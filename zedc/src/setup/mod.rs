@@ -17,15 +17,20 @@ pub use cmd::handle_cmd;
 ///
 /// # Arguments
 /// * `pkg_mgr` - The name of the package manager to activate (`pnpm, yarn`)
-pub fn activate_pkg_mgr(pkg_mgr: &String) {
+pub fn activate_pkg_mgr(pkg_mgr: &String) -> anyhow::Result<()> {
     match crate::pm::corepack().arg("enable").arg(pkg_mgr).output() {
         Ok(_) => {
             println!("✔️  {} setup complete", pkg_mgr);
         }
         Err(_) => {
-            println!("💿 Installing Node.js...");
+            bail!(
+                "❌ Error activating {} using corepack. Please open a new shell and try again."
+                    .red()
+            );
         }
     }
+
+    Ok(())
 }
 
 /// Installs Node.js using `cargo` and `fnm`.
@@ -73,12 +78,12 @@ pub async fn setup_node_with_pkg_mgr(pkg_mgr: &String) -> anyhow::Result<()> {
             let mut ver = String::from_utf8(out.stdout)?;
             crate::util::trim_newline(&mut ver);
             println!("✔️  Found node {}", ver);
-            activate_pkg_mgr(pkg_mgr);
+            activate_pkg_mgr(pkg_mgr)?;
         }
         Err(_) => {
             println!("\t❌ No Node.js installation found - installing...");
             install_node().await?;
-            activate_pkg_mgr(pkg_mgr);
+            activate_pkg_mgr(pkg_mgr)?;
         }
     }
 
