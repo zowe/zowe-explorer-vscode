@@ -260,7 +260,7 @@ export class ProfileManagement {
     private static tokenAuthQp(node: IZoweTreeNode): vscode.QuickPickItem[] {
         const profile = node.getProfile();
         const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.tokenAuthLoginQpItem);
-        if (profile.profile.tokenType) {
+        if (profile.profile.tokenValue) {
             quickPickOptions.push(this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]);
         }
         return this.addFinalQpOptions(node, quickPickOptions);
