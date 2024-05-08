@@ -24,7 +24,6 @@ const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 
 /**@type {webpack.Configuration}*/
 const config = {
-    context: __dirname,
     target: "node",
     entry: "./src/extension.ts",
     output: {
@@ -99,7 +98,16 @@ const config = {
         new CopyPlugin({
             patterns: [{ from: "../../node_modules/@zowe/secrets-for-zowe-sdk/prebuilds", to: "../../prebuilds/" }],
         }),
-        new ForkTsCheckerWebpackPlugin(),
+        new ForkTsCheckerWebpackPlugin({
+            typescript: {
+                build: true,
+                configFile: path.join(__dirname, "tsconfig.json"),
+                diagnosticOptions: {
+                    syntactic: true,
+                    semantic: true,
+                },
+            },
+        }),
     ],
 };
 
