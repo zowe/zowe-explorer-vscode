@@ -48,9 +48,9 @@
           "title": "%viewsContainers.panel.tableView%"
         },
         {
-          "icon": "",
           "id": "zosconsole",
-          "title": "z/OS Console"
+          "title": "z/OS Console",
+          "icon": ""
         }
       ]
     },
