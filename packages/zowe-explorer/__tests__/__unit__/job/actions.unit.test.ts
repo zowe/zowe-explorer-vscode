@@ -1561,7 +1561,6 @@ describe("sortJobs function", () => {
     });
 });
 
-
 describe("copyName function", () => {
     it("copies the node label", async () => {
         const node = new ZoweJobNode({ label: "JOBNAME(ID123456) - ACTIVE", collapsibleState: vscode.TreeItemCollapsibleState.None });

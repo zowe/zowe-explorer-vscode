@@ -227,10 +227,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
         )
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand(
-            "zowe.ds.copyName",
-            async (node: IZoweDatasetTreeNode): Promise<void> => dsActions.copyName(node)
-        )
+        vscode.commands.registerCommand("zowe.ds.copyName", async (node: IZoweDatasetTreeNode): Promise<void> => dsActions.copyName(node))
     );
 
     context.subscriptions.push(

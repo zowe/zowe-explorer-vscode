@@ -3595,7 +3595,7 @@ describe("Dataset Actions Unit Tests - function copyName", () => {
         await dsActions.copyName(pdsMember);
         expect(mocked(vscode.env.clipboard.writeText)).toHaveBeenCalledWith("A.PDS(MEM1)");
     });
-    
+
     it("copies the correct path for a DS", async () => {
         const ds = new ZoweDatasetNode({
             label: "A.DS",
@@ -3606,7 +3606,7 @@ describe("Dataset Actions Unit Tests - function copyName", () => {
         await dsActions.copyName(ds);
         expect(mocked(vscode.env.clipboard.writeText)).toHaveBeenCalledWith("A.DS");
     });
-    
+
     it("copies the correct path for a migrated DS", async () => {
         const ds = new ZoweDatasetNode({
             label: "A.DS.MIGRAT",
