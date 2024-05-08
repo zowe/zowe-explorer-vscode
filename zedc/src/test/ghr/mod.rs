@@ -89,7 +89,6 @@ async fn fetch_artifacts(refs: Vec<String>, gh: &Octocrab) -> anyhow::Result<Vec
         };
         zip.extract(&vsix_dir)?;
         println!("\t✔️ ");
-        // TODO: handle .tgz, .tar.gz.
     }
 
     // Walk the `vsix` directory and build a list of file paths to pass to `fs::install_from_paths`.

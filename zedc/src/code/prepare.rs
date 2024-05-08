@@ -167,7 +167,7 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
             let mut archive = Archive::new(tar);
             archive.unpack(&vsc_path)?;
         }
-        _ => {}
+        _ => bail!("Unable to extract VS Code; invalid extension for archive.".red())
     }
 
     Ok(code_cli_binary(&vsc_path).to_str().unwrap().to_owned())

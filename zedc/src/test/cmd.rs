@@ -20,7 +20,7 @@ pub enum Commands {
     },
     #[command(
         name = "local",
-        about = "Provide multiple .vsix or .tgz files containing extensions",
+        about = "Provide multiple .vsix files containing extensions",
         alias = "l"
     )]
     Local { files: Vec<String> },

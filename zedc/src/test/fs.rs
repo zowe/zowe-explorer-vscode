@@ -35,18 +35,14 @@ pub fn install_cli(version: String) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Installs the given list of .vsix or .tgz files using the given VS Code binary.
+/// Installs the given list of .vsix files using the given VS Code binary.
 ///
 /// # Arguments
 /// * `vsc_bin` - A path to the VS Code binary
-/// * `files` - A `Vec` of file paths that correspond to extension files (`.vsix, .tgz`)
+/// * `files` - A `Vec` of file paths that correspond to extension files (`.vsix`)
 pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::Result<()> {
     if files.is_empty() {
-        bail!(format!(
-            "{}\n{}\n.vsix, .tar.gz, .tgz",
-            "No valid files provided.".red(),
-            "Supported formats:".italic()
-        ));
+        bail!("No valid .vsix files provided.".red());
     }
 
     // Install the given extensions using the VS Code CLI.
@@ -93,12 +89,12 @@ pub fn resolve_paths(files: Vec<String>) -> Vec<String> {
         .iter()
         .filter_map(|f| match std::fs::canonicalize(f) {
             Ok(p) => match p.extension().unwrap_or(OsStr::new("")).to_str().unwrap() {
-                "gz" | "tgz" | "vsix" => {
+                "vsix" => {
                     println!("  ✔️  {}", f.bold());
                     Some(p.to_str().unwrap().to_owned())
                 }
                 _ => {
-                    println!("  ❌ {}", format!("{}: invalid extension", f).italic());
+                    println!("  ❌ {}", format!("{}: invalid extension format", f).italic());
                     None
                 }
             },
