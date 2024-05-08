@@ -48,6 +48,17 @@ fn build_url(version: &String) -> anyhow::Result<String> {
 fn code_cli_binary(dir: &Path) -> PathBuf {
     match std::env::consts::OS {
         "windows" => dir.join("bin").join("code.cmd"),
+        "linux" => dir
+            .join(format!(
+                "VSCode-linux-{}",
+                if std::env::consts::ARCH == "x86_64" {
+                    "x64"
+                } else {
+                    "aarch64"
+                }
+            ))
+            .join("bin")
+            .join("code"),
         _ => dir.join("bin").join("code"),
     }
 }
@@ -134,9 +145,14 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
     }
 
     progress_bar.finish();
-    match path.extension().unwrap_or_default().to_str().unwrap_or_default() {
+    println!("📤 Unpacking VS Code archive...");
+    match path
+        .extension()
+        .unwrap_or_default()
+        .to_str()
+        .unwrap_or_default()
+    {
         "zip" => {
-            println!("📤 Unpacking VS Code archive...");
             zip_extensions::zip_extract(&path, &vsc_path)?;
             tokio::fs::create_dir(vsc_path.join(if std::env::consts::OS == "macos" {
                 "code-portable-data"
