@@ -506,9 +506,7 @@ export async function pasteUss(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, nod
 export async function copyRelativePath(node: IZoweUSSTreeNode): Promise<void> {
     const sesNode = node.getSessionNode();
     if (!node.fullPath) {
-        ZoweLogger.warn(
-            localize("ussActions.copyName.missingPath", "copyName was called on USS node {0}, but its fullPath is invalid.", node.label as string)
-        );
+        await vscode.env.clipboard.writeText(node.label as string);
         return;
     }
 
