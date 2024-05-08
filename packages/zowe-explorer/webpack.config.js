@@ -19,6 +19,8 @@ const fs = require("fs");
 const CopyPlugin = require("copy-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 
+const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
+
 /**@type {webpack.Configuration}*/
 const config = {
     target: "node",
@@ -37,6 +39,7 @@ const config = {
         alias: {
             "@zowe/zowe-explorer-api$": path.resolve(__dirname, "..", "zowe-explorer-api/src"),
         },
+        plugins: [new TsconfigPathsPlugin()],
     },
     watchOptions: {
         ignored: /node_modules/,
@@ -79,13 +82,7 @@ const config = {
                 exclude: /node_modules/,
                 use: [
                     {
-                        loader: "ts-loader",
-                        options: {
-                            compilerOptions: {
-                                sourceMap: true,
-                            },
-                            projectReferences: true,
-                        },
+                        loader: "esbuild-loader",
                     },
                 ],
             },

@@ -2084,8 +2084,8 @@
     "fresh-clone": "pnpm clean:bundle && pnpm clean:dependencies",
     "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/",
     "pretty": "prettier --write .",
-    "createTestProfileData": "ts-node ./scripts/createTestProfileData.ts",
-    "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts",
+    "createTestProfileData": "tsx ./scripts/createTestProfileData.ts",
+    "createDemoNodes": "tsx ./scripts/createDemoNodes.ts",
     "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src"
   },
   "engines": {
