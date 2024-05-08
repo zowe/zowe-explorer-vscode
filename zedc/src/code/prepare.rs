@@ -1,19 +1,24 @@
 //! Preparation functions and utilities for VS Code "sandbox" testing.
 //! Includes setup, download and URL building procedures.
 
-use std::path::{Path, PathBuf};
+use std::{
+    fs::File,
+    path::{Path, PathBuf},
+};
 
 use anyhow::bail;
+use flate2::read::GzDecoder;
 use indicatif::{ProgressBar, ProgressStyle};
 use owo_colors::OwoColorize;
 use reqwest::{header, Client};
+use tar::Archive;
 use tokio::io::AsyncWriteExt;
 
 /// Returns a URL for the VS Code release for the current operating system with the given version.
 ///
 /// # Arguments
 /// * `version` - The version of VS Code to download
-/// 
+///
 /// ### Note:  
 /// The returned URL is not validated and might not exist; any errors should be handled at the time
 /// of the request.
@@ -129,15 +134,24 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
     }
 
     progress_bar.finish();
-    if path.extension().unwrap_or_default() == "zip" {
-        println!("📤 Unpacking VS Code archive...");
-        zip_extensions::zip_extract(&path, &vsc_path)?;
-        tokio::fs::create_dir(vsc_path.join(if std::env::consts::OS == "macos" {
-            "code-portable-data"
-        } else {
-            "data"
-        }))
-        .await?;
+    match path.extension().unwrap_or_default().to_str().unwrap_or_default() {
+        "zip" => {
+            println!("📤 Unpacking VS Code archive...");
+            zip_extensions::zip_extract(&path, &vsc_path)?;
+            tokio::fs::create_dir(vsc_path.join(if std::env::consts::OS == "macos" {
+                "code-portable-data"
+            } else {
+                "data"
+            }))
+            .await?;
+        }
+        "tgz" | "gz" => {
+            let tar_gz = File::open(path)?;
+            let tar = GzDecoder::new(tar_gz);
+            let mut archive = Archive::new(tar);
+            archive.unpack(&vsc_path)?;
+        }
+        _ => {}
     }
 
     Ok(code_cli_binary(&vsc_path).to_str().unwrap().to_owned())
