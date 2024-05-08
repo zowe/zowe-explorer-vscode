@@ -1880,3 +1880,11 @@ export async function _copyProcessor(
         }
     }
 }
+
+export function copyName(node: api.IZoweDatasetTreeNode): void {
+    if (contextually.isDsMember(node) && node.getParent()) {
+        vscode.env.clipboard.writeText(`${node.getParent().label as string}(${node.label as string})`);
+    } else if (contextually.isDs(node) || contextually.isPds(node) || contextually.isMigrated(node)) {
+        vscode.env.clipboard.writeText(node.label as string);
+    }
+}

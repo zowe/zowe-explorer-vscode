@@ -502,3 +502,23 @@ export async function pasteUss(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, nod
     );
     ussFileProvider.refreshElement(node);
 }
+
+export function copyRelativePath(node: IZoweUSSTreeNode): void {
+    const sesNode = node.getSessionNode();
+    if (!node.fullPath) {
+        ZoweLogger.warn(
+            localize("ussActions.copyName.missingPath", "copyName was called on USS node {0}, but its fullPath is invalid.", node.label as string)
+        );
+        return;
+    }
+
+    if (sesNode != null && !contextually.isFavorite(sesNode)) {
+        let relPath = node.fullPath.replace(sesNode.fullPath, "");
+        if (relPath.startsWith("/")) {
+            relPath = relPath.slice(1);
+        }
+        vscode.env.clipboard.writeText(relPath);    
+    } else {
+        vscode.env.clipboard.writeText(node.fullPath);
+    }
+}

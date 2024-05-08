@@ -22,6 +22,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import { SORT_DIRS, getDefaultUri, updateOpenFiles } from "../shared/utils";
 import { ZosJobsProvider } from "./ZosJobsProvider";
 import { JOB_SORT_OPTS } from "./utils";
+import * as contextually from "../shared/context";
 import * as globals from "../globals";
 import { TreeProviders } from "../shared/TreeProviders";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
@@ -565,4 +566,8 @@ export async function sortJobs(session: IZoweJobTreeNode, jobsProvider: ZosJobsP
     session.sort.method = JOB_SORT_OPTS.indexOf(selection.label.replace(" $(check)", ""));
     jobsProvider.sortBy(session);
     Gui.setStatusBarMessage(localize("sort.updated", "$(check) Sorting updated for {0}", session.label as string), globals.MS_PER_SEC * 4);
+}
+
+export function copyName(node: IZoweJobTreeNode): void {
+    vscode.env.clipboard.writeText(node.label as string);
 }

@@ -186,7 +186,12 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
             async (job: IZoweJobTreeNode): Promise<vscode.InputBox> => jobsProvider.filterJobsDialog(job)
         )
     );
-
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            "zowe.jobs.copyName",
+            (job: IZoweJobTreeNode): void => jobActions.copyName(job)
+        )
+    );
     context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(ZosJobsProvider.onDidCloseTextDocument));
 
     initSubscribers(context, jobsProvider);
