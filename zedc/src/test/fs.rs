@@ -1,3 +1,6 @@
+//! Module for test functions that interact with the filesystem.
+
+use crate::code::code_binary;
 use anyhow::bail;
 use owo_colors::OwoColorize;
 use std::{
@@ -6,8 +9,10 @@ use std::{
     process::{Command, Stdio},
 };
 
-use crate::code::code_binary;
-
+/// (WIP) Installs a copy of Zowe CLI for use during testing.
+///
+/// # Arguments
+/// * `version` - The version of Zowe CLI to install from `npm`
 pub fn install_cli(version: String) -> anyhow::Result<()> {
     let nm_path = Path::new("./node_modules");
     if nm_path.exists() {
@@ -30,6 +35,11 @@ pub fn install_cli(version: String) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Installs the given list of .vsix or .tgz files using the given VS Code binary.
+///
+/// # Arguments
+/// * `vsc_bin` - A path to the VS Code binary
+/// * `files` - A `Vec` of file paths that correspond to extension files (`.vsix, .tgz`)
 pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::Result<()> {
     if files.is_empty() {
         bail!(format!(
@@ -39,8 +49,8 @@ pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::
         ));
     }
 
+    // Install the given extensions using the VS Code CLI.
     let vsc_bin_path = Path::new(&vsc_bin);
-
     println!("\n⌛ Installing extensions...");
     let mut cmd = Command::new(vsc_bin_path);
     for file in files.iter() {
@@ -51,6 +61,7 @@ pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::
         bail!(e);
     }
 
+    // Launch VS Code after installing the given extensions.
     let vsc_dir = vsc_bin_path.parent().unwrap().parent().unwrap();
     let sandbox_dir = vsc_dir.parent().unwrap().join("sandbox");
     let sandbox_str = sandbox_dir.to_str().unwrap();
@@ -72,6 +83,10 @@ pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::
     }
 }
 
+/// Resolves absolute file paths given a list of relative paths.
+///
+/// # Arguments
+/// * `files` - A `Vec` of relative file paths to resolve on the local filesystem.
 pub fn resolve_paths(files: Vec<String>) -> Vec<String> {
     println!("\n🔍 Resolving files...");
     files

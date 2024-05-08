@@ -1,3 +1,6 @@
+//! Preparation functions and utilities for VS Code "sandbox" testing.
+//! Includes setup, download and URL building procedures.
+
 use std::path::{Path, PathBuf};
 
 use anyhow::bail;
@@ -6,6 +9,14 @@ use owo_colors::OwoColorize;
 use reqwest::{header, Client};
 use tokio::io::AsyncWriteExt;
 
+/// Returns a URL for the VS Code release for the current operating system with the given version.
+///
+/// # Arguments
+/// * `version` - The version of VS Code to download
+/// 
+/// ### Note:  
+/// The returned URL is not validated and might not exist; any errors should be handled at the time
+/// of the request.
 fn build_url(version: &String) -> anyhow::Result<String> {
     Ok(format!(
         "https://update.code.visualstudio.com/{}/{}/stable",
@@ -25,6 +36,10 @@ fn build_url(version: &String) -> anyhow::Result<String> {
     ))
 }
 
+/// Returns a path to the Code CLI binary, relative to the directory where the desired VS Code version was extracted.
+///
+/// # Arguments
+/// * `dir` - The directory path for the extracted copy of VS Code
 fn code_cli_binary(dir: &Path) -> PathBuf {
     match std::env::consts::OS {
         "windows" => dir.join("bin").join("code.cmd"),
@@ -32,6 +47,17 @@ fn code_cli_binary(dir: &Path) -> PathBuf {
     }
 }
 
+/// Downloads a portable copy of VS Code with the given version, if provided (default: `latest`).  
+/// Returns an absolute path to the Code CLI binary.
+///
+/// # Arguments  
+/// * `version`: (optional) The version of VS Code to download
+///
+/// # Summary
+/// This function performs the following operations:
+/// * Creates a data directory for `zedc` to manage VS Code versions (`zedc_data`)
+/// * Builds a URL and performs a `GET` request to fetch the VS Code archive
+/// * Extracts the VS Code archive into its corresponding directory in into `zedc_data`
 pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> {
     println!("💿 Downloading VS Code...");
     let ver = match version {

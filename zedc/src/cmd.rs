@@ -1,3 +1,5 @@
+//! Command module that defines the `zedc` command tree.
+
 use clap::{command, Parser, Subcommand};
 
 #[derive(Subcommand)]
@@ -9,7 +11,7 @@ pub enum RootCommands {
     )]
     PkgMgr {
         #[arg(last = true)]
-        args: Vec<String>
+        args: Vec<String>,
     },
     #[command(
         name = "setup",

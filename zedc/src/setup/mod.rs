@@ -1,4 +1,4 @@
-mod cmd;
+//! "Root" module containing all related logic for the `setup` command.
 
 use anyhow::bail;
 use homedir::get_my_home;
@@ -10,8 +10,13 @@ use std::{
 };
 use tokio::{fs::OpenOptions, io::AsyncWriteExt};
 
+mod cmd;
 pub use cmd::handle_cmd;
 
+/// Activates the given package manager using `corepack`.
+///
+/// # Arguments
+/// * `pkg_mgr` - The name of the package manager to activate (`pnpm, yarn`)
 pub fn activate_pkg_mgr(pkg_mgr: &String) {
     match crate::pm::corepack().arg("enable").arg(pkg_mgr).output() {
         Ok(_) => {
@@ -23,6 +28,7 @@ pub fn activate_pkg_mgr(pkg_mgr: &String) {
     }
 }
 
+/// Installs Node.js using `cargo` and `fnm`.
 pub async fn install_node() -> anyhow::Result<()> {
     match Command::new("cargo")
         .args(["install", "fnm"])
@@ -31,9 +37,7 @@ pub async fn install_node() -> anyhow::Result<()> {
     {
         Ok(_) => {
             println!("✔️  Installed fnm");
-            //match std::env::consts::OS {
-            //"windows" => {}
-            //_ => {
+            // TODO: Look into updating this - would like to avoid updating shell profiles if needed
             let mut bashrc = OpenOptions::new()
                 .create(true)
                 .append(true)
@@ -41,18 +45,24 @@ pub async fn install_node() -> anyhow::Result<()> {
                 .open(get_my_home().unwrap().unwrap_or("~".into()).join(".bashrc"))
                 .await?;
             bashrc.write_all(b"eval \"$(fnm env --use-on-cd)\"").await?;
-            //}
-            //}
             if let Err(_e) = Command::new("fnm").arg("install").arg("18").status() {
                 bail!("'fnm install 18' failed");
             }
         }
-        Err(_) => todo!(),
+        Err(_) => {
+            bail!("zedc setup requires Rust in order to install Node.js.\nPlease install it before continuing.".red());
+        }
     };
 
     Ok(())
 }
 
+/// Setup function that looks for the presence of Node.js with the `node --version` command.
+/// * If present, it attempts to activate the given package manager using `corepack`
+/// * If not present, it attempts to install Node.js using `cargo` and `fnm`
+///
+/// # Arguments
+/// * `pkg_mgr` - The package manager to setup
 pub async fn setup_node_with_pkg_mgr(pkg_mgr: &String) -> anyhow::Result<()> {
     match Command::new("node")
         .arg("--version")
@@ -75,10 +85,14 @@ pub async fn setup_node_with_pkg_mgr(pkg_mgr: &String) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Setup initialization function for Node.js and the current package manager.
+///
+/// # Arguments
+/// * `ze_dir` - The path to the Zowe Explorer repo
 pub async fn setup_pkg_mgr(ze_dir: PathBuf) -> anyhow::Result<String> {
     let pkg_mgr = crate::pm::detect_pkg_mgr(&ze_dir)?;
 
-    // check if the package manager actually exists
+    // Check if the package manager exists
     match crate::pm::pkg_mgr(&pkg_mgr)
         .arg("--version")
         .stderr(Stdio::null())
@@ -90,6 +104,7 @@ pub async fn setup_pkg_mgr(ze_dir: PathBuf) -> anyhow::Result<String> {
             println!("✔️  Using {} {}", pkg_mgr, ver);
         }
         Err(_) => {
+            // Package manager was not found, prompt for installation
             print!(
                 "❌ {} was not found. Would you like to install it? (y/N) ",
                 pkg_mgr.bold()

@@ -1,29 +1,30 @@
+//! Module for handling the `test ghr` sub-command.
+
 use anyhow::bail;
 use octocrab::{params::actions::ArchiveFormat, Octocrab};
 use owo_colors::OwoColorize;
 use zip::ZipArchive;
 
+/// Fetches artifacts from GitHub given a list of refs.
+///
+/// # Arguments
+/// * `refs` - A `Vec` of GitHub references to fetch artifacts from.
+/// * `gh` - An `octocrab` instance for interfacing with the GitHub API.
 async fn fetch_artifacts(refs: Vec<String>, gh: &Octocrab) -> anyhow::Result<Vec<String>> {
     println!("💿 {}", "Fetching artifacts...".underline());
 
+    // Collect workflow runs from the Zowe Explorer repo.
     let workflow_runs = gh
         .workflows("zowe", "zowe-explorer-vscode")
         .list_runs("zowe-explorer-ci.yml")
         .send()
         .await?;
-
     let workflow_runs = workflow_runs
         .into_iter()
         .filter(|wr| wr.name == "Zowe Explorer CI" && wr.conclusion == Some("success".to_owned()))
         .collect::<Vec<_>>();
-    // let mut wf = OpenOptions::new()
-    //     .create(true)
-    //     .append(true)
-    //     .write(true)
-    //     .open(current_dir().unwrap().join("workflows.txt"))
-    //     .await?;
-    // wf.write_all(format!("{:#?}", workflow_runs).as_bytes()).await?;
 
+    // Setup a directory for VSIX files.
     let current_exe = std::env::current_exe()?;
     let cur_dir = current_exe.parent().unwrap();
     let vsix_dir = cur_dir.join("zedc_data").join("vsix");
@@ -32,6 +33,7 @@ async fn fetch_artifacts(refs: Vec<String>, gh: &Octocrab) -> anyhow::Result<Vec
     }
     tokio::fs::create_dir_all(&vsix_dir).await?;
 
+    // Iterate over the references, fetching and extracting the artifacts from each one.
     for r in refs {
         print!("\t{}: ", r);
         let workflow_id = match workflow_runs
@@ -46,6 +48,8 @@ async fn fetch_artifacts(refs: Vec<String>, gh: &Octocrab) -> anyhow::Result<Vec
         };
         let workflow = &workflow_runs[workflow_id];
 
+        // Get the list of artifacts from the matching workflow.
+        // Filter the list to only return the Zowe Explorer VSIX artifact.
         let artifact_list = gh
             .actions()
             .list_workflow_run_artifacts("zowe", "zowe-explorer-vscode", workflow.id)
@@ -64,6 +68,7 @@ async fn fetch_artifacts(refs: Vec<String>, gh: &Octocrab) -> anyhow::Result<Vec
             continue;
         }
 
+        // Grab the first artifact from the list - download and extract it.
         let first_artifact = artifact_list.first().unwrap();
         let raw_artifact = gh
             .actions()
@@ -84,9 +89,10 @@ async fn fetch_artifacts(refs: Vec<String>, gh: &Octocrab) -> anyhow::Result<Vec
         };
         zip.extract(&vsix_dir)?;
         println!("\t✔️ ");
-        // handle: tgz, etc.
+        // TODO: handle .tgz, .tar.gz.
     }
 
+    // Walk the `vsix` directory and build a list of file paths to pass to `fs::install_from_paths`.
     let mut vec = Vec::new();
     let mut files = tokio::fs::read_dir(&vsix_dir).await?;
     while let Some(entry) = files.next_entry().await? {
@@ -98,6 +104,12 @@ async fn fetch_artifacts(refs: Vec<String>, gh: &Octocrab) -> anyhow::Result<Vec
     Ok(vec)
 }
 
+/// Downloads VS Code, resolves artifacts from the given GitHub refs, installs them in VS Code and opens it.
+///
+/// # Arguments
+/// * `refs` - A `Vec` of Git references containing artifacts to install
+/// * `vsc_version` - (optional) The VS Code version to download (default: `latest`)
+/// * `gh` - An instance of Octocrab to use for GitHub API requests.
 pub async fn setup(
     refs: Vec<String>,
     vsc_version: Option<String>,
@@ -107,6 +119,7 @@ pub async fn setup(
         bail!("At least one reference is required to use this command.".red());
     }
 
+    // Confirm that a GitHub personal token is defined before continuing.
     if std::env::var("ZEDC_PAT").is_err() {
         bail!("A GitHub personal access token must be defined in the ZEDC_PAT environment variable to use this command.".red());
     }

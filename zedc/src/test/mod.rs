@@ -1,3 +1,5 @@
+//! "Root" module for handling `test` commands.
+
 mod cmd;
 mod fs;
 

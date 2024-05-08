@@ -1,3 +1,5 @@
+//! The main module for the Zowe Explorer development CLI.
+
 use clap::Parser;
 use cmd::{Args, RootCommands};
 
@@ -8,8 +10,10 @@ mod setup;
 mod test;
 mod util;
 
+/// Main entrypoint function for handling all `zedc` commands.
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Initialize `octocrab` if a GitHub personal token is present in `ZEDC_PAT`.
     if std::env::var("ZEDC_PAT").is_ok() {
         let pat = std::env::var("ZEDC_PAT").unwrap();
         let crab = octocrab::Octocrab::builder()
@@ -19,6 +23,7 @@ async fn main() -> anyhow::Result<()> {
         octocrab::initialise(crab);
     }
 
+    // Parse the command entered by the user.
     let matches = Args::parse();
     match matches.command {
         RootCommands::Setup { reference } => setup::handle_cmd(reference).await?,

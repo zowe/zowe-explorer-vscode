@@ -1,7 +1,9 @@
-use std::path::PathBuf;
+//! Utility module containing general helper functions.
 
 use glob::glob;
+use std::path::PathBuf;
 
+/// Removes new line characters from the given String.
 pub fn trim_newline(line: &mut String) {
     if let Some('\n') = line.chars().next_back() {
         line.pop();
@@ -11,12 +13,15 @@ pub fn trim_newline(line: &mut String) {
     }
 }
 
+/// Searches upward from the current directory for the given list of patterns.
+/// 
+/// # Arguments
+/// * `patterns` - A `&str` slice containing the patterns to search upwards for.
 pub fn find_dir_match(patterns: &[&str]) -> anyhow::Result<Option<PathBuf>> {
     let cur_dir = std::env::current_dir()?;
     let root = &cur_dir.ancestors().last().unwrap();
 
     let mut start_dir = cur_dir.clone();
-
     while start_dir != *root {
         for pattern in patterns {
             for entry in glob(start_dir.join(pattern).to_str().unwrap())? {
