@@ -36,6 +36,7 @@
     "eslint-plugin-deprecation": "^2.0.0",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-zowe-explorer": "workspace:./packages/eslint-plugin-zowe-explorer",
+    "fork-ts-checker-webpack-plugin": "^9.0.2",
     "husky": "^6.0.0",
     "jest": "^29.3.1",
     "jest-html-reporter": "^3.7.0",

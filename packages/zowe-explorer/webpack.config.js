@@ -19,10 +19,12 @@ const fs = require("fs");
 const CopyPlugin = require("copy-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 
-const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
+const { TsconfigPathsPlugin } = require("tsconfig-paths-webpack-plugin");
+const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 
 /**@type {webpack.Configuration}*/
 const config = {
+    context: __dirname,
     target: "node",
     entry: "./src/extension.ts",
     output: {
@@ -39,7 +41,11 @@ const config = {
         alias: {
             "@zowe/zowe-explorer-api$": path.resolve(__dirname, "..", "zowe-explorer-api/src"),
         },
-        plugins: [new TsconfigPathsPlugin()],
+        plugins: [
+            new TsconfigPathsPlugin({
+                references: ["../zowe-explorer-api"],
+            }),
+        ],
     },
     watchOptions: {
         ignored: /node_modules/,
@@ -93,6 +99,7 @@ const config = {
         new CopyPlugin({
             patterns: [{ from: "../../node_modules/@zowe/secrets-for-zowe-sdk/prebuilds", to: "../../prebuilds/" }],
         }),
+        new ForkTsCheckerWebpackPlugin(),
     ],
 };
 
