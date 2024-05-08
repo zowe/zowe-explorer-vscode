@@ -74,7 +74,6 @@ async function createGlobalMocks() {
         mockLoad: jest.fn(),
         mockRegisterTextDocumentContentProvider: jest.fn(),
         mockFrom: jest.fn(),
-        mockUri: jest.fn(),
         mockGetProfileName: jest.fn(),
         mockCliHome: jest.fn().mockReturnValue(path.join(os.homedir(), ".zowe")),
         mockIcInstance: jest.fn(),
@@ -273,7 +272,6 @@ async function createGlobalMocks() {
         value: globalMocks.mockCreateTreeView,
         configurable: true,
     });
-    Object.defineProperty(vscode, "Uri", { value: globalMocks.mockUri, configurable: true });
     Object.defineProperty(vscode.commands, "registerCommand", {
         value: globalMocks.mockRegisterCommand,
         configurable: true,
