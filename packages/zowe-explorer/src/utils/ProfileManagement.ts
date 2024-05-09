@@ -124,7 +124,7 @@ export class ProfileManagement {
     };
     public static switchAuthenticationQpItems: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.switch]: {
-            label: localize("switchAuthenticationQpItems.switchAuthentication.qpLabel", "$(eye-closed) Change the Authentication Method"),
+            label: localize("switchAuthenticationQpItems.switchAuthentication.qpLabel", "$(key) Change the Authentication Method"),
             description: localize("switchAuthenticationQpItems.switchAuthentication.qpDetail", "To change the authentication method"),
         },
     };
@@ -284,7 +284,6 @@ export class ProfileManagement {
         try {
             ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getTokenTypeName();
             quickPickOptions.push(this.tokenAuthLoginQpItem[this.AuthQpLabels.login]);
-            // quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
         } catch {
             ZoweLogger.debug(`Profile ${profile.name} doesn't support token authentication, will not provide option.`);
         }

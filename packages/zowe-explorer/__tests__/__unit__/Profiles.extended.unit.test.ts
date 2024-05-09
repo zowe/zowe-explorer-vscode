@@ -1653,6 +1653,138 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
     });
 });
 
+describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
+    let globalMocks, testNode, modifiedTestNode;
+    beforeEach(async () => {
+        globalMocks = await createGlobalMocks();
+        testNode = new (ZoweTreeNode as any)(
+            "test",
+            vscode.TreeItemCollapsibleState.None,
+            undefined,
+            globalMocks.testSession,
+            globalMocks.testProfile
+        );
+        modifiedTestNode = new (ZoweTreeNode as any)(
+            "test",
+            vscode.TreeItemCollapsibleState.None,
+            undefined,
+            globalMocks.testSession,
+            globalMocks.testProfile
+        );
+    });
+    it("To switch from Basic to Token Based Authentication", async () => {
+        jest.spyOn(utils.ProfilesUtils, "isProfileUsingBasicAuth").mockReturnValueOnce(true);
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: () => ({
+                properties: jest.fn(),
+                set: jest.fn(),
+                delete: jest.fn(),
+                save: jest.fn(),
+            }),
+            getAllProfiles: () => [
+                {
+                    profName: "sestest",
+                    profLoc: {
+                        osLoc: ["test"],
+                    },
+                },
+            ],
+        } as any);
+        testNode.profile.profile = {
+            type: "zosmf",
+            host: "test",
+            port: 1443,
+            name: "base",
+            rejectUnauthorized: false,
+            user: "testUser",
+            password: "***",
+            tokenType: undefined,
+            tokenValue: undefined,
+            secure: ["user", "password"],
+        };
+        modifiedTestNode.profile.profile = {
+            type: "zosmf",
+            host: "test",
+            port: 1443,
+            name: "base",
+            rejectUnauthorized: false,
+            user: undefined,
+            password: undefined,
+            tokenType: "testToken",
+            tokenValue: "12345",
+            secure: ["tokenType"],
+        };
+        jest.spyOn(Gui, "infoMessage").mockImplementation();
+        jest.spyOn(Profiles.getInstance(), "ssoLogin").mockImplementationOnce((node) => modifiedTestNode);
+        await Profiles.getInstance().handleSwitchAuthentication(testNode);
+        expect(testNode.profile.profile.tokenType).toBe("testToken");
+        expect(testNode.profile.profile.tokenValue).toBe("12345");
+        expect(testNode.profile.profile.secure.length).toBe(1);
+        expect(testNode.profile.profile.secure).toEqual(["tokenType"]);
+        expect(testNode.profile.profile.user).toBeUndefined();
+        expect(testNode.profile.profile.password).toBeUndefined();
+    });
+
+    it("To switch from Token based to Basic Authentication", async () => {
+        jest.spyOn(utils.ProfilesUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: () => ({
+                properties: jest.fn(),
+                set: jest.fn(),
+                delete: jest.fn(),
+                save: jest.fn(),
+            }),
+            getAllProfiles: () => [
+                {
+                    profName: "sestest",
+                    profLoc: {
+                        osLoc: ["test"],
+                    },
+                },
+            ],
+        } as any);
+        testNode.profile.profile = {
+            type: "zosmf",
+            host: "test",
+            port: 1443,
+            name: "base",
+            rejectUnauthorized: false,
+            user: undefined,
+            password: undefined,
+            tokenType: "testTokenType",
+            tokenValue: "12345",
+            secure: ["tokenType"],
+        };
+        modifiedTestNode.profile.profile = {
+            type: "zosmf",
+            host: "test",
+            port: 1443,
+            name: "base",
+            rejectUnauthorized: false,
+            user: "testUser",
+            password: "6789",
+            tokenType: undefined,
+            tokenValue: undefined,
+            secure: ["user", "password"],
+        };
+        jest.spyOn(Gui, "infoMessage").mockImplementation();
+        jest.spyOn(utils.ProfilesUtils, "promptCredentials").mockImplementationOnce((node) => modifiedTestNode);
+        await Profiles.getInstance().handleSwitchAuthentication(testNode);
+        expect(testNode.profile.profile.user).toBe("testUser");
+        expect(testNode.profile.profile.password).toBe("6789");
+        expect(testNode.profile.profile.secure.length).toBe(2);
+        expect(testNode.profile.profile.secure).toEqual(["user", "password"]);
+        expect(testNode.profile.profile.tokenType).toBeUndefined();
+        expect(testNode.profile.profile.tokenValue).toBeUndefined();
+    });
+
+    it("when authentication method is unknown", () => {
+        jest.spyOn(utils.ProfilesUtils, "isProfileUsingBasicAuth").mockReturnValueOnce(false);
+        jest.spyOn(utils.ProfilesUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+        jest.spyOn(Gui, "infoMessage").mockImplementation();
+    });
+});
+
 describe("Profiles Unit Tests - function ssoLogout", () => {
     let testNode;
     let globalMocks;
