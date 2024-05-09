@@ -8,7 +8,7 @@ const defaultHeaders = { "Content-Type": "application/x-www-form-urlencoded" };
         body: `api_token=${poeditorToken}&id=${projectId}`,
         headers: defaultHeaders
     }).then(r => r.json());
-    for (const { code } of listResponse.result.languages) {
+    for (const { code } of listResponse.result.languages.filter(lang => lang.percentage > 0)) {
         const exportResponse = await fetch("https://api.poeditor.com/v2/projects/export", {
             method: "POST",
             body: `api_token=${poeditorToken}&id=${projectId}&language=${code}&type=key_value_json`,
