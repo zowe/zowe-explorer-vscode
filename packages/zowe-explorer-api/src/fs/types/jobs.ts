@@ -10,7 +10,7 @@
  */
 
 import { IJob, IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
-import { DirEntry, EntryMetadata, FileEntry } from "../types";
+import { DirEntry, EntryMetadata, FileEntry } from "./abstract";
 import { FilePermission, FileType } from "vscode";
 
 export type JobFilter = {

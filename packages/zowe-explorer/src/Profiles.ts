@@ -423,7 +423,7 @@ export class Profiles extends ProfilesCache {
         return profileType;
     }
 
-    public async createZoweSchema(_zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<string> {
+    public async createZoweSchema(_zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<string | undefined> {
         ZoweLogger.trace("Profiles.createZoweSchema called.");
         try {
             let user = false;
@@ -1078,7 +1078,7 @@ export class Profiles extends ProfilesCache {
         ZoweLogger.trace("Profiles.createNonSecureProfile called.");
         const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
         if (!isSecureCredsEnabled) {
-            for (const profile of Object.entries(newConfig?.profiles)) {
+            for (const profile of Object.entries(newConfig.profiles)) {
                 delete newConfig.profiles[profile[0]].secure;
             }
             newConfig.autoStore = false;

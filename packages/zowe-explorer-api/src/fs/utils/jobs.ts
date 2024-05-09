@@ -10,7 +10,8 @@
  */
 
 import { IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
-import { IFileSystemEntry, JobEntry, SpoolEntry } from "../types";
+import { IFileSystemEntry } from "../types/abstract";
+import { JobEntry, SpoolEntry } from "../types/jobs";
 
 export function isJobEntry(entry: IFileSystemEntry): entry is JobEntry {
     return entry instanceof JobEntry;

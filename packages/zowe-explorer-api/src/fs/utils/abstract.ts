@@ -12,8 +12,8 @@
 import * as vscode from "vscode";
 import { ProfilesCache } from "../../profiles/ProfilesCache";
 import { IProfileLoaded } from "@zowe/imperative";
-import { DirEntry, FileEntry, FilterEntry, IFileSystemEntry } from "../types";
-import { Gui } from "../..";
+import { DirEntry, FileEntry, FilterEntry, IFileSystemEntry } from "../types/abstract";
+import { Gui } from "../../globals";
 import { posix } from "path";
 
 export type UriFsInfo = {

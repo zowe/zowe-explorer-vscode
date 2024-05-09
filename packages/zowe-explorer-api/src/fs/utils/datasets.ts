@@ -9,7 +9,8 @@
  *
  */
 
-import { IFileSystemEntry, DsEntry, MemberEntry, PdsEntry } from "../";
+import { IFileSystemEntry } from "../types/abstract";
+import { DsEntry, MemberEntry, PdsEntry } from "../types/datasets";
 
 export function isDsEntry(entry: IFileSystemEntry): entry is DsEntry {
     return entry instanceof DsEntry;
