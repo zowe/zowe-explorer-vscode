@@ -27,6 +27,7 @@ import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweSaveQueue } from "../../../src/abstract/ZoweSaveQueue";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import * as HistoryView from "../../../src/shared/HistoryView";
+import * as certWizard from "../../../src/utils/CertificateWizard";
 
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
@@ -59,6 +60,25 @@ describe("Test src/shared/extension", () => {
             {
                 name: "zowe.promptCredentials",
                 mock: [{ spy: jest.spyOn(profUtils.ProfilesUtils, "promptCredentials"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.certificateWizard",
+                mock: [
+                    {
+                        spy: jest.spyOn(certWizard, "CertificateWizard").mockReturnValueOnce({
+                            userSubmission: {
+                                promise: Promise.resolve({
+                                    cert: "/a/b/cert.pem",
+                                    certKey: "/a/b/cert.key.pem",
+                                }),
+                                resolve: jest.fn(),
+                                reject: jest.fn(),
+                            },
+                            panel: { dispose: jest.fn() } as any,
+                        } as any),
+                        arg: [test.context, test.value],
+                    },
+                ],
             },
             {
                 name: "onDidChangeConfiguration:1",
