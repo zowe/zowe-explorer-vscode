@@ -1148,7 +1148,7 @@ describe("Shared utils unit tests - function initializeFileOpening", () => {
         });
 
         await sharedUtils.initializeFileOpening(testNode, testNode.fullPath, true);
-        expect(globalMocks.mockExecuteCommand).toHaveBeenCalledWith("vscode.open", { path: "" });
+        expect(globalMocks.mockExecuteCommand).toHaveBeenCalledWith("vscode.open", { fsPath: "", path: "" });
     });
 
     it("successfully handles text data sets that should be previewed", async () => {
@@ -1246,7 +1246,7 @@ describe("Shared utils unit tests - function initializeFileOpening", () => {
         testNode.fullPath = "test/testFile";
 
         await sharedUtils.initializeFileOpening(testNode, testNode.fullPath, true);
-        expect(globalMocks.mockExecuteCommand).toHaveBeenCalledWith("vscode.open", { path: testNode.fullPath });
+        expect(globalMocks.mockExecuteCommand).toHaveBeenCalledWith("vscode.open", { fsPath: testNode.fullPath, path: testNode.fullPath });
     });
 
     it("successfully handles text USS files that should be previewed", async () => {
