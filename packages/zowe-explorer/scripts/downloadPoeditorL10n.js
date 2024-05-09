@@ -1,3 +1,10 @@
+/**
+ * Downloads user-contributed translations from POEditor project. This requires
+ * the POEDITOR_TOKEN environment variable to be set. Each translation is split
+ * into two files: package.nls.<lang>.json and bundle.l10n.<lang>.json. These
+ * files use the format expected by vscode-l10n and can be bundled in a VSIX.
+ */
+
 const fs = require("fs");
 const poeditorToken = process.env.POEDITOR_TOKEN;
 const projectId = 698824;

@@ -1,3 +1,8 @@
+/**
+ * Merges package.nls.json and bundle.l10n.json into a key-value JSON file that
+ * can be imported into POEditor.
+ */
+
 const fs = require("fs");
 const poeditorJson = {};
 const packageNls = require(__dirname + "/../package.nls.json");
