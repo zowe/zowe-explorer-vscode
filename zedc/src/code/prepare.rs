@@ -4,6 +4,7 @@
 use std::{
     fs::File,
     path::{Path, PathBuf},
+    process::Command,
 };
 
 use anyhow::bail;
@@ -48,7 +49,10 @@ fn build_url(version: &String) -> anyhow::Result<String> {
 fn code_cli_binary(dir: &Path) -> PathBuf {
     match std::env::consts::OS {
         "windows" => dir.join("bin").join("code.cmd"),
-        "linux" => dir
+        "macos" => dir
+            .join("Visual Studio Code.app")
+            .join("Contents/Resources/app/bin/code"),
+        _ => dir
             .join(format!(
                 "VSCode-linux-{}",
                 if std::env::consts::ARCH == "x86_64" {
@@ -59,7 +63,6 @@ fn code_cli_binary(dir: &Path) -> PathBuf {
             ))
             .join("bin")
             .join("code"),
-        _ => dir.join("bin").join("code"),
     }
 }
 
@@ -167,7 +170,18 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
             let mut archive = Archive::new(tar);
             archive.unpack(&vsc_path)?;
         }
-        _ => bail!("Unable to extract VS Code; invalid extension for archive.".red())
+        _ => bail!("Unable to extract VS Code; invalid extension for archive.".red()),
+    }
+
+    if std::env::consts::OS == "macos" {
+        // Remove "quarantined" attribute from downloaded VS Code binary on macOS
+        let _ = Command::new("xattr")
+            .args([
+                "-dr",
+                "com.apple.quarantine",
+                vsc_path.join("Visual Studio Code.app").to_str().unwrap(),
+            ])
+            .spawn();
     }
 
     Ok(code_cli_binary(&vsc_path).to_str().unwrap().to_owned())
