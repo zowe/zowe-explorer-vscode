@@ -6,13 +6,8 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
-- Changed the hashing algorithm for e-tag generation from `sha1` to `sha256` to avoid collisions. [#2890](https://github.com/zowe/zowe-explorer-vscode/pull/2890)
-
-## `2.16.0`
-
-### Bug fixes
-
 - Fix issue #2832 zFTP: Spool files are not listed properly for active jobs.
+- Changed the hashing algorithm for e-tag generation from `sha1` to `sha256` to avoid collisions. [#2890](https://github.com/zowe/zowe-explorer-vscode/pull/2890)
 
 ## `2.15.4`
 

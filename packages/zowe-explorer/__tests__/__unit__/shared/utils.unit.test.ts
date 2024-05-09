@@ -295,15 +295,15 @@ describe("Test uploadContent", () => {
     });
 
     it("should test with missing node that uploadContent throws error", async () => {
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
-        await sharedUtils.uploadContent(
-            null,
-            {
-                fileName: "whatever",
-            } as any,
-            null
-        );
-        expect(errorHandlingSpy).toBeCalledWith("Could not find whatever in tree");
+        await expect(
+            sharedUtils.uploadContent(
+                null,
+                {
+                    fileName: "whatever",
+                } as any,
+                null
+            )
+        ).rejects.toThrow("Could not find whatever in tree");
     });
 });
 
@@ -790,18 +790,16 @@ describe("Shared utils unit tests - function compareFileContent", () => {
     });
 
     it("should test with missing node that compareFileContent throws error", async () => {
-        jest.spyOn(TreeProviders, "ds", "get").mockReturnValueOnce({ openFiles: {} } as any);
-        jest.spyOn(TreeProviders, "uss", "get").mockReturnValueOnce({ openFiles: {} } as any);
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
-        await sharedUtils.compareFileContent(
-            {
-                fileName: "whatever",
-                uri: { fsPath: "whatever" },
-            } as any,
-            null,
-            null
-        );
-        expect(errorHandlingSpy).toBeCalledWith("Could not find whatever in tree");
+        await expect(
+            sharedUtils.compareFileContent(
+                {
+                    fileName: "whatever",
+                    uri: { fsPath: "whatever" },
+                } as any,
+                null,
+                null
+            )
+        ).rejects.toThrow("Could not find whatever in tree");
     });
 });
 

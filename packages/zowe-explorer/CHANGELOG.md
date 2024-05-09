@@ -18,9 +18,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Updated sorting of PDS members to show items without stats at bottom of list. [#2660](https://github.com/zowe/vscode-extension-for-zowe/issues/2660)
 - Added support to view the Encoding history for MVS and Dataset in the History View. [#2776](https://github.com/zowe/zowe-explorer-vscode/pull/2776)
 - Updated MVS view progress indicator for entering a filter search. [#2181](https://github.com/zowe/zowe-explorer-vscode/issues/2181)
-- Added error handling for when the default credential manager is unable to intialize. [#2811](https://github.com/zowe/zowe-explorer-vscode/issues/2811)
+- Added error handling for when the default credential manager is unable to initialize. [#2811](https://github.com/zowe/zowe-explorer-vscode/issues/2811)
 - Provide users with the option to upload binary files by implementing a "Upload Files (Binary)" right-click option in the USS tree. [#1956](https://github.com/zowe/zowe-explorer-vscode/issues/1956)
 - Added Status bar to indicate that data is being pulled from mainframe. [#2484](https://github.com/zowe/zowe-explorer-vscode/issues/2484)
+- Added PEM certificate support as an authentication method for logging into the API ML. [#2621](https://github.com/zowe/zowe-explorer-vscode/issues/2621)
 
 ### Bug fixes
 
@@ -35,6 +36,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
   - `Zowe Explorer: Stop Polling`
 - Duplicated profile schema writing on repeated Team Config file initialization:
   [#2828](https://github.com/zowe/zowe-explorer-vscode/pull/2828)
+- Fixed issue where saving changes to favorited PDS member fails when custom temp folder is set on Windows. [#2880](https://github.com/zowe/zowe-explorer-vscode/issues/2880)
 
 ## `2.15.4`
 
