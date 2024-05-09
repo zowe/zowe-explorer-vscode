@@ -740,7 +740,13 @@ export class Profiles extends ProfilesCache {
                 loginOk = await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, loginTokenType, node, zeInstance, this);
             }
             if (loginOk) {
-                Gui.showMessage(vscode.l10n.t("Login to authentication service was successful."));
+                Gui.showMessage(
+                    vscode.l10n.t({
+                        message: "Login to authentication service was successful for {0}.",
+                        args: [serviceProfile.name],
+                        comment: ["Service profile name"],
+                    })
+                );
                 await Profiles.getInstance().refresh(zeInstance);
             } else {
                 Gui.showMessage(this.profilesOpCancelled);
@@ -912,7 +918,13 @@ export class Profiles extends ProfilesCache {
                 profile: { ...node.getProfile().profile, ...session },
             });
         }
-        Gui.showMessage(vscode.l10n.t("Login to authentication service was successful."));
+        Gui.showMessage(
+            vscode.l10n.t({
+                message: "Login to authentication service was successful for {0}.",
+                args: [serviceProfile.name],
+                comment: ["Service profile name"],
+            })
+        );
         return true;
     }
 

@@ -114,7 +114,12 @@
       "Service profile name"
     ]
   },
-  "Login to authentication service was successful.": "Login to authentication service was successful.",
+  "Login to authentication service was successful for {0}./Service profile name": {
+    "message": "Login to authentication service was successful for {0}.",
+    "comment": [
+      "Service profile name"
+    ]
+  },
   "Unable to log in with {0}. {1}/Service profile nameError message": {
     "message": "Unable to log in with {0}. {1}",
     "comment": [
@@ -463,6 +468,12 @@
   "Descending": "Descending",
   "Invalid job owner": "Invalid job owner",
   "Invalid job prefix": "Invalid job prefix",
+  "Failed to parse a saved favorite. Attempted to parse: {0}/Plaintext line": {
+    "message": "Failed to parse a saved favorite. Attempted to parse: {0}",
+    "comment": [
+      "Plaintext line"
+    ]
+  },
   "EBCDIC": "EBCDIC",
   "z/OS default codepage": "z/OS default codepage",
   "Raw data representation": "Raw data representation",
@@ -844,13 +855,6 @@
   "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
   "Initializing profiles with data set favorites.": "Initializing profiles with data set favorites.",
   "No data set favorites found.": "No data set favorites found.",
-  "Invalid Data Sets favorite: {0}. Please check formatting of the zowe.ds.history 'favorites' settings in the {1} user settings./Data Sets Favorite lineApplication name": {
-    "message": "Invalid Data Sets favorite: {0}. Please check formatting of the zowe.ds.history 'favorites' settings in the {1} user settings.",
-    "comment": [
-      "Data Sets Favorite line",
-      "Application name"
-    ]
-  },
   "Error creating data set favorite node: {0} for profile {1}./LabelProfile name": {
     "message": "Error creating data set favorite node: {0} for profile {1}.",
     "comment": [

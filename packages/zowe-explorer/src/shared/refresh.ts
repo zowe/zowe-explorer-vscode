@@ -17,6 +17,7 @@ import { returnIconState } from "./actions";
 import * as contextually from "../shared/context";
 import { ZoweLogger } from "../utils/ZoweLogger";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import * as vscode from "vscode";
 
 /**
  * View (DATA SETS, JOBS, USS) refresh button
@@ -30,7 +31,7 @@ export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>): Promis
     for (const sessNode of treeProvider.mSessionNodes) {
         const profiles = await Profiles.getInstance().fetchAllProfiles();
         const found = profiles.some((prof) => prof.name === sessNode.label.toString().trim());
-        if (found || sessNode.label.toString() === "Favorites") {
+        if (found || sessNode.label.toString() === vscode.l10n.t("Favorites")) {
             if (contextually.isSessionNotFav(sessNode)) {
                 sessNode.dirty = true;
                 returnIconState(sessNode);

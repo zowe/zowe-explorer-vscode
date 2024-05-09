@@ -56,9 +56,6 @@
   "removeFavProfile": {
     "Remove profile from Favorites": ""
   },
-  "uss.addFavorite": {
-    "Add to Favorites": ""
-  },
   "addSession": {
     "Add Profile to Data Sets View": ""
   },
@@ -117,9 +114,6 @@
     "Refresh Data Sets View": ""
   },
   "removeFavorite": {
-    "Remove Favorite": ""
-  },
-  "uss.removeFavorite": {
     "Remove Favorite": ""
   },
   "removeSavedSearch": {
@@ -401,37 +395,13 @@
   "disableValidation": {
     "Disable Validation for Profile": ""
   },
-  "uss.disableValidation": {
-    "Disable Validation for Profile": ""
-  },
-  "jobs.disableValidation": {
-    "Disable Validation for Profile": ""
-  },
   "enableValidation": {
-    "Enable Validation for Profile": ""
-  },
-  "uss.enableValidation": {
-    "Enable Validation for Profile": ""
-  },
-  "jobs.enableValidation": {
     "Enable Validation for Profile": ""
   },
   "ssoLogin": {
     "Log in to Authentication Service": ""
   },
-  "uss.ssoLogin": {
-    "Log in to Authentication Service": ""
-  },
-  "jobs.ssoLogin": {
-    "Log in to Authentication Service": ""
-  },
   "ssoLogout": {
-    "Log out from Authentication Service": ""
-  },
-  "uss.ssoLogout": {
-    "Log out from Authentication Service": ""
-  },
-  "jobs.ssoLogout": {
     "Log out from Authentication Service": ""
   },
   "jobs.refreshJob": {
@@ -455,12 +425,6 @@
   "all.configInit": {
     "Initialize Team Configuration File": ""
   },
-  "createZoweSchema.reload.button": {
-    "Reload Window": ""
-  },
-  "createZoweSchema.reload.infoMessage": {
-    "Team Configuration file created. Location: {0}. \n Please reload your window.": ""
-  },
   "copyFile": {
     "Copy": ""
   },
@@ -472,21 +436,6 @@
   },
   "jobs.filterBy": {
     "Filter jobs...": ""
-  },
-  "ds.allPdsSort": {
-    "all PDS members in {0}": ""
-  },
-  "ds.singlePdsSort": {
-    "the PDS members in {0}": ""
-  },
-  "ds.selectFilterOpt": {
-    "Set a filter for {0}": ""
-  },
-  "ds.selectSortOpt": {
-    "Select a sorting option for {0}": ""
-  },
-  "jobs.selectSortOpt": {
-    "Select a sorting option for jobs in {0}": ""
   },
   "ds.filterBy": {
     "Filter PDS members...": ""
@@ -566,7 +515,7 @@
   "Profile validation failed for {0}.": "",
   "This profile is using basic authentication and does not support token authentication.": "",
   "Error getting supported tokenType value for profile {0}": "",
-  "Login to authentication service was successful.": "",
+  "Login to authentication service was successful for {0}.": "",
   "Unable to log in with {0}. {1}": "",
   "Logout from authentication service was successful for {0}.": "",
   "Unable to log out with {0}. {1}": "",
@@ -723,6 +672,7 @@
   "Descending": "",
   "Invalid job owner": "",
   "Invalid job prefix": "",
+  "Failed to parse a saved favorite. Attempted to parse: {0}": "",
   "EBCDIC": "",
   "z/OS default codepage": "",
   "Raw data representation": "",
@@ -885,7 +835,6 @@
   "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "",
   "Initializing profiles with data set favorites.": "",
   "No data set favorites found.": "",
-  "Invalid Data Sets favorite: {0}. Please check formatting of the zowe.ds.history 'favorites' settings in the {1} user settings.": "",
   "Error creating data set favorite node: {0} for profile {1}.": "",
   "Loading profile: {0} for data set favorites": "",
   "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}.\n                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n                    Would you like to do this now? {1}": "",

@@ -16,11 +16,13 @@ const defaultHeaders = { "Content-Type": "application/x-www-form-urlencoded" };
         }).then(r => r.json());
         const packageNls = {};
         const l10nBundle = {};
+        const l10nTemplate = require(__dirname + "/../l10n/bundle.l10n.json");
         for (const [k, v] of Object.entries(await fetch(exportResponse.result.url).then(r => r.json()))) {
             if (typeof v !== "string") {
                 packageNls[k] = Object.values(v)[0] || undefined;
             } else {
-                l10nBundle[k] = v || undefined;
+                const message = Object.keys(l10nTemplate).find(k2 => l10nTemplate[k2].message === k) || k;
+                l10nBundle[message] = v || undefined;
             }
         }
         fs.writeFileSync(`${__dirname}/../package.nls.${code}.json`, JSON.stringify(packageNls, null, 2));
