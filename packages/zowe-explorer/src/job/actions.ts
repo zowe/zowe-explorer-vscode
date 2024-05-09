@@ -22,6 +22,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import { SORT_DIRS, getDefaultUri, updateOpenFiles } from "../shared/utils";
 import { ZosJobsProvider } from "./ZosJobsProvider";
 import { JOB_SORT_OPTS } from "./utils";
+import * as contextually from "../shared/context";
 import * as globals from "../globals";
 import { TreeProviders } from "../shared/TreeProviders";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
@@ -568,5 +569,8 @@ export async function sortJobs(session: IZoweJobTreeNode, jobsProvider: ZosJobsP
 }
 
 export async function copyName(node: IZoweJobTreeNode): Promise<void> {
+    if (contextually.isJob(node) && node.job) {
+        return vscode.env.clipboard.writeText(`${node.job.jobname}(${node.job.jobid})`);
+    }
     return vscode.env.clipboard.writeText(node.label as string);
 }

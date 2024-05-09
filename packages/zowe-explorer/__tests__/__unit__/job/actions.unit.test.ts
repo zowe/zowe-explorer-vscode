@@ -1562,11 +1562,24 @@ describe("sortJobs function", () => {
 });
 
 describe("copyName function", () => {
-    it("copies the node label", async () => {
-        const node = new ZoweJobNode({ label: "JOBNAME(ID123456) - ACTIVE", collapsibleState: vscode.TreeItemCollapsibleState.None });
+    it("copies the job with format JobName(JobId)", async () => {
+        const node = new ZoweJobNode({ label: "JOBNAME(ID123456) - ACTIVE", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
+        node.job = {
+            jobname: "JOBNAME",
+            jobid: "ID123456",
+        } as any;
+        node.contextValue = globals.JOBS_JOB_CONTEXT;
         const writeTextSpy = jest.spyOn(vscode.env.clipboard, "writeText");
         await jobActions.copyName(node);
-        expect(writeTextSpy).toHaveBeenCalledWith("JOBNAME(ID123456) - ACTIVE");
+        expect(writeTextSpy).toHaveBeenCalledWith("JOBNAME(ID123456)");
+        writeTextSpy.mockRestore();
+    });
+
+    it("copies a node's label for spools and nodes with missing job objects", async () => {
+        const node = new ZoweSpoolNode({ label: "JES2:JESMSGLG(2)", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const writeTextSpy = jest.spyOn(vscode.env.clipboard, "writeText");
+        await jobActions.copyName(node);
+        expect(writeTextSpy).toHaveBeenCalledWith("JES2:JESMSGLG(2)");
         writeTextSpy.mockRestore();
     });
 });
