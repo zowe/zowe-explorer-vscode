@@ -1705,7 +1705,6 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
     });
 
     it("presents a confirmation dialog to the user when the file is unsaved", async () => {
-        const globalMocks = await createGlobalMocks();
         const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.openUSS = jest.fn();
         const editor = { document: { uri: { path: "/folder/encodingTest" } } } as vscode.TextEditor;
