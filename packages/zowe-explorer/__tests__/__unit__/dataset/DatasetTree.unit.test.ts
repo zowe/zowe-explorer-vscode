@@ -3416,7 +3416,7 @@ describe("Dataset Tree Unit Tests - Function openWithEncoding", () => {
             editor,
         });
         jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "text" });
-        vscode.window.activeTextEditor = editor; 
+        vscode.window.activeTextEditor = editor;
         const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand");
         await DatasetTree.prototype.openWithEncoding(node);
         expect(node.binary).toBe(false);

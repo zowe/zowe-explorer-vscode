@@ -1090,7 +1090,7 @@ describe("Shared utils unit tests - function confirmForUnsavedDoc", () => {
         const fakeNode = { pattern: "someuser.*" } as IZoweDatasetTreeNode;
         await expect(sharedUtils.confirmForUnsavedDoc(fakeNode)).resolves.toStrictEqual({
             actionConfirmed: false,
-            isUnsaved: false
+            isUnsaved: false,
         });
     });
 
@@ -1098,10 +1098,10 @@ describe("Shared utils unit tests - function confirmForUnsavedDoc", () => {
         const fakeNode = { openUSS: jest.fn() } as any as IZoweUSSTreeNode;
         await expect(sharedUtils.confirmForUnsavedDoc(fakeNode)).resolves.toStrictEqual({
             actionConfirmed: false,
-            isUnsaved: false
+            isUnsaved: false,
         });
     });
-    
+
     it("calls warningMessage when the editor for a file is dirty", async () => {
         vscode.window.visibleTextEditors = [
             {
@@ -1109,11 +1109,11 @@ describe("Shared utils unit tests - function confirmForUnsavedDoc", () => {
                     fileName: "fakeNode",
                     uri: {
                         fsPath: "/fakeNode",
-                        path: "/fakeNode"
+                        path: "/fakeNode",
                     } as any,
-                    isDirty: true
-                } as any
-            } as vscode.TextEditor
+                    isDirty: true,
+                } as any,
+            } as vscode.TextEditor,
         ];
         const fakeNode = { openUSS: jest.fn(), getUSSDocumentFilePath: jest.fn().mockReturnValue("/fakeNode") } as any as IZoweUSSTreeNode;
         const warnMessageMock = jest.spyOn(Gui, "warningMessage").mockResolvedValue("Confirm");

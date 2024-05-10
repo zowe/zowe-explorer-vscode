@@ -1717,7 +1717,7 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
             editor,
         });
         jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "text" });
-        vscode.window.activeTextEditor = editor; 
+        vscode.window.activeTextEditor = editor;
         const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand");
         await USSTree.prototype.openWithEncoding(node);
         expect(node.binary).toBe(false);
@@ -1731,7 +1731,7 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
 
         // case 2: user cancels encoding change
         (node.openUSS as any).mockClear();
-        executeCommandSpy.mockClear();        
+        executeCommandSpy.mockClear();
         jest.spyOn(sharedUtils, "confirmForUnsavedDoc").mockResolvedValueOnce({
             actionConfirmed: false,
             isUnsaved: true,
