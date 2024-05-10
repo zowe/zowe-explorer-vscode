@@ -1703,4 +1703,43 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
         expect(node.encoding).toBeUndefined();
         expect(node.openUSS).toHaveBeenCalledTimes(0);
     });
+
+    it("presents a confirmation dialog to the user when the file is unsaved", async () => {
+        const globalMocks = await createGlobalMocks();
+        const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        node.openUSS = jest.fn();
+        const editor = { document: { uri: { path: "/folder/encodingTest" } } } as vscode.TextEditor;
+
+        // case 1: user confirms encoding change
+        jest.spyOn(sharedUtils, "confirmForUnsavedDoc").mockResolvedValueOnce({
+            actionConfirmed: true,
+            isUnsaved: true,
+            editor,
+        });
+        jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "text" });
+        vscode.window.activeTextEditor = editor; 
+        const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand");
+        await USSTree.prototype.openWithEncoding(node);
+        expect(node.binary).toBe(false);
+        expect(node.encoding).toBe(null);
+        expect(node.openUSS).toHaveBeenCalledTimes(1);
+        expect(executeCommandSpy).toHaveBeenCalledWith("workbench.action.files.revert");
+
+        jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
+            getTag: jest.fn(),
+        } as any);
+
+        // case 2: user cancels encoding change
+        (node.openUSS as any).mockClear();
+        executeCommandSpy.mockClear();        
+        jest.spyOn(sharedUtils, "confirmForUnsavedDoc").mockResolvedValueOnce({
+            actionConfirmed: false,
+            isUnsaved: true,
+            editor,
+        });
+        jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "text" });
+        await USSTree.prototype.openWithEncoding(node);
+        expect(node.openUSS).not.toHaveBeenCalled();
+        expect(executeCommandSpy).not.toHaveBeenCalledWith("workbench.action.files.revert");
+    });
 });

@@ -3402,4 +3402,39 @@ describe("Dataset Tree Unit Tests - Function openWithEncoding", () => {
         expect(node.encoding).toBeUndefined();
         expect(node.openDs).toHaveBeenCalledTimes(0);
     });
+
+    it("presents a confirmation dialog to the user when the file is unsaved", async () => {
+        const globalMocks = await createGlobalMocks();
+        const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        node.openDs = jest.fn();
+        const editor = { document: { uri: { path: "/folder/encodingTest" } } } as vscode.TextEditor;
+
+        // case 1: user confirms encoding change
+        jest.spyOn(sharedUtils, "confirmForUnsavedDoc").mockResolvedValueOnce({
+            actionConfirmed: true,
+            isUnsaved: true,
+            editor,
+        });
+        jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "text" });
+        vscode.window.activeTextEditor = editor; 
+        const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand");
+        await DatasetTree.prototype.openWithEncoding(node);
+        expect(node.binary).toBe(false);
+        expect(node.encoding).toBe(null);
+        expect(node.openDs).toHaveBeenCalledTimes(1);
+        expect(executeCommandSpy).toHaveBeenCalledWith("workbench.action.files.revert");
+
+        // case 2: user cancels encoding change
+        (node.openDs as any).mockClear();
+        executeCommandSpy.mockClear();
+        jest.spyOn(sharedUtils, "confirmForUnsavedDoc").mockResolvedValueOnce({
+            actionConfirmed: false,
+            isUnsaved: true,
+            editor,
+        });
+        jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "text" });
+        await DatasetTree.prototype.openWithEncoding(node);
+        expect(node.openDs).not.toHaveBeenCalled();
+        expect(executeCommandSpy).not.toHaveBeenCalledWith("workbench.action.files.revert");
+    });
 });

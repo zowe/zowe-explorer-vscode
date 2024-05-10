@@ -36,7 +36,6 @@ import { markDocumentUnsaved } from "../utils/workspace";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { LocalStorageKey, ZoweLocalStorage } from "../utils/ZoweLocalStorage";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
-import { TreeProviders } from "./TreeProviders";
 import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 
 // Set up localization

@@ -29,11 +29,10 @@ import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { Gui, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, IZoweTreeNode, IZoweUSSTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { LocalStorageKey, ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
-import { TreeProviders } from "../../../src/shared/TreeProviders";
 
 jest.mock("fs");
 
@@ -1083,5 +1082,44 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         // receive added encoding in upper case (first entry)
         expect(setValueSpy).toBeCalledWith(LocalStorageKey.ENCODING_HISTORY, ["UTF-8", "IBM-123", "IBM-456", "IBM-789"]);
         expect(setValueSpy);
+    });
+});
+
+describe("Shared utils unit tests - function confirmForUnsavedDoc", () => {
+    it("returns false for boolean properties if data set node doesn't have getDsDocumentFilePath", async () => {
+        const fakeNode = { pattern: "someuser.*" } as IZoweDatasetTreeNode;
+        await expect(sharedUtils.confirmForUnsavedDoc(fakeNode)).resolves.toStrictEqual({
+            actionConfirmed: false,
+            isUnsaved: false
+        });
+    });
+
+    it("returns false for boolean properties if USS node doesn't have getUSSDocumentFilePath", async () => {
+        const fakeNode = { openUSS: jest.fn() } as any as IZoweUSSTreeNode;
+        await expect(sharedUtils.confirmForUnsavedDoc(fakeNode)).resolves.toStrictEqual({
+            actionConfirmed: false,
+            isUnsaved: false
+        });
+    });
+    
+    it("calls warningMessage when the editor for a file is dirty", async () => {
+        vscode.window.visibleTextEditors = [
+            {
+                document: {
+                    fileName: "fakeNode",
+                    uri: {
+                        fsPath: "/fakeNode",
+                        path: "/fakeNode"
+                    } as any,
+                    isDirty: true
+                } as any
+            } as vscode.TextEditor
+        ];
+        const fakeNode = { openUSS: jest.fn(), getUSSDocumentFilePath: jest.fn().mockReturnValue("/fakeNode") } as any as IZoweUSSTreeNode;
+        const warnMessageMock = jest.spyOn(Gui, "warningMessage").mockResolvedValue("Confirm");
+        const result = await sharedUtils.confirmForUnsavedDoc(fakeNode);
+        expect(result.actionConfirmed).toBe(true);
+        expect(result.isUnsaved).toBe(true);
+        expect(warnMessageMock).toHaveBeenCalled();
     });
 });
