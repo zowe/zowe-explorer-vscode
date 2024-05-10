@@ -33,6 +33,9 @@ import { Gui, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explo
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { LocalStorageKey, ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
+import { TreeProviders } from "../../../src/shared/TreeProviders";
+
+jest.mock("fs");
 
 async function createGlobalMocks() {
     const newMocks = {
@@ -194,7 +197,7 @@ describe("Negative testing for ZoweJobTreeNode", () => {
     });
 });
 
-describe("Test uploadContents", () => {
+describe("Test uploadContent", () => {
     it("should test with uss node that new API method is called if it exists", async () => {
         const putContent = jest.fn();
         ZoweExplorerApiRegister.getUssApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>(
@@ -217,7 +220,7 @@ describe("Test uploadContents", () => {
                 },
             } as any
         );
-        expect(ZoweExplorerApiRegister.getUssApi(null).putContent).toBeCalled();
+        expect(ZoweExplorerApiRegister.getUssApi(null).putContent).toBeCalledWith("whatever", null, expect.objectContaining({ encoding: 123 }));
     });
 
     it("should test with uss node that old API method is called", async () => {
@@ -272,7 +275,19 @@ describe("Test uploadContents", () => {
                 },
             } as any
         );
-        expect(ZoweExplorerApiRegister.getMvsApi(null).putContents).toBeCalled();
+        expect(ZoweExplorerApiRegister.getMvsApi(null).putContents).toBeCalledWith("whatever", null, expect.objectContaining({ encoding: codepage }));
+    });
+
+    it("should test with missing node that uploadContent throws error", async () => {
+        await expect(
+            sharedUtils.uploadContent(
+                null,
+                {
+                    fileName: "whatever",
+                } as any,
+                null
+            )
+        ).rejects.toThrow("Could not find whatever in tree");
     });
 });
 
@@ -685,6 +700,90 @@ describe("Shared utils unit tests - function sortTreeItems", () => {
             { label: "W", contextValue: "some_other_context" },
             { label: "Z", contextValue: "some_other_context" },
         ]);
+    });
+});
+
+describe("Shared utils unit tests - function compareFileContent", () => {
+    beforeEach(() => {
+        jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
+    it("should test with uss node that getContents is called", async () => {
+        const getContents = jest.fn();
+        ZoweExplorerApiRegister.getUssApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>(
+            (profile: imperative.IProfileLoaded) => {
+                return {
+                    getContents,
+                };
+            }
+        );
+
+        await sharedUtils.compareFileContent(
+            {
+                fileName: "whatever",
+                getText: jest.fn().mockReturnValue(""),
+            } as any,
+            new ZoweUSSNode({
+                label: "",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: {
+                    profile: {
+                        encoding: 123,
+                    },
+                } as any,
+            }),
+            null
+        );
+        expect(ZoweExplorerApiRegister.getUssApi(null).getContents).toBeCalledWith("", expect.objectContaining({ encoding: 123 }));
+    });
+
+    it("should test with data set node that getContents is called", async () => {
+        const getContents = jest.fn();
+        ZoweExplorerApiRegister.getMvsApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getMvsApi>>(
+            (profile: imperative.IProfileLoaded) => {
+                return {
+                    getContents,
+                };
+            }
+        );
+        jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
+
+        const session = createISessionWithoutCredentials();
+        const imperativeProfile = createIProfile();
+        const codepage = 285;
+        imperativeProfile.profile.encoding = codepage;
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        await sharedUtils.compareFileContent(
+            {
+                fileName: "whatever",
+                getText: jest.fn().mockReturnValue(""),
+            } as any,
+            datasetSessionNode,
+            null,
+            {
+                profile: {
+                    encoding: codepage,
+                },
+            } as any
+        );
+        expect(ZoweExplorerApiRegister.getMvsApi(null).getContents).toBeCalledWith(null, expect.objectContaining({ encoding: codepage }));
+    });
+
+    it("should test with missing node that compareFileContent throws error", async () => {
+        await expect(
+            sharedUtils.compareFileContent(
+                {
+                    fileName: "whatever",
+                    uri: { fsPath: "whatever" },
+                } as any,
+                null,
+                null
+            )
+        ).rejects.toThrow("Could not find whatever in tree");
     });
 });
 

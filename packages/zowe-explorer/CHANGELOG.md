@@ -10,8 +10,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Updated sorting of PDS members to show items without stats at bottom of list [#2660](https://github.com/zowe/vscode-extension-for-zowe/issues/2660)
 - Added support to view the Encoding history for MVS and Dataset in the History View [#2776](https://github.com/zowe/zowe-explorer-vscode/pull/2776)
 - Updated MVS view progress indicator for entering a filter search. [#2181](https://github.com/zowe/zowe-explorer-vscode/issues/2181)
-- Added error handling for when the default credential manager is unable to intialize [#2811](https://github.com/zowe/zowe-explorer-vscode/issues/2811)
+- Added error handling for when the default credential manager is unable to initialize [#2811](https://github.com/zowe/zowe-explorer-vscode/issues/2811)
 - Provide users with the option to upload binary files by implementing a "Upload Files (Binary)" right-click option in the USS tree. [#1956](https://github.com/zowe/zowe-explorer-vscode/issues/1956)
+- Added Status bar to indicate that data is being pulled from mainframe. [#2484](https://github.com/zowe/zowe-explorer-vscode/issues/2484)
+- Added PEM certificate support as an authentication method for logging into the API ML. [#2621](https://github.com/zowe/zowe-explorer-vscode/issues/2621)
 
 ### Bug fixes
 
@@ -26,10 +28,23 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
   - `Zowe Explorer: Stop Polling`
 - Duplicated profile schema writing on repeated Team Config file initialization:
   [#2828](https://github.com/zowe/zowe-explorer-vscode/pull/2828)
+- Fixed issue where saving changes to favorited PDS member fails when custom temp folder is set on Windows. [#2880](https://github.com/zowe/zowe-explorer-vscode/issues/2880)
+
+## `2.15.4`
+
+### Bug fixes
+
+- Fixed issue where new PDS member node cannot be re-opened unless you pull from mainframe. [#2857](https://github.com/zowe/zowe-explorer-vscode/issues/2857)
+- Fixed issue where expanding a favorited PDS resulted in an error message. [#2873](https://github.com/zowe/zowe-explorer-vscode/issues/2873)
 
 ## `2.15.3`
 
-- Fixed error that could occur when listing data set members that contain control characters in the name [#2807](https://github.com/zowe/zowe-explorer-vscode/pull/2807)
+### Bug fixes
+
+- Fixed error that could occur when listing data set members that contain control characters in the name. [#2807](https://github.com/zowe/zowe-explorer-vscode/pull/2807)
+- Fixed issue where saving changes to a favorited data set or USS file could fail when it is opened outside of favorites. [#2820](https://github.com/zowe/vscode-extension-for-zowe/pull/2820)
+- Moved schema warnings into the log file (rather than a UI message) to minimize end-user disruption. [#2860](https://github.com/zowe/zowe-explorer-vscode/pull/2860)
+- Fixed duplicated profile schema writing with repeated Team Config file initialization. [#2828](https://github.com/zowe/zowe-explorer-vscode/pull/2828)
 
 ## `2.15.2`
 

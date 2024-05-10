@@ -36,17 +36,13 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // /**
 //  * Moves temp folder to user defined location in preferences
-//  * @param previousTempPath temp path settings value before updated by user
+//  * @param previousTempPath Zowe temp folder value before updated by user
 //  * @param currentTempPath temp path settings value after updated by user
 //  */
 export async function moveTempFolder(previousTempPath: string, currentTempPath: string): Promise<void> {
     ZoweLogger.trace("TempFolder.moveTempFolder called.");
     // Re-define globals with updated path
     globals.defineGlobals(currentTempPath);
-
-    if (previousTempPath === "") {
-        previousTempPath = path.join(__dirname, "..", "..", "resources");
-    }
 
     // Make certain that "temp" folder is cleared
     await cleanTempDir();
@@ -61,10 +57,9 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
             await errorHandling(err, null, localize("moveTempFolder.error", "Error encountered when creating temporary folder!"));
         }
     }
-    const previousTemp = path.join(previousTempPath, "temp");
     try {
         // If source and destination path are same, exit
-        if (previousTemp === globals.ZOWETEMPFOLDER) {
+        if (previousTempPath === globals.ZOWETEMPFOLDER) {
             return;
         }
 
@@ -72,11 +67,11 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
         // If a second instance has already moved the temp folder, exit
         // Ideally, `moveSync()` would alert user if path doesn't exist.
         // However when supporting "Multiple Instances", might not be possible.
-        if (!fs.existsSync(previousTemp)) {
+        if (!fs.existsSync(previousTempPath)) {
             return;
         }
 
-        moveSync(previousTemp, globals.ZOWETEMPFOLDER, { overwrite: true });
+        moveSync(previousTempPath, globals.ZOWETEMPFOLDER, { overwrite: true });
     } catch (err) {
         ZoweLogger.error("Error moving temporary folder! " + JSON.stringify(err));
         if (err instanceof Error) {
