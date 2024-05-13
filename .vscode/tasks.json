@@ -110,7 +110,7 @@
       "options": {
         "cwd": "${workspaceFolder}/scripts"
       },
-      "command": "ts-node create-env.ts"
+      "command": "tsx create-env.ts"
     },
     {
       "label": "Build",
@@ -132,7 +132,7 @@
       "options": {
         "cwd": "${workspaceFolder}/scripts"
       },
-      "command": "ts-node clean-env.ts"
+      "command": "tsx clean-env.ts"
     }
   ]
 }
