@@ -98,7 +98,7 @@ export async function confirmForUnsavedDoc(node: IZoweDatasetTreeNode | IZoweUSS
 
     const confirmItem = localize("unsavedNode.confirmRefresh", "Confirm");
     // Return result of confirmation prompt if editor is present and the file is unsaved
-    if (editor && editor.document.isDirty) {
+    if (editor?.document.isDirty) {
         return {
             actionConfirmed:
                 (await Gui.warningMessage(
