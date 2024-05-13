@@ -171,12 +171,12 @@
       },
       {
         "command": "zowe.uss.disableValidation",
-        "title": "%uss.disableValidation%",
+        "title": "%disableValidation%",
         "category": "Zowe Explorer"
       },
       {
         "command": "zowe.jobs.disableValidation",
-        "title": "%jobs.disableValidation%",
+        "title": "%disableValidation%",
         "category": "Zowe Explorer"
       },
       {
@@ -186,12 +186,12 @@
       },
       {
         "command": "zowe.uss.enableValidation",
-        "title": "%uss.enableValidation%",
+        "title": "%enableValidation%",
         "category": "Zowe Explorer"
       },
       {
         "command": "zowe.jobs.enableValidation",
-        "title": "%jobs.enableValidation%",
+        "title": "%enableValidation%",
         "category": "Zowe Explorer"
       },
       {
@@ -201,12 +201,12 @@
       },
       {
         "command": "zowe.uss.ssoLogin",
-        "title": "%uss.ssoLogin%",
+        "title": "%ssoLogin%",
         "category": "Zowe Explorer"
       },
       {
         "command": "zowe.jobs.ssoLogin",
-        "title": "%jobs.ssoLogin%",
+        "title": "%ssoLogin%",
         "category": "Zowe Explorer"
       },
       {
@@ -216,12 +216,12 @@
       },
       {
         "command": "zowe.uss.ssoLogout",
-        "title": "%uss.ssoLogout%",
+        "title": "%ssoLogout%",
         "category": "Zowe Explorer"
       },
       {
         "command": "zowe.jobs.ssoLogout",
-        "title": "%jobs.ssoLogout%",
+        "title": "%ssoLogout%",
         "category": "Zowe Explorer"
       },
       {
@@ -260,7 +260,7 @@
       },
       {
         "command": "zowe.uss.addFavorite",
-        "title": "%uss.addFavorite%",
+        "title": "%addFavorite%",
         "category": "Zowe Explorer",
         "icon": {
           "dark": "./resources/dark/favorites-open-dark.svg",
@@ -456,7 +456,7 @@
       },
       {
         "command": "zowe.uss.removeFavorite",
-        "title": "%uss.removeFavorite%",
+        "title": "%removeFavorite%",
         "category": "Zowe Explorer",
         "icon": {
           "dark": "./resources/dark/favorites-close-dark.svg",
@@ -2086,7 +2086,7 @@
     "pretty": "prettier --write .",
     "createTestProfileData": "ts-node ./scripts/createTestProfileData.ts",
     "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts",
-    "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src"
+    "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src && node ./scripts/generatePoeditorJson.js"
   },
   "engines": {
     "vscode": "^1.79.0"

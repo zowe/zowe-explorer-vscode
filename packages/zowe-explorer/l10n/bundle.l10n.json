@@ -114,7 +114,12 @@
       "Service profile name"
     ]
   },
-  "Login to authentication service was successful.": "Login to authentication service was successful.",
+  "Login to authentication service was successful for {0}./Service profile name": {
+    "message": "Login to authentication service was successful for {0}.",
+    "comment": [
+      "Service profile name"
+    ]
+  },
   "Unable to log in with {0}. {1}/Service profile nameError message": {
     "message": "Unable to log in with {0}. {1}",
     "comment": [

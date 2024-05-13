@@ -195,6 +195,7 @@ As a result, VS Code extensions like Zowe Explorer, Zowe Explorer CICS Extension
 
 - For the complete Zowe Explorer documentation, see [Zowe Docs](https://docs.zowe.org/stable/user-guide/ze-install.html).
 - Join the **#zowe-explorer** channel on [Slack](https://openmainframeproject.slack.com/) to stay in touch with the Zowe community.
+- To translate Zowe Explorer into your language, join our [POEditor project](https://poeditor.com/join/project/Siy3KCNFKk).
 
 ## Sample use cases extended
 

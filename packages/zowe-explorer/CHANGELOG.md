@@ -7,6 +7,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### New features and enhancements
 
 - Renamed `isHomeProfile` context helper function to `isGlobalProfile` for clarity.
+- Set up [POEditor project](https://poeditor.com/join/project/Siy3KCNFKk) for contributing translations and cleaned up redundant localization strings. [#546](https://github.com/zowe/zowe-explorer-vscode/issues/546)
 
 ### Bug fixes
 
