@@ -7,7 +7,7 @@
   "author": "Zowe",
   "license": "EPL-2.0",
   "repository": {
-    "url": "https://github.com/zowe/vscode-extension-for-zowe"
+    "url": "https://github.com/zowe/zowe-explorer-vscode"
   },
   "icon": "resources/zowe-icon-color.png",
   "keywords": [
@@ -591,6 +591,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.uss.uploadDialogBinary",
+        "title": "%uss.uploadDialogBinary%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.uss.text",
         "title": "%uss.text%",
         "category": "Zowe Explorer"
@@ -946,14 +951,19 @@
           "group": "001_zowe_ussCreate@3"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/ && !listMultiSelection",
+          "command": "zowe.uss.uploadDialogBinary",
+          "group": "001_zowe_ussCreate@4"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
           "command": "zowe.uss.copyUssFile",
-          "group": "001_zowe_ussCreate@4"
+          "group": "001_zowe_ussCreate@5"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*|ussSession.*_isFilterSearch)/",
           "command": "zowe.uss.pasteUssFile",
-          "group": "001_zowe_ussCreate@5"
+          "group": "001_zowe_ussCreate@6"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/ && !listMultiSelection",
@@ -1733,6 +1743,34 @@
         {
           "command": "zowe.uss.openWithEncoding",
           "when": "never"
+        },
+        {
+          "command": "zowe.jobs.cancelJob",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.filterJobs",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.filterBy",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.sortBy",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.sortBy",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.startPolling",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.stopPolling",
+          "when": "never"
         }
       ]
     },
@@ -2016,7 +2054,6 @@
     "@types/fs-extra": "^7.0.0",
     "@types/promise-queue": "^2.2.0",
     "@types/selenium-webdriver": "^3.0.4",
-    "@types/yargs": "^11.0.0",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
@@ -2033,11 +2070,8 @@
     "gulp-fs": "^0.0.2",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-typescript": "^5.0.1",
-    "jsdoc": "^3.6.3",
-    "jsdom": "^16.0.0",
     "log4js": "^6.4.6",
     "markdownlint-cli": "^0.33.0",
-    "mem": "^6.0.1",
     "run-sequence": "^2.2.1",
     "selenium-webdriver": "^3.6.0",
     "sinon": "^6.1.0"

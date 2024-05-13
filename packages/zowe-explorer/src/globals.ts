@@ -27,7 +27,6 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // Globals
-export let SETTINGS_TEMP_FOLDER_LOCATION;
 export let ZOWETEMPFOLDER: string;
 export let ZOWE_TMP_FOLDER: string;
 export let USS_DIR: string;
@@ -35,7 +34,7 @@ export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
 export let ISTHEIA = false; // set during activate
 export let LOG: imperative.Logger;
-export const COMMAND_COUNT = 119;
+export const COMMAND_COUNT = 121;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
 export const MS_PER_SEC = 1000;
@@ -328,9 +327,8 @@ export function defineGlobals(tempPath: string | undefined): void {
         ZoweLogger.info(localize("globals.defineGlobals.isTheia", "Zowe Explorer is running in Theia environment."));
     }
 
-    SETTINGS_TEMP_FOLDER_LOCATION = tempPath;
     // Set temp path & folder paths
-    ZOWETEMPFOLDER = tempPath ? path.join(tempPath, "temp") : path.join(__dirname, "..", "..", "resources", "temp");
+    ZOWETEMPFOLDER = vscode.Uri.file(tempPath ? path.join(tempPath, "temp") : path.join(__dirname, "..", "..", "resources", "temp")).fsPath;
     ZoweLogger.info(localize("globals.defineGlobals.tempFolder", "Zowe Explorer's temp folder is located at {0}", ZOWETEMPFOLDER));
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");

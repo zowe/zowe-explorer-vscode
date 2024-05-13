@@ -5,7 +5,7 @@
   "author": "Zowe",
   "license": "EPL-2.0",
   "repository": {
-    "url": "https://github.com/zowe/vscode-extension-for-zowe"
+    "url": "https://github.com/zowe/zowe-explorer-vscode"
   },
   "private": true,
   "workspaces": [
@@ -49,6 +49,10 @@
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11",
     "yarn": "1.22.19"
+  },
+  "resolutions": {
+    "glob-parent": "^5.1.2",
+    "xml2js": "^0.5.0"
   },
   "scripts": {
     "clean": "yarn workspaces run clean",

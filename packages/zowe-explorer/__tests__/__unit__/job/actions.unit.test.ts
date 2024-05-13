@@ -45,6 +45,7 @@ import { ZosJobsProvider } from "../../../src/job/ZosJobsProvider";
 import { ProfileManagement } from "../../../src/utils/ProfileManagement";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { mocked } from "../../../__mocks__/mockUtils";
+import { TreeViewUtils } from "../../../src/utils/TreeViewUtils";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -59,7 +60,7 @@ function createGlobalMocks() {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             session: createISession(),
             profile: createIProfile(),
-            job: settingJobObjects(createIJobObject(), "ZOWEUSR1", "JOB045123", "ABEND S222"),
+            job: settingJobObjects(createIJobObject(), "ZOWEUSR1", "JOB045123", "ABEND S222", "2024-03-12T10:50:08.950Z"),
         }),
         JobNode2: new ZoweJobNode({
             label: "testProfile",
@@ -73,7 +74,7 @@ function createGlobalMocks() {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             session: createISession(),
             profile: createIProfile(),
-            job: settingJobObjects(createIJobObject(), "ZOWEUSR2", "JOB045125", "CC 0000"),
+            job: settingJobObjects(createIJobObject(), "ZOWEUSR2", "JOB045125", "CC 0000", "2024-03-12T08:30:08.950Z"),
         }),
         mockJobArray: [],
         testJobsTree: null as any,
@@ -97,7 +98,7 @@ function createGlobalMocks() {
     Object.defineProperty(sharedUtils, "getDefaultUri", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showWarningMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "IssueCommand", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.IssueCommand, "issueSimple", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zowe.IssueCommand, "issue", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showOpenDialog", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "CancelJobs", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.CancelJobs, "cancelJobForJob", { value: jest.fn(), configurable: true });
@@ -128,14 +129,16 @@ function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(TreeViewUtils, "expandNode", { value: jest.fn(), configurable: true });
     Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
         value: jest.fn().mockReturnValue([newMocks.imperativeProfile.name]),
         configurable: true,
     });
-    function settingJobObjects(job: zowe.IJob, setjobname: string, setjobid: string, setjobreturncode: string): zowe.IJob {
+    function settingJobObjects(job: zowe.IJob, setjobname: string, setjobid: string, setjobreturncode: string, datecompleted?: string): zowe.IJob {
         job.jobname = setjobname;
         job.jobid = setjobid;
         job.retcode = setjobreturncode;
+        job["exec-ended"] = datecompleted;
         return job;
     }
 
@@ -201,7 +204,7 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
             job: blockMocks.iJob,
         });
 
-        mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
+        mocked(zowe.IssueCommand.issue).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
@@ -218,7 +221,7 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
             session: blockMocks.session,
             profile: blockMocks.imperativeProfile,
         });
-        mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
+        mocked(zowe.IssueCommand.issue).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
@@ -240,7 +243,7 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
         });
 
         mocked(vscode.window.showInputBox).mockResolvedValue("modify");
-        mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
+        mocked(zowe.IssueCommand.issue).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
@@ -258,7 +261,7 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
             profile: blockMocks.imperativeProfile,
         });
         mocked(vscode.window.showInputBox).mockResolvedValue("modify");
-        mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
+        mocked(zowe.IssueCommand.issue).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
@@ -1054,108 +1057,110 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
 });
 
 describe("focusing on a job in the tree view", () => {
-    it("should focus on the job in the existing tree view session", async () => {
-        // arrange
+    function createBlockMocks() {
         const submittedJob = createIJobObject();
         const profile = createIProfile();
         const session = createISessionWithoutCredentials();
         const existingJobSession = createJobSessionNode(session, profile);
+        const newJobSession = createJobSessionNode(session, profile);
         const datasetSessionName = existingJobSession.label as string;
-        const jobTree = createTreeView();
-        const jobTreeProvider = createJobsTree(session, submittedJob, profile, jobTree);
-        jobTreeProvider.mSessionNodes.push(existingJobSession);
         const submittedJobNode = new ZoweJobNode({
             label: submittedJob.jobid,
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: existingJobSession,
-            session,
-            profile,
+            session: session,
+            profile: profile,
             job: submittedJob,
         });
-        const updatedJobs = [submittedJobNode];
-        existingJobSession.getChildren = jest.fn();
-        mocked(existingJobSession.getChildren).mockReturnValueOnce(Promise.resolve(updatedJobs));
+        const jobTree = createTreeView();
+        const jobTreeProvider = createJobsTree(session, submittedJob, profile, jobTree);
+
+        return {
+            submittedJob,
+            profile,
+            session,
+            existingJobSession,
+            newJobSession,
+            datasetSessionName,
+            submittedJobNode,
+            jobTreeProvider,
+        };
+    }
+
+    it("should focus on the job in the existing tree view session", async () => {
+        // arrange
+        const blockMocks = createBlockMocks();
+        blockMocks.jobTreeProvider.mSessionNodes.push(blockMocks.existingJobSession);
+        const updatedJobs = [blockMocks.submittedJobNode];
+        blockMocks.existingJobSession.getChildren = jest.fn();
+        mocked(blockMocks.existingJobSession.getChildren).mockReturnValueOnce(Promise.resolve(updatedJobs));
         // act
-        await jobActions.focusOnJob(jobTreeProvider, datasetSessionName, submittedJob.jobid);
+        await jobActions.focusOnJob(blockMocks.jobTreeProvider, blockMocks.datasetSessionName, blockMocks.submittedJob.jobid);
         // assert
-        expect(mocked(jobTreeProvider.addSession)).not.toHaveBeenCalled();
-        expect(mocked(jobTreeProvider.refreshElement)).toHaveBeenCalledWith(existingJobSession);
+        expect(mocked(blockMocks.jobTreeProvider.addSession)).not.toHaveBeenCalled();
+        expect(mocked(blockMocks.jobTreeProvider.refreshElement)).toHaveBeenCalledWith(blockMocks.existingJobSession);
         // comparison between tree views is not working properly
         // const expectedTreeView = jobTree;
-        const expectedTreeView = expect.anything();
-        expect(mocked(jobTreeProvider.setItem)).toHaveBeenCalledWith(expectedTreeView, submittedJobNode);
     });
     it("should add a new tree view session and focus on the job under it", async () => {
         // arrange
-        const submittedJob = createIJobObject();
-        const profile = createIProfile();
-        const session = createISessionWithoutCredentials();
-        const newJobSession = createJobSessionNode(session, profile);
-        const datasetSessionName = newJobSession.label as string;
-        const jobTree = createTreeView();
-        const jobTreeProvider = createJobsTree(session, submittedJob, profile, jobTree);
-        mocked(jobTreeProvider.addSession).mockImplementationOnce(() => {
-            jobTreeProvider.mSessionNodes.push(newJobSession);
+        const blockMocks = createBlockMocks();
+        mocked(blockMocks.jobTreeProvider.addSession).mockImplementationOnce(() => {
+            blockMocks.jobTreeProvider.mSessionNodes.push(blockMocks.newJobSession);
         });
-        const submittedJobNode = new ZoweJobNode({
-            label: submittedJob.jobid,
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            parentNode: newJobSession,
-            session,
-            profile,
-            job: submittedJob,
-        });
-        const updatedJobs = [submittedJobNode];
-        newJobSession.getChildren = jest.fn().mockReturnValueOnce(Promise.resolve(updatedJobs));
+        const updatedJobs = [blockMocks.submittedJobNode];
+        blockMocks.newJobSession.getChildren = jest.fn().mockReturnValueOnce(Promise.resolve(updatedJobs));
         // act
-        await jobActions.focusOnJob(jobTreeProvider, datasetSessionName, submittedJob.jobid);
-        expect((newJobSession as IZoweJobTreeNode).filtered).toBe(true);
+        await jobActions.focusOnJob(blockMocks.jobTreeProvider, blockMocks.datasetSessionName, blockMocks.submittedJob.jobid);
+        expect((blockMocks.newJobSession as IZoweJobTreeNode).filtered).toBe(true);
         // assert
-        expect(mocked(jobTreeProvider.addSession)).toHaveBeenCalledWith(datasetSessionName);
-        expect(mocked(jobTreeProvider.refreshElement)).toHaveBeenCalledWith(newJobSession);
+        expect(mocked(blockMocks.jobTreeProvider.addSession)).toHaveBeenCalledWith(blockMocks.datasetSessionName);
+        expect(mocked(blockMocks.jobTreeProvider.refreshElement)).toHaveBeenCalledWith(blockMocks.newJobSession);
         // comparison between tree views is not working properly
         // const expectedTreeView = jobTree;
-        const expectedTreeView = expect.anything();
-        expect(mocked(jobTreeProvider.setItem)).toHaveBeenCalledWith(expectedTreeView, submittedJobNode);
     });
     it("should handle error focusing on the job", async () => {
         // arrange
-        const submittedJob = createIJobObject();
-        const profile = createIProfile();
-        const session = createISessionWithoutCredentials();
-        const existingJobSession = createJobSessionNode(session, profile);
-        const datasetSessionName = existingJobSession.label as string;
-        const jobTree = createTreeView();
-        const jobTreeProvider = createJobsTree(session, submittedJob, profile, jobTree);
-        jobTreeProvider.mSessionNodes.push(existingJobSession);
+        const blockMocks = createBlockMocks();
+        blockMocks.jobTreeProvider.mSessionNodes.push(blockMocks.existingJobSession);
         const testError = new Error("focusOnJob failed");
-        jest.spyOn(jobTreeProvider, "refreshElement").mockImplementationOnce(() => {
+        jest.spyOn(blockMocks.jobTreeProvider, "refreshElement").mockImplementationOnce(() => {
             throw testError;
         });
         // act
-        await jobActions.focusOnJob(jobTreeProvider, datasetSessionName, submittedJob.jobid);
+        await jobActions.focusOnJob(blockMocks.jobTreeProvider, blockMocks.datasetSessionName, blockMocks.submittedJob.jobid);
         // assert
-        expect(mocked(jobTreeProvider.refreshElement)).toHaveBeenCalledWith(existingJobSession);
+        expect(mocked(blockMocks.jobTreeProvider.refreshElement)).toHaveBeenCalledWith(blockMocks.existingJobSession);
         expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
         expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
     });
     it("should handle error adding a new tree view session", async () => {
         // arrange
-        const submittedJob = createIJobObject();
-        const profile = createIProfile();
-        const session = createISessionWithoutCredentials();
-        const newJobSession = createJobSessionNode(session, profile);
-        const datasetSessionName = newJobSession.label as string;
-        const jobTree = createTreeView();
-        const jobTreeProvider = createJobsTree(session, submittedJob, profile, jobTree);
+        const blockMocks = createBlockMocks();
         const testError = new Error("focusOnJob failed");
-        jest.spyOn(jobTreeProvider, "addSession").mockRejectedValueOnce(testError);
+        jest.spyOn(blockMocks.jobTreeProvider, "addSession").mockRejectedValueOnce(testError);
         // act
-        await jobActions.focusOnJob(jobTreeProvider, datasetSessionName, submittedJob.jobid);
+        await jobActions.focusOnJob(blockMocks.jobTreeProvider, blockMocks.datasetSessionName, blockMocks.submittedJob.jobid);
         // assert
-        expect(mocked(jobTreeProvider.addSession)).toHaveBeenCalledWith(datasetSessionName);
+        expect(mocked(blockMocks.jobTreeProvider.addSession)).toHaveBeenCalledWith(blockMocks.datasetSessionName);
         expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
         expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
+    });
+
+    it("should handle error on clicking the hyperlink of job submitted", async () => {
+        // arrange
+        const blockMocks = createBlockMocks();
+        blockMocks.existingJobSession.children.push(blockMocks.submittedJobNode);
+        blockMocks.jobTreeProvider.mSessionNodes.push(blockMocks.existingJobSession);
+        const updatedJobs = [blockMocks.submittedJobNode];
+        blockMocks.existingJobSession.getChildren = jest.fn();
+        mocked(blockMocks.existingJobSession.getChildren).mockReturnValueOnce(Promise.resolve(updatedJobs));
+        // act
+        await jobActions.focusOnJob(blockMocks.jobTreeProvider, blockMocks.datasetSessionName, blockMocks.submittedJob.jobid);
+        // assert
+        expect(mocked(blockMocks.jobTreeProvider.addSession)).not.toHaveBeenCalled();
+        expect(mocked(blockMocks.jobTreeProvider.refreshElement)).toHaveBeenCalledWith(blockMocks.existingJobSession);
+        expect(TreeViewUtils.expandNode).toHaveBeenCalled();
     });
 });
 
@@ -1516,6 +1521,26 @@ describe("sortJobs function", () => {
         expect(sortbyretcodespy).toBeCalledWith(testtree.mSessionNodes[0]);
         expect(sortbyretcodespy).toHaveBeenCalled();
         expect(sortbyretcodespy.mock.calls[0][0].children).toStrictEqual(expected.mSessionNodes[0].children);
+    });
+
+    it("sort by date completed", async () => {
+        const globalMocks = createGlobalMocks();
+        const testtree = new ZosJobsProvider();
+        const expected = new ZosJobsProvider();
+        testtree.mSessionNodes[0].sort = {
+            method: JobSortOpts.DateCompleted,
+            direction: SortDirection.Ascending,
+        };
+        testtree.mSessionNodes[0].children = [...[globalMocks.mockJobArray[0], globalMocks.mockJobArray[1], globalMocks.mockJobArray[2]]];
+        expected.mSessionNodes[0].children = [...[globalMocks.mockJobArray[2], globalMocks.mockJobArray[0], globalMocks.mockJobArray[1]]];
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce({ label: "$(calendar) Date Completed" });
+        const sortbynamespy = jest.spyOn(ZosJobsProvider.prototype, "sortBy");
+        //act
+        await jobActions.sortJobs(testtree.mSessionNodes[0], testtree);
+        //asert
+        expect(sortbynamespy).toBeCalledWith(testtree.mSessionNodes[0]);
+        expect(sortbynamespy).toHaveBeenCalled();
+        expect(sortbynamespy.mock.calls[0][0].children).toStrictEqual(expected.mSessionNodes[0].children);
     });
 
     it("updates sort options after selecting sort direction; returns user to sort selection", async () => {

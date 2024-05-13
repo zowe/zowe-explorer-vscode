@@ -6,7 +6,10 @@
   "author": "Zowe",
   "license": "EPL-2.0",
   "repository": {
-    "url": "https://github.com/zowe/vscode-extension-for-zowe"
+    "url": "https://github.com/zowe/zowe-explorer-vscode"
+  },
+  "publishConfig": {
+    "provenance": true
   },
   "main": "lib/index.js",
   "files": [

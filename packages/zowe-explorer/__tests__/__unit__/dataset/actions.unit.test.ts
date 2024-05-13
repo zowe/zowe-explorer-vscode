@@ -2519,7 +2519,7 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
             },
         });
 
-        await dsActions.hMigrateDataSet(node);
+        await dsActions.hMigrateDataSet(blockMocks.testDatasetTree, node);
 
         expect(migrateSpy).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
@@ -2539,7 +2539,7 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
         });
         node.contextValue = globals.DS_DS_CONTEXT;
 
-        await dsActions.hMigrateDataSet(node);
+        await dsActions.hMigrateDataSet(blockMocks.testDatasetTree, node);
 
         expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
     });
@@ -2575,7 +2575,7 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
             },
         });
 
-        await dsActions.hMigrateDataSet(node);
+        await dsActions.hMigrateDataSet(blockMocks.testDatasetTree, node);
 
         expect(migrateSpy).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
@@ -2633,7 +2633,7 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
             },
         });
 
-        await dsActions.hRecallDataSet(node);
+        await dsActions.hRecallDataSet(blockMocks.testDatasetTree, node);
 
         expect(recallSpy).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
@@ -2671,7 +2671,7 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
             },
         });
 
-        await dsActions.hRecallDataSet(node);
+        await dsActions.hRecallDataSet(blockMocks.testDatasetTree, node);
 
         expect(recallSpy).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();

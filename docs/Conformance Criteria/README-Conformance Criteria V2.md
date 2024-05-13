@@ -98,7 +98,7 @@ General conformance criteria for all extensions that add new capabilities to Zow
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
    <th></th>
-   <td><b>Error message consistency:</b> Extension follows the recommended error message format indicated in the <a href=https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/extenders/Error%20Handling.md>Zowe Explorer extensibility documentation</a> to provide a consistent user experience with Zowe Explorer.</td>
+   <td><b>Error message consistency:</b> Extension follows the recommended error message format indicated in the <a href=https://github.com/zowe/zowe-explorer-vscode/blob/main/docs/extenders/Error%20Handling.md>Zowe Explorer extensibility documentation</a> to provide a consistent user experience with Zowe Explorer.</td>
  </tr>
 
  <tr>
@@ -178,7 +178,7 @@ Criteria for VS Code extensions that want to access the same Zowe CLI profiles t
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>Zowe Extender access:</b> Extension accesses the shared Zowe Explorer profiles cache via `ZoweExplorerApi.IApiRegisterClient.getExplorerExtenderApi()` API as documented in the <a href=https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/README-Extending.md#using-the-zowe-explorer-profilescache-for-an-extenders-own-unrelated-profiles>Zowe Explorer extensibility documentation.</td>
+   <td><b>Zowe Extender access:</b> Extension accesses the shared Zowe Explorer profiles cache via `ZoweExplorerApi.IApiRegisterClient.getExplorerExtenderApi()` API as documented in the <a href=https://github.com/zowe/zowe-explorer-vscode/blob/main/docs/README-Extending.md#using-the-zowe-explorer-profilescache-for-an-extenders-own-unrelated-profiles>Zowe Explorer extensibility documentation.</td>
  </tr>
 
   <tr>
@@ -246,7 +246,7 @@ Criteria for VS Code extensions that extend the Zowe Explorer MVS, USS, or JES t
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>New Zowe CLI profile type:</b> Extension registers its new API instances with a new profile type name for the different Zowe Explorer views via the `ZoweExplorerApi.IApiRegisterClient.register{Mvs|Uss|Jes}Api(profileTypeName)` call as indicated from the <a href=https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/README-Extending.md#using-the-zowe-explorer-profilescache-for-an-extenders-own-unrelated-profiles>Zowe Explorer extensibility documentation</a></td>
+   <td><b>New Zowe CLI profile type:</b> Extension registers its new API instances with a new profile type name for the different Zowe Explorer views via the `ZoweExplorerApi.IApiRegisterClient.register{Mvs|Uss|Jes}Api(profileTypeName)` call as indicated from the <a href=https://github.com/zowe/zowe-explorer-vscode/blob/main/docs/README-Extending.md#using-the-zowe-explorer-profilescache-for-an-extenders-own-unrelated-profiles>Zowe Explorer extensibility documentation</a></td>
  </tr>
 
  <tr>
@@ -333,7 +333,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
    <th></th>
-   <td><b>Context menu groups: </b> If contributing commands to Zowe Explorer's context menus, the extension follows the <a href=https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/README-Extending.md#grouping-menu-commands>Zowe Explorer extensibility documentation</a> and adds them in new context menu groups that are located below Zowe Explorer's existing context menu groups in the user interface.</td>
+   <td><b>Context menu groups: </b> If contributing commands to Zowe Explorer's context menus, the extension follows the <a href=https://github.com/zowe/zowe-explorer-vscode/blob/main/docs/README-Extending.md#grouping-menu-commands>Zowe Explorer extensibility documentation</a> and adds them in new context menu groups that are located below Zowe Explorer's existing context menu groups in the user interface.</td>
  </tr>
 
   <tr>
@@ -342,7 +342,7 @@ Criteria for VS Code extensions adding menu and commands to VS Code that utilize
    <th style="background-color:#AAAAAA"></th>
    <th style="background-color:#AAAAAA">x</th>
    <th></th>
-   <td><b>Adding New Menu Items:</b> If the extension is adding new commands and context menu entries to the Zowe Explorer tree view nodes, the new command name is consistent with the terminology and naming conventions of the existing Zowe Explorer menu entries. More information is provided in the <a href=https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/README-Extending.md#creating-an-extension-that-adds-menu-commands
+   <td><b>Adding New Menu Items:</b> If the extension is adding new commands and context menu entries to the Zowe Explorer tree view nodes, the new command name is consistent with the terminology and naming conventions of the existing Zowe Explorer menu entries. More information is provided in the <a href=https://github.com/zowe/zowe-explorer-vscode/blob/main/docs/README-Extending.md#creating-an-extension-that-adds-menu-commands
 >Zowe Explorer extensibility documentation.</a></td>
  </tr>
 

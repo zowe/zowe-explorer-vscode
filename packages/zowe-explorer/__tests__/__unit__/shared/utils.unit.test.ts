@@ -31,7 +31,7 @@ import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import { Gui, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
-import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { LocalStorageKey, ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 
@@ -295,15 +295,15 @@ describe("Test uploadContent", () => {
     });
 
     it("should test with missing node that uploadContent throws error", async () => {
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
-        await sharedUtils.uploadContent(
-            null,
-            {
-                fileName: "whatever",
-            } as any,
-            null
-        );
-        expect(errorHandlingSpy).toBeCalledWith("Could not find whatever in tree");
+        await expect(
+            sharedUtils.uploadContent(
+                null,
+                {
+                    fileName: "whatever",
+                } as any,
+                null
+            )
+        ).rejects.toThrow("Could not find whatever in tree");
     });
 });
 
@@ -790,18 +790,16 @@ describe("Shared utils unit tests - function compareFileContent", () => {
     });
 
     it("should test with missing node that compareFileContent throws error", async () => {
-        jest.spyOn(TreeProviders, "ds", "get").mockReturnValueOnce({ openFiles: {} } as any);
-        jest.spyOn(TreeProviders, "uss", "get").mockReturnValueOnce({ openFiles: {} } as any);
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
-        await sharedUtils.compareFileContent(
-            {
-                fileName: "whatever",
-                uri: { fsPath: "whatever" },
-            } as any,
-            null,
-            null
-        );
-        expect(errorHandlingSpy).toBeCalledWith("Could not find whatever in tree");
+        await expect(
+            sharedUtils.compareFileContent(
+                {
+                    fileName: "whatever",
+                    uri: { fsPath: "whatever" },
+                } as any,
+                null,
+                null
+            )
+        ).rejects.toThrow("Could not find whatever in tree");
     });
 });
 
@@ -1033,6 +1031,75 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is IBM-1047" }));
     });
+
+    it("Prompts for other encoding for USS file and make sure new encoding is added to the beginning of the history", async () => {
+        const blockMocks = createBlockMocks();
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.profile,
+            parentPath: "/root",
+        });
+        node.setEncoding(otherEncoding);
+        const encodingHistory = ["IBM-123", "IBM-456", "IBM-789"];
+        blockMocks.localStorageGet.mockReturnValueOnce(encodingHistory);
+        blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[2]);
+        blockMocks.showInputBox.mockResolvedValueOnce(otherEncoding.codepage); // "IBM-1047"
+        await sharedUtils.promptForEncoding(node);
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(blockMocks.showInputBox).toHaveBeenCalled();
+
+        //spy on ZoweLocalStorage "zowe.encodingHistory"
+        const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
+        expect(setValueSpy).toBeCalledWith(LocalStorageKey.ENCODING_HISTORY, [otherEncoding.codepage].concat(encodingHistory));
+    });
+
+    it("Prompts for other encoding for USS file and supply an existing encoding and filter/move it to the front", async () => {
+        const blockMocks = createBlockMocks();
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.profile,
+            parentPath: "/root",
+        });
+        node.setEncoding(otherEncoding);
+        const encodingHistory = ["IBM-123", "IBM-456", "IBM-789"];
+        blockMocks.localStorageGet.mockReturnValueOnce(encodingHistory);
+        blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[2]);
+        blockMocks.showInputBox.mockResolvedValueOnce(encodingHistory[2]);
+        await sharedUtils.promptForEncoding(node);
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(blockMocks.showInputBox).toHaveBeenCalled();
+
+        //spy on ZoweLocalStorage "zowe.encodingHistory"
+        const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
+        encodingHistory.unshift(encodingHistory.splice(2, 1)[0]); // shift 3rd value to front to match with local storage
+        expect(setValueSpy).toBeCalledWith(LocalStorageKey.ENCODING_HISTORY, encodingHistory);
+    });
+
+    it("Prompts for other encoding for USS file and add encoding in lowercase and expect to save it in upper case", async () => {
+        const blockMocks = createBlockMocks();
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.profile,
+            parentPath: "/root",
+        });
+        node.setEncoding(otherEncoding);
+        const encodingHistory = ["IBM-123", "IBM-456", "IBM-789"];
+        blockMocks.localStorageGet.mockReturnValueOnce(encodingHistory);
+        blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[2]);
+        blockMocks.showInputBox.mockResolvedValueOnce("utf-8"); // add "utf-8" encoding in lowercase
+        await sharedUtils.promptForEncoding(node);
+
+        const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
+        // receive added encoding in upper case (first entry)
+        expect(setValueSpy).toBeCalledWith(LocalStorageKey.ENCODING_HISTORY, ["UTF-8", "IBM-123", "IBM-456", "IBM-789"]);
+        expect(setValueSpy);
+    });
 });
 
 describe("Shared utils unit tests - function initializeFileOpening", () => {
@@ -1081,7 +1148,7 @@ describe("Shared utils unit tests - function initializeFileOpening", () => {
         });
 
         await sharedUtils.initializeFileOpening(testNode, testNode.fullPath, true);
-        expect(globalMocks.mockExecuteCommand).toHaveBeenCalledWith("vscode.open", { path: "" });
+        expect(globalMocks.mockExecuteCommand).toHaveBeenCalledWith("vscode.open", { fsPath: "", path: "" });
     });
 
     it("successfully handles text data sets that should be previewed", async () => {
@@ -1179,7 +1246,7 @@ describe("Shared utils unit tests - function initializeFileOpening", () => {
         testNode.fullPath = "test/testFile";
 
         await sharedUtils.initializeFileOpening(testNode, testNode.fullPath, true);
-        expect(globalMocks.mockExecuteCommand).toHaveBeenCalledWith("vscode.open", { path: testNode.fullPath });
+        expect(globalMocks.mockExecuteCommand).toHaveBeenCalledWith("vscode.open", { fsPath: testNode.fullPath, path: testNode.fullPath });
     });
 
     it("successfully handles text USS files that should be previewed", async () => {

@@ -57,6 +57,7 @@ function createGlobalMocks() {
         openTextDocument: jest.fn(),
         withProgress: jest.fn(),
         writeText: jest.fn(),
+        showInformationMessage: jest.fn(),
         fileList: jest.fn(),
         setStatusBarMessage: jest.fn().mockReturnValue({ dispose: jest.fn() }),
         showWarningMessage: jest.fn(),
@@ -86,6 +87,7 @@ function createGlobalMocks() {
     const profilesForValidation = { status: "active", name: "fake" };
 
     Object.defineProperty(Gui, "setStatusBarMessage", { value: globalMocks.setStatusBarMessage, configurable: true });
+    Object.defineProperty(vscode.window, "showInformationMessage", { value: globalMocks.showInformationMessage, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.mockShowInputBox, configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.showQuickPick, configurable: true });
     Object.defineProperty(zowe, "Create", { value: globalMocks.Create, configurable: true });
@@ -542,6 +544,21 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
 
 describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
     async function createBlockMocks(globalMocks) {
+        Object.defineProperty(vscode.window, "withProgress", {
+            value: jest.fn().mockImplementation((progLocation, callback) => {
+                const progress = {
+                    report: (message) => {
+                        return;
+                    },
+                };
+                const token = {
+                    isCancellationRequested: false,
+                    onCancellationRequested: undefined,
+                };
+                return callback(progress, token);
+            }),
+            configurable: true,
+        });
         const newMocks = {
             node: null,
             mockGetEtag: null,
@@ -575,12 +592,11 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         globalMocks.openTextDocument.mockResolvedValue(blockMocks.testDoc);
         const fileUri = { fsPath: "/tmp/foo.txt" };
         globalMocks.showOpenDialog.mockReturnValue([fileUri]);
-        globalMocks.isBinaryFileSync.mockReturnValueOnce(false);
 
-        await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
+        await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree, false);
         expect(globalMocks.showOpenDialog).toBeCalled();
         expect(globalMocks.openTextDocument).toBeCalled();
-        expect(blockMocks.testUSSTree.refresh).toBeCalled();
+        expect(blockMocks.testUSSTree.refreshElement).toBeCalledWith(blockMocks.ussNode);
     });
 
     it("Tests that uploadDialog() works for binary file", async () => {
@@ -590,11 +606,19 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         globalMocks.openTextDocument.mockResolvedValue(blockMocks.testDoc);
         const fileUri = { fsPath: "/tmp/foo.zip" };
         globalMocks.showOpenDialog.mockReturnValue([fileUri]);
-        globalMocks.isBinaryFileSync.mockReturnValueOnce(true);
 
-        await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
+        await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree, true);
         expect(globalMocks.showOpenDialog).toBeCalled();
-        expect(blockMocks.testUSSTree.refresh).toBeCalled();
+        expect(blockMocks.testUSSTree.refreshElement).toBeCalledWith(blockMocks.ussNode);
+    });
+
+    it("shouldn't call upload dialog and not upload file if selection is empty", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        globalMocks.showOpenDialog.mockReturnValue(undefined);
+        await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree, true);
+        expect(globalMocks.showOpenDialog).toBeCalled();
+        expect(globalMocks.showInformationMessage.mock.calls.map((call) => call[0])).toEqual(["Operation Cancelled"]);
     });
 
     it("Tests that uploadDialog() throws an error successfully", async () => {
@@ -611,7 +635,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         globalMocks.isBinaryFileSync.mockReturnValueOnce(false);
 
         try {
-            await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
+            await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree, false);
         } catch (err) {
             // prevent exception from failing test
         }

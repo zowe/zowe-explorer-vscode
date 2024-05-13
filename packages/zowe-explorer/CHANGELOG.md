@@ -14,6 +14,32 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added support for `consoleName` property in z/OSMF profiles when issuing MVS commands. [#1667](https://github.com/zowe/vscode-extension-for-zowe/issues/1667)
+- Updated sorting of PDS members to show items without stats at bottom of list. [#2660](https://github.com/zowe/vscode-extension-for-zowe/issues/2660)
+- Added support to view the Encoding history for MVS and Dataset in the History View. [#2776](https://github.com/zowe/zowe-explorer-vscode/pull/2776)
+- Updated MVS view progress indicator for entering a filter search. [#2181](https://github.com/zowe/zowe-explorer-vscode/issues/2181)
+- Added error handling for when the default credential manager is unable to initialize. [#2811](https://github.com/zowe/zowe-explorer-vscode/issues/2811)
+- Provide users with the option to upload binary files by implementing a "Upload Files (Binary)" right-click option in the USS tree. [#1956](https://github.com/zowe/zowe-explorer-vscode/issues/1956)
+- Added Status bar to indicate that data is being pulled from mainframe. [#2484](https://github.com/zowe/zowe-explorer-vscode/issues/2484)
+- Added PEM certificate support as an authentication method for logging into the API ML. [#2621](https://github.com/zowe/zowe-explorer-vscode/issues/2621)
+
+### Bug fixes
+
+- Fixed issue where clicking on a submitted job hyperlink throws an error. [#2813](https://github.com/zowe/vscode-extension-for-zowe/issues/2813)
+- Omitted the following Zowe Explorer commands from the Command Palette that do not execute properly when run as a standalone command: [#2853](https://github.com/zowe/zowe-explorer-vscode/pull/2853)
+  - `Zowe Explorer: Cancel job`
+  - `Zowe Explorer: Filter jobs`
+  - `Zowe Explorer: Filter PDS members`
+  - `Zowe Explorer: Sort jobs`
+  - `Zowe Explorer: Sort PDS members`
+  - `Zowe Explorer: Start Polling`
+  - `Zowe Explorer: Stop Polling`
+- Duplicated profile schema writing on repeated Team Config file initialization:
+  [#2828](https://github.com/zowe/zowe-explorer-vscode/pull/2828)
+- Fixed issue where saving changes to favorited PDS member fails when custom temp folder is set on Windows. [#2880](https://github.com/zowe/zowe-explorer-vscode/issues/2880)
+
+## `2.15.4`
+
 ### Bug fixes
 
 - Fixed issue where new PDS member node cannot be re-opened unless you pull from mainframe. [#2857](https://github.com/zowe/zowe-explorer-vscode/issues/2857)
@@ -47,12 +73,16 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Implemented sorting of PDS members by date created [#2707](https://github.com/zowe/vscode-extension-for-zowe/pull/2707)
 - Added the capability for extenders to contribute new profile types to the Zowe schema during extender activation. [#2508](https://github.com/zowe/vscode-extension-for-zowe/issues/2508)
+- Sort encoding by the latest encoding and filter any duplicate encoding if it already exists.
+- Implemented sorting of jobs by timestamp(on last job ran) [#1685](https://github.com/zowe/vscode-extension-for-zowe/issues/1685)
 
 ### Bug fixes
 
 - Adjusted order of 'Manage Profile' and 'Edit History' in the jobs tree's context menu to match the other trees. [#2670](https://github.com/zowe/vscode-extension-for-zowe/issues/2670)
 - Fixed issue where spools with duplicate DD names would overwrite each other causing less spools in job output view [#2315](https://github.com/zowe/vscode-extension-for-zowe/issues/2315)
 - To fix Strange behaviour with the Job label in Job Favorites [#2632](https://github.com/zowe/vscode-extension-for-zowe/issues/2632)
+- Fixed issue of migrate/recall icons and right-click options now update instantly upon selection, eliminating the need to reload VSCode [#2755](https://github.com/zowe/vscode-extension-for-zowe/issues/2755)
+- To fix error when user clicks on a favourited job [#2618](https://github.com/zowe/vscode-extension-for-zowe/issues/2618)
 
 ## `2.14.1`
 

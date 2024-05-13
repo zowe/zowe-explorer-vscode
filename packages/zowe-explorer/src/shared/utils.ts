@@ -230,8 +230,7 @@ export async function uploadContent(
     returnEtag?: boolean
 ): Promise<IZosFilesResponse> {
     if (node == null) {
-        await errorHandling(localize("saveFile.nodeNotFound.error", "Could not find {0} in tree", doc.fileName));
-        return;
+        throw new Error(localize("saveFile.nodeNotFound.error", "Could not find {0} in tree", doc.fileName));
     }
     const uploadOptions: IUploadOptions = {
         etag: etagToUpload,
@@ -379,10 +378,8 @@ export async function compareFileContent(
     label?: string,
     profile?: imperative.IProfileLoaded
 ): Promise<void> {
-    node = node ?? TreeProviders.ds.openFiles?.[doc.uri.fsPath] ?? TreeProviders.uss.openFiles?.[doc.uri.fsPath];
     if (node == null) {
-        await errorHandling(localize("saveFile.nodeNotFound.error", "Could not find {0} in tree", doc.fileName));
-        return;
+        throw new Error(localize("saveFile.nodeNotFound.error", "Could not find {0} in tree", doc.fileName));
     }
     await markDocumentUnsaved(doc);
     const prof = node ? node.getProfile() : profile;
@@ -532,8 +529,9 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
             });
             if (response != null) {
                 encoding = { kind: "other", codepage: response };
-                encodingHistory.push(encoding.codepage);
-                ZoweLocalStorage.setValue(LocalStorageKey.ENCODING_HISTORY, encodingHistory.slice(0, globals.MAX_FILE_HISTORY));
+                const filterEncodingList = encodingHistory.filter((codepage) => codepage.toUpperCase() !== response.toUpperCase());
+                filterEncodingList.unshift(encoding.codepage.toUpperCase());
+                ZoweLocalStorage.setValue(LocalStorageKey.ENCODING_HISTORY, filterEncodingList.slice(0, globals.MAX_FILE_HISTORY));
             }
             break;
         default:
