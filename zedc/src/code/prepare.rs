@@ -177,7 +177,7 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
         // Remove "quarantined" attribute from downloaded VS Code binary on macOS
         let _ = Command::new("xattr")
             .args([
-                "-cdr",
+                "-dr",
                 "com.apple.quarantine",
                 vsc_path.join("Visual Studio Code.app").to_str().unwrap(),
             ])
