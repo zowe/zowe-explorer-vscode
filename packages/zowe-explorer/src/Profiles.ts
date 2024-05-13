@@ -1250,6 +1250,8 @@ export class Profiles extends ProfilesCache {
         const profAttrs = this.getProfileFromConfig(profileName);
         const configApi = (await this.getProfileInfo()).getTeamConfig();
         configApi.set(`${(await profAttrs).profLoc.jsonLoc}.secure`, []);
+        configApi.delete(`${(await profAttrs).profLoc.jsonLoc}.properties.tokenType`);
+        configApi.delete(`${(await profAttrs).profLoc.jsonLoc}.properties.tokenValue`);
         await configApi.save();
     }
 

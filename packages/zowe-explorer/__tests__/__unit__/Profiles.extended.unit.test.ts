@@ -1654,6 +1654,11 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
 });
 
 describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
+    afterEach(() => {
+        jest.resetAllMocks();
+        jest.clearAllMocks();
+    });
+
     let globalMocks, testNode, modifiedTestNode;
     beforeEach(async () => {
         globalMocks = await createGlobalMocks();
@@ -1715,6 +1720,9 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             secure: ["tokenType"],
         };
         jest.spyOn(Gui, "infoMessage").mockImplementation();
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockResolvedValue({
+            getTokenType: () => zowe.imperative.SessConstants.TOKEN_TYPE_APIML,
+        } as never);
         jest.spyOn(Profiles.getInstance(), "ssoLogin").mockImplementationOnce((node) => modifiedTestNode);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
         expect(testNode.profile.profile.tokenType).toBe("testToken");
@@ -1768,6 +1776,9 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             secure: ["user", "password"],
         };
         jest.spyOn(Gui, "infoMessage").mockImplementation();
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockResolvedValue({
+            getTokenType: () => zowe.imperative.SessConstants.TOKEN_TYPE_APIML,
+        } as never);
         jest.spyOn(utils.ProfilesUtils, "promptCredentials").mockImplementationOnce((node) => modifiedTestNode);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
         expect(testNode.profile.profile.user).toBe("testUser");
