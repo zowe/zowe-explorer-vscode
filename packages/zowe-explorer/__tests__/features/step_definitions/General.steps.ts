@@ -32,6 +32,7 @@ Then("the user can click on the Zowe Explorer icon", async () => {
 //
 Given("a user who is looking at the Zowe Explorer tree views", async () => {
     const activityBar = (await browser.getWorkbench()).getActivityBar();
+    await activityBar.wait();
     const zeContainer = await activityBar.getViewControl("Zowe Explorer");
     await zeContainer.wait();
     const zeView = await zeContainer.openView();
@@ -56,6 +57,9 @@ async function paneDivForTree(tree: string): Promise<ViewSection> {
     }
 }
 
+//
+// Scenario: User collapses/expands the Favorites node
+//
 When(/a user collapses the Favorites node in the (.*) view/, async (tree: string) => {
     const pane = await paneDivForTree(tree);
     if (!pane.isExpanded()) {
@@ -101,9 +105,14 @@ When(/a user clicks the plus button in the (.*) view/, async (tree) => {
     (await pane.elem).moveTo();
     await browser.waitUntil(() => plusIcon.elem.isClickable());
     await plusIcon.elem.click();
-
-    // dismiss quick pick that appears
-    await browser.keys(Key.Escape);
 });
 
-// Then("the 'Add Config/Profile' quick pick appears", () => {});
+Then("the Add Config quick pick menu appears", async () => {
+    const elem = await $(await browser.findElement("css selector", ".quick-input-widget"));
+    expect(elem).toExist();
+    expect(elem).toBeDisplayedInViewport();
+    await elem.click();
+
+    // dismiss the quick pick after verifying that it is visible
+    await browser.keys(Key.Escape);
+});
