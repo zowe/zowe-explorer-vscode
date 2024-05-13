@@ -14,7 +14,15 @@ import * as globals from "../globals";
 import * as path from "path";
 import { imperative } from "@zowe/cli";
 import { FilterItem, FilterDescriptor, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, checkIfChildPath, updateOpenFiles, promptForEncoding, isClosedFileDirty } from "../shared/utils";
+import {
+    sortTreeItems,
+    getAppName,
+    checkIfChildPath,
+    updateOpenFiles,
+    promptForEncoding,
+    isClosedFileDirty,
+    confirmForUnsavedDoc,
+} from "../shared/utils";
 import { Gui, IZoweTree, IZoweTreeNode, IZoweUSSTreeNode, NodeInteraction, ValidProfileEnum, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -963,9 +971,18 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             taggedEncoding = await ussApi.getTag(node.fullPath);
         }
         const encoding = await promptForEncoding(node, taggedEncoding !== "untagged" ? taggedEncoding : undefined);
+
+        const docResult = await confirmForUnsavedDoc(node);
+        if (docResult.isUnsaved && !docResult.actionConfirmed) {
+            return;
+        }
+
         if (encoding !== undefined) {
             node.setEncoding(encoding);
             await node.openUSS(true, false, this);
+            if (docResult.isUnsaved && docResult.editor == vscode.window.activeTextEditor) {
+                await vscode.commands.executeCommand("workbench.action.files.revert");
+            }
         }
     }
 }
