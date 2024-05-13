@@ -11,6 +11,7 @@
 
 import { Given, Then, When } from "@cucumber/cucumber";
 import { TreeItem, ViewSection } from "wdio-vscode-service";
+import { Key } from "webdriverio";
 
 //
 // Scenario: User clicks on the "Zowe Explorer" icon in the Activity Bar
@@ -31,10 +32,10 @@ Then("the user can click on the Zowe Explorer icon", async () => {
 //
 Given("a user who is looking at the Zowe Explorer tree views", async () => {
     const activityBar = (await browser.getWorkbench()).getActivityBar();
-    await activityBar.wait();
     const zeContainer = await activityBar.getViewControl("Zowe Explorer");
     await zeContainer.wait();
-    await zeContainer.openView();
+    const zeView = await zeContainer.openView();
+    await zeView.wait();
 });
 
 /* Helper functions */
@@ -75,11 +76,34 @@ When(/a user expands the Favorites node in the (.*) view/, async (tree: string) 
     await favoritesItem.expand();
 });
 
-Then(/the Favorites node will (.*) successfully in the (.*) view/, async (state: string, tree: string) => {
-    const expandedState = state !== "collapse";
+Then(/the Favorites node (.*) successfully in the (.*) view/, async (state: string, tree: string) => {
+    const expandedState = state !== "collapses";
 
     const pane = await paneDivForTree(tree);
     const favoritesItem = (await pane.findItem("Favorites")) as TreeItem;
     await favoritesItem.wait();
     expect(await favoritesItem.isExpanded()).toBe(expandedState);
 });
+
+//
+// Scenario: User clicks on the plus button to open the "Add Config/Profile" quick pick
+//
+When(/a user clicks the plus button in the (.*) view/, async (tree) => {
+    const pane = await paneDivForTree(tree);
+    if (!pane.isExpanded()) {
+        await pane.expand();
+    }
+
+    const fullTreeName = tree === "USS" ? "Unix System Services (USS)" : tree;
+
+    const plusIcon = await pane.getAction(`Add Profile to ${fullTreeName} View`);
+    expect(plusIcon).toExist();
+    (await pane.elem).moveTo();
+    await browser.waitUntil(() => plusIcon.elem.isClickable());
+    await plusIcon.elem.click();
+
+    // dismiss quick pick that appears
+    await browser.keys(Key.Escape);
+});
+
+// Then("the 'Add Config/Profile' quick pick appears", () => {});
