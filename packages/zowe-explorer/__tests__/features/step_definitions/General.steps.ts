@@ -10,70 +10,76 @@
  */
 
 import { Given, Then, When } from "@cucumber/cucumber";
+import { TreeItem, ViewSection } from "wdio-vscode-service";
 
 //
 // Scenario: User clicks on the "Zowe Explorer" icon in the Activity Bar
 //
 When("a user locates the Zowe Explorer icon in the side bar", async () => {
-    (await browser.getWorkbench()).getSideBar();
-    expect($('.action-item > a[aria-label="Zowe Explorer"]')).toExist();
+    const activityBar = (await browser.getWorkbench()).getActivityBar();
+    const zeContainer = activityBar.getViewControl("Zowe Explorer");
+    expect(zeContainer).toExist();
 });
-Then("the user can click on the Zowe Explorer icon", () => {
-    $('.action-item > a[aria-label="Zowe Explorer"]').click();
+Then("the user can click on the Zowe Explorer icon", async () => {
+    const activityBar = (await browser.getWorkbench()).getActivityBar();
+    const zeContainer = await activityBar.getViewControl("Zowe Explorer");
+    await zeContainer.openView();
 });
 
 //
 // Scenario: User expands the Favorites node for each tree view
 //
 Given("a user who is looking at the Zowe Explorer tree views", async () => {
-    (await browser.getWorkbench()).getActivityBar();
-    (await $('.action-item > a[aria-label="Zowe Explorer"]')).click();
+    const activityBar = (await browser.getWorkbench()).getActivityBar();
+    await activityBar.wait();
+    const zeContainer = await activityBar.getViewControl("Zowe Explorer");
+    await zeContainer.wait();
+    await zeContainer.openView();
 });
 
 /* Helper functions */
-async function paneDivForTree(tree: string): Promise<ChainablePromiseElement> {
+async function paneDivForTree(tree: string): Promise<ViewSection> {
+    const activityBar = (await browser.getWorkbench()).getActivityBar();
+    await activityBar.wait();
+    const zeContainer = await activityBar.getViewControl("Zowe Explorer");
+    await zeContainer.wait();
+    const sidebarContent = (await zeContainer.openView()).getContent();
     switch (tree.toLowerCase()) {
         case "data sets":
-            return $('div[aria-label="Data Sets Section"]');
+            return sidebarContent.getSection("DATA SETS");
         case "uss":
-            return $('div[aria-label="Unix System Services (USS) Section"]');
+            return sidebarContent.getSection("UNIX SYSTEM SERVICES (USS)");
         case "jobs":
         default:
-            return $('div[aria-label="Jobs Section"]');
+            return sidebarContent.getSection("JOBS");
     }
-}
-async function favoritesDivInPane(pane: WebdriverIO.Element): Promise<ChainablePromiseElement> {
-    return pane.parent.$('div[role="treeitem"][aria-label="Favorites"]');
 }
 
 When(/a user collapses the Favorites node in the (.*) view/, async (tree: string) => {
     const pane = await paneDivForTree(tree);
-    if ((await pane.getAttribute("aria-expanded")) === "false") {
-        await pane.click();
+    if (!pane.isExpanded()) {
+        await pane.expand();
     }
 
-    const favoritesNode = await favoritesDivInPane(pane);
-    // once to expand...
-    await favoritesNode.click();
-    // once to collapse
-    await favoritesNode.click();
+    const favoritesItem = (await pane.findItem("Favorites")) as TreeItem;
+    await favoritesItem.collapse();
 });
 
 When(/a user expands the Favorites node in the (.*) view/, async (tree: string) => {
     const pane = await paneDivForTree(tree);
-    if ((await pane.getAttribute("aria-expanded")) === "false") {
-        await pane.click();
+    if (!pane.isExpanded()) {
+        await pane.expand();
     }
 
-    const favoritesNode = await favoritesDivInPane(pane);
-    await favoritesNode.click();
+    const favoritesItem = (await pane.findItem("Favorites")) as TreeItem;
+    await favoritesItem.expand();
 });
 
 Then(/the Favorites node will (.*) successfully in the (.*) view/, async (state: string, tree: string) => {
-    const expandedState = state !== "collapse" ? "true" : "false";
+    const expandedState = state !== "collapse";
 
     const pane = await paneDivForTree(tree);
-    const favoritesNode = await favoritesDivInPane(pane);
-    expect(favoritesNode).toExist();
-    expect(await favoritesNode.getAttribute("aria-expanded")).toBe(expandedState);
+    const favoritesItem = (await pane.findItem("Favorites")) as TreeItem;
+    await favoritesItem.wait();
+    expect(await favoritesItem.isExpanded()).toBe(expandedState);
 });
