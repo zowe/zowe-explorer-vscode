@@ -28,15 +28,13 @@ export interface IJestIt {
     title?: string;
 }
 
-export function spyOnSubscriptions(subscriptions: any[]) {
-    subscriptions.forEach((sub) => {
-        sub.mock.forEach((mock) => {
-            if (mock.ret) {
-                mock.spy.mockClear().mockReturnValueOnce(mock.ret);
-            } else {
-                mock.spy.mockClear().mockImplementation(jest.fn());
-            }
-        });
+function spyOnSubscription(sub: IJestIt) {
+    sub.mock.forEach((mock) => {
+        if (mock.ret) {
+            mock.spy.mockClear().mockReturnValue(mock.ret);
+        } else {
+            mock.spy.mockClear().mockImplementation(jest.fn());
+        }
     });
 }
 
@@ -45,6 +43,7 @@ export function processSubscriptions(subscriptions: IJestIt[], test: ITestContex
         return str.indexOf(":") >= 0 ? str.substring(0, str.indexOf(":")) : str;
     };
     subscriptions.forEach((sub) => {
+        spyOnSubscription(sub);
         it(sub.title ?? `Test: ${sub.name}`, async () => {
             const parms = sub.parm ?? [test.value];
             await test.context.subscriptions.find((s) => Object.keys(s)[0] === getName(sub.name))?.[getName(sub.name)](...parms);

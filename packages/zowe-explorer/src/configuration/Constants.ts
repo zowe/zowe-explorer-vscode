@@ -11,9 +11,9 @@
 
 import * as path from "path";
 import * as vscode from "vscode";
-import { FileManagement, imperative, IZoweTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
-import { ZoweLogger } from "../tools";
-import { Profiles } from "../configuration";
+import { FileManagement, imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { ZoweLogger } from "../tools/ZoweLogger";
+import type { Profiles } from "./Profiles";
 
 export namespace Constants {
     export let SETTINGS_TEMP_FOLDER_LOCATION;
@@ -91,8 +91,6 @@ export namespace Constants {
     export let ACTIVATED = false;
     export let SAVED_PROFILE_CONTENTS = new Uint8Array();
     export const JOBS_MAX_PREFIX = 8;
-    export let FILE_SELECTED_TO_COMPARE: boolean;
-    export let filesToCompare: IZoweTreeNode[];
     export let PROFILES_CACHE: Profiles; // Works around circular dependency, see https://github.com/zowe/zowe-explorer-vscode/issues/2756
     export const WORKSPACE_UTIL_TAB_SWITCH_DELAY = 200;
     export const WORKSPACE_UTIL_MAX_EMPTY_WINDOWS_IN_THE_ROW = 3;
@@ -284,7 +282,7 @@ export namespace Constants {
 
     export const SEPARATORS = {
         BLANK: { kind: vscode.QuickPickItemKind.Separator, label: "" },
-        RECENT: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t("zowe.separator.recent", "Recent") },
+        RECENT: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t("Recent") },
         RECENT_FILTERS: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t(`Recent Filters`) },
         OPTIONS: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t(`Options`) },
     };
@@ -293,7 +291,7 @@ export namespace Constants {
      * Defines all global variables
      * @param tempPath File path for temporary folder defined in preferences
      */
-    export function defineGlobals(tempPath: string | undefined): void {
+    export function defineConstants(tempPath: string | undefined): void {
         SETTINGS_TEMP_FOLDER_LOCATION = tempPath;
         // Set temp path & folder paths
         ZOWETEMPFOLDER = tempPath ? path.join(tempPath, "temp") : path.join(__dirname, "..", "..", "resources", "temp");
@@ -326,16 +324,6 @@ export namespace Constants {
 
     export function setSavedProfileContents(value: Uint8Array): void {
         SAVED_PROFILE_CONTENTS = value;
-    }
-
-    export function setCompareSelection(val: boolean): void {
-        FILE_SELECTED_TO_COMPARE = val;
-        vscode.commands.executeCommand("setContext", "zowe.compareFileStarted", val);
-    }
-
-    export function resetCompareChoices(): void {
-        setCompareSelection(false);
-        filesToCompare = [];
     }
 
     export function setProfilesCache(profilesCache: Profiles): void {

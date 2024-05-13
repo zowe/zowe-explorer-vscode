@@ -10,18 +10,22 @@
  */
 
 import * as vscode from "vscode";
-import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../../__common__/testUtils";
-import { SharedActions, SharedContext, SharedInit } from "../../../../src/trees/shared";
-import { USSActions, USSInit, USSTree } from "../../../../src/trees/uss";
-import { Profiles } from "../../../../src/configuration";
+import { USSActions } from "../../../../src/trees/uss/USSActions";
+import { Profiles } from "../../../../src/configuration/Profiles";
+import { IJestIt, ITestContext, processSubscriptions } from "../../../__common__/testUtils";
+import { SharedContext } from "../../../../src/trees/shared/SharedContext";
+import { USSInit } from "../../../../src/trees/uss/USSInit";
+import { SharedActions } from "../../../../src/trees/shared/SharedActions";
+import { SharedInit } from "../../../../src/trees/shared/SharedInit";
+import { USSTree } from "../../../../src/trees/uss/USSTree";
 
-describe("Test src/dataset/extension", () => {
-    describe("initDatasetProvider", () => {
+describe("Test src/uss/extension", () => {
+    describe("initUSSProvider", () => {
         let registerCommand;
         let onDidChangeConfiguration;
         let spyCreateUssTree;
         const test: ITestContext = {
-            context: { subscriptions: [] },
+            context: { subscriptions: new Array() },
             value: { test: "uss", refreshUSS: jest.fn(), openUSS: jest.fn(), deleteUSSNode: jest.fn(), getUSSDocumentFilePath: jest.fn() },
             _: { _: "_" },
         };
@@ -66,7 +70,7 @@ describe("Test src/dataset/extension", () => {
                 name: "zowe.uss.refreshUSS",
                 mock: [
                     { spy: jest.spyOn(SharedContext, "isDocument"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(test.value, "refreshUSS"), arg: [] },
+                    { spy: jest.spyOn(SharedContext, "isUssDirectory"), arg: [test.value], ret: false },
                 ],
             },
             {
@@ -89,10 +93,6 @@ describe("Test src/dataset/extension", () => {
                 mock: [{ spy: jest.spyOn(ussFileProvider, "editSession"), arg: [test.value, ussFileProvider] }],
             },
             {
-                name: "zowe.uss.ZoweUSSNode.open",
-                mock: [{ spy: jest.spyOn(test.value, "openUSS"), arg: [false, true, ussFileProvider] }],
-            },
-            {
                 name: "zowe.uss.removeSession",
                 mock: [
                     { spy: jest.spyOn(SharedContext, "isUssSession"), arg: [test.value], ret: true },
@@ -110,11 +110,10 @@ describe("Test src/dataset/extension", () => {
             {
                 name: "zowe.uss.deleteNode",
                 mock: [
-                    { spy: jest.spyOn(SharedContext, "isDocument"), arg: [test.value], ret: false },
+                    { spy: jest.spyOn(SharedContext, "isDocument"), arg: [test.value], ret: true },
                     { spy: jest.spyOn(SharedContext, "isUssDirectory"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(USSActions, "deleteUSSFilesPrompt"), arg: [[test.value]], ret: true },
-                    { spy: jest.spyOn(test.value, "getUSSDocumentFilePath"), arg: [], ret: "dummy" },
-                    { spy: jest.spyOn(test.value, "deleteUSSNode"), arg: [ussFileProvider, "dummy", true] },
+                    { spy: jest.spyOn(USSActions, "deleteUSSFilesPrompt"), arg: [[test.value]], ret: false },
+                    { spy: jest.spyOn(test.value, "deleteUSSNode"), arg: [ussFileProvider, ""], ret: true },
                 ],
             },
             {
@@ -162,7 +161,7 @@ describe("Test src/dataset/extension", () => {
                     {
                         spy: jest.spyOn(Profiles, "getInstance"),
                         arg: [],
-                        ret: { enableValidation: jest.fn() },
+                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
                     },
                 ],
             },
@@ -209,7 +208,6 @@ describe("Test src/dataset/extension", () => {
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
 
             spyCreateUssTree.mockResolvedValue(ussFileProvider as any);
-            spyOnSubscriptions(commands);
             jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(ussFileProvider.onDidCloseTextDocument);
             await USSInit.initUSSProvider(test.context);
         });
@@ -222,9 +220,9 @@ describe("Test src/dataset/extension", () => {
 
         processSubscriptions(commands, test);
 
-        it("should not initialize if it is unable to create the dataset tree", async () => {
+        it("should not initialize if it is unable to create the USS tree", async () => {
             spyCreateUssTree.mockResolvedValue(null);
-            const myProvider = await USSInit.initUSSProvider({} as any);
+            const myProvider = await USSInit.initUSSProvider(test.context);
             expect(myProvider).toBe(null);
         });
 

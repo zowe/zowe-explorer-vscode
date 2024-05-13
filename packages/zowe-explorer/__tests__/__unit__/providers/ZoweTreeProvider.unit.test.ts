@@ -11,6 +11,8 @@
 
 import * as vscode from "vscode";
 import { imperative, ProfilesCache, Validation, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
+import { ZoweTreeProvider } from "../../../src/providers/ZoweTreeProvider";
 import {
     createIProfile,
     createISession,
@@ -18,16 +20,21 @@ import {
     createInstanceOfProfileInfo,
     createGetConfigMock,
 } from "../../__mocks__/mockCreators/shared";
+import { Constants } from "../../../src/configuration/Constants";
+import { Profiles } from "../../../src/configuration/Profiles";
+import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
+import { ZoweLogger } from "../../../src/tools/ZoweLogger";
+import { ZoweJobNode } from "../../../src/trees/job/ZoweJobNode";
+import { SharedActions } from "../../../src/trees/shared/SharedActions";
+import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
+import { UssFSProvider } from "../../../src/trees/uss/UssFSProvider";
+import { ZoweUSSNode } from "../../../src/trees/uss/ZoweUSSNode";
 import { createUSSSessionNode } from "../../__mocks__/mockCreators/uss";
-import { Profiles, Constants, SettingsConfig } from "../../../src/configuration";
-import { ZoweUSSNode, USSInit } from "../../../src/trees/uss";
+import { USSInit } from "../../../src/trees/uss/USSInit";
+import { JobInit } from "../../../src/trees/job/JobInit";
 import { createIJobObject, createJobSessionNode } from "../../__mocks__/mockCreators/jobs";
-import { ZoweJobNode, JobInit } from "../../../src/trees/job";
-import { ZoweTreeProvider } from "../../../src/providers";
-import { ZoweLogger, ZoweLocalStorage } from "../../../src/tools";
 import { createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets";
-import { SharedActions, SharedTreeProviders } from "../../../src/trees/shared";
-import { DatasetInit } from "../../../src/trees/dataset";
+import { DatasetInit } from "../../../src/trees/dataset/DatasetInit";
 
 async function createGlobalMocks() {
     Object.defineProperty(ZoweLocalStorage, "storage", {
@@ -77,7 +84,12 @@ async function createGlobalMocks() {
         }),
         mockProfileInfo: createInstanceOfProfileInfo(),
         mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
+        FileSystemProvider: {
+            createDirectory: jest.fn(),
+        },
     };
+
+    jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
 
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
         value: jest.fn(() => {
@@ -560,5 +572,38 @@ describe("Tree Provider Unit Tests - function loadProfileByPersistedProfile", ()
         expect(zoweLoggerWarnSpy).toHaveBeenCalledTimes(1);
         resetValidationSettingsSpy.mockClear();
         zoweLoggerWarnSpy.mockClear();
+    });
+});
+
+describe("Tree Provider Unit Tests - function isGlobalProfileNode", () => {
+    it("returns true if the profile is located in the global config", async () => {
+        const globalMocks = await createGlobalMocks();
+        const getAllProfilesMock = jest.spyOn(globalMocks.mockProfileInfo, "getAllProfiles").mockReturnValue([
+            {
+                profName: "sestest",
+            },
+        ]);
+        const getOsLocInfoMock = jest.spyOn(globalMocks.mockProfileInfo, "getOsLocInfo").mockReturnValue([{ global: true }]);
+        await expect((globalMocks.testTreeProvider as any).isGlobalProfileNode({ getProfileName: () => "sestest" })).resolves.toBe(true);
+        getAllProfilesMock.mockRestore();
+        getOsLocInfoMock.mockRestore();
+    });
+
+    it("returns false if the node does not have HOME_SUFFIX in its contextValue", async () => {
+        const globalMocks = await createGlobalMocks();
+        const getAllProfilesMock = jest.spyOn(globalMocks.mockProfileInfo, "getAllProfiles").mockReturnValue([
+            {
+                profName: "sestest",
+            },
+        ]);
+        const getOsLocInfoMock = jest.spyOn(globalMocks.mockProfileInfo, "getOsLocInfo").mockReturnValue([{ global: false }]);
+        await expect(
+            (globalMocks.testTreeProvider as any).isGlobalProfileNode({
+                contextValue: Constants.FAV_PROFILE_CONTEXT,
+                getProfileName: () => "sestest",
+            })
+        ).resolves.toBe(false);
+        getAllProfilesMock.mockRestore();
+        getOsLocInfoMock.mockRestore();
     });
 });

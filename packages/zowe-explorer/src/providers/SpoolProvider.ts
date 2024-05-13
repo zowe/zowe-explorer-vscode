@@ -12,9 +12,9 @@
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
-import { ZoweExplorerApiRegister } from "../extending";
-import { Profiles } from "../configuration";
-import { ZoweLogger } from "../tools";
+import { ZoweLogger } from "../tools/ZoweLogger";
+import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
+import { Profiles } from "../configuration/Profiles";
 
 export class SpoolProvider implements vscode.TextDocumentContentProvider {
     // Track files that have been opened previously through the SpoolProvider

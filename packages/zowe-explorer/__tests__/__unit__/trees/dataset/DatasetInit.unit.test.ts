@@ -10,10 +10,15 @@
  */
 
 import * as vscode from "vscode";
-import { DatasetTree, DatasetActions, DatasetInit } from "../../../../src/trees/dataset";
-import { SharedActions, SharedContext, SharedInit } from "../../../../src/trees/shared";
-import { Profiles } from "../../../../src/configuration";
-import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../../__common__/testUtils";
+import { IJestIt, ITestContext, processSubscriptions } from "../../../__common__/testUtils";
+import { ZoweScheme } from "@zowe/zowe-explorer-api";
+import { SharedActions } from "../../../../src/trees/shared/SharedActions";
+import { Profiles } from "../../../../src/configuration/Profiles";
+import { DatasetTree } from "../../../../src/trees/dataset/DatasetTree";
+import { SharedContext } from "../../../../src/trees/shared/SharedContext";
+import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
+import { DatasetInit } from "../../../../src/trees/dataset/DatasetInit";
+import { SharedInit } from "../../../../src/trees/shared/SharedInit";
 
 describe("Test src/dataset/extension", () => {
     describe("initDatasetProvider", () => {
@@ -22,7 +27,12 @@ describe("Test src/dataset/extension", () => {
         let spyCreateDatasetTree;
         const test: ITestContext = {
             context: { subscriptions: [] },
-            value: { label: "test", getParent: () => "test", openDs: jest.fn() },
+            value: {
+                label: "test",
+                getParent: () => "test",
+                openDs: jest.fn(),
+                command: { command: "vscode.open", title: "", arguments: [vscode.Uri.from({ scheme: ZoweScheme.DS, path: "TEST.DS" })] },
+            },
             _: { _: "_" },
         };
         const dsProvider: { [key: string]: jest.Mock } = {
@@ -87,10 +97,6 @@ describe("Test src/dataset/extension", () => {
                 mock: [{ spy: jest.spyOn(dsProvider, "editSession"), arg: [test.value, dsProvider] }],
             },
             {
-                name: "zowe.ds.ZoweNode.openPS",
-                mock: [{ spy: jest.spyOn(test.value, "openDs"), arg: [false, true, dsProvider] }],
-            },
-            {
                 name: "zowe.ds.createDataset",
                 mock: [{ spy: jest.spyOn(DatasetActions, "createFile"), arg: [test.value, dsProvider] }],
             },
@@ -119,7 +125,6 @@ describe("Test src/dataset/extension", () => {
                 mock: [
                     { spy: jest.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
                     { spy: jest.spyOn(SharedContext, "isDsMember"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(test.value, "openDs"), arg: [false, false, dsProvider] },
                 ],
             },
             {
@@ -127,7 +132,6 @@ describe("Test src/dataset/extension", () => {
                 mock: [
                     { spy: jest.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
                     { spy: jest.spyOn(SharedContext, "isDsMember"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(test.value, "openDs"), arg: [false, false, dsProvider] },
                 ],
             },
             {
@@ -237,7 +241,7 @@ describe("Test src/dataset/extension", () => {
                     {
                         spy: jest.spyOn(Profiles, "getInstance"),
                         arg: [],
-                        ret: { enableValidation: jest.fn() },
+                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
                     },
                 ],
             },
@@ -280,7 +284,6 @@ describe("Test src/dataset/extension", () => {
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
 
             spyCreateDatasetTree.mockResolvedValue(dsProvider as any);
-            spyOnSubscriptions(commands);
             jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(dsProvider.onDidCloseTextDocument);
             await DatasetInit.initDatasetProvider(test.context);
         });
@@ -295,7 +298,7 @@ describe("Test src/dataset/extension", () => {
 
         it("should not initialize if it is unable to create the dataset tree", async () => {
             spyCreateDatasetTree.mockResolvedValue(null);
-            const myProvider = await DatasetInit.initDatasetProvider({} as any);
+            const myProvider = await DatasetInit.initDatasetProvider(test.context);
             expect(myProvider).toBe(null);
         });
 

@@ -30,12 +30,21 @@ import {
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager } from "../../__mocks__/mockCreators/profiles";
 import { imperative, Gui, ProfilesCache, ZoweTreeNode, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
-import { Profiles, Constants } from "../../../src/configuration";
-import { ZoweExplorerExtender, ZoweExplorerApiRegister } from "../../../src/extending";
-import { createUSSNode, createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
+import { Constants } from "../../../src/configuration/Constants";
+import { Profiles } from "../../../src/configuration/Profiles";
 import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
-import { ZoweLogger, ZoweLocalStorage } from "../../../src/tools";
-import { SharedTreeProviders } from "../../../src/trees/shared";
+import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
+import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
+import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
+import { ZoweLogger } from "../../../src/tools/ZoweLogger";
+import { DatasetFSProvider } from "../../../src/trees/dataset/DatasetFSProvider";
+import { JobFSProvider } from "../../../src/trees/job/JobFSProvider";
+import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
+import { createUSSTree } from "../../../src/trees/uss/USSTree";
+import { UssFSProvider } from "../../../src/trees/uss/UssFSProvider";
+import { createUSSNode, createUSSSessionNode } from "../../__mocks__/mockCreators/uss";
+import { FilterDescriptor } from "../../../src/management/FilterManagement";
+import { AuthUtils } from "../../../src/utils/AuthUtils";
 
 jest.mock("../../../src/tools/ZoweLogger");
 jest.mock("child_process");
@@ -81,7 +90,14 @@ async function createGlobalMocks() {
         mockProfilesCache: null,
         mockConfigInstance: createConfigInstance(),
         mockConfigLoad: null,
+        FileSystemProvider: {
+            createDirectory: jest.fn(),
+        },
     };
+
+    jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
+    jest.spyOn(JobFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
+    jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
 
     newMocks.mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
     newMocks.withProgress = jest.fn().mockImplementation((_progLocation, _callback) => {
@@ -286,7 +302,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
             hide: jest.fn(),
             value: "test",
         } as any);
-        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new utils.FilterDescriptor("Test"));
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new FilterDescriptor("Test"));
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValueOnce(createInstanceOfProfileInfo());
         jest.spyOn(Gui, "showInputBox").mockResolvedValue("test");
 
@@ -302,7 +318,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
             hide: jest.fn(),
             value: "test",
         } as any);
-        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new utils.FilterDescriptor("Test"));
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new FilterDescriptor("Test"));
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockRejectedValueOnce(new Error("test error"));
         await expect(Profiles.getInstance().createZoweSession(globalMocks.testUSSTree)).resolves.not.toThrow();
         expect(ZoweLogger.warn).toHaveBeenCalledTimes(1);
@@ -716,7 +732,7 @@ describe("Profiles Unit Tests - function validateProfile", () => {
             value: [],
             configurable: true,
         });
-        const errorHandlingSpy = jest.spyOn(utils.ProfilesUtils, "errorHandling");
+        const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling");
         const testError = new Error("failed to validate profile");
         jest.spyOn(Gui, "withProgress").mockImplementation(() => {
             throw testError;
@@ -881,8 +897,8 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
     });
     it("should throw an error if using token auth and is logged out or has expired token", async () => {
         const globalMocks = await createGlobalMocks();
-        jest.spyOn(utils.ProfilesUtils, "errorHandling").mockImplementation();
-        jest.spyOn(utils.ProfilesUtils, "isUsingTokenAuth").mockResolvedValue(true);
+        jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
+        jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(true);
         setupProfilesCheck(globalMocks);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
     });

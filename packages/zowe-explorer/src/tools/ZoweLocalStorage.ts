@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import * as meta from "../../package.json";
-import { ZoweLogger } from "../tools";
+import { ZoweLogger } from "./ZoweLogger";
 
 export enum LocalStorageKey {
     CLI_LOGGER_SETTING_PRESENTED = "zowe.cliLoggerSetting.presented",

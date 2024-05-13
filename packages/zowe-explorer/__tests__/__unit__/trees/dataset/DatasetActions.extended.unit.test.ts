@@ -10,13 +10,15 @@
  */
 
 import * as vscode from "vscode";
-import { DatasetActions, ZoweDatasetNode } from "../../../../src/trees/dataset";
-import { Constants, Profiles } from "../../../../src/configuration";
-import { ProfilesUtils } from "../../../../src/utils";
+import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
+import { Constants } from "../../../../src/configuration/Constants";
 import { createIProfile, createISession, createTreeView } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import { ZoweExplorerApiRegister } from "../../../../src/extending";
-import { SharedActions } from "../../../../src/trees/shared";
+import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
+import { SharedActions } from "../../../../src/trees/shared/SharedActions";
+import { Profiles } from "../../../../src/configuration/Profiles";
+import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
+import { AuthUtils } from "../../../../src/utils/AuthUtils";
 
 async function createGlobalMocks() {
     const newMocks = {
@@ -214,7 +216,7 @@ describe("mvsNodeActions", () => {
             commandResponse: "",
             apiResponse: {},
         });
-        const errHandlerSpy = jest.spyOn(ProfilesUtils, "errorHandling").mockImplementation();
+        const errHandlerSpy = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
         await DatasetActions.uploadDialog(node, testTree);
 
         expect(errHandlerSpy).toHaveBeenCalled();
@@ -238,7 +240,7 @@ describe("mvsNodeActions", () => {
         ZoweExplorerApiRegister.getMvsApi = getMvsApiMock2.bind(ZoweExplorerApiRegister);
         const testError = new Error("putContents failed");
         jest.spyOn(mockMvsApi2, "putContents").mockRejectedValue(testError);
-        const errHandlerSpy = jest.spyOn(ProfilesUtils, "errorHandling").mockImplementation();
+        const errHandlerSpy = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
         await DatasetActions.uploadDialog(node, testTree);
 
         expect(errHandlerSpy).toHaveBeenCalledWith(testError, "sestest");

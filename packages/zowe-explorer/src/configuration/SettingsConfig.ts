@@ -11,8 +11,8 @@
 
 import * as vscode from "vscode";
 import { Gui, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
-import { LocalStorageKey, ZoweLocalStorage } from "../tools";
-import { Constants } from "../configuration";
+import { Constants } from "./Constants";
+import { LocalStorageKey, ZoweLocalStorage } from "../tools/ZoweLocalStorage";
 
 export class SettingsConfig {
     /**
@@ -113,10 +113,6 @@ export class SettingsConfig {
 
     private static get zoweOldConfigurations(): string[] {
         return Object.keys(SettingsConfig.configurations).filter((key) => key.match(new RegExp("Zowe-*|Zowe\\s*", "g")));
-    }
-
-    private static get currentVersionNumber(): unknown {
-        return vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version as unknown;
     }
 
     private static async promptReload(): Promise<void> {

@@ -10,11 +10,11 @@
  */
 
 import * as vscode from "vscode";
-import { Gui } from "@zowe/zowe-explorer-api";
 import { createUSSTree } from "../../__mocks__/mockCreators/uss";
-import { USSActions } from "../../../src/trees/uss";
-import { ZoweLogger, ZoweLocalStorage, ZoweSaveQueue } from "../../../src/tools";
-import { Workspace } from "../../../src/configuration";
+import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
+import { Gui } from "@zowe/zowe-explorer-api";
+import { ZoweSaveQueue } from "../../../src/tools/ZoweSaveQueue";
+import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 
 jest.mock("../../../src/tools/ZoweLogger");
 
@@ -31,7 +31,6 @@ describe("ZoweSaveQueue - unit tests", () => {
         jest.spyOn(Gui, "createTreeView").mockReturnValue({ onDidCollapseElement: jest.fn() } as any);
         const globalMocks = {
             errorMessageSpy: jest.spyOn(Gui, "errorMessage"),
-            markDocumentUnsavedSpy: jest.spyOn(Workspace, "markDocumentUnsaved"),
             processNextSpy: jest.spyOn(ZoweSaveQueue as any, "processNext"),
             allSpy: jest.spyOn(ZoweSaveQueue, "all"),
             trees: {
@@ -46,7 +45,7 @@ describe("ZoweSaveQueue - unit tests", () => {
     it("does promise chaining when pushing to queue", () => {
         ZoweSaveQueue.push({
             fileProvider: globalMocks.trees.uss,
-            uploadRequest: USSActions.saveUSSFile,
+            uploadRequest: async () => {},
             savedFile: {
                 isDirty: true,
                 uri: vscode.Uri.parse(""),
@@ -116,7 +115,6 @@ describe("ZoweSaveQueue - unit tests", () => {
             fail("ZoweSaveQueue.all should fail here");
         } catch (err) {
             expect(ZoweLogger.error).toHaveBeenCalledWith(EXAMPLE_ERROR);
-            expect(globalMocks.markDocumentUnsavedSpy).toHaveBeenCalledWith(FAILING_FILE);
             expect(globalMocks.errorMessageSpy).toHaveBeenCalledWith(
                 'Failed to upload changes for [failingFile](command:vscode.open?["/some/failing/path"]): Example error'
             );

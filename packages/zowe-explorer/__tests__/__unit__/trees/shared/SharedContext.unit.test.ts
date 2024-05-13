@@ -10,8 +10,8 @@
  */
 
 import { TreeItem } from "vscode";
-import { SharedContext } from "../../../../src/trees/shared";
-import { Constants } from "../../../../src/configuration";
+import { SharedContext } from "../../../../src/trees/shared/SharedContext";
+import { Constants } from "../../../../src/configuration/Constants";
 
 describe("Context helper tests", () => {
     const INFORMATION_CONTEXT = "information";

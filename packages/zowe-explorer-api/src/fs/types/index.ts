@@ -9,8 +9,7 @@
  *
  */
 
-export * from "./JobActions";
-export * from "./JobInit";
-export * from "./JobTree";
-export * from "./JobUtils";
-export * from "./ZoweJobNode";
+export * from "./abstract";
+export * from "./datasets";
+export * from "./jobs";
+export * from "./uss";

@@ -15,34 +15,24 @@ import * as path from "path";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { Gui, imperative, Validation, IZoweUSSTreeNode, Types } from "@zowe/zowe-explorer-api";
 import { isBinaryFileSync } from "isbinaryfile";
-import { SharedUtils, SharedActions, SharedContext } from "../shared";
-import { ProfilesUtils } from "../../utils";
-import { Profiles, Constants, Workspace } from "../../configuration";
-import { ZoweExplorerApiRegister } from "../../extending";
-import { USSUtils, USSFileStructure, USSAtributeView } from "../uss";
-import { ZoweLogger } from "../../tools";
-import { LocalFileManagement } from "../../management";
+import { USSAtributeView } from "./USSAttributeView";
+import { USSFileStructure } from "./USSFileStructure";
+import { ZoweUSSNode } from "./ZoweUSSNode";
+import { Constants } from "../../configuration/Constants";
+import { Profiles } from "../../configuration/Profiles";
+import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
+import { LocalFileManagement } from "../../management/LocalFileManagement";
+import { ZoweLogger } from "../../tools/ZoweLogger";
+import { SharedActions } from "../shared/SharedActions";
+import { SharedContext } from "../shared/SharedContext";
+import { SharedUtils } from "../shared/SharedUtils";
+import { AuthUtils } from "../../utils/AuthUtils";
 
 export class USSActions {
-    private static findEtag(node: IZoweUSSTreeNode, directories: Array<string>, index: number): boolean {
-        if (node === undefined || directories.indexOf(node.label.toString().trim()) === -1) {
-            return false;
-        }
-        if (directories.indexOf(node.label.toString().trim()) === directories.length - 1) {
-            return node.getEtag() !== "";
-        }
-
-        let flag: boolean = false;
-        for (const child of node.children) {
-            flag = flag || USSActions.findEtag(child, directories, directories.indexOf(node.label.toString().trim()) + 1);
-        }
-        return flag;
-    }
-
     /**
      * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
      *
-     * @param {ZoweUSSNode} node - The session node
+     * @param {ZoweUSSNode} node - The session or directory node that serves as the parent
      * @param {ussTree} ussFileProvider - Current ussTree used to populate the TreeView
      * @returns {Promise<void>}
      */
@@ -79,30 +69,33 @@ export class USSActions {
         const name = await Gui.showInputBox(nameOptions);
         if (name && filePath) {
             try {
-                filePath = `${filePath}/${name}`;
+                filePath = `${filePath}/${name as string}`;
+                const uri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, name) });
                 await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
+                if (nodeType === "file") {
+                    await vscode.workspace.fs.writeFile(uri, new Uint8Array());
+                } else {
+                    await vscode.workspace.fs.createDirectory(uri);
+                }
                 if (isTopLevel) {
                     await SharedActions.refreshAll(ussFileProvider);
                 } else {
                     ussFileProvider.refreshElement(node);
                 }
-                const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
+                const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name) as ZoweUSSNode);
                 await ussFileProvider.getTreeView().reveal(node, { select: true, focus: true });
                 ussFileProvider.getTreeView().reveal(newNode, { select: true, focus: true });
-                const localPath = `${node.getUSSDocumentFilePath()}/${name}`;
-                const fileExists = fs.existsSync(localPath);
-                if (fileExists && !USSUtils.fileExistsCaseSensitiveSync(localPath)) {
-                    Gui.showMessage(
-                        vscode.l10n.t(
-                            `There is already a file with the same name.
-                        Please change your OS file system settings if you want to give case sensitive file names.`
-                        )
-                    );
-                    ussFileProvider.refreshElement(node);
+
+                const equivalentNodeParent = ussFileProvider.findEquivalentNode(
+                    node,
+                    SharedContext.isFavorite(node) || SharedContext.isFavoriteDescendant(node)
+                );
+                if (equivalentNodeParent != null) {
+                    ussFileProvider.refreshElement(equivalentNodeParent);
                 }
             } catch (err) {
                 if (err instanceof Error) {
-                    await ProfilesUtils.errorHandling(err, node.getProfileName(), vscode.l10n.t("Unable to create node:"));
+                    await AuthUtils.errorHandling(err, node.getProfileName(), vscode.l10n.t("Unable to create node:"));
                 }
                 throw err;
             }
@@ -120,7 +113,7 @@ export class USSActions {
             await node.getChildren();
             ussFileProvider.refreshElement(node);
         } catch (err) {
-            await ProfilesUtils.errorHandling(err, node.getProfileName());
+            await AuthUtils.errorHandling(err, node.getProfileName());
         }
     }
 
@@ -132,7 +125,7 @@ export class USSActions {
             Profiles.getInstance().validProfile === Validation.ValidationType.UNVERIFIED
         ) {
             const quickPickOptions: vscode.QuickPickOptions = {
-                placeHolder: `What would you like to create at ${node.fullPath}?`,
+                placeHolder: `What would you like to create at ${node.fullPath as string}?`,
                 ignoreFocusOut: true,
                 canPickMany: false,
             };
@@ -181,17 +174,17 @@ export class USSActions {
                 }
             })
         );
-        ussFileProvider.refresh();
+        ussFileProvider.refreshElement(node);
     }
 
     public static async uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string): Promise<void> {
         ZoweLogger.trace("uss.actions.uploadBinaryFile called.");
         try {
             const localFileName = path.parse(filePath).base;
-            const ussName = `${node.fullPath}/${localFileName}`;
+            const ussName = `${node.fullPath as string}/${localFileName}`;
             await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContent(filePath, ussName, { binary: true });
         } catch (e) {
-            await ProfilesUtils.errorHandling(e, node.getProfileName());
+            await AuthUtils.errorHandling(e, node.getProfileName());
         }
     }
 
@@ -199,7 +192,7 @@ export class USSActions {
         ZoweLogger.trace("uss.actions.uploadFile called.");
         try {
             const localFileName = path.parse(doc.fileName).base;
-            const ussName = `${node.fullPath}/${localFileName}`;
+            const ussName = `${node.fullPath as string}/${localFileName}`;
             const prof = node.getProfile();
 
             const task: imperative.ITaskWithStatus = {
@@ -216,7 +209,7 @@ export class USSActions {
             }
             await ZoweExplorerApiRegister.getUssApi(prof).putContent(doc.fileName, ussName, options);
         } catch (e) {
-            await ProfilesUtils.errorHandling(e, node.getProfileName());
+            await AuthUtils.errorHandling(e, node.getProfileName());
         }
     }
 
@@ -234,102 +227,10 @@ export class USSActions {
         vscode.env.clipboard.writeText(node.fullPath);
     }
 
-    /**
-     * Uploads the file to the mainframe
-     *
-     * @export
-     * @param {Session} session - Desired session
-     * @param {vscode.TextDocument} doc - TextDocument that is being saved
-     */
-    public static async saveUSSFile(doc: vscode.TextDocument, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
-        ZoweLogger.trace("uss.actions.saveUSSFile called.");
-        ZoweLogger.debug(
-            vscode.l10n.t({
-                message: "save requested for USS file {0}",
-                args: [doc.fileName],
-                comment: ["Document file name"],
-            })
-        );
-        const start = path.join(Constants.USS_DIR + path.sep).length;
-        const ending = doc.fileName.substring(start);
-        const sesName = ending.substring(0, ending.indexOf(path.sep));
-        const profile = Profiles.getInstance().loadNamedProfile(sesName);
-        if (!profile) {
-            const sessionError = vscode.l10n.t("Could not locate session when saving USS file.");
-            ZoweLogger.error(sessionError);
-            await Gui.errorMessage(sessionError);
-            return;
-        }
-
-        const remote = ending.substring(sesName.length).replace(/\\/g, "/");
-        const directories = doc.fileName.split(path.sep).splice(doc.fileName.split(path.sep).indexOf("_U_") + 1);
-        directories.splice(1, 2);
-        const profileSesnode: IZoweUSSTreeNode = ussFileProvider.mSessionNodes.find((child) => child.label.toString().trim() === sesName);
-        const etagProfiles = USSActions.findEtag(profileSesnode, directories, 0);
-        const favoritesSesNode: IZoweUSSTreeNode = ussFileProvider.mFavorites.find((child) => child.label.toString().trim() === sesName);
-        const etagFavorites = USSActions.findEtag(favoritesSesNode, directories, 0);
-
-        // get session from session name
-        let sesNode: IZoweUSSTreeNode;
-        if ((etagProfiles && etagFavorites) || etagProfiles) {
-            sesNode = profileSesnode;
-        } else if (etagFavorites) {
-            sesNode = favoritesSesNode;
-        }
-        // Get specific node based on label and parent tree (session / favorites)
-        const nodes: IZoweUSSTreeNode[] = SharedUtils.concatChildNodes(sesNode ? [sesNode] : ussFileProvider.mSessionNodes);
-        const node: IZoweUSSTreeNode =
-            nodes.find((zNode) => {
-                if (SharedContext.isText(zNode)) {
-                    return zNode.fullPath.trim() === remote;
-                } else {
-                    return false;
-                }
-            }) ?? ussFileProvider.openFiles?.[doc.uri.fsPath];
-
-        // define upload options
-        const etagToUpload = node?.getEtag();
-        const returnEtag = etagToUpload != null;
-
-        const prof = node?.getProfile() ?? profile;
-        try {
-            await USSUtils.autoDetectEncoding(node, prof);
-
-            const uploadResponse: zosfiles.IZosFilesResponse = await Gui.withProgress(
-                {
-                    location: vscode.ProgressLocation.Window,
-                    title: vscode.l10n.t("Saving file..."),
-                },
-                () => {
-                    return SharedUtils.uploadContent(node, doc, remote, prof, etagToUpload, returnEtag);
-                }
-            );
-            if (uploadResponse.success) {
-                Gui.setStatusBarMessage(uploadResponse.commandResponse, Constants.STATUS_BAR_TIMEOUT_MS);
-                // set local etag with the new etag from the updated file on mainframe
-                node?.setEtag(uploadResponse.apiResponse.etag);
-                Workspace.setFileSaved(true);
-                // this part never runs! zowe.Upload.fileToUSSFile doesn't return success: false, it just throws the error which is caught below!!!!!
-            } else {
-                await Workspace.markDocumentUnsaved(doc);
-                Gui.errorMessage(uploadResponse.commandResponse);
-            }
-        } catch (err) {
-            // TODO: error handling must not be zosmf specific
-            const errorMessage = err ? err.message : err.toString();
-            if (errorMessage.includes("Rest API failure with HTTP(S) status 412")) {
-                await LocalFileManagement.compareSavedFileContent(doc, node, remote, prof);
-            } else {
-                await Workspace.markDocumentUnsaved(doc);
-                await ProfilesUtils.errorHandling(err, sesName);
-            }
-        }
-    }
-
     public static async deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<boolean> {
         ZoweLogger.trace("uss.actions.deleteUSSFilesPrompt called.");
         const fileNames = nodes.reduce((label, currentVal) => {
-            return label + currentVal.label.toString() + "\n";
+            return `${label as string}${currentVal.label.toString() as string}\n`;
         }, "");
 
         const deleteButton = vscode.l10n.t("Delete");
@@ -363,7 +264,7 @@ export class USSActions {
         ZoweLogger.trace("uss.actions.buildFileStructure called.");
         if (SharedContext.isUssDirectory(node)) {
             const directory: USSFileStructure.UssFileTree = {
-                localPath: node.getUSSDocumentFilePath(),
+                localUri: node.resourceUri,
                 ussPath: node.fullPath,
                 baseName: node.getLabel() as string,
                 sessionName: node.getSessionNode().getLabel() as string,
@@ -384,9 +285,8 @@ export class USSActions {
         }
 
         return {
-            children: [],
-            binary: node.binary,
-            localPath: node.getUSSDocumentFilePath(),
+            binary: (await node.getEncoding())?.kind === "binary",
+            localUri: node.resourceUri,
             ussPath: node.fullPath,
             baseName: node.getLabel() as string,
             sessionName: node.getSessionNode().getLabel() as string,
@@ -477,6 +377,7 @@ export class USSActions {
      */
     public static async pasteUss(ussFileProvider: Types.IZoweUSSTreeType, node: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("uss.actions.pasteUss called.");
+        /* eslint-disable-next-line deprecation/deprecation */
         if (node.pasteUssTree == null && node.copyUssFile == null) {
             await Gui.infoMessage(vscode.l10n.t("The paste operation is not supported for this node."));
             return;
@@ -487,6 +388,7 @@ export class USSActions {
                 title: vscode.l10n.t("Pasting files..."),
             },
             async () => {
+                /* eslint-disable-next-line deprecation/deprecation */
                 await (node.pasteUssTree ? node.pasteUssTree() : node.copyUssFile());
             }
         );

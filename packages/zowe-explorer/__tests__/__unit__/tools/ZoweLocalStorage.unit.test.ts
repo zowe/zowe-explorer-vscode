@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { ZoweLocalStorage } from "../../../src/tools";
+import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 
 describe("ZoweLocalStorage Unit Tests", () => {

@@ -14,9 +14,10 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { moveSync } from "fs-extra";
 import { Gui } from "@zowe/zowe-explorer-api";
-import { ProfilesUtils } from "../utils";
-import { SettingsConfig, Constants } from "../configuration";
-import { ZoweLogger } from "../tools";
+import { SettingsConfig } from "./SettingsConfig";
+import { Constants } from "./Constants";
+import { ZoweLogger } from "../tools/ZoweLogger";
+import { AuthUtils } from "../utils/AuthUtils";
 
 export class TempFolder {
     /**
@@ -27,7 +28,7 @@ export class TempFolder {
     public static async moveTempFolder(previousTempPath: string, currentTempPath: string): Promise<void> {
         ZoweLogger.trace("TempFolder.moveTempFolder called.");
         // Re-define globals with updated path
-        Constants.defineGlobals(currentTempPath);
+        Constants.defineConstants(currentTempPath);
 
         if (previousTempPath === "") {
             previousTempPath = path.join(__dirname, "..", "..", "resources");
@@ -43,7 +44,7 @@ export class TempFolder {
             fs.mkdirSync(Constants.DS_DIR);
         } catch (err) {
             if (err instanceof Error) {
-                await ProfilesUtils.errorHandling(err, null, vscode.l10n.t("Error encountered when creating temporary folder!"));
+                await AuthUtils.errorHandling(err, null, vscode.l10n.t("Error encountered when creating temporary folder!"));
             }
         }
         const previousTemp = path.join(previousTempPath, "temp");

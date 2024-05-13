@@ -11,31 +11,30 @@
 
 import * as path from "path";
 import { TreeItemCollapsibleState } from "vscode";
-import { IconGenerator } from "../icons";
-import { SharedContext } from "../trees/shared";
-import { Constants } from "../configuration";
-
+import { SharedContext } from "../trees/shared/SharedContext";
+import { Constants } from "../configuration/Constants";
+import { IconUtils } from "./IconUtils";
 /**
  * Zowe Explorer VS Code Extension Icons
  */
 export class Icon {
-    public static document: IconGenerator.IIconItem = {
-        id: IconGenerator.IconId.document,
-        type: IconGenerator.IconHierarchyType.base,
+    public static document: IconUtils.IIconItem = {
+        id: IconUtils.IconId.document,
+        type: IconUtils.IconHierarchyType.base,
         path: Icon.getIconPathInResources("document.svg"),
         check: (node) => SharedContext.isDocument(node),
     };
 
-    public static documentBinary: IconGenerator.IIconItem = {
-        id: IconGenerator.IconId.documentBinary,
-        type: IconGenerator.IconHierarchyType.base,
+    public static documentBinary: IconUtils.IIconItem = {
+        id: IconUtils.IconId.documentBinary,
+        type: IconUtils.IconHierarchyType.base,
         path: Icon.getIconPathInResources("document-binary.svg"),
         check: (node) => SharedContext.isBinary(node),
     };
 
-    public static documentBinaryDownloaded: IconGenerator.IIconItem = {
-        id: IconGenerator.IconId.documentBinaryDownloaded,
-        type: IconGenerator.IconHierarchyType.derived,
+    public static documentBinaryDownloaded: IconUtils.IIconItem = {
+        id: IconUtils.IconId.documentBinaryDownloaded,
+        type: IconUtils.IconHierarchyType.derived,
         path: Icon.getIconPathInResources("document-binary-downloaded.svg"),
         check: (node) => {
             const generalizedNode = node as any;
@@ -47,9 +46,9 @@ export class Icon {
         },
     };
 
-    public static downloadedDocument: IconGenerator.IIconItem = {
-        id: IconGenerator.IconId.downloadedDocument,
-        type: IconGenerator.IconHierarchyType.derived,
+    public static downloadedDocument: IconUtils.IIconItem = {
+        id: IconUtils.IconId.downloadedDocument,
+        type: IconUtils.IconHierarchyType.derived,
         path: Icon.getIconPathInResources("document-downloaded.svg"),
         check: (node) => {
             // Here we need to do check for potentially derived class, that's why any is required
@@ -63,23 +62,23 @@ export class Icon {
         },
     };
 
-    public static fileError: IconGenerator.IIconItem = {
-        id: IconGenerator.IconId.fileError,
-        type: IconGenerator.IconHierarchyType.base,
+    public static fileError: IconUtils.IIconItem = {
+        id: IconUtils.IconId.fileError,
+        type: IconUtils.IconHierarchyType.base,
         path: Icon.getIconPathInResources("fileError.svg"),
         check: (node) => SharedContext.hasFileError(node),
     };
 
-    public static folder: IconGenerator.IIconItem = {
-        id: IconGenerator.IconId.folder,
-        type: IconGenerator.IconHierarchyType.base,
+    public static folder: IconUtils.IIconItem = {
+        id: IconUtils.IconId.folder,
+        type: IconUtils.IconHierarchyType.base,
         path: Icon.getIconPathInResources("folder-closed.svg"),
         check: (node) => SharedContext.isFolder(node),
     };
 
-    public static folderOpen: IconGenerator.IIconItem = {
-        id: IconGenerator.IconId.folderOpen,
-        type: IconGenerator.IconHierarchyType.derived,
+    public static folderOpen: IconUtils.IIconItem = {
+        id: IconUtils.IconId.folderOpen,
+        type: IconUtils.IconHierarchyType.derived,
         path: Icon.getIconPathInResources("folder-open.svg"),
         check: (node) => {
             const parentCheck = Icon.folder.check(node);
@@ -87,16 +86,16 @@ export class Icon {
         },
     };
 
-    public static filterFolder: IconGenerator.IIconItem = {
-        id: IconGenerator.IconId.filterFolder,
-        type: IconGenerator.IconHierarchyType.base,
+    public static filterFolder: IconUtils.IIconItem = {
+        id: IconUtils.IconId.filterFolder,
+        type: IconUtils.IconHierarchyType.base,
         path: Icon.getIconPathInResources("folder-root-filtered-closed.svg"),
         check: (node) => SharedContext.isFilterFolder(node),
     };
 
-    public static filterFolderOpen: IconGenerator.IIconItem = {
-        id: IconGenerator.IconId.filterFolderOpen,
-        type: IconGenerator.IconHierarchyType.derived,
+    public static filterFolderOpen: IconUtils.IIconItem = {
+        id: IconUtils.IconId.filterFolderOpen,
+        type: IconUtils.IconHierarchyType.derived,
         path: Icon.getIconPathInResources("folder-root-filtered-open.svg"),
         check: (node) => {
             const parentCheck = Icon.folder.check(node);
@@ -104,44 +103,44 @@ export class Icon {
         },
     };
 
-    public static home: IconGenerator.IIconItem = {
-        id: IconGenerator.IconId.home,
-        type: IconGenerator.IconHierarchyType.base,
+    public static home: IconUtils.IIconItem = {
+        id: IconUtils.IconId.home,
+        type: IconUtils.IconHierarchyType.base,
         path: Icon.getIconPathInResources("home.svg"),
-        check: (node) => SharedContext.isHomeProfile(node),
+        check: (node) => SharedContext.isGlobalProfile(node),
     };
 
-    public static migrated: IconGenerator.IIconItem = {
-        id: IconGenerator.IconId.migrated,
-        type: IconGenerator.IconHierarchyType.base,
+    public static migrated: IconUtils.IIconItem = {
+        id: IconUtils.IconId.migrated,
+        type: IconUtils.IconHierarchyType.base,
         path: Icon.getIconPathInResources("migrated.svg"),
         check: (node) => SharedContext.isMigrated(node),
     };
 
-    public static pattern: IconGenerator.IIconItem = {
-        id: IconGenerator.IconId.pattern,
-        type: IconGenerator.IconHierarchyType.base,
+    public static pattern: IconUtils.IIconItem = {
+        id: IconUtils.IconId.pattern,
+        type: IconUtils.IconHierarchyType.base,
         path: Icon.getIconPathInResources("pattern.svg"),
         check: (node) => SharedContext.isFavoriteSearch(node),
     };
 
-    public static session: IconGenerator.IIconItem = {
-        id: IconGenerator.IconId.session,
-        type: IconGenerator.IconHierarchyType.base,
+    public static session: IconUtils.IIconItem = {
+        id: IconUtils.IconId.session,
+        type: IconUtils.IconHierarchyType.base,
         path: Icon.getIconPathInResources("folder-root-unverified-closed.svg"),
         check: (node) => SharedContext.isSessionNotFav(node),
     };
 
-    public static sessionActive: IconGenerator.IIconItem = {
-        id: IconGenerator.IconId.sessionActive,
-        type: IconGenerator.IconHierarchyType.base,
+    public static sessionActive: IconUtils.IIconItem = {
+        id: IconUtils.IconId.sessionActive,
+        type: IconUtils.IconHierarchyType.base,
         path: Icon.getIconPathInResources("folder-root-connected-closed.svg"),
         check: (node) => SharedContext.isSessionActive(node),
     };
 
-    public static sessionActiveOpen: IconGenerator.IIconItem = {
-        id: IconGenerator.IconId.sessionActiveOpen,
-        type: IconGenerator.IconHierarchyType.derived,
+    public static sessionActiveOpen: IconUtils.IIconItem = {
+        id: IconUtils.IconId.sessionActiveOpen,
+        type: IconUtils.IconHierarchyType.derived,
         path: Icon.getIconPathInResources("folder-root-connected-open.svg"),
         check: (node) => {
             const parentCheck = Icon.sessionActive.check(node);
@@ -149,16 +148,16 @@ export class Icon {
         },
     };
 
-    public static sessionFavorite: IconGenerator.IIconItem = {
-        id: IconGenerator.IconId.sessionFavourite,
-        type: IconGenerator.IconHierarchyType.base,
+    public static sessionFavorite: IconUtils.IIconItem = {
+        id: IconUtils.IconId.sessionFavourite,
+        type: IconUtils.IconHierarchyType.base,
         path: Icon.getIconPathInResources("folder-root-favorite-star-closed.svg"),
         check: (node) => SharedContext.isSessionFavorite(node),
     };
 
-    public static sessionFavoriteOpen: IconGenerator.IIconItem = {
-        id: IconGenerator.IconId.sessionFavouriteOpen,
-        type: IconGenerator.IconHierarchyType.derived,
+    public static sessionFavoriteOpen: IconUtils.IIconItem = {
+        id: IconUtils.IconId.sessionFavouriteOpen,
+        type: IconUtils.IconHierarchyType.derived,
         path: Icon.getIconPathInResources("folder-root-favorite-star-open.svg"),
         check: (node) => {
             const parentCheck = Icon.sessionFavorite.check(node);
@@ -166,16 +165,16 @@ export class Icon {
         },
     };
 
-    public static sessionInactive: IconGenerator.IIconItem = {
-        id: IconGenerator.IconId.sessionInactive,
-        type: IconGenerator.IconHierarchyType.base,
+    public static sessionInactive: IconUtils.IIconItem = {
+        id: IconUtils.IconId.sessionInactive,
+        type: IconUtils.IconHierarchyType.base,
         path: Icon.getIconPathInResources("folder-root-disconnected-closed.svg"),
         check: (node) => SharedContext.isSessionInactive(node),
     };
 
-    public static sessionOpen: IconGenerator.IIconItem = {
-        id: IconGenerator.IconId.sessionOpen,
-        type: IconGenerator.IconHierarchyType.derived,
+    public static sessionOpen: IconUtils.IIconItem = {
+        id: IconUtils.IconId.sessionOpen,
+        type: IconUtils.IconHierarchyType.derived,
         path: Icon.getIconPathInResources("folder-root-unverified-open.svg"),
         check: (node) => {
             const parentCheck = Icon.session.check(node);
@@ -185,9 +184,9 @@ export class Icon {
         },
     };
 
-    public static vsam: IconGenerator.IIconItem = {
-        id: IconGenerator.IconId.vsam,
-        type: IconGenerator.IconHierarchyType.base,
+    public static vsam: IconUtils.IIconItem = {
+        id: IconUtils.IconId.vsam,
+        type: IconUtils.IconHierarchyType.base,
         path: Icon.getIconPathInResources("file_type_db.svg"),
         check: (node) => SharedContext.isVsam(node),
     };
@@ -196,7 +195,7 @@ export class Icon {
      * Retrieve array with all available icons for extension
      * @returns array of all available icons
      */
-    public static getIcons(): IconGenerator.IIconItem[] {
+    public static getIcons(): IconUtils.IIconItem[] {
         return [
             Icon.document,
             Icon.documentBinary,

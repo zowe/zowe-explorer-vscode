@@ -10,7 +10,8 @@
  */
 
 import * as vscode from "vscode";
-import { Constants, Workspace } from "../../../src/configuration";
+import { Constants } from "../../../src/configuration/Constants";
+import { Workspace } from "../../../src/configuration/Workspace";
 
 function createGlobalMocks() {
     const activeTextEditor = jest.fn();

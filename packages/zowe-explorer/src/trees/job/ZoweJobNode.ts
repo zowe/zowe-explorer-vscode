@@ -11,19 +11,23 @@
 
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
-import { Gui, imperative, IZoweJobTreeNode, Sorting, ZoweTreeNode } from "@zowe/zowe-explorer-api";
-import { ZoweExplorerApiRegister } from "../../extending";
-import { ProfilesUtils } from "../../utils";
-import { IconGenerator } from "../../icons";
-import { JobUtils } from "../job";
-import { Profiles, Constants } from "../../configuration";
-import { ZoweLogger } from "../../tools";
-import { SpoolProvider } from "../../providers";
-import { SharedUtils, SharedContext } from "../shared";
+import * as path from "path";
+import { buildUniqueSpoolName, imperative, IZoweJobTreeNode, Sorting, ZoweScheme, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { JobFSProvider } from "./JobFSProvider";
+import { JobUtils } from "./JobUtils";
+import { Constants } from "../../configuration/Constants";
+import { Profiles } from "../../configuration/Profiles";
+import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
+import { IconGenerator } from "../../icons/IconGenerator";
+import { ZoweLogger } from "../../tools/ZoweLogger";
+import { SharedContext } from "../shared/SharedContext";
+import { SharedUtils } from "../shared/SharedUtils";
+import { AuthUtils } from "../../utils/AuthUtils";
 
 export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
     public children: IZoweJobTreeNode[] = [];
     public dirty = true;
+    public resourceUri?: vscode.Uri;
     public sort: Sorting.NodeSort;
     private _owner: string;
     private _prefix: string;
@@ -56,8 +60,19 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         this.tooltip = opts.label;
         this.job = opts.job ?? null; // null instead of undefined to satisfy isZoweJobTreeNode
 
-        if (opts.parentNode == null && opts.label !== "Favorites") {
-            this.contextValue = Constants.JOBS_SESSION_CONTEXT;
+        const isFavoritesNode = opts.label === "Favorites";
+        const sessionLabel = opts.profile?.name ?? SharedUtils.getSessionLabel(this);
+
+        if (!isFavoritesNode && this.job == null) {
+            // non-favorited, session node
+            if (!SharedContext.isFavorite(this)) {
+                this.contextValue = Constants.JOBS_SESSION_CONTEXT;
+            }
+            this.resourceUri = vscode.Uri.from({
+                scheme: ZoweScheme.Jobs,
+                path: `/${sessionLabel}/`,
+            });
+            JobFSProvider.instance.createDirectory(this.resourceUri, { isFilter: true });
         }
 
         if (opts.session) {
@@ -65,6 +80,10 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             if (opts.session.ISession?.user) {
                 this._owner = opts.session.ISession.user;
             }
+        }
+
+        if (opts.contextOverride) {
+            this.contextValue = opts.contextOverride;
         }
 
         const icon = IconGenerator.getIconByNode(this);
@@ -77,7 +96,14 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 method: Sorting.JobSortOpts.Id,
                 direction: Sorting.SortDirection.Ascending,
             };
-            this.id = this.label as string;
+            if (this.getParent()?.label !== vscode.l10n.t("Favorites") && !SharedContext.isFavorite(this)) {
+                this.id = this.label as string;
+            }
+        } else if (this.job != null) {
+            this.resourceUri = vscode.Uri.from({
+                scheme: ZoweScheme.Jobs,
+                path: `/${sessionLabel}/${this.job.jobid}`,
+            });
         }
     }
 
@@ -93,13 +119,18 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             return this.children;
         }
         if (SharedContext.isSession(this) && !this.filtered && !SharedContext.isFavorite(this)) {
-            return [
-                new ZoweJobNode({
-                    label: vscode.l10n.t("Use the search button to display jobs"),
-                    collapsibleState: vscode.TreeItemCollapsibleState.None,
-                    parentNode: this,
-                }),
-            ];
+            const placeholder = new ZoweJobNode({
+                label: vscode.l10n.t("Use the search button to display jobs"),
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: this,
+                profile: thisSessionNode.getProfile(),
+                contextOverride: Constants.INFORMATION_CONTEXT,
+            });
+            placeholder.command = {
+                command: "zowe.placeholderCommand",
+                title: "Placeholder",
+            };
+            return [placeholder];
         }
 
         if (!this.dirty) {
@@ -121,13 +152,12 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                     label: vscode.l10n.t("There are no JES spool messages to display"),
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
                     parentNode: this,
+                    profile: this.getProfile(),
                 });
-                noSpoolNode.iconPath = null;
+                noSpoolNode.iconPath = undefined;
                 return [noSpoolNode];
             }
-            const refreshTimestamp = Date.now();
             spools.forEach((spool) => {
-                const sessionName = this.getProfileName();
                 const procstep = spool.procstep ? spool.procstep : undefined;
                 let newLabel: string;
                 if (procstep) {
@@ -155,14 +185,20 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                         job: this.job,
                         spool,
                     });
+                    JobFSProvider.instance.writeFile(spoolNode.resourceUri, new Uint8Array(), {
+                        create: true,
+                        overwrite: true,
+                        name: spoolNode.uniqueName,
+                        spool,
+                    });
                     const icon = IconGenerator.getIconByNode(spoolNode);
                     if (icon) {
                         spoolNode.iconPath = icon.path;
                     }
                     spoolNode.command = {
-                        command: "zowe.jobs.zosJobsOpenspool",
+                        command: "vscode.open",
                         title: "",
-                        arguments: [sessionName, spoolNode],
+                        arguments: [spoolNode.resourceUri],
                     };
                     elementChildren[newLabel] = spoolNode;
                 }
@@ -175,9 +211,14 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                     label: vscode.l10n.t("No jobs found"),
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
                     parentNode: this,
+                    profile: this.getProfile(),
                 });
                 noJobsNode.contextValue = Constants.INFORMATION_CONTEXT;
-                noJobsNode.iconPath = null;
+                noJobsNode.iconPath = undefined;
+                noJobsNode.command = {
+                    command: "zowe.placeholderCommand",
+                    title: "Placeholder",
+                };
                 return [noJobsNode];
             }
             jobs.forEach((job) => {
@@ -205,6 +246,8 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                         profile: this.getProfile(),
                         job,
                     });
+                    JobFSProvider.instance.createDirectory(jobNode.resourceUri, { job });
+
                     jobNode.contextValue = Constants.JOBS_JOB_CONTEXT;
                     if (job.retcode) {
                         jobNode.contextValue += Constants.RC_SUFFIX + job.retcode;
@@ -315,15 +358,6 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         return this._searchId;
     }
 
-    private statusNotSupportedMsg(status: string): void {
-        ZoweLogger.trace("ZoweJobNode.statusNotSupportedMsg called.");
-        if (status !== "*") {
-            Gui.warningMessage(
-                vscode.l10n.t("Filtering by job status is not yet supported with this profile type. Will show jobs with all statuses.")
-            );
-        }
-    }
-
     private async getJobs(owner: string, prefix: string, searchId: string, status: string): Promise<zosjobs.IJob[]> {
         ZoweLogger.trace("ZoweJobNode.getJobs called.");
         let jobsInternal: zosjobs.IJob[] = [];
@@ -364,26 +398,27 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             }
         } catch (error) {
             ZoweLogger.trace("Error getting jobs from Rest API.");
-            await ProfilesUtils.errorHandling(error, cachedProfile.name, vscode.l10n.t("Retrieving response from zowe.GetJobs"));
-            ProfilesUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode());
+            await AuthUtils.errorHandling(error, cachedProfile.name, vscode.l10n.t("Retrieving response from zowe.GetJobs"));
+            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode());
         }
         return jobsInternal;
     }
 }
 
 export class ZoweSpoolNode extends ZoweJobNode {
+    public uniqueName: string;
     public spool: zosjobs.IJobFile;
 
     public constructor(opts: SharedUtils.IZoweJobTreeOpts & { spool?: zosjobs.IJobFile }) {
         super(opts);
+        this.uniqueName = opts.spool ? buildUniqueSpoolName(opts.spool).replace("/", "") : "<unknown-spool-id>";
+        this.resourceUri = opts.parentNode?.resourceUri.with({
+            path: path.posix.join(opts.parentNode.resourceUri.path, this.uniqueName),
+        });
         this.contextValue = Constants.JOBS_SPOOL_CONTEXT;
         this.spool = opts.spool;
         const icon = IconGenerator.getIconByNode(this);
 
-        // parent of parent should be the session; tie resourceUri with TreeItem for file decorator
-        if (opts.parentNode && opts.parentNode.getParent()) {
-            this.resourceUri = SpoolProvider.encodeJobFile(opts.parentNode.getParent().label as string, opts.spool);
-        }
         if (icon) {
             this.iconPath = icon.path;
         }

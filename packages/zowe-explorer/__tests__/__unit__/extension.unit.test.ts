@@ -18,13 +18,18 @@ import * as extension from "../../src/extension";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import { imperative, Gui, Validation, ProfilesCache, FileManagement } from "@zowe/zowe-explorer-api";
-import { ProfilesUtils } from "../../src/utils";
-import { createInstanceOfProfileInfo, createIProfile, createGetConfigMock, createTreeView } from "../__mocks__/mockCreators/shared";
-import { DatasetTree, ZoweDatasetNode } from "../../src/trees/dataset";
-import { Constants, Profiles, SettingsConfig, TempFolder } from "../../src/configuration";
-import { ZoweExplorerExtender } from "../../src/extending";
-import { ZoweLocalStorage, ZoweSaveQueue } from "../../src/tools";
-import { USSTree } from "../../src/trees/uss";
+import { createGetConfigMock, createInstanceOfProfileInfo, createIProfile, createTreeView } from "../__mocks__/mockCreators/shared";
+import { Constants } from "../../src/configuration/Constants";
+import { Profiles } from "../../src/configuration/Profiles";
+import { SettingsConfig } from "../../src/configuration/SettingsConfig";
+import { TempFolder } from "../../src/configuration/TempFolder";
+import { ZoweExplorerExtender } from "../../src/extending/ZoweExplorerExtender";
+import { ZoweLocalStorage } from "../../src/tools/ZoweLocalStorage";
+import { ZoweSaveQueue } from "../../src/tools/ZoweSaveQueue";
+import { DatasetTree } from "../../src/trees/dataset/DatasetTree";
+import { ZoweDatasetNode } from "../../src/trees/dataset/ZoweDatasetNode";
+import { USSTree } from "../../src/trees/uss/USSTree";
+import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 
 jest.mock("../../src/utils/LoggerUtils");
 jest.mock("../../src/tools/ZoweLogger");
@@ -144,7 +149,6 @@ function createGlobalMocks() {
             "zowe.ds.refreshDataset",
             "zowe.ds.pattern",
             "zowe.ds.editSession",
-            "zowe.ds.ZoweNode.openPS",
             "zowe.ds.createDataset",
             "zowe.ds.createMember",
             "zowe.ds.deleteDataset",
@@ -184,7 +188,6 @@ function createGlobalMocks() {
             "zowe.uss.refreshDirectory",
             "zowe.uss.fullPath",
             "zowe.uss.editSession",
-            "zowe.uss.ZoweUSSNode.open",
             "zowe.uss.removeSession",
             "zowe.uss.createFile",
             "zowe.uss.createFolder",
@@ -204,7 +207,6 @@ function createGlobalMocks() {
             "zowe.uss.pasteUssFile",
             "zowe.uss.copyUssFile",
             "zowe.uss.openWithEncoding",
-            "zowe.jobs.zosJobsOpenspool",
             "zowe.jobs.deleteJob",
             "zowe.jobs.runModifyCommand",
             "zowe.jobs.runStopCommand",
@@ -243,6 +245,8 @@ function createGlobalMocks() {
             "zowe.editHistory",
             "zowe.promptCredentials",
             "zowe.profileManagement",
+            "zowe.diff.useLocalContent",
+            "zowe.diff.useRemoteContent",
             "zowe.openRecentMember",
             "zowe.searchInAllLoadedItems",
             "zowe.ds.deleteProfile",
@@ -256,6 +260,7 @@ function createGlobalMocks() {
             "zowe.compareWithSelected",
             "zowe.compareWithSelectedReadOnly",
             "zowe.compareFileStarted",
+            "zowe.placeholderCommand",
             "zowe.extRefresh",
         ],
     };
@@ -269,7 +274,6 @@ function createGlobalMocks() {
         value: globalMocks.mockCreateTreeView,
         configurable: true,
     });
-    Object.defineProperty(vscode, "Uri", { value: globalMocks.mockUri, configurable: true });
     Object.defineProperty(vscode.commands, "registerCommand", {
         value: globalMocks.mockRegisterCommand,
         configurable: true,

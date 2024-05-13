@@ -14,10 +14,11 @@ import * as vscode from "vscode";
 import * as core from "@zowe/core-for-zowe-sdk";
 import * as shared from "../../__mocks__/mockCreators/shared";
 import { Gui, imperative, MessageSeverity } from "@zowe/zowe-explorer-api";
-import { ZoweLocalStorage, ZoweLogger } from "../../../src/tools";
-import { SettingsConfig } from "../../../src/configuration";
-import { SharedInit } from "../../../src/trees/shared";
-import { LoggerUtils } from "../../../src/utils";
+import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
+import { SharedInit } from "../../../src/trees/shared/SharedInit";
+import { LoggerUtils } from "../../../src/utils/LoggerUtils";
+import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
+import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 
 function createGlobalMocks() {
     const newMocks = {

@@ -11,16 +11,24 @@
 
 import * as vscode from "vscode";
 import { IZoweTreeNode, imperative, Types, IZoweTree, PersistenceSchemaEnum, Validation } from "@zowe/zowe-explorer-api";
-import { Constants, Profiles, SettingsConfig } from "../configuration";
-import { IconGenerator } from "../icons";
-import { ProfilesUtils } from "../utils";
-import { ZoweLogger, ZowePersistentFilters } from "../tools";
-import { SharedTreeProviders, SharedContext, SharedUtils, SharedActions } from "../trees/shared";
+import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
+import { ZoweLogger } from "../tools/ZoweLogger";
+import { Profiles } from "../configuration/Profiles";
+import { SharedContext } from "../trees/shared/SharedContext";
+import { Constants } from "../configuration/Constants";
+import { IconGenerator } from "../icons/IconGenerator";
+import { SettingsConfig } from "../configuration/SettingsConfig";
+import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
+import { SharedUtils } from "../trees/shared/SharedUtils";
+import { ProfilesUtils } from "../utils/ProfilesUtils";
+import { SharedActions } from "../trees/shared/SharedActions";
+import { IconUtils } from "../icons/IconUtils";
+import { AuthUtils } from "../utils/AuthUtils";
 
-export class ZoweTreeProvider {
+export class ZoweTreeProvider<T extends IZoweTreeNode> {
     // Event Emitters used to notify subscribers that the refresh event has fired
-    public mOnDidChangeTreeData: vscode.EventEmitter<IZoweTreeNode | void> = new vscode.EventEmitter<IZoweTreeNode | undefined>();
-    public readonly onDidChangeTreeData: vscode.Event<IZoweTreeNode | void> = this.mOnDidChangeTreeData.event;
+    public mOnDidChangeTreeData: vscode.EventEmitter<T | undefined | null | void> = new vscode.EventEmitter();
+    public readonly onDidChangeTreeData = this.mOnDidChangeTreeData.event;
 
     protected mHistory: ZowePersistentFilters;
     protected log: imperative.Logger = imperative.Logger.getAppLogger();
@@ -41,9 +49,9 @@ export class ZoweTreeProvider {
         return element;
     }
 
-    public getParent(element: IZoweTreeNode): IZoweTreeNode {
+    public getParent(element: T): vscode.ProviderResult<T> {
         ZoweLogger.trace("ZoweTreeProvider.getParent called.");
-        return element.getParent();
+        return element.getParent() as T;
     }
 
     /**
@@ -56,20 +64,36 @@ export class ZoweTreeProvider {
         treeView.reveal(item, { select: true, focus: true });
     }
 
+    protected async isGlobalProfileNode(node: T): Promise<boolean> {
+        const mProfileInfo = await Profiles.getInstance().getProfileInfo();
+        const prof = mProfileInfo.getAllProfiles().find((p) => p.profName === node.getProfileName());
+        const osLocInfo = mProfileInfo.getOsLocInfo(prof);
+        if (osLocInfo?.[0]?.global) {
+            return true;
+        }
+
+        return SharedContext.isGlobalProfile(node);
+    }
+
     /**
      * Call whenever the context of a node needs to be refreshed to add the home suffix
      * @param node Node to refresh
      */
-    public async refreshHomeProfileContext(node): Promise<void> {
+    public async refreshHomeProfileContext(node: T): Promise<void> {
         ZoweLogger.trace("ZoweTreeProvider.refreshHomeProfileContext called.");
-        const mProfileInfo = await Profiles.getInstance().getProfileInfo();
-        if (!SharedContext.isHomeProfile(node)) {
-            const prof = mProfileInfo.getAllProfiles().find((p) => p.profName === node.getProfileName());
-            const osLocInfo = mProfileInfo.getOsLocInfo(prof);
-            if (osLocInfo?.[0]?.global) {
-                node.contextValue += Constants.HOME_SUFFIX;
-            }
+        if (await this.isGlobalProfileNode(node)) {
+            node.contextValue += Constants.HOME_SUFFIX;
         }
+    }
+
+    /**
+     * Called whenever the tree needs to be refreshed, and fires the data change event
+     *
+     */
+    public refreshElement(element: T): void {
+        ZoweLogger.trace("ZoweTreeProvider.refreshElement called.");
+        element.dirty = true;
+        this.mOnDidChangeTreeData.fire(element);
     }
 
     /**
@@ -78,17 +102,8 @@ export class ZoweTreeProvider {
      * it simply tells VS Code to repaint the node in the tree.
      * @param node The node that should be repainted
      */
-    public nodeDataChanged(node: IZoweTreeNode): void {
-        this.mOnDidChangeTreeData.fire(node);
-    }
-
-    /**
-     * Called whenever the tree needs to be refreshed, and fires the data change event
-     *
-     */
-    public refreshElement(element: IZoweTreeNode): void {
-        ZoweLogger.trace("ZoweTreeProvider.refreshElement called.");
-        element.dirty = true;
+    public nodeDataChanged(element: T): void {
+        ZoweLogger.trace("ZoweTreeProvider.nodeDataChanged called.");
         this.mOnDidChangeTreeData.fire(element);
     }
 
@@ -98,7 +113,7 @@ export class ZoweTreeProvider {
      */
     public refresh(): void {
         ZoweLogger.trace("ZoweTreeProvider.refresh called.");
-        this.mOnDidChangeTreeData.fire();
+        this.mOnDidChangeTreeData.fire(null);
     }
 
     /**
@@ -107,7 +122,7 @@ export class ZoweTreeProvider {
      * @param element the node being flipped
      * @param isOpen the intended state of the the tree view provider, true or false
      */
-    public flipState(element: IZoweTreeNode, isOpen: boolean = false): void {
+    public flipState(element: T, isOpen: boolean = false): void {
         ZoweLogger.trace("ZoweTreeProvider.flipState called.");
         element.collapsibleState = isOpen ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
         const icon = IconGenerator.getIconByNode(element);
@@ -228,14 +243,14 @@ export class ZoweTreeProvider {
             ) {
                 node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
                 node.contextValue = node.contextValue + Constants.INACTIVE_CONTEXT;
-                const inactiveIcon = IconGenerator.getIconById(IconGenerator.IconId.sessionInactive);
+                const inactiveIcon = IconGenerator.getIconById(IconUtils.IconId.sessionInactive);
                 if (inactiveIcon) {
                     node.iconPath = inactiveIcon.path;
                 }
                 Profiles.getInstance().validProfile = Validation.ValidationType.INVALID;
             }
 
-            await ProfilesUtils.errorHandling(
+            await AuthUtils.errorHandling(
                 vscode.l10n.t({
                     message:
                         "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
@@ -250,7 +265,7 @@ export class ZoweTreeProvider {
             ) {
                 node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
                 node.contextValue = node.contextValue + Constants.ACTIVE_CONTEXT;
-                const activeIcon = IconGenerator.getIconById(IconGenerator.IconId.sessionActive);
+                const activeIcon = IconGenerator.getIconById(IconUtils.IconId.sessionActive);
                 if (activeIcon) {
                     node.iconPath = activeIcon.path;
                 }

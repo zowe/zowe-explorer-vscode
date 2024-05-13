@@ -13,9 +13,10 @@ jest.mock("vscode");
 
 import * as vscode from "vscode";
 import { imperative } from "@zowe/zowe-explorer-api";
-import { ZoweDatasetNode } from "../../../src/trees/dataset";
-import { Icon, IconGenerator } from "../../../src/icons";
-import { ZoweLocalStorage } from "../../../src/tools";
+import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
+import { IconGenerator } from "../../../src/icons/IconGenerator";
+import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
+import { IconUtils } from "../../../src/icons/IconUtils";
 
 describe("Checking icon generator's basics", () => {
     const setGlobalMocks = () => {
@@ -61,8 +62,8 @@ describe("Checking icon generator's basics", () => {
     setGlobalMocks();
 
     it("Testing that you can correctly get Icon by ID", () => {
-        const targetId = IconGenerator.IconId.document;
-        const resultIcon = IconGenerator.getIconById(IconGenerator.IconId.document);
+        const targetId = IconUtils.IconId.document;
+        const resultIcon = IconGenerator.getIconById(IconUtils.IconId.document);
 
         expect(resultIcon).toBeDefined();
         expect(resultIcon.id).toBe(targetId);
@@ -78,7 +79,7 @@ describe("Checking icon generator's basics", () => {
         const resultIcon = IconGenerator.getIconByNode(sessionNode);
 
         expect(resultIcon).toBeDefined();
-        expect(resultIcon.id).toBe(IconGenerator.IconId.folder);
+        expect(resultIcon.id).toBe(IconUtils.IconId.folder);
         expect(resultIcon.path.dark).toContain("folder-closed.svg");
     });
     it("Testing that you can correctly get Derived Icon By Node", () => {
@@ -88,7 +89,7 @@ describe("Checking icon generator's basics", () => {
         const resultIcon = IconGenerator.getIconByNode(sessionNode);
 
         expect(resultIcon).toBeDefined();
-        expect(resultIcon.id).toBe(IconGenerator.IconId.folderOpen);
+        expect(resultIcon.id).toBe(IconUtils.IconId.folderOpen);
         expect(resultIcon.path.dark).toContain("folder-open.svg");
     });
     it("Testing that you can't get Icon using incorrect Node", () => {

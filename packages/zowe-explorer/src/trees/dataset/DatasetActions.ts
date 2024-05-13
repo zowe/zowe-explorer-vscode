@@ -10,18 +10,23 @@
  */
 
 import * as vscode from "vscode";
-import * as fs from "fs";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as path from "path";
-import { Gui, imperative, IZoweDatasetTreeNode, Validation, Types } from "@zowe/zowe-explorer-api";
-import { SharedUtils, SharedContext } from "../shared";
-import { ZoweExplorerApiRegister } from "../../extending";
-import { Profiles, Constants, Workspace } from "../../configuration";
-import { IconGenerator } from "../../icons";
-import { ZoweDatasetNode, DatasetUtils } from "../dataset";
-import { ZoweLogger } from "../../tools";
-import { FilterItem, ProfilesUtils } from "../../utils";
-import { ProfileManagement, LocalFileManagement } from "../../management";
+import { Gui, imperative, IZoweDatasetTreeNode, Validation, Types, confirmForUnsavedDoc } from "@zowe/zowe-explorer-api";
+import { ZoweDatasetNode } from "./ZoweDatasetNode";
+import { DatasetUtils } from "./DatasetUtils";
+import { DatasetFSProvider } from "./DatasetFSProvider";
+import { ZoweLogger } from "../../tools/ZoweLogger";
+import { Constants } from "../../configuration/Constants";
+import { Profiles } from "../../configuration/Profiles";
+import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
+import { IconGenerator } from "../../icons/IconGenerator";
+import { LocalFileManagement } from "../../management/LocalFileManagement";
+import { ProfileManagement } from "../../management/ProfileManagement";
+import { SharedContext } from "../shared/SharedContext";
+import { SharedUtils } from "../shared/SharedUtils";
+import { FilterItem } from "../../management/FilterManagement";
+import { AuthUtils } from "../../utils/AuthUtils";
 
 /**
  * Type of z/os dataset or member intended for replacement
@@ -141,7 +146,7 @@ export class DatasetActions {
         const templates = datasetProvider.getDsTemplates();
         const templateNames: string[] = [];
         templates?.forEach((template) => {
-            Object.entries(template).forEach(([key, value]) => {
+            Object.entries(template).forEach(([key, _value]) => {
                 templateNames.push(key);
             });
         });
@@ -252,7 +257,7 @@ export class DatasetActions {
             const errorMsg = vscode.l10n.t("Error encountered when creating data set.");
             ZoweLogger.error(errorMsg + JSON.stringify(err));
             if (err instanceof Error) {
-                await ProfilesUtils.errorHandling(err, node.getProfileName(), errorMsg);
+                await AuthUtils.errorHandling(err, node.getProfileName(), errorMsg);
             }
             throw new Error(err);
         }
@@ -335,7 +340,7 @@ export class DatasetActions {
                 return;
             } else {
                 ZoweLogger.trace(`${selection?.toString()} was profile chosen to allocate a data set.`);
-                currSession = datasetProvider.mSessionNodes.find((thisSession) => thisSession.label === selection.label);
+                currSession = datasetProvider.mSessionNodes.find((thisSession) => thisSession.label === selection.label) as IZoweDatasetTreeNode;
                 profile = currSession.getProfile();
             }
             quickpick.dispose();
@@ -388,7 +393,7 @@ export class DatasetActions {
                 await ZoweExplorerApiRegister.getMvsApi(profile).allocateLikeDataSet(newDSName.toUpperCase(), likeDSName);
             } catch (err) {
                 if (err instanceof Error) {
-                    await ProfilesUtils.errorHandling(err, newDSName, vscode.l10n.t("Unable to create data set."));
+                    await AuthUtils.errorHandling(err, newDSName, vscode.l10n.t("Unable to create data set."));
                 }
                 throw err;
             }
@@ -396,7 +401,9 @@ export class DatasetActions {
 
         // Refresh tree and open new node, if applicable
         if (!currSession) {
-            currSession = datasetProvider.mSessionNodes.find((thisSession) => thisSession.label.toString().trim() === profile.name);
+            currSession = datasetProvider.mSessionNodes.find(
+                (thisSession) => thisSession.label.toString().trim() === profile.name
+            ) as IZoweDatasetTreeNode;
         }
 
         const theFilter = datasetProvider.createFilterString(newDSName, currSession);
@@ -442,7 +449,7 @@ export class DatasetActions {
                         Gui.reportProgress(progress, value.length, index, "Uploading");
                         const response = await DatasetActions.uploadFile(node, item.fsPath);
                         if (!response?.success) {
-                            await ProfilesUtils.errorHandling(response?.commandResponse, node.getProfileName(), response?.commandResponse);
+                            await AuthUtils.errorHandling(response?.commandResponse, node.getProfileName(), response?.commandResponse);
                             break;
                         }
                         index++;
@@ -481,7 +488,7 @@ export class DatasetActions {
             });
             return response;
         } catch (e) {
-            await ProfilesUtils.errorHandling(e, node.getProfileName());
+            await AuthUtils.errorHandling(e, node.getProfileName());
         }
     }
 
@@ -513,18 +520,18 @@ export class DatasetActions {
             if (SharedContext.isDsMember(item)) {
                 for (const parent of selectedNodes) {
                     if (parent.getLabel() === item.getParent().getLabel()) {
-                        childArray.push(item);
+                        childArray.push(item as IZoweDatasetTreeNode);
                     }
                 }
             }
         }
-        selectedNodes = selectedNodes.filter((val) => !childArray.includes(val));
+        selectedNodes = selectedNodes.filter((val) => !childArray.includes(val as IZoweDatasetTreeNode));
 
         if (includedSelection || !node) {
             // Filter out sessions and information messages
             nodes = selectedNodes.filter(
                 (selectedNode) => selectedNode.getParent() && !SharedContext.isSession(selectedNode) && !SharedContext.isInformation(selectedNode)
-            );
+            ) as IZoweDatasetTreeNode[];
         } else {
             if (node.getParent() && !SharedContext.isSession(node) && !SharedContext.isInformation(node)) {
                 nodes = [];
@@ -554,7 +561,7 @@ export class DatasetActions {
             if (SharedContext.isDsMember(deletedNode)) {
                 const parent = deletedNode.getParent();
                 if (memberParents.filter((alreadyAddedParent) => alreadyAddedParent.label.toString() === parent.label.toString()).length === 0) {
-                    memberParents.push(parent);
+                    memberParents.push(parent as IZoweDatasetTreeNode);
                 }
             }
         }
@@ -677,19 +684,20 @@ export class DatasetActions {
                 });
             } catch (err) {
                 if (err instanceof Error) {
-                    await ProfilesUtils.errorHandling(err, label, vscode.l10n.t("Unable to create member."));
+                    await AuthUtils.errorHandling(err, label, vscode.l10n.t("Unable to create member."));
                 }
                 throw err;
             }
             parent.dirty = true;
             datasetProvider.refreshElement(parent);
 
-            await new ZoweDatasetNode({
+            const newNode = new ZoweDatasetNode({
                 label: name,
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: parent,
                 profile: parent.getProfile(),
-            }).openDs(false, true, datasetProvider);
+            });
+            await vscode.workspace.fs.writeFile(newNode.resourceUri, new Uint8Array());
 
             // Refresh corresponding tree parent to reflect addition
             const otherTreeParent = datasetProvider.findEquivalentNode(parent, SharedContext.isFavorite(parent));
@@ -697,6 +705,7 @@ export class DatasetActions {
                 datasetProvider.refreshElement(otherTreeParent);
             }
 
+            await vscode.commands.executeCommand("vscode.open", newNode.resourceUri);
             datasetProvider.refresh();
         }
     }
@@ -877,7 +886,7 @@ export class DatasetActions {
                 }
             } catch (err) {
                 if (err instanceof Error) {
-                    await ProfilesUtils.errorHandling(err, node.getProfileName(), vscode.l10n.t("Unable to list attributes."));
+                    await AuthUtils.errorHandling(err, node.getProfileName(), vscode.l10n.t("Unable to list attributes."));
                 }
                 throw err;
             }
@@ -1021,7 +1030,7 @@ export class DatasetActions {
                 );
             } catch (error) {
                 if (error instanceof Error) {
-                    await ProfilesUtils.errorHandling(error, sessProfileName, vscode.l10n.t("Job submission failed."));
+                    await AuthUtils.errorHandling(error, sessProfileName, vscode.l10n.t("Job submission failed."));
                 }
             }
         } else {
@@ -1144,7 +1153,7 @@ export class DatasetActions {
                 );
             } catch (error) {
                 if (error instanceof Error) {
-                    await ProfilesUtils.errorHandling(error, sesName, vscode.l10n.t("Job submission failed."));
+                    await AuthUtils.errorHandling(error, sesName, vscode.l10n.t("Job submission failed."));
                 }
             }
         }
@@ -1180,8 +1189,7 @@ export class DatasetActions {
             }
             await datasetProvider.checkCurrentProfile(node);
             if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
-                const profile = node.getProfile();
-                await ZoweExplorerApiRegister.getMvsApi(profile).deleteDataSet(label, { responseTimeout: profile.profile?.responseTimeout });
+                await DatasetFSProvider.instance.delete(node.resourceUri, { recursive: false });
             } else {
                 return;
             }
@@ -1202,7 +1210,7 @@ export class DatasetActions {
                     })
                 );
             } else {
-                await ProfilesUtils.errorHandling(err, node.getProfileName());
+                await AuthUtils.errorHandling(err, node.getProfileName());
             }
             throw err;
         }
@@ -1232,16 +1240,6 @@ export class DatasetActions {
         }
 
         datasetProvider.refreshElement(node.getSessionNode());
-
-        // remove local copy of file
-        const fileName = SharedUtils.getDocumentFilePath(label, node);
-        try {
-            if (fs.existsSync(fileName)) {
-                fs.unlinkSync(fileName);
-            }
-        } catch (err) {
-            ZoweLogger.warn(err);
-        }
     }
 
     /**
@@ -1258,6 +1256,7 @@ export class DatasetActions {
                 // For favorited or non-favorited sequential DS:
                 case SharedContext.isFavorite(node):
                 case SharedContext.isSessionNotFav(node.getParent()):
+                case SharedContext.isDs(node):
                     label = node.label as string;
                     break;
                 // For favorited or non-favorited data set members:
@@ -1268,24 +1267,15 @@ export class DatasetActions {
                 default:
                     throw Error(vscode.l10n.t("Item invalid."));
             }
-            const documentFilePath = SharedUtils.getDocumentFilePath(label, node);
-            const prof = node.getProfile();
-            const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-                file: documentFilePath,
-                returnEtag: true,
-                binary: node.binary,
-                encoding: node.encoding !== undefined ? node.encoding : prof.profile?.encoding,
-                responseTimeout: prof.profile?.responseTimeout,
-            });
-            node.setEtag(response.apiResponse.etag);
-
-            const document = await vscode.workspace.openTextDocument(documentFilePath);
-            Gui.showTextDocument(document, { preview: false });
-            // if there are unsaved changes, vscode won't automatically display the updates, so close and reopen
-            if (document.isDirty) {
-                await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-                Gui.showTextDocument(document, { preview: false });
+            if (!(await confirmForUnsavedDoc(node.resourceUri))) {
+                return;
             }
+
+            const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching data set..."));
+            await DatasetFSProvider.instance.fetchDatasetAtUri(node.resourceUri, {
+                editor: vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path),
+            });
+            statusMsg.dispose();
         } catch (err) {
             if (err.message.includes(vscode.l10n.t("not found"))) {
                 ZoweLogger.error(
@@ -1303,7 +1293,7 @@ export class DatasetActions {
                     })
                 );
             } else {
-                await ProfilesUtils.errorHandling(err, node.getProfileName());
+                await AuthUtils.errorHandling(err, node.getProfileName());
             }
         }
     }
@@ -1320,7 +1310,7 @@ export class DatasetActions {
             await node.getChildren();
             datasetProvider.refreshElement(node);
         } catch (err) {
-            await ProfilesUtils.errorHandling(err, node.getProfileName());
+            await AuthUtils.errorHandling(err, node.getProfileName());
         }
     }
 
@@ -1359,7 +1349,7 @@ export class DatasetActions {
             pattern = node.label.toString().substring(node.label.toString().indexOf(":") + 2);
             const sessionName = node.label.toString().substring(node.label.toString().indexOf("[") + 1, node.label.toString().indexOf("]"));
             await datasetProvider.addSession(sessionName.trim());
-            node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.label.toString().trim() === sessionName.trim());
+            node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.label.toString().trim() === sessionName.trim()) as IZoweDatasetTreeNode;
         }
 
         // update the treeview with the new pattern
@@ -1420,10 +1410,10 @@ export class DatasetActions {
         }
         if (SharedContext.isDs(selectedNodes[0])) {
             await DatasetActions.copySequentialDatasets(selectedNodes);
-            return DatasetActions.refreshDataset(selectedNodes[0].getParent(), datasetProvider);
+            return DatasetActions.refreshDataset(selectedNodes[0].getParent() as IZoweDatasetTreeNode, datasetProvider);
         } else if (SharedContext.isPds(selectedNodes[0])) {
             await DatasetActions.copyPartitionedDatasets(selectedNodes);
-            return DatasetActions.refreshDataset(selectedNodes[0].getParent(), datasetProvider);
+            return DatasetActions.refreshDataset(selectedNodes[0].getParent() as IZoweDatasetTreeNode, datasetProvider);
         }
     }
 
@@ -1590,136 +1580,6 @@ export class DatasetActions {
                     }
                 }
             }
-        }
-    }
-
-    /**
-     * Uploads the file to the mainframe
-     *
-     * @export
-     * @param {vscode.TextDocument} doc - TextDocument that is being saved
-     */
-    public static async saveFile(doc: vscode.TextDocument, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
-        ZoweLogger.trace("dataset.actions.saveFile called.");
-        // Check if file is a data set, instead of some other file
-        const docPath = path.join(doc.fileName, "..");
-        ZoweLogger.debug(
-            vscode.l10n.t({
-                message: "Requested to save data set {0}",
-                args: [doc.fileName],
-                comment: ["Document file name"],
-            })
-        );
-        if (docPath.toUpperCase().indexOf(Constants.DS_DIR.toUpperCase()) === -1) {
-            ZoweLogger.error(
-                vscode.l10n.t({
-                    message: "path.relative returned a non-blank directory. Assuming we are not in the DS_DIR directory: {0}",
-                    args: [path.relative(docPath, Constants.DS_DIR)],
-                    comment: ["Relative path to Data Set directory"],
-                })
-            );
-            return;
-        }
-        const start = path.join(Constants.DS_DIR + path.sep).length;
-        const ending = doc.fileName.substring(start);
-        const sesName = ending.substring(0, ending.indexOf(path.sep));
-        const profile = Profiles.getInstance().loadNamedProfile(sesName);
-        const fileLabel = path.basename(doc.fileName);
-        const dataSetName = fileLabel.substring(0, fileLabel.indexOf("("));
-        const memberName = fileLabel.substring(fileLabel.indexOf("(") + 1, fileLabel.indexOf(")"));
-        if (!profile) {
-            const sessionError = vscode.l10n.t("Could not locate session when saving data set.");
-            ZoweLogger.error(sessionError);
-            await Gui.errorMessage(sessionError);
-            return;
-        }
-
-        const etagFavorites = (
-            datasetProvider.mFavorites
-                .find((child) => child.label.toString().trim() === sesName)
-                ?.children.find((child) => child.label.toString().trim() === dataSetName)
-                ?.children.find((child) => child.label.toString().trim() === memberName) as IZoweDatasetTreeNode
-        )?.getEtag();
-        const sesNode =
-            etagFavorites !== "" && etagFavorites !== undefined
-                ? datasetProvider.mFavorites.find((child) => child.label.toString().trim() === sesName)
-                : datasetProvider.mSessionNodes.find((child) => child.label.toString().trim() === sesName);
-        if (!sesNode) {
-            // if saving from favorites, a session might not exist for this node
-            ZoweLogger.debug(vscode.l10n.t("Could not find session node"));
-        }
-
-        // If not a member
-        let label = doc.fileName.substring(
-            doc.fileName.lastIndexOf(path.sep) + 1,
-            SharedUtils.checkForAddedSuffix(doc.fileName) ? doc.fileName.lastIndexOf(".") : doc.fileName.length
-        );
-        label = label.toUpperCase().trim();
-        ZoweLogger.info(
-            vscode.l10n.t({
-                message: "Saving file {0}",
-                args: [label],
-                comment: ["Label"],
-            })
-        );
-        const dsname = label.includes("(") ? label.slice(0, label.indexOf("(")) : label;
-        try {
-            // Checks if file still exists on server
-            const response = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(dsname, { responseTimeout: profile.profile?.responseTimeout });
-            if (!response.apiResponse.items.length) {
-                const saveError = vscode.l10n.t("Data set failed to save. Data set may have been deleted or renamed on mainframe.");
-                ZoweLogger.error(saveError);
-                await Gui.errorMessage(saveError);
-                return;
-            }
-        } catch (err) {
-            await ProfilesUtils.errorHandling(err, sesName);
-        }
-        // Get specific node based on label and parent tree (session / favorites)
-        const nodes = SharedUtils.concatChildNodes(sesNode ? [sesNode] : datasetProvider.mSessionNodes);
-        const node: IZoweDatasetTreeNode =
-            nodes.find((zNode) => {
-                if (SharedContext.isDsMember(zNode)) {
-                    const zNodeDetails = DatasetUtils.getProfileAndDataSetName(zNode);
-                    return `${zNodeDetails.profileName}(${zNodeDetails.dataSetName})` === `${label}`;
-                } else if (SharedContext.isDs(zNode) || SharedContext.isDsSession(zNode)) {
-                    return zNode.label.toString().trim() === label;
-                } else {
-                    return false;
-                }
-            }) ?? datasetProvider.openFiles?.[doc.uri.fsPath];
-
-        // define upload options
-        const uploadOptions: zosfiles.IUploadOptions = {
-            etag: node?.getEtag(),
-            returnEtag: true,
-        };
-
-        const prof = node?.getProfile() ?? profile;
-        try {
-            const uploadResponse = await Gui.withProgress(
-                {
-                    location: vscode.ProgressLocation.Window,
-                    title: vscode.l10n.t("Saving data set..."),
-                },
-                () => {
-                    return SharedUtils.uploadContent(node, doc, label, prof, uploadOptions.etag, uploadOptions.returnEtag);
-                }
-            );
-            if (uploadResponse.success) {
-                Gui.setStatusBarMessage(uploadResponse.commandResponse, Constants.STATUS_BAR_TIMEOUT_MS);
-                // set local etag with the new etag from the updated file on mainframe
-                node?.setEtag(uploadResponse.apiResponse[0].etag);
-                Workspace.setFileSaved(true);
-            } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
-                await LocalFileManagement.compareSavedFileContent(doc, node, label, profile);
-            } else {
-                await Workspace.markDocumentUnsaved(doc);
-                Gui.errorMessage(uploadResponse.commandResponse);
-            }
-        } catch (err) {
-            await Workspace.markDocumentUnsaved(doc);
-            await ProfilesUtils.errorHandling(err, sesName);
         }
     }
 
@@ -1919,7 +1779,7 @@ export class DatasetActions {
                 }
             } catch (error) {
                 if (error instanceof Error) {
-                    await ProfilesUtils.errorHandling(error, DatasetUtils.getNodeLabels(node).dataSetName, vscode.l10n.t("Unable to copy data set."));
+                    await AuthUtils.errorHandling(error, DatasetUtils.getNodeLabels(node).dataSetName, vscode.l10n.t("Unable to copy data set."));
                 }
             }
         }

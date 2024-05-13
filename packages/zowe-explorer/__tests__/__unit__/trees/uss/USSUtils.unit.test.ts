@@ -11,8 +11,9 @@
 
 import * as vscode from "vscode";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
-import { ZoweExplorerApiRegister } from "../../../../src/extending";
-import { USSUtils, ZoweUSSNode } from "../../../../src/trees/uss";
+import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
+import { USSUtils } from "../../../../src/trees/uss/USSUtils";
+import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
 
 describe("USS utils unit tests - function autoDetectEncoding", () => {
     const getTagMock = jest.fn();

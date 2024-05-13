@@ -11,7 +11,7 @@
 
 import { TreeItem } from "vscode";
 import { imperative, IZoweTreeNode, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
-import { Constants } from "../../configuration";
+import { Constants } from "../../configuration/Constants";
 
 export class SharedContext {
     /**
@@ -244,23 +244,12 @@ export class SharedContext {
     }
 
     /**
-     * Helper function to determine if node is located in the global layer.
-     * Only applicable for TEAM profiles
+     * Helper function to determine if the profile node is located in the global layer.
      * @param node
-     * @returns true if node is located in the global layer, false otherwise
+     * @returns true if profile is located in the global layer, false otherwise
      */
-    public static isHomeProfile(node: TreeItem): boolean {
-        return new RegExp(
-            "^(" +
-                Constants.JOBS_SESSION_CONTEXT +
-                "|" +
-                Constants.USS_SESSION_CONTEXT +
-                "|" +
-                Constants.DS_SESSION_CONTEXT +
-                ")(.*" +
-                Constants.HOME_SUFFIX +
-                ")"
-        ).test(node.contextValue);
+    public static isGlobalProfile(node: TreeItem): boolean {
+        return new RegExp(Constants.HOME_SUFFIX).test(node.contextValue);
     }
 
     /**

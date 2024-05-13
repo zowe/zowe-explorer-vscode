@@ -115,14 +115,14 @@ describe("USSTree Integration Tests", async () => {
         ];
 
         sampleRChildren[0].command = {
-            command: "zowe.uss.ZoweUSSNode.open",
+            command: "vscode.open",
             title: "",
-            arguments: [sampleRChildren[0]],
+            arguments: [sampleRChildren[0].resourceUri],
         };
         sampleRChildren[3].command = {
-            command: "zowe.uss.ZoweUSSNode.open",
+            command: "vscode.open",
             title: "",
-            arguments: [sampleRChildren[3]],
+            arguments: [sampleRChildren[3].resourceUri],
         };
 
         const samplePChildren: ZoweUSSNode[] = [
@@ -131,14 +131,14 @@ describe("USSTree Integration Tests", async () => {
         ];
 
         samplePChildren[0].command = {
-            command: "zowe.uss.ZoweUSSNode.open",
+            command: "vscode.open",
             title: "",
-            arguments: [samplePChildren[0]],
+            arguments: [samplePChildren[0].resourceUri],
         };
         samplePChildren[1].command = {
-            command: "zowe.uss.ZoweUSSNode.open",
+            command: "vscode.open",
             title: "",
-            arguments: [samplePChildren[1]],
+            arguments: [samplePChildren[1].resourceUri],
         };
         sampleRChildren[2].children = samplePChildren;
 

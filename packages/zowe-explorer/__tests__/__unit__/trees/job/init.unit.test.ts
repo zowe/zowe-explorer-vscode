@@ -10,13 +10,18 @@
  */
 
 import * as vscode from "vscode";
-import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../../__common__/testUtils";
 import { createISession, createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { createJobNode, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
-import { JobActions, JobInit, JobTree } from "../../../../src/trees/job";
-import { SharedActions, SharedContext, SharedInit } from "../../../../src/trees/shared";
-import { Profiles } from "../../../../src/configuration";
-import { ZoweLocalStorage, ZoweLogger } from "../../../../src/tools";
+import { IJestIt, ITestContext, processSubscriptions } from "../../../__common__/testUtils";
+import { JobActions } from "../../../../src/trees/job/JobActions";
+import { Profiles } from "../../../../src/configuration/Profiles";
+import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
+import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
+import { JobTree } from "../../../../src/trees/job/JobTree";
+import { SharedActions } from "../../../../src/trees/shared/SharedActions";
+import { SharedContext } from "../../../../src/trees/shared/SharedContext";
+import { JobInit } from "../../../../src/trees/job/JobInit";
+import { SharedInit } from "../../../../src/trees/shared/SharedInit";
 
 describe("Test src/jobs/extension", () => {
     describe("initJobsProvider", () => {
@@ -55,11 +60,6 @@ describe("Test src/jobs/extension", () => {
         };
         const commands: IJestIt[] = [
             {
-                name: "zowe.jobs.zosJobsOpenspool",
-                parm: [test._, test.value],
-                mock: [{ spy: jest.spyOn(JobActions, "getSpoolContent"), arg: [test._, test.value] }],
-            },
-            {
                 name: "zowe.jobs.deleteJob",
                 parm: [test.value, test._],
                 mock: [{ spy: jest.spyOn(JobActions, "deleteCommand"), arg: [jobsProvider, test.value, test._] }],
@@ -84,17 +84,6 @@ describe("Test src/jobs/extension", () => {
                 name: "zowe.jobs.refreshJob",
                 parm: [{ mParent: test.value }],
                 mock: [{ spy: jest.spyOn(JobActions, "refreshJob"), arg: [test.value, jobsProvider] }],
-            },
-            {
-                name: "zowe.jobs.refreshSpool",
-                parm: [{ mParent: { mParent: test.value } }],
-                mock: [
-                    {
-                        spy: jest.spyOn(JobActions, "getSpoolContentFromMainframe"),
-                        arg: [{ mParent: { mParent: test.value } }],
-                    },
-                    { spy: jest.spyOn(JobActions, "refreshJob"), arg: [test.value, jobsProvider] },
-                ],
             },
             {
                 name: "zowe.jobs.downloadSingleSpool",
@@ -188,7 +177,7 @@ describe("Test src/jobs/extension", () => {
                     {
                         spy: jest.spyOn(Profiles, "getInstance"),
                         arg: [],
-                        ret: { enableValidation: jest.fn() },
+                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
                     },
                 ],
             },
@@ -246,7 +235,6 @@ describe("Test src/jobs/extension", () => {
             });
 
             spyCreateJobsTree.mockResolvedValue(jobsProvider as any);
-            spyOnSubscriptions(commands);
             jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(jobsProvider.onDidCloseTextDocument);
             await JobInit.initJobsProvider(test.context);
         });
@@ -261,7 +249,7 @@ describe("Test src/jobs/extension", () => {
 
         it("should not initialize if it is unable to create the jobs tree", async () => {
             spyCreateJobsTree.mockResolvedValue(null);
-            const myProvider = await JobInit.initJobsProvider({} as any);
+            const myProvider = await JobInit.initJobsProvider(test.context);
             expect(myProvider).toBe(null);
         });
 

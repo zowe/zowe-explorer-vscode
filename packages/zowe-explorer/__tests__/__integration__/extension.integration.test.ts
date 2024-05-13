@@ -331,103 +331,6 @@ describe("Extension Integration Tests", async () => {
         }).timeout(TIMEOUT);
     });
 
-    describe("Opening a PS", () => {
-        it("should open a PS", async () => {
-            const node = new ZoweDatasetNode({
-                label: pattern + ".EXT.PS",
-                collapsibleState: vscode.TreeItemCollapsibleState.None,
-                parentNode: sessionNode,
-            });
-            await node.openDs(false, true, testTree);
-            expect(
-                path.relative(vscode.window.activeTextEditor.document.fileName, sharedUtils.getDocumentFilePath(pattern + ".EXT.PS", node))
-            ).to.equal("");
-            expect(fs.existsSync(sharedUtils.getDocumentFilePath(pattern + ".EXT.PS", node))).to.equal(true);
-        }).timeout(TIMEOUT);
-
-        it("should display an error message when openDs is passed an invalid node", async () => {
-            const node = new ZoweDatasetNode({
-                label: pattern + ".GARBAGE",
-                collapsibleState: vscode.TreeItemCollapsibleState.None,
-                parentNode: sessionNode,
-            });
-            const errorMessageStub = sandbox.spy(vscode.window, "showErrorMessage");
-            await expect(node.openDs(false, true, testTree)).to.eventually.be.rejectedWith(Error);
-
-            const called = errorMessageStub.called;
-            expect(called).to.equal(true);
-        }).timeout(TIMEOUT);
-    });
-
-    describe("Saving a File", () => {
-        it("should download, change, and re-upload a PS", async () => {
-            // Test for PS under HLQ
-            const profiles = await testTree.getChildren();
-            profiles[1].dirty = true;
-            const children = await profiles[1].getChildren();
-            children[1].dirty = true;
-            await children[1].openDs(false, true, testTree);
-
-            const changedData = "PS Upload Test";
-
-            fs.writeFileSync(path.join(globals.ZOWETEMPFOLDER, children[1].label.toString() + "[" + profiles[1].label.toString() + "]"), changedData);
-
-            // Upload file
-            const doc = await vscode.workspace.openTextDocument(
-                path.join(globals.ZOWETEMPFOLDER, children[1].label.toString() + "[" + profiles[1].label.toString() + "]")
-            );
-            await dsActions.saveFile(doc, testTree);
-
-            // Download file
-            await children[1].openDs(false, true, testTree);
-
-            expect(doc.getText().trim()).to.deep.equal("PS Upload Test");
-
-            // Change contents back
-            const originalData = "";
-            fs.writeFileSync(path.join(path.join(globals.ZOWETEMPFOLDER, children[1].label.toString())), originalData);
-        }).timeout(TIMEOUT);
-
-        it("should download, change, and re-upload a PDS member", async () => {
-            // Test for PS under HLQ
-            const profiles = await testTree.getChildren();
-            profiles[1].dirty = true;
-            const children = await profiles[1].getChildren();
-            children[0].dirty = true;
-
-            // Test for member under PO
-            const childrenMembers = await testTree.getChildren(children[0]);
-            await childrenMembers[0].openDs(false, true, testTree);
-
-            const changedData2 = "PO Member Upload Test";
-
-            fs.writeFileSync(
-                path.join(globals.ZOWETEMPFOLDER, children[0].label.toString() + "(" + childrenMembers[0].label.toString() + ")"),
-                changedData2
-            );
-
-            // Upload file
-            const doc2 = await vscode.workspace.openTextDocument(
-                path.join(globals.ZOWETEMPFOLDER, children[0].label.toString() + "(" + childrenMembers[0].label.toString() + ")")
-            );
-            await dsActions.saveFile(doc2, testTree);
-
-            // Download file
-            await childrenMembers[0].openDs(false, true, testTree);
-
-            expect(doc2.getText().trim()).to.deep.equal("PO Member Upload Test");
-
-            // Change contents back
-            const originalData2 = "";
-            fs.writeFileSync(
-                path.join(globals.ZOWETEMPFOLDER, children[0].label.toString() + "(" + childrenMembers[0].label.toString() + ")"),
-                originalData2
-            );
-        }).timeout(TIMEOUT);
-
-        // TODO add tests for saving data set from favorites
-    });
-
     describe("Copying data sets", () => {
         beforeEach(() => {
             const favProfileNode = new ZoweDatasetNode({
@@ -535,7 +438,7 @@ describe("Extension Integration Tests", async () => {
 
                         const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                         inputBoxStub.returns(toMemberName);
-                        await dsActions.copyDataSet(fromNode);
+                        await dsActions.copyDataSets(fromNode, [], testTree);
                         await dsActions.pasteMember(parentNode, testTree);
 
                         contents = await zosfiles.Get.dataSet(sessionNode.getSession(), `${dataSetName}(${toMemberName})`);
@@ -1134,41 +1037,6 @@ describe("Extension Integration Tests - USS", () => {
             await ussTestTree.filterPrompt(ussSessionNode);
             const gotCalled = showInfoStub2.calledWith("You must enter a path.");
             expect(gotCalled).to.equal(true);
-        }).timeout(TIMEOUT);
-    });
-
-    describe("Saving a USS File", () => {
-        // TODO Move to appropriate class
-        it("should download, change, and re-upload a file", async () => {
-            const changedData = "File Upload Test " + Math.random().toString(36).slice(2);
-
-            const rootChildren = await ussTestTree.getChildren();
-            rootChildren[0].dirty = true;
-            const sessChildren1 = await ussTestTree.getChildren(rootChildren[0]);
-            sessChildren1[3].dirty = true;
-            const sessChildren2 = await ussTestTree.getChildren(sessChildren1[3]);
-            sessChildren2[2].dirty = true;
-            const dirChildren = await ussTestTree.getChildren(sessChildren2[2]);
-            const localPath = path.join(globals.USS_DIR, testConst.profile.name, dirChildren[0].fullPath || "");
-
-            await dirChildren[0].openUSS(false, true, ussTestTree);
-            const doc = await vscode.workspace.openTextDocument(localPath);
-
-            const originalData = doc.getText().trim();
-
-            // write new data
-            fs.writeFileSync(localPath, changedData);
-
-            // Upload file
-            await ussActions.saveUSSFile(doc, ussTestTree);
-            await fs.unlinkSync(localPath);
-
-            // Download file
-            await dirChildren[0].openUSS(false, true, ussTestTree);
-
-            // Change contents back
-            fs.writeFileSync(localPath, originalData);
-            await ussActions.saveUSSFile(doc, ussTestTree);
         }).timeout(TIMEOUT);
     });
 });

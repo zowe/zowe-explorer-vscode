@@ -9,9 +9,10 @@
  *
  */
 
-import { Constants } from "../configuration";
 import { PersistenceSchemaEnum, Types } from "@zowe/zowe-explorer-api";
-import { ZoweLogger, ZoweLocalStorage } from "../tools";
+import { Constants } from "../configuration/Constants";
+import { ZoweLogger } from "./ZoweLogger";
+import { ZoweLocalStorage } from "./ZoweLocalStorage";
 
 export type ZowePersistentFilter = {
     persistence: boolean;
@@ -34,7 +35,6 @@ export class ZowePersistentFilters {
     private static readonly searchHistory: string = "searchHistory";
     private static readonly fileHistory: string = "fileHistory";
     private static readonly sessions: string = "sessions";
-    private static readonly templates: string = "templates";
 
     public schema: PersistenceSchemaEnum;
     private mSearchHistory: string[] = [];
@@ -181,7 +181,9 @@ export class ZowePersistentFilters {
     }
 
     public getDsTemplates(): Types.DataSetAllocTemplate[] {
-        const dsTemplateLines: Types.DataSetAllocTemplate[] = ZoweLocalStorage.getValue<ZowePersistentFilter>(this.schema).templates;
+        const dsTemplateLines: Types.DataSetAllocTemplate[] =
+            // See https://github.com/zowe/vscode-extension-for-zowe/issues/2770
+            ZoweLocalStorage.getValue<ZowePersistentFilter>(this.schema).templates ?? [];
         if (dsTemplateLines.length !== this.mDsTemplates.length) {
             this.mDsTemplates = dsTemplateLines;
         }

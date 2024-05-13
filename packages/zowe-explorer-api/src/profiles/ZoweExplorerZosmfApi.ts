@@ -17,7 +17,7 @@ import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as zostso from "@zowe/zos-tso-for-zowe-sdk";
 import * as zosuss from "@zowe/zos-uss-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
-import { MainframeInteraction } from "../extend";
+import { MainframeInteraction } from "../extend/MainframeInteraction";
 import { FileManagement } from "../utils";
 import { Types } from "../Types";
 
@@ -126,12 +126,19 @@ export namespace ZoweExplorerZosmf {
             return zosfiles.Utilities.isFileTagBinOrAscii(this.getSession(), ussFilePath);
         }
 
-        public getContents(inputFilePath: string, options: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse> {
+        public getContents(inputFilePath: string, options: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.Download.ussFile(this.getSession(), inputFilePath, options);
         }
 
         public copy(outputPath: string, options?: Omit<object, "request">): Promise<Buffer> {
             return zosfiles.Utilities.putUSSPayload(this.getSession(), outputPath, { ...(options ?? {}), request: "copy" });
+        }
+
+        public async move(oldPath: string, newPath: string): Promise<void> {
+            await zosfiles.Utilities.putUSSPayload(this.getSession(), newPath, {
+                request: "move",
+                from: oldPath,
+            });
         }
 
         public uploadFromBuffer(buffer: Buffer, filePath: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
@@ -235,7 +242,7 @@ export namespace ZoweExplorerZosmf {
             return zosfiles.List.allMembers(this.getSession(), dataSetName, options);
         }
 
-        public getContents(dataSetName: string, options?: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse> {
+        public getContents(dataSetName: string, options?: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.Download.dataSet(this.getSession(), dataSetName, options);
         }
 
@@ -381,9 +388,9 @@ export namespace ZoweExplorerZosmf {
             return zosconsole.IssueCommand.issueSimple(this.getSession(), command);
         }
 
-        public async issueUnixCommand(sshSession: zosuss.SshSession, command: string, cwd: string, flag: boolean): Promise<string> {
+        public async issueUnixCommand(command: string, cwd: string, sshSession: zosuss.SshSession): Promise<string> {
             let stdout = "";
-            if (flag) {
+            if (cwd) {
                 await zosuss.Shell.executeSshCwd(sshSession, command, '"' + cwd + '"', (data: string) => {
                     stdout += data;
                 });

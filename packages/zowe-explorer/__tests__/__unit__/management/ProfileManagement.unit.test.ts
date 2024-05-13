@@ -15,14 +15,16 @@ import * as unixMock from "../../__mocks__/mockCreators/uss";
 import * as profUtils from "../../../src/utils/ProfilesUtils";
 import * as vscode from "vscode";
 import { Gui, imperative } from "@zowe/zowe-explorer-api";
-import { ZoweDatasetNode } from "../../../src/trees/dataset";
-import { ProfileManagement } from "../../../src/management";
-import { ZoweLogger } from "../../../src/tools";
-import { Constants, Profiles } from "../../../src/configuration";
-import { ZoweUSSNode } from "../../../src/trees/uss";
-import { ZoweJobNode } from "../../../src/trees/job";
-import { ZoweExplorerApiRegister } from "../../../src/extending";
-import { SharedTreeProviders } from "../../../src/trees/shared";
+import { Constants } from "../../../src/configuration/Constants";
+import { Profiles } from "../../../src/configuration/Profiles";
+import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
+import { ZoweLogger } from "../../../src/tools/ZoweLogger";
+import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
+import { ZoweJobNode } from "../../../src/trees/job/ZoweJobNode";
+import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
+import { UssFSProvider } from "../../../src/trees/uss/UssFSProvider";
+import { ZoweUSSNode } from "../../../src/trees/uss/ZoweUSSNode";
+import { ProfileManagement } from "../../../src/management/ProfileManagement";
 
 jest.mock("fs");
 jest.mock("vscode");
@@ -68,7 +70,12 @@ describe("ProfileManagement unit tests", () => {
                 newMocks.mockTreeProviders.uss.mSessionNodes.push(newMocks.mockUnixSessionNode);
                 newMocks.mockTreeProviders.job.mSessionNodes.push(newMocks.mockJobSessionNode);
             },
+            FileSystemProvider: {
+                createDirectory: jest.fn(),
+            },
         };
+
+        jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
         Object.defineProperty(profUtils.ProfilesUtils, "promptCredentials", { value: jest.fn(), configurable: true });
         newMocks.promptSpy = jest.spyOn(profUtils.ProfilesUtils, "promptCredentials");
         Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });

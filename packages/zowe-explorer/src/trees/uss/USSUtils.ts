@@ -12,10 +12,11 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
-import { imperative, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
-import type { ZoweUSSNode } from "../uss";
-import { ZoweLogger } from "../../tools";
-import { ZoweExplorerApiRegister } from "../../extending";
+import { imperative, IZoweUSSTreeNode, ZosEncoding } from "@zowe/zowe-explorer-api";
+import type { ZoweUSSNode } from "./ZoweUSSNode";
+import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
+import { ZoweLogger } from "../../tools/ZoweLogger";
+import { SharedContext } from "../shared/SharedContext";
 
 export class USSUtils {
     /**
@@ -37,17 +38,19 @@ export class USSUtils {
                 });
         }
 
-        const encodingString = node.binary ? vscode.l10n.t("Binary") : node.encoding;
-        if (encodingString != null) {
-            tooltip +=
-                "  \n" +
-                vscode.l10n.t({
-                    message: "Encoding: {0}",
-                    args: [encodingString],
-                    comment: ["Encoding name"],
-                });
+        if (!SharedContext.isUssDirectory(node)) {
+            const zosEncoding = node.getEncoding();
+            const encodingString = zosEncoding ? USSUtils.zosEncodingToString(zosEncoding) : null;
+            if (encodingString != null) {
+                tooltip +=
+                    "  \n" +
+                    vscode.l10n.t({
+                        message: "Encoding: {0}",
+                        args: [encodingString],
+                        comment: ["Encoding name"],
+                    });
+            }
         }
-
         return tooltip;
     }
 
@@ -93,6 +96,17 @@ export class USSUtils {
         } else {
             const isBinary = await ussApi.isFileTagBinOrAscii(node.fullPath);
             node.setEncoding(isBinary ? { kind: "binary" } : undefined);
+        }
+    }
+
+    public static zosEncodingToString(encoding: ZosEncoding): string {
+        switch (encoding.kind) {
+            case "binary":
+                return vscode.l10n.t("Binary");
+            case "other":
+                return encoding.codepage;
+            case "text":
+                return null;
         }
     }
 }

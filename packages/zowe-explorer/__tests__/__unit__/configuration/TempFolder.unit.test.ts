@@ -14,9 +14,10 @@ import * as fs from "fs";
 import * as fsExtra from "fs-extra";
 import * as path from "path";
 import { Gui } from "@zowe/zowe-explorer-api";
-import { SettingsConfig, TempFolder } from "../../../src/configuration";
-import { ZoweLogger } from "../../../src/tools";
-import { ProfilesUtils } from "../../../src/utils";
+import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
+import { ZoweLogger } from "../../../src/tools/ZoweLogger";
+import { TempFolder } from "../../../src/configuration/TempFolder";
+import { AuthUtils } from "../../../src/utils/AuthUtils";
 
 jest.mock("../../../src/tools/ZoweLogger");
 jest.mock("fs");
@@ -51,7 +52,7 @@ describe("TempFolder Unit Tests", () => {
             configurable: true,
         });
         Object.defineProperty(Gui, "showMessage", { value: jest.fn() });
-        jest.spyOn(ProfilesUtils, "errorHandling").mockImplementationOnce(jest.fn());
+        jest.spyOn(AuthUtils, "errorHandling").mockImplementationOnce(jest.fn());
         return newMocks;
     }
 
@@ -88,7 +89,7 @@ describe("TempFolder Unit Tests", () => {
         try {
             await TempFolder.moveTempFolder("testpath1", "testpath2");
         } catch (err) {
-            expect(ProfilesUtils.errorHandling).toHaveBeenCalledWith(
+            expect(AuthUtils.errorHandling).toHaveBeenCalledWith(
                 err,
                 null,
                 "Error encountered when creating temporary folder! " + (err.message as string)

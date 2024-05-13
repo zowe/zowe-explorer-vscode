@@ -127,9 +127,6 @@ describe("DatasetTree Integration Tests", async () => {
         ];
         sampleRChildren[2].dirty = false; // Because getChildren was subsequently called.
 
-        sampleRChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleRChildren[0]] };
-        sampleRChildren[3].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleRChildren[3]] };
-
         const samplePChildren: ZoweDatasetNode[] = [
             new ZoweDatasetNode({
                 label: "TCHILD1",
@@ -142,9 +139,6 @@ describe("DatasetTree Integration Tests", async () => {
                 parentNode: sampleRChildren[2],
             }),
         ];
-
-        samplePChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [samplePChildren[0]] };
-        samplePChildren[1].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [samplePChildren[1]] };
         sampleRChildren[2].children = samplePChildren;
 
         // Checking that the rootChildren are what they are expected to be
@@ -417,7 +411,7 @@ describe("DatasetTree Integration Tests", async () => {
                         zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
                         beforeDataSetName
                     ).catch((err) => err);
-                    await zosfiles.Upload.bufferToDataSet(sessNode.getSession(), new Buffer("abc"), `${beforeDataSetName}(mem1)`);
+                    await zosfiles.Upload.bufferToDataSet(sessNode.getSession(), Buffer.from("abc"), `${beforeDataSetName}(mem1)`);
                     const favProfileNode = new ZoweDatasetNode({
                         label: testConst.profile.name,
                         collapsibleState: vscode.TreeItemCollapsibleState.Expanded,

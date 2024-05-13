@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { Constants } from "../configuration";
+import { Constants } from "./Constants";
 
 interface IExtTextEditor extends vscode.TextEditor {
     id: string;

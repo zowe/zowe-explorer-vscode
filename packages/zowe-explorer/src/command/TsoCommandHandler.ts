@@ -12,12 +12,15 @@
 import * as vscode from "vscode";
 import * as zostso from "@zowe/zos-tso-for-zowe-sdk";
 import { Gui, Validation, imperative, IZoweTreeNode } from "@zowe/zowe-explorer-api";
-import { Profiles, Constants, SettingsConfig } from "../configuration";
-import { ZoweExplorerApiRegister } from "../extending";
-import { ProfilesUtils, FilterDescriptor, FilterItem } from "../utils";
-import { ZoweCommandProvider } from "../providers";
-import { ZoweLogger } from "../tools";
-import { ProfileManagement } from "../management";
+import { ZoweCommandProvider } from "../providers/ZoweCommandProvider";
+import { ZoweLogger } from "../tools/ZoweLogger";
+import { Profiles } from "../configuration/Profiles";
+import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
+import { ProfileManagement } from "../management/ProfileManagement";
+import { Constants } from "../configuration/Constants";
+import { SettingsConfig } from "../configuration/SettingsConfig";
+import { FilterDescriptor, FilterItem } from "../management/FilterManagement";
+import { AuthUtils } from "../utils/AuthUtils";
 
 /**
  * Provides a class that manages submitting a TSO command on the server
@@ -130,7 +133,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     })
                 );
             } else {
-                await ProfilesUtils.errorHandling(error, profile.name);
+                await AuthUtils.errorHandling(error, profile.name);
             }
         }
     }
@@ -225,7 +228,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 ZoweLogger.error(message);
                 Gui.errorMessage(message);
             } else {
-                await ProfilesUtils.errorHandling(error, profile.name);
+                await AuthUtils.errorHandling(error, profile.name);
             }
         }
     }

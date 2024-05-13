@@ -10,8 +10,8 @@
  */
 
 import * as vscode from "vscode";
-import { Constants } from "../../../src/configuration";
-import { ZoweDatasetNode } from "../../../src/trees/dataset";
+import { Constants } from "../../../src/configuration/Constants";
+import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { removeNodeFromArray } from "./shared";
 import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 

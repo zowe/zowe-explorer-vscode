@@ -15,10 +15,14 @@ import * as util from "util";
 import * as vscode from "vscode";
 import { Gui, imperative, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { createAltTypeIProfile, createInstanceOfProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
-import { Constants, Profiles, SettingsConfig } from "../../../src/configuration";
-import { FilterItem, ProfilesUtils } from "../../../src/utils";
-import { ZoweLogger } from "../../../src/tools";
-import { ZoweExplorerExtender } from "../../../src/extending";
+import { Constants } from "../../../src/configuration/Constants";
+import { ZoweLogger } from "../../../src/tools/ZoweLogger";
+import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
+import { Profiles } from "../../../src/configuration/Profiles";
+import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
+import { FilterItem } from "../../../src/management/FilterManagement";
+import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
+import { AuthUtils } from "../../../src/utils/AuthUtils";
 
 jest.mock("../../../src/tools/ZoweLogger");
 jest.mock("fs");
@@ -87,7 +91,7 @@ describe("ProfilesUtils unit tests", () => {
             const errorDetails = new Error("i haz error");
             const label = "test";
             const moreInfo = "Task failed successfully";
-            await ProfilesUtils.errorHandling(errorDetails, label, moreInfo);
+            await AuthUtils.errorHandling(errorDetails, label, moreInfo);
             expect(Gui.errorMessage).toHaveBeenCalledWith(moreInfo + ` Error: ${errorDetails.message}`);
             expect(ZoweLogger.error).toHaveBeenCalledWith(
                 `${errorDetails.toString()}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null })
@@ -104,7 +108,7 @@ describe("ProfilesUtils unit tests", () => {
             });
             const label = "test";
             const moreInfo = "Task failed successfully";
-            await ProfilesUtils.errorHandling(errorDetails, label, moreInfo as unknown as string);
+            await AuthUtils.errorHandling(errorDetails, label, moreInfo as unknown as string);
             // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             expect(Gui.errorMessage).toHaveBeenCalledWith((`${moreInfo} ` + errorDetails) as any);
             expect(ZoweLogger.error).toHaveBeenCalledWith(
@@ -137,7 +141,7 @@ describe("ProfilesUtils unit tests", () => {
                 },
                 configurable: true,
             });
-            await ProfilesUtils.errorHandling(errorDetails, label, moreInfo);
+            await AuthUtils.errorHandling(errorDetails, label, moreInfo);
             expect(spyOpenConfigFile).toHaveBeenCalledTimes(1);
         });
 
@@ -161,7 +165,7 @@ describe("ProfilesUtils unit tests", () => {
                 },
                 configurable: true,
             });
-            await ProfilesUtils.errorHandling(errorDetails, label, moreInfo);
+            await AuthUtils.errorHandling(errorDetails, label, moreInfo);
             expect(showMessageSpy).toHaveBeenCalledTimes(1);
             expect(promptCredsSpy).toHaveBeenCalledTimes(1);
             showMessageSpy.mockClear();
@@ -188,7 +192,7 @@ describe("ProfilesUtils unit tests", () => {
                 },
                 configurable: true,
             });
-            await ProfilesUtils.errorHandling(errorDetails, label, moreInfo);
+            await AuthUtils.errorHandling(errorDetails, label, moreInfo);
             expect(showMessageSpy).toHaveBeenCalledTimes(1);
             expect(ssoLoginSpy).toHaveBeenCalledTimes(1);
             expect(showErrorSpy).not.toHaveBeenCalled();
@@ -223,7 +227,7 @@ describe("ProfilesUtils unit tests", () => {
                 },
                 configurable: true,
             });
-            await ProfilesUtils.errorHandling(errorDetails, label, moreInfo);
+            await AuthUtils.errorHandling(errorDetails, label, moreInfo);
             expect(showErrorSpy).toHaveBeenCalledTimes(1);
             expect(promptCredentialsSpy).not.toHaveBeenCalled();
             expect(showMsgSpy).toHaveBeenCalledWith("Operation Cancelled");
@@ -554,7 +558,7 @@ describe("ProfilesUtils unit tests", () => {
             ProfilesUtils.writeOverridesFile();
             expect(loggerSpy).toHaveBeenCalledWith("Reading imperative.json failed. Will try to create file.");
             expect(blockMocks.mockWriteFileSync).toHaveBeenCalledWith(blockMocks.zoweDir, content, { encoding: "utf-8", flag: "w" });
-            expect(blockMocks.mockWriteFileSync).not.toThrowError();
+            expect(blockMocks.mockWriteFileSync).not.toThrow();
         });
 
         it("should re-create file if overrides file contains invalid JSON", () => {
@@ -589,7 +593,7 @@ describe("ProfilesUtils unit tests", () => {
             await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
             expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
             expect(readConfigFromDiskSpy).toHaveBeenCalledTimes(1);
-            expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining(testError.message));
+            expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining("initializeZoweFolder failed"));
         });
 
         it("should handle Imperative error thrown on read config from disk", async () => {
@@ -747,7 +751,7 @@ describe("ProfilesUtils unit tests", () => {
             });
             jest.spyOn(Constants.PROFILES_CACHE, "getLoadedProfConfig").mockResolvedValue({ type: "test" } as any);
             jest.spyOn(Constants.PROFILES_CACHE, "getSecurePropsForProfile").mockResolvedValue([]);
-            await expect(ProfilesUtils.isUsingTokenAuth("test")).resolves.toEqual(false);
+            await expect(AuthUtils.isUsingTokenAuth("test")).resolves.toEqual(false);
         });
     });
 
@@ -841,7 +845,7 @@ describe("ProfilesUtils unit tests", () => {
                 })
             ).resolves.toEqual({} as imperative.ProfileInfo);
             expect(zoweLoggerTraceSpy).toHaveBeenCalledTimes(2);
-            expect(zoweLoggerInfoSpy).toHaveBeenCalledTimes(1);
+            expect(zoweLoggerInfoSpy).toHaveBeenCalledTimes(2);
         });
     });
 

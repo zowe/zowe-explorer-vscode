@@ -10,36 +10,28 @@
  */
 
 import * as vscode from "vscode";
-import { FileManagement, IZoweTree, IZoweTreeNode, Validation } from "@zowe/zowe-explorer-api";
-import { ZoweExplorerApiRegister } from "../../extending";
-import { Profiles, Constants, TempFolder, SettingsConfig } from "../../configuration";
-import { TsoCommandHandler, MvsCommandHandler, UnixCommandHandler } from "../../command";
-import { DatasetActions } from "../dataset";
-import { USSActions } from "../uss";
-import { ProfilesUtils, LoggerUtils } from "../../utils";
-import { ZoweLogger, ZoweSaveQueue } from "../../tools";
-import { JobActions } from "../job";
-import { ProfileManagement, LocalFileManagement } from "../../management";
-import { SharedActions, SharedHistoryView, SharedTreeProviders, SharedUtils } from "../shared";
-
+import { FileManagement, IZoweTree, IZoweTreeNode, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { SharedActions } from "./SharedActions";
+import { SharedHistoryView } from "./SharedHistoryView";
+import { SharedTreeProviders } from "./SharedTreeProviders";
+import { SharedUtils } from "./SharedUtils";
+import { JobActions } from "../job/JobActions";
+import { UssFSProvider } from "../uss/UssFSProvider";
+import { TempFolder } from "../../configuration/TempFolder";
+import { Constants } from "../../configuration/Constants";
+import { MvsCommandHandler } from "../../command/MvsCommandHandler";
+import { TsoCommandHandler } from "../../command/TsoCommandHandler";
+import { UnixCommandHandler } from "../../command/UnixCommandHandler";
+import { Profiles } from "../../configuration/Profiles";
+import { SettingsConfig } from "../../configuration/SettingsConfig";
+import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
+import { LocalFileManagement } from "../../management/LocalFileManagement";
+import { ProfileManagement } from "../../management/ProfileManagement";
+import { ZoweLogger } from "../../tools/ZoweLogger";
+import { LoggerUtils } from "../../utils/LoggerUtils";
+import { ProfilesUtils } from "../../utils/ProfilesUtils";
+import { DatasetFSProvider } from "../dataset/DatasetFSProvider";
 export class SharedInit {
-    /**
-     * Initialize Zowe Explorer UI functions
-     * Function can only run one time during runtime, otherwise it will immediately return
-     * @returns Promise<void>
-     */
-    private static async initZoweExplorerUI(): Promise<void> {
-        if (Constants.ACTIVATED) {
-            return;
-        }
-        const tempPath: string = SettingsConfig.getDirectValue(Constants.SETTINGS_TEMP_FOLDER_PATH);
-        Constants.defineGlobals(tempPath);
-        await TempFolder.hideTempFolder(FileManagement.getZoweDir());
-        ProfilesUtils.initializeZoweTempFolder();
-        await SettingsConfig.standardizeSettings();
-        Constants.setActivated(true);
-    }
-
     public static registerRefreshCommand(
         context: vscode.ExtensionContext,
         activate: (_context: vscode.ExtensionContext) => Promise<ZoweExplorerApiRegister>,
@@ -104,6 +96,25 @@ export class SharedInit {
             })
         );
 
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.diff.useLocalContent", async (localUri) => {
+                if (localUri.scheme === ZoweScheme.USS) {
+                    await UssFSProvider.instance.diffOverwrite(localUri);
+                } else if (localUri.scheme === ZoweScheme.DS) {
+                    await DatasetFSProvider.instance.diffOverwrite(localUri);
+                }
+            })
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.diff.useRemoteContent", async (localUri) => {
+                if (localUri.scheme === ZoweScheme.USS) {
+                    await UssFSProvider.instance.diffUseRemote(localUri);
+                } else if (localUri.scheme === ZoweScheme.DS) {
+                    await DatasetFSProvider.instance.diffUseRemote(localUri);
+                }
+            })
+        );
+
         // Register functions & event listeners
         context.subscriptions.push(
             vscode.workspace.onDidChangeConfiguration(async (e) => {
@@ -144,41 +155,14 @@ export class SharedInit {
                     SharedActions.searchInAllLoadedItems(providers.ds, providers.uss)
                 )
             );
-            context.subscriptions.push(
-                vscode.workspace.onDidSaveTextDocument((savedFile) => {
-                    ZoweLogger.debug(
-                        vscode.l10n.t({
-                            message: `File was saved -- determining whether the file is a USS file or Data set.
-                            \n Comparing (case insensitive) {0} against directory {1} and {2}`,
-                            args: [savedFile.fileName, Constants.DS_DIR, Constants.USS_DIR],
-                            comment: ["Saved file name", "Data Set directory", "USS directory"],
-                        })
-                    );
-                    if (savedFile.fileName.toUpperCase().indexOf(Constants.DS_DIR.toUpperCase()) >= 0) {
-                        ZoweLogger.debug(vscode.l10n.t("File is a Data Set-- saving "));
-                        // eslint-disable-next-line @typescript-eslint/unbound-method
-                        ZoweSaveQueue.push({ uploadRequest: DatasetActions.saveFile, savedFile, fileProvider: providers.ds });
-                    } else if (savedFile.fileName.toUpperCase().indexOf(Constants.USS_DIR.toUpperCase()) >= 0) {
-                        ZoweLogger.debug(vscode.l10n.t("File is a USS file -- saving"));
-                        // eslint-disable-next-line @typescript-eslint/unbound-method
-                        ZoweSaveQueue.push({ uploadRequest: USSActions.saveUSSFile, savedFile, fileProvider: providers.uss });
-                    } else {
-                        ZoweLogger.debug(
-                            vscode.l10n.t({
-                                message: "File {0} is not a Data Set or USS file",
-                                args: [savedFile.fileName],
-                                comment: ["Saved file name"],
-                            })
-                        );
-                    }
-                })
-            );
         }
         if (providers.ds || providers.uss || providers.job) {
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.ds.deleteProfile", async (node) => Profiles.getInstance().deleteProfile(node))
             );
-            context.subscriptions.push(vscode.commands.registerCommand("zowe.cmd.deleteProfile", async () => Profiles.getInstance().deleteProfile()));
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.cmd.deleteProfile", async (node) => Profiles.getInstance().deleteProfile(node))
+            );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.uss.deleteProfile", async (node) => Profiles.getInstance().deleteProfile(node))
             );
@@ -197,7 +181,7 @@ export class SharedInit {
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.issueUnixCmd", async (node?, command?) => {
                     if (node) {
-                        await UnixCommandHandler.getInstance().issueUnixCommand(node.session, command, node);
+                        await UnixCommandHandler.getInstance().issueUnixCommand(node, command);
                     } else {
                         await UnixCommandHandler.getInstance().issueUnixCommand();
                     }
@@ -228,12 +212,17 @@ export class SharedInit {
                 })
             );
             context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.compareFileStarted", () => {
-                    return Constants.FILE_SELECTED_TO_COMPARE;
+                vscode.commands.registerCommand("zowe.compareFileStarted", (): boolean => {
+                    return LocalFileManagement.fileSelectedToCompare;
+                })
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.placeholderCommand", () => {
+                    // This command does nothing, its here to let us disable individual items in the tree view
                 })
             );
             // initialize the Constants.filesToCompare array during initialization
-            Constants.resetCompareChoices();
+            LocalFileManagement.resetCompareSelection();
         }
     }
 
@@ -320,5 +309,20 @@ export class SharedInit {
     public static async initZoweLogger(context: vscode.ExtensionContext): Promise<void> {
         const logsPath = await ZoweLogger.initializeZoweLogger(context);
         ZoweLogger.zeOutputChannel = await LoggerUtils.initVscLogger(context, logsPath);
+    }
+
+    /**
+     * Initialize Zowe Explorer UI functions
+     * Function can only run one time during runtime, otherwise it will immediately return
+     * @returns Promise<void>
+     */
+    private static async initZoweExplorerUI(): Promise<void> {
+        if (Constants.ACTIVATED) {
+            return;
+        }
+        await TempFolder.hideTempFolder(FileManagement.getZoweDir());
+        ProfilesUtils.initializeZoweTempFolder();
+        await SettingsConfig.standardizeSettings();
+        Constants.setActivated(true);
     }
 }

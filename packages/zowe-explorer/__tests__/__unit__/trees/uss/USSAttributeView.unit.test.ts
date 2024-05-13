@@ -10,39 +10,43 @@
  */
 
 import * as vscode from "vscode";
-import { MainframeInteraction, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
-import { ZoweExplorerApiRegister } from "../../../../src/extending";
-import { USSAtributeView } from "../../../../src/trees/uss";
-import { SharedContext } from "../../../../src/trees/shared";
+import { MockedProperty } from "../../../__mocks__/mockUtils";
+import { USSAtributeView } from "../../../../src/trees/uss/USSAttributeView";
+import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
+import { IZoweTree } from "../../../../../zowe-explorer-api/src/tree/IZoweTree";
+import { IZoweUSSTreeNode } from "../../../../../zowe-explorer-api/src/tree";
+import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
+import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
+import { MainframeInteraction } from "../../../../../zowe-explorer-api/src/extend";
+import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 
 describe("AttributeView unit tests", () => {
     let view: USSAtributeView;
     const context = { extensionPath: "some/fake/ext/path" } as unknown as vscode.ExtensionContext;
     const treeProvider = { refreshElement: jest.fn(), refresh: jest.fn() } as unknown as IZoweTree<IZoweUSSTreeNode>;
-    const node = {
-        attributes: {
-            perms: "----------",
-            tag: undefined,
-        },
-        label: "example node",
-        fullPath: "/z/some/path",
-        getParent: jest.fn(),
-        getProfile: jest.fn(),
-        onUpdate: jest.fn(),
-    } as unknown as IZoweUSSTreeNode;
-    const updateAttributesMock = jest.fn();
+    const createDirMock = jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation();
+    const node = new ZoweUSSNode({
+        label: "example_node",
+        collapsibleState: vscode.TreeItemCollapsibleState.None,
+        parentPath: "/z/some",
+    });
+    const updateAttrsApiMock = jest.fn();
+    const updateAttributesMock = jest.spyOn(node, "setAttributes").mockImplementation();
+    const onUpdateMock = jest.fn();
+    const onUpdateMocked = new MockedProperty(ZoweUSSNode.prototype, "onUpdate", undefined, onUpdateMock);
 
     beforeAll(() => {
         jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({
-            updateAttributes: updateAttributesMock,
+            updateAttributes: jest.fn(),
             getTag: () => Promise.resolve("UTF-8"),
         } as unknown as MainframeInteraction.IUss);
         jest.spyOn(SharedContext, "isUssDirectory").mockReturnValue(false);
         view = new USSAtributeView(context, treeProvider, node);
     });
 
-    afterEach(() => {
-        node.onUpdate = jest.fn();
+    afterAll(() => {
+        createDirMock.mockRestore();
+        onUpdateMocked[Symbol.dispose]();
     });
 
     it("refreshes properly when webview sends 'refresh' command", async () => {
@@ -59,24 +63,33 @@ describe("AttributeView unit tests", () => {
     });
 
     it("dispatches node data to webview when 'ready' command is received", async () => {
+        const attrs = {
+            group: "group",
+            perms: "-rwxrwxrwx",
+        };
+        const getAttributesMock = jest.spyOn(ZoweUSSNode.prototype, "getAttributes").mockResolvedValue(attrs as any);
         await (view as any).onDidReceiveMessage({ command: "ready" });
         expect(view.panel.webview.postMessage).toHaveBeenCalledWith({
-            attributes: node.attributes,
+            attributes: attrs,
             name: node.fullPath,
             readonly: false,
         });
+        getAttributesMock.mockRestore();
     });
 
     it("updates attributes when 'update-attributes' command is received", async () => {
+        const getAttributesMock = jest.spyOn(ZoweUSSNode.prototype, "getAttributes");
         // case 1: no attributes provided from webview (sanity check)
+        updateAttrsApiMock.mockClear();
         await (view as any).onDidReceiveMessage({ command: "update-attributes" });
-        expect(updateAttributesMock).not.toHaveBeenCalled();
+        expect(updateAttrsApiMock).not.toHaveBeenCalled();
 
         const attributes = {
             owner: "owner",
             group: "group",
             perms: "-rwxrwxrwx",
         };
+        getAttributesMock.mockResolvedValue(attributes as any);
 
         // case 2: attributes provided from webview, pass owner/group as name
         await (view as any).onDidReceiveMessage({
@@ -102,12 +115,12 @@ describe("AttributeView unit tests", () => {
     });
 
     it("handles any errors while updating attributes", async () => {
-        updateAttributesMock.mockRejectedValueOnce(new Error("Failed to update attributes"));
+        const getAttributesMock = jest.spyOn(ZoweUSSNode.prototype, "getAttributes").mockRejectedValue(new Error("Failed to update attributes"));
         await (view as any).onDidReceiveMessage({
             command: "update-attributes",
-            attrs: {},
+            attrs: { owner: "someowner" },
         });
-        expect(updateAttributesMock).toHaveBeenCalled();
+        expect(getAttributesMock).toHaveBeenCalled();
         expect(view.panel.webview.postMessage).toHaveBeenCalledWith({
             updated: false,
         });

@@ -10,8 +10,8 @@
  */
 
 import { createTreeView } from "../../../__mocks__/mockCreators/shared";
-import { Constants } from "../../../../src/configuration";
-import { SharedTreeProviders } from "../../../../src/trees/shared";
+import { Constants } from "../../../../src/configuration/Constants";
+import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 
 describe("TreeProvider Unit Tests - Function getters", () => {
     it("should retrieve the ds provider", async () => {

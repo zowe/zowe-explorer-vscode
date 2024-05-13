@@ -27,12 +27,15 @@ import {
     IRegisterClient,
     Types,
 } from "@zowe/zowe-explorer-api";
-import { FilterDescriptor, FilterItem, ProfilesUtils } from "../utils";
-import { ZoweExplorerExtender, ZoweExplorerApiRegister } from "../extending";
-import { SettingsConfig, Constants } from "../configuration";
-import { ZoweLogger } from "../tools";
-import { SharedTreeProviders } from "../trees/shared";
+import { SettingsConfig } from "./SettingsConfig";
+import { Constants } from "./Constants";
 import { ProfileConstants } from "@zowe/core-for-zowe-sdk";
+import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
+import { ZoweLogger } from "../tools/ZoweLogger";
+import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
+import { ZoweExplorerExtender } from "../extending/ZoweExplorerExtender";
+import { FilterDescriptor, FilterItem } from "../management/FilterManagement";
+import { AuthUtils } from "../utils/AuthUtils";
 
 export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
@@ -40,6 +43,7 @@ export class Profiles extends ProfilesCache {
         Profiles.loader = new Profiles(log, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
         Constants.setProfilesCache(Profiles.loader);
         await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
+        await Profiles.getInstance().getProfileInfo();
         return Profiles.loader;
     }
 
@@ -78,7 +82,7 @@ export class Profiles extends ProfilesCache {
     public async checkCurrentProfile(theProfile: imperative.IProfileLoaded): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
         let profileStatus: Validation.IValidationProfile;
-        const usingTokenAuth = await ProfilesUtils.isUsingTokenAuth(theProfile.name);
+        const usingTokenAuth = await AuthUtils.isUsingTokenAuth(theProfile.name);
 
         if (usingTokenAuth && !theProfile.profile.tokenType) {
             const error = new imperative.ImperativeError({
@@ -86,7 +90,7 @@ export class Profiles extends ProfilesCache {
                 additionalDetails: vscode.l10n.t(`Profile was found using token auth, please log in to continue.`),
                 errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
             });
-            await ProfilesUtils.errorHandling(error, theProfile.name, error.message);
+            await AuthUtils.errorHandling(error, theProfile.name, error.message);
             profileStatus = { name: theProfile.name, status: "unverified" };
             return profileStatus;
         }
@@ -100,7 +104,7 @@ export class Profiles extends ProfilesCache {
             try {
                 values = await Profiles.getInstance().promptCredentials(theProfile);
             } catch (error) {
-                await ProfilesUtils.errorHandling(error, theProfile.name, error.message);
+                await AuthUtils.errorHandling(error, theProfile.name, error.message);
                 return profileStatus;
             }
             if (values) {
@@ -419,7 +423,7 @@ export class Profiles extends ProfilesCache {
         return profileType;
     }
 
-    public async createZoweSchema(_zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<string> {
+    public async createZoweSchema(_zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<string | undefined> {
         ZoweLogger.trace("Profiles.createZoweSchema called.");
         try {
             let user = false;
@@ -682,7 +686,7 @@ export class Profiles extends ProfilesCache {
                         comment: [`The profile name`],
                     })
                 );
-                await ProfilesUtils.errorHandling(error, theProfile.name);
+                await AuthUtils.errorHandling(error, theProfile.name);
                 filteredProfile = {
                     status: "inactive",
                     name: theProfile.name,
@@ -704,7 +708,7 @@ export class Profiles extends ProfilesCache {
             serviceProfile = this.loadNamedProfile(label.trim());
         }
         // This check will handle service profiles that have username and password
-        if (ProfilesUtils.isProfileUsingBasicAuth(serviceProfile)) {
+        if (AuthUtils.isProfileUsingBasicAuth(serviceProfile)) {
             Gui.showMessage(vscode.l10n.t(`This profile is using basic authentication and does not support token authentication.`));
             return;
         }
@@ -752,9 +756,9 @@ export class Profiles extends ProfilesCache {
         if (!SharedTreeProviders.ds?.mSessionNodes || !SharedTreeProviders.ds?.mSessionNodes.length) {
             return;
         }
-        const dsNode: IZoweDatasetTreeNode = SharedTreeProviders.ds.mSessionNodes.find(
+        const dsNode = SharedTreeProviders.ds.mSessionNodes.find(
             (sessionNode: IZoweDatasetTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
-        );
+        ) as IZoweDatasetTreeNode;
         if (!dsNode) {
             return;
         }
@@ -769,7 +773,7 @@ export class Profiles extends ProfilesCache {
         if (!SharedTreeProviders.uss?.mSessionNodes || !SharedTreeProviders.uss?.mSessionNodes.length) {
             return;
         }
-        const ussNode: IZoweUSSTreeNode = SharedTreeProviders.uss.mSessionNodes.find(
+        const ussNode = SharedTreeProviders.uss.mSessionNodes.find(
             (sessionNode: IZoweUSSTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
         );
         if (!ussNode) {
@@ -813,7 +817,7 @@ export class Profiles extends ProfilesCache {
         ZoweLogger.trace("Profiles.ssoLogout called.");
         const serviceProfile = node.getProfile();
         // This check will handle service profiles that have username and password
-        if (ProfilesUtils.isProfileUsingBasicAuth(serviceProfile)) {
+        if (AuthUtils.isProfileUsingBasicAuth(serviceProfile)) {
             Gui.showMessage(vscode.l10n.t(`This profile is using basic authentication and does not support token authentication.`));
             return;
         }
@@ -878,40 +882,6 @@ export class Profiles extends ProfilesCache {
         return mergedArgs.knownArgs
             .filter((arg) => arg.secure || arg.argName === "tokenType" || arg.argName === "tokenValue")
             .map((arg) => arg.argName);
-    }
-
-    private async loginWithBaseProfile(serviceProfile: imperative.IProfileLoaded, loginTokenType: string, node?: Types.IZoweNodeType): Promise<void> {
-        const baseProfile = await this.fetchBaseProfile();
-        if (baseProfile) {
-            const creds = await this.loginCredentialPrompt();
-            if (!creds) {
-                return;
-            }
-            const updSession = new imperative.Session({
-                hostname: serviceProfile.profile.host,
-                port: serviceProfile.profile.port,
-                user: creds[0],
-                password: creds[1],
-                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
-                tokenType: loginTokenType,
-                type: imperative.SessConstants.AUTH_TYPE_TOKEN,
-            });
-            const loginToken = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(updSession);
-            const updBaseProfile: imperative.IProfile = {
-                tokenType: loginTokenType,
-                tokenValue: loginToken,
-            };
-            await this.updateBaseProfileFileLogin(baseProfile, updBaseProfile);
-            const baseIndex = this.allProfiles.findIndex((profile) => profile.name === baseProfile.name);
-            this.allProfiles[baseIndex] = { ...baseProfile, profile: { ...baseProfile.profile, ...updBaseProfile } };
-            if (node) {
-                node.setProfileToChoice({
-                    ...node.getProfile(),
-                    profile: { ...node.getProfile().profile, ...updBaseProfile },
-                });
-            }
-            Gui.showMessage(vscode.l10n.t("Login to authentication service was successful."));
-        }
     }
 
     private async loginWithRegularProfile(serviceProfile: imperative.IProfileLoaded, node?: Types.IZoweNodeType): Promise<boolean> {
@@ -1091,7 +1061,7 @@ export class Profiles extends ProfilesCache {
         ZoweLogger.trace("Profiles.createNonSecureProfile called.");
         const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
         if (!isSecureCredsEnabled) {
-            for (const profile of Object.entries(newConfig?.profiles)) {
+            for (const profile of Object.entries(newConfig.profiles)) {
                 delete newConfig.profiles[profile[0]].secure;
             }
             newConfig.autoStore = false;

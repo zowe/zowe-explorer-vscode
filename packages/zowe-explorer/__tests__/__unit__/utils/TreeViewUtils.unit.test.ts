@@ -13,9 +13,9 @@ import * as vscode from "vscode";
 import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createIProfile, createISession, createPersistentConfig, createTreeView } from "../../__mocks__/mockCreators/shared";
-import { ZoweLocalStorage } from "../../../src/tools";
-import { TreeViewUtils } from "../../../src/utils";
-import { Constants } from "../../../src/configuration";
+import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
+import { TreeViewUtils } from "../../../src/utils/TreeViewUtils";
+import { Constants } from "../../../src/configuration/Constants";
 
 describe("TreeViewUtils Unit Tests", () => {
     function createBlockMocks() {

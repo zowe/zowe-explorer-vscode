@@ -23,7 +23,10 @@ import { Types } from "../Types";
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
  */
 export class ZoweVsCodeExtension {
-    private static get profilesCache(): ProfilesCache {
+    /**
+     * @internal
+     */
+    public static get profilesCache(): ProfilesCache {
         return new ProfilesCache(imperative.Logger.getAppLogger(), vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
     }
 

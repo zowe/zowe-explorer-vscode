@@ -20,10 +20,11 @@ import {
     createTreeView,
 } from "../../../__mocks__/mockCreators/shared";
 import { createIJobObject, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
+import { SharedHistoryView } from "../../../../src/trees/shared/SharedHistoryView";
 import { Gui } from "@zowe/zowe-explorer-api";
-import { Profiles } from "../../../../src/configuration";
-import { ZoweLocalStorage } from "../../../../src/tools";
-import { SharedHistoryView } from "../../../../src/trees/shared";
+import { Profiles } from "../../../../src/configuration/Profiles";
+import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
+import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 
 async function initializeHistoryViewMock(blockMocks: any, globalMocks: any): Promise<SharedHistoryView> {
     return new SharedHistoryView(
@@ -44,7 +45,12 @@ function createGlobalMocks(): any {
         testSession: createISession(),
         treeView: createTreeView(),
         imperativeProfile: createIProfile(),
+        FileSystemProvider: {
+            createDirectory: jest.fn(),
+        },
     };
+
+    jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
     Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "resolveQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "createQuickPick", { value: jest.fn(), configurable: true });

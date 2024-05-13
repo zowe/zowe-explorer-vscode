@@ -10,8 +10,6 @@
  */
 
 import * as vscode from "vscode";
-jest.mock("vscode");
-
 import * as imperative from "@zowe/imperative";
 import * as path from "path";
 import * as fs from "fs";
@@ -19,15 +17,19 @@ import { createISession, createAltTypeIProfile, createTreeView, createIProfile, 
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
 import { createJobsTree, createIJobObject } from "../../__mocks__/mockCreators/jobs";
-import { ZoweExplorerExtender } from "../../../src/extending";
+import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
+import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
+import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
+import { ZoweLogger } from "../../../src/tools/ZoweLogger";
+import { UssFSProvider } from "../../../src/trees/uss/UssFSProvider";
+import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
 import { FileManagement, Gui, ProfilesCache } from "@zowe/zowe-explorer-api";
-import { ProfilesUtils } from "../../../src/utils";
-import { ZoweLogger, ZoweLocalStorage } from "../../../src/tools";
-import { SettingsConfig } from "../../../src/configuration";
+
 jest.mock("fs");
+jest.mock("vscode");
 
 describe("ZoweExplorerExtender unit tests", () => {
-    async function createBlockMocks() {
+    function createBlockMocks() {
         const imperativeProfile = createIProfile();
         const newMocks = {
             log: imperative.Logger.getAppLogger(),
@@ -41,7 +43,12 @@ describe("ZoweExplorerExtender unit tests", () => {
             mockErrorMessage: jest.fn(),
             mockExistsSync: jest.fn(),
             mockTextDocument: jest.fn(),
+            FileSystemProvider: {
+                createDirectory: jest.fn(),
+            },
         };
+
+        jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
 
         Object.defineProperty(fs, "existsSync", { value: newMocks.mockExistsSync, configurable: true });
         jest.spyOn(ZoweExplorerExtender.prototype, "getProfilesCache").mockReturnValue(newMocks.profiles);
@@ -116,8 +123,8 @@ describe("ZoweExplorerExtender unit tests", () => {
         const blockMocks = await createBlockMocks();
         ZoweExplorerExtender.createInstance();
 
-        Object.defineProperty(vscode.Uri, "file", { value: jest.fn(), configurable: true });
         Object.defineProperty(Gui, "showTextDocument", { value: jest.fn(), configurable: true });
+        const uriFileMock = jest.spyOn(vscode.Uri, "file").mockImplementation();
 
         const zoweDir = FileManagement.getZoweDir();
         const userInputs = [
@@ -171,7 +178,7 @@ describe("ZoweExplorerExtender unit tests", () => {
                 expect(Gui.showTextDocument).not.toHaveBeenCalled();
             } else {
                 if (userInput.v1) {
-                    expect(vscode.Uri.file).toHaveBeenCalledWith(path.join(zoweDir, "profiles", "exampleType", "exampleType_meta.yaml"));
+                    expect(uriFileMock).toHaveBeenCalledWith(path.join(zoweDir, "profiles", "exampleType", "exampleType_meta.yaml"));
                 } else {
                     for (const fileName of userInput.fileChecks) {
                         expect(blockMocks.mockExistsSync).toHaveBeenCalledWith(path.join(zoweDir, fileName));

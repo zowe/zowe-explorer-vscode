@@ -10,7 +10,8 @@
  */
 
 import { Types } from "@zowe/zowe-explorer-api";
-import { SharedContext, SharedUtils } from "../shared";
+import { SharedContext } from "./SharedContext";
+import type { SharedUtils } from "./SharedUtils";
 
 export class SharedTreeProviders {
     static #ds: Types.IZoweDatasetTreeType;

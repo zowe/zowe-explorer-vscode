@@ -10,13 +10,14 @@
  */
 
 import * as vscode from "vscode";
-import { Constants } from "../configuration";
 import { Gui, IZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
+import { Constants } from "../configuration/Constants";
+import { Profiles } from "../configuration/Profiles";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
-import { Profiles } from "../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
-import { SharedContext } from "../trees/shared";
+import { SharedContext } from "../trees/shared/SharedContext";
+import { AuthUtils } from "../utils/AuthUtils";
 
 export class ProfileManagement {
     public static getRegisteredProfileNameList(registeredTree: Constants.Trees): string[] {
@@ -41,12 +42,12 @@ export class ProfileManagement {
         const profile = node.getProfile();
         let selected: vscode.QuickPickItem;
         switch (true) {
-            case ProfilesUtils.isProfileUsingBasicAuth(profile): {
+            case AuthUtils.isProfileUsingBasicAuth(profile): {
                 ZoweLogger.debug(`Profile ${profile.name} is using basic authentication.`);
                 selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_BASIC, node);
                 break;
             }
-            case await ProfilesUtils.isUsingTokenAuth(profile.name): {
+            case await AuthUtils.isUsingTokenAuth(profile.name): {
                 ZoweLogger.debug(`Profile ${profile.name} is using token authentication.`);
                 selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_TOKEN, node);
                 break;

@@ -39,7 +39,7 @@ describe("FtpUssApi", () => {
         UssApi.checkedProfile = jest.fn().mockReturnValue({ message: "success", type: "zftp", failNotFound: false });
         UssApi.ftpClient = jest.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
         UssApi.releaseConnection = jest.fn();
-        globals.SESSION_MAP.get = jest.fn().mockReturnValue({ ussListConnection: { connected: true } });
+        globals.SESSION_MAP.get = jest.fn().mockReturnValue({ ussListConnection: { isConnected: () => true } });
         globals.LOGGER.getExtensionName = jest.fn().mockReturnValue("Zowe Explorer FTP Extension");
     });
 
@@ -76,7 +76,7 @@ describe("FtpUssApi", () => {
         };
         const result = await UssApi.getContents(mockParams.ussFilePath, mockParams.options);
 
-        expect(result.apiResponse.etag).toHaveLength(40);
+        expect(result.apiResponse.etag).toHaveLength(64);
         expect(UssUtils.downloadFile).toHaveBeenCalledTimes(1);
         expect(UssApi.releaseConnection).toHaveBeenCalled();
 
@@ -85,12 +85,12 @@ describe("FtpUssApi", () => {
 
     it("should throw error for getContents if connection to FTP client fails.", async () => {
         jest.spyOn(UssApi, "ftpClient").mockReturnValueOnce(null);
-        expect(UssApi.getContents("/some/example/path", {})).rejects.toThrowError();
+        expect(UssApi.getContents("/some/example/path", {})).rejects.toThrow();
     });
 
     it("should throw error for putContent if connection to FTP client fails.", async () => {
         jest.spyOn(UssApi, "ftpClient").mockReturnValueOnce(null);
-        expect(UssApi.putContent("/some/example/input/path", "/some/uss/path")).rejects.toThrowError();
+        expect(UssApi.putContent("/some/example/input/path", "/some/uss/path")).rejects.toThrow();
     });
 
     it("should upload uss files.", async () => {
@@ -318,21 +318,9 @@ describe("FtpUssApi", () => {
             const buf = Buffer.from("abc123");
             const blockMocks = getBlockMocks();
 
-            await UssApi.uploadFromBuffer(buf, "/some/fs/path");
-            expect(blockMocks.tmpFileSyncMock).toHaveBeenCalled();
-            expect(blockMocks.writeSyncMock).toHaveBeenCalled();
-            expect(blockMocks.processNewlinesSpy).toHaveBeenCalled();
-        });
-
-        it("should not process new lines when uploading buffer as binary", async () => {
-            const buf = Buffer.from("abc123");
-            const blockMocks = getBlockMocks();
-            blockMocks.processNewlinesSpy.mockImplementation();
-
-            await UssApi.uploadFromBuffer(buf, "/some/fs/path", { binary: true });
-            expect(blockMocks.tmpFileSyncMock).toHaveBeenCalled();
-            expect(blockMocks.writeSyncMock).toHaveBeenCalled();
-            expect(blockMocks.processNewlinesSpy).not.toHaveBeenCalled();
+            const ussPath = "/some/fs/path";
+            await UssApi.uploadFromBuffer(buf, ussPath);
+            expect(blockMocks.putContent).toHaveBeenCalledWith(buf, ussPath, undefined);
         });
     });
 });

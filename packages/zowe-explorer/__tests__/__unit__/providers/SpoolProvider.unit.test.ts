@@ -12,8 +12,8 @@
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { imperative } from "@zowe/zowe-explorer-api";
-import { Profiles } from "../../../src/configuration";
-import { SpoolFile, SpoolProvider } from "../../../src/providers";
+import { Profiles } from "../../../src/configuration/Profiles";
+import { SpoolFile, SpoolProvider } from "../../../src/providers/SpoolProvider";
 import { createIProfile, createISessionWithoutCredentials } from "../../__mocks__/mockCreators/shared";
 import { bindJesApi, createJesApi } from "../../__mocks__/mockCreators/api";
 import { createJobSessionNode } from "../../__mocks__/mockCreators/jobs";

@@ -9,55 +9,15 @@
  *
  */
 
-// Generic utility functions (not node type related). See ./src/shared/utils.ts
-
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
-import * as util from "util";
-import { IZoweTreeNode, ZoweTreeNode, FileManagement, Gui, ProfilesCache, MainframeInteraction, imperative } from "@zowe/zowe-explorer-api";
-import { ZoweLogger } from "../tools";
-import { Constants, SettingsConfig } from "../configuration";
-import { SharedTreeProviders } from "../trees/shared";
-
-export interface IFilterItem {
-    text: string;
-    description?: string;
-    show?: boolean;
-    icon?: string;
-    menuType?: Constants.JobPickerTypes;
-}
-
-export class FilterItem implements vscode.QuickPickItem {
-    public constructor(public filterItem: IFilterItem) {}
-    public get label(): string {
-        const icon = this.filterItem.icon ? this.filterItem.icon + " " : null;
-        return (icon ?? "") + this.filterItem.text;
-    }
-    public get description(): string {
-        if (this.filterItem.description) {
-            return this.filterItem.description;
-        } else {
-            return "";
-        }
-    }
-    public get alwaysShow(): boolean {
-        return this.filterItem.show;
-    }
-}
-
-export class FilterDescriptor implements vscode.QuickPickItem {
-    public constructor(private text: string) {}
-    public get label(): string {
-        return this.text;
-    }
-    public get description(): string {
-        return "";
-    }
-    public get alwaysShow(): boolean {
-        return true;
-    }
-}
+import { IZoweTreeNode, ZoweTreeNode, FileManagement, Gui, ProfilesCache, imperative } from "@zowe/zowe-explorer-api";
+import { Constants } from "../configuration/Constants";
+import { SettingsConfig } from "../configuration/SettingsConfig";
+import { ZoweLogger } from "../tools/ZoweLogger";
+import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
+import { AuthUtils } from "./AuthUtils";
 
 export class ProfilesUtils {
     public static PROFILE_SECURITY: string | boolean = Constants.ZOWE_CLI_SCM;
@@ -115,20 +75,18 @@ export class ProfilesUtils {
     public static updateCredentialManagerSetting(credentialManager?: string): void {
         ZoweLogger.trace("ProfilesUtils.updateCredentialManagerSetting called.");
         const settingEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
-        if (settingEnabled) {
-            if (settingEnabled && credentialManager) {
-                this.PROFILE_SECURITY = credentialManager;
-                return;
-            } else if (!settingEnabled) {
-                this.PROFILE_SECURITY = false;
-                ZoweLogger.info(vscode.l10n.t(`Zowe explorer profiles are being set as unsecured.`));
-            } else {
-                this.PROFILE_SECURITY = Constants.ZOWE_CLI_SCM;
-                ZoweLogger.info(vscode.l10n.t(`Zowe explorer profiles are being set as secured.`));
-            }
-            if (this.PROFILE_SECURITY) {
-                imperative.CredentialManagerOverride.recordCredMgrInConfig(this.PROFILE_SECURITY);
-            }
+        if (settingEnabled && credentialManager) {
+            this.PROFILE_SECURITY = credentialManager;
+            return;
+        } else if (!settingEnabled) {
+            this.PROFILE_SECURITY = false;
+            ZoweLogger.info(vscode.l10n.t(`Zowe explorer profiles are being set as unsecured.`));
+        } else {
+            this.PROFILE_SECURITY = Constants.ZOWE_CLI_SCM;
+            ZoweLogger.info(vscode.l10n.t(`Zowe explorer profiles are being set as secured.`));
+        }
+        if (this.PROFILE_SECURITY) {
+            imperative.CredentialManagerOverride.recordCredMgrInConfig(this.PROFILE_SECURITY);
         }
     }
 
@@ -265,7 +223,7 @@ export class ProfilesUtils {
             async (selection) => {
                 if (selection === installButton) {
                     const credentialManagerInstallURL = vscode.Uri.parse(
-                        `https://marketplace.visualstudio.com/items?itemName=${credentialManager.credMgrZEName}`
+                        `https://marketplace.visualstudio.com/items?itemName=${credentialManager.credMgrZEName as string}`
                     );
                     if (await vscode.env.openExternal(credentialManagerInstallURL)) {
                         const refreshMessage = vscode.l10n.t(
@@ -327,11 +285,11 @@ export class ProfilesUtils {
                 ZoweLogger.warn(schemaWarning);
             }
             Constants.setConfigPath(rootPath);
-            ZoweLogger.info(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName}"`);
+            ZoweLogger.info(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName as string}"`);
             const layers = mProfileInfo.getTeamConfig().layers || [];
             const layerSummary = layers.map(
                 (config: imperative.IConfigLayer) =>
-                    `Path: ${config.path}: ${
+                    `Path: ${config.path as string}: ${
                         config.exists
                             ? "Found, with the following defaults:" + JSON.stringify(config.properties?.defaults || "Undefined default")
                             : "Not available"
@@ -343,33 +301,6 @@ export class ProfilesUtils {
                 this.v1ProfileOptions();
             }
         }
-    }
-
-    /**
-     * Function that checks whether a profile is using basic authentication
-     * @param profile
-     * @returns {Promise<boolean>} a boolean representing whether basic auth is being used or not
-     */
-    public static isProfileUsingBasicAuth(profile: imperative.IProfileLoaded): boolean {
-        const prof = profile.profile;
-        // See https://github.com/zowe/zowe-explorer-vscode/issues/2664
-        return prof.user != null && prof.password != null;
-    }
-
-    /**
-     * Function that checks whether a profile is using token based authentication
-     * @param profileName the name of the profile to check
-     * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not
-     */
-    public static async isUsingTokenAuth(profileName: string): Promise<boolean> {
-        const secureProfileProps = await Constants.PROFILES_CACHE.getSecurePropsForProfile(profileName);
-        const profileUsesBasicAuth = secureProfileProps.includes("user") && secureProfileProps.includes("password");
-        if (secureProfileProps.includes("tokenValue")) {
-            return secureProfileProps.includes("tokenValue") && !profileUsesBasicAuth;
-        }
-        const baseProfile = Constants.PROFILES_CACHE.getDefaultProfile("base");
-        const secureBaseProfileProps = await Constants.PROFILES_CACHE.getSecurePropsForProfile(baseProfile?.name);
-        return secureBaseProfileProps.includes("tokenValue") && !profileUsesBasicAuth;
     }
 
     public static async promptCredentials(node: IZoweTreeNode): Promise<void> {
@@ -517,7 +448,7 @@ export class ProfilesUtils {
             ZoweLogger.info(vscode.l10n.t("Zowe Profiles initialized successfully."));
         } catch (err) {
             if (err instanceof imperative.ImperativeError) {
-                await ProfilesUtils.errorHandling(err, undefined, err.mDetails.causeErrors);
+                await AuthUtils.errorHandling(err, undefined, err.mDetails.causeErrors);
             } else {
                 ZoweLogger.error(err);
                 errorCallback(err.message);
@@ -561,10 +492,10 @@ export class ProfilesUtils {
                     const convertResults = await Constants.PROFILES_CACHE.convertV1ProfToConfig();
                     let responseMsg = "";
                     if (convertResults.success) {
-                        responseMsg += `Success: ${convertResults.success}\n`;
+                        responseMsg += `Success: ${convertResults.success as string}\n`;
                     }
                     if (convertResults.warnings) {
-                        responseMsg += `Warning: ${convertResults.warnings}\n`;
+                        responseMsg += `Warning: ${convertResults.warnings as string}\n`;
                     }
                     ZoweLogger.info(responseMsg);
                     Gui.infoMessage(vscode.l10n.t(responseMsg), { vsCodeOpts: { modal: true } });
@@ -604,118 +535,8 @@ export class ProfilesUtils {
     public static getProfile(node: vscode.TreeItem | ZoweTreeNode): imperative.IProfileLoaded {
         ZoweLogger.trace("ProfilesUtils.getProfile called.");
         if (node instanceof ZoweTreeNode) {
-            return node.getProfile();
+            return node.getProfile() as imperative.IProfileLoaded;
         }
         throw new Error(vscode.l10n.t("Tree Item is not a Zowe Explorer item."));
-    }
-
-    /*************************************************************************************************************
-     * Error Handling
-     * @param {errorDetails} - string or error object
-     * @param {label} - additional information such as profile name, credentials, messageID etc
-     * @param {moreInfo} - additional/customized error messages
-     *************************************************************************************************************/
-    public static async errorHandling(errorDetails: Error | string, label?: string, moreInfo?: string): Promise<void> {
-        // Use util.inspect instead of JSON.stringify to handle circular references
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        ZoweLogger.error(`${errorDetails.toString()}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null }));
-        if (typeof errorDetails !== "string" && (errorDetails as imperative.ImperativeError)?.mDetails !== undefined) {
-            const imperativeError: imperative.ImperativeError = errorDetails as imperative.ImperativeError;
-            const httpErrorCode = Number(imperativeError.mDetails.errorCode);
-            // open config file for missing hostname error
-            if (imperativeError.toString().includes("hostname")) {
-                const mProfileInfo = await Constants.PROFILES_CACHE.getProfileInfo();
-                Gui.errorMessage(vscode.l10n.t("Required parameter 'host' must not be blank."));
-                const profAllAttrs = mProfileInfo.getAllProfiles();
-                for (const prof of profAllAttrs) {
-                    if (prof.profName === label.trim()) {
-                        const filePath = prof.profLoc.osLoc[0];
-                        await Constants.PROFILES_CACHE.openConfigFile(filePath);
-                        return;
-                    }
-                }
-            } else if (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401) {
-                const errMsg = vscode.l10n.t({
-                    message:
-                        "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
-                    args: [label],
-                    comment: ["Label"],
-                });
-                const errToken = vscode.l10n.t({
-                    message:
-                        // eslint-disable-next-line max-len
-                        "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
-                    args: [label],
-                    comment: ["Label"],
-                });
-                if (label.includes("[")) {
-                    label = label.substring(0, label.indexOf(" [")).trim();
-                }
-
-                if (imperativeError.mDetails.additionalDetails) {
-                    const tokenError: string = imperativeError.mDetails.additionalDetails;
-                    const isTokenAuth = await ProfilesUtils.isUsingTokenAuth(label);
-
-                    if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
-                        const message = vscode.l10n.t("Log in to Authentication Service");
-                        Gui.showMessage(errToken, { items: [message] }).then(async (selection) => {
-                            if (selection) {
-                                await Constants.PROFILES_CACHE.ssoLogin(null, label);
-                            }
-                        });
-                        return;
-                    }
-                }
-                const checkCredsButton = vscode.l10n.t("Update Credentials");
-                await Gui.errorMessage(errMsg, {
-                    items: [checkCredsButton],
-                    vsCodeOpts: { modal: true },
-                }).then(async (selection) => {
-                    if (selection !== checkCredsButton) {
-                        Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
-                        return;
-                    }
-                    await Constants.PROFILES_CACHE.promptCredentials(label.trim(), true);
-                });
-                return;
-            }
-        }
-        if (errorDetails.toString().includes("Could not find profile")) {
-            return;
-        }
-        if (moreInfo === undefined) {
-            moreInfo = errorDetails.toString().includes("Error") ? "" : "Error: ";
-        } else {
-            moreInfo += " ";
-        }
-        // Try to keep message readable since VS Code doesn't support newlines in error messages
-        Gui.errorMessage(moreInfo + errorDetails.toString().replace(/\n/g, " | "));
-    }
-
-    /**
-     * Function to update session and profile information in provided node
-     * @param profiles is data source to find profiles
-     * @param getSessionForProfile is a function to build a valid specific session based on provided profile
-     * @param sessionNode is a tree node, containing session information
-     */
-    public static syncSessionNode(
-        getCommonApi: (profile: imperative.IProfileLoaded) => MainframeInteraction.ICommon,
-        sessionNode: IZoweTreeNode
-    ): void {
-        ZoweLogger.trace("ProfilesUtils.syncSessionNode called.");
-
-        const profileType = sessionNode.getProfile()?.type;
-        const profileName = sessionNode.getProfileName();
-
-        let profile: imperative.IProfileLoaded;
-        try {
-            profile = Constants.PROFILES_CACHE.loadNamedProfile(profileName, profileType);
-        } catch (e) {
-            ZoweLogger.warn(e);
-            return;
-        }
-        sessionNode.setProfileToChoice(profile);
-        const session = getCommonApi(profile).getSession();
-        sessionNode.setSessionToChoice(session);
     }
 }

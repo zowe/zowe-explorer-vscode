@@ -13,8 +13,9 @@
 
 import * as vscode from "vscode";
 import { Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
-import { Constants, SettingsConfig } from "../configuration";
-import { ZoweLogger } from "../tools";
+import { Constants } from "../configuration/Constants";
+import { SettingsConfig } from "../configuration/SettingsConfig";
+import { ZoweLogger } from "../tools/ZoweLogger";
 
 export class LoggerUtils {
     public static async initVscLogger(context: vscode.ExtensionContext, logFileLocation: string): Promise<vscode.OutputChannel> {

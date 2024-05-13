@@ -11,8 +11,8 @@
 
 import { FileDecoration, Uri } from "vscode";
 import { ICreateDataSetOptions } from "@zowe/zos-files-for-zowe-sdk";
-import { IApiExplorerExtender, IRegisterClient } from "./extend";
-import { IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode, IZoweUSSTreeNode, IZoweTree } from "./tree";
+import type { IApiExplorerExtender, IRegisterClient } from "./extend";
+import type { IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode, IZoweUSSTreeNode, IZoweTree } from "./tree";
 
 export namespace Types {
     export type IZoweNodeType = IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode;

@@ -10,12 +10,19 @@
  */
 
 import * as vscode from "vscode";
-import { SharedActions, SharedContext, SharedInit, SharedUtils } from "../shared";
-import { IZoweDatasetTreeNode, IZoweTreeNode, ZosEncoding, imperative } from "@zowe/zowe-explorer-api";
-import { Profiles, Constants } from "../../configuration";
-import { ZoweLogger } from "../../tools";
-import { TreeViewUtils } from "../../utils";
-import { DatasetTree, DatasetActions, ZoweDatasetNode } from "../dataset";
+import { IZoweDatasetTreeNode, IZoweTreeNode, ZosEncoding, ZoweScheme, imperative } from "@zowe/zowe-explorer-api";
+import { DatasetTree } from "./DatasetTree";
+import { DatasetFSProvider } from "./DatasetFSProvider";
+import { DatasetActions } from "./DatasetActions";
+import { ZoweDatasetNode } from "./ZoweDatasetNode";
+import { Constants } from "../../configuration/Constants";
+import { Profiles } from "../../configuration/Profiles";
+import { ZoweLogger } from "../../tools/ZoweLogger";
+import { TreeViewUtils } from "../../utils/TreeViewUtils";
+import { SharedActions } from "../shared/SharedActions";
+import { SharedContext } from "../shared/SharedContext";
+import { SharedInit } from "../shared/SharedInit";
+import { SharedUtils } from "../shared/SharedUtils";
 
 export class DatasetInit {
     /**
@@ -23,13 +30,14 @@ export class DatasetInit {
      */
     public static async createDatasetTree(log: imperative.Logger): Promise<DatasetTree> {
         const tree = new DatasetTree();
-        tree.initializeFavorites(log);
+        await tree.initializeFavorites(log);
         await tree.addSession(undefined, undefined, tree);
         return tree;
     }
 
     public static async initDatasetProvider(context: vscode.ExtensionContext): Promise<DatasetTree> {
         ZoweLogger.trace("dataset.init.initDatasetProvider called.");
+        context.subscriptions.push(vscode.workspace.registerFileSystemProvider(ZoweScheme.DS, DatasetFSProvider.instance, { isCaseSensitive: true }));
         const datasetProvider = await DatasetInit.createDatasetTree(Constants.LOG);
         if (datasetProvider == null) {
             return null;
@@ -47,7 +55,7 @@ export class DatasetInit {
             vscode.commands.registerCommand("zowe.ds.addFavorite", async (node, nodeList) => {
                 const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
                 for (const item of selectedNodes) {
-                    await datasetProvider.addFavorite(item);
+                    await datasetProvider.addFavorite(item as IZoweDatasetTreeNode);
                 }
             })
         );
@@ -61,7 +69,7 @@ export class DatasetInit {
                 let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
                 selectedNodes = selectedNodes.filter((element) => SharedContext.isDs(element) || SharedContext.isDsMember(element));
                 for (const item of selectedNodes) {
-                    await DatasetActions.refreshPS(item);
+                    await DatasetActions.refreshPS(item as IZoweDatasetTreeNode);
                 }
             })
         );
@@ -70,18 +78,13 @@ export class DatasetInit {
                 let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
                 selectedNodes = selectedNodes.filter((element) => SharedContext.isDs(element) || SharedContext.isPdsNotFav(element));
                 for (const item of selectedNodes) {
-                    await DatasetActions.refreshDataset(item, datasetProvider);
+                    await DatasetActions.refreshDataset(item as IZoweDatasetTreeNode, datasetProvider);
                 }
             })
         );
         context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.pattern", (node) => datasetProvider.filterPrompt(node)));
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.editSession", async (node) => datasetProvider.editSession(node, datasetProvider))
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.ZoweNode.openPS", async (node: IZoweDatasetTreeNode) =>
-                node.openDs(false, true, datasetProvider)
-            )
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.createDataset", async (node) => DatasetActions.createFile(node, datasetProvider))
@@ -106,7 +109,7 @@ export class DatasetInit {
                 let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweDatasetTreeNode[];
                 selectedNodes = selectedNodes.filter((element) => SharedContext.isDs(element) || SharedContext.isDsMember(element));
                 for (const item of selectedNodes) {
-                    await item.openDs(false, false, datasetProvider);
+                    await vscode.commands.executeCommand(item.command.command, item.resourceUri);
                 }
             })
         );
@@ -115,7 +118,7 @@ export class DatasetInit {
                 let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweDatasetTreeNode[];
                 selectedNodes = selectedNodes.filter((element) => SharedContext.isDs(element) || SharedContext.isDsMember(element));
                 for (const item of selectedNodes) {
-                    await item.openDs(false, false, datasetProvider);
+                    await vscode.commands.executeCommand(item.command.command, item.resourceUri);
                 }
             })
         );
@@ -126,7 +129,7 @@ export class DatasetInit {
                     let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
                     selectedNodes = selectedNodes.filter((sNode) => SharedContext.isDsSession(sNode));
                     for (const select of selectedNodes) {
-                        datasetProvider.deleteSession(select, hideFromAllTrees);
+                        datasetProvider.deleteSession(select as IZoweDatasetTreeNode, hideFromAllTrees);
                     }
                     await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider);
                 }
@@ -136,7 +139,7 @@ export class DatasetInit {
             vscode.commands.registerCommand("zowe.ds.removeFavorite", async (node, nodeList) => {
                 const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
                 for (const item of selectedNodes) {
-                    await datasetProvider.removeFavorite(item);
+                    await datasetProvider.removeFavorite(item as IZoweDatasetTreeNode);
                 }
             })
         );
@@ -155,7 +158,7 @@ export class DatasetInit {
                     (element) => SharedContext.isDs(element) || SharedContext.isPds(element) || SharedContext.isDsMember(element)
                 );
                 for (const item of selectedNodes) {
-                    await DatasetActions.showAttributes(item, datasetProvider);
+                    await DatasetActions.showAttributes(item as IZoweDatasetTreeNode, datasetProvider);
                 }
             })
         );
@@ -171,7 +174,7 @@ export class DatasetInit {
                     node = datasetProvider.getTreeView().selection[0] as ZoweDatasetNode;
                 }
                 await DatasetActions.pasteDataSetMembers(datasetProvider, node);
-                await DatasetActions.refreshDataset(node.getParent(), datasetProvider);
+                await DatasetActions.refreshDataset(node.getParent() as IZoweDatasetTreeNode, datasetProvider);
             })
         );
         context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.renameDataSetMember", (node) => datasetProvider.rename(node)));
@@ -236,6 +239,7 @@ export class DatasetInit {
                 await datasetProvider.onDidChangeConfiguration(e);
             })
         );
+        context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(DatasetFSProvider.onDidOpenTextDocument));
         context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(DatasetTree.onDidCloseTextDocument));
 
         SharedInit.initSubscribers(context, datasetProvider);

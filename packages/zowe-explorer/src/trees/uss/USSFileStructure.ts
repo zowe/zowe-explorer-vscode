@@ -9,25 +9,10 @@
  *
  */
 
-import { ZoweLogger } from "../../tools";
+import * as vscode from "vscode";
+import { ZoweLogger } from "../../tools/ZoweLogger";
 
 export namespace USSFileStructure {
-    /**
-     * Whether the file tree is going to be pasted within the same session node.
-     *
-     * @param fileTree The file tree to paste
-     * @param destSessionName The name of the destination session
-     * @returns true if the tree will be pasted in the same session, and false if otherwise.
-     */
-    export function toSameSession(fileTree: UssFileTree, destSessionName: string): boolean {
-        ZoweLogger.trace("UssFileUtils.toSameSession called.");
-        if (fileTree.sessionName && fileTree.sessionName !== destSessionName) {
-            return false;
-        }
-
-        return fileTree.children.every((node) => USSFileStructure.toSameSession(node, destSessionName));
-    }
-
     /**
      * File types within the USS tree structure
      */
@@ -37,8 +22,7 @@ export namespace USSFileStructure {
     }
 
     export interface UssFileTree {
-        // The path of the file on the local file system, if it exists
-        localPath?: string;
+        localUri?: vscode.Uri;
 
         // The path of the file/directory as defined in USS
         ussPath: string;
@@ -50,12 +34,33 @@ export namespace USSFileStructure {
         binary?: boolean;
 
         // Any files/directory trees within this file tree
-        children: UssFileTree[];
+        children?: UssFileTree[];
 
         // The session where this node comes from (optional for root)
         sessionName?: string;
 
         // The type of the file (file or directory)
         type: UssFileType;
+    }
+
+    /**
+     * Interprets a file/directory list as a tree structure
+     */
+    export class UssFileUtils {
+        /**
+         * Whether the file tree is going to be pasted within the same session node.
+         *
+         * @param fileTree The file tree to paste
+         * @param destSessionName The name of the destination session
+         * @returns true if the tree will be pasted in the same session, and false if otherwise.
+         */
+        public static toSameSession(fileTree: UssFileTree, destSessionName: string): boolean {
+            ZoweLogger.trace("UssFileUtils.toSameSession called.");
+            if (fileTree.sessionName && fileTree.sessionName !== destSessionName) {
+                return false;
+            }
+
+            return fileTree.children.every((node) => UssFileUtils.toSameSession(node, destSessionName));
+        }
     }
 }

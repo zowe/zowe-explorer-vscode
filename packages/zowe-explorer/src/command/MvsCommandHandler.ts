@@ -11,12 +11,15 @@
 
 import * as vscode from "vscode";
 import { Validation, imperative, IZoweTreeNode, Gui } from "@zowe/zowe-explorer-api";
-import { Profiles, Constants, SettingsConfig } from "../configuration";
-import { FilterDescriptor, FilterItem, ProfilesUtils } from "../utils";
-import { ZoweExplorerApiRegister } from "../extending";
-import { ZoweCommandProvider } from "../providers";
-import { ZoweLogger } from "../tools";
-import { ProfileManagement } from "../management";
+import { ZoweCommandProvider } from "../providers/ZoweCommandProvider";
+import { ZoweLogger } from "../tools/ZoweLogger";
+import { Profiles } from "../configuration/Profiles";
+import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
+import { ProfileManagement } from "../management/ProfileManagement";
+import { Constants } from "../configuration/Constants";
+import { SettingsConfig } from "../configuration/SettingsConfig";
+import { FilterDescriptor, FilterItem } from "../management/FilterManagement";
+import { AuthUtils } from "../utils/AuthUtils";
 
 /**
  * Provides a class that manages submitting a command on the server
@@ -122,7 +125,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                     })
                 );
             } else {
-                await ProfilesUtils.errorHandling(error, profile.name);
+                await AuthUtils.errorHandling(error, profile.name);
             }
         }
     }
@@ -211,7 +214,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 }
             }
         } catch (error) {
-            await ProfilesUtils.errorHandling(error, profile.name);
+            await AuthUtils.errorHandling(error, profile.name);
         }
         this.history.addSearchHistory(command);
     }

@@ -30,6 +30,7 @@ interface OtherEncoding {
 }
 
 export type ZosEncoding = TextEncoding | BinaryEncoding | OtherEncoding;
+export type EncodingMap = Record<string, ZosEncoding>;
 
 /**
  * The base interface for Zowe tree nodes that are implemented by vscode.TreeItem.
@@ -37,32 +38,11 @@ export type ZosEncoding = TextEncoding | BinaryEncoding | OtherEncoding;
  * @export
  * @interface IZoweTreeNode
  */
-export interface IZoweTreeNode {
-    /**
-     * The icon path or [ThemeIcon](#ThemeIcon) for the tree item.
-     */
-    iconPath?: string | vscode.Uri | { light: string | vscode.Uri; dark: string | vscode.Uri } | vscode.ThemeIcon;
+export interface IZoweTreeNode extends vscode.TreeItem {
     /**
      * Indicator that the child data may have become stale and requires refreshing.
      */
     dirty: boolean;
-    /**
-     *  A human-readable string describing this item.
-     */
-    label?: string | vscode.TreeItemLabel;
-    /**
-     * A description for this tree item.
-     */
-    description?: string | boolean;
-    /**
-     * A unique identifier for this tree item.
-     * Used to prevent VScode from losing track of TreeItems in a TreeProvider.
-     */
-    id?: string;
-    /**
-     * The tooltip text when you hover over this item.
-     */
-    tooltip?: string | vscode.MarkdownString | undefined;
     /**
      * Describes the full path of a file
      */
@@ -71,16 +51,6 @@ export interface IZoweTreeNode {
      * Children nodes of this node
      */
     children?: IZoweTreeNode[];
-    /**
-     * [TreeItemCollapsibleState](#TreeItemCollapsibleState) of the tree item.
-     */
-    collapsibleState?: vscode.TreeItemCollapsibleState;
-    /**
-     * Context value of the tree item. This can be used to contribute item specific actions in the tree.
-     *
-     * This will show action `extension.deleteFolder` only for items with `contextValue` is `folder`.
-     */
-    contextValue?: string;
     /**
      * Any ongoing actions that must be awaited before continuing
      */
@@ -151,6 +121,8 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      */
     memberPattern?: string;
     /**
+     * @deprecated Please use `setStats` and `getStats` instead.
+     *
      * Additional statistics about this data set
      */
     stats?: Partial<Types.DatasetStats>;
@@ -159,14 +131,20 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      */
     filter?: Sorting.DatasetFilter;
     /**
+     * @deprecated Please use `getEncodingInMap` and `updateEncodingInMap` instead.
+     *
      * List of child nodes and user-selected encodings
      */
     encodingMap?: Record<string, ZosEncoding>;
     /**
+     * @deprecated Please use `setEncoding` and `getEncoding` instead.
+     *
      * Binary indicator. Default false (text)
      */
     binary?: boolean;
     /**
+     * @deprecated Please use `setEncoding` and `getEncoding` instead.
+     *
      * Remote encoding of the data set
      *
      * * `null` = user selected z/OS default codepage
@@ -184,13 +162,13 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      *
      * @returns {string}
      */
-    getEtag?(): string;
+    getEtag(): string | PromiseLike<string>;
     /**
      * Sets the etag value for the file
      *
      * @param {string}
      */
-    setEtag?(etag: string);
+    setEtag(etag: string): void | PromiseLike<void>;
     /**
      * Downloads and displays a file in a text editor view
      *
@@ -200,11 +178,37 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      */
     openDs?(download: boolean, previewFile: boolean, datasetFileProvider: Types.IZoweDatasetTreeType): Promise<void>;
     /**
+     * Gets the codepage value for the file
+     *
+     * @param {string}
+     */
+    getEncoding(): ZosEncoding | PromiseLike<ZosEncoding>;
+    /**
      * Sets the codepage value for the file
      *
      * @param {string}
      */
-    setEncoding?(encoding: ZosEncoding);
+    setEncoding(encoding: ZosEncoding): void | PromiseLike<void>;
+
+    /**
+     * Returns the encoding map for the USS tree node.
+     */
+    getEncodingInMap(uriPath: string): ZosEncoding | PromiseLike<ZosEncoding>;
+
+    /**
+     * Sets the encoding map for the USS tree node.
+     */
+    updateEncodingInMap(uriPath: string, encoding: ZosEncoding): void | PromiseLike<void>;
+
+    /**
+     * Returns the stats for a data set.
+     */
+    getStats(): Types.DatasetStats;
+
+    /**
+     * Sets the stats for a data set.
+     */
+    setStats(stats: Partial<Types.DatasetStats>): void | PromiseLike<void>;
 }
 
 /**
@@ -215,19 +219,27 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
  */
 export interface IZoweUSSTreeNode extends IZoweTreeNode {
     /**
+     * @deprecated Please use `getBaseName` instead.
+     *
      * Retrieves an abridged for of the label
      */
     shortLabel?: string;
+    encoding?: string;
     /**
+     * @deprecated Please use `getEncodingInMap` and `updateEncodingInMap` instead.
+     *
      * List of child nodes and user-selected encodings
      */
     encodingMap?: Record<string, ZosEncoding>;
     /**
+     * @deprecated Please use `getEncoding` and `setEncoding` instead.
+     *
      * Binary indicator. Default false (text)
      */
     binary?: boolean;
-
     /**
+     * @deprecated Please use `setAttributes` and `getAttributes` instead.
+     *
      * File attributes
      */
     attributes?: Types.FileAttributes;
@@ -235,35 +247,57 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * Event that fires whenever an existing node is updated.
      */
     onUpdateEmitter?: vscode.EventEmitter<IZoweUSSTreeNode>;
-    /**
-     * Remote encoding of the data set
-     *
-     * * `null` = user selected z/OS default codepage
-     * * `undefined` = user did not specify
-     */
-    encoding?: string;
+
     /**
      * Event that fires whenever an existing node is updated.
      */
     onUpdate?: vscode.Event<IZoweUSSTreeNode>;
+
+    /**
+     * Returns the base name of the USS tree node.
+     */
+    getBaseName(): string | PromiseLike<string>;
+
     /**
      * Retrieves child nodes of this IZoweUSSTreeNode
      *
      * @returns {Promise<IZoweUSSTreeNode[]>}
      */
     getChildren(): Promise<IZoweUSSTreeNode[]>;
+
+    /**
+     * Returns the last-saved encoding from the encoding map for the USS tree node.
+     */
+    getEncodingInMap(uriPath: string): ZosEncoding | PromiseLike<ZosEncoding>;
+
+    /**
+     * Update the encoding map to contain the encoding for the USS tree node.
+     */
+    updateEncodingInMap(path: string, encoding: ZosEncoding): void | PromiseLike<void>;
+
     /**
      * Retrieves the etag value for the file
      *
      * @returns {string}
      */
-    getEtag?(): string;
+    getEtag(): string | PromiseLike<string>;
     /**
      * Sets the etag value for the file
      *
      * @param {string}
      */
-    setEtag?(etag: string);
+    setEtag(etag: string): void | PromiseLike<void>;
+
+    /**
+     * Gets the attributes for the USS file/folder.
+     */
+    getAttributes(): Types.FileAttributes | PromiseLike<Types.FileAttributes>;
+
+    /**
+     * Sets the attributes for the USS file/folder.
+     */
+    setAttributes(attributes: Partial<Types.FileAttributes>): void | PromiseLike<void>;
+
     /**
      * Renaming a USS Node. This could be a Favorite Node
      *
@@ -271,11 +305,17 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      */
     rename?(newNamePath: string);
     /**
+     * Gets the codepage value for the file
+     *
+     * @param {string}
+     */
+    getEncoding(): ZosEncoding | PromiseLike<ZosEncoding>;
+    /**
      * Sets the codepage value for the file
      *
      * @param {string}
      */
-    setEncoding?(encoding: ZosEncoding);
+    setEncoding(encoding: ZosEncoding): void | PromiseLike<void>;
     // /**
     //  * Opens the text document
     //  * @return vscode.TextDocument

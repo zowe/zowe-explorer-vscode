@@ -10,9 +10,13 @@
  */
 
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { imperative, MainframeInteraction, ZoweExplorerZosmf } from "@zowe/zowe-explorer-api";
-import { ZoweExplorerApiRegister, ZoweExplorerExtender } from "../../../src/extending";
+import { imperative, MainframeInteraction, ZoweExplorerZosmf, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
 import { createInstanceOfProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
+import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
+import { DatasetFSProvider } from "../../../src/trees/dataset/DatasetFSProvider";
+import { JobFSProvider } from "../../../src/trees/job/JobFSProvider";
+import { UssFSProvider } from "../../../src/trees/uss/UssFSProvider";
 
 class MockUssApi1 implements MainframeInteraction.IUss {
     public profile?: imperative.IProfileLoaded;
@@ -265,10 +269,10 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         }).toThrow();
         expect(() => {
             ZoweExplorerApiRegister.getCommonApi(invalidProfile);
-        }).toThrowError("Internal error: Tried to call a non-existing Common API in API register: invalid_profile_type");
+        }).toThrow("Internal error: Tried to call a non-existing Common API in API register: invalid_profile_type");
         expect(() => {
             ZoweExplorerApiRegister.getCommandApi(invalidProfile);
-        }).toThrowError("Internal error: Tried to call a non-existing Command API in API register: invalid_profile_type");
+        }).toThrow("Internal error: Tried to call a non-existing Command API in API register: invalid_profile_type");
     });
 
     it("returns an API extender instance for getExplorerExtenderApi()", () => {
@@ -306,5 +310,17 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         });
         expect(ZoweExplorerApiRegister.getInstance().onProfilesUpdate).toEqual({});
         ZoweExplorerApiRegister.getInstance()["onProfilesUpdateCallback"] = undefined;
+    });
+
+    it("provides access to the appropriate event for onResourceChanged", () => {
+        expect(ZoweExplorerApiRegister.onResourceChanged(ZoweScheme.DS)).toBe(DatasetFSProvider.instance.onDidChangeFile);
+    });
+
+    it("provides access to the onUssChanged event", () => {
+        expect(ZoweExplorerApiRegister.onResourceChanged(ZoweScheme.USS)).toBe(UssFSProvider.instance.onDidChangeFile);
+    });
+
+    it("provides access to the onJobChanged event", () => {
+        expect(ZoweExplorerApiRegister.onResourceChanged(ZoweScheme.Jobs)).toBe(JobFSProvider.instance.onDidChangeFile);
     });
 });

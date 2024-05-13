@@ -13,11 +13,9 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
-import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
+import * as zosJobs from "@zowe/zos-jobs-for-zowe-sdk";
 import {
     Gui,
-    imperative,
     IZoweTreeNode,
     IZoweDatasetTreeNode,
     IZoweUSSTreeNode,
@@ -25,14 +23,17 @@ import {
     IZoweTree,
     Types,
     ZosEncoding,
+    imperative,
 } from "@zowe/zowe-explorer-api";
-import { ZoweExplorerApiRegister } from "../../extending";
-import { ZoweLogger, LocalStorageKey, ZoweLocalStorage } from "../../tools";
-import { Workspace, Constants } from "../../configuration";
-import { ProfilesUtils } from "../../utils";
-import { USSTree } from "../uss";
-import { DatasetTree } from "../dataset";
-import { JobTree } from "../job";
+import { UssFSProvider } from "../uss/UssFSProvider";
+import { USSUtils } from "../uss/USSUtils";
+import { Constants } from "../../configuration/Constants";
+import { ZoweLocalStorage, LocalStorageKey } from "../../tools/ZoweLocalStorage";
+import { ZoweLogger } from "../../tools/ZoweLogger";
+import type { DatasetTree } from "../dataset/DatasetTree";
+import type { JobTree } from "../job/JobTree";
+import type { USSTree } from "../uss/USSTree";
+import { SharedContext } from "./SharedContext";
 
 export namespace SharedUtils {
     export type TreeProvider = USSTree | DatasetTree | JobTree;
@@ -44,6 +45,25 @@ export namespace SharedUtils {
         dsTemplates?: Types.DataSetAllocTemplate[];
         favorites: string[];
     };
+    export interface IZoweTreeOpts {
+        label: string;
+        collapsibleState: vscode.TreeItemCollapsibleState;
+        parentNode?: IZoweTreeNode;
+        session?: imperative.Session;
+        profile?: imperative.IProfileLoaded;
+        contextOverride?: string;
+    }
+
+    export interface IZoweDatasetTreeOpts extends IZoweTreeOpts {
+        encoding?: ZosEncoding;
+        etag?: string;
+    }
+
+    export interface IZoweUssTreeOpts extends IZoweTreeOpts {
+        parentPath?: string;
+        encoding?: ZosEncoding;
+        etag?: string;
+    }
 
     export type ProviderFunctions = {
         ds: () => Promise<Types.IZoweDatasetTreeType>;
@@ -56,28 +76,9 @@ export namespace SharedUtils {
         uss: Types.IZoweUSSTreeType;
         job: Types.IZoweJobTreeType;
     }
-    export interface IZoweTreeOpts {
-        label: string;
-        collapsibleState: vscode.TreeItemCollapsibleState;
-        parentNode?: IZoweTreeNode;
-        session?: imperative.Session;
-        profile?: imperative.IProfileLoaded;
-    }
-
-    export interface IZoweDatasetTreeOpts extends IZoweTreeOpts {
-        contextOverride?: string;
-        encoding?: ZosEncoding;
-        etag?: string;
-    }
-
-    export interface IZoweUssTreeOpts extends IZoweTreeOpts {
-        parentPath?: string;
-        encoding?: ZosEncoding;
-        etag?: string;
-    }
 
     export interface IZoweJobTreeOpts extends IZoweTreeOpts {
-        job?: zosjobs.IJob;
+        job?: zosJobs.IJob;
     }
 
     export enum JobSubmitDialogOpts {
@@ -111,6 +112,21 @@ export namespace SharedUtils {
             }
         });
         return filteredArray;
+    }
+
+    /**
+     * Gets path to the icon, which is located in resources folder
+     * @param iconFileName {string} Name of icon file with extension
+     * @returns {object}
+     */
+    export function getIconPathInResources(iconFileName: string): {
+        light: string;
+        dark: string;
+    } {
+        return {
+            light: path.join(Constants.ROOTPATH, "resources", "light", iconFileName),
+            dark: path.join(Constants.ROOTPATH, "resources", "dark", iconFileName),
+        };
     }
 
     /*************************************************************************************************************
@@ -152,180 +168,9 @@ export namespace SharedUtils {
         return "VS Code";
     }
 
-    /**
-     * Returns the file path for the IZoweTreeNode
-     *
-     * @export
-     * @param {string} label - If node is a member, label includes the name of the PDS
-     * @param {IZoweTreeNode} node
-     */
-    export function getDocumentFilePath(label: string, node: IZoweTreeNode): string {
-        const dsDir = Constants.DS_DIR;
-        const profName = node.getProfileName();
-        const suffix = appendSuffix(label);
-        return path.join(dsDir, profName || "", suffix);
-    }
-
-    /**
-     * Append a suffix on a ds file so it can be interpretted with syntax highlighter
-     *
-     * Rules of mapping:
-     *  1. Start with LLQ and work backwards as it is at this end usually
-     *   the language is specified
-     *  2. Dont do this for the top level HLQ
-     */
-    export function appendSuffix(label: string): string {
-        const limit = 5;
-        const bracket = label.indexOf("(");
-        const split = bracket > -1 ? label.substr(0, bracket).split(".", limit) : label.split(".", limit);
-        for (let i = split.length - 1; i > 0; i--) {
-            if (["JCL", "JCLLIB", "CNTL", "PROC", "PROCLIB"].includes(split[i])) {
-                return label.concat(".jcl");
-            }
-            if (["COBOL", "CBL", "COB", "SCBL"].includes(split[i])) {
-                return label.concat(".cbl");
-            }
-            if (["COPYBOOK", "COPY", "CPY", "COBCOPY"].includes(split[i])) {
-                return label.concat(".cpy");
-            }
-            if (["INC", "INCLUDE", "PLINC"].includes(split[i])) {
-                return label.concat(".inc");
-            }
-            if (["PLI", "PL1", "PLX", "PCX"].includes(split[i])) {
-                return label.concat(".pli");
-            }
-            if (["SH", "SHELL"].includes(split[i])) {
-                return label.concat(".sh");
-            }
-            if (["REXX", "REXEC", "EXEC"].includes(split[i])) {
-                return label.concat(".rexx");
-            }
-            if (split[i] === "XML") {
-                return label.concat(".xml");
-            }
-            if (split[i] === "ASM" || split[i].indexOf("ASSEMBL") > -1) {
-                return label.concat(".asm");
-            }
-            if (split[i] === "LOG" || split[i].indexOf("SPFLOG") > -1) {
-                return label.concat(".log");
-            }
-        }
-        return label;
-    }
-
-    export function checkForAddedSuffix(filename: string): boolean {
-        // identify how close to the end of the string the last . is
-        const dotPos = filename.length - (1 + filename.lastIndexOf("."));
-        return (
-            dotPos >= 2 &&
-            dotPos <= 4 && // if the last characters are 2 to 4 long and lower case it has been added
-            filename.substring(filename.length - dotPos) === filename.substring(filename.length - dotPos).toLowerCase()
-        );
-    }
-
     export function checkIfChildPath(parentPath: string, childPath: string): boolean {
         const relativePath = path.relative(parentPath, childPath);
         return relativePath && !relativePath.startsWith("..") && !path.isAbsolute(relativePath);
-    }
-
-    /**
-     * Function that rewrites the document in the active editor thus marking it dirty
-     * @param {vscode.TextDocument} doc - document to rewrite
-     * @returns void
-     */
-
-    export function markFileAsDirty(doc: vscode.TextDocument): void {
-        const docText = doc.getText();
-        const startPosition = new vscode.Position(0, 0);
-        const endPosition = new vscode.Position(doc.lineCount, 0);
-        const deleteRange = new vscode.Range(startPosition, endPosition);
-        vscode.window.activeTextEditor.edit((editBuilder) => {
-            editBuilder.delete(deleteRange);
-            editBuilder.insert(startPosition, docText);
-        });
-    }
-
-    export async function uploadContent(
-        node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
-        doc: vscode.TextDocument,
-        remotePath: string,
-        profile?: imperative.IProfileLoaded,
-        etagToUpload?: string,
-        returnEtag?: boolean
-    ): Promise<zosfiles.IZosFilesResponse> {
-        const uploadOptions: zosfiles.IUploadOptions = {
-            etag: etagToUpload,
-            returnEtag: returnEtag ?? true,
-            binary: node.binary,
-            encoding: node.encoding !== undefined ? node.encoding : profile.profile?.encoding,
-            responseTimeout: profile.profile?.responseTimeout,
-        };
-        if (isZoweDatasetTreeNode(node)) {
-            return ZoweExplorerApiRegister.getMvsApi(profile).putContents(doc.fileName, remotePath, uploadOptions);
-        } else {
-            const task: imperative.ITaskWithStatus = {
-                percentComplete: 0,
-                statusMessage: vscode.l10n.t("Uploading USS file"),
-                stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
-            };
-            const result = ZoweExplorerApiRegister.getUssApi(profile).putContent(doc.fileName, remotePath, {
-                task,
-                ...uploadOptions,
-            });
-            return result;
-        }
-    }
-
-    /**
-     * Function that will forcefully upload a file and won't check for matching Etag
-     */
-    export function willForceUpload(
-        node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
-        doc: vscode.TextDocument,
-        remotePath: string,
-        profile?: imperative.IProfileLoaded
-    ): Thenable<void> {
-        // setup to handle both cases (dataset & USS)
-        let title: string;
-        if (isZoweDatasetTreeNode(node)) {
-            title = vscode.l10n.t("Saving Data Set...");
-        } else {
-            title = vscode.l10n.t("Saving file...");
-        }
-        // Don't wait for prompt to return since this would block the save queue
-        return Gui.infoMessage(vscode.l10n.t("Would you like to overwrite the remote file?"), {
-            items: [vscode.l10n.t("Yes"), vscode.l10n.t("No")],
-        }).then(async (selection) => {
-            if (selection === vscode.l10n.t("Yes")) {
-                try {
-                    const uploadResponse = await Gui.withProgress(
-                        {
-                            location: vscode.ProgressLocation.Notification,
-                            title,
-                        },
-                        () => {
-                            return uploadContent(node, doc, remotePath, profile, null, true);
-                        }
-                    );
-                    if (uploadResponse.success) {
-                        Gui.showMessage(uploadResponse.commandResponse);
-                        if (node) {
-                            // Upload API returns a singleton array for data sets and an object for USS files
-                            node.setEtag(uploadResponse.apiResponse[0]?.etag ?? uploadResponse.apiResponse.etag);
-                        }
-                    } else {
-                        await Workspace.markDocumentUnsaved(doc);
-                        Gui.errorMessage(uploadResponse.commandResponse);
-                    }
-                } catch (err) {
-                    await Workspace.markDocumentUnsaved(doc);
-                    await ProfilesUtils.errorHandling(err, profile.name);
-                }
-            } else {
-                Gui.showMessage(vscode.l10n.t("Upload cancelled."));
-                markFileAsDirty(doc);
-            }
-        });
     }
 
     // Type guarding for current IZoweNodeType.
@@ -373,16 +218,60 @@ export namespace SharedUtils {
         }
     }
 
-    export function getCachedEncoding(node: IZoweTreeNode): string | undefined {
+    export async function getCachedEncoding(node: IZoweTreeNode): Promise<string | undefined> {
         let cachedEncoding: ZosEncoding;
         if (isZoweUSSTreeNode(node)) {
-            cachedEncoding = (node.getSessionNode() as IZoweUSSTreeNode).encodingMap[node.fullPath];
+            cachedEncoding = await node.getEncodingInMap(node.fullPath);
         } else {
             const isMemberNode = node.contextValue.startsWith(Constants.DS_MEMBER_CONTEXT);
             const dsKey = isMemberNode ? `${node.getParent().label as string}(${node.label as string})` : (node.label as string);
-            cachedEncoding = (node.getSessionNode() as IZoweDatasetTreeNode).encodingMap[dsKey];
+            cachedEncoding = await (node as IZoweDatasetTreeNode).getEncodingInMap(dsKey);
         }
         return cachedEncoding?.kind === "other" ? cachedEncoding.codepage : cachedEncoding?.kind;
+    }
+
+    export type FavoriteData = {
+        profileName: string;
+        label: string;
+        contextValue?: string;
+    };
+
+    export function parseFavorites(lines: string[]): FavoriteData[] {
+        const invalidFavoriteWarning = (line: string): void =>
+            ZoweLogger.warn(
+                vscode.l10n.t({ message: "Failed to parse a saved favorite. Attempted to parse: {0}", args: [line], comment: ["Plaintext line"] })
+            );
+
+        return lines
+            .map((line) => {
+                // [profile]: label{context}
+                const closingSquareBracket = line.indexOf("]");
+
+                // Filter out lines with a missing opening/closing square bracket as they are invalid
+                if (!line.startsWith("[") || closingSquareBracket === -1) {
+                    invalidFavoriteWarning(line);
+                    return null;
+                }
+
+                const profileName = line.substring(1, closingSquareBracket);
+
+                // label{context}
+                const remainderOfLine = line.substring(closingSquareBracket + 2).trim();
+
+                // Filter out lines that do not contain a label and context value
+                if (remainderOfLine.length === 0) {
+                    invalidFavoriteWarning(line);
+                    return null;
+                }
+
+                const openingCurlyBrace = remainderOfLine.indexOf("{");
+                return {
+                    profileName,
+                    label: remainderOfLine.substring(0, openingCurlyBrace).trim(),
+                    contextValue: openingCurlyBrace > 0 ? remainderOfLine.substring(openingCurlyBrace + 1, remainderOfLine.indexOf("}")) : undefined,
+                };
+            })
+            .filter(Boolean);
     }
 
     export async function promptForEncoding(
@@ -420,10 +309,14 @@ export namespace SharedUtils {
             });
         }
 
-        let currentEncoding = node.encoding ?? getCachedEncoding(node);
-        if (node.binary || currentEncoding === "binary") {
+        let zosEncoding = await node.getEncoding();
+        if (zosEncoding === undefined && isZoweUSSTreeNode(node)) {
+            zosEncoding = await UssFSProvider.instance.fetchEncodingForUri(node.resourceUri);
+        }
+        let currentEncoding = zosEncoding ? USSUtils.zosEncodingToString(zosEncoding) : await getCachedEncoding(node);
+        if (zosEncoding?.kind === "binary") {
             currentEncoding = binaryItem.label;
-        } else if (node.encoding === null || currentEncoding === "text") {
+        } else if (zosEncoding === null || zosEncoding?.kind === "text" || currentEncoding === null || currentEncoding === "text") {
             currentEncoding = ebcdicItem.label;
         }
         const encodingHistory = ZoweLocalStorage.getValue<string[]>(LocalStorageKey.ENCODING_HISTORY) ?? [];
@@ -482,5 +375,9 @@ export namespace SharedUtils {
                 break;
         }
         return encoding;
+    }
+
+    export function getSessionLabel(node: IZoweTreeNode): string {
+        return (SharedContext.isSession(node) ? node : node.getSessionNode()).label as string;
     }
 }

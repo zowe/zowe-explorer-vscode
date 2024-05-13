@@ -37,7 +37,7 @@
     "lint:html": "eslint . --format html > results/eslint.html",
     "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/",
     "pretty": "prettier --write .",
-    "watch": "webpack --mode development --watch --info-verbosity verbose",
+    "watch": "webpack --mode development --watch",
     "clean": "rimraf out",
     "fresh-clone": "pnpm clean && (rimraf node_modules || true)",
     "vscode:prepublish": "webpack --mode production",
@@ -49,17 +49,13 @@
   },
   "dependencies": {
     "@zowe/zos-files-for-zowe-sdk": "8.0.0-next.202404032038",
-    "@zowe/zos-ftp-for-zowe-cli": "2.1.8",
+    "@zowe/zos-ftp-for-zowe-cli": "3.0.0-next.202403191358",
     "@zowe/zos-jobs-for-zowe-sdk": "8.0.0-next.202404032038",
     "@zowe/zowe-explorer-api": "3.0.0-next-SNAPSHOT",
-    "tmp": "0.2.1"
+    "tmp": "0.2.3"
   },
   "devDependencies": {
-    "@types/tmp": "0.2.0",
-    "concurrently": "^5.2.0"
-  },
-  "overrides": {
-    "@zowe/imperative": "8.0.0-next.202404032038"
+    "@types/tmp": "0.2.6"
   },
   "jest": {
     "moduleFileExtensions": [
@@ -112,5 +108,12 @@
   "jest-junit": {
     "outputDirectory": "<rootDir>/results/unit",
     "outputName": "junit.xml"
+  },
+  "madge": {
+    "detectiveOptions": {
+      "ts": {
+        "skipTypeImports": true
+      }
+    }
   }
 }

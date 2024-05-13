@@ -10,12 +10,13 @@
  */
 
 import * as vscode from "vscode";
-import { Constants } from "../../../src/configuration";
-import { ZoweUSSNode, USSTree } from "../../../src/trees/uss";
-import { ZoweTreeProvider } from "../../../src/providers";
+import { Constants } from "../../../src/configuration/Constants";
+import { ZoweUSSNode } from "../../../src/trees/uss/ZoweUSSNode";
+import { USSTree } from "../../../src/trees/uss/USSTree";
 import { IconGenerator } from "../../../src/icons/IconGenerator";
 import { removeNodeFromArray } from "./shared";
 import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { ZoweTreeProvider } from "../../../src/providers/ZoweTreeProvider";
 
 export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView?: vscode.TreeView<ZoweTreeProvider>): USSTree {
     const newTree = new USSTree();
@@ -29,6 +30,7 @@ export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUS
     newTree.resetSearchHistory = jest.fn();
     newTree.resetFileHistory = jest.fn();
     newTree.refresh = jest.fn();
+    newTree.nodeDataChanged = jest.fn();
     newTree.checkCurrentProfile = jest.fn();
     newTree.refreshElement = jest.fn();
     newTree.getChildren = jest.fn();
@@ -53,17 +55,17 @@ export function createUSSNode(session, profile) {
         collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
         session,
         profile,
+        contextOverride: Constants.USS_SESSION_CONTEXT,
     });
+    parentNode.fullPath = "/u/myuser";
     const ussNode = new ZoweUSSNode({
         label: "usstest",
         collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
         parentNode,
         session,
         profile,
+        contextOverride: Constants.USS_DIR_CONTEXT,
     });
-    parentNode.contextValue = Constants.USS_SESSION_CONTEXT;
-    ussNode.contextValue = Constants.USS_DIR_CONTEXT;
-    parentNode.fullPath = "/u/myuser";
     ussNode.fullPath = "/u/myuser/usstest";
     return ussNode;
 }
@@ -76,7 +78,7 @@ export function createUSSSessionNode(session: imperative.Session, profile: imper
         profile,
         parentPath: "/",
     });
-    zoweUSSNode.fullPath = "test";
+    zoweUSSNode.fullPath = "/test";
     zoweUSSNode.contextValue = Constants.USS_SESSION_CONTEXT;
     const targetIcon = IconGenerator.getIconByNode(zoweUSSNode);
     if (targetIcon) {

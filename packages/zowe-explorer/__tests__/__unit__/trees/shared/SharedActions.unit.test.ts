@@ -21,17 +21,24 @@ import {
     createTreeView,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import { Gui, Types } from "@zowe/zowe-explorer-api";
-import { Profiles, Constants, SettingsConfig } from "../../../../src/configuration";
-import { FilterDescriptor, FilterItem, TreeViewUtils } from "../../../../src/utils";
-import { ZoweDatasetNode } from "../../../../src/trees/dataset";
-import { SharedActions } from "../../../../src/trees/shared";
 import { createFavoriteUSSNode, createUSSNode, createUSSSessionNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
-import { ZoweUSSNode } from "../../../../src/trees/uss";
-import { IconGenerator } from "../../../../src/icons";
-import { ZoweLocalStorage, ZoweLogger } from "../../../../src/tools";
+import { Constants } from "../../../../src/configuration/Constants";
+import { Profiles } from "../../../../src/configuration/Profiles";
+import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
+import { IconGenerator } from "../../../../src/icons/IconGenerator";
+import { FilterItem, FilterDescriptor } from "../../../../src/management/FilterManagement";
+import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
+import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
+import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
+import { createJobsTree } from "../../../../src/trees/job/JobTree";
+import { SharedActions } from "../../../../src/trees/shared/SharedActions";
+import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
+import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
+import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
+import { Gui, Types } from "@zowe/zowe-explorer-api";
 import { mocked } from "../../../__mocks__/mockUtils";
-import { createIJobObject, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
+import { IconUtils } from "../../../../src/icons/IconUtils";
+import { createIJobObject } from "../../../__mocks__/mockCreators/jobs";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -46,7 +53,12 @@ function createGlobalMocks() {
             };
         }),
         qpPlaceholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
+        FileSystemProvider: {
+            createDirectory: jest.fn(),
+        },
     };
+
+    jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
 
     Object.defineProperty(vscode.window, "withProgress", {
         value: jest.fn().mockImplementation((progLocation, callback) => {
@@ -81,7 +93,6 @@ function createGlobalMocks() {
     Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "resolveQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "createQuickPick", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.commands, "executeCommand", { value: globalMocks.withProgress, configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn().mockReturnValue(createInstanceOfProfile(globalMocks.imperativeProfile)),
@@ -141,6 +152,11 @@ describe("Shared Actions Unit Tests - Function searchInAllLoadedItems", () => {
             parentNode: blockMocks.datasetSessionNode,
             session: globalMocks.session,
         });
+        testNode.command = {
+            command: "vscode.open",
+            title: "",
+            arguments: [testNode.resourceUri],
+        };
         const testDatasetTree = createDatasetTree(blockMocks.datasetSessionNode, globalMocks.treeView);
 
         jest.spyOn(ZoweDatasetNode.prototype, "openDs").mockResolvedValueOnce(undefined);
@@ -217,11 +233,15 @@ describe("Shared Actions Unit Tests - Function searchInAllLoadedItems", () => {
             parentNode: testNode,
             session: globalMocks.session,
         });
+        testMember.command = {
+            command: "vscode.open",
+            title: "",
+            arguments: [testMember.resourceUri],
+        };
         testNode.children.push(testMember);
         const testDatasetTree = createDatasetTree(blockMocks.datasetSessionNode, globalMocks.treeView);
         testDatasetTree.getChildren.mockReturnValue([blockMocks.datasetSessionNode]);
 
-        jest.spyOn(ZoweDatasetNode.prototype, "openDs").mockResolvedValueOnce(undefined);
         testDatasetTree.getAllLoadedItems.mockResolvedValueOnce([testMember]);
         const testUssTree = createUSSTree([], [blockMocks.ussSessionNode], globalMocks.treeView);
         Object.defineProperty(testUssTree, "getAllLoadedItems", {
@@ -443,7 +463,7 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
             datasetSessionNode: createDatasetSessionNode(globalMocks.session, globalMocks.imperativeProfile),
             mockGetIconByNode: jest.fn(),
         };
-        newMocks.mockGetIconByNode.mockReturnValue(IconGenerator.IconId.sessionActive);
+        newMocks.mockGetIconByNode.mockReturnValue(IconUtils.IconId.sessionActive);
         return newMocks;
     }
 
@@ -451,11 +471,11 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         const resultNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
-        const resultIcon = IconGenerator.getIconById(IconGenerator.IconId.session);
+        const resultIcon = IconGenerator.getIconById(IconUtils.IconId.session);
         resultNode.iconPath = resultIcon.path;
 
         const testNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
-        const sessionIcon = IconGenerator.getIconById(IconGenerator.IconId.sessionActive);
+        const sessionIcon = IconGenerator.getIconById(IconUtils.IconId.sessionActive);
         testNode.iconPath = sessionIcon.path;
 
         const response = await SharedActions.returnIconState(testNode);
@@ -466,13 +486,13 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         const resultNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
-        const resultIcon = IconGenerator.getIconById(IconGenerator.IconId.session);
+        const resultIcon = IconGenerator.getIconById(IconUtils.IconId.session);
         resultNode.iconPath = resultIcon.path;
         const testNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
-        const sessionIcon = IconGenerator.getIconById(IconGenerator.IconId.sessionInactive);
+        const sessionIcon = IconGenerator.getIconById(IconUtils.IconId.sessionInactive);
         testNode.iconPath = sessionIcon.path;
 
-        blockMocks.mockGetIconByNode.mockReturnValueOnce(IconGenerator.IconId.sessionInactive);
+        blockMocks.mockGetIconByNode.mockReturnValueOnce(IconUtils.IconId.sessionInactive);
         const response = await SharedActions.returnIconState(testNode);
         expect(IconGenerator.getIconByNode(response)).toEqual(IconGenerator.getIconByNode(resultNode));
     });

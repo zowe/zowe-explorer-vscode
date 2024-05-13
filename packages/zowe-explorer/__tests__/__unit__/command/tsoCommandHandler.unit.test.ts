@@ -10,14 +10,14 @@
  */
 
 import * as vscode from "vscode";
-import * as utils from "../../../src/utils/ProfilesUtils";
-import * as profileLoader from "../../../src/configuration";
+import * as profileLoader from "../../../src/configuration/Profiles";
 import { Gui, imperative, Validation } from "@zowe/zowe-explorer-api";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
-import { ZoweDatasetNode } from "../../../src/trees/dataset";
-import { ZoweExplorerApiRegister } from "../../../src/extending";
-import { ZoweLocalStorage } from "../../../src/tools";
-import { ProfileManagement } from "../../../src/management";
+import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
+import { FilterDescriptor, FilterItem } from "../../../src/management/FilterManagement";
+import { ProfileManagement } from "../../../src/management/ProfileManagement";
+import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
+import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 
 jest.mock("Session");
 
@@ -42,8 +42,8 @@ describe("TsoCommandHandler unit testing", () => {
         replace: jest.fn(),
     };
     createOutputChannel.mockReturnValue(outputChannel);
-    const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
-    const qpItem2 = new utils.FilterItem({ text: "/d iplinfo0" });
+    const qpItem: vscode.QuickPickItem = new FilterDescriptor("\uFF0B " + "Create a new filter");
+    const qpItem2 = new FilterItem({ text: "/d iplinfo0" });
 
     const mockLoadNamedProfile = jest.fn();
     Object.defineProperty(profileLoader.Profiles, "createInstance", {

@@ -12,12 +12,12 @@
 import * as vscode from "vscode";
 import { ZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
 import { createIProfile, createISession } from "../../__mocks__/mockCreators/shared";
-import { ZoweCommandProvider } from "../../../src/providers";
+import { ZoweCommandProvider } from "../../../src/providers/ZoweCommandProvider";
 import { Profiles } from "../../../src/configuration/Profiles";
-import { ZoweDatasetNode } from "../../../src/trees/dataset";
-import { SharedContext } from "../../../src/trees/shared";
-import { ProfilesUtils } from "../../../src/utils";
+import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
+import { SharedContext } from "../../../src/trees/shared/SharedContext";
 import { createIJobFile } from "../../__mocks__/mockCreators/jobs";
+import { AuthUtils } from "../../../src/utils/AuthUtils";
 
 const globalMocks = {
     testSession: createISession(),
@@ -83,7 +83,7 @@ describe("ZoweCommandProvide Unit Tests - function checkCurrentProfile", () => {
             name: "test",
             status: "inactive",
         });
-        const errorHandlingSpy = jest.spyOn(ProfilesUtils, "errorHandling").mockImplementation();
+        const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
         await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(undefined);
         expect(errorHandlingSpy).toHaveBeenCalledWith(
             "Profile Name " +

@@ -10,9 +10,9 @@
  */
 
 import * as vscode from "vscode";
-import { imperative, IApiExplorerExtender, MainframeInteraction, Types, Validation, ZoweExplorerZosmf } from "@zowe/zowe-explorer-api";
-import { ZoweExplorerExtender } from "../extending";
-import { ZoweLogger } from "../tools";
+import { IApiExplorerExtender, MainframeInteraction, Types, Validation, ZoweExplorerZosmf, ZoweScheme, imperative } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
+import { ZoweLogger } from "../tools/ZoweLogger";
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
@@ -20,6 +20,7 @@ import { ZoweLogger } from "../tools";
  */
 export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
     public static ZoweExplorerApiRegisterInst: ZoweExplorerApiRegister;
+    private static eventMap: Record<ZoweScheme | string, vscode.Event<vscode.FileChangeEvent[]>> = {};
 
     /**
      * Access the singleton instance.
@@ -347,5 +348,23 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
      */
     public get onProfilesUpdate(): vscode.Event<Validation.EventType> {
         return this.onProfilesUpdateEmitter.event;
+    }
+
+    /**
+     * Access the specific event that fires when a resource from the given scheme is updated (changed/created/deleted).
+     * @param scheme The scheme of the resource (Data Sets, USS, Jobs, or an extender scheme)
+     * @returns an instance of the event to add listeners to
+     */
+    public static onResourceChanged(scheme: ZoweScheme | string): vscode.Event<vscode.FileChangeEvent[]> {
+        return ZoweExplorerApiRegister.eventMap[scheme];
+    }
+
+    /**
+     * Access the specific event that fires when a resource from the given scheme is updated (changed/created/deleted).
+     * @param scheme The scheme of the resource (Data Sets, USS, or Jobs, or an extender scheme)
+     * @param event The event that fires when changes are made to URIs matching the given scheme
+     */
+    public static addFileSystemEvent(scheme: ZoweScheme | string, event: vscode.Event<vscode.FileChangeEvent[]>): void {
+        ZoweExplorerApiRegister.eventMap[scheme] = event;
     }
 }

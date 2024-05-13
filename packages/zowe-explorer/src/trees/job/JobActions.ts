@@ -12,14 +12,17 @@
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { Gui, IZoweJobTreeNode, Sorting, Types } from "@zowe/zowe-explorer-api";
-import { ProfilesUtils } from "../../utils";
-import { Profiles, Constants } from "../../configuration";
-import { ZoweExplorerApiRegister } from "../../extending";
-import { ZoweJobNode, ZoweSpoolNode, JobTree, JobUtils } from "../job";
-import { SpoolProvider } from "../../providers";
-import { ZoweLogger } from "../../tools";
-import { LocalFileManagement } from "../../management";
-import { SharedUtils, SharedTreeProviders } from "../shared";
+import { ZoweJobNode } from "./ZoweJobNode";
+import { JobTree } from "./JobTree";
+import { JobUtils } from "./JobUtils";
+import { JobFSProvider } from "./JobFSProvider";
+import { Constants } from "../../configuration/Constants";
+import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
+import { LocalFileManagement } from "../../management/LocalFileManagement";
+import { SpoolProvider } from "../../providers/SpoolProvider";
+import { ZoweLogger } from "../../tools/ZoweLogger";
+import { SharedUtils } from "../shared/SharedUtils";
+import { AuthUtils } from "../../utils/AuthUtils";
 
 export class JobActions {
     private static async deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: Types.IZoweJobTreeType): Promise<void> {
@@ -51,7 +54,7 @@ export class JobActions {
                 })
             );
         } catch (error) {
-            await ProfilesUtils.errorHandling(error, job.getProfile().name);
+            await AuthUtils.errorHandling(error, job.getProfile().name);
         }
     }
 
@@ -118,7 +121,7 @@ export class JobActions {
         if (deletionErrors.length) {
             const errorMessages = deletionErrors.map((error) => error.message).join(", ");
             const userMessage = `There were errors during jobs deletion: ${errorMessages}`;
-            await ProfilesUtils.errorHandling(userMessage);
+            await AuthUtils.errorHandling(userMessage);
         }
     }
 
@@ -135,7 +138,7 @@ export class JobActions {
             try {
                 await jobsProvider.addSession(sessionName.trim());
             } catch (error) {
-                await ProfilesUtils.errorHandling(error);
+                await AuthUtils.errorHandling(error);
                 return;
             }
             sessionNode = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label.toString().trim() === sessionName.trim());
@@ -143,7 +146,7 @@ export class JobActions {
         try {
             jobsProvider.refreshElement(sessionNode);
         } catch (error) {
-            await ProfilesUtils.errorHandling(error);
+            await AuthUtils.errorHandling(error);
             return;
         }
         sessionNode.searchId = jobId;
@@ -181,7 +184,7 @@ export class JobActions {
                 }
             }
         } catch (error) {
-            await ProfilesUtils.errorHandling(error);
+            await AuthUtils.errorHandling(error);
         }
     }
 
@@ -218,56 +221,8 @@ export class JobActions {
                 }
             }
         } catch (error) {
-            await ProfilesUtils.errorHandling(error);
+            await AuthUtils.errorHandling(error);
         }
-    }
-
-    /**
-     * Download the spool content for the specified job
-     *
-     * @param session The session to which the job belongs
-     * @param spool The IJobFile to get the spool content for
-     * @param refreshTimestamp The timestamp of the last job node refresh
-     */
-    public static async getSpoolContent(session: string, spoolNode: ZoweSpoolNode): Promise<void> {
-        ZoweLogger.trace("job.actions.getSpoolContent called.");
-        const profiles = Profiles.getInstance();
-        try {
-            profiles.loadNamedProfile(session);
-        } catch (error) {
-            await ProfilesUtils.errorHandling(error, session);
-            return;
-        }
-
-        const statusMsg = Gui.setStatusBarMessage(
-            vscode.l10n.t({
-                message: "$(sync~spin) Opening spool file...",
-                args: [spoolNode.label as string],
-                comment: ["Label"],
-            })
-        );
-        const uri = SpoolProvider.encodeJobFile(session, spoolNode.spool);
-        try {
-            const spoolFile = SpoolProvider.files[uri.path];
-            if (spoolFile) {
-                // Fetch any changes to the spool file if it exists in the SpoolProvider
-                await spoolFile.fetchContent();
-            }
-            SharedUtils.updateOpenFiles(SharedTreeProviders.job, uri.path, spoolNode);
-            await Gui.showTextDocument(uri, { preview: false });
-        } catch (error) {
-            const isTextDocActive =
-                vscode.window.activeTextEditor &&
-                vscode.window.activeTextEditor.document.uri?.path === `${spoolNode.spool.jobname}.${spoolNode.spool.jobid}.${spoolNode.spool.ddname}`;
-
-            statusMsg.dispose();
-            if (isTextDocActive && String(error.message).includes("Failed to show text document")) {
-                return;
-            }
-            await ProfilesUtils.errorHandling(error, session);
-            return;
-        }
-        statusMsg.dispose();
     }
 
     /**
@@ -282,37 +237,7 @@ export class JobActions {
                 comment: ["Document file name"],
             })
         );
-        await SpoolProvider.files[doc.uri.path].fetchContent();
-        setTimeout(() => {
-            statusMsg.dispose();
-        }, 250);
-    }
-
-    public static async getSpoolContentFromMainframe(node: IZoweJobTreeNode): Promise<void> {
-        ZoweLogger.trace("job.actions.getSpoolContentFromMainframe called.");
-        const statusMsg = await Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching spool files..."));
-        const spools = await SpoolProvider.getSpoolFiles(node);
-        for (const spool of spools) {
-            if (SpoolProvider.matchSpool(spool, node)) {
-                let prefix = spool.stepname;
-                if (prefix === undefined) {
-                    prefix = spool.procstep;
-                }
-
-                const newLabel = `${spool.stepname}:${spool.ddname} - ${spool.procstep ?? spool["record-count"]}`;
-
-                const spoolNode = new ZoweSpoolNode({
-                    label: newLabel,
-                    collapsibleState: vscode.TreeItemCollapsibleState.None,
-                    parentNode: node.getParent(),
-                    session: node.getSession(),
-                    profile: node.getProfile(),
-                    job: node.job,
-                    spool,
-                });
-                node = spoolNode;
-            }
-        }
+        await JobFSProvider.instance.fetchSpoolAtUri(doc.uri);
         statusMsg.dispose();
     }
 
@@ -350,7 +275,7 @@ export class JobActions {
             const jclDoc = await vscode.workspace.openTextDocument({ language: "jcl", content: jobJcl });
             await Gui.showTextDocument(jclDoc, { preview: false });
         } catch (error) {
-            await ProfilesUtils.errorHandling(error);
+            await AuthUtils.errorHandling(error);
         }
     }
 
@@ -386,7 +311,7 @@ export class JobActions {
                     vscode.l10n.t("jobActions.modifyCommand.apiNonExisting", "Not implemented yet for profile of type: ") + job.getProfile().type
                 );
             } else {
-                await ProfilesUtils.errorHandling(error, job.getProfile().name);
+                await AuthUtils.errorHandling(error, job.getProfile().name);
             }
         }
     }
@@ -421,7 +346,7 @@ export class JobActions {
                     })
                 );
             } else {
-                await ProfilesUtils.errorHandling(error, job.getProfile().name);
+                await AuthUtils.errorHandling(error, job.getProfile().name);
             }
         }
     }

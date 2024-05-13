@@ -12,11 +12,13 @@
 import * as vscode from "vscode";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import { imperative, Validation, IZoweTreeNode } from "@zowe/zowe-explorer-api";
-import { ZoweTreeProvider } from "../../../src/providers";
-import { ZoweDatasetNode } from "../../../src/trees/dataset";
-import { ZoweUSSNode } from "../../../src/trees/uss";
-import { Constants, Profiles, SettingsConfig } from "../../../src/configuration";
-import { FilterDescriptor } from "../../../src/utils";
+import { Constants } from "../../../src/configuration/Constants";
+import { Profiles } from "../../../src/configuration/Profiles";
+import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
+import { FilterDescriptor } from "../../../src/management/FilterManagement";
+import { ZoweTreeProvider } from "../../../src/providers/ZoweTreeProvider";
+import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
+import { ZoweUSSNode } from "../../../src/trees/uss/ZoweUSSNode";
 
 const MOCK_PROFILES = [];
 
@@ -271,7 +273,7 @@ export function createAltTypeIProfile(): imperative.IProfileLoaded {
     };
 }
 
-export function createTreeView(selection?): vscode.TreeView<ZoweTreeProvider> {
+export function createTreeView(selection?): vscode.TreeView<ZoweTreeProvider<any>> {
     const currSelection = selection ? selection : [];
     return {
         reveal: jest.fn(),
@@ -283,7 +285,7 @@ export function createTreeView(selection?): vscode.TreeView<ZoweTreeProvider> {
         onDidChangeVisibility: jest.fn(),
         dispose: jest.fn(),
         addSingleSession: jest.fn(),
-    } as unknown as vscode.TreeView<ZoweTreeProvider>;
+    } as unknown as vscode.TreeView<ZoweTreeProvider<any>>;
 }
 
 export function createTextDocument(name: string, sessionNode?: ZoweDatasetNode | ZoweUSSNode): vscode.TextDocument {
@@ -328,7 +330,9 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         validateProfiles: jest.fn(),
         getBaseProfile: jest.fn(),
         enableValidationContext: jest.fn(),
+        enableValidation: jest.fn(),
         disableValidationContext: jest.fn(),
+        disableValidation: jest.fn(),
         getProfileSetting: jest.fn(),
         resetValidationSettings: jest.fn(),
         getValidSession: jest.fn(),

@@ -10,7 +10,7 @@
  */
 
 import { imperative, MainframeInteraction } from "@zowe/zowe-explorer-api";
-import { ZoweExplorerApiRegister } from "../../../src/extending";
+import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
 
 export function createJesApi(profile: imperative.IProfileLoaded) {
     return ZoweExplorerApiRegister.getJesApi(profile);

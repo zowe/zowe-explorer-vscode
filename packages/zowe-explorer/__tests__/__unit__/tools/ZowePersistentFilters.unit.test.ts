@@ -10,8 +10,10 @@
  */
 
 import * as vscode from "vscode";
-import { ZowePersistentFilters, ZoweLogger, ZoweLocalStorage } from "../../../src/tools";
 import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
+import { ZoweLogger } from "../../../src/tools/ZoweLogger";
+import { ZowePersistentFilters } from "../../../src/tools/ZowePersistentFilters";
 
 describe("PersistentFilters Unit Test", () => {
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });

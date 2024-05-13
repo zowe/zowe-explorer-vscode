@@ -23,9 +23,9 @@ import {
     IZoweExplorerTreeApi,
     imperative,
 } from "@zowe/zowe-explorer-api";
-import { ProfilesUtils } from "../utils";
-import { ZoweLogger } from "../tools";
-import { Constants } from "../configuration";
+import { Constants } from "../configuration/Constants";
+import { ProfilesUtils } from "../utils/ProfilesUtils";
+import { ZoweLogger } from "../tools/ZoweLogger";
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code

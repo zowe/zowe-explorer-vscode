@@ -12,10 +12,10 @@
 import * as vscode from "vscode";
 import { WebView, Gui } from "@zowe/zowe-explorer-api";
 import { ExtensionContext } from "vscode";
-import { DatasetTree } from "../dataset";
-import { JobTree } from "../job";
-import { ZoweLogger } from "../../tools";
-import { SharedUtils } from "../shared";
+import { SharedUtils } from "./SharedUtils";
+import { ZoweLogger } from "../../tools/ZoweLogger";
+import { DatasetTree } from "../dataset/DatasetTree";
+import { JobTree } from "../job/JobTree";
 
 const tabs = {
     ds: "ds-panel-tab",

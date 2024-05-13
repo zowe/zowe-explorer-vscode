@@ -148,7 +148,139 @@ export namespace extensions {
 export interface QuickPickItem {}
 export interface QuickPick<T extends QuickPickItem> {}
 
+export enum QuickPickItemKind {
+    Separator = -1,
+    Default = 0,
+}
+
+/**
+ * Represents a tab within a {@link TabGroup group of tabs}.
+ * Tabs are merely the graphical representation within the editor area.
+ * A backing editor is not a guarantee.
+ */
+export interface Tab {
+    /**
+     * The text displayed on the tab.
+     */
+    readonly label: string;
+
+    /**
+     * The group which the tab belongs to.
+     */
+    readonly group: TabGroup;
+
+    /**
+     * Defines the structure of the tab i.e. text, notebook, custom, etc.
+     * Resource and other useful properties are defined on the tab kind.
+     */
+    readonly input: unknown;
+
+    /**
+     * Whether or not the tab is currently active.
+     * This is dictated by being the selected tab in the group.
+     */
+    readonly isActive: boolean;
+
+    /**
+     * Whether or not the dirty indicator is present on the tab.
+     */
+    readonly isDirty: boolean;
+
+    /**
+     * Whether or not the tab is pinned (pin icon is present).
+     */
+    readonly isPinned: boolean;
+
+    /**
+     * Whether or not the tab is in preview mode.
+     */
+    readonly isPreview: boolean;
+}
+
+/**
+ * Represents a group of tabs. A tab group itself consists of multiple tabs.
+ */
+export interface TabGroup {
+    /**
+     * Whether or not the group is currently active.
+     *
+     * *Note* that only one tab group is active at a time, but that multiple tab
+     * groups can have an {@link activeTab active tab}.
+     *
+     * @see {@link Tab.isActive}
+     */
+    readonly isActive: boolean;
+
+    /**
+     * The view column of the group.
+     */
+    readonly viewColumn: ViewColumn;
+
+    /**
+     * The active {@link Tab tab} in the group. This is the tab whose contents are currently
+     * being rendered.
+     *
+     * *Note* that there can be one active tab per group but there can only be one {@link TabGroups.activeTabGroup active group}.
+     */
+    readonly activeTab: Tab | undefined;
+
+    /**
+     * The list of tabs contained within the group.
+     * This can be empty if the group has no tabs open.
+     */
+    readonly tabs: readonly Tab[];
+}
+
+/**
+ * Represents the main editor area which consists of multiple groups which contain tabs.
+ */
+export interface TabGroups {
+    /**
+     * All the groups within the group container.
+     */
+    readonly all: readonly TabGroup[];
+
+    /**
+     * The currently active group.
+     */
+    readonly activeTabGroup: TabGroup;
+
+    /**
+     * Closes the tab. This makes the tab object invalid and the tab
+     * should no longer be used for further actions.
+     * Note: In the case of a dirty tab, a confirmation dialog will be shown which may be cancelled. If cancelled the tab is still valid
+     *
+     * @param tab The tab to close.
+     * @param preserveFocus When `true` focus will remain in its current position. If `false` it will jump to the next tab.
+     * @returns A promise that resolves to `true` when all tabs have been closed.
+     */
+    close(tab: Tab | readonly Tab[], preserveFocus?: boolean): Thenable<boolean>;
+
+    /**
+     * Closes the tab group. This makes the tab group object invalid and the tab group
+     * should no longer be used for further actions.
+     * @param tabGroup The tab group to close.
+     * @param preserveFocus When `true` focus will remain in its current position.
+     * @returns A promise that resolves to `true` when all tab groups have been closed.
+     */
+    close(tabGroup: TabGroup | readonly TabGroup[], preserveFocus?: boolean): Thenable<boolean>;
+}
+
 export namespace window {
+    /**
+     * Represents the grid widget within the main editor area
+     */
+    export const tabGroups: TabGroups = {
+        all: [],
+        activeTabGroup: {
+            isActive: true,
+            viewColumn: ViewColumn.One,
+            activeTab: undefined,
+            tabs: [],
+        },
+        close: jest.fn(),
+    };
+
     /**
      * Show an information message to users. Optionally provide an array of items which will be presented as
      * clickable buttons.
@@ -286,6 +418,185 @@ export interface TreeDataProvider<T> {
     getParent?(element: T): ProviderResult<T>;
 }
 
+export class Uri {
+    public static file(path: string): Uri {
+        return Uri.parse(path);
+    }
+    public static parse(value: string, strict?: boolean): Uri {
+        const newUri = new Uri();
+        newUri.path = value;
+
+        return newUri;
+    }
+
+    public with(change: { scheme?: string; authority?: string; path?: string; query?: string; fragment?: string }): Uri {
+        let newUri = Uri.from(this);
+
+        if (change.scheme) {
+            newUri.scheme = change.scheme;
+        }
+
+        if (change.authority) {
+            newUri.authority = change.authority;
+        }
+
+        if (change.path) {
+            newUri.path = change.path;
+        }
+
+        if (change.query) {
+            newUri.query = change.query;
+        }
+
+        if (change.fragment) {
+            newUri.fragment = change.fragment;
+        }
+
+        return newUri !== this ? newUri : this;
+    }
+
+    public static from(components: {
+        readonly scheme: string;
+        readonly authority?: string;
+        readonly path?: string;
+        readonly query?: string;
+        readonly fragment?: string;
+    }): Uri {
+        let uri = new Uri();
+        if (components.path) {
+            uri.path = components.path;
+        }
+        if (components.scheme) {
+            uri.scheme = components.scheme;
+        }
+        if (components.authority) {
+            uri.authority = components.authority;
+        }
+        if (components.query) {
+            uri.query = components.query;
+        }
+        if (components.fragment) {
+            uri.fragment = components.fragment;
+        }
+        return uri;
+    }
+
+    /**
+     * Scheme is the `http` part of `http://www.example.com/some/path?query#fragment`.
+     * The part before the first colon.
+     */
+    scheme: string;
+
+    /**
+     * Authority is the `www.example.com` part of `http://www.example.com/some/path?query#fragment`.
+     * The part between the first double slashes and the next slash.
+     */
+    authority: string;
+
+    /**
+     * Path is the `/some/path` part of `http://www.example.com/some/path?query#fragment`.
+     */
+    path: string;
+
+    /**
+     * Query is the `query` part of `http://www.example.com/some/path?query#fragment`.
+     */
+    query: string;
+
+    /**
+     * Fragment is the `fragment` part of `http://www.example.com/some/path?query#fragment`.
+     */
+    fragment: string;
+
+    /**
+     * The string representing the corresponding file system path of this Uri.
+     *
+     * Will handle UNC paths and normalize windows drive letters to lower-case. Also
+     * uses the platform specific path separator.
+     *
+     * * Will *not* validate the path for invalid characters and semantics.
+     * * Will *not* look at the scheme of this Uri.
+     * * The resulting string shall *not* be used for display purposes but
+     * for disk operations, like `readFile` et al.
+     *
+     * The *difference* to the {@linkcode Uri.path path}-property is the use of the platform specific
+     * path separator and the handling of UNC paths. The sample below outlines the difference:
+     * ```ts
+     * const u = URI.parse('file://server/c$/folder/file.txt')
+     * u.authority === 'server'
+     * u.path === '/shares/c$/file.txt'
+     * u.fsPath === '\\server\c$\folder\file.txt'
+     * ```
+     */
+    fsPath: string;
+
+    public toString(): string {
+        let result = this.scheme ? `${this.scheme}://` : "";
+
+        if (this.authority) {
+            result += `${this.authority}`;
+        }
+
+        if (this.path) {
+            result += `${this.path}`;
+        }
+
+        if (this.query) {
+            result += `?${this.query}`;
+        }
+
+        if (this.fragment) {
+            result += `#${this.fragment}`;
+        }
+
+        return result;
+    }
+}
+
+/**
+ * Enumeration of file types. The types `File` and `Directory` can also be
+ * a symbolic links, in that case use `FileType.File | FileType.SymbolicLink` and
+ * `FileType.Directory | FileType.SymbolicLink`.
+ */
+export enum FileType {
+    /**
+     * The file type is unknown.
+     */
+    Unknown = 0,
+    /**
+     * A regular file.
+     */
+    File = 1,
+    /**
+     * A directory.
+     */
+    Directory = 2,
+    /**
+     * A symbolic link to a file.
+     */
+    SymbolicLink = 64,
+}
+
+export namespace l10n {
+    export function t(
+        options:
+            | {
+                  message: string;
+                  args?: Array<string | number | boolean> | Record<string, any>;
+                  comment?: string | string[];
+              }
+            | string
+    ): string {
+        if (typeof options === "string") {
+            return options;
+        }
+        options.args?.forEach((arg: string, i: number) => {
+            options.message = options.message.replace(`{${i}}`, arg);
+        });
+        return options.message;
+    }
+}
+
 export class TreeItem {
     /**
      * A human-readable string describing this item. When `falsy`, it is derived from [resourceUri](#TreeItem.resourceUri).
@@ -411,6 +722,167 @@ export class EventEmitter<T> {
     //dispose(): void;
 }
 
+export enum FilePermission {
+    /**
+     * The file is readonly.
+     *
+     * *Note:* All `FileStat` from a `FileSystemProvider` that is registered with
+     * the option `isReadonly: true` will be implicitly handled as if `FilePermission.Readonly`
+     * is set. As a consequence, it is not possible to have a readonly file system provider
+     * registered where some `FileStat` are not readonly.
+     */
+    Readonly = 1,
+}
+
+/**
+ * The `FileStat`-type represents metadata about a file
+ */
+export interface FileStat {
+    /**
+     * The type of the file, e.g. is a regular file, a directory, or symbolic link
+     * to a file.
+     *
+     * *Note:* This value might be a bitmask, e.g. `FileType.File | FileType.SymbolicLink`.
+     */
+    type: FileType;
+    /**
+     * The creation timestamp in milliseconds elapsed since January 1, 1970 00:00:00 UTC.
+     */
+    ctime: number;
+    /**
+     * The modification timestamp in milliseconds elapsed since January 1, 1970 00:00:00 UTC.
+     *
+     * *Note:* If the file changed, it is important to provide an updated `mtime` that advanced
+     * from the previous value. Otherwise there may be optimizations in place that will not show
+     * the updated file contents in an editor for example.
+     */
+    mtime: number;
+    /**
+     * The size in bytes.
+     *
+     * *Note:* If the file changed, it is important to provide an updated `size`. Otherwise there
+     * may be optimizations in place that will not show the updated file contents in an editor for
+     * example.
+     */
+    size: number;
+    /**
+     * The permissions of the file, e.g. whether the file is readonly.
+     *
+     * *Note:* This value might be a bitmask, e.g. `FilePermission.Readonly | FilePermission.Other`.
+     */
+    permissions?: FilePermission;
+}
+
+/**
+ * Enumeration of file change types.
+ */
+export enum FileChangeType {
+    /**
+     * The contents or metadata of a file have changed.
+     */
+    Changed = 1,
+
+    /**
+     * A file has been created.
+     */
+    Created = 2,
+
+    /**
+     * A file has been deleted.
+     */
+    Deleted = 3,
+}
+
+/**
+ * The event filesystem providers must use to signal a file change.
+ */
+export interface FileChangeEvent {
+    /**
+     * The type of change.
+     */
+    readonly type: FileChangeType;
+
+    /**
+     * The uri of the file that has changed.
+     */
+    readonly uri: Uri;
+}
+
+/**
+ * A type that filesystem providers should use to signal errors.
+ *
+ * This class has factory methods for common error-cases, like `FileNotFound` when
+ * a file or folder doesn't exist, use them like so: `throw vscode.FileSystemError.FileNotFound(someUri);`
+ */
+export class FileSystemError extends Error {
+    /**
+     * Create an error to signal that a file or folder wasn't found.
+     * @param messageOrUri Message or uri.
+     */
+    static FileNotFound(messageOrUri?: string | Uri): FileSystemError {
+        return new FileSystemError("file not found");
+    }
+
+    /**
+     * Create an error to signal that a file or folder already exists, e.g. when
+     * creating but not overwriting a file.
+     * @param messageOrUri Message or uri.
+     */
+    static FileExists(messageOrUri?: string | Uri): FileSystemError {
+        return new FileSystemError("file exists");
+    }
+
+    /**
+     * Create an error to signal that a file is not a folder.
+     * @param messageOrUri Message or uri.
+     */
+    static FileNotADirectory(messageOrUri?: string | Uri): FileSystemError {
+        return new FileSystemError("file not a directory");
+    }
+
+    /**
+     * Create an error to signal that a file is a folder.
+     * @param messageOrUri Message or uri.
+     */
+    static FileIsADirectory(messageOrUri?: string | Uri): FileSystemError {
+        return new FileSystemError("file is a directory");
+    }
+
+    /**
+     * Create an error to signal that an operation lacks required permissions.
+     * @param messageOrUri Message or uri.
+     */
+    static NoPermissions(messageOrUri?: string | Uri): FileSystemError {
+        return new FileSystemError("no permissions");
+    }
+
+    /**
+     * Create an error to signal that the file system is unavailable or too busy to
+     * complete a request.
+     * @param messageOrUri Message or uri.
+     */
+    static Unavailable(messageOrUri?: string | Uri): FileSystemError {
+        return new FileSystemError("unavailable");
+    }
+
+    /**
+     * Creates a new filesystem error.
+     *
+     * @param messageOrUri Message or uri.
+     */
+    constructor(messageOrUri?: string | Uri) {
+        super(typeof messageOrUri === "string" ? messageOrUri : undefined);
+    }
+
+    /**
+     * A code that identifies this error.
+     *
+     * Possible values are names of errors, like {@linkcode FileSystemError.FileNotFound FileNotFound},
+     * or `Unknown` for unspecified errors.
+     */
+    readonly code: string;
+}
+
 /**
  * Namespace for dealing with the current workspace. A workspace is the representation
  * of the folder that has been opened. There is no workspace when just a file but not a
@@ -421,6 +893,7 @@ export class EventEmitter<T> {
  * the editor-process so that they should be always used instead of nodejs-equivalents.
  */
 export namespace workspace {
+    export const textDocuments: TextDocument[] = [];
     export function getConfiguration(configuration: string) {
         return {
             update: () => {
@@ -438,6 +911,10 @@ export namespace workspace {
             onDidChange: () => {},
             onDidDelete: () => {},
         };
+    }
+
+    export function onDidCloseTextDocument(event) {
+        return Disposable;
     }
 
     export function onWillSaveTextDocument(event) {
@@ -477,6 +954,134 @@ export namespace workspace {
          * The ordinal number of this workspace folder.
          */
         readonly index: number;
+    }
+
+    export namespace fs {
+        /**
+         * Retrieve metadata about a file.
+         *
+         * Note that the metadata for symbolic links should be the metadata of the file they refer to.
+         * Still, the {@link FileType.SymbolicLink SymbolicLink}-type must be used in addition to the actual type, e.g.
+         * `FileType.SymbolicLink | FileType.Directory`.
+         *
+         * @param uri The uri of the file to retrieve metadata about.
+         * @returns The file metadata about the file.
+         * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when `uri` doesn't exist.
+         */
+        export function stat(uri: Uri): FileStat | Thenable<FileStat> {
+            return {} as FileStat;
+        }
+
+        /**
+         * Retrieve all entries of a {@link FileType.Directory directory}.
+         *
+         * @param uri The uri of the folder.
+         * @returns An array of name/type-tuples or a thenable that resolves to such.
+         * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when `uri` doesn't exist.
+         */
+        export function readDirectory(uri: Uri): Array<[string, FileType]> | Thenable<Array<[string, FileType]>> {
+            return [];
+        }
+
+        /**
+         * Create a new directory (Note, that new files are created via `write`-calls).
+         *
+         * @param uri The uri of the new folder.
+         * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when the parent of `uri` doesn't exist, e.g. no mkdirp-logic required.
+         * @throws {@linkcode FileSystemError.FileExists FileExists} when `uri` already exists.
+         * @throws {@linkcode FileSystemError.NoPermissions NoPermissions} when permissions aren't sufficient.
+         */
+        export function createDirectory(uri: Uri): void | Thenable<void> {
+            return;
+        }
+
+        /**
+         * Read the entire contents of a file.
+         *
+         * @param uri The uri of the file.
+         * @returns An array of bytes or a thenable that resolves to such.
+         * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when `uri` doesn't exist.
+         */
+        export function readFile(uri: Uri): Uint8Array | Thenable<Uint8Array> {
+            return new Uint8Array();
+        }
+
+        /**
+         * Write data to a file, replacing its entire contents.
+         *
+         * @param uri The uri of the file.
+         * @param content The new content of the file.
+         * @param options Defines if missing files should or must be created.
+         * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when `uri` doesn't exist and `create` is not set.
+         * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when the parent of `uri` doesn't exist and `create` is set, e.g. no mkdirp-logic required.
+         * @throws {@linkcode FileSystemError.FileExists FileExists} when `uri` already exists, `create` is set but `overwrite` is not set.
+         * @throws {@linkcode FileSystemError.NoPermissions NoPermissions} when permissions aren't sufficient.
+         */
+        export function writeFile(
+            uri: Uri,
+            content: Uint8Array,
+            options: {
+                /**
+                 * Create the file if it does not exist already.
+                 */
+                readonly create: boolean;
+                /**
+                 * Overwrite the file if it does exist.
+                 */
+                readonly overwrite: boolean;
+            }
+        ): void | Thenable<void> {
+            return;
+        }
+
+        /**
+         * Rename a file or folder.
+         *
+         * @param oldUri The existing file.
+         * @param newUri The new location.
+         * @param options Defines if existing files should be overwritten.
+         * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when `oldUri` doesn't exist.
+         * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when parent of `newUri` doesn't exist, e.g. no mkdirp-logic required.
+         * @throws {@linkcode FileSystemError.FileExists FileExists} when `newUri` exists and when the `overwrite` option is not `true`.
+         * @throws {@linkcode FileSystemError.NoPermissions NoPermissions} when permissions aren't sufficient.
+         */
+        export function rename(
+            oldUri: Uri,
+            newUri: Uri,
+            options: {
+                /**
+                 * Overwrite the file if it does exist.
+                 */
+                readonly overwrite: boolean;
+            }
+        ): void | Thenable<void> {
+            return;
+        }
+
+        /**
+         * Copy files or folders. Implementing this function is optional but it will speedup
+         * the copy operation.
+         *
+         * @param source The existing file.
+         * @param destination The destination location.
+         * @param options Defines if existing files should be overwritten.
+         * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when `source` doesn't exist.
+         * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when parent of `destination` doesn't exist, e.g. no mkdirp-logic required.
+         * @throws {@linkcode FileSystemError.FileExists FileExists} when `destination` exists and when the `overwrite` option is not `true`.
+         * @throws {@linkcode FileSystemError.NoPermissions NoPermissions} when permissions aren't sufficient.
+         */
+        export function copy(
+            source: Uri,
+            destination: Uri,
+            options: {
+                /**
+                 * Overwrite the file if it does exist.
+                 */
+                readonly overwrite: boolean;
+            }
+        ): void | Thenable<void> {
+            return;
+        }
     }
 }
 

@@ -10,9 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import * as path from "path";
-import * as fs from "fs";
-import { Gui, Validation } from "@zowe/zowe-explorer-api";
+import { DsEntry, Gui, PdsEntry, Validation } from "@zowe/zowe-explorer-api";
 import {
     createSessCfgFromArgs,
     createInstanceOfProfile,
@@ -22,11 +20,13 @@ import {
     createTreeView,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import { ZoweDatasetNode } from "../../../../src/trees/dataset";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
-import { Constants, Profiles } from "../../../../src/configuration";
-import { SharedUtils } from "../../../../src/trees/shared";
-import { ZoweLogger } from "../../../../src/tools";
+import * as fs from "fs";
+import { Constants } from "../../../../src/configuration/Constants";
+import { Profiles } from "../../../../src/configuration/Profiles";
+import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
+import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
+import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -36,13 +36,14 @@ jest.mock("vscode");
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 function createGlobalMocks() {
-    Constants.defineGlobals("");
+    Constants.defineConstants("");
 
     const newMocks = {
         imperativeProfile: createIProfile(),
         profileInstance: null,
         getContentsSpy: null,
         mvsApi: null,
+        openTextDocument: jest.fn(),
     };
 
     newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
@@ -89,7 +90,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
     }
 
     it("Checking of opening for common dataset", async () => {
-        Constants.defineGlobals("");
+        Constants.defineConstants("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -109,14 +110,11 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 
         await node.openDs(false, true, blockMocks.testDatasetTree);
 
-        expect(mocked(fs.existsSync)).toHaveBeenCalledWith(
-            path.join(Constants.DS_DIR, node.getSessionNode().label.toString(), node.label.toString())
-        );
-        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalledWith(SharedUtils.getDocumentFilePath(node.label.toString(), node));
+        expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("vscode.open", node.resourceUri);
     });
 
     it("Checking of opening for common dataset with unverified profile", async () => {
-        Constants.defineGlobals("");
+        Constants.defineConstants("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -142,46 +140,13 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
         });
 
         await node.openDs(false, true, blockMocks.testDatasetTree);
-
-        expect(mocked(fs.existsSync)).toHaveBeenCalledWith(
-            path.join(Constants.DS_DIR, node.getSessionNode().label.toString(), node.label.toString())
-        );
-        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalledWith(SharedUtils.getDocumentFilePath(node.label.toString(), node));
-    });
-
-    it("Checking of opening for common dataset without supporting ongoing actions", async () => {
-        Constants.defineGlobals("");
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-
-        mocked(blockMocks.mvsApi.getContents).mockResolvedValueOnce({
-            success: true,
-            commandResponse: "",
-            apiResponse: {
-                etag: "123",
-            },
-        });
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const node = new ZoweDatasetNode({
-            label: "node",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        node.ongoingActions = undefined as any;
-
-        await node.openDs(false, true, blockMocks.testDatasetTree);
-
-        expect(mocked(fs.existsSync)).toHaveBeenCalledWith(
-            path.join(Constants.DS_DIR, node.getSessionNode().label.toString(), node.label.toString())
-        );
-        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalledWith(SharedUtils.getDocumentFilePath(node.label.toString(), node));
+        expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("vscode.open", node.resourceUri);
     });
 
     it("Checking of failed attempt to open dataset", async () => {
-        Constants.defineGlobals("");
-        const globalMocks = createGlobalMocks();
+        Constants.defineConstants("");
         const blockMocks = createBlockMocks();
-        globalMocks.getContentsSpy.mockRejectedValueOnce(new Error("testError"));
+        mocked(vscode.commands.executeCommand).mockRejectedValueOnce(new Error("testError"));
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode({
             label: "node",
@@ -198,29 +163,8 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
         expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error: testError");
     });
 
-    it("Check for invalid/null response when contents are already fetched", async () => {
-        Constants.defineGlobals("");
-        const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks();
-        globalMocks.getContentsSpy.mockClear();
-        mocked(fs.existsSync).mockReturnValueOnce(true);
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const node = new ZoweDatasetNode({
-            label: "node",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-            etag: "abc",
-        });
-        node.ongoingActions = undefined as any;
-
-        await node.openDs(false, true, blockMocks.testDatasetTree);
-
-        expect(globalMocks.getContentsSpy).not.toHaveBeenCalled();
-        expect(node.getEtag()).toBe("abc");
-    });
-
     it("Checking of opening for PDS Member", async () => {
-        Constants.defineGlobals("");
+        Constants.defineConstants("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -243,15 +187,10 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 
         await child.openDs(false, true, blockMocks.testDatasetTree);
 
-        expect(mocked(fs.existsSync)).toHaveBeenCalledWith(
-            path.join(Constants.DS_DIR, child.getSessionNode().label.toString(), `${parent.label.toString()}(${child.label.toString()})`)
-        );
-        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalledWith(
-            SharedUtils.getDocumentFilePath(`${parent.label.toString()}(${child.label.toString()})`, child)
-        );
+        expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("vscode.open", child.resourceUri);
     });
     it("Checking of opening for PDS Member of favorite dataset", async () => {
-        Constants.defineGlobals("");
+        Constants.defineConstants("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -274,15 +213,10 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 
         await child.openDs(false, true, blockMocks.testDatasetTree);
 
-        expect(mocked(fs.existsSync)).toHaveBeenCalledWith(
-            path.join(Constants.DS_DIR, child.getSessionNode().label.toString(), `${parent.label.toString()}(${child.label.toString()})`)
-        );
-        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalledWith(
-            SharedUtils.getDocumentFilePath(`${parent.label.toString()}(${child.label.toString()})`, child)
-        );
+        expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("vscode.open", child.resourceUri);
     });
     it("Checking of opening for sequential DS of favorite session", async () => {
-        Constants.defineGlobals("");
+        Constants.defineConstants("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -305,31 +239,9 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 
         await child.openDs(false, true, blockMocks.testDatasetTree);
 
-        expect(mocked(fs.existsSync)).toHaveBeenCalledWith(path.join(Constants.DS_DIR, blockMocks.imperativeProfile.name, child.label.toString()));
-        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalledWith(SharedUtils.getDocumentFilePath(child.label.toString(), child));
+        expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("vscode.open", child.resourceUri);
     });
-    it("Checks that openDs fails if called from an invalid node", async () => {
-        Constants.defineGlobals("");
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
 
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const node = new ZoweDatasetNode({
-            label: "parent",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-            profile: blockMocks.imperativeProfile,
-        });
-        blockMocks.datasetSessionNode.contextValue = "aieieiieeeeooooo";
-
-        try {
-            await node.openDs(false, true, blockMocks.testDatasetTree);
-        } catch (err) {
-            // Prevent exception from failing test
-        }
-
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Invalid data set or member.");
-    });
     it("Checking that error is displayed and logged for opening of node with invalid context value", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -358,98 +270,34 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
             // Do nothing
         }
 
-        expect(showErrorMessageSpy).toHaveBeenCalledWith("Invalid data set or member.");
+        expect(showErrorMessageSpy).toHaveBeenCalledWith("Cannot download, item invalid.");
         expect(logErrorSpy).toHaveBeenCalledTimes(1);
     });
 });
 
-describe("ZoweDatasetNode Unit Tests - Function node.downloadDs()", () => {
-    function createBlockMocks() {
-        const session = createISession();
-        const imperativeProfile = createIProfile();
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
-        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const pdsSessionNode = new ZoweDatasetNode({
-            label: "sestest",
-            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
-            parentNode: datasetSessionNode,
-            session,
-            profile: profileInstance,
-        });
-        pdsSessionNode.contextValue = Constants.DS_PDS_CONTEXT;
-
-        return {
-            imperativeProfile,
-            pdsSessionNode,
-        };
-    }
-
-    it("Testing downloadDs() called with invalid node", async () => {
-        Constants.defineGlobals("");
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-        const node = new ZoweDatasetNode({
-            label: "HLQ.TEST.TO.NODE",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.pdsSessionNode,
-            profile: blockMocks.imperativeProfile,
-        });
-        blockMocks.pdsSessionNode.contextValue = "fakeContext";
-
-        try {
-            await node.downloadDs(true);
-        } catch (err) {
-            /* Do nothing */
-        }
-
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Invalid data set or member.");
-    });
-
-    it("Testing downloadDs() called with a member", async () => {
-        Constants.defineGlobals("");
-        const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks();
-        const node = new ZoweDatasetNode({
-            label: "HLQ.TEST.TO.NODE",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.pdsSessionNode,
-            profile: blockMocks.imperativeProfile,
-        });
-        globalMocks.getContentsSpy.mockResolvedValueOnce({
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "123",
-            },
-        });
-
-        const label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
-        const filePathSpy = jest.spyOn(SharedUtils, "getDocumentFilePath");
-        await node.downloadDs(true);
-        expect(filePathSpy).toHaveBeenCalledWith(label, node);
-    });
-});
-
 describe("ZoweDatasetNode Unit Tests - Function node.setEncoding()", () => {
+    const setEncodingForFileMock = jest.spyOn(DatasetFSProvider.instance, "setEncodingForFile").mockImplementation();
+
+    afterAll(() => {
+        setEncodingForFileMock.mockRestore();
+    });
+
     it("sets encoding to binary", () => {
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setEncoding({ kind: "binary" });
-        expect(node.binary).toEqual(true);
-        expect(node.encoding).toBeUndefined();
+        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "binary" });
     });
 
     it("sets encoding to text", () => {
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setEncoding({ kind: "text" });
-        expect(node.binary).toEqual(false);
-        expect(node.encoding).toBeNull();
+        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "text" });
     });
 
     it("sets encoding to other codepage", () => {
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setEncoding({ kind: "other", codepage: "IBM-1047" });
-        expect(node.binary).toEqual(false);
-        expect(node.encoding).toEqual("IBM-1047");
+        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "other", codepage: "IBM-1047" });
     });
 
     it("sets encoding for favorite node", () => {
@@ -460,15 +308,13 @@ describe("ZoweDatasetNode Unit Tests - Function node.setEncoding()", () => {
         });
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode });
         node.setEncoding({ kind: "text" });
-        expect(node.binary).toEqual(false);
-        expect(node.encoding).toBeNull();
+        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "text" });
     });
 
     it("resets encoding to undefined", () => {
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setEncoding(undefined as any);
-        expect(node.binary).toEqual(false);
-        expect(node.encoding).toBeUndefined();
+        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, undefined);
     });
 
     it("fails to set encoding for session node", () => {
@@ -477,7 +323,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.setEncoding()", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             contextOverride: Constants.DS_SESSION_CONTEXT,
         });
-        expect(node.setEncoding.bind(node)).toThrowError("Cannot set encoding for node with context session");
+        expect(node.setEncoding.bind(node)).toThrow("Cannot set encoding for node with context session");
     });
 });
 
@@ -488,5 +334,54 @@ describe("ZoweDatasetNode Unit Tests - Function node.setIcon()", () => {
         node.setIcon(iconTest);
         expect(node.iconPath).toEqual(iconTest);
         expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("zowe.ds.refreshDataset", node);
+    });
+});
+
+describe("ZoweDatasetNode Unit Tests - Function node.setEtag", () => {
+    it("sets the e-tag for a member/PS", () => {
+        const dsEntry = new DsEntry("TEST.DS");
+        const statMock = jest.spyOn(DatasetFSProvider.instance, "stat").mockReturnValueOnce(dsEntry);
+
+        const node = new ZoweDatasetNode({ label: "etagTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        node.setEtag("123ETAG");
+        expect(statMock).toHaveBeenCalled();
+        expect(dsEntry.etag).toBe("123ETAG");
+        statMock.mockRestore();
+    });
+
+    it("returns early when trying to set the e-tag for a PDS", () => {
+        const pdsEntry = new PdsEntry("TEST.PDS");
+        const statMock = jest.spyOn(DatasetFSProvider.instance, "stat").mockReturnValueOnce(pdsEntry);
+
+        const node = new ZoweDatasetNode({ label: "pds", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
+        node.setEtag("123ETAG");
+        expect(statMock).toHaveBeenCalled();
+        expect(pdsEntry).not.toHaveProperty("etag");
+        statMock.mockRestore();
+    });
+});
+
+describe("ZoweDatasetNode Unit Tests - Function node.setStats", () => {
+    it("sets the stats for a data set or PDS member", () => {
+        const dsEntry = new DsEntry("TEST.DS");
+        dsEntry.stats = { user: "aUser" };
+        const statMock = jest.spyOn(DatasetFSProvider.instance, "stat").mockReturnValueOnce(dsEntry);
+
+        const node = new ZoweDatasetNode({ label: "statsTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        node.setStats({ user: "bUser" });
+        expect(statMock).toHaveBeenCalled();
+        expect(dsEntry.stats).toStrictEqual({ user: "bUser" });
+        statMock.mockRestore();
+    });
+
+    it("returns early when trying to set the stats for a PDS", () => {
+        const pdsEntry = new PdsEntry("TEST.PDS");
+        const statMock = jest.spyOn(DatasetFSProvider.instance, "stat").mockClear().mockReturnValueOnce(pdsEntry);
+
+        const node = new ZoweDatasetNode({ label: "pds", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
+        node.setStats({ user: "bUser" });
+        expect(statMock).toHaveBeenCalled();
+        expect(pdsEntry).not.toHaveProperty("stats");
+        statMock.mockRestore();
     });
 });

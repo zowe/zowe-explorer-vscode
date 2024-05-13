@@ -11,11 +11,14 @@
 
 import * as vscode from "vscode";
 import { IZoweTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
-import { Constants, Profiles } from "../configuration";
-import { IconGenerator } from "../icons";
-import { ProfilesUtils } from "../utils";
-import { ZowePersistentFilters, ZoweLogger } from "../tools";
-import { SharedContext } from "../trees/shared";
+import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
+import { ZoweLogger } from "../tools/ZoweLogger";
+import { SharedContext } from "../trees/shared/SharedContext";
+import { Profiles } from "../configuration/Profiles";
+import { Constants } from "../configuration/Constants";
+import { IconGenerator } from "../icons/IconGenerator";
+import { IconUtils } from "../icons/IconUtils";
+import { AuthUtils } from "../utils/AuthUtils";
 
 export class ZoweCommandProvider {
     // eslint-disable-next-line no-magic-numbers
@@ -60,13 +63,13 @@ export class ZoweCommandProvider {
             ) {
                 node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
                 node.contextValue = node.contextValue + Constants.INACTIVE_CONTEXT;
-                const inactiveIcon = IconGenerator.getIconById(IconGenerator.IconId.sessionInactive);
+                const inactiveIcon = IconGenerator.getIconById(IconUtils.IconId.sessionInactive);
                 if (inactiveIcon) {
                     node.iconPath = inactiveIcon.path;
                 }
             }
 
-            await ProfilesUtils.errorHandling(
+            await AuthUtils.errorHandling(
                 vscode.l10n.t({
                     message:
                         "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
@@ -81,7 +84,7 @@ export class ZoweCommandProvider {
             ) {
                 node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
                 node.contextValue = node.contextValue + Constants.ACTIVE_CONTEXT;
-                const activeIcon = IconGenerator.getIconById(IconGenerator.IconId.sessionActive);
+                const activeIcon = IconGenerator.getIconById(IconUtils.IconId.sessionActive);
                 if (activeIcon) {
                     node.iconPath = activeIcon.path;
                 }

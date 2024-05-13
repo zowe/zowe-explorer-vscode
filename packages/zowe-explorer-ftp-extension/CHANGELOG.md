@@ -6,6 +6,22 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
+- Changed the hashing algorithm for e-tag generation from `sha1` to `sha256` to avoid collisions. [#2890](https://github.com/zowe/zowe-explorer-vscode/pull/2890)
+- Updated the FTP plugin dependency to `3.0.0-next.202403191358` for technical currency [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783).
+
+## `3.0.0-next.202404242037`
+
+### New features and enhancements
+
+- Changed the type for the options parameter in the `getContents` function (`MainframeInteraction.IUss` and `MainframeInteraction.IMvs` interfaces) from `zosfiles.IDownloadOptions` to `zosfiles.IDownloadSingleOptions`. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
+- Added support for streams to the `getContents` and `putContents` functions (`FtpMvsApi` and `FtpUssApi` interfaces).
+- **Breaking:** updated the `FtpMvsApi.putContents` function to throw an error when an e-tag conflict is found.
+  - This establishes consistency with the `FtpUssApi.putContents` function which has always thrown an error for this scenario.
+- **Breaking:** Removed the deprecated `FtpUssApi.putContents` function in favor of the `FtpUssApi.putContent` function.
+  - The `putContents` function was deprecated in v2 in favor of the replacement function that offers the same capabilities, as well as the feature to upload from a buffer.
+
+### Bug fixes
+
 - Updated the SDK dependencies to `8.0.0-next.202403041352` for technical currency [#2754](https://github.com/zowe/vscode-extension-for-zowe/pull/2754).
 
 ## `3.0.0-next.202403051607`

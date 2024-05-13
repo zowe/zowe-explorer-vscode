@@ -11,8 +11,8 @@
 
 import { Types, Gui, MainframeInteraction, IZoweUSSTreeNode, WebView } from "@zowe/zowe-explorer-api";
 import { Disposable, ExtensionContext } from "vscode";
-import { ZoweExplorerApiRegister } from "../../extending";
-import { SharedContext } from "../shared";
+import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
+import { SharedContext } from "../shared/SharedContext";
 
 export class USSAtributeView extends WebView {
     private treeProvider: Types.IZoweUSSTreeType;
@@ -33,7 +33,7 @@ export class USSAtributeView extends WebView {
 
     private async attachTag(node: IZoweUSSTreeNode): Promise<void> {
         if (this.ussApi.getTag && !SharedContext.isUssDirectory(node)) {
-            node.attributes.tag = await this.ussApi.getTag(node.fullPath);
+            await node.setAttributes({ tag: await this.ussApi.getTag(node.fullPath) });
         }
     }
 
@@ -44,7 +44,7 @@ export class USSAtributeView extends WebView {
                     this.onUpdateDisposable = this.ussNode.onUpdate(async (node) => {
                         await this.attachTag(node);
                         await this.panel.webview.postMessage({
-                            attributes: node.attributes,
+                            attributes: await this.ussNode.getAttributes(),
                             name: node.fullPath,
                             readonly: this.ussApi.updateAttributes == null,
                         });
@@ -61,7 +61,7 @@ export class USSAtributeView extends WebView {
             case "ready":
                 await this.attachTag(this.ussNode);
                 await this.panel.webview.postMessage({
-                    attributes: this.ussNode.attributes,
+                    attributes: await this.ussNode.getAttributes(),
                     name: this.ussNode.fullPath,
                     readonly: this.ussApi.updateAttributes == null,
                 });
@@ -75,14 +75,14 @@ export class USSAtributeView extends WebView {
     }
 
     private async updateAttributes(message: any): Promise<void> {
-        if (!this.ussApi.updateAttributes) {
-            // The condition in this if statement should never be satisfied; the "Apply Changes" button is disabled
-            // when this API doesn't exist. But, this ensures the webview will be blocked from making update requests.
+        if (!this.ussApi.updateAttributes || !("attrs" in message)) {
+            // Block the webview from making update requests if the API doesn't exist or if "attrs" is not present in the message object.
             return;
         }
 
         try {
-            if (Object.keys(message.attrs).length > 0) {
+            if (Object.keys(message?.attrs).length > 0) {
+                const oldAttrs = await this.ussNode.getAttributes();
                 const attrs = message.attrs;
                 const newAttrs: Partial<Types.FileAttributes> = {};
                 if (!isNaN(parseInt(attrs.owner))) {
@@ -91,7 +91,7 @@ export class USSAtributeView extends WebView {
 
                     // set owner to the UID to prevent mismatched UIDs/owners
                     newAttrs.owner = attrs.owner;
-                } else if (this.ussNode.attributes.owner !== attrs.owner) {
+                } else if (oldAttrs.owner !== attrs.owner) {
                     newAttrs.owner = attrs.owner;
                 }
 
@@ -103,22 +103,22 @@ export class USSAtributeView extends WebView {
 
                     // set group to the GID to prevent mismatched GIDs/groups
                     newAttrs.group = attrs.group;
-                } else if (this.ussNode.attributes.group !== attrs.group) {
+                } else if (oldAttrs.group !== attrs.group) {
                     // must provide owner when changing group
                     newAttrs.owner = attrs.owner;
                     newAttrs.group = attrs.group;
                 }
 
-                if (this.ussNode.attributes.perms !== attrs.perms) {
+                if (oldAttrs.perms !== attrs.perms) {
                     newAttrs.perms = attrs.perms;
                 }
 
-                if (this.ussNode.attributes.tag !== attrs.tag && this.ussApi.getTag) {
+                if (oldAttrs.tag !== attrs.tag && this.ussApi.getTag) {
                     newAttrs.tag = attrs.tag;
                 }
 
                 await this.ussApi.updateAttributes(this.ussNode.fullPath, newAttrs);
-                this.ussNode.attributes = { ...(this.ussNode.attributes ?? {}), ...newAttrs } as Types.FileAttributes;
+                await this.ussNode.setAttributes(newAttrs);
 
                 await this.panel.webview.postMessage({
                     updated: true,
