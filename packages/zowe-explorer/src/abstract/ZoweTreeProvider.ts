@@ -342,7 +342,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         if (profile) {
             await treeProvider.addSingleSession(profile);
             for (const node of treeProvider.mSessionNodes) {
-                if (node.label !== "Favorites") {
+                if (node.label !== vscode.l10n.t("Favorites")) {
                     const name = node.getProfileName();
                     if (name === profile.name) {
                         resetValidationSettings(node, isUsingAutomaticProfileValidation);
@@ -365,7 +365,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
                         if (session && session.trim() === profile.name) {
                             await treeProvider.addSingleSession(profile);
                             for (const node of treeProvider.mSessionNodes) {
-                                if (node.label !== "Favorites") {
+                                if (node.label !== vscode.l10n.t("Favorites")) {
                                     const name = node.getProfileName();
                                     if (name === profile.name) {
                                         resetValidationSettings(node, isUsingAutomaticProfileValidation);

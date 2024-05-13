@@ -48,6 +48,12 @@ jobs:
           pnpm install
           pnpm build
 
+      - name: Download Translations
+        run: node scripts/downloadPoeditorL10n.js
+        working-directory: packages/zowe-explorer
+        env:
+          POEDITOR_TOKEN: ${{ secrets.POEDITOR_TOKEN }}
+
       - name: Get Project Version
         id: lerna
         run: echo "version=$(jq -r .version lerna.json)" >> $GITHUB_OUTPUT

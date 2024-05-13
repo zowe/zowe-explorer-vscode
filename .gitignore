@@ -25,3 +25,5 @@ v8-compile-cache-0/
 dist/
 prebuilds/
 samples/**/pnpm-lock.yaml
+package.nls.*.json
+bundle.l10n.*.json
