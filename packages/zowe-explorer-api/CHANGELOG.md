@@ -12,6 +12,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Updated `@zowe/cli` dependency to fix issue where "Log out of authentication service" doesn't show in Manage Profile menu. [#2633](https://github.com/zowe/zowe-explorer-vscode/issues/2633)
+
 ## `2.15.4`
 
 ## `2.15.3`
