@@ -72,21 +72,25 @@ fn code_cli_binary(dir: &Path) -> PathBuf {
 /// # Arguments
 /// * `file` - The file that contains the archive
 /// * `vsc_path` - The path where the archive should be extracted into
-fn extract_code_zip(file: &std::fs::File, vsc_path: &Path) -> anyhow::Result<()> {
+fn extract_code_zip(file: &std::fs::File) {
     let mut archive = zip::ZipArchive::new(file).unwrap();
 
     for i in 0..archive.len() {
         let mut entry = archive.by_index(i).unwrap();
         let out_path = match entry.enclosed_name() {
-            Some(p) => p,
+            Some(p) => p.to_owned(),
             None => continue,
         };
 
         if entry.is_dir() {
-            std::fs::create_dir_all(&out_path)?;
+            std::fs::create_dir_all(&out_path).unwrap();
         } else {
-            let filename = out_path.file_name().unwrap();
-            let mut outfile = std::fs::File::create(vsc_path.join(filename))?;
+            if let Some(p) = out_path.parent() {
+                if !p.exists() {
+                    std::fs::create_dir_all(p).unwrap();
+                }
+            }
+            let mut outfile = std::fs::File::create(&out_path).unwrap();
             std::io::copy(&mut entry, &mut outfile).unwrap();
         }
 
@@ -100,8 +104,6 @@ fn extract_code_zip(file: &std::fs::File, vsc_path: &Path) -> anyhow::Result<()>
             }
         }
     }
-
-    Ok(())
 }
 
 /// Downloads a portable copy of VS Code with the given version, if provided (default: `latest`).  
@@ -198,7 +200,7 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
     {
         "zip" => {
             let file = std::fs::File::open(&path)?;
-            extract_code_zip(&file, &vsc_path)?;
+            extract_code_zip(&file);
             tokio::fs::create_dir(vsc_path.join(if std::env::consts::OS == "macos" {
                 "code-portable-data"
             } else {
