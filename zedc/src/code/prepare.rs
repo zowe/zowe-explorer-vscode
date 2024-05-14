@@ -2,7 +2,7 @@
 //! Includes setup, download and URL building procedures.
 
 use std::{
-    fs::File,
+    io::SeekFrom,
     path::{Path, PathBuf},
     process::Command,
 };
@@ -13,7 +13,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use owo_colors::OwoColorize;
 use reqwest::{header, Client};
 use tar::Archive;
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncSeekExt, AsyncWriteExt};
 
 /// Returns a URL for the VS Code release for the current operating system with the given version.
 ///
@@ -184,6 +184,8 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
         progress_bar.inc(chunk.len() as u64);
         outfile.write_all(&chunk).await?;
     }
+    outfile.flush().await?;
+    outfile.seek(SeekFrom::Start(0)).await?;
 
     progress_bar.finish();
     println!("📤 Unpacking VS Code archive...");
@@ -204,7 +206,7 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
             .await?;
         }
         "tgz" | "gz" => {
-            let tar_gz = File::open(path)?;
+            let tar_gz = outfile.try_into_std().unwrap();
             let tar = GzDecoder::new(tar_gz);
             let mut archive = Archive::new(tar);
             archive.unpack(&vsc_path)?;
