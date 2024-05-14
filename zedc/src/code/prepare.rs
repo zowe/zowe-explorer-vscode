@@ -203,13 +203,13 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
             match std::env::consts::OS {
                 "macos" => {
                     match Command::new("unzip")
-                        .arg(&vsc_path)
+                        .current_dir(&vsc_path)
+                        .arg(&path)
                         .stdout(Stdio::null())
-                        .status()
-                    {
-                        Ok(s) => {}
-                        Err(e) => bail!("Failed to extract VS Code archive: {}", e),
-                    }
+                        .status() {
+                            Ok(s) => {},
+                            Err(e) => bail!("Failed to extract VS Code archive: {}", e),
+                        }
                     tokio::fs::create_dir(vsc_path.join("code-portable-data")).await?;
                 }
                 _ => {
