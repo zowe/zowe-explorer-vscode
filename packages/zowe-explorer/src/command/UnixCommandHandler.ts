@@ -281,7 +281,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     Gui.showMessage(this.unixCmdMsgs.opCancelledMsg);
                     return;
                 }
-                return allProfiles.find((temprofile) => temprofile.name === sesName) as imperative.IProfileLoaded;
+                return allProfiles.find((temprofile) => temprofile.name === sesName);
             }
         } else {
             ZoweLogger.info(this.unixCmdMsgs.noProfilesAvailableMsg);

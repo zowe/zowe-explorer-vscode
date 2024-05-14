@@ -223,7 +223,7 @@ export class ProfilesUtils {
             async (selection) => {
                 if (selection === installButton) {
                     const credentialManagerInstallURL = vscode.Uri.parse(
-                        `https://marketplace.visualstudio.com/items?itemName=${credentialManager.credMgrZEName as string}`
+                        `https://marketplace.visualstudio.com/items?itemName=${credentialManager.credMgrZEName}`
                     );
                     if (await vscode.env.openExternal(credentialManagerInstallURL)) {
                         const refreshMessage = vscode.l10n.t(
@@ -285,11 +285,11 @@ export class ProfilesUtils {
                 ZoweLogger.warn(schemaWarning);
             }
             Constants.setConfigPath(rootPath);
-            ZoweLogger.info(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName as string}"`);
+            ZoweLogger.info(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName}"`);
             const layers = mProfileInfo.getTeamConfig().layers || [];
             const layerSummary = layers.map(
                 (config: imperative.IConfigLayer) =>
-                    `Path: ${config.path as string}: ${
+                    `Path: ${config.path}: ${
                         config.exists
                             ? "Found, with the following defaults:" + JSON.stringify(config.properties?.defaults || "Undefined default")
                             : "Not available"
@@ -492,10 +492,10 @@ export class ProfilesUtils {
                     const convertResults = await Constants.PROFILES_CACHE.convertV1ProfToConfig();
                     let responseMsg = "";
                     if (convertResults.success) {
-                        responseMsg += `Success: ${convertResults.success as string}\n`;
+                        responseMsg += `Success: ${convertResults.success}\n`;
                     }
                     if (convertResults.warnings) {
-                        responseMsg += `Warning: ${convertResults.warnings as string}\n`;
+                        responseMsg += `Warning: ${convertResults.warnings}\n`;
                     }
                     ZoweLogger.info(responseMsg);
                     Gui.infoMessage(vscode.l10n.t(responseMsg), { vsCodeOpts: { modal: true } });
@@ -535,7 +535,7 @@ export class ProfilesUtils {
     public static getProfile(node: vscode.TreeItem | ZoweTreeNode): imperative.IProfileLoaded {
         ZoweLogger.trace("ProfilesUtils.getProfile called.");
         if (node instanceof ZoweTreeNode) {
-            return node.getProfile() as imperative.IProfileLoaded;
+            return node.getProfile();
         }
         throw new Error(vscode.l10n.t("Tree Item is not a Zowe Explorer item."));
     }

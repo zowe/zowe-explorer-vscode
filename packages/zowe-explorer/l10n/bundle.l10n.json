@@ -1,155 +1,4 @@
 {
-  "Enter an allocation unit": "Enter an allocation unit",
-  "Enter the average block length (if allocation unit = BLK)": "Enter the average block length (if allocation unit = BLK)",
-  "Enter a block size": "Enter a block size",
-  "Enter an SMS data class": "Enter an SMS data class",
-  "Enter a device type (unit)": "Enter a device type (unit)",
-  "Enter the number of directory blocks": "Enter the number of directory blocks",
-  "Specify the data set type (DSNTYPE)": "Specify the data set type (DSNTYPE)",
-  "Enter the SMS management class": "Enter the SMS management class",
-  "Enter a data set name": "Enter a data set name",
-  "Select a data set organization (DSORG)": "Select a data set organization (DSORG)",
-  "Enter the primary space allocation": "Enter the primary space allocation",
-  "Enter the data set's record format": "Enter the data set's record format",
-  "Enter the logical record length": "Enter the logical record length",
-  "Enter the secondary space allocation": "Enter the secondary space allocation",
-  "Enter the size of the data set": "Enter the size of the data set",
-  "Enter the SMS storage class": "Enter the SMS storage class",
-  "Enter the volume serial on which the data set should be placed": "Enter the volume serial on which the data set should be placed",
-  "Recent": "Recent",
-  "Recent Filters": "Recent Filters",
-  "Options": "Options",
-  "Zowe Explorer's temp folder is located at {0}/Zowe temp folder": {
-    "message": "Zowe Explorer's temp folder is located at {0}",
-    "comment": [
-      "Zowe temp folder"
-    ]
-  },
-  "Zowe Explorer has activated successfully.": "Zowe Explorer has activated successfully.",
-  "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.": "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.",
-  "Failed to update Zowe schema: insufficient permissions or read-only file. {0}/Error message": {
-    "message": "Failed to update Zowe schema: insufficient permissions or read-only file. {0}",
-    "comment": [
-      "Error message"
-    ]
-  },
-  "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.": "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.",
-  "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.": "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.",
-  "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.": "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.",
-  "Internal error: A Zowe Explorer extension client tried to register an invalid Command API.": "Internal error: A Zowe Explorer extension client tried to register an invalid Command API.",
-  "Internal error: Tried to call a non-existing USS API in API register: {0}/Profile type": {
-    "message": "Internal error: Tried to call a non-existing USS API in API register: {0}",
-    "comment": [
-      "Profile type"
-    ]
-  },
-  "Internal error: Tried to call a non-existing MVS API in API register: {0}/Profile type": {
-    "message": "Internal error: Tried to call a non-existing MVS API in API register: {0}",
-    "comment": [
-      "Profile type"
-    ]
-  },
-  "Internal error: Tried to call a non-existing JES API in API register: {0}/Profile type": {
-    "message": "Internal error: Tried to call a non-existing JES API in API register: {0}",
-    "comment": [
-      "Profile type"
-    ]
-  },
-  "Internal error: Tried to call a non-existing Command API in API register: {0}/Profile type": {
-    "message": "Internal error: Tried to call a non-existing Command API in API register: {0}",
-    "comment": [
-      "Profile type"
-    ]
-  },
-  "Internal error: Tried to call a non-existing Common API in API register: {0}/Profile type": {
-    "message": "Internal error: Tried to call a non-existing Common API in API register: {0}",
-    "comment": [
-      "Profile type"
-    ]
-  },
-  "Operation Cancelled": "Operation Cancelled",
-  "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.",
-  "Token auth error": "Token auth error",
-  "Profile was found using token auth, please log in to continue.": "Profile was found using token auth, please log in to continue.",
-  "Choose \"Create new...\" to define or select a profile to add to the DATA SETS Explorer": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS Explorer",
-  "Choose \"Create new...\" to define or select a profile to add to the JOBS Explorer": "Choose \"Create new...\" to define or select a profile to add to the JOBS Explorer",
-  "Choose \"Create new...\" to define or select a profile to add to the USS Explorer": "Choose \"Create new...\" to define or select a profile to add to the USS Explorer",
-  "Profile selection has been cancelled.": "Profile selection has been cancelled.",
-  "The profile {0} has been added to the {1} tree./chosen profiletree type": {
-    "message": "The profile {0} has been added to the {1} tree.",
-    "comment": [
-      "chosen profile",
-      "tree type"
-    ]
-  },
-  "Profile Type": "Profile Type",
-  "User Name": "User Name",
-  "Enter the user name for the connection. Leave blank to not store.": "Enter the user name for the connection. Leave blank to not store.",
-  "Password": "Password",
-  "Enter the password for the connection. Leave blank to not store.": "Enter the password for the connection. Leave blank to not store.",
-  "No profiles available": "No profiles available",
-  "Select the profile you want to delete": "Select the profile you want to delete",
-  "Validating {0} Profile./The profile name": {
-    "message": "Validating {0} Profile.",
-    "comment": [
-      "The profile name"
-    ]
-  },
-  "Validating {0} was cancelled./The profile name": {
-    "message": "Validating {0} was cancelled.",
-    "comment": [
-      "The profile name"
-    ]
-  },
-  "Profile validation failed for {0}./The profile name": {
-    "message": "Profile validation failed for {0}.",
-    "comment": [
-      "The profile name"
-    ]
-  },
-  "This profile is using basic authentication and does not support token authentication.": "This profile is using basic authentication and does not support token authentication.",
-  "Error getting supported tokenType value for profile {0}/Service profile name": {
-    "message": "Error getting supported tokenType value for profile {0}",
-    "comment": [
-      "Service profile name"
-    ]
-  },
-  "Login to authentication service was successful for {0}./Service profile name": {
-    "message": "Login to authentication service was successful for {0}.",
-    "comment": [
-      "Service profile name"
-    ]
-  },
-  "Unable to log in with {0}. {1}/Service profile nameError message": {
-    "message": "Unable to log in with {0}. {1}",
-    "comment": [
-      "Service profile name",
-      "Error message"
-    ]
-  },
-  "Logout from authentication service was successful for {0}./Service profile name": {
-    "message": "Logout from authentication service was successful for {0}.",
-    "comment": [
-      "Service profile name"
-    ]
-  },
-  "Unable to log out with {0}. {1}/Service profile nameError message": {
-    "message": "Unable to log out with {0}. {1}",
-    "comment": [
-      "Service profile name",
-      "Error message"
-    ]
-  },
-  "Select the location where the config file will be initialized": "Select the location where the config file will be initialized",
-  "Select the location of the config file to edit": "Select the location of the config file to edit",
-  "Global: in the Zowe home directory": "Global: in the Zowe home directory",
-  "Project: in the current working directory": "Project: in the current working directory",
-  "Create New": "Create New",
-  "Do you wish to apply this for all trees?": "Do you wish to apply this for all trees?",
-  "Yes": "Yes",
-  "Apply to all trees": "Apply to all trees",
-  "No": "No",
-  "Apply to current tree selected": "Apply to current tree selected",
   "Refresh": "Refresh",
   "Delete Selected": "Delete Selected",
   "Select an item before deleting": "Select an item before deleting",
@@ -1060,7 +909,12 @@
       "Service profile name"
     ]
   },
-  "Login to authentication service was successful.": "Login to authentication service was successful.",
+  "Login to authentication service was successful for {0}./Service profile name": {
+    "message": "Login to authentication service was successful for {0}.",
+    "comment": [
+      "Service profile name"
+    ]
+  },
   "Unable to log in with {0}. {1}/Service profile nameError message": {
     "message": "Unable to log in with {0}. {1}",
     "comment": [
