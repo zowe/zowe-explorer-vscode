@@ -27,18 +27,6 @@ Then("the user can click on the Zowe Explorer icon", async () => {
     await zeContainer.openView();
 });
 
-//
-// Scenario: User expands the Favorites node for each tree view
-//
-Given("a user who is looking at the Zowe Explorer tree views", async () => {
-    const activityBar = (await browser.getWorkbench()).getActivityBar();
-    await activityBar.wait();
-    const zeContainer = await activityBar.getViewControl("Zowe Explorer");
-    await zeContainer.wait();
-    const zeView = await zeContainer.openView();
-    await zeView.wait();
-});
-
 /* Helper functions */
 async function paneDivForTree(tree: string): Promise<ViewSection> {
     const activityBar = (await browser.getWorkbench()).getActivityBar();
@@ -50,6 +38,7 @@ async function paneDivForTree(tree: string): Promise<ViewSection> {
         case "data sets":
             return sidebarContent.getSection("DATA SETS");
         case "uss":
+        case "unix system services (uss)":
             return sidebarContent.getSection("UNIX SYSTEM SERVICES (USS)");
         case "jobs":
         default:
@@ -60,6 +49,14 @@ async function paneDivForTree(tree: string): Promise<ViewSection> {
 //
 // Scenario: User collapses/expands the Favorites node
 //
+Given("a user who is looking at the Zowe Explorer tree views", async () => {
+    const activityBar = (await browser.getWorkbench()).getActivityBar();
+    await activityBar.wait();
+    const zeContainer = await activityBar.getViewControl("Zowe Explorer");
+    await zeContainer.wait();
+    const zeView = await zeContainer.openView();
+    await zeView.wait();
+});
 When(/a user (.*) the Favorites node in the (.*) view/, async (state: string, tree: string) => {
     const pane = await paneDivForTree(tree);
     const shouldExpand = state == "expands";
@@ -75,7 +72,6 @@ When(/a user (.*) the Favorites node in the (.*) view/, async (state: string, tr
         await favoritesItem.collapse();
     }
 });
-
 Then(/the Favorites node (.*) successfully in the (.*) view/, async (state: string, tree: string) => {
     const expandedState = (state !== "collapses").toString();
 
@@ -99,7 +95,6 @@ When(/a user clicks the plus button in the (.*) view/, async (tree) => {
     await (await pane.elem).moveTo();
     await plusIcon.elem.click();
 });
-
 Then("the Add Config quick pick menu appears", async () => {
     const elem = await $(".quick-input-widget");
     expect(elem).toBeDisplayedInViewport();
@@ -107,4 +102,32 @@ Then("the Add Config quick pick menu appears", async () => {
     // dismiss the quick pick after verifying that it is visible
     await browser.keys(Key.Escape);
     await elem.waitForDisplayed({ reverse: true });
+});
+
+//
+// Scenario: User clicks on the context menu and hides a tree view
+//
+When(/a user hides the (.*) view using the context menu/, async (tree: string) => {
+    const activityBar = (await browser.getWorkbench()).getActivityBar();
+    const zeContainer = await activityBar.getViewControl("Zowe Explorer");
+    const zeView = await zeContainer.openView();
+    const zeTitlePart = zeView.getTitlePart();
+    const ctxMenu = await zeTitlePart.openContextMenu();
+    const menuItem = await ctxMenu.getItem(tree);
+    await (await menuItem.elem).click();
+});
+Then(/the (.*) view is no longer displayed/, async (tree: string) => {
+    const activityBar = (await browser.getWorkbench()).getActivityBar();
+    const zeContainer = await activityBar.getViewControl("Zowe Explorer");
+    const zeView = await zeContainer.openView();
+    const sidebarContent = zeView.getContent();
+    const visibleSections = await sidebarContent.getSections();
+    expect(visibleSections.find(async (s) => (await s.getTitle()) === tree)).not.toBeDisplayedInViewport();
+
+    // re-enable the view for the next scenario
+    const zeTitlePart = zeView.getTitlePart();
+    const ctxMenu = await zeTitlePart.openContextMenu();
+    const menuItem = await ctxMenu.getItem(tree);
+    await (await menuItem.elem).click();
+    await ctxMenu.close();
 });

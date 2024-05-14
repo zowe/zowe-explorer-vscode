@@ -1,4 +1,4 @@
-Feature: General UI actions
+Feature: Tree View Actions
 
 Scenario: User clicks on the Zowe Explorer icon
     When a user locates the Zowe Explorer icon in the side bar
@@ -35,4 +35,15 @@ Scenario Outline: User clicks the plus action button
       | tree |
       | Data Sets |
       | USS |
+      | Jobs |
+
+Scenario Outline: User hides a tree view using the context menu
+    Given a user who is looking at the Zowe Explorer tree views
+    When a user hides the <tree> view using the context menu
+    Then the <tree> view is no longer displayed
+
+    Examples:
+      | tree |
+      | Data Sets |
+      | Unix System Services (USS) |
       | Jobs |
