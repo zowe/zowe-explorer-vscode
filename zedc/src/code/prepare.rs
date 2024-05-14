@@ -178,14 +178,15 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
         .unwrap_or("tmp-vscode.bin");
 
     let path = zedc_path.join(fname);
-    let mut outfile = tokio::fs::File::create(&path).await?;
+    {
+        let mut outfile = tokio::fs::File::create(&path).await?;
 
-    while let Some(chunk) = resp.chunk().await? {
-        progress_bar.inc(chunk.len() as u64);
-        outfile.write_all(&chunk).await?;
+        while let Some(chunk) = resp.chunk().await? {
+            progress_bar.inc(chunk.len() as u64);
+            outfile.write_all(&chunk).await?;
+        }
+        outfile.flush().await?;
     }
-    outfile.flush().await?;
-    outfile.seek(SeekFrom::Start(0)).await?;
 
     progress_bar.finish();
     println!("📤 Unpacking VS Code archive...");
@@ -196,7 +197,7 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
         .unwrap_or_default()
     {
         "zip" => {
-            let file = outfile.try_into_std().unwrap();
+            let file = std::fs::File::open(&path)?;
             extract_code_zip(&file, &vsc_path)?;
             tokio::fs::create_dir(vsc_path.join(if std::env::consts::OS == "macos" {
                 "code-portable-data"
@@ -206,7 +207,7 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
             .await?;
         }
         "tgz" | "gz" => {
-            let tar_gz = outfile.try_into_std().unwrap();
+            let tar_gz = std::fs::File::open(&path)?;
             let tar = GzDecoder::new(tar_gz);
             let mut archive = Archive::new(tar);
             archive.unpack(&vsc_path)?;
