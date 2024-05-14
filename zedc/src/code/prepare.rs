@@ -2,9 +2,8 @@
 //! Includes setup, download and URL building procedures.
 
 use std::{
-    io::SeekFrom,
     path::{Path, PathBuf},
-    process::Command,
+    process::{Command, Stdio},
 };
 
 use anyhow::bail;
@@ -13,7 +12,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use owo_colors::OwoColorize;
 use reqwest::{header, Client};
 use tar::Archive;
-use tokio::io::{AsyncSeekExt, AsyncWriteExt};
+use tokio::io::AsyncWriteExt;
 
 /// Returns a URL for the VS Code release for the current operating system with the given version.
 ///
@@ -200,13 +199,22 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
     {
         "zip" => {
             let file = std::fs::File::open(&path)?;
-            extract_code_zip(&file);
-            tokio::fs::create_dir(vsc_path.join(if std::env::consts::OS == "macos" {
-                "code-portable-data"
-            } else {
-                "data"
-            }))
-            .await?;
+            match std::env::consts::OS {
+                "macos" => {
+                    match Command::new("unzip")
+                        .arg(path.to_str().unwrap())
+                        .stdout(Stdio::null())
+                        .status() {
+                            Ok(s) => {},
+                            Err(e) => bail!("Failed to extract VS Code archive: {}", e),
+                        }
+                    tokio::fs::create_dir(vsc_path.join("code-portable-data")).await?;
+                }
+                _ => {
+                    extract_code_zip(&file);
+                    tokio::fs::create_dir(vsc_path.join("data")).await?;
+                }
+            }
         }
         "tgz" | "gz" => {
             let tar_gz = std::fs::File::open(&path)?;
