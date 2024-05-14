@@ -60,33 +60,29 @@ async function paneDivForTree(tree: string): Promise<ViewSection> {
 //
 // Scenario: User collapses/expands the Favorites node
 //
-When(/a user collapses the Favorites node in the (.*) view/, async (tree: string) => {
+When(/a user (.*) the Favorites node in the (.*) view/, async (state: string, tree: string) => {
     const pane = await paneDivForTree(tree);
-    if (!pane.isExpanded()) {
+    const shouldExpand = state == "expands";
+
+    if (!(await pane.isExpanded()) && shouldExpand) {
         await pane.expand();
     }
 
     const favoritesItem = (await pane.findItem("Favorites")) as TreeItem;
-    await favoritesItem.collapse();
-});
-
-When(/a user expands the Favorites node in the (.*) view/, async (tree: string) => {
-    const pane = await paneDivForTree(tree);
-    if (!pane.isExpanded()) {
-        await pane.expand();
+    if (shouldExpand) {
+        await favoritesItem.expand();
+    } else {
+        await favoritesItem.collapse();
     }
-
-    const favoritesItem = (await pane.findItem("Favorites")) as TreeItem;
-    await favoritesItem.expand();
 });
 
 Then(/the Favorites node (.*) successfully in the (.*) view/, async (state: string, tree: string) => {
-    const expandedState = state !== "collapses";
+    const expandedState = (state !== "collapses").toString();
 
     const pane = await paneDivForTree(tree);
     const favoritesItem = (await pane.findItem("Favorites")) as TreeItem;
-    await favoritesItem.wait();
-    expect(await favoritesItem.isExpanded()).toBe(expandedState);
+    const expandedAttr = await (await favoritesItem.elem).getAttribute("aria-expanded");
+    expect(expandedAttr).toBe(expandedState);
 });
 
 //
@@ -94,25 +90,21 @@ Then(/the Favorites node (.*) successfully in the (.*) view/, async (state: stri
 //
 When(/a user clicks the plus button in the (.*) view/, async (tree) => {
     const pane = await paneDivForTree(tree);
-    if (!pane.isExpanded()) {
+    if (!(await pane.isExpanded())) {
         await pane.expand();
     }
 
-    const fullTreeName = tree === "USS" ? "Unix System Services (USS)" : tree;
-
-    const plusIcon = await pane.getAction(`Add Profile to ${fullTreeName} View`);
+    const plusIcon = await pane.getAction(`Add Profile to ${tree} View`);
     expect(plusIcon).toExist();
-    (await pane.elem).moveTo();
-    await browser.waitUntil(() => plusIcon.elem.isClickable());
+    await (await pane.elem).moveTo();
     await plusIcon.elem.click();
 });
 
 Then("the Add Config quick pick menu appears", async () => {
-    const elem = await $(await browser.findElement("css selector", ".quick-input-widget"));
-    expect(elem).toExist();
+    const elem = await $(".quick-input-widget");
     expect(elem).toBeDisplayedInViewport();
-    await elem.click();
 
     // dismiss the quick pick after verifying that it is visible
     await browser.keys(Key.Escape);
+    await elem.waitForDisplayed({ reverse: true });
 });
