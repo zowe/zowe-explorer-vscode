@@ -6,9 +6,14 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-- Renamed `isHomeProfile` context helper function to `isGlobalProfile` for clarity.
+- Refactored behavior and management of Favorites in Zowe Explorer. [#2026](https://github.com/zowe/zowe-explorer-vscode/issues/2026)
+- Renamed `isHomeProfile` context helper function to `isGlobalProfile` for clarity. [#2026](https://github.com/zowe/zowe-explorer-vscode/issues/2026)
+- Set up [POEditor project](https://poeditor.com/join/project/Siy3KCNFKk) for contributing translations and cleaned up redundant localization strings. [#546](https://github.com/zowe/zowe-explorer-vscode/issues/546)
+- Replaced `ts-loader` with `esbuild-loader` to improve build speed for developers. [#2909](https://github.com/zowe/zowe-explorer-vscode/pull/2909)
 
 ### Bug fixes
+
+- Fixed vNext-only issue where users are not able to create data sets. [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783).
 
 ## `3.0.0-next.202404242037`
 
@@ -20,7 +25,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - **Breaking:** Removed the `zowe.uss.ZoweUSSNode.open` command in favor of using `vscode.open` with a USS URI. See the [FileSystemProvider wiki page](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#file-paths-vs-uris) for more information on USS URIs. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
 - Added the `onResourceChanged` function to the `ZoweExplorerApiRegister` class to allow extenders to subscribe to any changes to Zowe resources (Data Sets, USS files/folders, Jobs, etc.). See the [FileSystemProvider wiki page](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider) for more information on Zowe resources.
 - Added the `addFileSystemEvent` function to the `ZoweExplorerApiRegister` class to allow extenders to register their FileSystemProvider "onDidChangeFile" events. See the [FileSystemProvider wiki page](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider) for more information on the FileSystemProvider.
-- Refactored behavior and management of Favorites in Zowe Explorer. [#2026](https://github.com/zowe/zowe-explorer-vscode/issues/2026)
 
 ### Bug fixes
 

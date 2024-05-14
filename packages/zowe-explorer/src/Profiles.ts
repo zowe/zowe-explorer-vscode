@@ -423,7 +423,7 @@ export class Profiles extends ProfilesCache {
         return profileType;
     }
 
-    public async createZoweSchema(_zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<string> {
+    public async createZoweSchema(_zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<string | undefined> {
         ZoweLogger.trace("Profiles.createZoweSchema called.");
         try {
             let user = false;
@@ -740,7 +740,13 @@ export class Profiles extends ProfilesCache {
                 loginOk = await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, loginTokenType, node, zeInstance, this);
             }
             if (loginOk) {
-                Gui.showMessage(vscode.l10n.t("Login to authentication service was successful."));
+                Gui.showMessage(
+                    vscode.l10n.t({
+                        message: "Login to authentication service was successful for {0}.",
+                        args: [serviceProfile.name],
+                        comment: ["Service profile name"],
+                    })
+                );
                 await Profiles.getInstance().refresh(zeInstance);
             } else {
                 Gui.showMessage(this.profilesOpCancelled);
@@ -912,7 +918,13 @@ export class Profiles extends ProfilesCache {
                 profile: { ...node.getProfile().profile, ...session },
             });
         }
-        Gui.showMessage(vscode.l10n.t("Login to authentication service was successful."));
+        Gui.showMessage(
+            vscode.l10n.t({
+                message: "Login to authentication service was successful for {0}.",
+                args: [serviceProfile.name],
+                comment: ["Service profile name"],
+            })
+        );
         return true;
     }
 
@@ -1066,7 +1078,7 @@ export class Profiles extends ProfilesCache {
         ZoweLogger.trace("Profiles.createNonSecureProfile called.");
         const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
         if (!isSecureCredsEnabled) {
-            for (const profile of Object.entries(newConfig?.profiles)) {
+            for (const profile of Object.entries(newConfig.profiles)) {
                 delete newConfig.profiles[profile[0]].secure;
             }
             newConfig.autoStore = false;

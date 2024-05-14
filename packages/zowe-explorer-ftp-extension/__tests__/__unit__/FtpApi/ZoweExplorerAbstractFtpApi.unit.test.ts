@@ -141,7 +141,9 @@ describe("AbstractFtpApi", () => {
     it("should return active from sessionStatus when getStatus is called w/ correct profile", async () => {
         Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
         const instance = new Dummy(profile);
-        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(jest.fn((prof) => Promise.resolve({ test: "Test successful object" })));
+        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(
+            jest.fn(((prof) => Promise.resolve({ test: "Test successful object" })) as any)
+        );
 
         const status = await instance.getStatus(profile, "zftp");
         expect(status).toStrictEqual("active");
@@ -150,7 +152,7 @@ describe("AbstractFtpApi", () => {
     it("should return inactive from sessionStatus when getStatus is called w/ correct profile", async () => {
         Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
         const instance = new Dummy(profile);
-        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(jest.fn((prof) => Promise.resolve(false)));
+        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(jest.fn(((prof) => Promise.resolve(false)) as any));
 
         const status = await instance.getStatus(profile, "zftp");
         expect(status).toStrictEqual("inactive");

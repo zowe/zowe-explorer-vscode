@@ -9,31 +9,30 @@
  *
  */
 
+import { zosNodeAccessor } from "@zowe/zos-ftp-for-zowe-cli";
 import { imperative } from "@zowe/zowe-explorer-api";
 
 export class FtpSession extends imperative.Session {
-    public ussListConnection;
-    public mvsListConnection;
-    public jesListConnection;
+    public ussListConnection: zosNodeAccessor.ZosAccessor;
+    public mvsListConnection: zosNodeAccessor.ZosAccessor;
+    public jesListConnection: zosNodeAccessor.ZosAccessor;
     public constructor(newSession: imperative.ISession) {
         super(newSession);
     }
 
-    /* eslint-disable @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access*/
     public releaseConnections(): void {
         if (this.ussListConnection) {
-            this.ussListConnection.close();
+            void this.ussListConnection.close();
             this.ussListConnection = undefined;
         }
         if (this.mvsListConnection) {
-            this.mvsListConnection.close();
+            void this.mvsListConnection.close();
             this.mvsListConnection = undefined;
         }
 
         if (this.jesListConnection) {
-            this.jesListConnection.close();
+            void this.jesListConnection.close();
             this.jesListConnection = undefined;
         }
-        return;
     }
 }

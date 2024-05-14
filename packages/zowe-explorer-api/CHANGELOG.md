@@ -13,6 +13,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
   - `encoding` property on the `IZoweDatasetTreeNode` and `IZoweUSSTreeNode` interfaces - use the `getEncoding` and `setEncoding` functions instead.
   - `shortLabel` property on the `IZoweUSSTreeNode` interface - use the `getBaseName` function instead.
   - `attributes` property on the `IZoweUSSTreeNode` interface - use the `getAttributes` and `setAttributes` functions instead.
+- **Breaking:** Added return type of `Promise<void>` to `MainframeInteractions.ICommon.logout`. [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783).
 
 ### Bug fixes
 
@@ -37,6 +38,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Updated the SDK dependencies to `8.0.0-next.202404032038` for technical currency [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783).
 - Fixed an issue where the `ProfilesCache` class would retain old service profiles, even if they were removed from the team config. [#2395](https://github.com/zowe/zowe-explorer-vscode/issues/2395)
 - **Breaking:** issueUnixCommand API now takes sshSession as a optional parameter. [#2866](https://github.com/zowe/zowe-explorer-vscode/pull/2866)
 

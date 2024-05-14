@@ -19,6 +19,9 @@ const fs = require("fs");
 const CopyPlugin = require("copy-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 
+const { TsconfigPathsPlugin } = require("tsconfig-paths-webpack-plugin");
+const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
+
 /**@type {webpack.Configuration}*/
 const config = {
     target: "node",
@@ -37,6 +40,11 @@ const config = {
         alias: {
             "@zowe/zowe-explorer-api$": path.resolve(__dirname, "..", "zowe-explorer-api/src"),
         },
+        plugins: [
+            new TsconfigPathsPlugin({
+                references: ["../zowe-explorer-api"],
+            }),
+        ],
     },
     watchOptions: {
         ignored: /node_modules/,
@@ -79,13 +87,7 @@ const config = {
                 exclude: /node_modules/,
                 use: [
                     {
-                        loader: "ts-loader",
-                        options: {
-                            compilerOptions: {
-                                sourceMap: true,
-                            },
-                            projectReferences: true,
-                        },
+                        loader: "esbuild-loader",
                     },
                 ],
             },
@@ -95,6 +97,16 @@ const config = {
         new webpack.BannerPlugin(fs.readFileSync("../../scripts/LICENSE_HEADER", "utf-8")),
         new CopyPlugin({
             patterns: [{ from: "../../node_modules/@zowe/secrets-for-zowe-sdk/prebuilds", to: "../../prebuilds/" }],
+        }),
+        new ForkTsCheckerWebpackPlugin({
+            typescript: {
+                build: true,
+                configFile: path.join(__dirname, "tsconfig.json"),
+                diagnosticOptions: {
+                    syntactic: true,
+                    semantic: true,
+                },
+            },
         }),
     ],
 };
