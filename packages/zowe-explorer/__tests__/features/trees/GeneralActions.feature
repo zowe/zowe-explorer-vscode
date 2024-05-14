@@ -1,4 +1,4 @@
-Feature: Tree View Actions
+Feature: General Tree View Actions
 
 Scenario: User clicks on the Zowe Explorer icon
     When a user locates the Zowe Explorer icon in the side bar
