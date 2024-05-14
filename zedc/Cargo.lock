@@ -2397,6 +2397,7 @@ name = "zedc"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "cfg-if",
  "clap",
  "flate2",
  "glob",

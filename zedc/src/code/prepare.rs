@@ -71,38 +71,58 @@ fn code_cli_binary(dir: &Path) -> PathBuf {
 /// # Arguments
 /// * `file` - The file that contains the archive
 /// * `vsc_path` - The path where the archive should be extracted into
-fn extract_code_zip(file: &std::fs::File) {
-    let mut archive = zip::ZipArchive::new(file).unwrap();
+///
+async fn extract_code_zip(file: &std::fs::File, vsc_path: &Path) -> anyhow::Result<()> {
+    cfg_if::cfg_if! {
+        if #[cfg(any(unix, windows))] {
+            let mut archive = zip::ZipArchive::new(file).unwrap();
 
-    for i in 0..archive.len() {
-        let mut entry = archive.by_index(i).unwrap();
-        let out_path = match entry.enclosed_name() {
-            Some(p) => p.to_owned(),
-            None => continue,
-        };
+            for i in 0..archive.len() {
+                let mut entry = archive.by_index(i).unwrap();
+                let out_path = match entry.enclosed_name() {
+                    Some(p) => p.to_owned(),
+                    None => continue,
+                };
 
-        if entry.is_dir() {
-            std::fs::create_dir_all(&out_path).unwrap();
-        } else {
-            if let Some(p) = out_path.parent() {
-                if !p.exists() {
-                    std::fs::create_dir_all(p).unwrap();
+                if entry.is_dir() {
+                    std::fs::create_dir_all(&out_path).unwrap();
+                } else {
+                    if let Some(p) = out_path.parent() {
+                        if !p.exists() {
+                            std::fs::create_dir_all(p).unwrap();
+                        }
+                    }
+                    let mut outfile = std::fs::File::create(&out_path).unwrap();
+                    std::io::copy(&mut entry, &mut outfile).unwrap();
+                }
+
+                // Apply permissions to file for UNIX-based systems
+                // https://github.com/zip-rs/zip2/blob/d96ba591976f732b4112da6f0a5c0587d6afd090/examples/extract.rs#L52-L61
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::PermissionsExt;
+                    if let Some(mode) = entry.unix_mode() {
+                        std::fs::set_permissions(&out_path, std::fs::Permissions::from_mode(mode)).unwrap();
+                    }
                 }
             }
-            let mut outfile = std::fs::File::create(&out_path).unwrap();
-            std::io::copy(&mut entry, &mut outfile).unwrap();
-        }
 
-        // Apply permissions to file for UNIX-based systems
-        // https://github.com/zip-rs/zip2/blob/d96ba591976f732b4112da6f0a5c0587d6afd090/examples/extract.rs#L52-L61
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            if let Some(mode) = entry.unix_mode() {
-                std::fs::set_permissions(&out_path, std::fs::Permissions::from_mode(mode)).unwrap();
+            tokio::fs::create_dir(vsc_path.join("data")).await?;
+        } else if #[cfg(macos)] {
+            match Command::new("unzip")
+                .current_dir(&vsc_path)
+                .arg(&path)
+                .stdout(Stdio::null())
+                .status()
+            {
+                Ok(s) => {}
+                Err(e) => bail!("Failed to extract VS Code archive: {}", e),
             }
+            tokio::fs::create_dir(vsc_path.join("code-portable-data")).await?;
         }
     }
+
+    Ok(())
 }
 
 /// Downloads a portable copy of VS Code with the given version, if provided (default: `latest`).  
@@ -200,23 +220,7 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
     {
         "zip" => {
             let file = std::fs::File::open(&path)?;
-            match std::env::consts::OS {
-                "macos" => {
-                    match Command::new("unzip")
-                        .current_dir(&vsc_path)
-                        .arg(&path)
-                        .stdout(Stdio::null())
-                        .status() {
-                            Ok(s) => {},
-                            Err(e) => bail!("Failed to extract VS Code archive: {}", e),
-                        }
-                    tokio::fs::create_dir(vsc_path.join("code-portable-data")).await?;
-                }
-                _ => {
-                    extract_code_zip(&file);
-                    tokio::fs::create_dir(vsc_path.join("data")).await?;
-                }
-            }
+            extract_code_zip(&file, &vsc_path).await?;
         }
         "tgz" | "gz" => {
             let tar_gz = std::fs::File::open(&path)?;
