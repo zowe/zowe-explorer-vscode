@@ -64,18 +64,33 @@ pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::
     let zowe_dir = sandbox_dir.join(".zowe");
     tokio::fs::create_dir_all(&zowe_dir).await?;
     let vsc = vsc_dir.join(code_binary());
-    match Command::new(vsc)
-        .arg("--disable-updates")
-        .arg(sandbox_str)
-        .env("ZOWE_CLI_HOME", zowe_dir.to_str().unwrap())
-        .stdout(Stdio::null())
-        .spawn()
-    {
-        Ok(_s) => {
-            println!("🚀 Launched VS Code");
-            Ok(())
+
+    if std::env::consts::OS == "macos" {
+        match Command::new("open")
+            .args([vsc.to_str().unwrap(), "--args", "--disable-updates", sandbox_str])
+            .env("ZOWE_CLI_HOME", zowe_dir.to_str().unwrap())
+            .stdout(Stdio::null())
+            .spawn() {
+                Ok(_s) => {
+                    println!("🚀 Launched VS Code");
+                    Ok(())
+                }
+                Err(_) => todo!(),
+            }
+    } else {
+        match Command::new(vsc)
+            .arg("")
+            .arg(sandbox_str)
+            .env("ZOWE_CLI_HOME", zowe_dir.to_str().unwrap())
+            .stdout(Stdio::null())
+            .spawn()
+        {
+            Ok(_s) => {
+                println!("🚀 Launched VS Code");
+                Ok(())
+            }
+            Err(_) => todo!(),
         }
-        Err(_) => todo!(),
     }
 }
 
@@ -94,7 +109,10 @@ pub fn resolve_paths(files: Vec<String>) -> Vec<String> {
                     Some(p.to_str().unwrap().to_owned())
                 }
                 _ => {
-                    println!("  ❌ {}", format!("{}: invalid extension format", f).italic());
+                    println!(
+                        "  ❌ {}",
+                        format!("{}: invalid extension format", f).italic()
+                    );
                     None
                 }
             },
