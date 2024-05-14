@@ -24,5 +24,4 @@ reqwest = { version = "0.12.4", features = ["blocking"] }
 tar = "0.4.40"
 tokio = { version = "1", features = ["fs", "macros", "rt-multi-thread"] }
 tokio-util = { version = "0.7.10", features = ["codec"] }
-zip = "0.6"
-zip-extensions = "0.6"
+zip = "1.2.3"

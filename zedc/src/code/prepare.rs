@@ -66,6 +66,44 @@ fn code_cli_binary(dir: &Path) -> PathBuf {
     }
 }
 
+/// Extracts the ZIP for a VS Code archive, extracting all the contents to the data path
+/// built by zedc.
+///
+/// # Arguments
+/// * `file` - The file that contains the archive
+/// * `vsc_path` - The path where the archive should be extracted into
+fn extract_code_zip(file: &std::fs::File, vsc_path: &Path) -> anyhow::Result<()> {
+    let mut archive = zip::ZipArchive::new(file).unwrap();
+
+    for i in 0..archive.len() {
+        let mut entry = archive.by_index(i).unwrap();
+        let out_path = match entry.enclosed_name() {
+            Some(p) => p,
+            None => continue,
+        };
+
+        if entry.is_dir() {
+            std::fs::create_dir_all(&out_path)?;
+        } else {
+            let filename = out_path.file_name().unwrap();
+            let mut outfile = std::fs::File::create(vsc_path.join(filename))?;
+            std::io::copy(&mut entry, &mut outfile).unwrap();
+        }
+
+        // Apply permissions to file for UNIX-based systems
+        // https://github.com/zip-rs/zip2/blob/d96ba591976f732b4112da6f0a5c0587d6afd090/examples/extract.rs#L52-L61
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            if let Some(mode) = entry.unix_mode() {
+                std::fs::set_permissions(&out_path, std::fs::Permissions::from_mode(mode)).unwrap();
+            }
+        }
+    }
+
+    Ok(())
+}
+
 /// Downloads a portable copy of VS Code with the given version, if provided (default: `latest`).  
 /// Returns an absolute path to the Code CLI binary.
 ///
@@ -156,7 +194,8 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
         .unwrap_or_default()
     {
         "zip" => {
-            zip_extensions::zip_extract(&path, &vsc_path)?;
+            let file = outfile.try_into_std().unwrap();
+            extract_code_zip(&file, &vsc_path)?;
             tokio::fs::create_dir(vsc_path.join(if std::env::consts::OS == "macos" {
                 "code-portable-data"
             } else {
