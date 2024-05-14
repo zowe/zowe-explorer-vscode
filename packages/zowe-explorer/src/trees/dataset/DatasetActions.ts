@@ -327,7 +327,7 @@ export class DatasetActions {
             quickpick.ignoreFocusOut = true;
 
             for (const thisSession of datasetProvider.mSessionNodes) {
-                if (!thisSession.label.toString().includes("Favorites")) {
+                if (!thisSession.label.toString().includes(vscode.l10n.t("Favorites"))) {
                     qpItems.push(new FilterItem({ text: thisSession.label as string }));
                 }
             }

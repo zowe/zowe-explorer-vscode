@@ -3,6 +3,7 @@
 */**
 
 # Allowlist what we need
+!l10n/bundle*.json
 !out/src/**.js
 !out/src/nls.metadata*.json
 !resources/**/*.png

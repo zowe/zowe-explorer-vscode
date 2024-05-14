@@ -320,6 +320,8 @@ export class SharedInit {
         if (Constants.ACTIVATED) {
             return;
         }
+        const tempPath: string = SettingsConfig.getDirectValue(Constants.SETTINGS_TEMP_FOLDER_PATH);
+        Constants.defineConstants(tempPath);
         await TempFolder.hideTempFolder(FileManagement.getZoweDir());
         ProfilesUtils.initializeZoweTempFolder();
         await SettingsConfig.standardizeSettings();

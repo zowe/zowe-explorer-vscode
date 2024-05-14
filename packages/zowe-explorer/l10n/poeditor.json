@@ -1,0 +1,897 @@
+{
+  "displayName": {
+    "Zowe Explorer": ""
+  },
+  "description": {
+    "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets, USS files, and jobs": ""
+  },
+  "viewsContainers.activitybar": {
+    "Zowe Explorer": ""
+  },
+  "zowe.placeholderCommand": {
+    "Placeholder": ""
+  },
+  "zowe.promptCredentials": {
+    "Update Credentials": ""
+  },
+  "zowe.profileManagement": {
+    "Manage Profile": ""
+  },
+  "zowe.extRefresh": {
+    "Refresh Zowe Explorer": ""
+  },
+  "zowe.editHistory": {
+    "Edit History": ""
+  },
+  "zowe.ds.explorer": {
+    "Data Sets": ""
+  },
+  "zowe.uss.explorer": {
+    "Unix System Services (USS)": ""
+  },
+  "zowe.jobs.explorer": {
+    "Jobs": ""
+  },
+  "uss.createFile": {
+    "Create File": ""
+  },
+  "uss.createFolder": {
+    "Create Directory": ""
+  },
+  "uss.deleteNode": {
+    "Delete": ""
+  },
+  "uss.renameNode": {
+    "Rename": ""
+  },
+  "diff.overwrite": {
+    "Overwrite": ""
+  },
+  "diff.useRemote": {
+    "Use Remote": ""
+  },
+  "addFavorite": {
+    "Add to Favorites": ""
+  },
+  "removeFavProfile": {
+    "Remove profile from Favorites": ""
+  },
+  "addSession": {
+    "Add Profile to Data Sets View": ""
+  },
+  "editSession": {
+    "Edit Team Config File": ""
+  },
+  "createDataset": {
+    "Create New Data Set": ""
+  },
+  "createMember": {
+    "Create New Member": ""
+  },
+  "showAttributes": {
+    "Show Attributes": ""
+  },
+  "editAttributes": {
+    "Edit Attributes": ""
+  },
+  "deleteDataset": {
+    "Delete": ""
+  },
+  "deleteMember": {
+    "Delete": ""
+  },
+  "allocateLike": {
+    "Allocate Like (New Data Set with Same Attributes)": ""
+  },
+  "editDataSet": {
+    "Edit Data Set": ""
+  },
+  "editMember": {
+    "Edit Member": ""
+  },
+  "issueMvsCmd": {
+    "Issue MVS Command": ""
+  },
+  "uploadDialog": {
+    "Upload Member...": ""
+  },
+  "pattern": {
+    "Search Data Sets": ""
+  },
+  "startPolling": {
+    "Start Polling": ""
+  },
+  "stopPolling": {
+    "Stop Polling": ""
+  },
+  "refreshNode": {
+    "Pull from Mainframe": ""
+  },
+  "refreshDataset": {
+    "Refresh Data Set": ""
+  },
+  "refreshAll": {
+    "Refresh Data Sets View": ""
+  },
+  "removeFavorite": {
+    "Remove Favorite": ""
+  },
+  "removeSavedSearch": {
+    "Remove Search": ""
+  },
+  "removeSession": {
+    "Hide Profile": ""
+  },
+  "saveSearch": {
+    "Add to Favorites": ""
+  },
+  "submitJcl": {
+    "Submit as JCL": ""
+  },
+  "submitMember": {
+    "Submit Job": ""
+  },
+  "uss.addSession": {
+    "Add Profile to USS View": ""
+  },
+  "uss.copyPath": {
+    "Copy Path": ""
+  },
+  "uss.createDirectory": {
+    "Create New Directory": ""
+  },
+  "uss.editFile": {
+    "Edit File": ""
+  },
+  "uss.fullPath": {
+    "Search Unix System Services (USS)": ""
+  },
+  "uss.refreshAll": {
+    "Refresh USS View": ""
+  },
+  "uss.refreshUSS": {
+    "Pull from Mainframe": ""
+  },
+  "uss.refreshDirectory": {
+    "Refresh Directory": ""
+  },
+  "uss.removeSession": {
+    "Hide Profile": ""
+  },
+  "uss.binary": {
+    "Toggle Binary": ""
+  },
+  "uss.uploadDialog": {
+    "Upload Files...": ""
+  },
+  "uss.text": {
+    "Toggle Text": ""
+  },
+  "jobs.search": {
+    "Search Jobs": ""
+  },
+  "deleteJob": {
+    "Delete Job": ""
+  },
+  "runModifyCommand": {
+    "Issue Modify command": ""
+  },
+  "runStopCommand": {
+    "Issue Stop command": ""
+  },
+  "setOwner": {
+    "Set Owner": ""
+  },
+  "setPrefix": {
+    "Set Job Prefix": ""
+  },
+  "refreshJobsServer": {
+    "Refresh": ""
+  },
+  "refreshAllJobs": {
+    "Refresh Jobs View": ""
+  },
+  "addJobsSession": {
+    "Add Profile to Jobs View": ""
+  },
+  "downloadSpool": {
+    "Download All": ""
+  },
+  "downloadSpoolBinary": {
+    "Download All (Binary)": ""
+  },
+  "cancelJobs": {
+    "Cancel Job": ""
+  },
+  "getJobJcl": {
+    "Get JCL": ""
+  },
+  "setJobSpool": {
+    "Set Spool": ""
+  },
+  "configuration.title": {
+    "Zowe Explorer": ""
+  },
+  "zowe.files.temporaryDownloadsFolder.hide": {
+    "Hide the Zowe temporary folder from the workspace": ""
+  },
+  "zowe.files.temporaryDownloadsFolder.cleanup": {
+    "Ensure deletion of downloaded file content to clean up local source files during deactivation (that is, closing a window).  Disable this setting to support using multiple windows with z/OS files opened using Zowe Explorer.": ""
+  },
+  "zowe.ds.default.binary": {
+    "Default values of Binary data set creation": ""
+  },
+  "zowe.ds.default.c": {
+    "Default values of C data set creation": ""
+  },
+  "zowe.ds.default.classic": {
+    "Default values of Classic data set creation": ""
+  },
+  "zowe.ds.default.pds": {
+    "Default values of Partitioned data set creation": ""
+  },
+  "zowe.ds.default.extended": {
+    "Default values of Partitioned data set extended creation": ""
+  },
+  "zowe.ds.default.ps": {
+    "Default values of Sequential data set creation": ""
+  },
+  "zowe.ds.history": {
+    "Toggle if favorite files persist locally": ""
+  },
+  "zowe.files.logsFolder.path": {
+    "Path to Zowe Explorer logs folder": ""
+  },
+  "zowe.files.temporaryDownloadsFolder.path": {
+    "Path to temporary folder location": ""
+  },
+  "zowe.uss.history": {
+    "Toggle if USS favorite files persist locally": ""
+  },
+  "zowe.jobs.history": {
+    "Toggle if Jobs favorite files persist locally": ""
+  },
+  "zowe.jobs.confirmSubmission": {
+    "Require user confirmation before submitting a job": ""
+  },
+  "zowe.jobs.confirmSubmission.yourJobs": {
+    "Your jobs": ""
+  },
+  "zowe.jobs.confirmSubmission.otherUserJobs": {
+    "Other user jobs": ""
+  },
+  "zowe.jobs.confirmSubmission.allJobs": {
+    "All jobs": ""
+  },
+  "zowe.jobs.confirmSubmission.disabled": {
+    "Disabled": ""
+  },
+  "zowe.jobs.confirmSubmission.disabled.desc": {
+    "No confirmation dialogs will be shown when submitting a job.": ""
+  },
+  "zowe.jobs.confirmSubmission.yourJobs.desc": {
+    "Shows a confirmation dialog when submitting your jobs.": ""
+  },
+  "zowe.jobs.confirmSubmission.otherUserJobs.desc": {
+    "Shows a confirmation dialog when submitting jobs from another user.": ""
+  },
+  "zowe.jobs.confirmSubmission.allJobs.desc": {
+    "Shows a confirmation dialog when submitting any job.": ""
+  },
+  "zowe.settings.oldSettingsMigrated": {
+    "Shows whether the v1 Zowe settings were successfully migrated to v2 Zowe settings": ""
+  },
+  "zowe.settings.localStorageMigrated": {
+    "Shows whether persistent settings were successfully migrated to local storage": ""
+  },
+  "zowe.logger": {
+    "Select the log level for Zowe Explorer.  The default is INFO.": ""
+  },
+  "zowe.logger.trace": {
+    "TRACE": ""
+  },
+  "zowe.logger.debug": {
+    "DEBUG": ""
+  },
+  "zowe.logger.info": {
+    "INFO": ""
+  },
+  "zowe.logger.warn": {
+    "WARN": ""
+  },
+  "zowe.logger.error": {
+    "ERROR": ""
+  },
+  "zowe.logger.fatal": {
+    "FATAL": ""
+  },
+  "zowe.logger.trace.description": {
+    "Messages about fine details of the application's behaviour.": ""
+  },
+  "zowe.logger.debug.description": {
+    "Messages about diagnostic information for troubleshooting.": ""
+  },
+  "zowe.logger.info.description": {
+    "Messages about routine application operations.": ""
+  },
+  "zowe.logger.warn.description": {
+    "Messages about potentially harmful occurrences.": ""
+  },
+  "zowe.logger.error.description": {
+    "Messages about serious problem occurrences.": ""
+  },
+  "zowe.logger.fatal.description": {
+    "Messages about catastraphic error events.": ""
+  },
+  "zowe.cliLoggerSetting.presented": {
+    "User has been asked to sync Zowe Explorer log setting with Zowe CL's environment variable.": ""
+  },
+  "zowe.commands.history": {
+    "Toggle if Commands persist locally": ""
+  },
+  "zowe.automaticProfileValidation": {
+    "Allow automatic validation of profiles.": ""
+  },
+  "zowe.pollInterval.info": {
+    "Default interval (in milliseconds) when polling spool files.": ""
+  },
+  "zowe.separator.recentFilters": {
+    "Recent Filters": ""
+  },
+  "zowe.settings.version": {
+    "Track if migration has been processed": ""
+  },
+  "zowe.security.checkForCustomCredentialManagers": {
+    "Check for any installed VS Code extensions for handling credentials when activating Zowe Explorer": ""
+  },
+  "zowe.security.secureCredentialsEnabled": {
+    "Allow credentials to be stored securely. If disabled and autoStore is set to true, z/OS credentials are stored as clear text in zowe.config.json.": ""
+  },
+  "issueTsoCmd": {
+    "Issue TSO Command": ""
+  },
+  "deleteProfile": {
+    "Delete Profile": ""
+  },
+  "cmd.deleteProfile": {
+    "Delete a Profile Permanently...": ""
+  },
+  "renameDataSet": {
+    "Rename Data Set": ""
+  },
+  "renameMember": {
+    "Rename Member": ""
+  },
+  "copyDataSet": {
+    "Copy Data Set": ""
+  },
+  "paste": {
+    "Paste": ""
+  },
+  "hMigrateDataSet": {
+    "Migrate Data Set": ""
+  },
+  "hRecallDataSet": {
+    "Recall Data Set": ""
+  },
+  "showFileErrorDetails": {
+    "Show Error Details": ""
+  },
+  "profile.configuration.title": {
+    "Zowe z/OSMF Profiles": ""
+  },
+  "profile.configuration.name": {
+    "Profile Name": ""
+  },
+  "profile.configuration.url": {
+    "z/OSMF URL": ""
+  },
+  "profile.configuration.user": {
+    "z/OSMF User Name": ""
+  },
+  "profile.configuration.ru": {
+    "Profile Reject Unauthorize": ""
+  },
+  "disableValidation": {
+    "Disable Validation for Profile": ""
+  },
+  "enableValidation": {
+    "Enable Validation for Profile": ""
+  },
+  "ssoLogin": {
+    "Log in to Authentication Service": ""
+  },
+  "ssoLogout": {
+    "Log out from Authentication Service": ""
+  },
+  "jobs.refreshJob": {
+    "Refresh Job": ""
+  },
+  "jobs.refreshSpool": {
+    "Pull from Mainframe": ""
+  },
+  "manualPoll": {
+    "Poll Content in Active Editor": ""
+  },
+  "downloadSingleSpool": {
+    "Download": ""
+  },
+  "downloadSingleSpoolBinary": {
+    "Download (Binary)": ""
+  },
+  "downloadSingleSpool.error": {
+    "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).": ""
+  },
+  "all.configInit": {
+    "Initialize Team Configuration File": ""
+  },
+  "copyFile": {
+    "Copy": ""
+  },
+  "pasteFile": {
+    "Paste": ""
+  },
+  "jobs.sortBy": {
+    "Sort jobs...": ""
+  },
+  "jobs.filterBy": {
+    "Filter jobs...": ""
+  },
+  "ds.filterBy": {
+    "Filter PDS members...": ""
+  },
+  "ds.sortBy": {
+    "Sort PDS members...": ""
+  },
+  "issueUnixCmd": {
+    "Issue Unix Command": ""
+  },
+  "selectForCompare": {
+    "Select for Compare": ""
+  },
+  "compareWithSelected": {
+    "Compare with Selected": ""
+  },
+  "compareWithSelectedReadOnly": {
+    "Compare with Selected (Read-Only)": ""
+  },
+  "compareFileStarted": {
+    "A file has been chosen for compare": ""
+  },
+  "openWithEncoding": {
+    "Open with Encoding": ""
+  },
+  "Enter an allocation unit": "",
+  "Enter the average block length (if allocation unit = BLK)": "",
+  "Enter a block size": "",
+  "Enter an SMS data class": "",
+  "Enter a device type (unit)": "",
+  "Enter the number of directory blocks": "",
+  "Specify the data set type (DSNTYPE)": "",
+  "Enter the SMS management class": "",
+  "Enter a data set name": "",
+  "Select a data set organization (DSORG)": "",
+  "Enter the primary space allocation": "",
+  "Enter the data set's record format": "",
+  "Enter the logical record length": "",
+  "Enter the secondary space allocation": "",
+  "Enter the size of the data set": "",
+  "Enter the SMS storage class": "",
+  "Enter the volume serial on which the data set should be placed": "",
+  "Recent": "",
+  "Recent Filters": "",
+  "Options": "",
+  "Zowe Explorer's temp folder is located at {0}": "",
+  "Zowe Explorer has activated successfully.": "",
+  "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.": "",
+  "Failed to update Zowe schema: insufficient permissions or read-only file. {0}": "",
+  "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.": "",
+  "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.": "",
+  "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.": "",
+  "Internal error: A Zowe Explorer extension client tried to register an invalid Command API.": "",
+  "Internal error: Tried to call a non-existing USS API in API register: {0}": "",
+  "Internal error: Tried to call a non-existing MVS API in API register: {0}": "",
+  "Internal error: Tried to call a non-existing JES API in API register: {0}": "",
+  "Internal error: Tried to call a non-existing Command API in API register: {0}": "",
+  "Internal error: Tried to call a non-existing Common API in API register: {0}": "",
+  "Operation Cancelled": "",
+  "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "",
+  "Token auth error": "",
+  "Profile was found using token auth, please log in to continue.": "",
+  "Choose \"Create new...\" to define or select a profile to add to the DATA SETS Explorer": "",
+  "Choose \"Create new...\" to define or select a profile to add to the JOBS Explorer": "",
+  "Choose \"Create new...\" to define or select a profile to add to the USS Explorer": "",
+  "Profile selection has been cancelled.": "",
+  "The profile {0} has been added to the {1} tree.": "",
+  "Profile Type": "",
+  "User Name": "",
+  "Enter the user name for the connection. Leave blank to not store.": "",
+  "Password": "",
+  "Enter the password for the connection. Leave blank to not store.": "",
+  "No profiles available": "",
+  "Select the profile you want to delete": "",
+  "Validating {0} Profile.": "",
+  "Validating {0} was cancelled.": "",
+  "Profile validation failed for {0}.": "",
+  "This profile is using basic authentication and does not support token authentication.": "",
+  "Error getting supported tokenType value for profile {0}": "",
+  "Login to authentication service was successful for {0}.": "",
+  "Unable to log in with {0}. {1}": "",
+  "Logout from authentication service was successful for {0}.": "",
+  "Unable to log out with {0}. {1}": "",
+  "Select the location where the config file will be initialized": "",
+  "Select the location of the config file to edit": "",
+  "Global: in the Zowe home directory": "",
+  "Project: in the current working directory": "",
+  "Create New": "",
+  "Do you wish to apply this for all trees?": "",
+  "Yes": "",
+  "Apply to all trees": "",
+  "No": "",
+  "Apply to current tree selected": "",
+  "Refresh": "",
+  "Delete Selected": "",
+  "Select an item before deleting": "",
+  "Clear All": "",
+  "Add New History Item": "",
+  "Item": "",
+  "Select": "",
+  "Error encountered while activating and initializing logger": "",
+  "Error encountered when creating temporary folder!": "",
+  "Unable to delete temporary folder. {0}": "",
+  "Reload Window": "",
+  "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.": "",
+  "Required parameter 'host' must not be blank.": "",
+  "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.": "",
+  "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.": "",
+  "Log in to Authentication Service": "",
+  "Update Credentials": "",
+  "Zowe explorer profiles are being set as unsecured.": "",
+  "Zowe explorer profiles are being set as secured.": "",
+  "Custom credential manager failed to activate": "",
+  "Custom credential manager {0} found, attempting to activate.": "",
+  "No custom credential managers found, using the default instead.": "",
+  "Custom credential manager {0} found": "",
+  "Do you wish to use this credential manager instead?": "",
+  "Don't ask again": "",
+  "Plugin of name '{0}' was defined for custom credential management on imperative.json file.": "",
+  "Please install associated VS Code extension for custom credential manager or revert to default.": "",
+  "Use Default": "",
+  "Install": "",
+  "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager": "",
+  "Reload": "",
+  "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.": "",
+  "\"Update Credentials\" operation not supported when \"autoStore\" is false": "",
+  "Connection Name": "",
+  "Enter a name for the connection.": "",
+  "Credentials for {0} were successfully updated": "",
+  "Zowe home directory is located at {0}": "",
+  "Reading imperative.json failed. Will try to create file.": "",
+  "Reading imperative.json Credential Manager.\n {0}": "",
+  "Failed to parse JSON file {0}. Will try to re-create the file.": "",
+  "Updating imperative.json Credential Manager to {0}.\n{1}": "",
+  "Failed to initialize Zowe folder: {0}": "",
+  "Zowe Profiles initialized successfully.": "",
+  "Zowe Temp folder initialized successfully.": "",
+  "Convert Existing Profiles": "",
+  "Operation cancelled": "",
+  "Tree Item is not a Zowe Explorer item.": "",
+  "$(plus) Add Credentials": "",
+  "Add username and password for basic authentication": "",
+  "$(refresh) Update Credentials": "",
+  "Update stored username and password": "",
+  "$(trash) Delete Profile": "",
+  "$(workspace-untrusted) Disable Profile Validation": "",
+  "Disable validation of server check for profile": "",
+  "$(workspace-trusted) Enable Profile Validation": "",
+  "Enable validation of server check for profile": "",
+  "$(pencil) Edit Profile": "",
+  "Update profile connection information": "",
+  "$(eye-closed) Hide Profile": "",
+  "Hide profile name from tree view": "",
+  "$(arrow-right) Log in to authentication service": "",
+  "Log in to obtain a new token value": "",
+  "$(arrow-left) Log out of authentication service": "",
+  "Log out to invalidate and remove stored token value": "",
+  "Profile {0} is using basic authentication. Choose a profile action.": "",
+  "Profile {0} is using token authentication. Choose a profile action.": "",
+  "Profile {0} doesn't specify an authentication method. Choose a profile action.": "",
+  "Zowe Explorer": "",
+  "Initialized logger for Zowe Explorer": "",
+  "This log file can be found at {0}": "",
+  "Zowe Explorer log level: {0}": "",
+  "Update": "",
+  "Zowe Explorer now has a VS Code logger with a default log level of INFO.\n                \nIt looks like the Zowe CLI's ZOWE_APP_LOG_LEVEL={0}.\n                \nWould you like Zowe Explorer to update to the the same log level?": "",
+  "Binary": "",
+  "Downloaded: {0}": "",
+  "Encoding: {0}": "",
+  "{0} location": "",
+  "Choose a location to create the {0}": "",
+  "Name of file or directory": "",
+  "Unable to create node:": "",
+  "Uploading USS file": "",
+  "Delete": "",
+  "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}": "",
+  "Delete action was canceled.": "",
+  "Copying file structure...": "",
+  "The paste operation is not supported for this node.": "",
+  "Pasting files...": "",
+  "Favorites": "",
+  "Use the search button to list USS files": "",
+  "Invalid node": "",
+  "Profile auth error": "",
+  "Profile is not authenticated, please log in to continue": "",
+  "Retrieving response from uss-file-list": "",
+  "Open": "",
+  "Delete action was cancelled.": "",
+  "Unable to delete node: {0}": "",
+  "The item {0} has been deleted.": "",
+  "open() called from invalid node.": "",
+  "$(sync~spin) Downloading USS file...": "",
+  "refreshUSS() called from invalid node.": "",
+  "not found": "",
+  "Unable to find file: {0}": "",
+  "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.": "",
+  "Uploading USS files...": "",
+  "Error uploading files": "",
+  "The 'move' function is not implemented for this USS API.": "",
+  "Could not list USS files: Empty path provided in URI": "",
+  "Profile does not exist for this file.": "",
+  "$(sync~spin) Saving USS file...": "",
+  "Renaming {0} failed due to API error: {1}": "",
+  "Deleting {0} failed due to API error: {1}": "",
+  "$(plus) Create a new filter": "",
+  "Failed to move file {0}: {1}": "",
+  "Confirm": "",
+  "One or more items may be overwritten from this drop operation. Confirm or cancel?": "",
+  "$(sync~spin) Moving USS files...": "",
+  "Unable to rename {0} because you have unsaved changes in this {1}. Please save your work before renaming the {1}.": "",
+  "Enter a new name for the {0}": "",
+  "Unable to rename node:": "",
+  "A {0} already exists with this name. Please choose a different name.": "",
+  "This will remove all favorited USS items for profile {0}. Continue?": "",
+  "Continue": "",
+  "Prompting the user to choose a member from the filtered list": "",
+  "Prompting the user for a USS path": "",
+  "Select a filter": "",
+  "No selection made. Operation cancelled.": "",
+  "New filter": "",
+  "You must enter a path.": "",
+  "Initializing profiles with USS favorites.": "",
+  "No USS favorites found.": "",
+  "Loading profile: {0} for USS favorites": "",
+  "You must authenticate to view favorites.": "",
+  "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: {0}.\n                     To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's USS view.\n                      Would you like to do this now? {1}": "",
+  "initializeUSSFavorites.error.buttonRemove": "",
+  "File does not exist. It may have been deleted.": "",
+  "Disabled": "",
+  "Your jobs": "",
+  "Other user jobs": "",
+  "All jobs": "",
+  "Ascending": "",
+  "Descending": "",
+  "Invalid job owner": "",
+  "Invalid job prefix": "",
+  "Failed to parse a saved favorite. Attempted to parse: {0}": "",
+  "EBCDIC": "",
+  "z/OS default codepage": "",
+  "Raw data representation": "",
+  "Other": "",
+  "Specify another codepage": "",
+  "From profile {0}": "",
+  "USS file tag": "",
+  "Choose encoding for {0}": "",
+  "Current encoding is {0}": "",
+  "Enter a codepage (e.g., 1047, IBM-1047)": "",
+  "Team config file created, refreshing Zowe Explorer.": "",
+  "Team config file deleted, refreshing Zowe Explorer.": "",
+  "Team config file updated.": "",
+  "Enter a filter": "",
+  "No items are loaded in the tree.": "",
+  "You must enter a pattern.": "",
+  "Prompting the user to choose a recent member for editing": "",
+  "Select a recent member to open": "",
+  "No recent members found.": "",
+  "Type the new pattern to add to history": "",
+  "action is not supported for this property type.": "",
+  "Clear all history items for this persistent property?": "",
+  "$(list-ordered) Job ID (default)": "",
+  "$(calendar) Date Submitted": "",
+  "$(case-sensitive) Job Name": "",
+  "$(symbol-numeric) Return Code": "",
+  "$(fold) Sort Direction": "",
+  "Go to Local Filtering": "",
+  "$(clear-all) Clear filter for profile": "",
+  "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).": "",
+  "$(sync~spin) Polling: {0}...": "",
+  "Modify Command": "",
+  "Command response: {0}": "",
+  "jobActions.modifyCommand.apiNonExisting": "",
+  "Not implemented yet for profile of type: {0}": "",
+  "Owner": "",
+  "Prefix": "",
+  "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}": "",
+  "Job {0} was deleted.": "",
+  "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}": "",
+  "The following jobs were deleted: {0}": "",
+  "The selected jobs were already cancelled.": "",
+  "The cancel function is not implemented in this API.": "",
+  "The job was not cancelled.": "",
+  "One or more jobs failed to cancel: {0}": "",
+  "Cancelled selected jobs successfully.": "",
+  "Select a sorting option for jobs in {0}": "",
+  "Select a sorting direction": "",
+  "$(check) Sorting updated for {0}": "",
+  "Use the search button to display jobs": "",
+  "There are no JES spool messages to display": "",
+  "No jobs found": "",
+  "Retrieving response from zowe.GetJobs": "",
+  "Create new...": "",
+  "$(check) Submit this query": "",
+  "Enter job owner ID": "",
+  "Enter job prefix": "",
+  "Enter job status": "",
+  "$(plus) Create job search filter": "",
+  "$(search) Search by job ID": "",
+  "Initializing profiles with jobs favorites.": "",
+  "No jobs favorites found.": "",
+  "Loading profile: {0} for jobs favorites": "",
+  "Error: You have Zowe Job favorites that refer to a non-existent CLI profile named: {0}.\n                         To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n                          Would you like to do this now? {1}": "",
+  "Remove": "",
+  "This will remove all favorited Jobs items for profile {0}. Continue?": "",
+  "Enter a job ID": "",
+  "Job search cancelled.": "",
+  "The polling interval must be greater than or equal to 1000ms.": "",
+  "Poll interval (in ms) for: {0}": "",
+  "Polling dismissed for {0}; operation cancelled.": "",
+  "Filter: {0}": "",
+  "Set a filter...": "",
+  "$(check) Filter cleared for {0}": "",
+  "Enter local filter...": "",
+  "$(check) Filter updated for {0}": "",
+  "$(sync~spin) Fetching spool file...": "",
+  "Failed to fetch jobs: getJobsByParameters is not implemented for this session's JES API.": "",
+  "$(case-sensitive) Name (default)": "",
+  "$(calendar) Date Created": "",
+  "$(calendar) Date Modified": "",
+  "$(account) User ID": "",
+  "Partitioned Data Set: Binary": "",
+  "Partitioned Data Set: C": "",
+  "Partitioned Data Set: Classic": "",
+  "Partitioned Data Set: Default": "",
+  "Partitioned Data Set: Extended": "",
+  "Sequential Data Set": "",
+  "Copying File(s)": "",
+  "Profile is invalid, check connection details.": "",
+  "Allocate Data Set": "",
+  "Edit Attributes": "",
+  "Select the profile to which the original data set belongs": "",
+  "You must select a profile.": "",
+  "Enter the name of the data set to copy attributes from": "",
+  "Enter a valid data set name.": "",
+  "You must enter a new data set name.": "",
+  "Allocating data set like {0}.": "",
+  "Enter a name for the new data set": "",
+  "Unable to create data set.": "",
+  "{0} was created like {1}.": "",
+  "Uploading to data set": "",
+  "Upload action was cancelled.": "",
+  "No data sets selected for deletion, cancelling...": "",
+  "Deleting data set(s): {0}": "",
+  "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}": "",
+  "Deleting items": "",
+  "The following {0} item(s) were deleted: {1}": "",
+  "Name of Member": "",
+  "Enter valid member name": "",
+  "Creating new data set member {0}": "",
+  "Unable to create member.": "",
+  "Allocating new data set": "",
+  "Attempting to allocate new data set": "",
+  "Click on parameters to change them": "",
+  "Name of Data Set": "",
+  "Enter valid dataset name": "",
+  "Template of Data Set to be Created": "",
+  "Error encountered when creating data set.": "",
+  "Name of Data Set Template": "",
+  "Showing attributes for {0}.": "",
+  "No matching names found for query: {0}": "",
+  "Unable to list attributes.": "",
+  "Attributes": "",
+  "No editor with a document that could be submitted as JCL is currently open.": "",
+  "Submitting as JCL in document {0}": "",
+  "Select the Profile to use to submit the job": "",
+  "Session for submitting JCL was null or undefined!": "",
+  "Job submitted {0}": "",
+  "Job submitted {0} using profile {1}.": "",
+  "Job submission failed.": "",
+  "Are you sure you want to submit the following job?\n\n{0}": "",
+  "Cannot submit, item invalid.": "",
+  "Cannot delete, item invalid.": "",
+  "Error encountered when deleting data set. {0}": "",
+  "Unable to find file {0}": "",
+  "Item invalid.": "",
+  "$(sync~spin) Fetching data set...": "",
+  "Error encountered when refreshing data set view. {0}": "",
+  "Search Data Sets: use a comma to separate multiple patterns": "",
+  "Prompted for a data set pattern, recieved {0}.": "",
+  "Cannot perform the copy operation as the data sets selected have different types": "",
+  "Migration of data set {0} requested.": "",
+  "Recall of data set {0} requested.": "",
+  "Unable to gather more information": "",
+  "Invalid paste. Copy data set(s) first.": "",
+  "Name of Data Set Member": "",
+  "Copying data sets is not supported.": "",
+  "Replace": "",
+  "Cancel": "",
+  "The data set member already exists.\nDo you want to replace it?": "",
+  "The physical sequential (PS) data set already exists.\nDo you want to replace it?": "",
+  "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?": "",
+  "Unable to copy data set.": "",
+  "Use the search button to display data sets": "",
+  "The response from Zowe CLI was not successful": "",
+  "Cannot access member with control characters in the name: {0}": "",
+  "No data sets found": "",
+  "Cannot download, item invalid.": "",
+  "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "",
+  "Initializing profiles with data set favorites.": "",
+  "No data set favorites found.": "",
+  "Error creating data set favorite node: {0} for profile {1}.": "",
+  "Loading profile: {0} for data set favorites": "",
+  "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}.\n                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n                    Would you like to do this now? {1}": "",
+  "PDS already in favorites": "",
+  "This will remove all favorited Data Sets items for profile {0}. Continue?": "",
+  "Node does not exist. It may have been deleted.": "",
+  "Prompting the user for a data set pattern": "",
+  "Rename operation cancelled.": "",
+  "Renaming data set {0}": "",
+  "all PDS members in {0}": "",
+  "the PDS members in {0}": "",
+  "Select a sorting option for {0}": "",
+  "$(clear-all) Clear filter for PDS": "",
+  "Set a filter for {0}": "",
+  "Invalid date format specified": "",
+  "Enter a value to filter by": "",
+  "Invalid filter specified": "",
+  "$(sync~spin) Saving data set...": "",
+  "$(plus) Create a new Unix command": "",
+  "Issuing commands is not supported for this profile type, {0}.": "",
+  "Issuing UNIX commands is not supported for this profile type, {0}.": "",
+  "Error preparring SSH connection for issueing UNIX commands, please check SSH profile for correctness.": "",
+  "No SSH profile found. Please create an SSH profile.": "",
+  "SSH profile missing connection details. Please update.": "",
+  "No profiles available.": "",
+  "Redirecting to Home Directory": "",
+  "Zowe Unix Command": "",
+  "An SSH profile will be used for issuing UNIX commands with the profile {0}.": "",
+  "Error checking if SSH profile type required for issueing UNIX commands, setting requirement to false for profile {0}.": "",
+  "Enter the path of the directory in order to execute the command": "",
+  "Select the ssh Profile.": "",
+  "Select the Profile to use to submit the Unix command": "",
+  "Select a Unix command to run against {0} (An option to edit will follow)": "",
+  "Select a Unix command to run immediately against {0}": "",
+  "Enter or update the Unix command": "",
+  "Unix command submitted.": "",
+  "$(plus) Create a new TSO command": "",
+  "Zowe TSO Command": "",
+  "Select the Profile to use to submit the TSO command": "",
+  "Profile is invalid": "",
+  "Select a TSO command to run against {0} (An option to edit will follow)": "",
+  "Select a TSO command to run immediately against {0}": "",
+  "Enter or update the TSO command": "",
+  "No command entered.": "",
+  "TSO command submitted.": "",
+  "No account number was supplied.": "",
+  "Select the TSO Profile to use for account number.": "",
+  "Account Number": "",
+  "Enter the account number for the TSO connection.": "",
+  "Operation Cancelled.": "",
+  "$(plus) Create a new MVS command": "",
+  "Zowe MVS Command": "",
+  "Select the Profile to use to submit the command": "",
+  "Select an MVS command to run against {0} (An option to edit will follow)": "",
+  "Select an MVS command to run immediately against {0}": "",
+  "Enter or update the MVS command": "",
+  "MVS command submitted.": "",
+  "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.": "",
+  "Failed to upload changes for {0}: {1}": ""
+}

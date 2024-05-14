@@ -238,7 +238,7 @@ export class SharedActions {
         for (const sessNode of treeProvider.mSessionNodes) {
             const profiles = await Profiles.getInstance().fetchAllProfiles();
             const found = profiles.some((prof) => prof.name === sessNode.label.toString().trim());
-            if (found || sessNode.label.toString() === "Favorites") {
+            if (found || sessNode.label.toString() === vscode.l10n.t("Favorites")) {
                 if (SharedContext.isSessionNotFav(sessNode)) {
                     sessNode.dirty = true;
                     SharedActions.returnIconState(sessNode);

@@ -60,7 +60,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         this.tooltip = opts.label;
         this.job = opts.job ?? null; // null instead of undefined to satisfy isZoweJobTreeNode
 
-        const isFavoritesNode = opts.label === "Favorites";
+        const isFavoritesNode = opts.label === vscode.l10n.t("Favorites");
         const sessionLabel = opts.profile?.name ?? SharedUtils.getSessionLabel(this);
 
         if (!isFavoritesNode && this.job == null) {
