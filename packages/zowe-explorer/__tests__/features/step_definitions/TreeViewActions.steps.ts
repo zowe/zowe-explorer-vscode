@@ -23,7 +23,9 @@ When("a user locates the Zowe Explorer icon in the side bar", async () => {
 });
 Then("the user can click on the Zowe Explorer icon", async () => {
     const activityBar = (await browser.getWorkbench()).getActivityBar();
+    await activityBar.wait();
     const zeContainer = await activityBar.getViewControl("Zowe Explorer");
+    await zeContainer.wait();
     await zeContainer.openView();
 });
 
