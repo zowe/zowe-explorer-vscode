@@ -43,6 +43,7 @@ import { IconGenerator } from "../../../../src/icons/IconGenerator";
 import { IconUtils } from "../../../../src/icons/IconUtils";
 import { FilterDescriptor } from "../../../../src/management/FilterManagement";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
+import { Icon } from "../../../../src/icons/Icon";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -294,7 +295,7 @@ describe("USSTree Unit Tests - Function createProfileNodeForFavs", () => {
             profile: globalMocks.testProfile,
         });
         expectedFavProfileNode.contextValue = Constants.USS_SESSION_CONTEXT;
-        const icon = getIconByNode(expectedFavProfileNode);
+        const icon = IconGenerator.getIconByNode(expectedFavProfileNode);
         if (icon) {
             expectedFavProfileNode.iconPath = icon.path;
         }
@@ -324,7 +325,7 @@ describe("USSTree Unit Tests - Function createProfileNodeForFavs", () => {
     });
 
     it("Tests that profile grouping node is created correctly if icon is defined", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const expectedFavProfileNode = new ZoweUSSNode({
             label: "testProfile",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -332,11 +333,11 @@ describe("USSTree Unit Tests - Function createProfileNodeForFavs", () => {
             profile: globalMocks.testProfile,
         });
         expectedFavProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
-        const folderIcon = IconGenerator.getIconById(IconUtils.IconId.folder);
-        const getIconByNodeSpy = jest.spyOn(IconGenerator, "getIconByNode");
-        getIconByNodeSpy.mockReturnValueOnce(folderIcon);
+        expectedFavProfileNode.iconPath = Icon.folder.path;
+
+        jest.spyOn(IconGenerator, "getIconByNode").mockReturnValue(Icon.folder);
         const createdFavProfileNode = await globalMocks.testTree.createProfileNodeForFavs("testProfile");
-        expect(createdFavProfileNode).toEqual(expectedFavProfileNode);
+        expect(JSON.stringify(createdFavProfileNode, null, 2)).toEqual(JSON.stringify(expectedFavProfileNode, null, 2));
     });
 });
 
@@ -1213,7 +1214,7 @@ describe("USSTree Unit Tests - Function getChildren", () => {
         sessNode[1].fullPath = "/test";
 
         expect(sessNode).toEqual(rootChildren);
-        expect(JSON.stringify(sessNode[0].iconPath)).toContain("folder-root-favorite-star-closed.svg");
+        expect(sessNode[0].iconPath).toEqual(Icon.folder.path);
     });
 
     it("Testing that getChildren() returns correct ZoweUSSNodes when passed element of type ZoweUSSNode<session>", async () => {

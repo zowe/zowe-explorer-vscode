@@ -34,6 +34,7 @@ import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { USSUtils } from "../../../../src/trees/uss/USSUtils";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
+import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 
 jest.mock("fs");
 
@@ -1162,7 +1163,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openedDocumentInstance()", () =
         });
         rootNode.fullPath = "/path/to";
         rootNode.resourceUri = rootNode.resourceUri?.with({
-            path: `/${getSessionLabel(rootNode)}/${rootNode.fullPath}`,
+            path: `/${SharedUtils.getSessionLabel(rootNode)}/${rootNode.fullPath}`,
         });
         const testNode = new ZoweUSSNode({
             label: "node",

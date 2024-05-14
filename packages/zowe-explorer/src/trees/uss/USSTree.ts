@@ -12,8 +12,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import {
-    confirmForUnsavedDoc,
-    getInfoForUri,
+    FsAbstractUtils,
     Gui,
     imperative,
     IZoweTree,
@@ -113,7 +112,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     }
 
     private async crossLparMove(sourceNode: IZoweUSSTreeNode, sourceUri: vscode.Uri, destUri: vscode.Uri, recursiveCall?: boolean): Promise<void> {
-        const destinationInfo = getInfoForUri(destUri, Profiles.getInstance());
+        const destinationInfo = FsAbstractUtils.getInfoForUri(destUri, Profiles.getInstance());
 
         if (SharedContext.isUssDirectory(sourceNode)) {
             if (!UssFSProvider.instance.exists(destUri)) {
@@ -303,7 +302,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             validateInput: (value) => this.checkDuplicateLabel(parentPath + value, loadedNodes),
         };
         const newName = await Gui.showInputBox(options);
-        if (newName && parentPath + (newName as string) !== originalNode.fullPath) {
+        if (newName && parentPath + newName !== originalNode.fullPath) {
             try {
                 const newNamePath = path.posix.join(parentPath, newName);
 
@@ -439,7 +438,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      */
     public findEquivalentNode(node: IZoweUSSTreeNode, isFavorite: boolean): IZoweUSSTreeNode {
         ZoweLogger.trace("USSTree.findEquivalentNode called.");
-        return (isFavorite ? this.findNonFavoritedNode(node) : this.findFavoritedNode(node)) as IZoweUSSTreeNode;
+        return isFavorite ? this.findNonFavoritedNode(node) : this.findFavoritedNode(node);
     }
 
     /**
@@ -1190,7 +1189,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             encoding = await SharedUtils.promptForEncoding(node, taggedEncoding !== "untagged" ? taggedEncoding : undefined);
         }
         if (encoding !== undefined) {
-            if (!(await confirmForUnsavedDoc(node.resourceUri))) {
+            if (!(await FsAbstractUtils.confirmForUnsavedDoc(node.resourceUri))) {
                 return;
             }
             await node.setEncoding(encoding);

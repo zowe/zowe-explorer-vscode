@@ -12,7 +12,6 @@
 import * as sharedMock from "../../__mocks__/mockCreators/shared";
 import * as dsMock from "../../__mocks__/mockCreators/datasets";
 import * as unixMock from "../../__mocks__/mockCreators/uss";
-import * as profUtils from "../../../src/utils/ProfilesUtils";
 import * as vscode from "vscode";
 import { Gui, imperative } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../../src/configuration/Constants";
@@ -25,6 +24,8 @@ import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProvide
 import { UssFSProvider } from "../../../src/trees/uss/UssFSProvider";
 import { ZoweUSSNode } from "../../../src/trees/uss/ZoweUSSNode";
 import { ProfileManagement } from "../../../src/management/ProfileManagement";
+import { AuthUtils } from "../../../src/utils/AuthUtils";
+import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
 
 jest.mock("fs");
 jest.mock("vscode");
@@ -76,8 +77,8 @@ describe("ProfileManagement unit tests", () => {
         };
 
         jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
-        Object.defineProperty(profUtils.ProfilesUtils, "promptCredentials", { value: jest.fn(), configurable: true });
-        newMocks.promptSpy = jest.spyOn(profUtils.ProfilesUtils, "promptCredentials");
+        Object.defineProperty(ProfilesUtils, "promptCredentials", { value: jest.fn(), configurable: true });
+        newMocks.promptSpy = jest.spyOn(ProfilesUtils, "promptCredentials");
         Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
         newMocks.debugLogSpy = jest.spyOn(ZoweLogger, "debug");
         Object.defineProperty(Gui, "resolveQuickPick", { value: newMocks.mockResolveQp, configurable: true });
@@ -167,7 +168,7 @@ describe("ProfileManagement unit tests", () => {
         function createBlockMocks(globalMocks): any {
             globalMocks.logMsg = `Profile ${globalMocks.mockTokenAuthProfile.name as string} is using token authentication.`;
             globalMocks.mockUnixSessionNode = unixMock.createUSSSessionNode(globalMocks.mockSession, globalMocks.mockBasicAuthProfile) as any;
-            Object.defineProperty(profUtils.ProfilesUtils, "isUsingTokenAuth", { value: jest.fn().mockResolvedValueOnce(true), configurable: true });
+            Object.defineProperty(AuthUtils, "isUsingTokenAuth", { value: jest.fn().mockResolvedValueOnce(true), configurable: true });
             globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockTokenAuthProfile);
             globalMocks.mockUnixSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockTokenAuthProfile);
             return globalMocks;
@@ -221,7 +222,7 @@ describe("ProfileManagement unit tests", () => {
     describe("unit tests around no auth declared selections", () => {
         function createBlockMocks(globalMocks): any {
             globalMocks.logMsg = `Profile ${globalMocks.mockNoAuthProfile.name as string} authentication method is unkown.`;
-            Object.defineProperty(profUtils.ProfilesUtils, "isUsingTokenAuth", { value: jest.fn().mockResolvedValueOnce(false), configurable: true });
+            Object.defineProperty(AuthUtils, "isUsingTokenAuth", { value: jest.fn().mockResolvedValueOnce(false), configurable: true });
             globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockNoAuthProfile);
             return globalMocks;
         }

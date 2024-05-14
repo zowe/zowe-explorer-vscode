@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import { DirEntry, FileEntry, IFileSystemEntry, FS_PROVIDER_DELAY, ConflictViewSelection, DeleteMetadata } from "./types";
 import * as path from "path";
-import { isDirectoryEntry, isFileEntry } from "./utils";
+import { FsAbstractUtils } from "./utils";
 import { Gui } from "../globals/Gui";
 import { ZosEncoding } from "../tree";
 
@@ -130,7 +130,7 @@ export class BaseProvider {
      */
     public invalidateFileAtUri(uri: vscode.Uri): boolean {
         const entry = this._lookup(uri, true);
-        if (!isFileEntry(entry)) {
+        if (!FsAbstractUtils.isFileEntry(entry)) {
             return false;
         }
 
@@ -147,7 +147,7 @@ export class BaseProvider {
      */
     public invalidateDirAtUri(uri: vscode.Uri): boolean {
         const entry = this._lookup(uri, true);
-        if (!isDirectoryEntry(entry)) {
+        if (!FsAbstractUtils.isDirectoryEntry(entry)) {
             return false;
         }
 
@@ -163,7 +163,7 @@ export class BaseProvider {
      */
     public getEncodingForFile(uri: vscode.Uri): ZosEncoding {
         const entry = this._lookup(uri, false) as FileEntry | DirEntry;
-        if (isDirectoryEntry(entry)) {
+        if (FsAbstractUtils.isDirectoryEntry(entry)) {
             return undefined;
         }
 
@@ -186,7 +186,7 @@ export class BaseProvider {
      */
     protected async _updateResourceInEditor(uri: vscode.Uri): Promise<void> {
         const entry = this._lookup(uri, true);
-        if (!isFileEntry(entry)) {
+        if (!FsAbstractUtils.isFileEntry(entry)) {
             return;
         }
         // NOTE: This does not work for editors that aren't the active one, so...
@@ -213,7 +213,7 @@ export class BaseProvider {
         // update child entries
         for (const child of entry.entries.values()) {
             child.metadata.path = path.posix.join(entry.metadata.path, child.name);
-            if (isDirectoryEntry(child)) {
+            if (FsAbstractUtils.isDirectoryEntry(child)) {
                 this._updateChildPaths(child);
             }
         }
@@ -256,7 +256,7 @@ export class BaseProvider {
         }
 
         entry.metadata.path = newUssPath;
-        const isFile = isFileEntry(entry);
+        const isFile = FsAbstractUtils.isFileEntry(entry);
         // write new entry in FS
         if (isFile) {
             // put new contents in relocated file
@@ -380,7 +380,7 @@ export class BaseProvider {
                 continue;
             }
             let child: IFileSystemEntry | undefined;
-            if (isDirectoryEntry(entry)) {
+            if (FsAbstractUtils.isDirectoryEntry(entry)) {
                 child = entry.entries.get(part);
             }
             if (!child) {
@@ -397,7 +397,7 @@ export class BaseProvider {
 
     protected _lookupAsDirectory(uri: vscode.Uri, silent: boolean): DirEntry {
         const entry = this._lookup(uri, silent);
-        if (isDirectoryEntry(entry)) {
+        if (FsAbstractUtils.isDirectoryEntry(entry)) {
             return entry;
         }
         throw vscode.FileSystemError.FileNotADirectory(uri);
@@ -407,7 +407,7 @@ export class BaseProvider {
         const basename = path.posix.basename(uri.path);
         const parent = this._lookupParentDirectory(uri);
         let entry = parent.entries.get(basename);
-        if (isDirectoryEntry(entry)) {
+        if (FsAbstractUtils.isDirectoryEntry(entry)) {
             throw vscode.FileSystemError.FileIsADirectory(uri);
         }
         if (entry) {
@@ -430,7 +430,7 @@ export class BaseProvider {
 
     protected _lookupAsFile(uri: vscode.Uri, opts?: { silent?: boolean }): FileEntry {
         const entry = this._lookup(uri, opts?.silent ?? false);
-        if (isFileEntry(entry)) {
+        if (FsAbstractUtils.isFileEntry(entry)) {
             return entry;
         }
         throw vscode.FileSystemError.FileIsADirectory(uri);

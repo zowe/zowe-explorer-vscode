@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as path from "path";
-import { Gui, imperative, IZoweDatasetTreeNode, Validation, Types, confirmForUnsavedDoc } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweDatasetTreeNode, Validation, Types, FsAbstractUtils } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetUtils } from "./DatasetUtils";
 import { DatasetFSProvider } from "./DatasetFSProvider";
@@ -1267,7 +1267,7 @@ export class DatasetActions {
                 default:
                     throw Error(vscode.l10n.t("Item invalid."));
             }
-            if (!(await confirmForUnsavedDoc(node.resourceUri))) {
+            if (!(await FsAbstractUtils.confirmForUnsavedDoc(node.resourceUri))) {
                 return;
             }
 

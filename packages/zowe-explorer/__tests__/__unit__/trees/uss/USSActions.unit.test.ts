@@ -33,7 +33,6 @@ import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { SharedActions } from "../../../../src/trees/shared/SharedActions";
 import { USSActions } from "../../../../src/trees/uss/USSActions";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
-import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
 import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
@@ -324,7 +323,7 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         globalMocks.mockShowInputBox.mockReturnValueOnce("USSFolder");
         const isTopLevel = false;
-        const errorHandlingSpy = jest.spyOn(ProfilesUtils, "errorHandling");
+        const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling");
 
         // Simulate unsuccessful api call
         Object.defineProperty(blockMocks.ussApi, "create", {

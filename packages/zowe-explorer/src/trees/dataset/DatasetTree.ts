@@ -24,7 +24,7 @@ import {
     IZoweTreeNode,
     Sorting,
     ZosEncoding,
-    confirmForUnsavedDoc,
+    FsAbstractUtils,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetFSProvider } from "./DatasetFSProvider";
@@ -1576,7 +1576,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public async openWithEncoding(node: IZoweDatasetTreeNode, encoding?: ZosEncoding): Promise<void> {
         encoding = encoding ?? (await SharedUtils.promptForEncoding(node));
         if (encoding !== undefined) {
-            if (!(await confirmForUnsavedDoc(node.resourceUri))) {
+            if (!(await FsAbstractUtils.confirmForUnsavedDoc(node.resourceUri))) {
                 return;
             }
             node.setEncoding(encoding);

@@ -23,7 +23,7 @@ import {
     ZoweScheme,
     UssFile,
     UssDirectory,
-    isDirectoryEntry,
+    FsAbstractUtils,
     MainframeInteraction,
 } from "@zowe/zowe-explorer-api";
 import { USSUtils } from "./USSUtils";
@@ -97,7 +97,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
         const isSession = this.getParent() == null;
         if (isSession) {
-            this.id = `uss.${this.label.toString() as string}`;
+            this.id = `uss.${this.label.toString()}`;
         }
         if (opts.profile) {
             this.profile = opts.profile;
@@ -132,7 +132,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public setEtag(etag: string): void {
         const ussEntry = UssFSProvider.instance.stat(this.resourceUri) as UssFile | UssDirectory;
-        if (isDirectoryEntry(ussEntry)) {
+        if (FsAbstractUtils.isDirectoryEntry(ussEntry)) {
             return;
         }
 
@@ -141,7 +141,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public getAttributes(): Types.FileAttributes {
         const ussEntry = UssFSProvider.instance.stat(this.resourceUri) as UssFile | UssDirectory;
-        return ussEntry.attributes as Types.FileAttributes;
+        return ussEntry.attributes;
     }
 
     public setAttributes(attributes: Partial<Types.FileAttributes>): void {
@@ -308,13 +308,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     public getEncoding(): ZosEncoding {
-        return UssFSProvider.instance.getEncodingForFile(this.resourceUri) as ZosEncoding;
+        return UssFSProvider.instance.getEncodingForFile(this.resourceUri);
     }
 
     public setEncoding(encoding: ZosEncoding): void {
         ZoweLogger.trace("ZoweUSSNode.setEncoding called.");
         if (!(this.contextValue.startsWith(Constants.USS_BINARY_FILE_CONTEXT) || this.contextValue.startsWith(Constants.USS_TEXT_FILE_CONTEXT))) {
-            throw new Error(`Cannot set encoding for node with context ${this.contextValue as string}`);
+            throw new Error(`Cannot set encoding for node with context ${this.contextValue}`);
         }
         if (encoding?.kind === "binary") {
             this.contextValue = Constants.USS_BINARY_FILE_CONTEXT;
@@ -473,7 +473,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         // Remove node from the USS Favorites tree
         await ussFileProvider.removeFavorite(this);
-        ussFileProvider.removeFileHistory(`[${this.getProfileName() as string}]: ${this.parentPath}/${this.label.toString() as string}`);
+        ussFileProvider.removeFileHistory(`[${this.getProfileName()}]: ${this.parentPath}/${this.label.toString()}`);
         const parent = this.getParent();
         parent.children = parent.children.filter((c) => c !== this);
         if (ussFileProvider.nodeDataChanged) {
@@ -559,7 +559,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             try {
                 // Add document name to recently-opened files
-                ussFileProvider.addFileHistory(`[${this.getProfile().name as string}]: ${this.fullPath}`);
+                ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
                 ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
                 const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Downloading USS file..."));
                 await this.initializeFileOpening(download ? this.resourceUri.with({ query: "redownload=true" }) : this.resourceUri);
@@ -700,7 +700,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 await this.paste(
                     vscode.Uri.from({
                         scheme: ZoweScheme.USS,
-                        path: `/${this.profile.name as string}${this.fullPath}`,
+                        path: `/${this.profile.name}${this.fullPath}`,
                     }),
                     { api, tree: subnode, options }
                 );

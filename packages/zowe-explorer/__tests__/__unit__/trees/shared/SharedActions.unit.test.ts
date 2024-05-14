@@ -10,9 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import {
-    createGetConfigMock,
     createInstanceOfProfile,
     createIProfile,
     createISessionWithoutCredentials,
@@ -21,24 +19,21 @@ import {
     createTreeView,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import { createFavoriteUSSNode, createUSSNode, createUSSSessionNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
-import { Constants } from "../../../../src/configuration/Constants";
-import { Profiles } from "../../../../src/configuration/Profiles";
-import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
-import { IconGenerator } from "../../../../src/icons/IconGenerator";
-import { FilterItem, FilterDescriptor } from "../../../../src/management/FilterManagement";
-import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
-import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
-import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
-import { createJobsTree } from "../../../../src/trees/job/JobTree";
-import { SharedActions } from "../../../../src/trees/shared/SharedActions";
-import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
-import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
-import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
 import { Gui, Types } from "@zowe/zowe-explorer-api";
+import { Profiles } from "../../../../src/configuration/Profiles";
+import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
+import { createUSSSessionNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
+import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
+import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
+import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { mocked } from "../../../__mocks__/mockUtils";
+import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
+import { Constants } from "../../../../src/configuration/Constants";
+import { FilterDescriptor, FilterItem } from "../../../../src/management/FilterManagement";
+import { SharedActions } from "../../../../src/trees/shared/SharedActions";
 import { IconUtils } from "../../../../src/icons/IconUtils";
-import { createIJobObject } from "../../../__mocks__/mockCreators/jobs";
+import { IconGenerator } from "../../../../src/icons/IconGenerator";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -61,7 +56,7 @@ function createGlobalMocks() {
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
 
     Object.defineProperty(vscode.window, "withProgress", {
-        value: jest.fn().mockImplementation((progLocation, callback) => {
+        value: jest.fn().mockImplementation((_, callback) => {
             const progress = {
                 report: () => {
                     return;
@@ -545,74 +540,5 @@ describe("Shared Actions Unit Tests - Function resetValidationSettings", () => {
         });
         const response = await SharedActions.resetValidationSettings(testNode, true);
         expect(response.contextValue).toContain(`${Constants.VALIDATE_SUFFIX}true`);
-    });
-});
-
-describe("Refresh Unit Tests - Function refreshAll", () => {
-    function createBlockMocks(globalMocks) {
-        const newMocks = {
-            testUSSTree: null,
-            jobsTree: null,
-            testDatasetTree: null,
-            iJob: createIJobObject(),
-            treeView: createTreeView(),
-            profileInstance: null,
-            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
-            datasetSessionNode: createDatasetSessionNode(createISessionWithoutCredentials(), createIProfile()),
-        };
-        newMocks.profileInstance = createInstanceOfProfile(globalMocks.testProfile);
-        newMocks.testUSSTree = createUSSTree(
-            [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-            [newMocks.ussNode],
-            createTreeView()
-        );
-        newMocks.testUSSTree.mSessionNodes.push(newMocks.ussNode);
-        newMocks.jobsTree = createJobsTree(globalMocks.session, newMocks.iJob, newMocks.profileInstance, newMocks.treeView);
-        newMocks.jobsTree.mSessionNodes.push(newMocks.datasetSessionNode);
-        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
-        newMocks.testDatasetTree.mSessionNodes.push(newMocks.datasetSessionNode);
-
-        Object.defineProperty(SettingsConfig, "getDirectValue", {
-            value: createGetConfigMock({
-                "zowe.automaticProfileValidation": true,
-            }),
-        });
-        Object.defineProperty(TreeViewUtils, "removeSession", {
-            value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
-            configurable: true,
-        });
-
-        return newMocks;
-    }
-
-    afterAll(() => jest.restoreAllMocks());
-
-    it("Tests that refreshAll() executed successfully with ussTreeProvider passed", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-        const spy = jest.spyOn(SharedActions, "refreshAll");
-        await SharedActions.refreshAll(blockMocks.testUSSTree);
-        expect(spy).toHaveBeenCalledTimes(1);
-        await expect(SharedActions.refreshAll(blockMocks.testUSSTree)).resolves.not.toThrow();
-        spy.mockClear();
-    });
-
-    it("Testing that refreshAll() is executed successfully with jobsTreeProvider passed", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-        const submitJclSpy = jest.spyOn(SharedActions, "refreshAll");
-        await SharedActions.refreshAll(blockMocks.jobsTree);
-        expect(submitJclSpy).toHaveBeenCalledTimes(1);
-        await expect(SharedActions.refreshAll(blockMocks.jobsTree)).resolves.not.toThrow();
-        submitJclSpy.mockClear();
-    });
-    it("Testing that refreshAll() is executed successfully with datasetTreeProvider passed", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-        const spy = jest.spyOn(SharedActions, "refreshAll");
-        await SharedActions.refreshAll(blockMocks.testUSSTree);
-        expect(spy).toHaveBeenCalledTimes(1);
-        await expect(SharedActions.refreshAll(blockMocks.testDatasetTree)).resolves.not.toThrow();
-        spy.mockClear();
     });
 });

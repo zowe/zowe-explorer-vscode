@@ -12,14 +12,16 @@
 import { IFileSystemEntry } from "../types/abstract";
 import { DsEntry, MemberEntry, PdsEntry } from "../types/datasets";
 
-export function isDsEntry(entry: IFileSystemEntry): entry is DsEntry {
-    return entry instanceof DsEntry;
-}
+export class FsDatasetsUtils {
+    public static isDsEntry(entry: IFileSystemEntry): entry is DsEntry {
+        return entry instanceof DsEntry;
+    }
 
-export function isMemberEntry(entry: IFileSystemEntry): entry is MemberEntry {
-    return entry != null && entry instanceof MemberEntry;
-}
+    public static isMemberEntry(entry: IFileSystemEntry): entry is MemberEntry {
+        return entry != null && entry instanceof MemberEntry;
+    }
 
-export function isPdsEntry(entry: IFileSystemEntry): entry is PdsEntry {
-    return entry != null && entry instanceof PdsEntry;
+    public static isPdsEntry(entry: IFileSystemEntry): entry is PdsEntry {
+        return entry != null && entry instanceof PdsEntry;
+    }
 }

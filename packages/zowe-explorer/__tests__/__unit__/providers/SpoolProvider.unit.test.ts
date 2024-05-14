@@ -17,6 +17,7 @@ import { SpoolFile, SpoolProvider } from "../../../src/providers/SpoolProvider";
 import { createIProfile, createISessionWithoutCredentials } from "../../__mocks__/mockCreators/shared";
 import { bindJesApi, createJesApi } from "../../__mocks__/mockCreators/api";
 import { createJobSessionNode } from "../../__mocks__/mockCreators/jobs";
+import { JobFSProvider } from "../../../src/trees/job/JobFSProvider";
 
 describe("SpoolProvider Unit Tests", () => {
     const iJobFile: zosjobs.IJobFile = {
@@ -264,6 +265,15 @@ describe("SpoolProvider Unit Tests", () => {
         });
 
         it("should gather all spool files for a given job", async () => {
+            const uriMock = jest.fn();
+            Object.defineProperty(vscode, "Uri", { value: uriMock });
+            const from = jest.fn().mockReturnValue(uriObj);
+            Object.defineProperty(uriMock, "from", { value: from });
+            const withMock = jest.fn().mockReturnValue(uriObj);
+            Object.defineProperty(uriObj, "with", { value: withMock });
+
+            jest.spyOn(JobFSProvider.instance, "createDirectory").mockImplementation();
+
             const profile = createIProfile();
             const session = createISessionWithoutCredentials();
             const newJobSession = createJobSessionNode(session, profile);
@@ -286,6 +296,15 @@ describe("SpoolProvider Unit Tests", () => {
         });
 
         it("should return an empty array of the node.job is null", async () => {
+            const uriMock = jest.fn();
+            Object.defineProperty(vscode, "Uri", { value: uriMock });
+            const from = jest.fn().mockReturnValue(uriObj);
+            Object.defineProperty(uriMock, "from", { value: from });
+            const withMock = jest.fn().mockReturnValue(uriObj);
+            Object.defineProperty(uriObj, "with", { value: withMock });
+
+            jest.spyOn(JobFSProvider.instance, "createDirectory").mockImplementation();
+
             const profile = createIProfile();
             const session = createISessionWithoutCredentials();
             const newJobSession = createJobSessionNode(session, profile);

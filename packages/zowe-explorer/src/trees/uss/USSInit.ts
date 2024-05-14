@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweUSSTreeNode, IZoweTreeNode, ZosEncoding, imperative, ZoweScheme, confirmForUnsavedDoc, Gui } from "@zowe/zowe-explorer-api";
+import { IZoweUSSTreeNode, IZoweTreeNode, ZosEncoding, imperative, ZoweScheme, FsAbstractUtils, Gui } from "@zowe/zowe-explorer-api";
 import { USSTree } from "./USSTree";
 import { USSActions } from "./USSActions";
 import { UssFSProvider } from "./UssFSProvider";
@@ -79,7 +79,7 @@ export class USSInit {
                         // just refresh item to grab latest files
                         ussFileProvider.refreshElement(item);
                     } else {
-                        if (!(await confirmForUnsavedDoc(node.resourceUri))) {
+                        if (!(await FsAbstractUtils.confirmForUnsavedDoc(node.resourceUri))) {
                             return;
                         }
                         const statusMsg = Gui.setStatusBarMessage("$(sync~spin) Fetching USS file...");

@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as path from "path";
-import { buildUniqueSpoolName, imperative, IZoweJobTreeNode, Sorting, ZoweScheme, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { FsJobsUtils, imperative, IZoweJobTreeNode, Sorting, ZoweScheme, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { JobFSProvider } from "./JobFSProvider";
 import { JobUtils } from "./JobUtils";
 import { Constants } from "../../configuration/Constants";
@@ -411,7 +411,7 @@ export class ZoweSpoolNode extends ZoweJobNode {
 
     public constructor(opts: SharedUtils.IZoweJobTreeOpts & { spool?: zosjobs.IJobFile }) {
         super(opts);
-        this.uniqueName = opts.spool ? buildUniqueSpoolName(opts.spool).replace("/", "") : "<unknown-spool-id>";
+        this.uniqueName = opts.spool ? FsJobsUtils.buildUniqueSpoolName(opts.spool).replace("/", "") : "<unknown-spool-id>";
         this.resourceUri = opts.parentNode?.resourceUri.with({
             path: path.posix.join(opts.parentNode.resourceUri.path, this.uniqueName),
         });

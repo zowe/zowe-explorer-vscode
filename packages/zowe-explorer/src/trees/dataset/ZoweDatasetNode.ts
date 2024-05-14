@@ -25,7 +25,7 @@ import {
     DsEntry,
     ZoweScheme,
     PdsEntry,
-    isPdsEntry,
+    FsDatasetsUtils,
 } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -167,7 +167,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
     public setEtag(etag: string): void {
         const dsEntry = DatasetFSProvider.instance.stat(this.resourceUri) as DsEntry | PdsEntry;
-        if (isPdsEntry(dsEntry)) {
+        if (FsDatasetsUtils.isPdsEntry(dsEntry)) {
             return;
         }
 
@@ -176,7 +176,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
     public setStats(stats: Partial<Types.DatasetStats>): void {
         const dsEntry = DatasetFSProvider.instance.stat(this.resourceUri) as DsEntry | PdsEntry;
-        if (isPdsEntry(dsEntry)) {
+        if (FsDatasetsUtils.isPdsEntry(dsEntry)) {
             return;
         }
 
@@ -185,7 +185,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
     public getStats(): Types.DatasetStats {
         const dsEntry = DatasetFSProvider.instance.stat(this.resourceUri) as DsEntry | PdsEntry;
-        if (isPdsEntry(dsEntry)) {
+        if (FsDatasetsUtils.isPdsEntry(dsEntry)) {
             return;
         }
 
@@ -520,7 +520,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public getEtag(): string {
         ZoweLogger.trace("ZoweDatasetNode.getEtag called.");
         const fileEntry = DatasetFSProvider.instance.stat(this.resourceUri) as DsEntry;
-        return fileEntry.etag as string;
+        return fileEntry.etag;
     }
 
     private async getDatasets(): Promise<zosfiles.IZosFilesResponse[]> {

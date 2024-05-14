@@ -14,20 +14,17 @@ import * as path from "path";
 import {
     BaseProvider,
     BufferBuilder,
-    buildUniqueSpoolName,
     DirEntry,
     EntryMetadata,
     FilterEntry,
-    getInfoForUri,
     Gui,
-    isFilterEntry,
-    isJobEntry,
-    isSpoolEntry,
     IZoweJobTreeNode,
     JobEntry,
     JobFilter,
     SpoolEntry,
     ZoweScheme,
+    FsJobsUtils,
+    FsAbstractUtils,
 } from "@zowe/zowe-explorer-api";
 import { IJob, IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -71,7 +68,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public stat(uri: vscode.Uri): vscode.FileStat | Thenable<vscode.FileStat> {
         const entry = this._lookup(uri, false);
-        if (isSpoolEntry(entry)) {
+        if (FsJobsUtils.isSpoolEntry(entry)) {
             return { ...entry, permissions: vscode.FilePermission.Readonly };
         }
 
@@ -85,11 +82,11 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         const fsEntry = this._lookupAsDirectory(uri, false) as FilterEntry | JobEntry;
-        const uriInfo = getInfoForUri(uri, Profiles.getInstance());
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const results: [string, vscode.FileType][] = [];
 
         const jesApi = ZoweExplorerApiRegister.getJesApi(uriInfo.profile);
-        if (isFilterEntry(fsEntry)) {
+        if (FsAbstractUtils.isFilterEntry(fsEntry)) {
             if (!jesApi.getJobsByParameters) {
                 throw new Error(vscode.l10n.t("Failed to fetch jobs: getJobsByParameters is not implemented for this session's JES API."));
             }
@@ -106,10 +103,10 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                     fsEntry.entries.set(job.jobid, newJob);
                 }
             }
-        } else if (isJobEntry(fsEntry)) {
+        } else if (FsJobsUtils.isJobEntry(fsEntry)) {
             const spoolFiles = await jesApi.getSpoolFiles(fsEntry.job.jobname, fsEntry.job.jobid);
             for (const spool of spoolFiles) {
-                const spoolName = buildUniqueSpoolName(spool);
+                const spoolName = FsJobsUtils.buildUniqueSpoolName(spool);
                 if (!fsEntry.entries.has(spoolName)) {
                     const newSpool = new SpoolEntry(spoolName);
                     newSpool.spool = spool;
@@ -132,7 +129,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public updateFilterForUri(uri: vscode.Uri, filter: JobFilter): void {
         const filterEntry = this._lookupAsDirectory(uri, false);
-        if (!isFilterEntry(filterEntry)) {
+        if (!FsAbstractUtils.isFilterEntry(filterEntry)) {
             return;
         }
 
@@ -157,7 +154,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const EntryType = options?.isFilter ? FilterEntry : JobEntry;
         const entry = new EntryType(basename);
-        if (isJobEntry(entry) && options?.job) {
+        if (FsJobsUtils.isJobEntry(entry) && options?.job) {
             entry.job = options.job;
         }
 
@@ -246,7 +243,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const spoolName = options.name ?? basename;
         const parent = this._lookupParentDirectory(uri);
         let entry = parent.entries.get(spoolName) as JobEntry | SpoolEntry;
-        if (isJobEntry(entry)) {
+        if (FsJobsUtils.isJobEntry(entry)) {
             throw vscode.FileSystemError.FileIsADirectory(uri);
         }
         if (!entry && !options.create) {
@@ -281,14 +278,14 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public async delete(uri: vscode.Uri, options: { readonly recursive: boolean; readonly deleteRemote: boolean }): Promise<void> {
         const entry = this._lookup(uri, false);
-        const isJob = isJobEntry(entry);
+        const isJob = FsJobsUtils.isJobEntry(entry);
         if (!isJob) {
             return;
         }
 
         const parent = this._lookupParentDirectory(uri, false);
 
-        const profInfo = getInfoForUri(uri, Profiles.getInstance());
+        const profInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
 
         if (options.deleteRemote) {
             await ZoweExplorerApiRegister.getJesApi(profInfo.profile).deleteJob(entry.job.jobname, entry.job.jobid);
@@ -308,7 +305,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns Metadata for the URI that contains the profile instance and resource path
      */
     private _getInfoFromUri(uri: vscode.Uri): EntryMetadata {
-        const uriInfo = getInfoForUri(uri, Profiles.getInstance());
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         return {
             profile: uriInfo.profile,
             path: uriInfo.isRoot ? "/" : uri.path.substring(uriInfo.slashAfterProfilePos),

@@ -10,7 +10,7 @@
  */
 
 import { Disposable, FilePermission, FileType, Uri } from "vscode";
-import { buildUniqueSpoolName, FilterEntry, Gui, JobEntry, SpoolEntry, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { FsJobsUtils, FilterEntry, Gui, JobEntry, SpoolEntry, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { createIJobFile, createIJobObject } from "../../../__mocks__/mockCreators/jobs";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
@@ -155,8 +155,8 @@ describe("readDirectory", () => {
         fakeJob.job = testEntries.job.job;
         const lookupAsDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupAsDirectory").mockReturnValueOnce(fakeJob);
         expect(await JobFSProvider.instance.readDirectory(testUris.job)).toStrictEqual([
-            [buildUniqueSpoolName(fakeSpool), FileType.File],
-            [buildUniqueSpoolName(fakeSpool2), FileType.File],
+            [FsJobsUtils.buildUniqueSpoolName(fakeSpool), FileType.File],
+            [FsJobsUtils.buildUniqueSpoolName(fakeSpool2), FileType.File],
         ]);
         expect(lookupAsDirMock).toHaveBeenCalledWith(testUris.job, false);
         expect(mockJesApi.getSpoolFiles).toHaveBeenCalledWith(testEntries.job.job?.jobname, testEntries.job.job?.jobid);

@@ -10,7 +10,6 @@
  */
 
 import * as vscode from "vscode";
-import * as utils from "../../../src/utils/ProfilesUtils";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import * as path from "path";
 import {
@@ -30,26 +29,27 @@ import {
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager } from "../../__mocks__/mockCreators/profiles";
 import { imperative, Gui, ProfilesCache, ZoweTreeNode, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
-import { Constants } from "../../../src/configuration/Constants";
 import { Profiles } from "../../../src/configuration/Profiles";
-import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
-import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
-import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
+import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
+import { createUSSNode, createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
+import { createIJobObject, createJobsTree } from "../../__mocks__/mockCreators/jobs";
+import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
-import { DatasetFSProvider } from "../../../src/trees/dataset/DatasetFSProvider";
-import { JobFSProvider } from "../../../src/trees/job/JobFSProvider";
+import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
-import { createUSSTree } from "../../../src/trees/uss/USSTree";
 import { UssFSProvider } from "../../../src/trees/uss/UssFSProvider";
-import { createUSSNode, createUSSSessionNode } from "../../__mocks__/mockCreators/uss";
-import { FilterDescriptor } from "../../../src/management/FilterManagement";
+import { JobFSProvider } from "../../../src/trees/job/JobFSProvider";
+import { DatasetFSProvider } from "../../../src/trees/dataset/DatasetFSProvider";
+import { Constants } from "../../../src/configuration/Constants";
+import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
+import { FilterDescriptor } from "../../../src/management/FilterManagement";
 
-jest.mock("../../../src/tools/ZoweLogger");
 jest.mock("child_process");
 jest.mock("fs");
 jest.mock("fs-extra");
+jest.mock("../../../src/tools/ZoweLogger");
 
 async function createGlobalMocks() {
     const newMocks = {
@@ -189,7 +189,7 @@ async function createGlobalMocks() {
         configurable: true,
     });
 
-    Object.defineProperty(utils.ProfilesUtils, "usingTeamConfig", {
+    Object.defineProperty(ProfilesUtils, "usingTeamConfig", {
         value: jest.fn(() => {
             return true;
         }),
@@ -778,6 +778,7 @@ describe("Profiles Unit Tests - function deleteProfile", () => {
         const datasetTree = createDatasetTree(datasetSessionNode, globalMocks.testProfile);
         const ussSessionNode = [createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile)];
         const ussTree = createUSSTree([], ussSessionNode);
+        const jobsTree = createJobsTree(globalMocks.testSession, createIJobObject(), globalMocks.testProfile, createTreeView());
 
         jest.spyOn(datasetTree, "getFileHistory").mockReturnValue(["[SESTEST]: TEST.LIST"]);
         jest.spyOn(ussTree, "getFileHistory").mockReturnValue(["[SESTEST]: /u/test/test.txt"]);
@@ -1014,7 +1015,7 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
             ],
             configurable: true,
         });
-        Object.defineProperty(utils.ProfilesUtils, "isProfileUsingBasicAuth", { value: jest.fn(), configurable: true });
+        Object.defineProperty(AuthUtils, "isProfileUsingBasicAuth", { value: jest.fn(), configurable: true });
         jest.spyOn(Gui, "showMessage").mockImplementation();
     });
     it("should perform an SSOLogin successfully while fetching the base profile", async () => {

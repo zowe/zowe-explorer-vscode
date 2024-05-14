@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import { createIProfile, createISession, createInstanceOfProfile } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
-import { imperative, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { imperative, ProfilesCache, Gui, ZosEncoding, BaseProvider, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../../../src/configuration/Constants";
 import { FilterItem } from "../../../../src/management/FilterManagement";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
@@ -24,9 +24,6 @@ import { ZoweJobNode } from "../../../../src/trees/job/ZoweJobNode";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
-import { IZoweTreeNode, ZosEncoding } from "../../../../../zowe-explorer-api/src/tree/IZoweTreeNode";
-import { Gui } from "../../../../../zowe-explorer-api/src/globals";
-import { BaseProvider } from "../../../../../zowe-explorer-api/src/fs/BaseProvider";
 
 function createGlobalMocks() {
     const newMocks = {
@@ -312,6 +309,8 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         const getEncodingForFile = jest.spyOn((BaseProvider as any).prototype, "getEncodingForFile");
         const setEncodingForFile = jest.spyOn((BaseProvider as any).prototype, "setEncodingForFile").mockReturnValue(undefined);
         const fetchEncodingForUri = jest.spyOn(UssFSProvider.instance, "fetchEncodingForUri").mockResolvedValue(undefined as any);
+        const createDirectorySpy = jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation();
+        const getEncodingForFileSpy = jest.spyOn(UssFSProvider.instance, "getEncodingForFile").mockReturnValue({ kind: "binary" });
 
         return {
             profile: createIProfile(),
@@ -323,11 +322,15 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             getEncodingForFile,
             setEncodingForFile,
             fetchEncodingForUri,
+            createDirectorySpy,
+            getEncodingForFileSpy,
         };
     }
 
-    afterEach(() => {
+    beforeEach(() => {
         jest.resetAllMocks();
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
     });
 
     it("prompts for text encoding for USS file", async () => {
@@ -409,7 +412,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(await blockMocks.showQuickPick.mock.calls[0][0][0]).toEqual({ label: "IBM-1047", description: "USS file tag" });
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(
-            expect.objectContaining({ placeHolder: "Current encoding is binary", title: "Choose encoding for testFile" })
+            expect.objectContaining({ placeHolder: "Current encoding is Binary", title: "Choose encoding for testFile" })
         );
     });
 

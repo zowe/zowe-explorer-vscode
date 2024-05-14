@@ -14,8 +14,7 @@ import * as vscode from "vscode";
 import {
     BaseProvider,
     BufferBuilder,
-    getInfoForUri,
-    isDirectoryEntry,
+    FsAbstractUtils,
     imperative,
     Gui,
     EntryMetadata,
@@ -161,7 +160,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public async fetchFileAtUri(uri: vscode.Uri, options?: { editor?: vscode.TextEditor | null; isConflict?: boolean }): Promise<void> {
         const file = this._lookupAsFile(uri);
-        const uriInfo = getInfoForUri(uri, Profiles.getInstance());
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const bufBuilder = new BufferBuilder();
         const filePath = uri.path.substring(uriInfo.slashAfterProfilePos);
         const metadata = file.metadata;
@@ -299,7 +298,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const parentDir = this._lookupParentDirectory(uri);
 
         let entry = parentDir.entries.get(fileName);
-        if (isDirectoryEntry(entry)) {
+        if (FsAbstractUtils.isDirectoryEntry(entry)) {
             throw vscode.FileSystemError.FileIsADirectory(uri);
         }
         if (!entry && !options.create) {
@@ -418,7 +417,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         entry.metadata.path = newPath;
         // We have to update the path for all child entries if they exist in the FileSystem
         // This way any further API requests in readFile will use the latest paths on the LPAR
-        if (isDirectoryEntry(entry)) {
+        if (FsAbstractUtils.isDirectoryEntry(entry)) {
             this._updateChildPaths(entry);
         }
         parentDir.entries.set(newName, entry);
@@ -587,7 +586,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns Metadata for the URI that contains the profile instance and path
      */
     private _getInfoFromUri(uri: vscode.Uri): EntryMetadata {
-        const uriInfo = getInfoForUri(uri, Profiles.getInstance());
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         return { profile: uriInfo.profile, path: uriInfo.isRoot ? "/" : uri.path.substring(uriInfo.slashAfterProfilePos) };
     }
 }

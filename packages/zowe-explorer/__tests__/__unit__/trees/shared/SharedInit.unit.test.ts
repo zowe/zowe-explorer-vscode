@@ -11,26 +11,26 @@
 
 import * as vscode from "vscode";
 import * as core from "@zowe/core-for-zowe-sdk";
-import * as sharedHistoryView from "../../../../src/trees/shared/SharedHistoryView";
+import * as profUtils from "../../../../src/utils/ProfilesUtils";
+import * as SharedHistoryView from "../../../../src/trees/shared/SharedHistoryView";
+import { FileManagement } from "@zowe/zowe-explorer-api";
 import { IJestIt, ITestContext, processSubscriptions } from "../../../__common__/testUtils";
-import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 import { Constants } from "../../../../src/configuration/Constants";
 import { Profiles } from "../../../../src/configuration/Profiles";
-import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
-import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SharedActions } from "../../../../src/trees/shared/SharedActions";
 import { TempFolder } from "../../../../src/configuration/TempFolder";
-import { FileManagement } from "../../../../../zowe-explorer-api/src/utils/FileManagement";
 import { TsoCommandHandler } from "../../../../src/command/TsoCommandHandler";
 import { MvsCommandHandler } from "../../../../src/command/MvsCommandHandler";
 import { LocalFileManagement } from "../../../../src/management/LocalFileManagement";
 import { UnixCommandHandler } from "../../../../src/command/UnixCommandHandler";
+import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
+import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { SharedInit } from "../../../../src/trees/shared/SharedInit";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
 
-describe("SharedInit Unit Tests", () => {
+describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
         const executeCommand = { fun: jest.fn() };
         const testConstants = {
@@ -41,7 +41,7 @@ describe("SharedInit Unit Tests", () => {
         const test: ITestContext = {
             context: { subscriptions: [] },
             value: {
-                test: "SharedInit",
+                test: "shared",
                 providers: { ds: "ds", uss: "uss", job: "job" },
                 affectsConfiguration: jest.fn(),
                 document: jest.fn(),
@@ -55,8 +55,8 @@ describe("SharedInit Unit Tests", () => {
                 name: "zowe.updateSecureCredentials",
                 parm: ["@zowe/cli"],
                 mock: [
-                    { spy: jest.spyOn(ProfilesUtils, "updateCredentialManagerSetting"), arg: ["@zowe/cli"] },
-                    { spy: jest.spyOn(ProfilesUtils, "writeOverridesFile"), arg: [] },
+                    { spy: jest.spyOn(profUtils.ProfilesUtils, "updateCredentialManagerSetting"), arg: ["@zowe/cli"] },
+                    { spy: jest.spyOn(profUtils.ProfilesUtils, "writeOverridesFile"), arg: [] },
                 ],
             },
             {
@@ -65,11 +65,11 @@ describe("SharedInit Unit Tests", () => {
             },
             {
                 name: "zowe.editHistory",
-                mock: [{ spy: jest.spyOn(sharedHistoryView, "SharedHistoryView"), arg: [test.context, test.value.providers] }],
+                mock: [{ spy: jest.spyOn(SharedHistoryView, "SharedHistoryView"), arg: [test.context, test.value.providers] }],
             },
             {
                 name: "zowe.promptCredentials",
-                mock: [{ spy: jest.spyOn(ProfilesUtils, "promptCredentials"), arg: [test.value] }],
+                mock: [{ spy: jest.spyOn(profUtils.ProfilesUtils, "promptCredentials"), arg: [test.value] }],
             },
             {
                 name: "onDidChangeConfiguration:1",
@@ -79,7 +79,6 @@ describe("SharedInit Unit Tests", () => {
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_TEMP_FOLDER_HIDE], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                 ],
             },
             {
@@ -91,7 +90,6 @@ describe("SharedInit Unit Tests", () => {
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_TEMP_FOLDER_HIDE], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                 ],
             },
             {
@@ -106,7 +104,6 @@ describe("SharedInit Unit Tests", () => {
                     { spy: jest.spyOn(SharedActions, "refreshAll"), arg: ["job"] },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_TEMP_FOLDER_HIDE], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                 ],
             },
             {
@@ -118,8 +115,7 @@ describe("SharedInit Unit Tests", () => {
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_TEMP_FOLDER_HIDE], ret: true },
                     { spy: jest.spyOn(FileManagement, "getZoweDir"), arg: [], ret: test.value },
                     { spy: jest.spyOn(TempFolder, "hideTempFolder"), arg: [test.value] },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: true },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
                 ],
             },
             {
@@ -131,7 +127,6 @@ describe("SharedInit Unit Tests", () => {
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_TEMP_FOLDER_HIDE], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: true },
                     { spy: jest.spyOn(executeCommand, "fun"), arg: ["zowe.updateSecureCredentials"] },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                 ],
             },
             {
@@ -213,7 +208,7 @@ describe("SharedInit Unit Tests", () => {
             },
         ];
 
-        beforeAll(async () => {
+        beforeAll(() => {
             const registerCommand = (cmd: string, fun: () => void) => {
                 return { [cmd]: fun };
             };
@@ -231,7 +226,7 @@ describe("SharedInit Unit Tests", () => {
             Object.defineProperty(Constants, "USS_DIR", { value: testConstants.USS_DIR });
             Object.defineProperty(Constants, "SETTINGS_TEMP_FOLDER_LOCATION", { value: "/some/old/temp/location" });
             Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
-            await SharedInit.registerCommonCommands(test.context, test.value.providers);
+            SharedInit.registerCommonCommands(test.context, test.value.providers);
         });
         afterAll(() => {
             jest.restoreAllMocks();

@@ -31,7 +31,6 @@ import { createDatasetSessionNode, createDatasetTree, createDatasetFavoritesNode
 import { ProfilesCache, imperative, Gui, Validation } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../../../src/configuration/Constants";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
-import { utils } from "mocha";
 import { join } from "path";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
@@ -1621,7 +1620,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const errorHandlingMock = new MockedProperty(utils, "errorHandling");
+        const errorHandlingMock = new MockedProperty(AuthUtils, "errorHandling");
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new FilterDescriptor("\uFF0B " + "Create a new filter"));
         mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");

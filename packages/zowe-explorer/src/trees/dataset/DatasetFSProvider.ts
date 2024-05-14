@@ -17,10 +17,8 @@ import {
     DsEntryMetadata,
     MemberEntry,
     PdsEntry,
-    getInfoForUri,
-    isDirectoryEntry,
-    isFilterEntry,
-    isPdsEntry,
+    FsAbstractUtils,
+    FsDatasetsUtils,
     FilterEntry,
     Gui,
     ZosEncoding,
@@ -105,11 +103,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      */
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         const dsEntry = this._lookupAsDirectory(uri, false);
-        const uriInfo = getInfoForUri(uri, Profiles.getInstance());
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
 
         const results: [string, vscode.FileType][] = [];
 
-        if (isFilterEntry(dsEntry)) {
+        if (FsAbstractUtils.isFilterEntry(dsEntry)) {
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(uriInfo.profile);
             const datasetResponses: IZosFilesResponse[] = [];
             const dsPatterns = [
@@ -117,7 +115,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     dsEntry.filter["pattern"]
                         .toUpperCase()
                         .split(",")
-                        .map((p) => p.trim())
+                        .map((p) => p.trim() as string)
                 ),
             ];
 
@@ -152,7 +150,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     results.push([tempEntry.name, tempEntry instanceof DsEntry ? vscode.FileType.File : vscode.FileType.Directory]);
                 }
             }
-        } else if (isDirectoryEntry(dsEntry)) {
+        } else if (FsAbstractUtils.isDirectoryEntry(dsEntry)) {
             const members = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(dsEntry.name);
 
             for (const ds of members.apiResponse?.items || []) {
@@ -171,7 +169,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
     public updateFilterForUri(uri: vscode.Uri, pattern: string): void {
         const filterEntry = this._lookup(uri, false);
-        if (!isFilterEntry(filterEntry)) {
+        if (!FsAbstractUtils.isFilterEntry(filterEntry)) {
             return;
         }
 
@@ -197,7 +195,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                   })
                 : this._getInfoFromUri(uri);
 
-        if (isFilterEntry(parent)) {
+        if (FsAbstractUtils.isFilterEntry(parent)) {
             const entry = new PdsEntry(basename);
             entry.metadata = profInfo;
             parent.entries.set(entry.name, entry);
@@ -295,7 +293,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
     private async uploadEntry(parent: DirEntry, entry: DsEntry, content: Uint8Array, forceUpload?: boolean): Promise<IZosFilesResponse> {
         const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
-        const isPdsMember = isPdsEntry(parent) && !isFilterEntry(parent);
+        const isPdsMember = FsDatasetsUtils.isPdsEntry(parent) && !FsAbstractUtils.isFilterEntry(parent);
         const fullName = isPdsMember ? `${parent.name}(${entry.name})` : entry.name;
         let resp: IZosFilesResponse;
         try {
@@ -327,7 +325,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const basename = path.posix.basename(uri.path);
         const parent = this._lookupParentDirectory(uri);
         let entry = parent.entries.get(basename);
-        if (isDirectoryEntry(entry)) {
+        if (FsAbstractUtils.isDirectoryEntry(entry)) {
             throw vscode.FileSystemError.FileIsADirectory(uri);
         }
         if (!entry && !options.create) {
@@ -402,7 +400,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @returns Metadata for the URI that contains the profile instance and path
      */
     private _getInfoFromUri(uri: vscode.Uri): DsEntryMetadata {
-        const uriInfo = getInfoForUri(uri, Profiles.getInstance());
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         return new DsEntryMetadata({
             profile: uriInfo.profile,
             path: uri.path.substring(uriInfo.slashAfterProfilePos),
@@ -413,7 +411,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const entry = this._lookup(uri, false);
         const parent = this._lookupParentDirectory(uri);
         let fullName: string = "";
-        if (isPdsEntry(parent)) {
+        if (FsDatasetsUtils.isPdsEntry(parent)) {
             fullName = `${parent.name}(${entry.name})`;
         } else {
             fullName = entry.name;
@@ -453,7 +451,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const newName = path.posix.basename(newUri.path);
 
         try {
-            if (isPdsEntry(entry)) {
+            if (FsDatasetsUtils.isPdsEntry(entry)) {
                 await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).renameDataSet(oldName, newName);
             } else {
                 const pdsName = path.basename(path.posix.join(entry.metadata.path, ".."));
