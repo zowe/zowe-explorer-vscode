@@ -66,6 +66,7 @@ pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::
     let vsc = vsc_dir.join(code_binary());
 
     if std::env::consts::OS == "macos" {
+        let vsc = vsc_bin_path.ancestors().nth(5).unwrap();
         match Command::new("open")
             .args([vsc.to_str().unwrap(), "--args", "--disable-updates", sandbox_str])
             .env("ZOWE_CLI_HOME", zowe_dir.to_str().unwrap())
