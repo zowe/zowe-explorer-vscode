@@ -10,8 +10,9 @@
  */
 
 import { Given, Then, When } from "@cucumber/cucumber";
-import { TreeItem, ViewSection } from "wdio-vscode-service";
+import { TreeItem } from "wdio-vscode-service";
 import { Key } from "webdriverio";
+import { paneDivForTree } from "../../shared.steps";
 
 //
 // Scenario: User clicks on the "Zowe Explorer" icon in the Activity Bar
@@ -28,25 +29,6 @@ Then("the user can click on the Zowe Explorer icon", async () => {
     await zeContainer.wait();
     await zeContainer.openView();
 });
-
-/* Helper functions */
-async function paneDivForTree(tree: string): Promise<ViewSection> {
-    const activityBar = (await browser.getWorkbench()).getActivityBar();
-    await activityBar.wait();
-    const zeContainer = await activityBar.getViewControl("Zowe Explorer");
-    await zeContainer.wait();
-    const sidebarContent = (await zeContainer.openView()).getContent();
-    switch (tree.toLowerCase()) {
-        case "data sets":
-            return sidebarContent.getSection("DATA SETS");
-        case "uss":
-        case "unix system services (uss)":
-            return sidebarContent.getSection("UNIX SYSTEM SERVICES (USS)");
-        case "jobs":
-        default:
-            return sidebarContent.getSection("JOBS");
-    }
-}
 
 //
 // Scenario: User collapses/expands the Favorites node
