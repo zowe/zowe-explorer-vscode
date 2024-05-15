@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import { Validation, imperative, IZoweTreeNode, Gui } from "@zowe/zowe-explorer-api";
-import { ZoweCommandProvider } from "../providers/ZoweCommandProvider";
+import { ZoweCommandProvider } from "./ZoweCommandProvider";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { Profiles } from "../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
@@ -20,6 +20,7 @@ import { Constants } from "../configuration/Constants";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { FilterDescriptor, FilterItem } from "../management/FilterManagement";
 import { AuthUtils } from "../utils/AuthUtils";
+import { Definitions } from "../configuration/Definitions";
 
 /**
  * Provides a class that manages submitting a command on the server
@@ -71,7 +72,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
         }
         if (!session) {
             const allProfiles = profiles.allProfiles;
-            const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Constants.Trees.MVS);
+            const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS);
             if (profileNamesList.length) {
                 const quickPickOptions: vscode.QuickPickOptions = {
                     placeHolder: vscode.l10n.t("Select the Profile to use to submit the command"),

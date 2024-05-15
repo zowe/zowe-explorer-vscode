@@ -15,7 +15,6 @@ import { DatasetTree } from "./DatasetTree";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { DatasetActions } from "./DatasetActions";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
-import { Constants } from "../../configuration/Constants";
 import { Profiles } from "../../configuration/Profiles";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
@@ -25,9 +24,6 @@ import { SharedInit } from "../shared/SharedInit";
 import { SharedUtils } from "../shared/SharedUtils";
 
 export class DatasetInit {
-    /**
-     * Creates the Dataset tree that contains nodes of sessions and data sets
-     */
     public static async createDatasetTree(log: imperative.Logger): Promise<DatasetTree> {
         const tree = new DatasetTree();
         await tree.initializeFavorites(log);
@@ -38,7 +34,7 @@ export class DatasetInit {
     public static async initDatasetProvider(context: vscode.ExtensionContext): Promise<DatasetTree> {
         ZoweLogger.trace("dataset.init.initDatasetProvider called.");
         context.subscriptions.push(vscode.workspace.registerFileSystemProvider(ZoweScheme.DS, DatasetFSProvider.instance, { isCaseSensitive: true }));
-        const datasetProvider = await DatasetInit.createDatasetTree(Constants.LOG);
+        const datasetProvider = await DatasetInit.createDatasetTree(ZoweLogger.log);
         if (datasetProvider == null) {
             return null;
         }

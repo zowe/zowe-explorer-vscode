@@ -41,6 +41,7 @@ import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { mocked } from "../../../__mocks__/mockUtils";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
+import { ExtensionUtils } from "../../../../src/utils/ExtensionUtils";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -151,7 +152,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
     const globalMocks = createGlobalMocks();
 
     it("Checking of common dataset member creation", async () => {
-        Constants.defineConstants("");
+        ExtensionUtils.defineConstants("");
         const blockMocks = createBlockMocksShared();
         const parent = new ZoweDatasetNode({
             label: "parent",
@@ -656,7 +657,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
     afterAll(() => jest.restoreAllMocks());
 
     it("Checking common PS dataset deletion", async () => {
-        Constants.defineConstants("");
+        ExtensionUtils.defineConstants("");
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -2937,7 +2938,7 @@ describe("Dataset Actions Unit Tests - Function confirmJobSubmission", () => {
         jest.spyOn(vscode.workspace, "getConfiguration").mockImplementation(
             () =>
                 ({
-                    get: () => SharedUtils.JOB_SUBMIT_DIALOG_OPTS[1],
+                    get: () => Constants.JOB_SUBMIT_DIALOG_OPTS[1],
                 } as any)
         );
         jest.spyOn(Gui, "warningMessage").mockResolvedValue({

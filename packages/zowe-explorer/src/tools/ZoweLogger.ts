@@ -13,12 +13,13 @@
 
 import * as vscode from "vscode";
 import * as loggerConfig from "../../log4jsconfig.json";
+import * as path from "path";
 import { Gui, imperative, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { padLeft } from "@zowe/core-for-zowe-sdk";
-import { join as joinPath } from "path";
 
 export class ZoweLogger {
     public static zeOutputChannel: vscode.OutputChannel;
+    public static log: imperative.Logger;
     private static defaultLogLevel: "INFO";
     private static zeLogLevel: string;
 
@@ -46,7 +47,7 @@ export class ZoweLogger {
         const zeLogLevel = ZoweLogger.getLogSetting();
         const loggerConfigCopy = JSON.parse(JSON.stringify(loggerConfig));
         for (const appenderName of Object.keys(loggerConfigCopy.log4jsConfig.appenders)) {
-            loggerConfigCopy.log4jsConfig.appenders[appenderName].filename = joinPath(
+            loggerConfigCopy.log4jsConfig.appenders[appenderName].filename = path.join(
                 logsPath,
                 loggerConfigCopy.log4jsConfig.appenders[appenderName].filename
             );

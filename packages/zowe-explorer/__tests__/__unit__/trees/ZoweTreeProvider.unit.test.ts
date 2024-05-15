@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import { imperative, ProfilesCache, Validation, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
-import { ZoweTreeProvider } from "../../../src/providers/ZoweTreeProvider";
+import { ZoweTreeProvider } from "../../../src/trees/ZoweTreeProvider";
 import {
     createIProfile,
     createISession,

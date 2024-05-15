@@ -10,18 +10,18 @@
  */
 
 import * as vscode from "vscode";
-import { PollDecorator } from "../../../src/providers/DecorationProviders";
 import { Poller } from "@zowe/zowe-explorer-api";
+import { PollProvider } from "../../../../src/trees/job/JobPollProvider";
 
 jest.mock("vscode");
 
-describe("PollDecorationProvider - unit tests", () => {
+describe("PollProvider - unit tests", () => {
     it("disposes the provider without errors", () => {
         const forEachDisposableMock = jest.fn();
-        (PollDecorator as any).disposables = [{ dispose: forEachDisposableMock }];
-        const forEachSpy = jest.spyOn((PollDecorator as any).disposables, "forEach");
+        (PollProvider as any).disposables = [{ dispose: forEachDisposableMock }];
+        const forEachSpy = jest.spyOn((PollProvider as any).disposables, "forEach");
         try {
-            PollDecorator.dispose();
+            PollProvider.dispose();
         } catch (err) {
             fail("PollDecorator.dispose should not throw an error.");
         }
@@ -42,7 +42,7 @@ describe("PollDecorationProvider - unit tests", () => {
                 }),
         };
         try {
-            PollDecorator.updateIcon(mockUri);
+            PollProvider.updateIcon(mockUri);
         } catch (err) {
             fail("PollDecorator.updateIcon should not throw an error for a new icon.");
         }
@@ -51,7 +51,7 @@ describe("PollDecorationProvider - unit tests", () => {
         Poller.pollRequests[mockUri.path].msInterval = 500;
 
         // Update the icon for a URI that has already been decorated
-        PollDecorator.provideFileDecoration(mockUri, undefined as any);
+        PollProvider.provideFileDecoration(mockUri, undefined as any);
 
         const decoration = Poller.pollRequests[mockUri.path].decoration;
         expect(decoration?.tooltip).toBe("Polling (500ms)");
@@ -66,7 +66,7 @@ describe("PollDecorationProvider - unit tests", () => {
             dispose: false,
         };
 
-        const fileDecoration = PollDecorator.provideFileDecoration(fakeUri, {
+        const fileDecoration = PollProvider.provideFileDecoration(fakeUri, {
             isCancellationRequested: false,
             onCancellationRequested: jest.fn(),
         });
@@ -76,7 +76,7 @@ describe("PollDecorationProvider - unit tests", () => {
         // Verify that a file (that is not being polled) has a null decoration
         delete Poller.pollRequests[fakeUri.path];
 
-        const nullDecoration = PollDecorator.provideFileDecoration(fakeUri, {
+        const nullDecoration = PollProvider.provideFileDecoration(fakeUri, {
             isCancellationRequested: false,
             onCancellationRequested: jest.fn(),
         });

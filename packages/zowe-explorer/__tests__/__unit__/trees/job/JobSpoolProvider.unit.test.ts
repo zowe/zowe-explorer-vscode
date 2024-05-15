@@ -12,14 +12,15 @@
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { imperative } from "@zowe/zowe-explorer-api";
-import { Profiles } from "../../../src/configuration/Profiles";
-import { SpoolFile, SpoolProvider } from "../../../src/providers/SpoolProvider";
-import { createIProfile, createISessionWithoutCredentials } from "../../__mocks__/mockCreators/shared";
-import { bindJesApi, createJesApi } from "../../__mocks__/mockCreators/api";
-import { createJobSessionNode } from "../../__mocks__/mockCreators/jobs";
-import { JobFSProvider } from "../../../src/trees/job/JobFSProvider";
+import { Profiles } from "../../../../src/configuration/Profiles";
+import { createIProfile, createISessionWithoutCredentials } from "../../../__mocks__/mockCreators/shared";
+import { bindJesApi, createJesApi } from "../../../__mocks__/mockCreators/api";
+import { createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
+import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
+import { JobSpoolProvider } from "../../../../src/trees/job/JobSpoolProvider";
+import { JobSpoolFile } from "../../../../src/trees/job/JobSpoolFile";
 
-describe("SpoolProvider Unit Tests", () => {
+describe("JobJobSpoolProvider Unit Tests", () => {
     const iJobFile: zosjobs.IJobFile = {
         "byte-count": 128,
         "job-correlator": "",
@@ -124,7 +125,7 @@ describe("SpoolProvider Unit Tests", () => {
         const query = jest.fn();
         Object.defineProperty(uriMock, "query", { value: query });
 
-        SpoolProvider.encodeJobFile("sessionName", iJobFile);
+        JobSpoolProvider.encodeJobFile("sessionName", iJobFile);
         expect(mockUri.with.mock.calls.length).toEqual(1);
         expect(mockUri.with.mock.calls[0][0]).toEqual({
             path: "TESTJOB.100.STDOUT.100",
@@ -167,12 +168,12 @@ describe("SpoolProvider Unit Tests", () => {
         const parse = jest.fn().mockReturnValue(mockUri);
         Object.defineProperty(uriMock, "parse", { value: parse });
 
-        const uri = SpoolProvider.encodeJobFile("sessionName", fullIJobFile);
+        const uri = JobSpoolProvider.encodeJobFile("sessionName", fullIJobFile);
         expect(uri.path).toEqual(fullSpoolFilePath);
     });
 
     it("Tests that the URI is decoded", () => {
-        const [sessionName, spool] = SpoolProvider.decodeJobFile(uriObj);
+        const [sessionName, spool] = JobSpoolFile.decodeJobFile(uriObj);
         expect(sessionName).toEqual(sessionName);
         expect(spool).toEqual(iJobFile);
     });
@@ -207,10 +208,10 @@ describe("SpoolProvider Unit Tests", () => {
         Object.defineProperty(zosjobs.GetJobs, "getSpoolContentById", { value: getSpoolContentById });
         getSpoolContentById.mockReturnValue("spool content");
 
-        const provider = new SpoolProvider();
+        const provider = new JobSpoolProvider();
 
-        // the first time the file is provided by SpoolProvider, it will fetch the latest spool content
-        const fetchContentSpy = jest.spyOn(SpoolFile.prototype, "fetchContent");
+        // the first time the file is provided by JobSpoolProvider, it will fetch the latest spool content
+        const fetchContentSpy = jest.spyOn(JobSpoolFile.prototype, "fetchContent");
         const content = await provider.provideTextDocumentContent(uriObj);
         expect(fetchContentSpy).toHaveBeenCalled();
 
@@ -223,38 +224,38 @@ describe("SpoolProvider Unit Tests", () => {
     });
 
     it("disposes the event emitter when the content provider is disposed", () => {
-        SpoolProvider.onDidChangeEmitter = {
+        JobSpoolProvider.onDidChangeEmitter = {
             dispose: jest.fn(),
         } as unknown as vscode.EventEmitter<vscode.Uri>;
-        const testProvider = new SpoolProvider();
+        const testProvider = new JobSpoolProvider();
         testProvider.dispose();
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(SpoolProvider.onDidChangeEmitter.dispose).toHaveBeenCalled();
+        expect(JobSpoolProvider.onDidChangeEmitter.dispose).toHaveBeenCalled();
     });
 
     describe("matchSpool", () => {
         it("should match spool to the selected node", () => {
             const spool: zosjobs.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1, procstep: "proc" };
-            let match = SpoolProvider.matchSpool(spool, { label: "test:dd - 1" } as any);
+            let match = JobSpoolProvider.matchSpool(spool, { label: "test:dd - 1" } as any);
             expect(match).toBe(true);
 
-            match = SpoolProvider.matchSpool(spool, { label: "test:dd - proc" } as any);
+            match = JobSpoolProvider.matchSpool(spool, { label: "test:dd - proc" } as any);
             expect(match).toBe(true);
 
             // Different record-count
-            match = SpoolProvider.matchSpool(spool, { label: "test:dd - 2" } as any);
+            match = JobSpoolProvider.matchSpool(spool, { label: "test:dd - 2" } as any);
             expect(match).toBe(false);
 
             // Different procstep
-            match = SpoolProvider.matchSpool(spool, { label: "test:dd - abc" } as any);
+            match = JobSpoolProvider.matchSpool(spool, { label: "test:dd - abc" } as any);
             expect(match).toBe(false);
 
             // Different stepname
-            match = SpoolProvider.matchSpool(spool, { label: "other:dd - 1" } as any);
+            match = JobSpoolProvider.matchSpool(spool, { label: "other:dd - 1" } as any);
             expect(match).toBe(false);
 
             // Different ddname
-            match = SpoolProvider.matchSpool(spool, { label: "test:new - proc" } as any);
+            match = JobSpoolProvider.matchSpool(spool, { label: "test:new - proc" } as any);
             expect(match).toBe(false);
         });
     });
@@ -289,7 +290,7 @@ describe("SpoolProvider Unit Tests", () => {
 
             const getSpoolFilesSpy = jest.spyOn(jesApi, "getSpoolFiles").mockResolvedValue([spoolOk, withoutIdDdStep] as any);
 
-            const spools = await SpoolProvider.getSpoolFiles(newJobSession);
+            const spools = await JobSpoolProvider.getSpoolFiles(newJobSession);
 
             expect(getSpoolFilesSpy).toHaveBeenCalledWith("TESTJOB", "100");
             expect(spools).toEqual([spoolOk]);
@@ -312,7 +313,7 @@ describe("SpoolProvider Unit Tests", () => {
             const jesApi = createJesApi(profile);
             bindJesApi(jesApi);
 
-            const spools = await SpoolProvider.getSpoolFiles(newJobSession);
+            const spools = await JobSpoolProvider.getSpoolFiles(newJobSession);
 
             expect(spools).toEqual([]);
         });

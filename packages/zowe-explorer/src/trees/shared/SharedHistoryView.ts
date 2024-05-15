@@ -10,25 +10,20 @@
  */
 
 import * as vscode from "vscode";
+import type { Definitions } from "../../configuration/Definitions";
 import { WebView, Gui } from "@zowe/zowe-explorer-api";
 import { ExtensionContext } from "vscode";
-import { SharedUtils } from "./SharedUtils";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { DatasetTree } from "../dataset/DatasetTree";
 import { JobTree } from "../job/JobTree";
-
-const tabs = {
-    ds: "ds-panel-tab",
-    uss: "uss-panel-tab",
-    jobs: "jobs-panel-tab",
-};
+import { Constants } from "../../configuration/Constants";
 
 export class SharedHistoryView extends WebView {
-    private treeProviders: SharedUtils.IZoweProviders;
+    private treeProviders: Definitions.IZoweProviders;
     private currentTab: string;
     private currentSelection: { [type: string]: string };
 
-    public constructor(context: ExtensionContext, treeProviders: SharedUtils.IZoweProviders) {
+    public constructor(context: ExtensionContext, treeProviders: Definitions.IZoweProviders) {
         const label = "Edit History";
         super(label, "edit-history", context, (message: object) => this.onDidReceiveMessage(message), true);
         this.treeProviders = treeProviders;
@@ -69,12 +64,12 @@ export class SharedHistoryView extends WebView {
         }
     }
 
-    private getTreeProvider(type: string): SharedUtils.TreeProvider {
-        return this.treeProviders[type === "jobs" ? "job" : type] as SharedUtils.TreeProvider;
+    private getTreeProvider(type: string): Definitions.TreeProvider {
+        return this.treeProviders[type === "jobs" ? "job" : type] as Definitions.TreeProvider;
     }
 
-    private getHistoryData(type: string): SharedUtils.History {
-        const treeProvider = this.treeProviders[type] as SharedUtils.TreeProvider;
+    private getHistoryData(type: string): Definitions.History {
+        const treeProvider = this.treeProviders[type] as Definitions.TreeProvider;
         return {
             search: treeProvider.getSearchHistory(),
             sessions: treeProvider.getSessions(),
@@ -164,7 +159,7 @@ export class SharedHistoryView extends WebView {
 
     private async refreshView(message): Promise<void> {
         ZoweLogger.trace("HistoryView.refreshView called.");
-        this.currentTab = tabs[message.attrs.type];
+        this.currentTab = Constants.HISTORY_VIEW_TABS[(message.attrs.type as string).toUpperCase()];
         await this.panel.webview.postMessage({
             ds: this.getHistoryData("ds"),
             uss: this.getHistoryData("uss"),

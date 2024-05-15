@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zostso from "@zowe/zos-tso-for-zowe-sdk";
 import { Gui, Validation, imperative, IZoweTreeNode } from "@zowe/zowe-explorer-api";
-import { ZoweCommandProvider } from "../providers/ZoweCommandProvider";
+import { ZoweCommandProvider } from "./ZoweCommandProvider";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { Profiles } from "../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
@@ -21,6 +21,7 @@ import { Constants } from "../configuration/Constants";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { FilterDescriptor, FilterItem } from "../management/FilterManagement";
 import { AuthUtils } from "../utils/AuthUtils";
+import { Definitions } from "../configuration/Definitions";
 
 /**
  * Provides a class that manages submitting a TSO command on the server
@@ -71,7 +72,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             }
         }
         if (!session) {
-            const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Constants.Trees.MVS);
+            const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS);
             if (profileNamesList.length > 0) {
                 const quickPickOptions: vscode.QuickPickOptions = {
                     placeHolder: vscode.l10n.t("Select the Profile to use to submit the TSO command"),

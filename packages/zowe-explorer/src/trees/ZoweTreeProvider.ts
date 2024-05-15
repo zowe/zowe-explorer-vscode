@@ -14,16 +14,16 @@ import { IZoweTreeNode, imperative, Types, IZoweTree, PersistenceSchemaEnum, Val
 import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { Profiles } from "../configuration/Profiles";
-import { SharedContext } from "../trees/shared/SharedContext";
+import { SharedContext } from "./shared/SharedContext";
 import { Constants } from "../configuration/Constants";
 import { IconGenerator } from "../icons/IconGenerator";
 import { SettingsConfig } from "../configuration/SettingsConfig";
-import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
-import { SharedUtils } from "../trees/shared/SharedUtils";
+import { SharedTreeProviders } from "./shared/SharedTreeProviders";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
-import { SharedActions } from "../trees/shared/SharedActions";
+import { SharedActions } from "./shared/SharedActions";
 import { IconUtils } from "../icons/IconUtils";
 import { AuthUtils } from "../utils/AuthUtils";
+import { Definitions } from "../configuration/Definitions";
 
 export class ZoweTreeProvider<T extends IZoweTreeNode> {
     // Event Emitters used to notify subscribers that the refresh event has fired
@@ -199,7 +199,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
     public deleteSession(node: IZoweTreeNode, hideFromAllTrees?: boolean): void {
         ZoweLogger.trace("ZoweTreeProvider.deleteSession called.");
         if (hideFromAllTrees) {
-            for (const key of Object.keys(SharedTreeProviders.providers) as Array<keyof SharedUtils.IZoweProviders>) {
+            for (const key of Object.keys(SharedTreeProviders.providers) as Array<keyof Definitions.IZoweProviders>) {
                 const currentProvider = SharedTreeProviders.providers[key];
                 this.deleteSessionForProvider(node, currentProvider);
             }
@@ -281,7 +281,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
                 Profiles.getInstance().validProfile = Validation.ValidationType.UNVERIFIED;
             }
         }
-        await this.refresh();
+        this.refresh();
     }
 
     public async ssoLogin(node: IZoweTreeNode): Promise<void> {

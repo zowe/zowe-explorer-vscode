@@ -11,14 +11,9 @@
 
 import * as path from "path";
 import * as vscode from "vscode";
-import { Gui, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "./ZoweLogger";
-
-interface SaveRequest {
-    uploadRequest: (document: SaveRequest["savedFile"], provider: SaveRequest["fileProvider"]) => Promise<void>;
-    savedFile: vscode.TextDocument;
-    fileProvider: IZoweTree<IZoweTreeNode>;
-}
+import type { Definitions } from "../configuration/Definitions";
 
 /**
  * Class to handle queueing of file save/upload operations.
@@ -30,7 +25,7 @@ export class ZoweSaveQueue {
      * processing the next item in the queue if there are no active upload
      * operations.
      */
-    public static push(request: SaveRequest): void {
+    public static push(request: Definitions.SaveRequest): void {
         ZoweLogger.trace("ZoweSaveQueue.push called.");
         this.savingQueue.push(request);
         this.ongoingSave = this.all().then(this.processNext.bind(this));
@@ -45,7 +40,7 @@ export class ZoweSaveQueue {
     }
 
     private static ongoingSave = Promise.resolve();
-    private static savingQueue: SaveRequest[] = [];
+    private static savingQueue: Definitions.SaveRequest[] = [];
 
     /**
      * Iterate over the queue and process next item until it is empty.

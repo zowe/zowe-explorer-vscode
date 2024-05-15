@@ -12,7 +12,7 @@
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { createIProfile, createISessionWithoutCredentials } from "../../__mocks__/mockCreators/shared";
-import { getSpoolFiles, matchSpool } from "../../../src/utils/SpoolUtils";
+import { SpoolUtils } from "../../../src/utils/SpoolUtils";
 import { createJobSessionNode } from "../../__mocks__/mockCreators/jobs";
 import { bindJesApi, createJesApi } from "../../__mocks__/mockCreators/api";
 
@@ -70,26 +70,26 @@ describe("SpoolProvider Unit Tests", () => {
     describe("matchSpool", () => {
         it("should match spool to the selected node", () => {
             const spool: zosjobs.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1, procstep: "proc" };
-            let match = matchSpool(spool, { label: "test:dd - 1" } as any);
+            let match = SpoolUtils.matchSpool(spool, { label: "test:dd - 1" } as any);
             expect(match).toBe(true);
 
-            match = matchSpool(spool, { label: "test:dd - proc" } as any);
+            match = SpoolUtils.matchSpool(spool, { label: "test:dd - proc" } as any);
             expect(match).toBe(true);
 
             // Different record-count
-            match = matchSpool(spool, { label: "test:dd - 2" } as any);
+            match = SpoolUtils.matchSpool(spool, { label: "test:dd - 2" } as any);
             expect(match).toBe(false);
 
             // Different procstep
-            match = matchSpool(spool, { label: "test:dd - abc" } as any);
+            match = SpoolUtils.matchSpool(spool, { label: "test:dd - abc" } as any);
             expect(match).toBe(false);
 
             // Different stepname
-            match = matchSpool(spool, { label: "other:dd - 1" } as any);
+            match = SpoolUtils.matchSpool(spool, { label: "other:dd - 1" } as any);
             expect(match).toBe(false);
 
             // Different ddname
-            match = matchSpool(spool, { label: "test:new - proc" } as any);
+            match = SpoolUtils.matchSpool(spool, { label: "test:new - proc" } as any);
             expect(match).toBe(false);
         });
     });
@@ -114,7 +114,7 @@ describe("SpoolProvider Unit Tests", () => {
 
             const getSpoolFilesSpy = jest.spyOn(jesApi, "getSpoolFiles").mockResolvedValue([spoolOk, withoutIdDdStep] as any);
 
-            const spools = await getSpoolFiles(newJobSession);
+            const spools = await SpoolUtils.getSpoolFiles(newJobSession);
 
             expect(getSpoolFilesSpy).toHaveBeenCalledWith("TESTJOB", "100");
             expect(spools).toEqual([spoolOk]);
@@ -128,7 +128,7 @@ describe("SpoolProvider Unit Tests", () => {
             const jesApi = createJesApi(profile);
             bindJesApi(jesApi);
 
-            const spools = await getSpoolFiles(newJobSession);
+            const spools = await SpoolUtils.getSpoolFiles(newJobSession);
 
             expect(spools).toEqual([]);
         });

@@ -34,7 +34,7 @@ import { Profiles } from "../../configuration/Profiles";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { IconGenerator } from "../../icons/IconGenerator";
-import { ZoweTreeProvider } from "../../providers/ZoweTreeProvider";
+import { ZoweTreeProvider } from "../ZoweTreeProvider";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedContext } from "../shared/SharedContext";
@@ -43,18 +43,6 @@ import { SharedUtils } from "../shared/SharedUtils";
 import { FilterDescriptor, FilterItem } from "../../management/FilterManagement";
 import { IconUtils } from "../../icons/IconUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
-
-/**
- * Creates the Dataset tree that contains nodes of sessions and data sets
- *
- * @export
- */
-export async function createDatasetTree(log: imperative.Logger): Promise<DatasetTree> {
-    const tree = new DatasetTree();
-    await tree.initializeFavorites(log);
-    await tree.addSession(undefined, undefined, tree);
-    return tree;
-}
 
 /**
  * A tree that contains nodes of sessions and data sets
@@ -158,8 +146,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 return this.mFavorites;
             }
             if (element.contextValue && element.contextValue === Constants.FAV_PROFILE_CONTEXT) {
-                const favsForProfile = this.loadProfilesForFavorites(this.log, element);
-                return favsForProfile;
+                return this.loadProfilesForFavorites(this.log, element);
             }
             let response: IZoweDatasetTreeNode[] = [];
             try {
@@ -580,7 +567,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             profileNodeInFavorites.children.push(temp);
             SharedUtils.sortTreeItems(profileNodeInFavorites.children, Constants.DS_SESSION_CONTEXT + Constants.FAV_SUFFIX);
             SharedUtils.sortTreeItems(this.mFavorites, Constants.FAV_PROFILE_CONTEXT);
-            await this.updateFavorites();
+            this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }
     }
@@ -742,7 +729,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         });
 
         // Update the favorites in settings file
-        await this.updateFavorites();
+        this.updateFavorites();
     }
 
     public async onDidChangeConfiguration(e): Promise<void> {
@@ -878,7 +865,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         sessionNode.tooltip = sessionNode.pattern = this.createFilterString(parentName, sessionNode);
         sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
         sessionNode.dirty = true;
-        await this.refresh();
+        this.refresh();
         let children = await sessionNode.getChildren();
 
         // Find parent node in tree
@@ -1361,7 +1348,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         const selection = await Gui.showQuickPick(
             DatasetUtils.DATASET_SORT_OPTS.map((opt, i) => ({
                 label: sortOpts.method === i ? `${opt} $(check)` : opt,
-                description: i === DatasetUtils.DATASET_SORT_OPTS.length - 1 ? SharedUtils.SORT_DIRS[sortOpts.direction] : null,
+                description: i === DatasetUtils.DATASET_SORT_OPTS.length - 1 ? Constants.SORT_DIRS[sortOpts.direction] : null,
             })),
             {
                 placeHolder: vscode.l10n.t({
@@ -1377,13 +1364,13 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
         if (selection.label === vscode.l10n.t("$(fold) Sort Direction")) {
             // Update sort direction (if a new one was provided)
-            const dir = await Gui.showQuickPick(SharedUtils.SORT_DIRS, {
+            const dir = await Gui.showQuickPick(Constants.SORT_DIRS, {
                 placeHolder: vscode.l10n.t("Select a sorting direction"),
             });
             if (dir != null) {
                 node.sort = {
                     ...sortOpts,
-                    direction: SharedUtils.SORT_DIRS.indexOf(dir),
+                    direction: Constants.SORT_DIRS.indexOf(dir),
                 };
             }
             await this.sortPdsMembersDialog(node);

@@ -23,6 +23,7 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedUtils } from "../shared/SharedUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
+import type { Definitions } from "../../configuration/Definitions";
 
 export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
     public children: IZoweJobTreeNode[] = [];
@@ -37,7 +38,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
     public filtered = false;
     public filter?: string;
 
-    public constructor(opts: SharedUtils.IZoweJobTreeOpts) {
+    public constructor(opts: Definitions.IZoweJobTreeOpts) {
         let finalLabel = opts.label;
         // If the node has a parent and the parent is favorited, it is a saved query
         if (opts.parentNode != null && SharedContext.isFavProfile(opts.parentNode) && !opts.label.includes("|")) {
@@ -409,7 +410,7 @@ export class ZoweSpoolNode extends ZoweJobNode {
     public uniqueName: string;
     public spool: zosjobs.IJobFile;
 
-    public constructor(opts: SharedUtils.IZoweJobTreeOpts & { spool?: zosjobs.IJobFile }) {
+    public constructor(opts: Definitions.IZoweJobTreeOpts & { spool?: zosjobs.IJobFile }) {
         super(opts);
         this.uniqueName = opts.spool ? FsJobsUtils.buildUniqueSpoolName(opts.spool).replace("/", "") : "<unknown-spool-id>";
         this.resourceUri = opts.parentNode?.resourceUri.with({

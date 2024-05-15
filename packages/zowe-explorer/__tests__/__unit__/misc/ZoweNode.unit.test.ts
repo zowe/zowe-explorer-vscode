@@ -12,10 +12,10 @@
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { imperative, Sorting } from "@zowe/zowe-explorer-api";
-import { ZoweDatasetNode } from "../../src/trees/dataset/ZoweDatasetNode";
-import { Constants } from "../../src/configuration/Constants";
-import { Profiles } from "../../src/configuration/Profiles";
-import { DatasetFSProvider } from "../../src/trees/dataset/DatasetFSProvider";
+import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
+import { Constants } from "../../../src/configuration/Constants";
+import { Profiles } from "../../../src/configuration/Profiles";
+import { DatasetFSProvider } from "../../../src/trees/dataset/DatasetFSProvider";
 
 jest.mock("vscode");
 jest.mock("@zowe/zos-files-for-zowe-sdk");

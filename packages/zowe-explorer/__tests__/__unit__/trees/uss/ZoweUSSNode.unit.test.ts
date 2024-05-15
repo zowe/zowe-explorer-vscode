@@ -35,6 +35,7 @@ import { USSUtils } from "../../../../src/trees/uss/USSUtils";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
+import { ExtensionUtils } from "../../../../src/utils/ExtensionUtils";
 
 jest.mock("fs");
 
@@ -905,7 +906,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         globalMocks.ussFile.mockReturnValue(globalMocks.response);
         globalMocks.withProgress.mockReturnValue(globalMocks.response);
         globalMocks.showInputBox.mockReturnValue("fake");
-        Constants.defineConstants("/test/path/");
+        ExtensionUtils.defineConstants("/test/path/");
 
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {

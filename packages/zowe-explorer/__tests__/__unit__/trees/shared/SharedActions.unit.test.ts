@@ -105,10 +105,10 @@ function createGlobalMocks() {
     });
     Object.defineProperty(zosfiles, "Utilities", { value: jest.fn(), configurable: true });
     Object.defineProperty(zosfiles.Utilities, "isFileTagBinOrAscii", { value: jest.fn(), configurable: true });
-    Object.defineProperty(Constants, "LOG", { value: jest.fn(), configurable: true });
-    Object.defineProperty(Constants.LOG, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(Constants.LOG, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(Constants.LOG, "warn", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "log", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger.log, "debug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger.log, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger.log, "warn", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });

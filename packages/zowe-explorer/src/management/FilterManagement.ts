@@ -10,14 +10,14 @@
  */
 
 import * as vscode from "vscode";
-import { Constants } from "../configuration/Constants";
+import type { Definitions } from "../configuration/Definitions";
 
 export interface IFilterItem {
     text: string;
     description?: string;
     show?: boolean;
     icon?: string;
-    menuType?: Constants.JobPickerTypes;
+    menuType?: Definitions.JobPickerTypes;
 }
 
 export class FilterItem implements vscode.QuickPickItem {

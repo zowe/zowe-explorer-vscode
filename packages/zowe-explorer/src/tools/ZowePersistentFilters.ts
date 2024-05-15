@@ -13,16 +13,7 @@ import { PersistenceSchemaEnum, Types } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "./ZoweLogger";
 import { ZoweLocalStorage } from "./ZoweLocalStorage";
-
-export type ZowePersistentFilter = {
-    persistence: boolean;
-    favorites: string[];
-    history: string[];
-    sessions: string[];
-    searchHistory: string[];
-    fileHistory: string[];
-    templates: Types.DataSetAllocTemplate[];
-};
+import { Definitions } from "../configuration/Definitions";
 
 /**
  * Standard history and favorite persistance handling routines
@@ -183,7 +174,7 @@ export class ZowePersistentFilters {
     public getDsTemplates(): Types.DataSetAllocTemplate[] {
         const dsTemplateLines: Types.DataSetAllocTemplate[] =
             // See https://github.com/zowe/vscode-extension-for-zowe/issues/2770
-            ZoweLocalStorage.getValue<ZowePersistentFilter>(this.schema).templates ?? [];
+            ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema).templates ?? [];
         if (dsTemplateLines.length !== this.mDsTemplates.length) {
             this.mDsTemplates = dsTemplateLines;
         }
@@ -192,7 +183,7 @@ export class ZowePersistentFilters {
 
     public readFavorites(): string[] {
         ZoweLogger.trace("PersistentFilters.readFavorites called.");
-        const localStorageSchema = ZoweLocalStorage.getValue<ZowePersistentFilter>(this.schema);
+        const localStorageSchema = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema);
         if (localStorageSchema) {
             return localStorageSchema[ZowePersistentFilters.favorites] as string[];
         }
@@ -268,52 +259,52 @@ export class ZowePersistentFilters {
 
     public updateFavorites(favorites: string[]): void {
         ZoweLogger.trace("PersistentFilters.updateFavorites called.");
-        const settings = ZoweLocalStorage.getValue<ZowePersistentFilter>(this.schema);
+        const settings = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema);
         if (settings.persistence) {
             settings.favorites = favorites;
-            ZoweLocalStorage.setValue<ZowePersistentFilter>(this.schema, settings);
+            ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(this.schema, settings);
         }
     }
 
     private updateSearchHistory(): void {
         ZoweLogger.trace("PersistentFilters.updateSearchHistory called.");
-        const settings = { ...ZoweLocalStorage.getValue<ZowePersistentFilter>(this.schema) };
+        const settings = { ...ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema) };
         if (settings.persistence) {
             settings.searchHistory = this.mSearchHistory;
-            ZoweLocalStorage.setValue<ZowePersistentFilter>(this.schema, settings);
+            ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(this.schema, settings);
         }
     }
 
     private updateSessions(): void {
         ZoweLogger.trace("PersistentFilters.updateSessions called.");
-        const settings = { ...ZoweLocalStorage.getValue<ZowePersistentFilter>(this.schema) };
+        const settings = { ...ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema) };
         if (settings.persistence) {
             settings.sessions = this.mSessions;
-            ZoweLocalStorage.setValue<ZowePersistentFilter>(this.schema, settings);
+            ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(this.schema, settings);
         }
     }
 
     private updateFileHistory(): void {
         ZoweLogger.trace("PersistentFilters.updateFileHistory called.");
-        const settings = { ...ZoweLocalStorage.getValue<ZowePersistentFilter>(this.schema) };
+        const settings = { ...ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema) };
         if (settings.persistence) {
             settings.fileHistory = this.mFileHistory;
-            ZoweLocalStorage.setValue<ZowePersistentFilter>(this.schema, settings);
+            ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(this.schema, settings);
         }
     }
 
     private updateDsTemplateHistory(): void {
         // settings are read-only, so make a clone
-        const settings: any = { ...ZoweLocalStorage.getValue<ZowePersistentFilter>(this.schema) };
+        const settings: any = { ...ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema) };
         if (settings.persistence) {
             settings.templates = this.mDsTemplates;
-            ZoweLocalStorage.setValue<ZowePersistentFilter>(this.schema, settings);
+            ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(this.schema, settings);
         }
     }
 
     private initialize(): void {
         ZoweLogger.trace("PersistentFilters.initialize called.");
-        const settings = ZoweLocalStorage.getValue<ZowePersistentFilter>(this.schema);
+        const settings = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema);
         if (settings) {
             this.mSearchHistory = settings[ZowePersistentFilters.searchHistory] ?? [];
             this.mSessions = settings[ZowePersistentFilters.sessions] ?? [];

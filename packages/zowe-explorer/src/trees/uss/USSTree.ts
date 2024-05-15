@@ -29,7 +29,7 @@ import { Constants } from "../../configuration/Constants";
 import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { IconGenerator } from "../../icons/IconGenerator";
-import { ZoweTreeProvider } from "../../providers/ZoweTreeProvider";
+import { ZoweTreeProvider } from "../ZoweTreeProvider";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedContext } from "../shared/SharedContext";

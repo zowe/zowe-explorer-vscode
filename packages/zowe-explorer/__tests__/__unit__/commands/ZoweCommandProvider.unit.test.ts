@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import { ZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
 import { createIProfile, createISession } from "../../__mocks__/mockCreators/shared";
-import { ZoweCommandProvider } from "../../../src/providers/ZoweCommandProvider";
+import { ZoweCommandProvider } from "../../../src/commands/ZoweCommandProvider";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { SharedContext } from "../../../src/trees/shared/SharedContext";

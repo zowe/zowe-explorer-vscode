@@ -1,3 +1,4 @@
+/* eslint-disable no-magic-numbers */
 /**
  * This program and the accompanying materials are made available under the terms of the
  * Eclipse Public License v2.0 which accompanies this distribution, and is available at
@@ -11,123 +12,105 @@
 
 import * as path from "path";
 import * as vscode from "vscode";
-import { FileManagement, imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
-import { ZoweLogger } from "../tools/ZoweLogger";
+import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import type { Profiles } from "./Profiles";
 
-export namespace Constants {
-    export let SETTINGS_TEMP_FOLDER_LOCATION;
-    export let ZOWETEMPFOLDER: string;
-    export let ZOWE_TMP_FOLDER: string;
-    export let USS_DIR: string;
-    export let DS_DIR: string;
-    export let CONFIG_PATH; // set during activate
-    export let LOG: imperative.Logger;
-    export const COMMAND_COUNT = 121;
-    export const MAX_SEARCH_HISTORY = 5;
-    export const MAX_FILE_HISTORY = 10;
-    export const MS_PER_SEC = 1000;
-    export const STATUS_BAR_TIMEOUT_MS = 5000;
-    export const CONTEXT_PREFIX = "_";
-    export const FAV_SUFFIX = CONTEXT_PREFIX + "fav";
-    export const HOME_SUFFIX = CONTEXT_PREFIX + "home";
-    export const FAV_PROFILE_CONTEXT = "profile_fav";
-    export const RC_SUFFIX = CONTEXT_PREFIX + "rc=";
-    export const VALIDATE_SUFFIX = CONTEXT_PREFIX + "validate";
-    export const NO_VALIDATE_SUFFIX = CONTEXT_PREFIX + "noValidate";
-    export const INFORMATION_CONTEXT = "information";
-    export const FAVORITE_CONTEXT = "favorite";
-    export const DS_FAV_CONTEXT = "ds_fav";
-    export const PDS_FAV_CONTEXT = "pds_fav";
-    export const DS_SESSION_FAV_CONTEXT = "session_fav";
-    export const DS_SESSION_CONTEXT = "session";
-    export const DS_PDS_CONTEXT = "pds";
-    export const DS_DS_CONTEXT = "ds";
-    export const DS_DS_BINARY_CONTEXT = "dsBinary";
-    export const DS_MEMBER_CONTEXT = "member";
-    export const DS_MEMBER_BINARY_CONTEXT = "memberBinary";
-    export const DS_MIGRATED_FILE_CONTEXT = "migr";
-    export const DS_FILE_ERROR_CONTEXT = "fileError";
-    export const USS_SESSION_CONTEXT = "ussSession";
-    export const USS_DIR_CONTEXT = "directory";
-    export const USS_FAV_DIR_CONTEXT = "directory_fav";
-    export const USS_TEXT_FILE_CONTEXT = "textFile";
-    export const USS_FAV_TEXT_FILE_CONTEXT = "textFile_fav";
-    export const USS_BINARY_FILE_CONTEXT = "binaryFile";
-    export const JOBS_SESSION_CONTEXT = "server";
-    export const JOBS_JOB_CONTEXT = "job";
-    export const JOBS_SPOOL_CONTEXT = "spool";
-    export const POLL_CONTEXT = CONTEXT_PREFIX + "polling";
-    export const VSAM_CONTEXT = "vsam";
-    export const INACTIVE_CONTEXT = CONTEXT_PREFIX + "Inactive";
-    export const ACTIVE_CONTEXT = CONTEXT_PREFIX + "Active";
-    export const UNVERIFIED_CONTEXT = CONTEXT_PREFIX + "Unverified";
-    export const ICON_STATE_OPEN = "open";
-    export const ICON_STATE_CLOSED = "closed";
-    export const FILTER_SEARCH = "isFilterSearch";
-    export const VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
-    export const ROOTPATH = path.join(__dirname, "..", "..");
-    export const SETTINGS_TEMP_FOLDER_PATH = "zowe.files.temporaryDownloadsFolder.path";
-    export const SETTINGS_TEMP_FOLDER_CLEANUP = "zowe.files.temporaryDownloadsFolder.cleanup";
-    export const SETTINGS_TEMP_FOLDER_HIDE = "zowe.files.temporaryDownloadsFolder.hide";
-    export const SETTINGS_LOGS_FOLDER_PATH = "zowe.files.logsFolder.path";
-    export const SETTINGS_DS_DEFAULT_BINARY = "zowe.ds.default.binary";
-    export const SETTINGS_DS_DEFAULT_C = "zowe.ds.default.c";
-    export const SETTINGS_DS_DEFAULT_CLASSIC = "zowe.ds.default.classic";
-    export const SETTINGS_DS_DEFAULT_PDS = "zowe.ds.default.pds";
-    export const SETTINGS_DS_DEFAULT_EXTENDED = "zowe.ds.default.extended";
-    export const SETTINGS_DS_DEFAULT_PS = "zowe.ds.default.ps";
-    export const SETTINGS_COMMANDS_ALWAYS_EDIT = "zowe.commands.alwaysEdit";
-    export const SETTINGS_AUTOMATIC_PROFILE_VALIDATION = "zowe.automaticProfileValidation";
-    export const SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";
-    export const SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS = "zowe.security.checkForCustomCredentialManagers";
-    export const LOGGER_SETTINGS = "zowe.logger";
-    export const EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
-    export const ZOWE_CLI_SCM = "@zowe/cli";
-    export const MAX_DATASET_LENGTH = 44;
-    export const MAX_MEMBER_LENGTH = 8;
-    export const DS_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7}(\.[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7})*$/;
-    export const MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$]{0,7}$/;
-    export let ACTIVATED = false;
-    export let SAVED_PROFILE_CONTENTS = new Uint8Array();
-    export const JOBS_MAX_PREFIX = 8;
-    export let PROFILES_CACHE: Profiles; // Works around circular dependency, see https://github.com/zowe/zowe-explorer-vscode/issues/2756
-    export const WORKSPACE_UTIL_TAB_SWITCH_DELAY = 200;
-    export const WORKSPACE_UTIL_MAX_EMPTY_WINDOWS_IN_THE_ROW = 3;
-    export const WORKSPACE_UTIL_FILE_SAVE_INTERVAL = 200;
-    export const WORKSPACE_UTIL_FILE_SAVE_MAX_ITERATION_COUNT = 25;
-
-    // Dictionary describing translation from old configuration names to new standardized names
-    export const configurationDictionary: { [k: string]: string } = {
-        "Zowe-Default-Datasets-Binary": SETTINGS_DS_DEFAULT_BINARY,
-        "Zowe-Default-Datasets-C": SETTINGS_DS_DEFAULT_C,
-        "Zowe-Default-Datasets-Classic": SETTINGS_DS_DEFAULT_CLASSIC,
-        "Zowe-Default-Datasets-PDS": SETTINGS_DS_DEFAULT_PDS,
-        "Zowe-Default-Datasets-Extended": SETTINGS_DS_DEFAULT_EXTENDED,
-        "Zowe-Default-Datasets-PS": SETTINGS_DS_DEFAULT_PS,
-        "Zowe-Temp-Folder-Location": SETTINGS_TEMP_FOLDER_PATH,
+export class Constants {
+    public static SETTINGS_TEMP_FOLDER_LOCATION: string;
+    public static ZOWETEMPFOLDER: string;
+    public static ZOWE_TMP_FOLDER: string;
+    public static USS_DIR: string;
+    public static DS_DIR: string;
+    public static CONFIG_PATH: string;
+    public static COMMAND_COUNT = 121;
+    public static MAX_SEARCH_HISTORY = 5;
+    public static MAX_FILE_HISTORY = 10;
+    public static MS_PER_SEC = 1000;
+    public static STATUS_BAR_TIMEOUT_MS = 5000;
+    public static CONTEXT_PREFIX = "_";
+    public static FAV_SUFFIX = Constants.CONTEXT_PREFIX + "fav";
+    public static HOME_SUFFIX = Constants.CONTEXT_PREFIX + "home";
+    public static FAV_PROFILE_CONTEXT = "profile_fav";
+    public static RC_SUFFIX = Constants.CONTEXT_PREFIX + "rc=";
+    public static VALIDATE_SUFFIX = Constants.CONTEXT_PREFIX + "validate";
+    public static NO_VALIDATE_SUFFIX = Constants.CONTEXT_PREFIX + "noValidate";
+    public static INFORMATION_CONTEXT = "information";
+    public static FAVORITE_CONTEXT = "favorite";
+    public static DS_FAV_CONTEXT = "ds_fav";
+    public static PDS_FAV_CONTEXT = "pds_fav";
+    public static DS_SESSION_FAV_CONTEXT = "session_fav";
+    public static DS_SESSION_CONTEXT = "session";
+    public static DS_PDS_CONTEXT = "pds";
+    public static DS_DS_CONTEXT = "ds";
+    public static DS_DS_BINARY_CONTEXT = "dsBinary";
+    public static DS_MEMBER_CONTEXT = "member";
+    public static DS_MEMBER_BINARY_CONTEXT = "memberBinary";
+    public static DS_MIGRATED_FILE_CONTEXT = "migr";
+    public static DS_FILE_ERROR_CONTEXT = "fileError";
+    public static USS_SESSION_CONTEXT = "ussSession";
+    public static USS_DIR_CONTEXT = "directory";
+    public static USS_FAV_DIR_CONTEXT = "directory_fav";
+    public static USS_TEXT_FILE_CONTEXT = "textFile";
+    public static USS_FAV_TEXT_FILE_CONTEXT = "textFile_fav";
+    public static USS_BINARY_FILE_CONTEXT = "binaryFile";
+    public static JOBS_SESSION_CONTEXT = "server";
+    public static JOBS_JOB_CONTEXT = "job";
+    public static JOBS_SPOOL_CONTEXT = "spool";
+    public static POLL_CONTEXT = Constants.CONTEXT_PREFIX + "polling";
+    public static VSAM_CONTEXT = "vsam";
+    public static INACTIVE_CONTEXT = Constants.CONTEXT_PREFIX + "Inactive";
+    public static ACTIVE_CONTEXT = Constants.CONTEXT_PREFIX + "Active";
+    public static UNVERIFIED_CONTEXT = Constants.CONTEXT_PREFIX + "Unverified";
+    public static ICON_STATE_OPEN = "open";
+    public static ICON_STATE_CLOSED = "closed";
+    public static FILTER_SEARCH = "isFilterSearch";
+    public static VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
+    public static ROOTPATH = path.join(__dirname, "..", "..");
+    public static SETTINGS_TEMP_FOLDER_PATH = "zowe.files.temporaryDownloadsFolder.path";
+    public static SETTINGS_TEMP_FOLDER_CLEANUP = "zowe.files.temporaryDownloadsFolder.cleanup";
+    public static SETTINGS_TEMP_FOLDER_HIDE = "zowe.files.temporaryDownloadsFolder.hide";
+    public static SETTINGS_LOGS_FOLDER_PATH = "zowe.files.logsFolder.path";
+    public static SETTINGS_DS_DEFAULT_BINARY = "zowe.ds.default.binary";
+    public static SETTINGS_DS_DEFAULT_C = "zowe.ds.default.c";
+    public static SETTINGS_DS_DEFAULT_CLASSIC = "zowe.ds.default.classic";
+    public static SETTINGS_DS_DEFAULT_PDS = "zowe.ds.default.pds";
+    public static SETTINGS_DS_DEFAULT_EXTENDED = "zowe.ds.default.extended";
+    public static SETTINGS_DS_DEFAULT_PS = "zowe.ds.default.ps";
+    public static SETTINGS_COMMANDS_ALWAYS_EDIT = "zowe.commands.alwaysEdit";
+    public static SETTINGS_AUTOMATIC_PROFILE_VALIDATION = "zowe.automaticProfileValidation";
+    public static SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";
+    public static SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS = "zowe.security.checkForCustomCredentialManagers";
+    public static LOGGER_SETTINGS = "zowe.logger";
+    public static EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
+    public static ZOWE_CLI_SCM = "@zowe/cli";
+    public static MAX_DATASET_LENGTH = 44;
+    public static MAX_MEMBER_LENGTH = 8;
+    public static DS_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7}(\.[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7})*$/;
+    public static MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$]{0,7}$/;
+    public static ACTIVATED = false;
+    public static SAVED_PROFILE_CONTENTS = new Uint8Array();
+    public static JOBS_MAX_PREFIX = 8;
+    public static PROFILES_CACHE: Profiles;
+    public static WORKSPACE_UTIL_TAB_SWITCH_DELAY = 200;
+    public static WORKSPACE_UTIL_MAX_EMPTY_WINDOWS_IN_THE_ROW = 3;
+    public static WORKSPACE_UTIL_FILE_SAVE_INTERVAL = 200;
+    public static WORKSPACE_UTIL_FILE_SAVE_MAX_ITERATION_COUNT = 25;
+    public static configurationDictionary: { [k: string]: string } = {
+        "Zowe-Default-Datasets-Binary": Constants.SETTINGS_DS_DEFAULT_BINARY,
+        "Zowe-Default-Datasets-C": Constants.SETTINGS_DS_DEFAULT_C,
+        "Zowe-Default-Datasets-Classic": Constants.SETTINGS_DS_DEFAULT_CLASSIC,
+        "Zowe-Default-Datasets-PDS": Constants.SETTINGS_DS_DEFAULT_PDS,
+        "Zowe-Default-Datasets-Extended": Constants.SETTINGS_DS_DEFAULT_EXTENDED,
+        "Zowe-Default-Datasets-PS": Constants.SETTINGS_DS_DEFAULT_PS,
+        "Zowe-Temp-Folder-Location": Constants.SETTINGS_TEMP_FOLDER_PATH,
         "Zowe Commands: History": PersistenceSchemaEnum.Commands,
-        "Zowe Commands: Always edit": SETTINGS_COMMANDS_ALWAYS_EDIT,
-        "Zowe-Automatic-Validation": SETTINGS_AUTOMATIC_PROFILE_VALIDATION,
+        "Zowe Commands: Always edit": Constants.SETTINGS_COMMANDS_ALWAYS_EDIT,
+        "Zowe-Automatic-Validation": Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION,
         "Zowe-DS-Persistent": PersistenceSchemaEnum.Dataset,
         "Zowe-USS-Persistent": PersistenceSchemaEnum.USS,
         "Zowe-Jobs-Persistent": PersistenceSchemaEnum.Job,
     };
-    export enum Trees {
-        USS,
-        MVS,
-        JES,
-    }
-
-    export enum CreateDataSetTypeWithKeysEnum {
-        DATA_SET_BINARY,
-        DATA_SET_C,
-        DATA_SET_CLASSIC,
-        DATA_SET_PARTITIONED,
-        DATA_SET_SEQUENTIAL,
-        DATA_SET_BLANK,
-    }
-    export const DATA_SET_PROPERTIES = [
+    public static DATA_SET_PROPERTIES = [
         {
             key: `alcunit`,
             label: `Allocation Unit`,
@@ -237,8 +220,7 @@ export namespace Constants {
             placeHolder: vscode.l10n.t(`Enter the volume serial on which the data set should be placed`),
         },
     ];
-
-    export const JOB_STATUS = [
+    public static JOB_STATUS = [
         {
             key: `All`,
             label: `*`,
@@ -264,8 +246,7 @@ export namespace Constants {
             picked: false,
         },
     ];
-
-    export const JOB_STATUS_UNSUPPORTED = [
+    public static JOB_STATUS_UNSUPPORTED = [
         {
             key: `All`,
             label: `*`,
@@ -273,60 +254,22 @@ export namespace Constants {
             picked: true,
         },
     ];
-
-    export enum JobPickerTypes {
-        QuerySearch = "QuerySearch",
-        IdSearch = "IdSearch",
-        History = "History",
-    }
-
-    export const SEPARATORS = {
+    public static SEPARATORS = {
         BLANK: { kind: vscode.QuickPickItemKind.Separator, label: "" },
         RECENT: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t("Recent") },
         RECENT_FILTERS: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t(`Recent Filters`) },
         OPTIONS: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t(`Options`) },
     };
-
-    /**
-     * Defines all global variables
-     * @param tempPath File path for temporary folder defined in preferences
-     */
-    export function defineConstants(tempPath: string | undefined): void {
-        SETTINGS_TEMP_FOLDER_LOCATION = tempPath;
-        // Set temp path & folder paths
-        ZOWETEMPFOLDER = tempPath ? path.join(tempPath, "temp") : path.join(__dirname, "..", "..", "resources", "temp");
-        ZoweLogger.info(
-            vscode.l10n.t({
-                message: `Zowe Explorer's temp folder is located at {0}`,
-                args: [ZOWETEMPFOLDER],
-                comment: ["Zowe temp folder"],
-            })
-        );
-        ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
-        USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
-        DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");
-    }
-
-    export function setConfigPath(configPath: string | undefined): void {
-        if (configPath) {
-            CONFIG_PATH = configPath;
-        } else {
-            CONFIG_PATH = FileManagement.getZoweDir();
-        }
-    }
-
-    export function setActivated(value: boolean): void {
-        if (value) {
-            ZoweLogger.info(vscode.l10n.t(`Zowe Explorer has activated successfully.`));
-        }
-        ACTIVATED = value;
-    }
-
-    export function setSavedProfileContents(value: Uint8Array): void {
-        SAVED_PROFILE_CONTENTS = value;
-    }
-
-    export function setProfilesCache(profilesCache: Profiles): void {
-        PROFILES_CACHE = profilesCache;
-    }
+    public static JOB_SUBMIT_DIALOG_OPTS = [
+        vscode.l10n.t("Disabled"),
+        vscode.l10n.t("Your jobs"),
+        vscode.l10n.t("Other user jobs"),
+        vscode.l10n.t("All jobs"),
+    ];
+    public static SORT_DIRS: string[] = [vscode.l10n.t("Ascending"), vscode.l10n.t("Descending")];
+    public static HISTORY_VIEW_TABS = {
+        DS: "ds-panel-tab",
+        USS: "uss-panel-tab",
+        JOBS: "jobs-panel-tab",
+    };
 }

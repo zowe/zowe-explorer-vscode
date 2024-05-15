@@ -41,7 +41,7 @@ export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: imperative.Logger): Promise<Profiles> {
         Profiles.loader = new Profiles(log, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
-        Constants.setProfilesCache(Profiles.loader);
+        Constants.PROFILES_CACHE = Profiles.loader;
         await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
         await Profiles.getInstance().getProfileInfo();
         return Profiles.loader;
@@ -837,9 +837,7 @@ export class Profiles extends ProfilesCache {
                 serviceProfile.profile != null &&
                 !serviceProfile.profile.tokenType?.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)
             ) {
-                await ZoweExplorerApiRegister.getInstance()
-                    .getCommonApi(serviceProfile)
-                    .logout(await node.getSession());
+                await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(node.getSession());
             } else {
                 await ZoweVsCodeExtension.logoutWithBaseProfile(serviceProfile, ZoweExplorerApiRegister.getInstance(), this);
             }
@@ -946,7 +944,6 @@ export class Profiles extends ProfilesCache {
             case projectText:
                 return "project";
         }
-        return;
     }
 
     private async checkExistingConfig(filePath: string): Promise<string | false> {

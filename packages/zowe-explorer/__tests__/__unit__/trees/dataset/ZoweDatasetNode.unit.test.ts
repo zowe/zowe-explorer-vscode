@@ -27,6 +27,7 @@ import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
+import { ExtensionUtils } from "../../../../src/utils/ExtensionUtils";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -36,7 +37,7 @@ jest.mock("vscode");
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 function createGlobalMocks() {
-    Constants.defineConstants("");
+    ExtensionUtils.defineConstants("");
 
     const newMocks = {
         imperativeProfile: createIProfile(),
@@ -90,7 +91,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
     }
 
     it("Checking of opening for common dataset", async () => {
-        Constants.defineConstants("");
+        ExtensionUtils.defineConstants("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -114,7 +115,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
     });
 
     it("Checking of opening for common dataset with unverified profile", async () => {
-        Constants.defineConstants("");
+        ExtensionUtils.defineConstants("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -144,7 +145,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
     });
 
     it("Checking of failed attempt to open dataset", async () => {
-        Constants.defineConstants("");
+        ExtensionUtils.defineConstants("");
         const blockMocks = createBlockMocks();
         mocked(vscode.commands.executeCommand).mockRejectedValueOnce(new Error("testError"));
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -164,7 +165,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
     });
 
     it("Checking of opening for PDS Member", async () => {
-        Constants.defineConstants("");
+        ExtensionUtils.defineConstants("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -190,7 +191,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
         expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("vscode.open", child.resourceUri);
     });
     it("Checking of opening for PDS Member of favorite dataset", async () => {
-        Constants.defineConstants("");
+        ExtensionUtils.defineConstants("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -216,7 +217,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
         expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("vscode.open", child.resourceUri);
     });
     it("Checking of opening for sequential DS of favorite session", async () => {
-        Constants.defineConstants("");
+        ExtensionUtils.defineConstants("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 

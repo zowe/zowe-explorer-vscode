@@ -26,6 +26,7 @@ import { ZoweUSSNode } from "../../../src/trees/uss/ZoweUSSNode";
 import { ProfileManagement } from "../../../src/management/ProfileManagement";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
+import { Definitions } from "../../../src/configuration/Definitions";
 
 jest.mock("fs");
 jest.mock("vscode");
@@ -315,24 +316,24 @@ describe("ProfileManagement unit tests", () => {
         it("should return zosmf profile registered with the MVS tree", () => {
             const blockMocks = createBlockMocks(createGlobalMocks());
             blockMocks.registry.registeredMvsApiTypes = jest.fn().mockReturnValueOnce("zosmf");
-            expect(ProfileManagement.getRegisteredProfileNameList(Constants.Trees.MVS)).toEqual(["sestest"]);
+            expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS)).toEqual(["sestest"]);
         });
         it("should return zosmf profile registered with the USS tree", () => {
             const blockMocks = createBlockMocks(createGlobalMocks());
             blockMocks.registry.registeredUssApiTypes = jest.fn().mockReturnValueOnce("zosmf");
-            expect(ProfileManagement.getRegisteredProfileNameList(Constants.Trees.USS)).toEqual(["sestest"]);
+            expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.USS)).toEqual(["sestest"]);
         });
         it("should return zosmf profile registered with the JES tree", () => {
             const blockMocks = createBlockMocks(createGlobalMocks());
             blockMocks.registry.registeredJesApiTypes = jest.fn().mockReturnValueOnce("zosmf");
-            expect(ProfileManagement.getRegisteredProfileNameList(Constants.Trees.JES)).toEqual(["sestest"]);
+            expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual(["sestest"]);
         });
         it("should return empty array with no profiles in allProfiles", () => {
             const globalMocks = createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
             globalMocks.mockProfileInstance.allProfiles = [];
             const regSpy = jest.spyOn(blockMocks.registry, "registeredJesApiTypes");
-            expect(ProfileManagement.getRegisteredProfileNameList(Constants.Trees.JES)).toEqual([]);
+            expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual([]);
             expect(regSpy).not.toHaveBeenCalled();
         });
         it("should return empty array when profile in allProfiles doesn't load", () => {
@@ -340,13 +341,13 @@ describe("ProfileManagement unit tests", () => {
             const blockMocks = createBlockMocks(globalMocks);
             jest.spyOn(globalMocks.mockProfileInstance, "loadNamedProfile").mockReturnValue(undefined);
             const regSpy = jest.spyOn(blockMocks.registry, "registeredJesApiTypes");
-            expect(ProfileManagement.getRegisteredProfileNameList(Constants.Trees.JES)).toEqual([]);
+            expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual([]);
             expect(regSpy).not.toHaveBeenCalled();
         });
         it("should return empty array when profile type isn't registered", () => {
             const blockMocks = createBlockMocks(createGlobalMocks());
             blockMocks.registry.registeredJesApiTypes = jest.fn().mockReturnValueOnce("zftp");
-            expect(ProfileManagement.getRegisteredProfileNameList(Constants.Trees.JES)).toEqual([]);
+            expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual([]);
         });
         it("should return empty array when unkown tree is forcefully passed", () => {
             createBlockMocks(createGlobalMocks());
@@ -363,7 +364,7 @@ describe("ProfileManagement unit tests", () => {
                 }),
                 configurable: true,
             });
-            expect(ProfileManagement.getRegisteredProfileNameList(Constants.Trees.JES)).toEqual([]);
+            expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual([]);
             expect(warnSpy).toHaveBeenCalledWith(thrownError);
         });
     });
@@ -392,24 +393,24 @@ describe("ProfileManagement unit tests", () => {
         it("should return zosmf profile registered with the MVS tree", () => {
             const blockMocks = createBlockMocks(createGlobalMocks());
             blockMocks.registry.registeredMvsApiTypes = jest.fn().mockReturnValueOnce("zosmf");
-            expect(ProfileManagement.getRegisteredProfileNameList(Constants.Trees.MVS)).toEqual(["sestest"]);
+            expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS)).toEqual(["sestest"]);
         });
         it("should return zosmf profile registered with the USS tree", () => {
             const blockMocks = createBlockMocks(createGlobalMocks());
             blockMocks.registry.registeredUssApiTypes = jest.fn().mockReturnValueOnce("zosmf");
-            expect(ProfileManagement.getRegisteredProfileNameList(Constants.Trees.USS)).toEqual(["sestest"]);
+            expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.USS)).toEqual(["sestest"]);
         });
         it("should return zosmf profile registered with the JES tree", () => {
             const blockMocks = createBlockMocks(createGlobalMocks());
             blockMocks.registry.registeredJesApiTypes = jest.fn().mockReturnValueOnce("zosmf");
-            expect(ProfileManagement.getRegisteredProfileNameList(Constants.Trees.JES)).toEqual(["sestest"]);
+            expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual(["sestest"]);
         });
         it("should return empty array with no profiles in allProfiles", () => {
             const globalMocks = createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
             globalMocks.mockProfileInstance.allProfiles = [];
             const regSpy = jest.spyOn(blockMocks.registry, "registeredJesApiTypes");
-            expect(ProfileManagement.getRegisteredProfileNameList(Constants.Trees.JES)).toEqual([]);
+            expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual([]);
             expect(regSpy).not.toHaveBeenCalled();
         });
         it("should return empty array when profile in allProfiles doesn't load", () => {
@@ -417,13 +418,13 @@ describe("ProfileManagement unit tests", () => {
             const blockMocks = createBlockMocks(globalMocks);
             jest.spyOn(globalMocks.mockProfileInstance, "loadNamedProfile").mockReturnValue(undefined);
             const regSpy = jest.spyOn(blockMocks.registry, "registeredJesApiTypes");
-            expect(ProfileManagement.getRegisteredProfileNameList(Constants.Trees.JES)).toEqual([]);
+            expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual([]);
             expect(regSpy).not.toHaveBeenCalled();
         });
         it("should return empty array when profile type isn't registered", () => {
             const blockMocks = createBlockMocks(createGlobalMocks());
             blockMocks.registry.registeredJesApiTypes = jest.fn().mockReturnValueOnce("zftp");
-            expect(ProfileManagement.getRegisteredProfileNameList(Constants.Trees.JES)).toEqual([]);
+            expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual([]);
         });
         it("should return empty array when unkown tree is forcefully passed", () => {
             createBlockMocks(createGlobalMocks());
@@ -440,7 +441,7 @@ describe("ProfileManagement unit tests", () => {
                 }),
                 configurable: true,
             });
-            expect(ProfileManagement.getRegisteredProfileNameList(Constants.Trees.JES)).toEqual([]);
+            expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual([]);
             expect(warnSpy).toHaveBeenCalledWith(thrownError);
         });
     });

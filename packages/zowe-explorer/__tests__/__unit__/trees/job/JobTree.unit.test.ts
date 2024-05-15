@@ -38,6 +38,7 @@ import { ZoweJobNode, ZoweSpoolNode } from "../../../../src/trees/job/ZoweJobNod
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { JobInit } from "../../../../src/trees/job/JobInit";
+import { Definitions } from "../../../../src/configuration/Definitions";
 
 jest.mock("@zowe/zos-jobs-for-zowe-sdk");
 jest.mock("vscode");
@@ -227,8 +228,8 @@ async function createGlobalMocks() {
         },
         configurable: true,
     });
-    Object.defineProperty(Constants, "LOG", { value: jest.fn(), configurable: true });
-    Object.defineProperty(Constants.LOG, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "log", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger.log, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
@@ -797,7 +798,7 @@ describe("ZosJobsProvider unit tests - Function getUserSearchQueryInput", () => 
     it("should call handleEditingMultiJobParameters if user chose QuerySearch menu", async () => {
         const multiSearchMenu = new FilterItem({
             text: "Create search query",
-            menuType: Constants.JobPickerTypes.QuerySearch,
+            menuType: Definitions.JobPickerTypes.QuerySearch,
         });
         await globalMocks.testJobsProvider.getUserSearchQueryInput(multiSearchMenu, globalMocks.testJobsProvider.mSessionNodes[1]);
         expect(handleEditingMultiJobParameters).toHaveBeenCalled();
@@ -805,7 +806,7 @@ describe("ZosJobsProvider unit tests - Function getUserSearchQueryInput", () => 
     it("should call handleSearchByJobId if user chose IdSearch menu", async () => {
         const multiSearchMenu = new FilterItem({
             text: "Create search query",
-            menuType: Constants.JobPickerTypes.IdSearch,
+            menuType: Definitions.JobPickerTypes.IdSearch,
         });
         await globalMocks.testJobsProvider.getUserSearchQueryInput(multiSearchMenu, globalMocks.testJobsProvider.mSessionNodes[1]);
         expect(handleEditingMultiJobParameters).not.toHaveBeenCalled();
@@ -814,7 +815,7 @@ describe("ZosJobsProvider unit tests - Function getUserSearchQueryInput", () => 
     it("should call handleSearchByJobId if user chose History item with job id", async () => {
         const multiSearchMenu = new FilterItem({
             text: "Create search query",
-            menuType: Constants.JobPickerTypes.History,
+            menuType: Definitions.JobPickerTypes.History,
         });
 
         jest.spyOn(globalMocks.testJobsProvider, "parseJobSearchQuery").mockReturnValue({
@@ -830,7 +831,7 @@ describe("ZosJobsProvider unit tests - Function getUserSearchQueryInput", () => 
     it("should call handleEditingMultiJobParameters if user chose History item with query", async () => {
         const multiSearchMenu = new FilterItem({
             text: "Create search query",
-            menuType: Constants.JobPickerTypes.History,
+            menuType: Definitions.JobPickerTypes.History,
         });
 
         jest.spyOn(globalMocks.testJobsProvider, "parseJobSearchQuery").mockReturnValue({

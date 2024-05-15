@@ -12,7 +12,7 @@
 import { Types, IZoweTree, IZoweTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { TreeViewExpansionEvent } from "vscode";
 import { IconGenerator } from "../icons/IconGenerator";
-import type { ZoweTreeProvider } from "../providers/ZoweTreeProvider";
+import type { ZoweTreeProvider } from "../trees/ZoweTreeProvider";
 import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
 import { ZoweLogger } from "../tools/ZoweLogger";
 

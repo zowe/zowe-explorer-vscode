@@ -25,6 +25,7 @@ import { Gui } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
+import { Constants } from "../../../../src/configuration/Constants";
 
 async function initializeHistoryViewMock(blockMocks: any, globalMocks: any): Promise<SharedHistoryView> {
     return new SharedHistoryView(
@@ -99,7 +100,7 @@ describe("HistoryView Unit Tests", () => {
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
             const postMessageSpy = jest.spyOn(historyView.panel.webview, "postMessage");
             jest.spyOn(historyView as any, "getHistoryData").mockReturnValue([]);
-            await historyView["onDidReceiveMessage"]({ command: "refresh", attrs: { type: "uss" } });
+            await historyView["onDidReceiveMessage"]({ command: "refresh", attrs: { type: "USS" } });
             expect(postMessageSpy).toHaveBeenCalledTimes(1);
             expect(historyView["currentTab"]).toEqual("uss-panel-tab");
         });

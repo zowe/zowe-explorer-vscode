@@ -9,6 +9,8 @@
  *
  */
 
+import * as path from "path";
+import * as vscode from "vscode";
 import {
     BaseProvider,
     BufferBuilder,
@@ -24,8 +26,6 @@ import {
     ZosEncoding,
     ZoweScheme,
 } from "@zowe/zowe-explorer-api";
-import * as path from "path";
-import * as vscode from "vscode";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { DatasetUtils } from "./DatasetUtils";
 import { Profiles } from "../../configuration/Profiles";
@@ -115,7 +115,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     dsEntry.filter["pattern"]
                         .toUpperCase()
                         .split(",")
-                        .map((p) => p.trim() as string)
+                        .map((p) => p.trim())
                 ),
             ];
 

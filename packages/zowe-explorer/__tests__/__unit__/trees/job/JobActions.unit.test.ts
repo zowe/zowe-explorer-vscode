@@ -34,13 +34,14 @@ import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
 import { JobTree } from "../../../../src/trees/job/JobTree";
 import { ZoweJobNode } from "../../../../src/trees/job/ZoweJobNode";
 import { SharedActions } from "../../../../src/trees/shared/SharedActions";
-import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { LocalFileManagement } from "../../../../src/management/LocalFileManagement";
-import { SpoolProvider } from "../../../../src/providers/SpoolProvider";
 import { ProfileManagement } from "../../../../src/management/ProfileManagement";
 import { mocked } from "../../../__mocks__/mockUtils";
 import { JobActions } from "../../../../src/trees/job/JobActions";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
+import { JobSpoolProvider } from "../../../../src/trees/job/JobSpoolProvider";
+import { ExtensionUtils } from "../../../../src/utils/ExtensionUtils";
+import { Definitions } from "../../../../src/configuration/Definitions";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -113,8 +114,8 @@ function createGlobalMocks() {
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn().mockResolvedValue(newMocks.mockProfileInstance), configurable: true });
     const executeCommand = jest.fn();
     Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand, configurable: true });
-    Object.defineProperty(SpoolProvider, "encodeJobFile", { value: jest.fn(), configurable: true });
-    Object.defineProperty(SpoolProvider, "toUniqueJobFileUri", { value: jest.fn(), configurable: true });
+    Object.defineProperty(JobSpoolProvider, "encodeJobFile", { value: jest.fn(), configurable: true });
+    Object.defineProperty(JobSpoolProvider, "toUniqueJobFileUri", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
@@ -339,7 +340,7 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         mocked(Gui.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
         const downloadFileSpy = jest.spyOn(blockMocks.jesApi, "downloadSingleSpool");
         const spool: zosjobs.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1 };
-        const getSpoolFilesSpy = jest.spyOn(SpoolProvider, "getSpoolFiles").mockResolvedValue([spool]);
+        const getSpoolFilesSpy = jest.spyOn(JobSpoolProvider, "getSpoolFiles").mockResolvedValue([spool]);
 
         await JobActions.downloadSingleSpool(jobs, true);
         expect(mocked(Gui.showOpenDialog)).toHaveBeenCalled();
@@ -375,7 +376,7 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         mocked(Gui.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
         blockMocks.jesApi.downloadSingleSpool = undefined;
         const spool: zosjobs.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1 };
-        const getSpoolFilesSpy = jest.spyOn(SpoolProvider, "getSpoolFiles").mockResolvedValue([spool]);
+        const getSpoolFilesSpy = jest.spyOn(JobSpoolProvider, "getSpoolFiles").mockResolvedValue([spool]);
 
         await JobActions.downloadSingleSpool(jobs, true);
         expect(getSpoolFilesSpy).not.toHaveBeenCalled();
@@ -643,7 +644,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(showMessagespy).toHaveBeenCalledWith("No profiles available");
     });
     it("Getting session name from the path itself", async () => {
-        Constants.defineConstants("/user/");
+        ExtensionUtils.defineConstants("/user/");
         createGlobalMocks();
         const blockMocks: any = createBlockMocks();
         mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
@@ -871,17 +872,17 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         });
         dataset.contextValue = Constants.DS_DS_CONTEXT;
 
-        for (let o = 0; o < SharedUtils.JOB_SUBMIT_DIALOG_OPTS.length; o++) {
-            const option = SharedUtils.JOB_SUBMIT_DIALOG_OPTS[o];
+        for (let o = 0; o < Constants.JOB_SUBMIT_DIALOG_OPTS.length; o++) {
+            const option = Constants.JOB_SUBMIT_DIALOG_OPTS[o];
             Object.defineProperty(vscode.workspace, "getConfiguration", {
                 value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", option]])),
                 configurable: true,
             });
 
-            if (option === SharedUtils.JOB_SUBMIT_DIALOG_OPTS[SharedUtils.JobSubmitDialogOpts.Disabled]) {
+            if (option === Constants.JOB_SUBMIT_DIALOG_OPTS[Definitions.JobSubmitDialogOpts.Disabled]) {
                 await DatasetActions.submitMember(dataset);
                 expect(mocked(Gui.warningMessage)).not.toHaveBeenCalled();
-            } else if (option === SharedUtils.JOB_SUBMIT_DIALOG_OPTS[SharedUtils.JobSubmitDialogOpts.OtherUserJobs]) {
+            } else if (option === Constants.JOB_SUBMIT_DIALOG_OPTS[Definitions.JobSubmitDialogOpts.OtherUserJobs]) {
                 dataset.label = "OTHERUSER.DATASET";
                 mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
                 await DatasetActions.submitMember(dataset);
@@ -893,8 +894,8 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                     }
                 );
             } else if (
-                option === SharedUtils.JOB_SUBMIT_DIALOG_OPTS[SharedUtils.JobSubmitDialogOpts.AllJobs] ||
-                option === SharedUtils.JOB_SUBMIT_DIALOG_OPTS[SharedUtils.JobSubmitDialogOpts.YourJobs]
+                option === Constants.JOB_SUBMIT_DIALOG_OPTS[Definitions.JobSubmitDialogOpts.AllJobs] ||
+                option === Constants.JOB_SUBMIT_DIALOG_OPTS[Definitions.JobSubmitDialogOpts.YourJobs]
             ) {
                 dataset.label = "TESTUSER.DATASET";
                 mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });

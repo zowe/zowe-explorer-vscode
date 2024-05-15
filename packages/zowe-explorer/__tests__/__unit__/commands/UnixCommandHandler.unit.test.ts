@@ -13,13 +13,13 @@ import * as vscode from "vscode";
 import * as profileLoader from "../../../src/configuration/Profiles";
 import { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
 import { Gui, imperative, Validation } from "@zowe/zowe-explorer-api";
-import { UnixCommandHandler } from "../../../src/command/UnixCommandHandler";
 import { FilterDescriptor, FilterItem } from "../../../src/management/FilterManagement";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
 import { ProfileManagement } from "../../../src/management/ProfileManagement";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
+import { UnixCommandHandler } from "../../../src/commands/UnixCommandHandler";
 
 jest.mock("Session");
 

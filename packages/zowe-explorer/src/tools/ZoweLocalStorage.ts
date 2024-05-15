@@ -10,16 +10,10 @@
  */
 
 import * as vscode from "vscode";
-import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import * as meta from "../../package.json";
 import { ZoweLogger } from "./ZoweLogger";
-
-export enum LocalStorageKey {
-    CLI_LOGGER_SETTING_PRESENTED = "zowe.cliLoggerSetting.presented",
-    ENCODING_HISTORY = "zowe.encodingHistory",
-    SETTINGS_LOCAL_STORAGE_MIGRATED = "zowe.settings.localStorageMigrated",
-    SETTINGS_OLD_SETTINGS_MIGRATED = "zowe.settings.oldSettingsMigrated",
-}
+import type { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import type { Definitions } from "../configuration/Definitions";
 
 export class ZoweLocalStorage {
     private static storage: vscode.Memento;
@@ -27,13 +21,13 @@ export class ZoweLocalStorage {
         ZoweLocalStorage.storage = state;
     }
 
-    public static getValue<T>(key: LocalStorageKey | PersistenceSchemaEnum): T {
+    public static getValue<T>(key: Definitions.LocalStorageKey | PersistenceSchemaEnum): T {
         ZoweLogger.trace("ZoweLocalStorage.getValue called.");
         const defaultValue = meta.contributes.configuration.properties[key]?.default;
         return ZoweLocalStorage.storage.get<T>(key, defaultValue);
     }
 
-    public static setValue<T>(key: LocalStorageKey | PersistenceSchemaEnum, value: T): void {
+    public static setValue<T>(key: Definitions.LocalStorageKey | PersistenceSchemaEnum, value: T): void {
         ZoweLogger.trace("ZoweLocalStorage.setValue called.");
         ZoweLocalStorage.storage.update(key, value);
     }

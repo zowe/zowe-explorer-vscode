@@ -284,7 +284,7 @@ export class ProfilesUtils {
                 Gui.warningMessage(schemaWarning);
                 ZoweLogger.warn(schemaWarning);
             }
-            Constants.setConfigPath(rootPath);
+            Constants.CONFIG_PATH = rootPath ? rootPath : FileManagement.getZoweDir();
             ZoweLogger.info(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName}"`);
             const layers = mProfileInfo.getTeamConfig().layers || [];
             const layerSummary = layers.map(

@@ -18,6 +18,7 @@ import { SettingsConfig } from "./SettingsConfig";
 import { Constants } from "./Constants";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { AuthUtils } from "../utils/AuthUtils";
+import { ExtensionUtils } from "../utils/ExtensionUtils";
 
 export class TempFolder {
     /**
@@ -28,7 +29,7 @@ export class TempFolder {
     public static async moveTempFolder(previousTempPath: string, currentTempPath: string): Promise<void> {
         ZoweLogger.trace("TempFolder.moveTempFolder called.");
         // Re-define globals with updated path
-        Constants.defineConstants(currentTempPath);
+        ExtensionUtils.defineConstants(currentTempPath);
 
         if (previousTempPath === "") {
             previousTempPath = path.join(__dirname, "..", "..", "resources");

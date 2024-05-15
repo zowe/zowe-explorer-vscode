@@ -38,6 +38,7 @@ import { SharedUtils } from "../shared/SharedUtils";
 import { USSFileStructure } from "./USSFileStructure";
 import { UssFSProvider } from "./UssFSProvider";
 import { AuthUtils } from "../../utils/AuthUtils";
+import type { Definitions } from "../../configuration/Definitions";
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -65,7 +66,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      *
      * @param {IZoweUssTreeOpts} opts
      */
-    public constructor(opts: SharedUtils.IZoweUssTreeOpts) {
+    public constructor(opts: Definitions.IZoweUssTreeOpts) {
         super(opts.label, opts.collapsibleState, opts.parentNode, opts.session, opts.profile);
         this.parentPath = opts.parentPath;
         if (opts.collapsibleState !== vscode.TreeItemCollapsibleState.None) {

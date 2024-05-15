@@ -14,7 +14,6 @@ import { IZoweUSSTreeNode, IZoweTreeNode, ZosEncoding, imperative, ZoweScheme, F
 import { USSTree } from "./USSTree";
 import { USSActions } from "./USSActions";
 import { UssFSProvider } from "./UssFSProvider";
-import { Constants } from "../../configuration/Constants";
 import { Profiles } from "../../configuration/Profiles";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
@@ -41,7 +40,7 @@ export class USSInit {
         ZoweLogger.trace("init.initUSSProvider called.");
 
         context.subscriptions.push(vscode.workspace.registerFileSystemProvider(ZoweScheme.USS, UssFSProvider.instance, { isCaseSensitive: true }));
-        const ussFileProvider: USSTree = await USSInit.createUSSTree(Constants.LOG);
+        const ussFileProvider: USSTree = await USSInit.createUSSTree(ZoweLogger.log);
         if (ussFileProvider == null) {
             return null;
         }

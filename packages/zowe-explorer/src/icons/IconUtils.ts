@@ -9,8 +9,8 @@
  *
  */
 
-import { ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
+import { ZoweTreeNode } from "@zowe/zowe-explorer-api";
 
 export namespace IconUtils {
     export enum IconId {

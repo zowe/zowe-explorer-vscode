@@ -27,18 +27,7 @@ import { SharedContext } from "../shared/SharedContext";
 import { SharedUtils } from "../shared/SharedUtils";
 import { FilterItem } from "../../management/FilterManagement";
 import { AuthUtils } from "../../utils/AuthUtils";
-
-/**
- * Type of z/os dataset or member intended for replacement
- * @export
- */
-export type replaceDstype = "ps" | "po" | "mem";
-
-/**
- * String type to determine whether or not the z/os dataset should be replaced
- * @export
- */
-export type shouldReplace = "replace" | "cancel" | "notFound";
+import { Definitions } from "../../configuration/Definitions";
 
 export class DatasetActions {
     public static typeEnum: zosfiles.CreateDataSetTypeEnum;
@@ -218,7 +207,7 @@ export class DatasetActions {
             const options = DatasetActions.getDataSetTypeAndOptions(dsType)?.createOptions;
             return DatasetActions.getDsTypePropertiesFromWorkspaceConfig(options);
         } else {
-            const cliDefaultsKey = Constants.CreateDataSetTypeWithKeysEnum[DatasetActions.typeEnum]?.replace("DATA_SET_", "");
+            const cliDefaultsKey = Definitions.CreateDataSetTypeWithKeysEnum[DatasetActions.typeEnum]?.replace("DATA_SET_", "");
             return zosfiles.CreateDefaults.DATA_SET[cliDefaultsKey] as zosfiles.ICreateDataSetOptions;
         }
     }
@@ -482,11 +471,10 @@ export class DatasetActions {
             const datasetName = node.label as string;
             const prof = node.getProfile();
 
-            const response = await ZoweExplorerApiRegister.getMvsApi(prof).putContents(docPath, datasetName, {
+            return await ZoweExplorerApiRegister.getMvsApi(prof).putContents(docPath, datasetName, {
                 encoding: prof.profile?.encoding,
                 responseTimeout: prof.profile?.responseTimeout,
             });
-            return response;
         } catch (e) {
             await AuthUtils.errorHandling(e, node.getProfileName());
         }
@@ -592,7 +580,6 @@ export class DatasetActions {
             if (!selection || selection === "Cancel") {
                 ZoweLogger.debug(DatasetActions.localizedStrings.opCancelled);
                 nodes = [];
-                return;
             }
         });
 
@@ -966,7 +953,7 @@ export class DatasetActions {
         let sessProfileName;
         if (regExp === null) {
             if (!doc.uri.fsPath.includes(Constants.ZOWETEMPFOLDER)) {
-                const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Constants.Trees.JES);
+                const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES);
                 if (profileNamesList.length > 1) {
                     const quickPickOptions: vscode.QuickPickOptions = {
                         placeHolder: vscode.l10n.t("Select the Profile to use to submit the job"),
@@ -1067,23 +1054,23 @@ export class DatasetActions {
 
         const confirmationOption: string = vscode.workspace.getConfiguration().get("zowe.jobs.confirmSubmission");
 
-        switch (SharedUtils.JOB_SUBMIT_DIALOG_OPTS.indexOf(confirmationOption)) {
-            case SharedUtils.JobSubmitDialogOpts.OtherUserJobs:
+        switch (Constants.JOB_SUBMIT_DIALOG_OPTS.indexOf(confirmationOption)) {
+            case Definitions.JobSubmitDialogOpts.OtherUserJobs:
                 if (!ownsJob && !(await showConfirmationDialog())) {
                     return false;
                 }
                 break;
-            case SharedUtils.JobSubmitDialogOpts.YourJobs:
+            case Definitions.JobSubmitDialogOpts.YourJobs:
                 if (ownsJob && !(await showConfirmationDialog())) {
                     return false;
                 }
                 break;
-            case SharedUtils.JobSubmitDialogOpts.AllJobs:
+            case Definitions.JobSubmitDialogOpts.AllJobs:
                 if (!(await showConfirmationDialog())) {
                     return false;
                 }
                 break;
-            case SharedUtils.JobSubmitDialogOpts.Disabled:
+            case Definitions.JobSubmitDialogOpts.Disabled:
             default:
                 break;
         }
@@ -1548,7 +1535,7 @@ export class DatasetActions {
             }
 
             if (beforeProfileName === profileName) {
-                let replace: shouldReplace;
+                let replace: Definitions.ShouldReplace;
                 if (memberName) {
                     replace = await DatasetActions.determineReplacement(node.getProfile(), `${dataSetName}(${memberName})`, "mem");
                 }
@@ -1635,7 +1622,7 @@ export class DatasetActions {
      */
     public static async copySequentialDatasets(nodes: ZoweDatasetNode[]): Promise<void> {
         ZoweLogger.trace("dataset.actions.copySequentialDatasets called.");
-        await DatasetActions.copyProcessor(nodes, "ps", async (node: ZoweDatasetNode, dsname: string, replace: shouldReplace) => {
+        await DatasetActions.copyProcessor(nodes, "ps", async (node: ZoweDatasetNode, dsname: string, replace: Definitions.ShouldReplace) => {
             const lbl = node.getLabel().toString();
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
             if (mvsApi?.copyDataSet == null) {
@@ -1662,7 +1649,7 @@ export class DatasetActions {
      */
     public static async copyPartitionedDatasets(nodes: ZoweDatasetNode[]): Promise<void> {
         ZoweLogger.trace("dataset.actions.copyPartitionedDatasets called.");
-        await DatasetActions.copyProcessor(nodes, "po", async (node: ZoweDatasetNode, dsname: string, replace: shouldReplace) => {
+        await DatasetActions.copyProcessor(nodes, "po", async (node: ZoweDatasetNode, dsname: string, replace: Definitions.ShouldReplace) => {
             const lbl = node.getLabel().toString();
             const uploadOptions: zosfiles.IUploadOptions = {
                 etag: node.getEtag(),
@@ -1703,7 +1690,11 @@ export class DatasetActions {
      * @param type The type of z/os dataset (or member) that we should determine whether or not to replace
      * @returns string that explain whether or not to replace the z/os content
      */
-    public static async determineReplacement(nodeProfile: imperative.IProfileLoaded, name: string, type: replaceDstype): Promise<shouldReplace> {
+    public static async determineReplacement(
+        nodeProfile: imperative.IProfileLoaded,
+        name: string,
+        type: Definitions.ReplaceDSType
+    ): Promise<Definitions.ShouldReplace> {
         ZoweLogger.trace("dataset.actions.determineReplacement called.");
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(nodeProfile);
         const options = { responseTimeout: nodeProfile.profile?.responseTimeout };
@@ -1747,8 +1738,8 @@ export class DatasetActions {
      */
     public static async copyProcessor(
         nodes: ZoweDatasetNode[],
-        type: replaceDstype,
-        action: (_node: ZoweDatasetNode, _dsname: string, _shouldReplace: shouldReplace) => Promise<void>
+        type: Definitions.ReplaceDSType,
+        action: (_node: ZoweDatasetNode, _dsname: string, _shouldReplace: Definitions.ShouldReplace) => Promise<void>
     ): Promise<void> {
         ZoweLogger.trace("dataset.actions._copyProcessor called.");
         for (const node of nodes) {

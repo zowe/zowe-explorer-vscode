@@ -12,17 +12,16 @@
 import * as vscode from "vscode";
 import * as profileLoader from "../../../src/configuration/Profiles";
 import { Gui, imperative, Validation } from "@zowe/zowe-explorer-api";
-import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
-import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
-import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
-import { ProfileManagement } from "../../../src/management/ProfileManagement";
 import { FilterDescriptor, FilterItem } from "../../../src/management/FilterManagement";
-import { ZoweLogger } from "../../../src/tools/ZoweLogger";
+import { ProfileManagement } from "../../../src/management/ProfileManagement";
+import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
+import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
+import { TsoCommandHandler } from "../../../src/commands/TsoCommandHandler";
 
 jest.mock("Session");
 
-describe("mvsCommandActions unit testing", () => {
+describe("TsoCommandHandler unit testing", () => {
     const showErrorMessage = jest.fn();
     const showInputBox = jest.fn();
     const showInformationMessage = jest.fn();
@@ -61,12 +60,6 @@ describe("mvsCommandActions unit testing", () => {
             update: jest.fn(),
             keys: () => [],
         },
-        configurable: true,
-    });
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
-        value: jest.fn().mockReturnValue(["firstName", "secondName"]),
         configurable: true,
     });
 
@@ -132,6 +125,10 @@ describe("mvsCommandActions unit testing", () => {
     Object.defineProperty(vscode.window, "createOutputChannel", { value: createOutputChannel });
     Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
     Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
+    Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+        value: jest.fn().mockReturnValue(["firstName", "secondName"]),
+        configurable: true,
+    });
 
     mockLoadNamedProfile.mockReturnValue({ profile: { name: "aProfile", type: "zosmf" } });
     getConfiguration.mockReturnValue({
@@ -146,10 +143,16 @@ describe("mvsCommandActions unit testing", () => {
     });
 
     const apiRegisterInstance = ZoweExplorerApiRegister.getInstance();
-    const mvsActions = MvsCommandHandler.getInstance();
+    const tsoActions = TsoCommandHandler.getInstance();
     const profilesForValidation = { status: "active", name: "fake" };
 
-    it("tests the issueMvsCommand function", async () => {
+    Object.defineProperty(tsoActions, "getTsoParams", {
+        value: jest.fn(() => {
+            return "acctNum";
+        }),
+    });
+
+    it("tests the issueTsoCommand function", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -172,24 +175,21 @@ describe("mvsCommandActions unit testing", () => {
         jest.spyOn(mockMvsApi, "getSession").mockReturnValue(session);
 
         showQuickPick.mockReturnValueOnce("firstName");
-
         const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
         const getCommandApiMock = jest.fn();
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
-
         showInputBox.mockReturnValueOnce("/d iplinfo1");
-        jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
-        jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValue("iplinfo1" as any);
+        jest.spyOn(mockCommandApi, "issueTsoCommandWithParms").mockReturnValue("iplinfo1" as any);
 
-        await mvsActions.issueMvsCommand();
+        await tsoActions.issueTsoCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command",
+            placeHolder: "Select the Profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(appendLine.mock.calls.length).toBe(2);
@@ -198,7 +198,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
-    it("tests the issueMvsCommand function user selects a history item", async () => {
+    it("tests the issueTsoCommand function user selects a history item", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -221,18 +221,17 @@ describe("mvsCommandActions unit testing", () => {
         const getCommandApiMock = jest.fn();
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
-
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem2));
-        jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValue("iplinfo0" as any);
+        jest.spyOn(mockCommandApi, "issueTsoCommandWithParms").mockReturnValue("iplinfo0" as any);
 
-        await mvsActions.issueMvsCommand();
+        await tsoActions.issueTsoCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command",
+            placeHolder: "Select the Profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(0);
         expect(appendLine.mock.calls.length).toBe(2);
@@ -241,7 +240,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
-    it("tests the issueMvsCommand function - issueSimple throws an error", async () => {
+    it("tests the issueTsoCommand function - issueTsoCommand throws an error", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -267,23 +266,23 @@ describe("mvsCommandActions unit testing", () => {
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
-        jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValue("iplinfo3" as any);
+        jest.spyOn(mockCommandApi, "issueTsoCommandWithParms").mockReturnValue("iplinfo3" as any);
 
-        await mvsActions.issueMvsCommand();
+        await tsoActions.issueTsoCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command",
+            placeHolder: "Select the Profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toEqual("Error: fake testError");
     });
 
-    it("tests the issueMvsCommand function user escapes the quick pick box", async () => {
+    it("tests the issueTsoCommand function user escapes the quick pick box", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -309,7 +308,7 @@ describe("mvsCommandActions unit testing", () => {
 
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(undefined));
 
-        await mvsActions.issueMvsCommand();
+        await tsoActions.issueTsoCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showInputBox.mock.calls.length).toBe(0);
@@ -317,13 +316,13 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command",
+            placeHolder: "Select the Profile to use to submit the TSO command",
         });
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made. Operation cancelled.");
     });
 
-    it("tests the issueMvsCommand function user escapes the command box", async () => {
+    it("tests the issueTsoCommand function user escapes the command box", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -349,21 +348,21 @@ describe("mvsCommandActions unit testing", () => {
 
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
 
-        await mvsActions.issueMvsCommand();
+        await tsoActions.issueTsoCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command",
+            placeHolder: "Select the Profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No command entered.");
     });
 
-    it("tests the issueMvsCommand function user starts typing a value in quick pick", async () => {
+    it("tests the issueTsoCommand function user starts typing a value in quick pick", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -406,19 +405,19 @@ describe("mvsCommandActions unit testing", () => {
 
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
 
-        await mvsActions.issueMvsCommand();
+        await tsoActions.issueTsoCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command",
+            placeHolder: "Select the Profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(0);
     });
 
-    it("tests the issueMvsCommand prompt credentials", async () => {
+    it("tests the issueTsoCommand prompt credentials", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -448,21 +447,21 @@ describe("mvsCommandActions unit testing", () => {
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
-        jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValueOnce({ commandResponse: "fake response" } as any);
+        jest.spyOn(mockCommandApi, "issueTsoCommandWithParms").mockReturnValue("iplinfo" as any);
 
-        await mvsActions.issueMvsCommand();
+        await tsoActions.issueTsoCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command",
+            placeHolder: "Select the Profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
     });
 
-    it("tests the issueMvsCommand prompt credentials for password only", async () => {
+    it("tests the issueTsoiCommand prompt credentials for password only", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -490,21 +489,21 @@ describe("mvsCommandActions unit testing", () => {
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
-        jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValueOnce({ commandResponse: "fake response" } as any);
+        jest.spyOn(mockCommandApi, "issueTsoCommandWithParms").mockReturnValue("iplinfo5" as any);
 
-        await mvsActions.issueMvsCommand();
+        await tsoActions.issueTsoCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command",
+            placeHolder: "Select the Profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
     });
 
-    it("tests the issueMvsCommand error in prompt credentials", async () => {
+    it("tests the issueTsoCommand error in prompt credentials", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -523,12 +522,12 @@ describe("mvsCommandActions unit testing", () => {
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce("fake");
 
-        await mvsActions.issueMvsCommand();
+        await tsoActions.issueTsoCommand();
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
     });
 
-    it("tests the issueMvsCommand function user does not select a profile", async () => {
+    it("tests the issueTsoCommand function user does not select a profile", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -544,13 +543,13 @@ describe("mvsCommandActions unit testing", () => {
 
         showQuickPick.mockReturnValueOnce(undefined);
 
-        await mvsActions.issueMvsCommand();
+        await tsoActions.issueTsoCommand();
 
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
     });
 
-    it("tests the issueMvsCommand function from a session", async () => {
+    it("tests the issueTsoCommand function from a session", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -564,7 +563,7 @@ describe("mvsCommandActions unit testing", () => {
             }),
         });
 
-        jest.spyOn(mvsActions, "checkCurrentProfile").mockReturnValue(undefined as any);
+        jest.spyOn(tsoActions, "checkCurrentProfile").mockReturnValue(undefined as any);
 
         const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
         const getCommandApiMock = jest.fn();
@@ -572,15 +571,15 @@ describe("mvsCommandActions unit testing", () => {
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
         showInputBox.mockReturnValueOnce("/d iplinfo1");
-        jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValueOnce({ commandResponse: "fake response" } as any);
+        jest.spyOn(mockCommandApi, "issueTsoCommandWithParms").mockReturnValue("iplinfo1" as any);
 
-        await mvsActions.issueMvsCommand(session, null as any, testNode);
+        await tsoActions.issueTsoCommand(session, null as any, testNode);
 
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
-    it("tests the issueMvsCommand handles error thrown by API register", async () => {
+    it("tests the issueTsoCommand handles error thrown by API register", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -608,21 +607,38 @@ describe("mvsCommandActions unit testing", () => {
             throw testError;
         });
 
-        await mvsActions.issueMvsCommand();
+        await tsoActions.issueTsoCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command",
+            placeHolder: "Select the Profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(0);
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toContain(testError.message);
     });
 
-    it("tests the issueMvsCommand function no profiles error", async () => {
+    it("tests the selectTsoProfile function", async () => {
+        showQuickPick.mockReturnValueOnce("test1" as any);
+
+        await expect(
+            (tsoActions as any).selectTsoProfile([
+                {
+                    name: "test1",
+                },
+                {
+                    name: "test2",
+                },
+            ])
+        ).resolves.toEqual({
+            name: "test1",
+        });
+    });
+
+    it("tests the issueTsoCommand function no profiles error", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -641,7 +657,7 @@ describe("mvsCommandActions unit testing", () => {
             value: jest.fn().mockReturnValue([]),
             configurable: true,
         });
-        await mvsActions.issueMvsCommand();
+        await tsoActions.issueTsoCommand();
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles available");
     });
 });

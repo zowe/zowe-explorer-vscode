@@ -33,7 +33,6 @@ import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
 import { createUSSNode, createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
-import { createIJobObject, createJobsTree } from "../../__mocks__/mockCreators/jobs";
 import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
@@ -51,7 +50,7 @@ jest.mock("fs");
 jest.mock("fs-extra");
 jest.mock("../../../src/tools/ZoweLogger");
 
-async function createGlobalMocks() {
+function createGlobalMocks() {
     const newMocks = {
         log: imperative.Logger.getAppLogger(),
         mockShowInputBox: jest.fn(),
@@ -268,7 +267,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
 });
 
 describe("Profiles Unit Tests - Function createZoweSession", () => {
-    async function createBlockMocks(globalMocks) {
+    function createBlockMocks(globalMocks) {
         const newMocks = {
             session: createISessionWithoutCredentials(),
             treeView: createTreeView(),
@@ -400,7 +399,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
 });
 
 describe("Profiles Unit Tests - Function createZoweSchema", () => {
-    async function createBlockMocks(globalMocks) {
+    function createBlockMocks(globalMocks) {
         const newMocks = {
             session: createISessionWithoutCredentials(),
             treeView: createTreeView(),
@@ -778,7 +777,6 @@ describe("Profiles Unit Tests - function deleteProfile", () => {
         const datasetTree = createDatasetTree(datasetSessionNode, globalMocks.testProfile);
         const ussSessionNode = [createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile)];
         const ussTree = createUSSTree([], ussSessionNode);
-        const jobsTree = createJobsTree(globalMocks.testSession, createIJobObject(), globalMocks.testProfile, createTreeView());
 
         jest.spyOn(datasetTree, "getFileHistory").mockReturnValue(["[SESTEST]: TEST.LIST"]);
         jest.spyOn(ussTree, "getFileHistory").mockReturnValue(["[SESTEST]: /u/test/test.txt"]);
@@ -888,7 +886,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         const globalMocks = await createGlobalMocks();
         environmentSetup(globalMocks);
         setupProfilesCheck(globalMocks);
-        jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValue(undefined);
+        jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValue(undefined as any);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
     });
     it("should show as inactive in status of profile", async () => {

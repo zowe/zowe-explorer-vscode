@@ -36,6 +36,7 @@ import { IconGenerator } from "../../icons/IconGenerator";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedContext } from "../shared/SharedContext";
 import { AuthUtils } from "../../utils/AuthUtils";
+import type { Definitions } from "../../configuration/Definitions";
 
 /**
  * A type of TreeItem used to represent sessions and data sets
@@ -62,7 +63,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      *
      * @param {IZoweTreeOpts} opts
      */
-    public constructor(opts: SharedUtils.IZoweDatasetTreeOpts) {
+    public constructor(opts: Definitions.IZoweDatasetTreeOpts) {
         super(opts.label, opts.collapsibleState, opts.parentNode, opts.session, opts.profile);
         if (opts.encoding != null) {
             this.setEncoding(opts.encoding);

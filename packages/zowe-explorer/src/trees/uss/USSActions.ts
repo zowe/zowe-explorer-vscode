@@ -69,7 +69,7 @@ export class USSActions {
         const name = await Gui.showInputBox(nameOptions);
         if (name && filePath) {
             try {
-                filePath = `${filePath}/${name as string}`;
+                filePath = `${filePath}/${name}`;
                 const uri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, name) });
                 await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
                 if (nodeType === "file") {
@@ -125,7 +125,7 @@ export class USSActions {
             Profiles.getInstance().validProfile === Validation.ValidationType.UNVERIFIED
         ) {
             const quickPickOptions: vscode.QuickPickOptions = {
-                placeHolder: `What would you like to create at ${node.fullPath as string}?`,
+                placeHolder: `What would you like to create at ${node.fullPath}?`,
                 ignoreFocusOut: true,
                 canPickMany: false,
             };
@@ -181,7 +181,7 @@ export class USSActions {
         ZoweLogger.trace("uss.actions.uploadBinaryFile called.");
         try {
             const localFileName = path.parse(filePath).base;
-            const ussName = `${node.fullPath as string}/${localFileName}`;
+            const ussName = `${node.fullPath}/${localFileName}`;
             await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContent(filePath, ussName, { binary: true });
         } catch (e) {
             await AuthUtils.errorHandling(e, node.getProfileName());
@@ -192,7 +192,7 @@ export class USSActions {
         ZoweLogger.trace("uss.actions.uploadFile called.");
         try {
             const localFileName = path.parse(doc.fileName).base;
-            const ussName = `${node.fullPath as string}/${localFileName}`;
+            const ussName = `${node.fullPath}/${localFileName}`;
             const prof = node.getProfile();
 
             const task: imperative.ITaskWithStatus = {
@@ -230,7 +230,7 @@ export class USSActions {
     public static async deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<boolean> {
         ZoweLogger.trace("uss.actions.deleteUSSFilesPrompt called.");
         const fileNames = nodes.reduce((label, currentVal) => {
-            return `${label as string}${currentVal.label.toString() as string}\n`;
+            return `${label}${currentVal.label.toString()}\n`;
         }, "");
 
         const deleteButton = vscode.l10n.t("Delete");

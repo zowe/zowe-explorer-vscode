@@ -20,8 +20,8 @@ import {
     IZoweTreeNode,
     IZoweJobTreeNode,
     PersistenceSchemaEnum,
-    Types,
     Poller,
+    Types,
 } from "@zowe/zowe-explorer-api";
 import { ZoweJobNode } from "./ZoweJobNode";
 import { JobFSProvider } from "./JobFSProvider";
@@ -31,8 +31,7 @@ import { Profiles } from "../../configuration/Profiles";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { IconGenerator } from "../../icons/IconGenerator";
-import { PollDecorator } from "../../providers/DecorationProviders";
-import { ZoweTreeProvider } from "../../providers/ZoweTreeProvider";
+import { ZoweTreeProvider } from "../ZoweTreeProvider";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedContext } from "../shared/SharedContext";
@@ -40,29 +39,8 @@ import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { SharedUtils } from "../shared/SharedUtils";
 import { FilterItem } from "../../management/FilterManagement";
 import { AuthUtils } from "../../utils/AuthUtils";
-
-interface IJobSearchCriteria {
-    Owner: string | undefined;
-    Prefix: string | undefined;
-    JobId: string | undefined;
-    Status: string | undefined;
-}
-
-interface IJobStatusOption {
-    key: string;
-    label: string;
-    value: string;
-    picked: boolean;
-}
-
-interface IJobPickerOption {
-    key: string;
-    label: string;
-    value: string;
-    show: boolean;
-    placeHolder: string;
-    validateInput?: vscode.InputBoxOptions["validateInput"];
-}
+import { PollProvider } from "./JobPollProvider";
+import { Definitions } from "../../configuration/Definitions";
 
 /**
  * Creates the Job tree that contains nodes of sessions, jobs and spool items
@@ -123,11 +101,11 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     public lastOpened: Types.ZoweNodeInteraction = {};
     public searchByQuery = new FilterItem({
         text: vscode.l10n.t("$(plus) Create job search filter"),
-        menuType: Constants.JobPickerTypes.QuerySearch,
+        menuType: Definitions.JobPickerTypes.QuerySearch,
     });
     public searchById = new FilterItem({
         text: vscode.l10n.t("$(search) Search by job ID"),
-        menuType: Constants.JobPickerTypes.IdSearch,
+        menuType: Definitions.JobPickerTypes.IdSearch,
     });
     private treeView: vscode.TreeView<IZoweJobTreeNode>;
 
@@ -205,8 +183,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 return this.mFavorites;
             }
             if (element.contextValue && element.contextValue === Constants.FAV_PROFILE_CONTEXT) {
-                const favsForProfile = this.loadProfilesForFavorites(this.log, element);
-                return favsForProfile;
+                return this.loadProfilesForFavorites(this.log, element);
             }
             return element.getChildren();
         }
@@ -705,7 +682,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         ZoweLogger.trace("ZosJobsProvider.getUserJobsMenuChoice called.");
         const items: FilterItem[] = this.mHistory
             .getSearchHistory()
-            .map((element) => new FilterItem({ text: element, menuType: Constants.JobPickerTypes.History }));
+            .map((element) => new FilterItem({ text: element, menuType: Definitions.JobPickerTypes.History }));
 
         // VSCode route to create a QuickPick
         const quickpick = Gui.createQuickPick();
@@ -722,13 +699,13 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         return choice as FilterItem;
     }
 
-    public async getUserSearchQueryInput(choice: FilterItem, node: IZoweJobTreeNode): Promise<IJobSearchCriteria | undefined> {
+    public async getUserSearchQueryInput(choice: FilterItem, node: IZoweJobTreeNode): Promise<Definitions.IJobSearchCriteria | undefined> {
         ZoweLogger.trace("ZosJobsProvider.getUserSearchQueryInput called.");
         if (!choice) {
             return undefined;
         }
         const { menuType } = choice.filterItem;
-        const { QuerySearch, History, IdSearch } = Constants.JobPickerTypes;
+        const { QuerySearch, History, IdSearch } = Definitions.JobPickerTypes;
 
         if (menuType === QuerySearch) {
             return this.handleEditingMultiJobParameters(this.JOB_PROPERTIES, node);
@@ -766,7 +743,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         return searchCriteria;
     }
 
-    public async handleSearchByJobId(jobId?: string): Promise<IJobSearchCriteria> {
+    public async handleSearchByJobId(jobId?: string): Promise<Definitions.IJobSearchCriteria> {
         ZoweLogger.trace("ZosJobsProvider.handleSearchByJobId called.");
         const options = {
             prompt: vscode.l10n.t("Enter a job ID"),
@@ -785,9 +762,9 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         };
     }
 
-    public parseJobSearchQuery(searchCriteria: string): IJobSearchCriteria {
+    public parseJobSearchQuery(searchCriteria: string): Definitions.IJobSearchCriteria {
         ZoweLogger.trace("ZosJobsProvider.parseJobSearchQuery called.");
-        const searchCriteriaObj: IJobSearchCriteria = {
+        const searchCriteriaObj: Definitions.IJobSearchCriteria = {
             Owner: undefined,
             Prefix: undefined,
             JobId: undefined,
@@ -814,7 +791,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         return searchCriteriaObj;
     }
 
-    public getPopulatedPickerValues(searchObj: IJobSearchCriteria): IJobPickerOption[] {
+    public getPopulatedPickerValues(searchObj: Definitions.IJobSearchCriteria): Definitions.IJobPickerOption[] {
         ZoweLogger.trace("ZosJobsProvider.getPopulatedPickerValues called.");
         const historyPopulatedItems = this.JOB_PROPERTIES;
         historyPopulatedItems.forEach((prop) => {
@@ -942,7 +919,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         throw new Error("Method not implemented.");
     }
 
-    private async setJobStatus(node: IZoweJobTreeNode): Promise<IJobStatusOption> {
+    private async setJobStatus(node: IZoweJobTreeNode): Promise<Definitions.IJobStatusOption> {
         ZoweLogger.trace("ZosJobsProvider.setJobStatus called.");
         const jobStatusSelection = ZoweExplorerApiRegister.getJesApi(node.getProfile()).getJobsByParameters
             ? Constants.JOB_STATUS
@@ -955,9 +932,9 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     }
 
     private async handleEditingMultiJobParameters(
-        jobProperties: IJobPickerOption[],
+        jobProperties: Definitions.IJobPickerOption[],
         node: IZoweJobTreeNode
-    ): Promise<IJobSearchCriteria | undefined> {
+    ): Promise<Definitions.IJobSearchCriteria | undefined> {
         ZoweLogger.trace("ZosJobsProvider.handleEditingMultiJobParameters called.");
         const editableItems: vscode.QuickPickItem[] = [new FilterItem({ text: JobTree.submitJobQueryLabel, show: true }), Constants.SEPARATORS.BLANK];
         jobProperties.forEach((prop) => {
@@ -987,7 +964,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 node.prefix = jobProperties.find((prop) => prop.key === "prefix").value;
                 node.owner = jobProperties.find((prop) => prop.key === "owner").value;
                 node.status = jobProperties.find((prop) => prop.key === "job-status").value;
-                const searchCriteriaObj: IJobSearchCriteria = {
+                const searchCriteriaObj: Definitions.IJobSearchCriteria = {
                     Owner: node.owner,
                     Prefix: node.prefix,
                     JobId: undefined,
@@ -1012,7 +989,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         }
         return this.handleEditingMultiJobParameters(jobProperties, node);
     }
-    private resetJobProperties(jobProperties: IJobPickerOption[]): IJobPickerOption[] {
+    private resetJobProperties(jobProperties: Definitions.IJobPickerOption[]): Definitions.IJobPickerOption[] {
         ZoweLogger.trace("ZosJobsProvider.resetJobProperties called.");
         jobProperties.forEach((prop) => {
             if (prop.key === "owner") {
@@ -1033,7 +1010,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @param node - a IZoweJobTreeNode node
      * @param storedSearch - The original search string
      */
-    private applySearchLabelToNode(node: IZoweJobTreeNode, storedSearchObj: IJobSearchCriteria): void {
+    private applySearchLabelToNode(node: IZoweJobTreeNode, storedSearchObj: Definitions.IJobSearchCriteria): void {
         ZoweLogger.trace("ZosJobsProvider.applySearchLabelToNode called.");
         if (storedSearchObj) {
             node.searchId = storedSearchObj.JobId || "";
@@ -1094,7 +1071,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         // If the uri is already being polled, mark it as ready for removal
         if (node.resourceUri.path in Poller.pollRequests && SharedContext.isPolling(node)) {
             Poller.pollRequests[node.resourceUri.path].dispose = true;
-            PollDecorator.updateIcon(node.resourceUri);
+            PollProvider.updateIcon(node.resourceUri);
             node.contextValue = node.contextValue.replace(Constants.POLL_CONTEXT, "");
 
             // Fire "tree changed event" to reflect removal of polling context value
@@ -1132,7 +1109,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 statusMsg.dispose();
             },
         });
-        PollDecorator.updateIcon(node.resourceUri);
+        PollProvider.updateIcon(node.resourceUri);
         node.contextValue += Constants.POLL_CONTEXT;
 
         // Fire "tree changed event" to reflect added polling context value

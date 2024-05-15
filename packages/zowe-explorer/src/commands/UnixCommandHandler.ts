@@ -10,10 +10,10 @@
  */
 
 import * as vscode from "vscode";
-import { ZoweCommandProvider } from "../providers/ZoweCommandProvider";
+import * as zosuss from "@zowe/zos-uss-for-zowe-sdk";
+import { ZoweCommandProvider } from "./ZoweCommandProvider";
 import { Gui, IZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../configuration/Profiles";
-import * as zosuss from "@zowe/zos-uss-for-zowe-sdk";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { ProfileManagement } from "../management/ProfileManagement";
@@ -21,6 +21,7 @@ import { Constants } from "../configuration/Constants";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { FilterDescriptor, FilterItem } from "../management/FilterManagement";
 import { AuthUtils } from "../utils/AuthUtils";
+import { Definitions } from "../configuration/Definitions";
 
 /**
  * Provides a class that manages submitting a Unix command on the server
@@ -192,7 +193,6 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         } else {
             ZoweLogger.info(this.unixCmdMsgs.opCancelledMsg);
             Gui.showMessage(this.unixCmdMsgs.opCancelledMsg);
-            return;
         }
     }
 
@@ -268,7 +268,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     private async userSelectProfile(): Promise<imperative.IProfileLoaded> {
         const allProfiles = this.profileInstance.allProfiles;
         const sshReq = this.checkForSshRequiredForAllTypes(allProfiles);
-        const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Constants.Trees.USS);
+        const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.USS);
         if (profileNamesList.length) {
             if (!sshReq) {
                 const quickPickOptions: vscode.QuickPickOptions = {
@@ -286,7 +286,6 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         } else {
             ZoweLogger.info(this.unixCmdMsgs.noProfilesAvailableMsg);
             Gui.showMessage(this.unixCmdMsgs.noProfilesAvailableMsg);
-            return;
         }
     }
 

@@ -105,6 +105,12 @@
       "CLI setting"
     ]
   },
+  "Zowe Explorer's temp folder is located at {0}/Zowe temp folder": {
+    "message": "Zowe Explorer's temp folder is located at {0}",
+    "comment": [
+      "Zowe temp folder"
+    ]
+  },
   "Required parameter 'host' must not be blank.": "Required parameter 'host' must not be blank.",
   "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out./Label": {
     "message": "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
@@ -120,6 +126,12 @@
   },
   "Log in to Authentication Service": "Log in to Authentication Service",
   "Update Credentials": "Update Credentials",
+  "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct./Profile name": {
+    "message": "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
+    "comment": [
+      "Profile name"
+    ]
+  },
   "Favorites": "Favorites",
   "Use the search button to list USS files": "Use the search button to list USS files",
   "Invalid node": "Invalid node",
@@ -266,12 +278,6 @@
   "Copying file structure...": "Copying file structure...",
   "The paste operation is not supported for this node.": "The paste operation is not supported for this node.",
   "Pasting files...": "Pasting files...",
-  "Disabled": "Disabled",
-  "Your jobs": "Your jobs",
-  "Other user jobs": "Other user jobs",
-  "All jobs": "All jobs",
-  "Ascending": "Ascending",
-  "Descending": "Descending",
   "Invalid job owner": "Invalid job owner",
   "Invalid job prefix": "Invalid job prefix",
   "Failed to parse a saved favorite. Attempted to parse: {0}/Plaintext line": {
@@ -308,6 +314,7 @@
   "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",
   "Team config file deleted, refreshing Zowe Explorer.": "Team config file deleted, refreshing Zowe Explorer.",
   "Team config file updated.": "Team config file updated.",
+  "Zowe Explorer has activated successfully.": "Zowe Explorer has activated successfully.",
   "Type the new pattern to add to history": "Type the new pattern to add to history",
   "action is not supported for this property type.": "action is not supported for this property type.",
   "Clear all history items for this persistent property?": "Clear all history items for this persistent property?",
@@ -774,12 +781,6 @@
     ]
   },
   "Error encountered while activating and initializing logger": "Error encountered while activating and initializing logger",
-  "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct./Profile name": {
-    "message": "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
-    "comment": [
-      "Profile name"
-    ]
-  },
   "$(plus) Add Credentials": "$(plus) Add Credentials",
   "Add username and password for basic authentication": "Add username and password for basic authentication",
   "$(refresh) Update Credentials": "$(refresh) Update Credentials",
@@ -962,13 +963,12 @@
   "Recent": "Recent",
   "Recent Filters": "Recent Filters",
   "Options": "Options",
-  "Zowe Explorer's temp folder is located at {0}/Zowe temp folder": {
-    "message": "Zowe Explorer's temp folder is located at {0}",
-    "comment": [
-      "Zowe temp folder"
-    ]
-  },
-  "Zowe Explorer has activated successfully.": "Zowe Explorer has activated successfully.",
+  "Disabled": "Disabled",
+  "Your jobs": "Your jobs",
+  "Other user jobs": "Other user jobs",
+  "All jobs": "All jobs",
+  "Ascending": "Ascending",
+  "Descending": "Descending",
   "$(plus) Create a new Unix command": "$(plus) Create a new Unix command",
   "Issuing commands is not supported for this profile type, {0}./Profile type": {
     "message": "Issuing commands is not supported for this profile type, {0}.",

@@ -11,14 +11,14 @@
 
 import { Types } from "@zowe/zowe-explorer-api";
 import { SharedContext } from "./SharedContext";
-import type { SharedUtils } from "./SharedUtils";
+import type { Definitions } from "../../configuration/Definitions";
 
 export class SharedTreeProviders {
     static #ds: Types.IZoweDatasetTreeType;
     static #uss: Types.IZoweUSSTreeType;
     static #job: Types.IZoweJobTreeType;
 
-    public static async initializeProviders(initializers: SharedUtils.ProviderFunctions): Promise<SharedUtils.IZoweProviders> {
+    public static async initializeProviders(initializers: Definitions.ProviderFunctions): Promise<Definitions.IZoweProviders> {
         SharedTreeProviders.#ds = await initializers.ds();
         SharedTreeProviders.#uss = await initializers.uss();
         SharedTreeProviders.#job = await initializers.job();
@@ -37,7 +37,7 @@ export class SharedTreeProviders {
         return SharedTreeProviders.#job;
     }
 
-    public static get providers(): SharedUtils.IZoweProviders {
+    public static get providers(): Definitions.IZoweProviders {
         return {
             ds: SharedTreeProviders.#ds,
             uss: SharedTreeProviders.#uss,

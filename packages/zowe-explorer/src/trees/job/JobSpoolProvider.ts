@@ -12,35 +12,35 @@
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
-import { ZoweLogger } from "../tools/ZoweLogger";
-import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
-import { Profiles } from "../configuration/Profiles";
+import { ZoweLogger } from "../../tools/ZoweLogger";
+import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
+import { JobSpoolFile } from "./JobSpoolFile";
 
-export class SpoolProvider implements vscode.TextDocumentContentProvider {
+export class JobSpoolProvider implements vscode.TextDocumentContentProvider {
     // Track files that have been opened previously through the SpoolProvider
-    public static files: { [key: string]: SpoolFile } = {};
+    public static files: { [key: string]: JobSpoolFile } = {};
 
     public static scheme = "zosspool";
     public static onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
-    public onDidChange = SpoolProvider.onDidChangeEmitter.event;
+    public onDidChange = JobSpoolProvider.onDidChangeEmitter.event;
 
     public async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
         ZoweLogger.trace("SpoolProvider.provideTextDocumentContent called.");
-        const spoolFile = SpoolProvider.files[uri.path];
+        const spoolFile = JobSpoolProvider.files[uri.path];
         if (spoolFile) {
             // Use latest cached content from stored SpoolFile object
             return spoolFile.content;
         }
 
         // Track the new spool file and pass the event emitter for future updates
-        const newSpoolFile = new SpoolFile(uri, SpoolProvider.onDidChangeEmitter);
+        const newSpoolFile = new JobSpoolFile(uri, JobSpoolProvider.onDidChangeEmitter);
         await newSpoolFile.fetchContent();
-        SpoolProvider.files[uri.path] = newSpoolFile;
+        JobSpoolProvider.files[uri.path] = newSpoolFile;
         return newSpoolFile.content;
     }
 
     public dispose(): void {
-        SpoolProvider.onDidChangeEmitter.dispose();
+        JobSpoolProvider.onDidChangeEmitter.dispose();
     }
 
     /**
@@ -60,7 +60,7 @@ export class SpoolProvider implements vscode.TextDocumentContentProvider {
         const path = spoolSegments.filter((v) => v && v.length).join(".");
 
         return vscode.Uri.parse("").with({
-            scheme: SpoolProvider.scheme,
+            scheme: JobSpoolProvider.scheme,
             path,
             query,
         });
@@ -82,7 +82,7 @@ export class SpoolProvider implements vscode.TextDocumentContentProvider {
         (session: string, spool: zosjobs.IJobFile) =>
         (uniqueFragment: string): vscode.Uri => {
             ZoweLogger.trace("SpoolProvider.toUniqueJobFileUri called.");
-            const encodedUri = SpoolProvider.encodeJobFile(session, spool);
+            const encodedUri = JobSpoolProvider.encodeJobFile(session, spool);
             return encodedUri.with({
                 fragment: uniqueFragment,
             });
@@ -121,52 +121,12 @@ export class SpoolProvider implements vscode.TextDocumentContentProvider {
         );
     }
 
-    /**
-     * Decode the information needed to get the Spool content.
-     *
-     * @param uri The URI passed to TextDocumentContentProvider
-     */
-    public static decodeJobFile(uri: vscode.Uri): [string, zosjobs.IJobFile] {
-        ZoweLogger.trace("SpoolProvider.decodeJobFile called.");
-        const [session, spool] = JSON.parse(uri.query) as [string, zosjobs.IJobFile];
-        return [session, spool];
-    }
-
     public static initializeSpoolProvider(context: vscode.ExtensionContext): void {
         ZoweLogger.trace("SpoolProvider.initializeSpoolProvider called.");
-        const spoolProvider = new SpoolProvider();
+        const spoolProvider = new JobSpoolProvider();
         const providerRegistration = vscode.Disposable.from(
-            vscode.workspace.registerTextDocumentContentProvider(SpoolProvider.scheme, spoolProvider)
+            vscode.workspace.registerTextDocumentContentProvider(JobSpoolProvider.scheme, spoolProvider)
         );
         context.subscriptions.push(spoolProvider, providerRegistration);
-    }
-}
-
-/**
- * Manage spool content for each file that is opened through the SpoolProvider.
- */
-export class SpoolFile {
-    public content: string = "";
-    private readonly emitter: vscode.EventEmitter<vscode.Uri>;
-    private sessionName: string = "";
-    private spool: zosjobs.IJobFile;
-    public uri: vscode.Uri;
-
-    public constructor(uri: vscode.Uri, emitter: vscode.EventEmitter<vscode.Uri>) {
-        this.uri = uri;
-        this.emitter = emitter;
-        [this.sessionName, this.spool] = SpoolProvider.decodeJobFile(this.uri);
-    }
-
-    /**
-     * Caches content changes to the spool file for the SpoolProvider to display.
-     */
-    public async fetchContent(): Promise<void> {
-        const profile = Profiles.getInstance().loadNamedProfile(this.sessionName);
-        const result = await ZoweExplorerApiRegister.getJesApi(profile).getSpoolContentById(this.spool.jobname, this.spool.jobid, this.spool.id);
-        this.content = result;
-
-        // Signal to the SpoolProvider that the new contents should be rendered for this file
-        this.emitter.fire(this.uri);
     }
 }

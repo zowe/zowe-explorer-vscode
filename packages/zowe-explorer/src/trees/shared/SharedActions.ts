@@ -196,7 +196,6 @@ export class SharedActions {
             }
         } else {
             Gui.showMessage(vscode.l10n.t("No recent members found."));
-            return;
         }
     }
 

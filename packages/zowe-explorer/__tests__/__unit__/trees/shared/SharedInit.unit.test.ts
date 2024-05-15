@@ -19,13 +19,13 @@ import { Constants } from "../../../../src/configuration/Constants";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { SharedActions } from "../../../../src/trees/shared/SharedActions";
 import { TempFolder } from "../../../../src/configuration/TempFolder";
-import { TsoCommandHandler } from "../../../../src/command/TsoCommandHandler";
-import { MvsCommandHandler } from "../../../../src/command/MvsCommandHandler";
 import { LocalFileManagement } from "../../../../src/management/LocalFileManagement";
-import { UnixCommandHandler } from "../../../../src/command/UnixCommandHandler";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { SharedInit } from "../../../../src/trees/shared/SharedInit";
+import { TsoCommandHandler } from "../../../../src/commands/TsoCommandHandler";
+import { MvsCommandHandler } from "../../../../src/commands/MvsCommandHandler";
+import { UnixCommandHandler } from "../../../../src/commands/UnixCommandHandler";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");

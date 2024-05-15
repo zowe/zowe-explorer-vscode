@@ -18,9 +18,10 @@ import { ProfilesUtils } from "../utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { SharedContext } from "../trees/shared/SharedContext";
 import { AuthUtils } from "../utils/AuthUtils";
+import { Definitions } from "../configuration/Definitions";
 
 export class ProfileManagement {
-    public static getRegisteredProfileNameList(registeredTree: Constants.Trees): string[] {
+    public static getRegisteredProfileNameList(registeredTree: Definitions.Trees): string[] {
         let profileNamesList: string[] = [];
         try {
             profileNamesList = Profiles.getInstance()
@@ -284,17 +285,17 @@ export class ProfileManagement {
         return vscode.commands.executeCommand(`zowe.${type}.disableValidation`, node);
     }
 
-    private static isProfileRegisteredWithTree(tree: Constants.Trees, profile: imperative.IProfileLoaded): boolean {
+    private static isProfileRegisteredWithTree(tree: Definitions.Trees, profile: imperative.IProfileLoaded): boolean {
         switch (tree) {
-            case Constants.Trees.MVS: {
+            case Definitions.Trees.MVS: {
                 const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
                 return mvsProfileTypes.includes(profile.type);
             }
-            case Constants.Trees.USS: {
+            case Definitions.Trees.USS: {
                 const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
                 return ussProfileTypes.includes(profile.type);
             }
-            case Constants.Trees.JES: {
+            case Definitions.Trees.JES: {
                 const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
                 return jesProfileTypes.includes(profile.type);
             }

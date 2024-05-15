@@ -14,14 +14,13 @@ import { FileManagement, IZoweTree, IZoweTreeNode, Validation, ZoweScheme } from
 import { SharedActions } from "./SharedActions";
 import { SharedHistoryView } from "./SharedHistoryView";
 import { SharedTreeProviders } from "./SharedTreeProviders";
-import { SharedUtils } from "./SharedUtils";
 import { JobActions } from "../job/JobActions";
 import { UssFSProvider } from "../uss/UssFSProvider";
 import { TempFolder } from "../../configuration/TempFolder";
 import { Constants } from "../../configuration/Constants";
-import { MvsCommandHandler } from "../../command/MvsCommandHandler";
-import { TsoCommandHandler } from "../../command/TsoCommandHandler";
-import { UnixCommandHandler } from "../../command/UnixCommandHandler";
+import { MvsCommandHandler } from "../../commands/MvsCommandHandler";
+import { TsoCommandHandler } from "../../commands/TsoCommandHandler";
+import { UnixCommandHandler } from "../../commands/UnixCommandHandler";
 import { Profiles } from "../../configuration/Profiles";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
@@ -31,6 +30,9 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { LoggerUtils } from "../../utils/LoggerUtils";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
 import { DatasetFSProvider } from "../dataset/DatasetFSProvider";
+import { ExtensionUtils } from "../../utils/ExtensionUtils";
+import type { Definitions } from "../../configuration/Definitions";
+
 export class SharedInit {
     public static registerRefreshCommand(
         context: vscode.ExtensionContext,
@@ -54,7 +56,7 @@ export class SharedInit {
         );
     }
 
-    public static registerCommonCommands(context: vscode.ExtensionContext, providers: SharedUtils.IZoweProviders): void {
+    public static registerCommonCommands(context: vscode.ExtensionContext, providers: Definitions.IZoweProviders): void {
         ZoweLogger.trace("shared.init.registerCommonCommands called.");
 
         // Update imperative.json to false only when VS Code setting is set to false
@@ -226,7 +228,7 @@ export class SharedInit {
         }
     }
 
-    public static watchConfigProfile(context: vscode.ExtensionContext, providers: SharedUtils.IZoweProviders): void {
+    public static watchConfigProfile(context: vscode.ExtensionContext, providers: Definitions.IZoweProviders): void {
         ZoweLogger.trace("shared.init.watchConfigProfile called.");
         const watchers: vscode.FileSystemWatcher[] = [];
         watchers.push(
@@ -260,7 +262,7 @@ export class SharedInit {
                 if (newProfileContents.toString() === Constants.SAVED_PROFILE_CONTENTS.toString()) {
                     return;
                 }
-                Constants.setSavedProfileContents(newProfileContents);
+                Constants.SAVED_PROFILE_CONTENTS = newProfileContents;
                 await SharedActions.refreshAll(providers.ds);
                 await SharedActions.refreshAll(providers.uss);
                 await SharedActions.refreshAll(providers.job);
@@ -321,10 +323,11 @@ export class SharedInit {
             return;
         }
         const tempPath: string = SettingsConfig.getDirectValue(Constants.SETTINGS_TEMP_FOLDER_PATH);
-        Constants.defineConstants(tempPath);
+        ExtensionUtils.defineConstants(tempPath);
         await TempFolder.hideTempFolder(FileManagement.getZoweDir());
         ProfilesUtils.initializeZoweTempFolder();
         await SettingsConfig.standardizeSettings();
-        Constants.setActivated(true);
+        ZoweLogger.info(vscode.l10n.t(`Zowe Explorer has activated successfully.`));
+        Constants.ACTIVATED = true;
     }
 }

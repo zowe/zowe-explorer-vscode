@@ -19,9 +19,8 @@ import { JobFSProvider } from "./JobFSProvider";
 import { Constants } from "../../configuration/Constants";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { LocalFileManagement } from "../../management/LocalFileManagement";
-import { SpoolProvider } from "../../providers/SpoolProvider";
+import { JobSpoolProvider } from "./JobSpoolProvider";
 import { ZoweLogger } from "../../tools/ZoweLogger";
-import { SharedUtils } from "../shared/SharedUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
 
 export class JobActions {
@@ -112,8 +111,7 @@ export class JobActions {
         const deletionErrors: ReadonlyArray<Error> = deletionResult
             .map((result) => {
                 if (result instanceof Error) {
-                    const error = result;
-                    return error;
+                    return result;
                 }
                 return undefined;
             })
@@ -208,8 +206,8 @@ export class JobActions {
             });
             if (dirUri !== undefined) {
                 for (const node of nodes) {
-                    const spools = (await SpoolProvider.getSpoolFiles(node)).filter((spool: zosjobs.IJobFile) =>
-                        SpoolProvider.matchSpool(spool, node)
+                    const spools = (await JobSpoolProvider.getSpoolFiles(node)).filter((spool: zosjobs.IJobFile) =>
+                        JobSpoolProvider.matchSpool(spool, node)
                     );
                     for (const spool of spools) {
                         await ZoweExplorerApiRegister.getJesApi(nodes[0].getProfile()).downloadSingleSpool({
@@ -247,9 +245,9 @@ export class JobActions {
      * @param node The node to refresh
      * @param jobsProvider The tree to which the refreshed node belongs
      */
-    public static async refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: Types.IZoweJobTreeType): Promise<void> {
+    public static refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: Types.IZoweJobTreeType): void {
         ZoweLogger.trace("job.actions.refreshJobsServer called.");
-        await jobsProvider.refreshElement(node);
+        jobsProvider.refreshElement(node);
     }
 
     /**
@@ -396,7 +394,6 @@ export class JobActions {
                 jobs.filter((jobNode) => jobNode.job !== undefined && jobNode.job !== null),
                 jobsProvider
             );
-            return;
         } else if (job) {
             await JobActions.deleteSingleJob(job, jobsProvider);
             return;
@@ -483,7 +480,7 @@ export class JobActions {
         const selection = await Gui.showQuickPick(
             JobUtils.JOB_SORT_OPTS.map((sortOpt, i) => ({
                 label: i === session.sort.method ? `${sortOpt} $(check)` : sortOpt,
-                description: i === JobUtils.JOB_SORT_OPTS.length - 1 ? SharedUtils.SORT_DIRS[session.sort.direction] : null,
+                description: i === JobUtils.JOB_SORT_OPTS.length - 1 ? Constants.SORT_DIRS[session.sort.direction] : null,
             })),
             {
                 placeHolder: vscode.l10n.t({
@@ -497,13 +494,13 @@ export class JobActions {
             return;
         }
         if (selection.label === vscode.l10n.t("$(fold) Sort Direction")) {
-            const dir = await Gui.showQuickPick(SharedUtils.SORT_DIRS, {
+            const dir = await Gui.showQuickPick(Constants.SORT_DIRS, {
                 placeHolder: vscode.l10n.t("Select a sorting direction"),
             });
             if (dir != null) {
                 session.sort = {
                     ...(session.sort ?? { method: Sorting.JobSortOpts.Id }),
-                    direction: SharedUtils.SORT_DIRS.indexOf(dir),
+                    direction: Constants.SORT_DIRS.indexOf(dir),
                 };
             }
             await JobActions.sortJobs(session, jobsProvider);

@@ -12,11 +12,11 @@
 import * as vscode from "vscode";
 import { Poller } from "@zowe/zowe-explorer-api";
 
-class PollDecorationProvider implements vscode.FileDecorationProvider {
+class JobPollProvider implements vscode.FileDecorationProvider {
     private disposables: vscode.Disposable[];
 
     private static fileDecorationsEmitter: vscode.EventEmitter<vscode.Uri | vscode.Uri[]> = new vscode.EventEmitter<vscode.Uri | vscode.Uri[]>();
-    public onDidChangeFileDecorations: vscode.Event<vscode.Uri | vscode.Uri[]> = PollDecorationProvider.fileDecorationsEmitter.event;
+    public onDidChangeFileDecorations: vscode.Event<vscode.Uri | vscode.Uri[]> = JobPollProvider.fileDecorationsEmitter.event;
 
     public constructor() {
         this.disposables = [];
@@ -27,7 +27,7 @@ class PollDecorationProvider implements vscode.FileDecorationProvider {
     }
 
     public updateIcon(uri: vscode.Uri): void {
-        PollDecorationProvider.fileDecorationsEmitter.fire(uri);
+        JobPollProvider.fileDecorationsEmitter.fire(uri);
     }
 
     public provideFileDecoration(uri: vscode.Uri, _token: vscode.CancellationToken): vscode.ProviderResult<vscode.FileDecoration> {
@@ -57,4 +57,4 @@ class PollDecorationProvider implements vscode.FileDecorationProvider {
     }
 }
 
-export const PollDecorator = new PollDecorationProvider();
+export const PollProvider = new JobPollProvider();
