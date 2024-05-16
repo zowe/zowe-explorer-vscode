@@ -128,6 +128,9 @@ async function createGlobalMocks() {
                 fetchAllProfiles: jest.fn(() => {
                     return [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }];
                 }),
+                fetchAllProfilesByType: jest.fn(() => {
+                    return [{ name: "sestest" }];
+                }),
             };
         }),
         configurable: true,
@@ -544,7 +547,7 @@ describe("Tree Provider Unit Tests - function loadProfileByPersistedProfile", ()
 
         await expect(ZoweTreeProvider.prototype["loadProfileByPersistedProfile"](globalMocks.testDSTree, "zosmf", true)).resolves.not.toThrow();
         expect(globalMocks.testDSTree.addSingleSession).toBeCalledTimes(1);
-        expect(resetValidationSettingsSpy).toBeCalledTimes(2);
+        expect(resetValidationSettingsSpy).toBeCalledTimes(1);
         expect(zoweLoggerWarnSpy).toBeCalledTimes(2);
     });
 });
