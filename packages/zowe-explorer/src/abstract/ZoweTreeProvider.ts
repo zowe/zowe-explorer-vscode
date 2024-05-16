@@ -225,7 +225,7 @@ export class ZoweTreeProvider {
             } else {
                 zoweFileProvider.deleteSession(node.getSessionNode());
                 this.mHistory.addSession(node.label as string);
-                await zoweFileProvider.addSession(node.getProfileName(), undefined, zoweFileProvider);
+                await zoweFileProvider.addSession(node.getProfileName());
             }
             this.refresh();
             // Remove the edited profile from profilesForValidation

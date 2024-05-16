@@ -441,9 +441,9 @@ export class Profiles extends ProfilesCache {
                     ZoweLogger.info(localize("createZoweSession.createNewProfile", "New profile created, {0}.", chosenProfile));
 
                     if (await ProfileManagement.handleChangeForAllTrees(newprofile, true)) {
-                        await zoweFileProvider.addSession(newprofile);
+                        await zoweFileProvider.addSession(newprofile, undefined, undefined);
                     } else {
-                        await zoweFileProvider.addSession(newprofile, undefined, zoweFileProvider);
+                        await zoweFileProvider.addSession(newprofile);
                     }
 
                     zoweFileProvider.refresh();
@@ -452,9 +452,9 @@ export class Profiles extends ProfilesCache {
         } else if (chosenProfile) {
             ZoweLogger.info(localize("createZoweSession.addProfile", "The profile {0} has been added to the {1} tree.", chosenProfile, treeType));
             if (await ProfileManagement.handleChangeForAllTrees(chosenProfile, true)) {
-                await zoweFileProvider.addSession(chosenProfile);
+                await zoweFileProvider.addSession(chosenProfile, undefined, undefined);
             } else {
-                await zoweFileProvider.addSession(chosenProfile, undefined, zoweFileProvider);
+                await zoweFileProvider.addSession(chosenProfile);
             }
         } else {
             ZoweLogger.debug(debugMsg);
