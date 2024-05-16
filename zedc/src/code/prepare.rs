@@ -79,7 +79,7 @@ fn code_cli_binary(dir: &Path) -> PathBuf {
 ///
 async fn extract_code_zip(file: &std::fs::File, vsc_path: &Path) -> anyhow::Result<()> {
     cfg_if::cfg_if! {
-        if #[cfg(macos)] {
+        if #[cfg(target_os = "macos")] {
             match Command::new("unzip")
                 .current_dir(&vsc_path)
                 .args([&path, "-d", vsc_path.to_str().unwrap()])
