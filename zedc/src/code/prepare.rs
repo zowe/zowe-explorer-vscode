@@ -6,6 +6,9 @@ use std::{
     process::Command,
 };
 
+#[cfg(target_os = "macos")]
+use std::process::Stdio;
+
 use anyhow::bail;
 cfg_if::cfg_if! {
     if #[cfg(not(windows))] {
@@ -77,12 +80,12 @@ fn code_cli_binary(dir: &Path) -> PathBuf {
 /// * `file` - The file that contains the archive
 /// * `vsc_path` - The path where the archive should be extracted into
 ///
-async fn extract_code_zip(file: &std::fs::File, vsc_path: &Path) -> anyhow::Result<()> {
+async fn extract_code_zip(file: &std::fs::File, zip_path: &Path, vsc_path: &Path) -> anyhow::Result<()> {
     cfg_if::cfg_if! {
         if #[cfg(target_os = "macos")] {
             match Command::new("unzip")
                 .current_dir(&vsc_path)
-                .args([&path, "-d", vsc_path.to_str().unwrap()])
+                .args([zip_path.to_str().unwrap(), "-d", vsc_path.to_str().unwrap()])
                 .stdout(Stdio::null())
                 .status()
             {
@@ -233,7 +236,7 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
     {
         "zip" => {
             let file = std::fs::File::open(&path)?;
-            extract_code_zip(&file, &vsc_path).await?;
+            extract_code_zip(&file, &path, &vsc_path).await?;
         }
         #[cfg(not(windows))]
         "tgz" | "gz" => {
