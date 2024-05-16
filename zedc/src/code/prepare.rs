@@ -13,7 +13,7 @@ cfg_if::cfg_if! {
         use tar::Archive;
     }
 }
- 
+
 use indicatif::{ProgressBar, ProgressStyle};
 use owo_colors::OwoColorize;
 use reqwest::{header, Client};
@@ -79,7 +79,18 @@ fn code_cli_binary(dir: &Path) -> PathBuf {
 ///
 async fn extract_code_zip(file: &std::fs::File, vsc_path: &Path) -> anyhow::Result<()> {
     cfg_if::cfg_if! {
-        if #[cfg(any(unix, windows))] {
+        if #[cfg(macos)] {
+            match Command::new("unzip")
+                .current_dir(&vsc_path)
+                .args([&path, "-d", vsc_path.to_str().unwrap()])
+                .stdout(Stdio::null())
+                .status()
+            {
+                Ok(s) => {}
+                Err(e) => bail!("Failed to extract VS Code archive: {}", e),
+            }
+            tokio::fs::create_dir(vsc_path.join("code-portable-data")).await?;
+        } else {
             let mut archive = zip::ZipArchive::new(file).unwrap();
 
             for i in 0..archive.len() {
@@ -113,17 +124,6 @@ async fn extract_code_zip(file: &std::fs::File, vsc_path: &Path) -> anyhow::Resu
             }
 
             tokio::fs::create_dir(vsc_path.join("data")).await?;
-        } else if #[cfg(macos)] {
-            match Command::new("unzip")
-                .current_dir(&vsc_path)
-                .arg(&path)
-                .stdout(Stdio::null())
-                .status()
-            {
-                Ok(s) => {}
-                Err(e) => bail!("Failed to extract VS Code archive: {}", e),
-            }
-            tokio::fs::create_dir(vsc_path.join("code-portable-data")).await?;
         }
     }
 
