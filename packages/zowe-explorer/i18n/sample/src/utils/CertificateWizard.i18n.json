@@ -1,0 +1,10 @@
+{
+  "fileDialog.allFiles": "All Files",
+  "zowe.certWizard.dismissed": "User dismissed the certificate wizard.",
+  "cert.viewTitle": "Certificate Wizard",
+  "cert.files": "Certificate Files",
+  "cert.select": "Select Certificate",
+  "cert.enterKeyPath": "Enter the path to the certificate key for authenticating the connection.",
+  "cert.keys": "Certificate Keys",
+  "cert.selectKey": "Select Certificate Key"
+}

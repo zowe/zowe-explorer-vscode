@@ -508,6 +508,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.ds.copyName",
+        "title": "%copyName%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.uss.addSession",
         "title": "%uss.addSession%",
         "category": "Zowe Explorer",
@@ -622,6 +627,11 @@
       {
         "command": "zowe.uss.pasteUssFile",
         "title": "%pasteFile%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.uss.copyRelativePath",
+        "title": "%uss.copyRelativePath%",
         "category": "Zowe Explorer"
       },
       {
@@ -831,6 +841,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.jobs.copyName",
+        "title": "%copyName%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.ds.openWithEncoding",
         "title": "%openWithEncoding%",
         "category": "Zowe Explorer"
@@ -983,6 +998,11 @@
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/ && !listMultiSelection",
           "command": "zowe.uss.copyPath",
           "group": "002_zowe_ussSystemSpecific@4"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/ && !listMultiSelection",
+          "command": "zowe.uss.copyRelativePath",
+          "group": "002_zowe_ussSystemSpecific@5"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
@@ -1170,14 +1190,19 @@
           "group": "002_zowe_dsWorkspace@4"
         },
         {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member).*/ && !listMultiSelection",
+          "command": "zowe.ds.copyName",
+          "group": "098_zowe_dsMisc@0"
+        },
+        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|session).*/ && !listMultiSelection",
           "command": "zowe.ds.filterBy",
-          "group": "098_zowe_dsSort@0"
+          "group": "098_zowe_dsMisc@1"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|session).*/ && !listMultiSelection",
           "command": "zowe.ds.sortBy",
-          "group": "098_zowe_dsSort@1"
+          "group": "098_zowe_dsMisc@2"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^fileError.*/",
@@ -1348,6 +1373,11 @@
           "when": "view == zowe.jobs.explorer && viewItem == profile_fav && !listMultiSelection",
           "command": "zowe.jobs.removeFavProfile",
           "group": "002_zowe_jobsWorkspace"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(job|spool).*/",
+          "command": "zowe.jobs.copyName",
+          "group": "003_zowe_jobsMisc@0"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^spool.*/",
@@ -2068,7 +2098,6 @@
     "@types/fs-extra": "^7.0.0",
     "@types/promise-queue": "^2.2.0",
     "@types/selenium-webdriver": "^3.0.4",
-    "@types/yargs": "^11.0.0",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
@@ -2085,11 +2114,8 @@
     "gulp-fs": "^0.0.2",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-typescript": "^5.0.1",
-    "jsdoc": "^3.6.3",
-    "jsdom": "^16.0.0",
     "log4js": "^6.4.6",
     "markdownlint-cli": "^0.33.0",
-    "mem": "^6.0.1",
     "run-sequence": "^2.2.1",
     "selenium-webdriver": "^3.6.0",
     "sinon": "^6.1.0"

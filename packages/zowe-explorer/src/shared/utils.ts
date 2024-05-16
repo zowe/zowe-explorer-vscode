@@ -36,7 +36,6 @@ import { markDocumentUnsaved } from "../utils/workspace";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { LocalStorageKey, ZoweLocalStorage } from "../utils/ZoweLocalStorage";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
-import { TreeProviders } from "./TreeProviders";
 import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 
 // Set up localization
@@ -60,6 +59,67 @@ export const JOB_SUBMIT_DIALOG_OPTS = [
 ];
 
 export const SORT_DIRS: string[] = [localize("sort.asc", "Ascending"), localize("sort.desc", "Descending")];
+
+/**
+ * Checks if the given Data Set or USS node is opened and unsaved in the editor.
+ * If so, it prompts the user with a confirmation dialog and returns the user response.
+ *
+ * @param node A Data Set or USS node that may be unsaved
+ * @returns An object with the following properties:
+ *  * `actionConfirmed` - Whether the user has answered "Confirm" to the dialog
+ *  * `editor` - (optional) an instance of the editor where the node is open
+ *  * `isUnsaved` - Whether the node is unsaved
+ */
+export async function confirmForUnsavedDoc(node: IZoweDatasetTreeNode | IZoweUSSTreeNode): Promise<{
+    actionConfirmed: boolean;
+    editor?: vscode.TextEditor;
+    isUnsaved: boolean;
+}> {
+    // keep original behavior for nodes that do not have the file path method
+    const isDsNode = isZoweDatasetTreeNode(node);
+    if (isDsNode && !node.getDsDocumentFilePath) {
+        return {
+            actionConfirmed: false,
+            isUnsaved: false,
+        };
+    }
+    const isUssNode = !isDsNode && isZoweUSSTreeNode(node);
+    if (isUssNode && !node.getUSSDocumentFilePath) {
+        return {
+            actionConfirmed: false,
+            isUnsaved: false,
+        };
+    }
+
+    // Look for the node in the list of visible text editors
+    const editor = vscode.window.visibleTextEditors.find(
+        (e: vscode.TextEditor) => e.document.uri.fsPath == (isDsNode ? node.getDsDocumentFilePath() : node.getUSSDocumentFilePath())
+    );
+
+    const confirmItem = localize("unsavedNode.confirmRefresh", "Confirm");
+    // Return result of confirmation prompt if editor is present and the file is unsaved
+    if (editor?.document.isDirty) {
+        return {
+            actionConfirmed:
+                (await Gui.warningMessage(
+                    localize(
+                        "unsavedNode.confirmDialog",
+                        "{0} is opened and has pending changes in the editor. By selecting 'Confirm', any unsaved changes will be lost.",
+                        path.basename(editor.document.fileName)
+                    ),
+                    {
+                        items: [confirmItem],
+                        vsCodeOpts: { modal: true },
+                    }
+                )) === confirmItem,
+            editor,
+            isUnsaved: true,
+        };
+    }
+
+    // No editor found or the file is not dirty
+    return { actionConfirmed: false, editor, isUnsaved: false };
+}
 
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
     ZoweLogger.trace("shared.utils.filterTreeByString called.");
@@ -230,8 +290,7 @@ export async function uploadContent(
     returnEtag?: boolean
 ): Promise<IZosFilesResponse> {
     if (node == null) {
-        await errorHandling(localize("saveFile.nodeNotFound.error", "Could not find {0} in tree", doc.fileName));
-        return;
+        throw new Error(localize("saveFile.nodeNotFound.error", "Could not find {0} in tree", doc.fileName));
     }
     const uploadOptions: IUploadOptions = {
         etag: etagToUpload,
@@ -379,10 +438,8 @@ export async function compareFileContent(
     label?: string,
     profile?: imperative.IProfileLoaded
 ): Promise<void> {
-    node = node ?? TreeProviders.ds.openFiles?.[doc.uri.fsPath] ?? TreeProviders.uss.openFiles?.[doc.uri.fsPath];
     if (node == null) {
-        await errorHandling(localize("saveFile.nodeNotFound.error", "Could not find {0} in tree", doc.fileName));
-        return;
+        throw new Error(localize("saveFile.nodeNotFound.error", "Could not find {0} in tree", doc.fileName));
     }
     await markDocumentUnsaved(doc);
     const prof = node ? node.getProfile() : profile;

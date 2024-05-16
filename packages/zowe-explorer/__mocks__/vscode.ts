@@ -239,7 +239,69 @@ export interface FileDecorationProvider {
     provideFileDecoration(uri: Uri, token: CancellationToken): ProviderResult<FileDecoration>;
 }
 
+/**
+ * Represents a {@link TextEditor text editor}'s {@link TextEditor.options options}.
+ */
+export interface TextEditorOptions {
+    /**
+     * The size in spaces a tab takes. This is used for two purposes:
+     *  - the rendering width of a tab character;
+     *  - the number of spaces to insert when {@link TextEditorOptions.insertSpaces insertSpaces} is true.
+     *
+     * When getting a text editor's options, this property will always be a number (resolved).
+     * When setting a text editor's options, this property is optional and it can be a number or `"auto"`.
+     */
+    tabSize?: number | string;
+
+    /**
+     * When pressing Tab insert {@link TextEditorOptions.tabSize n} spaces.
+     * When getting a text editor's options, this property will always be a boolean (resolved).
+     * When setting a text editor's options, this property is optional and it can be a boolean or `"auto"`.
+     */
+    insertSpaces?: boolean | string;
+}
+
+/**
+ * Represents an editor that is attached to a {@link TextDocument document}.
+ */
+export interface TextEditor {
+    /**
+     * The document associated with this text editor. The document will be the same for the entire lifetime of this text editor.
+     */
+    readonly document: TextDocument;
+
+    /**
+     * The primary selection on this text editor. Shorthand for `TextEditor.selections[0]`.
+     */
+    selection: Selection;
+
+    /**
+     * The selections in this text editor. The primary selection is always at index 0.
+     */
+    selections: readonly Selection[];
+
+    /**
+     * The current visible ranges in the editor (vertically).
+     * This accounts only for vertical scrolling, and not for horizontal scrolling.
+     */
+    readonly visibleRanges: readonly Range[];
+
+    /**
+     * Text editor options.
+     */
+    options: TextEditorOptions;
+
+    /**
+     * The column in which this editor shows. Will be `undefined` in case this
+     * isn't one of the main editors, e.g. an embedded editor, or when the editor
+     * column is larger than three.
+     */
+    readonly viewColumn: ViewColumn | undefined;
+}
+
 export namespace window {
+    export const visibleTextEditors: TextEditor[] = [];
+
     /**
      * Options for creating a {@link TreeView}
      */
@@ -363,6 +425,7 @@ export namespace window {
         return {};
     }
 }
+
 export namespace commands {
     /**
      * Registers a command that can be invoked via a keyboard shortcut,
@@ -678,7 +741,7 @@ export class Uri {
     }
     public static parse(value: string, strict?: boolean): Uri {
         const newUri = new Uri();
-        newUri.path = value;
+        newUri.path = newUri.fsPath = value;
 
         return newUri;
     }
@@ -686,9 +749,10 @@ export class Uri {
         return this;
     }
 
+    public fsPath: string;
     public path: string;
     public toString(): string {
-        return this.path;
+        return this.fsPath;
     }
 }
 
