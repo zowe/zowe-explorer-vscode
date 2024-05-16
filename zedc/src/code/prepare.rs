@@ -3,15 +3,20 @@
 
 use std::{
     path::{Path, PathBuf},
-    process::{Command, Stdio},
+    process::Command,
 };
 
 use anyhow::bail;
-use flate2::read::GzDecoder;
+cfg_if::cfg_if! {
+    if #[cfg(not(windows))] {
+        use flate2::read::GzDecoder;
+        use tar::Archive;
+    }
+}
+ 
 use indicatif::{ProgressBar, ProgressStyle};
 use owo_colors::OwoColorize;
 use reqwest::{header, Client};
-use tar::Archive;
 use tokio::io::AsyncWriteExt;
 
 /// Returns a URL for the VS Code release for the current operating system with the given version.
@@ -149,13 +154,21 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
         .join("zedc_data");
 
     let vsc_path = zedc_path.join(format!("vscode-{}", ver));
-    if let Ok(v) = tokio::fs::try_exists(&vsc_path).await {
-        if v && ver != "latest" {
-            println!(
-                "  ⏭️  {}",
-                format!("Found VS Code {} in cache, skipping download...", ver).italic()
-            );
-            return Ok(code_cli_binary(&vsc_path).to_str().unwrap().to_owned());
+    if let Ok(vsc_exists) = tokio::fs::try_exists(&vsc_path).await {
+        if vsc_exists {
+            match ver.as_str() {
+                "latest" => {
+                    // redownload latest to ensure newest version
+                    tokio::fs::remove_dir_all(&vsc_path).await?;
+                }
+                _ => {
+                    println!(
+                        "  ⏭️  {}",
+                        format!("Found VS Code {} in cache, skipping download...", ver).italic()
+                    );
+                    return Ok(code_cli_binary(&vsc_path).to_str().unwrap().to_owned());
+                }
+            }
         }
     }
 
@@ -222,6 +235,7 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
             let file = std::fs::File::open(&path)?;
             extract_code_zip(&file, &vsc_path).await?;
         }
+        #[cfg(not(windows))]
         "tgz" | "gz" => {
             let tar_gz = std::fs::File::open(&path)?;
             let tar = GzDecoder::new(tar_gz);
