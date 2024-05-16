@@ -115,3 +115,13 @@ Then(/the (.*) view is no longer displayed/, async (tree: string) => {
     await (await menuItem.elem).click();
     await ctxMenu.close();
 });
+
+Then("a user can select multiple nodes in a tree view", async function () {
+    const pane = await paneDivForTree("data sets");
+    const treeItems = await pane.getVisibleItems();
+    for (const treeItem of treeItems) {
+        await browser.keys(Key.Shift);
+        await treeItem.select();
+    }
+    await expect(treeItems.every(async (treeItem) => (await treeItem.elem.getAttribute("aria-selected")) === "true")).toBe(true);
+});

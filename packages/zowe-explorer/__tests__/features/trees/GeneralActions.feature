@@ -47,3 +47,7 @@ Scenario Outline: User hides a tree view using the context menu
       | Data Sets |
       | Unix System Services (USS) |
       | Jobs |
+
+Scenario: User selects multiple items in a tree view
+    Given a user who is looking at the Zowe Explorer tree views
+    Then a user can select multiple nodes in a tree view
