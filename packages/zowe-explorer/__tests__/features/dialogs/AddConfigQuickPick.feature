@@ -16,3 +16,15 @@ Scenario: User edits Team Configuration file
     Given a user who is looking at the Add Config quick pick
     When a user selects "Edit Team Configuration File"
     Then it will open the config in the editor
+
+Scenario Outline: User wants to add a profile to the tree views
+    Given a user who is looking at the Add Config quick pick
+    When a user selects the first profile in the list
+    Then it will prompt the user to add the profile to one or all trees
+    When a user selects <opt> to apply to all trees
+    Then it will add a tree item for the profile to the correct trees
+    
+    Examples:
+      | opt |
+      | No |
+      | Yes |

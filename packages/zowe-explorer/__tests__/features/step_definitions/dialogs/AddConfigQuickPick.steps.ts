@@ -75,3 +75,42 @@ When('a user selects "Edit Team Configuration File"', async function () {
     await editTeamConfigEntry.waitForClickable();
     await editTeamConfigEntry.click();
 });
+
+//
+// Scenario: User wants to add a profile to a tree
+//
+When("a user selects the first profile in the list", async function () {
+    const firstProfileEntry = await $('.monaco-list-row[data-index="2"]');
+    const profileLabelAttr = await firstProfileEntry.getAttribute("aria-label");
+    this.profileName = profileLabelAttr.substring(profileLabelAttr.lastIndexOf(" ")).trim();
+    await firstProfileEntry.waitForClickable();
+    await firstProfileEntry.click();
+});
+Then("it will prompt the user to add the profile to one or all trees", async function () {
+    this.quickPickTreeSelection = await $(".quick-input-widget");
+    await expect(this.quickPickTreeSelection).toBeDefined();
+
+    this.yesOpt = await $('.monaco-list-row[aria-label="Yes, Apply to all trees"]');
+    await expect(this.yesOpt).toBeDefined();
+    this.noOpt = await $('.monaco-list-row[aria-label="No, Apply to current tree selected"]');
+    await expect(this.noOpt).toBeDefined();
+});
+When(/a user selects (.*) to apply to all trees/, async function (choice: string) {
+    this.userSelectedYes = choice === "Yes";
+    if (this.userSelectedYes) {
+        await this.yesOpt.click();
+    } else {
+        await this.noOpt.click();
+    }
+});
+Then("it will add a tree item for the profile to the correct trees", async function () {
+    const dsPane = await paneDivForTree("data sets");
+    const ussPane = await paneDivForTree("uss");
+
+    await expect(await dsPane.findItem(this.profileName)).toBeDefined();
+    if (this.userSelectedYes) {
+        await expect(await ussPane.findItem(this.profileName)).toBeDefined();
+    } else {
+        await expect(await ussPane.findItem(this.profileName)).toBeUndefined();
+    }
+});
