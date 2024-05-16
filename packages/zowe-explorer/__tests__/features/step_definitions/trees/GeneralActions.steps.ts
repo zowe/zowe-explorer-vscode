@@ -73,10 +73,10 @@ When(/a user clicks the plus button in the (.*) view/, async (tree) => {
     if (!(await pane.isExpanded())) {
         await pane.expand();
     }
+    await pane.elem.moveTo();
 
     const plusIcon = await pane.getAction(`Add Profile to ${tree} View`);
-    expect(plusIcon).toExist();
-    await (await pane.elem).moveTo();
+    await expect(plusIcon).toBeDefined();
     await plusIcon.elem.click();
 });
 Then("the Add Config quick pick menu appears", async () => {
