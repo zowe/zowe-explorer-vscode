@@ -175,7 +175,7 @@ export class ProfilesCache {
      *
      * @returns {IProfileLoaded[]}
      */
-    public getProfiles(type = "zosmf"): zowe.imperative.IProfileLoaded[] {
+    public getProfiles(type = "zosmf"): zowe.imperative.IProfileLoaded[] | undefined {
         return this.profilesByType.get(type);
     }
 
@@ -222,7 +222,7 @@ export class ProfilesCache {
             }
             this.allProfiles = allProfiles;
             this.allTypes = allTypes;
-            for (const oldType of [...this.profilesByType.keys()].filter((type) => !allTypes.includes(type))) {
+            for (const oldType of [...this.profilesByType.keys()].filter((type) => !allProfiles.some((prof) => prof.type === type))) {
                 this.profilesByType.delete(oldType);
                 this.defaultProfileByType.delete(oldType);
             }
