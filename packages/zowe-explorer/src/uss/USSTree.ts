@@ -324,7 +324,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public async addSession(sessionName?: string, profileType?: string, provider?: IZoweTree<IZoweTreeNode>): Promise<void> {
         ZoweLogger.trace("USSTree.addSession called.");
-        await super.addSession(sessionName, profileType, provider);
+        await super.addSession(sessionName, profileType, provider ?? this);
     }
 
     /**

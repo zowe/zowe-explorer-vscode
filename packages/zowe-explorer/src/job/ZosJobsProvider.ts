@@ -225,7 +225,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      */
     public async addSession(sessionName?: string, profileType?: string, provider?: IZoweTree<IZoweTreeNode>): Promise<void> {
         ZoweLogger.trace("ZosJobsProvider.addSession called.");
-        await super.addSession(sessionName, profileType, provider);
+        await super.addSession(sessionName, profileType, provider ?? this);
     }
 
     /**

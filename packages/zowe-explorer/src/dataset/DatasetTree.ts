@@ -439,7 +439,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     public async addSession(sessionName?: string, profileType?: string, provider?: IZoweTree<IZoweTreeNode>): Promise<void> {
         ZoweLogger.trace("DatasetTree.addSession called.");
-        await super.addSession(sessionName, profileType, provider);
+        await super.addSession(sessionName, profileType, provider ?? this);
     }
 
     /**
