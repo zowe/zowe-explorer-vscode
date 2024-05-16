@@ -1654,12 +1654,10 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
 });
 
 describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
-    afterEach(() => {
-        jest.resetAllMocks();
-        jest.clearAllMocks();
-    });
+    let testNode;
+    let globalMocks;
+    let modifiedTestNode;
 
-    let globalMocks, testNode, modifiedTestNode;
     beforeEach(async () => {
         globalMocks = await createGlobalMocks();
         testNode = new (ZoweTreeNode as any)(
@@ -1669,6 +1667,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             globalMocks.testSession,
             globalMocks.testProfile
         );
+
         modifiedTestNode = new (ZoweTreeNode as any)(
             "test",
             vscode.TreeItemCollapsibleState.None,
@@ -1677,6 +1676,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             globalMocks.testProfile
         );
     });
+
     it("To switch from Basic to Token Based Authentication", async () => {
         jest.spyOn(utils.ProfilesUtils, "isProfileUsingBasicAuth").mockReturnValueOnce(true);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
@@ -1720,9 +1720,10 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             secure: ["tokenType"],
         };
         jest.spyOn(Gui, "infoMessage").mockImplementation();
-        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockResolvedValue({
-            getTokenType: () => zowe.imperative.SessConstants.TOKEN_TYPE_APIML,
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
+            getTokenTypeName: () => "apimlAuthenticationToken",
         } as never);
+
         jest.spyOn(Profiles.getInstance(), "ssoLogin").mockImplementationOnce((node) => modifiedTestNode);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
         expect(testNode.profile.profile.tokenType).toBe("testToken");
@@ -1776,8 +1777,8 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             secure: ["user", "password"],
         };
         jest.spyOn(Gui, "infoMessage").mockImplementation();
-        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockResolvedValue({
-            getTokenType: () => zowe.imperative.SessConstants.TOKEN_TYPE_APIML,
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
+            getTokenTypeName: () => "apimlAuthenticationToken",
         } as never);
         jest.spyOn(utils.ProfilesUtils, "promptCredentials").mockImplementationOnce((node) => modifiedTestNode);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
