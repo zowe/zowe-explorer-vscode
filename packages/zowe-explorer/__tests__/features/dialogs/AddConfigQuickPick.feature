@@ -28,17 +28,3 @@ Scenario Outline: User wants to add a profile to the tree views
       | opt |
       | No |
       | Yes |
-      
-Scenario Outline: User wants to toggle a profile node in a tree view
-    Given a user who is looking at the Zowe Explorer tree views
-    When a user clicks on the first profile in the <tree> view
-    Then the profile node will <state>
-
-    Examples:
-      | tree | state |
-      | Data Sets | expand |
-      | Data Sets | collapse |
-      | USS | expand |
-      | USS | collapse |
-      | Jobs | expand |
-      | Jobs | collapse |

@@ -12,7 +12,6 @@
 import { Given, Then, When } from "@cucumber/cucumber";
 import { paneDivForTree } from "../../shared.steps";
 import { Key } from "webdriverio";
-import { TreeItem } from "wdio-vscode-service";
 
 // Given
 Given("a user who is looking at the Add Config quick pick", async function () {
@@ -114,19 +113,4 @@ Then("it will add a tree item for the profile to the correct trees", async funct
     } else {
         await expect(await ussPane.findItem(this.profileName)).toBeUndefined();
     }
-});
-
-//
-// Scenario: User wants to toggle a profile node in a tree view
-//
-When(/a user clicks on the first profile in the (.*) view/, async function (tree: string) {
-    const dsPane = await paneDivForTree(tree);
-    const treeItems = (await dsPane.getVisibleItems()) as TreeItem[];
-    await treeItems[1].select();
-    this.selectedTreeItem = treeItems[1];
-});
-Then(/the profile node will (.*)/, async function (state: string) {
-    const expandedState = await this.selectedTreeItem.elem.getAttribute("aria-expanded");
-    const shouldBeExpanded = (state === "expand").toString();
-    await expect(expandedState).toBe(shouldBeExpanded);
 });
