@@ -24,7 +24,7 @@ Given("a user who is looking at the Add Config quick pick", async function () {
     await plusIcon.elem.click();
 
     this.addConfigQuickPick = await $(".quick-input-widget");
-    await expect(this.addConfigQuickPick).toBeDisplayedInViewport();
+    await this.addConfigQuickPick.waitForClickable();
 });
 
 //
@@ -81,16 +81,14 @@ When('a user selects "Edit Team Configuration File"', async function () {
 // Scenario: User wants to add a profile to a tree
 //
 When("a user selects the first profile in the list", async function () {
-    const firstProfileEntry = await $('.monaco-list-row[data-index="2"]');
+    const firstProfileEntry = await this.addConfigQuickPick.$('.monaco-list-row[data-index="2"]');
+    await firstProfileEntry.waitForClickable();
     const profileLabelAttr = await firstProfileEntry.getAttribute("aria-label");
     this.profileName = profileLabelAttr.substring(profileLabelAttr.lastIndexOf(" ")).trim();
-    await firstProfileEntry.waitForClickable();
     await firstProfileEntry.click();
 });
 Then("it will prompt the user to add the profile to one or all trees", async function () {
     this.quickPickTreeSelection = await $(".quick-input-widget");
-    await expect(this.quickPickTreeSelection).toBeDefined();
-
     this.yesOpt = await $('.monaco-list-row[aria-label="Yes, Apply to all trees"]');
     await expect(this.yesOpt).toBeDefined();
     this.noOpt = await $('.monaco-list-row[aria-label="No, Apply to current tree selected"]');
@@ -99,8 +97,10 @@ Then("it will prompt the user to add the profile to one or all trees", async fun
 When(/a user selects (.*) to apply to all trees/, async function (choice: string) {
     this.userSelectedYes = choice === "Yes";
     if (this.userSelectedYes) {
+        await this.yesOpt.waitForClickable();
         await this.yesOpt.click();
     } else {
+        await this.noOpt.waitForClickable();
         await this.noOpt.click();
     }
 });

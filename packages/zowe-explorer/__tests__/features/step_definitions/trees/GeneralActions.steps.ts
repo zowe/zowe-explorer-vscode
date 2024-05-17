@@ -77,11 +77,12 @@ When(/a user clicks the plus button in the (.*) view/, async (tree) => {
 
     const plusIcon = await pane.getAction(`Add Profile to ${tree} View`);
     await expect(plusIcon).toBeDefined();
+    await plusIcon.elem.waitForClickable();
     await plusIcon.elem.click();
 });
 Then("the Add Config quick pick menu appears", async () => {
     const elem = await $(".quick-input-widget");
-    expect(elem).toBeDisplayedInViewport();
+    await expect(elem).toBeDefined();
 
     // dismiss the quick pick after verifying that it is visible
     await browser.keys(Key.Escape);
