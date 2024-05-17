@@ -8,9 +8,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
-- Fixed issue where data sets or members containing binary content cannot be opened. [#2696](https://github.com/zowe/zowe-explorer-vscode/issues/2696)
+- Fixed issue where multiple extensions that contribute profiles to a tree view using the Zowe Explorer API may fail to load. [#2888](https://github.com/zowe/zowe-explorer-vscode/issues/2888)
 
-## `2.15.4`
+## `2.16.0`
 
 ### New features and enhancements
 
@@ -37,6 +37,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Duplicated profile schema writing on repeated Team Config file initialization:
   [#2828](https://github.com/zowe/zowe-explorer-vscode/pull/2828)
 - Fixed issue where saving changes to favorited PDS member fails when custom temp folder is set on Windows. [#2880](https://github.com/zowe/zowe-explorer-vscode/issues/2880)
+- Fixed issue where data sets or members containing binary content cannot be opened. [#2696](https://github.com/zowe/zowe-explorer-vscode/issues/2696)
 
 ## `2.15.4`
 
