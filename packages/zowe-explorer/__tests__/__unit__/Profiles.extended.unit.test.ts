@@ -586,8 +586,8 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         jest.spyOn(TreeProviders, "providers", "get").mockReturnValue({
             ds: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testUSSTree.mSessionNodes], refresh: jest.fn() } as any,
             uss: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testUSSTree.mSessionNodes], refresh: jest.fn() } as any,
-            jobs: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testUSSTree.mSessionNodes], refresh: jest.fn() } as any,
-        } as any);
+            job: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testUSSTree.mSessionNodes], refresh: jest.fn() } as any,
+        });
         await expect(Profiles.getInstance().createZoweSession(globalMocks.testUSSTree)).resolves.not.toThrow();
         expect(refreshSpy).toBeCalledTimes(1);
         expect(spyInfo).toBeCalledWith("New profile created, test.");
