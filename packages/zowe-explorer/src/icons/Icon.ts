@@ -98,7 +98,7 @@ export class Icon {
         type: IconUtils.IconHierarchyType.derived,
         path: Icon.getIconPathInResources("folder-root-filtered-open.svg"),
         check: (node) => {
-            const parentCheck = Icon.folder.check(node);
+            const parentCheck = Icon.filterFolder.check(node);
             return parentCheck && node.collapsibleState === TreeItemCollapsibleState.Expanded;
         },
     };
@@ -199,24 +199,24 @@ export class Icon {
         return [
             Icon.document,
             Icon.documentBinary,
-            Icon.documentBinaryDownloaded,
             Icon.downloadedDocument,
-            Icon.fileError,
-            Icon.filterFolder,
-            Icon.filterFolderOpen,
-            Icon.folder,
-            Icon.folderOpen,
-            Icon.home,
-            Icon.migrated,
+            Icon.documentBinaryDownloaded,
             Icon.pattern,
             Icon.session,
+            Icon.sessionInactive,
             Icon.sessionActive,
             Icon.sessionActiveOpen,
+            Icon.sessionOpen,
             Icon.sessionFavorite,
             Icon.sessionFavoriteOpen,
-            Icon.sessionInactive,
-            Icon.sessionOpen,
+            Icon.folder,
+            Icon.folderOpen,
+            Icon.migrated,
+            Icon.fileError,
             Icon.vsam,
+            Icon.home,
+            Icon.filterFolder,
+            Icon.filterFolderOpen,
         ];
     }
 

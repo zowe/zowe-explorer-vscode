@@ -21,7 +21,6 @@ export class IconGenerator {
     public static getIconByNode(node: IconUtils.TreeNode): IconUtils.IIconItem {
         const items = Icon.getIcons();
         const targetItems = items.filter((item) => item.check(node));
-
         if (targetItems.some((item) => item.type === IconUtils.IconHierarchyType.derived)) {
             return targetItems.filter((item) => item.type === IconUtils.IconHierarchyType.derived).pop();
         } else {
