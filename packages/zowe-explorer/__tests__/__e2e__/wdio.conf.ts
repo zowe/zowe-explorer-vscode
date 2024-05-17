@@ -1,5 +1,9 @@
 import type { Options } from "@wdio/types";
 import { join } from "path";
+
+import * as dotenv from "dotenv";
+dotenv.config();
+
 export const config: Options.Testrunner = {
     //
     // ====================
