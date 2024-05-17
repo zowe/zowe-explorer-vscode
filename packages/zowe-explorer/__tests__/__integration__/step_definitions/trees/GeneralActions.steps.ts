@@ -12,7 +12,7 @@
 import { Given, Then, When } from "@cucumber/cucumber";
 import { TreeItem } from "wdio-vscode-service";
 import { Key } from "webdriverio";
-import { paneDivForTree } from "../../shared.steps";
+import { paneDivForTree } from "../shared.steps";
 
 //
 // Scenario: User clicks on the "Zowe Explorer" icon in the Activity Bar
@@ -20,7 +20,7 @@ import { paneDivForTree } from "../../shared.steps";
 When("a user locates the Zowe Explorer icon in the side bar", async () => {
     const activityBar = (await browser.getWorkbench()).getActivityBar();
     const zeContainer = activityBar.getViewControl("Zowe Explorer");
-    expect(zeContainer).toExist();
+    await expect(zeContainer).toBeDefined();
 });
 Then("the user can click on the Zowe Explorer icon", async () => {
     const activityBar = (await browser.getWorkbench()).getActivityBar();
@@ -62,13 +62,13 @@ Then(/the Favorites node (.*) successfully in the (.*) view/, async (state: stri
     const pane = await paneDivForTree(tree);
     const favoritesItem = (await pane.findItem("Favorites")) as TreeItem;
     const expandedAttr = await (await favoritesItem.elem).getAttribute("aria-expanded");
-    expect(expandedAttr).toBe(expandedState);
+    await expect(expandedAttr).toBe(expandedState);
 });
 
 //
 // Scenario: User clicks on the plus button to open the "Add Config/Profile" quick pick
 //
-When(/a user clicks the plus button in the (.*) view/, async (tree) => {
+When(/a user clicks the plus button in the (.*) view/, async (tree: string) => {
     const pane = await paneDivForTree(tree);
     if (!(await pane.isExpanded())) {
         await pane.expand();

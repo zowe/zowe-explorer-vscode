@@ -2062,7 +2062,6 @@
   },
   "scripts": {
     "build": "pnpm clean:bundle && pnpm license && webpack --mode development && pnpm madge",
-    "build:integration": "pnpm createTestProfileData && pnpm license && tsc --pretty --project tsconfig-tests.json",
     "test": "pnpm test:unit",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:silent": "pnpm test:unit --reporters \"jest-silent-reporter\"",
@@ -2087,6 +2086,7 @@
     "createTestProfileData": "tsx ./scripts/createTestProfileData.ts",
     "createDemoNodes": "tsx ./scripts/createDemoNodes.ts",
     "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src && node ./scripts/generatePoeditorJson.js"
+    "test:integration": "cd __tests__/__integration__/ && wdio run ./wdio.conf.ts"
   },
   "engines": {
     "vscode": "^1.79.0"

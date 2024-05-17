@@ -10,7 +10,7 @@
  */
 
 import { Given, Then, When } from "@cucumber/cucumber";
-import { paneDivForTree } from "../../shared.steps";
+import { paneDivForTree } from "../shared.steps";
 import { Key } from "webdriverio";
 
 // Given

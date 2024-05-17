@@ -2,7 +2,7 @@
 // Scenario: User wants to toggle a profile node in a tree view
 
 import { TreeItem } from "wdio-vscode-service";
-import { paneDivForTree } from "../../shared.steps";
+import { paneDivForTree } from "../shared.steps";
 import { Then, When } from "@cucumber/cucumber";
 
 //
@@ -23,7 +23,7 @@ Then(/the profile node will (.*)/, async function (state: string) {
 //
 // Scenario: User clicks on a verified profile node in a tree view
 //
-When(/the first profile in the (.*) view is verified/, async function (tree: string) {
+When(/the first profile in the (.*) view is verified/, async function (_tree: string) {
     // TODO: requires a test system to validate behavior
 });
 Then("the profile will list its results based on the filter", async function () {

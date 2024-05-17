@@ -1,4 +1,5 @@
 import type { Options } from "@wdio/types";
+import { join } from "path";
 export const config: Options.Testrunner = {
     //
     // ====================
@@ -29,10 +30,7 @@ export const config: Options.Testrunner = {
     // The path of the spec files will be resolved relative from the directory of
     // of the config file unless it's absolute.
     //
-    specs: [
-        // ToDo: define location for spec files here
-        "__tests__/features/**/*.feature",
-    ],
+    specs: ["./features/**/*.feature"],
     // Patterns to exclude.
     exclude: [
         // 'path/to/excluded/files'
@@ -65,7 +63,7 @@ export const config: Options.Testrunner = {
             browserVersion: "stable", // also possible: "insiders" or a specific version e.g. "1.80.0"
             "wdio:vscodeOptions": {
                 // points to directory where extension package.json is located
-                extensionPath: __dirname,
+                extensionPath: join(__dirname, "..", ".."),
                 // optional VS Code settings
                 userSettings: {
                     "editor.fontSize": 14,
@@ -156,7 +154,7 @@ export const config: Options.Testrunner = {
     // If you are using Cucumber you need to specify the location of your step definitions.
     cucumberOpts: {
         // <string[]> (file/dir) require files before executing features
-        require: ["./__tests__/features/step_definitions/**/*.steps.ts"],
+        require: ["./step_definitions/**/*.steps.ts"],
         // <boolean> show full backtrace for errors
         backtrace: false,
         // <string[]> ("extension:module") require files with the given EXTENSION after requiring MODULE (repeatable)

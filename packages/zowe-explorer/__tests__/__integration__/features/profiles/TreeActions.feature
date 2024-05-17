@@ -1,3 +1,5 @@
+Feature: Tree Actions with Profiles
+
 Scenario Outline: User wants to toggle a profile node in a tree view - unverified/no filter set
     Given a user who is looking at the Zowe Explorer tree views
     When a user clicks on the first profile in the <tree> view
