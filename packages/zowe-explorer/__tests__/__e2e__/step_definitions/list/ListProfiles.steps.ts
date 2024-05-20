@@ -9,7 +9,7 @@
  *
  */
 
-import { When } from "@cucumber/cucumber";
+import { Then, When } from "@cucumber/cucumber";
 import { paneDivForTree } from "../shared.steps";
 import { TreeItem } from "wdio-vscode-service";
 
@@ -17,10 +17,11 @@ When(/the user has an expanded profile in their (.*) tree/, async function (tree
     this.tree = tree;
     this.treePane = await paneDivForTree(tree);
     const visibleItems = (await this.treePane.getVisibleItems()) as TreeItem[];
-    this.profileNode = visibleItems.find(async (treeItem) => treeItem.isExpanded());
+    // eslint-disable-next-line no-return-await
+    this.profileNode = visibleItems.find(async (treeItem) => await treeItem.isExpanded());
     await expect(this.profileNode).toBeDefined();
 });
 
-When("a user collapses a profile with a filter set", async function () {
+Then("a user can collapse a profile with a filter set", async function () {
     await this.profileNode.collapse();
 });
