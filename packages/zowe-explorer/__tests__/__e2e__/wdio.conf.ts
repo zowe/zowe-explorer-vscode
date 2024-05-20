@@ -1,8 +1,21 @@
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
+ */
+
 import type { Options } from "@wdio/types";
 import { join } from "path";
 
-import * as dotenv from "dotenv";
-dotenv.config();
+if (process.env.PWD && process.env.ZOWE_TEST_DIR) {
+    // Set ZOWE_CLI_HOME relative to __tests__/__e2e__ folder
+    process.env["ZOWE_CLI_HOME"] = join(process.env.PWD, "__tests__", "__e2e__", process.env.ZOWE_TEST_DIR);
+}
 
 export const config: Options.Testrunner = {
     //

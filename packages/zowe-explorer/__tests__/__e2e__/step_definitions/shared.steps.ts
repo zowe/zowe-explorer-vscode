@@ -9,7 +9,17 @@
  *
  */
 
+import { Given } from "@cucumber/cucumber";
 import { ViewSection } from "wdio-vscode-service";
+
+Given("a user who is looking at the Zowe Explorer tree views", async () => {
+    const activityBar = (await browser.getWorkbench()).getActivityBar();
+    await activityBar.wait();
+    const zeContainer = await activityBar.getViewControl("Zowe Explorer");
+    await zeContainer.wait();
+    const zeView = await zeContainer.openView();
+    await zeView.wait();
+});
 
 /* Helper functions */
 export async function paneDivForTree(tree: string): Promise<ViewSection> {

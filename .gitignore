@@ -26,5 +26,7 @@ dist/
 prebuilds/
 samples/**/pnpm-lock.yaml
 packages/zowe-explorer/**/.wdio-vscode-service
+packages/zowe-explorer/__tests__/**/.zowe
+packages/zowe-explorer/__tests__/**/.env
 package.nls.*.json
 bundle.l10n.*.json

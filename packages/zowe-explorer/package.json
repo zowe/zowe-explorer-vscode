@@ -103,25 +103,25 @@
         "command": "zowe.uss.copyUssFile",
         "key": "ctrl+c",
         "mac": "cmd+c",
-        "when": "focusedView == zowe.uss.explorer || viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*)/"
+        "when": "focusedView == zowe.uss.explorer || viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*)/ && sideBarFocus"
       },
       {
         "command": "zowe.uss.pasteUssFile",
         "key": "ctrl+v",
         "mac": "cmd+v",
-        "when": "focusedView == zowe.uss.explorer || viewItem =~ /^(directory.*|ussSession.*)/ && !listSupportsMultiselect"
+        "when": "focusedView == zowe.uss.explorer || viewItem =~ /^(directory.*|ussSession.*)/ && !listSupportsMultiselect && sideBarFocus"
       },
       {
         "command": "zowe.ds.copyDataSets",
         "key": "ctrl+c",
         "mac": "cmd+c",
-        "when": "focusedView == zowe.ds.explorer"
+        "when": "focusedView == zowe.ds.explorer && sideBarFocus"
       },
       {
         "command": "zowe.ds.pasteDataSets",
         "key": "ctrl+v",
         "mac": "cmd+v",
-        "when": "focusedView == zowe.ds.explorer && !listSupportsMultiselect"
+        "when": "focusedView == zowe.ds.explorer && !listSupportsMultiselect && sideBarFocus"
       },
       {
         "command": "zowe.manualPoll",
@@ -2109,7 +2109,6 @@
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
     "copy-webpack-plugin": "^12.0.2",
-    "dotenv": "^16.4.5",
     "eslint-plugin-zowe-explorer": "3.0.0-next-SNAPSHOT",
     "expect": "^24.8.0",
     "expect-webdriverio": "^4.13.0",
