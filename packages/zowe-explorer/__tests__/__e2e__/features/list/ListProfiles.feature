@@ -12,25 +12,16 @@ Scenario: User wants to set a filter on a profile
       | USS |
       | Jobs |
       
-Scenario Outline: User wants to collapse a profile with a pre-existing filter
+Scenario Outline: User wants to click a profile node with a pre-existing filter
     Given a user who is looking at the Zowe Explorer tree views
-    And the user has an expanded profile in their <treeName> tree
-    Then a user can collapse a profile with a filter set
+    And the user has a <initialState> profile in their <treeName> tree
+    Then a user can <action> a profile with a filter set
     
     Examples:
-      | treeName |
-      | Data Sets |
-      | USS |
-      | Jobs |
-
-# Scenario Outline: User wants to expand a profile with a pre-existing filter
-#     Given a user who is looking at the Zowe Explorer tree views
-#     And the user has a profile in their <treeName> tree
-#     When a user expands a profile with a filter set
-#     Then the profile node will list results of the filter search
-    
-#     Examples:
-#       | treeName |
-#       | Data Sets |
-#       | USS |
-#       | Jobs |
+      | initialState | treeName | action |
+      | expanded | Data Sets | collapse |
+      | collapsed | Data Sets | expand |
+      | expanded | USS | collapse |
+      | collapsed | USS | expand |
+      | expanded | Jobs | collapse |
+      | collapsed | Jobs | expand |

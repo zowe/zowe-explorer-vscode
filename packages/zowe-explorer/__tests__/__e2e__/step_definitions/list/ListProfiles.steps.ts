@@ -13,15 +13,19 @@ import { Then, When } from "@cucumber/cucumber";
 import { paneDivForTree } from "../shared.steps";
 import { TreeItem } from "wdio-vscode-service";
 
-When(/the user has an expanded profile in their (.*) tree/, async function (tree: string) {
+When(/the user has a (.*) profile in their (.*) tree/, async function (initialState: string, tree: string) {
+    const isExpanded = initialState === "collapsed";
     this.tree = tree;
     this.treePane = await paneDivForTree(tree);
     const visibleItems = (await this.treePane.getVisibleItems()) as TreeItem[];
-    // eslint-disable-next-line no-return-await
-    this.profileNode = visibleItems.find(async (treeItem) => await treeItem.isExpanded());
+    this.profileNode = visibleItems.find(async (treeItem) => (await treeItem.isExpanded()) === isExpanded);
     await expect(this.profileNode).toBeDefined();
 });
 
-Then("a user can collapse a profile with a filter set", async function () {
-    await this.profileNode.collapse();
+Then(/a user can (.*) a profile with a filter set/, async function (action: string) {
+    if (action === "collapse") {
+        await this.profileNode.collapse();
+    } else {
+        await this.profileNode.expand();
+    }
 });
