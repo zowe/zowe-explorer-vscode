@@ -2102,6 +2102,7 @@
     "@types/promise-queue": "^2.2.0",
     "@wdio/cli": "^8.36.1",
     "@wdio/cucumber-framework": "^8.36.1",
+    "@wdio/junit-reporter": "^8.36.1",
     "@wdio/local-runner": "^8.36.1",
     "@wdio/spec-reporter": "^8.36.1",
     "@wdio/types": "^8.36.1",

@@ -155,6 +155,12 @@ export const config: Options.Testrunner = {
     // see also: https://webdriver.io/docs/dot-reporter
     reporters: [
         [
+            "junit",
+            {
+                outputDir: "results",
+            },
+        ],
+        [
             "spec",
             {
                 addConsoleLogs: true,
