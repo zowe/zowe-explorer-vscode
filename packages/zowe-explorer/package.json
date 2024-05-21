@@ -2100,6 +2100,7 @@
     "@types/expect": "^1.20.3",
     "@types/fs-extra": "^7.0.0",
     "@types/promise-queue": "^2.2.0",
+    "@types/sinon": "^17.0.3",
     "@wdio/cli": "^8.36.1",
     "@wdio/cucumber-framework": "^8.36.1",
     "@wdio/junit-reporter": "^8.36.1",
@@ -2117,7 +2118,7 @@
     "jest-silent-reporter": "^0.5.0",
     "log4js": "^6.4.6",
     "markdownlint-cli": "^0.33.0",
-    "sinon": "^6.1.0",
+    "sinon": "^16.1.1",
     "wdio-vscode-service": "^6.0.3",
     "wdio-wait-for": "^3.0.11",
     "webdriverio": "^8.36.1"

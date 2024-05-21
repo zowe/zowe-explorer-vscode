@@ -11,6 +11,7 @@
 
 import type { Options } from "@wdio/types";
 import { join } from "path";
+
 export const config: Options.Testrunner = {
     //
     // ====================
