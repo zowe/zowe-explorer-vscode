@@ -20,6 +20,14 @@ if (process.env.ZOWE_TEST_DIR) {
     if (!existsSync(homeDir)) {
         mkdirpSync(homeDir);
     }
+
+    // TODO: create config if it does not exist
+    if (!existsSync(join(homeDir, "zowe.config.json"))) {
+        console.error(
+            "Zowe config was not present in ZOWE_TEST_DIR. Please run `zowe config init` in this directory, edit the config and re-run the script."
+        );
+        process.exit(1);
+    }
 }
 
 export const config: Options.Testrunner = {
