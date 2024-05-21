@@ -33,7 +33,6 @@ import { Gui, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explo
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { LocalStorageKey, ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
-import { TreeProviders } from "../../../src/shared/TreeProviders";
 
 jest.mock("fs");
 

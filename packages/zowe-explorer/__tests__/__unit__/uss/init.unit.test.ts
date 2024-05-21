@@ -214,6 +214,10 @@ describe("Test src/dataset/extension", () => {
                 mock: [{ spy: jest.spyOn(ussFileProvider, "openWithEncoding"), arg: [test.value, undefined] }],
             },
             {
+                name: "zowe.uss.copyRelativePath",
+                mock: [{ spy: jest.spyOn(ussActions, "copyRelativePath"), arg: [test.value] }],
+            },
+            {
                 name: "onDidChangeConfiguration",
                 mock: [{ spy: jest.spyOn(ussFileProvider, "onDidChangeConfiguration"), arg: [test.value] }],
             },

@@ -72,6 +72,7 @@
   "configuration.title": "Zowe Explorer",
   "zowe.files.temporaryDownloadsFolder.hide": "Hide the Zowe temporary folder from the workspace",
   "zowe.files.temporaryDownloadsFolder.cleanup": "Ensure deletion of downloaded file content to clean up local source files during deactivation (that is, closing a window).  Disable this setting to support using multiple windows with z/OS files opened using Zowe Explorer.",
+  "copyName": "Copy Name",
   "zowe.ds.default.binary": "Default values of Binary data set creation",
   "zowe.ds.default.c": "Default values of C data set creation",
   "zowe.ds.default.classic": "Default values of Classic data set creation",
@@ -161,5 +162,6 @@
   "ds.filterBy": "Filter PDS members...",
   "ds.sortBy": "Sort PDS members...",
   "openWithEncoding": "Open with Encoding",
-  "zowe.placeholderCommand": "Placeholder"
+  "zowe.placeholderCommand": "Placeholder",
+  "uss.copyRelativePath": "Copy Relative Path"
 }

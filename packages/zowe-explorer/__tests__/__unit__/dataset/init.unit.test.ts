@@ -267,6 +267,10 @@ describe("Test src/dataset/extension", () => {
                 mock: [{ spy: jest.spyOn(dsProvider, "openWithEncoding"), arg: [test.value, undefined] }],
             },
             {
+                name: "zowe.ds.copyName",
+                mock: [{ spy: jest.spyOn(dsActions, "copyName"), arg: [test.value] }],
+            },
+            {
                 name: "onDidChangeConfiguration",
                 mock: [{ spy: jest.spyOn(dsProvider, "onDidChangeConfiguration"), arg: [test.value] }],
             },

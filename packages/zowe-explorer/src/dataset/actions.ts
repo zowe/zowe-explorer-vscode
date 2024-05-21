@@ -1881,3 +1881,11 @@ export async function _copyProcessor(
         }
     }
 }
+
+export async function copyName(node: api.IZoweDatasetTreeNode): Promise<void> {
+    if (contextually.isDsMember(node) && node.getParent()) {
+        await vscode.env.clipboard.writeText(`${node.getParent().label as string}(${node.label as string})`);
+    } else if (contextually.isDs(node) || contextually.isPds(node) || contextually.isMigrated(node)) {
+        await vscode.env.clipboard.writeText(node.label as string);
+    }
+}

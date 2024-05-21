@@ -5,6 +5,8 @@
   "zowe.jobs.confirmSubmission.allJobs": "All jobs",
   "sort.asc": "Ascending",
   "sort.desc": "Descending",
+  "unsavedNode.confirmRefresh": "Confirm",
+  "unsavedNode.confirmDialog": "{0} is opened and has pending changes in the editor. By selecting 'Confirm', any unsaved changes will be lost.",
   "saveFile.nodeNotFound.error": "Could not find {0} in tree",
   "uploadContent.putContents": "Uploading USS file",
   "saveFile.response.save.title": "Saving data set...",

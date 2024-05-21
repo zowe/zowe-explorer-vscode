@@ -502,3 +502,21 @@ export async function pasteUss(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, nod
     );
     ussFileProvider.refreshElement(node);
 }
+
+export async function copyRelativePath(node: IZoweUSSTreeNode): Promise<void> {
+    const sesNode = node.getSessionNode();
+    if (!node.fullPath) {
+        await vscode.env.clipboard.writeText(node.label as string);
+        return;
+    }
+
+    if (sesNode != null && !contextually.isFavorite(sesNode)) {
+        let relPath = node.fullPath.replace(sesNode.fullPath, "");
+        if (relPath.startsWith("/")) {
+            relPath = relPath.slice(1);
+        }
+        await vscode.env.clipboard.writeText(relPath);
+    } else {
+        await vscode.env.clipboard.writeText(node.fullPath);
+    }
+}
