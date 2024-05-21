@@ -10,11 +10,16 @@
  */
 
 import type { Options } from "@wdio/types";
+import { existsSync } from "fs";
+import { mkdirp } from "fs-extra";
 import { join } from "path";
 
 if (process.env.PWD && process.env.ZOWE_TEST_DIR) {
     // Set ZOWE_CLI_HOME relative to __tests__/__e2e__ folder
-    process.env["ZOWE_CLI_HOME"] = join(process.env.PWD, "__tests__", "__e2e__", process.env.ZOWE_TEST_DIR);
+    const homeDir = (process.env["ZOWE_CLI_HOME"] = join(process.env.PWD, "__tests__", "__e2e__", process.env.ZOWE_TEST_DIR));
+    if (!existsSync(homeDir)) {
+        mkdirp(homeDir);
+    }
 }
 
 export const config: Options.Testrunner = {
