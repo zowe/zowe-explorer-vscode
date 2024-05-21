@@ -16,7 +16,7 @@ import { join } from "path";
 
 if (process.env.ZOWE_TEST_DIR) {
     // Set ZOWE_CLI_HOME relative to __tests__/__e2e__ folder
-    const homeDir = (process.env["ZOWE_CLI_HOME"] = join(__dirname, "__tests__", "__e2e__", process.env.ZOWE_TEST_DIR));
+    const homeDir = (process.env["ZOWE_CLI_HOME"] = join(__dirname, process.env.ZOWE_TEST_DIR));
     if (!existsSync(homeDir)) {
         mkdirpSync(homeDir);
     }
