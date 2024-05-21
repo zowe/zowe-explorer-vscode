@@ -1222,12 +1222,6 @@ export class Profiles extends ProfilesCache {
                 loginOk = await this.loginWithRegularProfile(serviceProfile, node);
             } else {
                 loginOk = await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, loginTokenType, node, zeInstance, this);
-                if (loginOk) {
-                    const profAttrs = this.getProfileFromConfig("base");
-                    const configApi = (await this.getProfileInfo()).getTeamConfig();
-                    configApi.set(`${(await profAttrs).profLoc.jsonLoc}.properties.port`, serviceProfile.profile.port);
-                    await configApi.save();
-                }
             }
             if (loginOk) {
                 Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
