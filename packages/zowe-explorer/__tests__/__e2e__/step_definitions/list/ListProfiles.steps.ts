@@ -14,10 +14,12 @@ import { paneDivForTree } from "../shared.steps";
 import { TreeItem } from "wdio-vscode-service";
 
 When(/the user has a (.*) profile in their (.*) tree/, async function (initialState: string, tree: string) {
-    const isExpanded = initialState === "collapsed";
+    const isExpanded = initialState === "expanded";
     this.tree = tree;
     this.treePane = await paneDivForTree(tree);
-    const visibleItems = (await this.treePane.getVisibleItems()) as TreeItem[];
+    const visibleItems = ((await this.treePane.getVisibleItems()) as TreeItem[]).filter(
+        async (treeItem) => (await treeItem.getLabel()) !== "Favorites"
+    );
     this.profileNode = visibleItems.find(async (treeItem) => (await treeItem.isExpanded()) === isExpanded);
     await expect(this.profileNode).toBeDefined();
 });
@@ -25,7 +27,9 @@ When(/the user has a (.*) profile in their (.*) tree/, async function (initialSt
 Then(/a user can (.*) a profile with a filter set/, async function (action: string) {
     if (action === "collapse") {
         await this.profileNode.collapse();
+        await browser.waitUntil(async () => !(await this.profileNode.isExpanded()));
     } else {
         await this.profileNode.expand();
+        await browser.waitUntil(async () => await this.profileNode.isExpanded());
     }
 });
