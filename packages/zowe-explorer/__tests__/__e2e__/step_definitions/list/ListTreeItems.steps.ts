@@ -17,7 +17,9 @@ import { Key } from "webdriverio";
 const testInfo = {
     profileName: process.env.ZE_TEST_PROFILE_NAME,
     dsFilter: process.env.ZE_TEST_DS_FILTER,
+    pds: process.env.ZE_TEST_PDS,
     ussFilter: process.env.ZE_TEST_USS_FILTER,
+    ussDir: process.env.ZE_TEST_USS_DIR.replace(`${process.env.ZE_TEST_USS_FILTER}/`, ""),
 };
 
 async function setFilterForProfile(world: IWorld, profileNode: TreeItem, tree: string): Promise<void> {
@@ -84,14 +86,30 @@ When("a user sets a filter search on the profile", async function () {
 });
 Then("the profile node will list results of the filter search", async function () {
     await expect(await this.profileNode.isExpanded()).toBe(true);
-    // TODO: verify that the profile node contains nodes
+    await browser.waitUntil(async () => (await this.profileNode.getChildren()).length > 0);
 });
 When("a user expands a PDS in the list", async function () {
-    // TODO: expand a PDS in the list
+    this.pds = await this.profileNode.findChildItem(testInfo.pds);
+    await expect(this.pds).toBeDefined();
+    await this.pds.expand();
+    await browser.waitUntil(async () => (await this.pds.getChildren()).length > 0);
+    this.children = await this.pds.getChildren();
 });
 When("a user expands a USS directory in the list", async function () {
-    // TODO: expand a USS directory in the list
+    this.ussDir = await this.profileNode.findChildItem(testInfo.ussDir);
+    await expect(this.ussDir).toBeDefined();
+    await this.ussDir.expand();
+    await browser.waitUntil(async () => (await this.ussDir.getChildren()).length > 0);
+    this.children = await this.ussDir.getChildren();
 });
 Then("the node will expand and list its children", async function () {
-    // TODO: verify that the node is expanded and that it contains children (aside from the placeholder)
+    if (this.pds) {
+        await expect(await this.pds.isExpanded()).toBe(true);
+    } else {
+        await expect(await this.ussDir.isExpanded()).toBe(true);
+    }
+});
+Then("the user can select a child in the list and open it", async function () {
+    await expect(this.children.length).not.toBe(0);
+    await this.children[0].select();
 });
