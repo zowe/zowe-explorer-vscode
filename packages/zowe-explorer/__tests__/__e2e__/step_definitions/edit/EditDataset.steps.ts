@@ -19,6 +19,16 @@ Then("the user can select a PDS member in the list and open it", async function 
     this.editorForFile = await editorView.openEditor(process.env.ZE_TEST_PDS_MEMBER);
     await expect(this.editorForFile).toBeDefined();
 });
+Then("the user can select a PS in the list and open it", async function () {
+    this.ps = await this.profileNode.findChildItem(process.env.ZE_TEST_PS);
+    await this.ps.select();
+    const editorView = (await browser.getWorkbench()).getEditorView();
+    this.editorForFile = await editorView.openEditor(process.env.ZE_TEST_PS);
+    await expect(this.editorForFile).toBeDefined();
+});
 When("the user edits the PDS member", async function () {
     await this.editorForFile.setText("Hello from a Data Set test for a PDS member!");
+});
+When("the user edits the PS", async function () {
+    await this.editorForFile.setText("Hello from a Data Set test for a PS!");
 });
