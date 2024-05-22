@@ -2063,8 +2063,10 @@
   "scripts": {
     "build": "pnpm clean:bundle && pnpm license && webpack --mode development && pnpm madge",
     "test": "pnpm test:unit",
-    "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
+    "test:e2e": "pnpm build && cd __tests__/__e2e__/ && wdio run ./wdio.conf.ts",
+    "test:integration": "pnpm build && cd __tests__/__integration__/ && wdio run ./wdio.conf.ts",
     "test:silent": "pnpm test:unit --reporters \"jest-silent-reporter\"",
+    "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "vscode:prepublish": "pnpm clean:bundle && pnpm generateLocalization && webpack --mode production --devtool hidden-source-map",
     "package": "vsce package --no-dependencies && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
     "license": "node ../../scripts/updateLicenses.js",
@@ -2085,9 +2087,7 @@
     "pretty": "prettier --write .",
     "createTestProfileData": "tsx ./scripts/createTestProfileData.ts",
     "createDemoNodes": "tsx ./scripts/createDemoNodes.ts",
-    "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src && node ./scripts/generatePoeditorJson.js",
-    "test:e2e": "cd __tests__/__e2e__/ && wdio run ./wdio.conf.ts",
-    "test:integration": "cd __tests__/__integration__/ && wdio run ./wdio.conf.ts"
+    "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src && node ./scripts/generatePoeditorJson.js"
   },
   "engines": {
     "vscode": "^1.79.0"
@@ -2119,6 +2119,7 @@
     "log4js": "^6.4.6",
     "markdownlint-cli": "^0.33.0",
     "sinon": "^16.1.1",
+    "ts-node": "^10.9.2",
     "wdio-vscode-service": "^6.0.3",
     "wdio-wait-for": "^3.0.11",
     "webdriverio": "^8.36.1"
