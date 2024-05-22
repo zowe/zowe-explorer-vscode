@@ -1658,6 +1658,10 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
     let globalMocks;
     let modifiedTestNode;
 
+    afterEach(() => {
+        jest.resetAllMocks();
+    });
+
     beforeEach(async () => {
         globalMocks = await createGlobalMocks();
         testNode = new (ZoweTreeNode as any)(
@@ -1726,6 +1730,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
 
         jest.spyOn(Profiles.getInstance(), "ssoLogin").mockImplementationOnce((node) => modifiedTestNode);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
+        expect(Gui.infoMessage).toBeCalled();
         expect(testNode.profile.profile.tokenType).toBe("testToken");
         expect(testNode.profile.profile.tokenValue).toBe("12345");
         expect(testNode.profile.profile.secure.length).toBe(1);
@@ -1782,6 +1787,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         } as never);
         jest.spyOn(utils.ProfilesUtils, "promptCredentials").mockImplementationOnce((node) => modifiedTestNode);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
+        expect(Gui.infoMessage).toBeCalled();
         expect(testNode.profile.profile.user).toBe("testUser");
         expect(testNode.profile.profile.password).toBe("6789");
         expect(testNode.profile.profile.secure.length).toBe(2);
@@ -1790,10 +1796,27 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         expect(testNode.profile.profile.tokenValue).toBeUndefined();
     });
 
-    it("when authentication method is unknown", () => {
+    it("When authentication method is unknown", async () => {
         jest.spyOn(utils.ProfilesUtils, "isProfileUsingBasicAuth").mockReturnValueOnce(false);
         jest.spyOn(utils.ProfilesUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
         jest.spyOn(Gui, "infoMessage").mockImplementation();
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
+            getTokenTypeName: () => "apimlAuthenticationToken",
+        } as never);
+        await Profiles.getInstance().handleSwitchAuthentication(testNode);
+        expect(Gui.infoMessage).toBeCalled();
+    });
+
+    it("To check authentication switch for a profile which does not support token based authentication", async () => {
+        jest.spyOn(utils.ProfilesUtils, "isProfileUsingBasicAuth").mockReturnValueOnce(true);
+        jest.spyOn(Gui, "showMessage").mockImplementation();
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
+            getTokenTypeName: () => {
+                throw new Error("test error.");
+            },
+        } as never);
+        await Profiles.getInstance().handleSwitchAuthentication(testNode);
+        expect(Gui.showMessage).toBeCalled();
     });
 });
 
