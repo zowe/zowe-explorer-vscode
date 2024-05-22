@@ -20,7 +20,9 @@ When(/the user has a (.*) profile in their (.*) tree/, async function (initialSt
     const visibleItems = ((await this.treePane.getVisibleItems()) as TreeItem[]).filter(
         async (treeItem) => (await treeItem.getLabel()) !== "Favorites"
     );
-    this.profileNode = visibleItems.find(async (treeItem) => (await treeItem.isExpanded()) === isExpanded);
+    this.profileNode = visibleItems.find(
+        async (treeItem) => (await treeItem.isExpanded()) === isExpanded && (await treeItem.getLabel()) === process.env.ZE_TEST_PROFILE_NAME
+    );
     await expect(this.profileNode).toBeDefined();
 });
 
