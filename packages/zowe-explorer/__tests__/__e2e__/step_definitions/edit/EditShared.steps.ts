@@ -14,4 +14,5 @@ import { Then } from "@cucumber/cucumber";
 Then("the user should be able to save it successfully", async function () {
     await this.editorForFile.save();
     await browser.waitUntil(async () => !(await this.editorForFile.isDirty()));
+    await this.editorView.closeTab(await this.editorForFile.getTitle());
 });

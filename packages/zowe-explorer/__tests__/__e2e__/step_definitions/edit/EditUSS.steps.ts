@@ -15,8 +15,8 @@ Then("the user can select a USS file in the list and open it", async function ()
     await expect(this.children.length).not.toBe(0);
     this.ussFile = await this.ussDir.findChildItem(process.env.ZE_TEST_USS_FILE);
     await this.ussFile.select();
-    const editorView = (await browser.getWorkbench()).getEditorView();
-    this.editorForFile = await editorView.openEditor(process.env.ZE_TEST_USS_FILE);
+    this.editorView = (await browser.getWorkbench()).getEditorView();
+    this.editorForFile = await this.editorView.openEditor(process.env.ZE_TEST_USS_FILE);
     await expect(this.editorForFile).toBeDefined();
 });
 When("the user edits the USS file", async function () {
