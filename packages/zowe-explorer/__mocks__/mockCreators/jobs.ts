@@ -15,6 +15,7 @@ import * as globals from "../../src/globals";
 import { IJob, IJobFile, imperative } from "@zowe/cli";
 import { removeNodeFromArray } from "./shared";
 import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { ZosJobsProvider } from "../../src/job/ZosJobsProvider";
 
 export function createIJobObject() {
     return {
@@ -76,7 +77,8 @@ export function createJobsTree(session: imperative.Session, iJob: IJob, profile:
     });
     jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
 
-    const testJobsTree = {
+    const testJobsTree = new ZosJobsProvider();
+    Object.assign(testJobsTree, {
         mSessionNodes: [],
         mFavorites: [],
         getChildren: jest.fn(),
@@ -94,16 +96,21 @@ export function createJobsTree(session: imperative.Session, iJob: IJob, profile:
                 dispose: jest.fn(),
             };
         }),
-        getSessions: jest.fn(),
+        getSessions: jest.fn().mockReturnValue([]),
         getFavorites: jest.fn(),
-        getSearchHistory: jest.fn(),
+        getSearchHistory: jest.fn().mockImplementation(),
         removeSearchHistory: jest.fn(),
         resetSearchHistory: jest.fn(),
         resetFileHistory: jest.fn(),
-        deleteSession: jest.fn(),
-        addFavorite: jest.fn(),
-        removeFavorite: jest.fn(),
-        removeFavProfile: jest.fn(),
+        deleteSession: jest.fn().mockImplementation((badSession) => removeNodeFromArray(badSession, testJobsTree.mSessionNodes)),
+        addFavorite: jest.fn().mockImplementation((newFavorite) => {
+            testJobsTree.mFavorites.push(newFavorite);
+        }),
+        removeFavorite: jest.fn().mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testJobsTree.mFavorites)),
+        removeFavProfile: jest.fn().mockImplementation((badFavProfileName) => {
+            const badFavProfileNode = testJobsTree.mFavorites.find((treeNode) => treeNode.label === badFavProfileName);
+            removeNodeFromArray(badFavProfileNode, testJobsTree.mFavorites);
+        }),
         treeView,
         getTreeType: jest.fn().mockImplementation(() => PersistenceSchemaEnum.Job),
         checkCurrentProfile: jest.fn(),
@@ -114,19 +121,9 @@ export function createJobsTree(session: imperative.Session, iJob: IJob, profile:
         delete: jest.fn(),
         setItem: jest.fn(),
         openFiles: {},
-    };
+    });
     testJobsTree.mSessionNodes = [];
     testJobsTree.mSessionNodes.push(jobNode);
-    testJobsTree.addFavorite.mockImplementation((newFavorite) => {
-        testJobsTree.mFavorites.push(newFavorite);
-    });
-    testJobsTree.getSearchHistory.mockImplementation();
-    testJobsTree.deleteSession.mockImplementation((badSession) => removeNodeFromArray(badSession, testJobsTree.mSessionNodes));
-    testJobsTree.removeFavorite.mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testJobsTree.mFavorites));
-    testJobsTree.removeFavProfile.mockImplementation((badFavProfileName) => {
-        const badFavProfileNode = testJobsTree.mFavorites.find((treeNode) => treeNode.label === badFavProfileName);
-        removeNodeFromArray(badFavProfileNode, testJobsTree.mFavorites);
-    });
 
     return testJobsTree;
 }
