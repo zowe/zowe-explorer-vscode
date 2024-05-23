@@ -78,6 +78,7 @@ fn code_cli_binary(dir: &Path) -> PathBuf {
 ///
 /// # Arguments
 /// * `file` - The file that contains the archive
+/// * `zip_path` - The path of the ZIP file to extract
 /// * `vsc_path` - The path where the archive should be extracted into
 ///
 async fn extract_code_zip(file: &std::fs::File, zip_path: &Path, vsc_path: &Path) -> anyhow::Result<()> {
@@ -104,14 +105,14 @@ async fn extract_code_zip(file: &std::fs::File, zip_path: &Path, vsc_path: &Path
                 };
 
                 if entry.is_dir() {
-                    std::fs::create_dir_all(&out_path).unwrap();
+                    std::fs::create_dir_all(vsc_path.join(&out_path)).unwrap();
                 } else {
                     if let Some(p) = out_path.parent() {
                         if !p.exists() {
                             std::fs::create_dir_all(p).unwrap();
                         }
                     }
-                    let mut outfile = std::fs::File::create(&out_path).unwrap();
+                    let mut outfile = std::fs::File::create(vsc_path.join(&out_path)).unwrap();
                     std::io::copy(&mut entry, &mut outfile).unwrap();
                 }
 
@@ -121,7 +122,7 @@ async fn extract_code_zip(file: &std::fs::File, zip_path: &Path, vsc_path: &Path
                 {
                     use std::os::unix::fs::PermissionsExt;
                     if let Some(mode) = entry.unix_mode() {
-                        std::fs::set_permissions(&out_path, std::fs::Permissions::from_mode(mode)).unwrap();
+                        std::fs::set_permissions(vsc_path.join(&out_path), std::fs::Permissions::from_mode(mode)).unwrap();
                     }
                 }
             }
@@ -228,6 +229,13 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
 
     progress_bar.finish();
     println!("📤 Unpacking VS Code archive...");
+    
+    // If the VS Code folder exists for the latest version, remove its contents before downloading
+    if vsc_path.exists() {
+        tokio::fs::remove_dir_all(&vsc_path).await?;
+        tokio::fs::create_dir(&vsc_path).await?;
+    }
+
     match path
         .extension()
         .unwrap_or_default()
