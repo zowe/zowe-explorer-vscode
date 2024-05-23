@@ -28,7 +28,7 @@ import {
     createMockNode,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree, createDatasetFavoritesNode } from "../../../__mocks__/mockCreators/datasets";
-import { ProfilesCache, imperative, Gui, Validation } from "@zowe/zowe-explorer-api";
+import { ProfilesCache, imperative, Gui, Validation, Types } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../../../src/configuration/Constants";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { join } from "path";
@@ -54,6 +54,7 @@ import { ZoweScheme } from "../../../../../zowe-explorer-api/src/fs/types/abstra
 import { Sorting } from "../../../../../zowe-explorer-api/src/tree";
 import { IconUtils } from "../../../../src/icons/IconUtils";
 import { ExtensionUtils } from "../../../../src/utils/ExtensionUtils";
+import { DataSetTemplates } from "../../../../src/trees/dataset/DatasetTemplates";
 
 jest.mock("fs");
 jest.mock("util");
@@ -3009,10 +3010,38 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
         });
     });
 
+    describe("addDsTemplate", () => {
+        it("adds a new DS template to the persistent object", async () => {
+            const mockTemplates = [{ test1: {} }, { test2: {} }, { test3: {} }];
+            Object.defineProperty(SettingsConfig, "getDirectValue", {
+                value: jest.fn().mockReturnValue(mockTemplates),
+                configurable: true,
+            });
+            const newTemplate = { test: {} };
+            mockTemplates.unshift(newTemplate as any);
+            const updateSpy = jest.spyOn(DataSetTemplates, "updateDsTemplateSetting");
+            Object.defineProperty(SettingsConfig, "setDirectValue", { value: jest.fn(), configurable: true });
+
+            await tree.addDsTemplate(newTemplate as any);
+            expect(updateSpy).toHaveBeenCalledWith(mockTemplates);
+        });
+    });
+
     describe("getSessions", () => {
         it("gets all the available sessions from persistent object", () => {
             tree["mHistory"]["mSessions"] = ["sestest"];
             expect(tree.getSessions()).toEqual(["sestest"]);
+        });
+    });
+
+    describe("getDsTemplates", () => {
+        it("gets all the DS templates from persistent object", () => {
+            const mockTemplates = [{ test1: {} }, { test2: {} }, { test3: {} }];
+            Object.defineProperty(SettingsConfig, "getDirectValue", {
+                value: jest.fn().mockReturnValue(mockTemplates),
+                configurable: true,
+            });
+            expect(tree.getDsTemplates()).toEqual(mockTemplates);
         });
     });
 
