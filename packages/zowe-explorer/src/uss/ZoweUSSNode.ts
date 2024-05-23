@@ -34,7 +34,7 @@ import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { UssFileTree, UssFileType, UssFileUtils } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { updateOpenFiles } from "../shared/utils";
+import { initializeFileOpening, updateOpenFiles } from "../shared/utils";
 import { IZoweUssTreeOpts } from "../shared/IZoweTreeOpts";
 import { TreeProviders } from "../shared/TreeProviders";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
@@ -542,7 +542,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
 
                     updateOpenFiles(ussFileProvider, documentFilePath, this);
-                    await this.initializeFileOpening(documentFilePath, shouldPreview);
+                    await initializeFileOpening(this, documentFilePath, shouldPreview);
                 }
             } catch (err) {
                 await errorHandling(err, this.getProfileName());
@@ -604,10 +604,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 this.downloaded = true;
 
                 if (isDirty) {
-                    await this.initializeFileOpening(ussDocumentFilePath, true);
+                    await initializeFileOpening(this, ussDocumentFilePath, true);
                 }
             } else if (wasSaved) {
-                await this.initializeFileOpening(ussDocumentFilePath, true);
+                await initializeFileOpening(this, ussDocumentFilePath, true);
             }
         } catch (err) {
             if (err instanceof Error && err.message.includes(localize("refreshUSS.error.notFound", "not found"))) {
@@ -618,44 +618,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             } else {
                 await errorHandling(err, this.getProfileName());
             }
-        }
-    }
-
-    public async initializeFileOpening(documentPath: string, previewFile?: boolean): Promise<void> {
-        ZoweLogger.trace("ZoweUSSNode.initializeFileOpening called.");
-        let document;
-        let openingTextFailed = false;
-
-        if (!this.binary) {
-            try {
-                document = await vscode.workspace.openTextDocument(documentPath);
-            } catch (err) {
-                ZoweLogger.warn(err);
-                openingTextFailed = true;
-            }
-
-            if (openingTextFailed) {
-                const yesResponse = localize("openUSS.log.info.failedToOpenAsText.yes", "Re-download");
-                const noResponse = localize("openUSS.log.info.failedToOpenAsText.no", "Cancel");
-
-                const response = await Gui.errorMessage(
-                    localize("openUSS.log.info.failedToOpenAsText", "Failed to open file as text. Re-download file as binary?"),
-                    { items: [yesResponse, noResponse] }
-                );
-
-                if (response === yesResponse) {
-                    await vscode.commands.executeCommand("zowe.uss.binary", this);
-                }
-            } else {
-                if (previewFile === true) {
-                    await Gui.showTextDocument(document);
-                } else {
-                    await Gui.showTextDocument(document, { preview: false });
-                }
-            }
-        } else {
-            const uriPath = vscode.Uri.file(documentPath);
-            await vscode.commands.executeCommand("vscode.open", uriPath);
         }
     }
 

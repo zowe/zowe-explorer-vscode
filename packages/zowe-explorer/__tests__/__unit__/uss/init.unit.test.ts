@@ -211,7 +211,7 @@ describe("Test src/dataset/extension", () => {
             },
             {
                 name: "zowe.uss.openWithEncoding",
-                mock: [{ spy: jest.spyOn(ussFileProvider, "openWithEncoding"), arg: [test.value] }],
+                mock: [{ spy: jest.spyOn(ussFileProvider, "openWithEncoding"), arg: [test.value, undefined] }],
             },
             {
                 name: "zowe.uss.copyRelativePath",

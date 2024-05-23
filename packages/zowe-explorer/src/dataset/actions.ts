@@ -26,6 +26,7 @@ import {
     JOB_SUBMIT_DIALOG_OPTS,
     getDefaultUri,
     uploadContent,
+    initializeFileOpening,
 } from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
@@ -1217,10 +1218,10 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode): Promise<void> {
         });
         node.setEtag(response.apiResponse.etag);
 
-        const document = await vscode.workspace.openTextDocument(documentFilePath);
-        api.Gui.showTextDocument(document, { preview: false });
+        await initializeFileOpening(node, documentFilePath, false);
+        const document = vscode.workspace.textDocuments.find((doc) => doc.fileName === documentFilePath);
         // if there are unsaved changes, vscode won't automatically display the updates, so close and reopen
-        if (document.isDirty) {
+        if (document?.isDirty) {
             await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
             api.Gui.showTextDocument(document, { preview: false });
         }

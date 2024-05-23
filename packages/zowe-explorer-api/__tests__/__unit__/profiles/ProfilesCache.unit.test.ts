@@ -302,14 +302,16 @@ describe("ProfilesCache", () => {
         it("should remove old types from profilesByType and defaultProfileByType maps when reloading profiles", async () => {
             const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as unknown as zowe.imperative.Logger);
             jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([]));
-            (profCache as any).profilesByType.set("test-type", { name: "someProf" as any });
-            (profCache as any).defaultProfileByType.set("test-type", { name: "someProf" as any });
+            (profCache as any).profilesByType.set("base", { name: "someProf" as any });
+            (profCache as any).defaultProfileByType.set("base", { name: "someProf" as any });
             const promise = profCache.refresh();
             expect((profCache as any).profilesByType.size).toBe(1);
             expect((profCache as any).defaultProfileByType.size).toBe(1);
             await promise;
             expect((profCache as any).profilesByType.size).toBe(0);
             expect((profCache as any).defaultProfileByType.size).toBe(0);
+            expect((profCache as any).allProfiles.length).toBe(0);
+            expect((profCache as any).allTypes).toEqual(["base"]);
             expect(mockLogError).not.toHaveBeenCalled();
         });
     });

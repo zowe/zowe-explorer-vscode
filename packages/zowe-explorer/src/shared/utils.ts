@@ -602,3 +602,42 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
     }
     return encoding;
 }
+
+export async function initializeFileOpening(
+    node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
+    documentPath: string,
+    previewFile?: boolean
+): Promise<void> {
+    ZoweLogger.trace("zowe.shared.utils.initializeFileOpening called.");
+    let document;
+    let openingTextFailed = false;
+
+    if (!node.binary) {
+        try {
+            document = await vscode.workspace.openTextDocument(documentPath);
+        } catch (err) {
+            ZoweLogger.warn(err);
+            openingTextFailed = true;
+        }
+
+        if (openingTextFailed) {
+            const yesResponse = localize("zowe.shared.utils.initializeFileOpening.yesButton", "Re-download");
+            const noResponse = localize("zowe.shared.utils.initializeFileOpening.noButton", "Cancel");
+
+            const response = await Gui.errorMessage(
+                localize("zowe.shared.utils.initializeFileOpening.message", "Failed to open file as text. Re-download file as binary?"),
+                { items: [yesResponse, noResponse] }
+            );
+
+            if (response === yesResponse) {
+                const command = isZoweDatasetTreeNode(node) ? "zowe.ds.openWithEncoding" : "zowe.uss.openWithEncoding";
+                await vscode.commands.executeCommand(command, node, { kind: "binary" });
+            }
+        } else {
+            await Gui.showTextDocument(document, { preview: previewFile });
+        }
+    } else {
+        const uriPath = vscode.Uri.file(documentPath);
+        await vscode.commands.executeCommand("vscode.open", uriPath);
+    }
+}

@@ -15,9 +15,6 @@
   "refreshUSS.error.notFound": "not found",
   "refreshUSS.file1": "Unable to find file: ",
   "refreshUSS.file2": " was probably deleted.",
-  "openUSS.log.info.failedToOpenAsText.yes": "Re-download",
-  "openUSS.log.info.failedToOpenAsText.no": "Cancel",
-  "openUSS.log.info.failedToOpenAsText": "Failed to open file as text. Re-download file as binary?",
   "paste.missingApis": "Required API functions for pasting (fileList, copy and/or putContent) were not found.",
   "uploadFile.putContents": "Uploading USS files...",
   "copyUssFile.error": "Error uploading files"
