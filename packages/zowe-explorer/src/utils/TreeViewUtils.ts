@@ -10,11 +10,11 @@
  */
 
 import { Types, IZoweTree, IZoweTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
-import { ZoweLogger } from "./ZoweLogger";
 import { TreeViewExpansionEvent } from "vscode";
-import { getIconByNode } from "../generators/icons";
-import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
-import { ZoweLocalStorage } from "./ZoweLocalStorage";
+import { IconGenerator } from "../icons/IconGenerator";
+import type { ZoweTreeProvider } from "../trees/ZoweTreeProvider";
+import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
+import { ZoweLogger } from "../tools/ZoweLogger";
 
 export class TreeViewUtils {
     /**
@@ -50,7 +50,7 @@ export class TreeViewUtils {
         treeProvider: ZoweTreeProvider<T>
     ) {
         return (e: TreeViewExpansionEvent<T>): any => {
-            const newIcon = getIconByNode(e.element);
+            const newIcon = IconGenerator.getIconByNode(e.element);
             if (qualifiers.some((q) => q(e.element)) && newIcon) {
                 e.element.iconPath = newIcon;
                 treeProvider.mOnDidChangeTreeData.fire(e.element);
