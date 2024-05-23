@@ -141,3 +141,10 @@ export type LocalConflict = {
     uri: vscode.Uri;
     content: Uint8Array;
 };
+
+export type UriFsInfo = {
+    isRoot: boolean;
+    slashAfterProfilePos: number;
+    profileName: string;
+    profile?: IProfileLoaded;
+};

@@ -9,6 +9,6 @@
  *
  */
 
-export * from "./abstract";
-export * from "./datasets";
-export * from "./jobs";
+export * from "./FsAbstractUtils";
+export * from "./FsDatasetsUtils";
+export * from "./FsJobsUtils";

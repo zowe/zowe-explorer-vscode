@@ -224,6 +224,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * Retrieves an abridged for of the label
      */
     shortLabel?: string;
+    encoding?: string;
     /**
      * @deprecated Please use `getEncodingInMap` and `updateEncodingInMap` instead.
      *

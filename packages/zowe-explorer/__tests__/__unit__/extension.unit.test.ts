@@ -15,32 +15,31 @@ import * as os from "os";
 import * as fs from "fs";
 import * as fsextra from "fs-extra";
 import * as extension from "../../src/extension";
-import * as globals from "../../src/globals";
-import * as tempFolderUtils from "../../src/utils/TempFolder";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import { imperative, Gui, Validation, ProfilesCache, FileManagement } from "@zowe/zowe-explorer-api";
-import { Profiles } from "../../src/Profiles";
-import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
-import { createGetConfigMock, createInstanceOfProfileInfo, createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
-import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
-import { SettingsConfig } from "../../src/utils/SettingsConfig";
-import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
-import { DatasetTree } from "../../src/dataset/DatasetTree";
-import { USSTree } from "../../src/uss/USSTree";
-import { ZoweSaveQueue } from "../../src/abstract/ZoweSaveQueue";
-import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
+import { createGetConfigMock, createInstanceOfProfileInfo, createIProfile, createTreeView } from "../__mocks__/mockCreators/shared";
+import { Constants } from "../../src/configuration/Constants";
+import { Profiles } from "../../src/configuration/Profiles";
+import { SettingsConfig } from "../../src/configuration/SettingsConfig";
+import { TempFolder } from "../../src/configuration/TempFolder";
+import { ZoweExplorerExtender } from "../../src/extending/ZoweExplorerExtender";
+import { ZoweLocalStorage } from "../../src/tools/ZoweLocalStorage";
+import { ZoweSaveQueue } from "../../src/tools/ZoweSaveQueue";
+import { DatasetTree } from "../../src/trees/dataset/DatasetTree";
+import { ZoweDatasetNode } from "../../src/trees/dataset/ZoweDatasetNode";
+import { USSTree } from "../../src/trees/uss/USSTree";
 import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
-jest.mock("../../src/utils/LoggerUtils");
-jest.mock("../../src/utils/ZoweLogger");
 
+jest.mock("../../src/utils/LoggerUtils");
+jest.mock("../../src/tools/ZoweLogger");
 jest.mock("vscode");
 jest.mock("fs");
 jest.mock("fs-extra");
 jest.mock("util");
 jest.mock("isbinaryfile");
 
-async function createGlobalMocks() {
+function createGlobalMocks() {
     const mockReadProfilesFromDisk = jest.fn();
     const globalMocks = {
         mockLoadNamedProfile: jest.fn(),
@@ -429,25 +428,6 @@ async function createGlobalMocks() {
     return globalMocks;
 }
 
-function createBlockMocks(globalMocks: any) {
-    const blockMocks = {
-        rootNode: new ZoweUSSNode({
-            label: "root",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            session: globalMocks.session,
-        }),
-        testNode: null,
-    };
-    blockMocks.testNode = new ZoweUSSNode({
-        label: globals.DS_PDS_CONTEXT,
-        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-        parentNode: blockMocks.rootNode,
-    });
-
-    blockMocks.rootNode.contextValue = globals.USS_SESSION_CONTEXT;
-    return blockMocks;
-}
-
 describe("Extension Unit Tests", () => {
     const allCommands: Array<{ cmd: string; fun: () => void; toMock: () => void }> = [];
     let globalMocks;
@@ -480,7 +460,7 @@ describe("Extension Unit Tests", () => {
         expect(globalMocks.mockCreateTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
 
         // Checking if commands are registered properly
-        expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(globals.COMMAND_COUNT);
+        expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(Constants.COMMAND_COUNT);
 
         globalMocks.mockRegisterCommand.mock.calls.forEach((call, i) => {
             expect(call[0]).toStrictEqual(globalMocks.expectedCommands[i]);
@@ -522,14 +502,14 @@ describe("Extension Unit Tests", () => {
     });
     it("should deactivate the extension", async () => {
         const spyAwaitAllSaves = jest.spyOn(ZoweSaveQueue, "all");
-        const spyCleanTempDir = jest.spyOn(tempFolderUtils, "cleanTempDir");
+        const spyCleanTempDir = jest.spyOn(TempFolder, "cleanDir");
         spyCleanTempDir.mockImplementation(jest.fn());
         await extension.deactivate();
         expect(spyAwaitAllSaves).toHaveBeenCalled();
         expect(spyCleanTempDir).toHaveBeenCalled();
         // Test that upload operations complete before cleaning temp dir
         expect(spyAwaitAllSaves.mock.invocationCallOrder[0]).toBeLessThan(spyCleanTempDir.mock.invocationCallOrder[0]);
-        expect(globals.ACTIVATED).toBe(false);
+        expect(Constants.ACTIVATED).toBe(false);
     });
 
     async function removeSessionTest(command: string, contextValue: string, providerObject: any) {
@@ -550,7 +530,7 @@ describe("Extension Unit Tests", () => {
     it("zowe.ds.removeSession", async () => {
         globalMocks.mockGetConfiguration.mockReturnValueOnce({
             persistence: true,
-            get: (setting: string) => {
+            get: () => {
                 return [];
             },
             update: jest.fn(),
@@ -561,10 +541,10 @@ describe("Extension Unit Tests", () => {
                 };
             },
         });
-        await removeSessionTest("zowe.ds.removeSession", globals.DS_SESSION_CONTEXT, DatasetTree);
+        await removeSessionTest("zowe.ds.removeSession", Constants.DS_SESSION_CONTEXT, DatasetTree);
     });
 
     it("zowe.uss.removeSession", async () => {
-        await removeSessionTest("zowe.uss.removeSession", globals.USS_SESSION_CONTEXT, USSTree);
+        await removeSessionTest("zowe.uss.removeSession", Constants.USS_SESSION_CONTEXT, USSTree);
     });
 });

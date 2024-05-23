@@ -14,6 +14,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
   - `shortLabel` property on the `IZoweUSSTreeNode` interface - use the `getBaseName` function instead.
   - `attributes` property on the `IZoweUSSTreeNode` interface - use the `getAttributes` and `setAttributes` functions instead.
 - **Breaking:** Added return type of `Promise<void>` to `MainframeInteractions.ICommon.logout`. [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783).
+- Grouped Common methods into Singleton classes. [#2109](https://github.com/zowe/zowe-explorer-vscode/issues/2109)
 
 ### Bug fixes
 

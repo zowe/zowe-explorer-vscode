@@ -1,0 +1,94 @@
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
+ */
+
+import * as vscode from "vscode";
+import { ZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
+import { createIProfile, createISession } from "../../__mocks__/mockCreators/shared";
+import { ZoweCommandProvider } from "../../../src/commands/ZoweCommandProvider";
+import { Profiles } from "../../../src/configuration/Profiles";
+import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
+import { SharedContext } from "../../../src/trees/shared/SharedContext";
+import { createIJobFile } from "../../__mocks__/mockCreators/jobs";
+import { AuthUtils } from "../../../src/utils/AuthUtils";
+
+const globalMocks = {
+    testSession: createISession(),
+    testProfile: createIProfile(),
+    mockIJobFile: createIJobFile(),
+};
+describe("ZoweCommandProvider Unit Tests", () => {
+    describe("ZoweCommandProvider Unit Tests - function refreshElement", () => {
+        it("should refresh the tree data", () => {
+            const testNode = new (ZoweTreeNode as any)("test", vscode.TreeItemCollapsibleState.None, undefined);
+            Object.defineProperty(ZoweCommandProvider.prototype, "mOnDidChangeTreeData", {
+                value: {
+                    fire: jest.fn(),
+                },
+                configurable: true,
+            });
+            expect(ZoweCommandProvider.prototype.refreshElement(testNode)).toEqual(undefined);
+        });
+    });
+});
+
+describe("ZoweCommandProvide Unit Tests - function checkCurrentProfile", () => {
+    const testNode = new ZoweDatasetNode({
+        label: "test",
+        collapsibleState: vscode.TreeItemCollapsibleState.None,
+        session: globalMocks.testSession,
+    });
+    testNode.setProfileToChoice(globalMocks.testProfile);
+    testNode.contextValue = "session server";
+
+    beforeEach(() => {
+        void Profiles.createInstance(imperative.Logger.getAppLogger());
+        Object.defineProperty(Profiles.getInstance(), "log", {
+            value: {
+                error: jest.fn(),
+            },
+        });
+        jest.spyOn(ZoweCommandProvider.prototype, "refresh").mockImplementationOnce(() => {});
+        jest.spyOn(SharedContext, "isSessionNotFav").mockReturnValue(true);
+    });
+    it("should check current profile and perform the case when status is 'active'", async () => {
+        jest.spyOn(Profiles.getInstance(), "checkCurrentProfile").mockResolvedValue({
+            name: "test",
+            status: "active",
+        });
+        await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(undefined);
+    });
+    it("should check current profile and perform the case when status is 'unverified'", async () => {
+        jest.spyOn(Profiles.getInstance(), "checkCurrentProfile").mockResolvedValue({
+            name: "test",
+            status: "unverified",
+        });
+        await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(undefined);
+    });
+    it("should check current profile and perform the case when status is 'inactive'", async () => {
+        Object.defineProperty(ZoweCommandProvider, "mOnDidChangeTreeData", {
+            value: {
+                debug: jest.fn(),
+            },
+            configurable: true,
+        });
+        jest.spyOn(Profiles.getInstance(), "checkCurrentProfile").mockResolvedValue({
+            name: "test",
+            status: "inactive",
+        });
+        const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
+        await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(undefined);
+        expect(errorHandlingSpy).toHaveBeenCalledWith(
+            "Profile Name " +
+                globalMocks.testProfile.name +
+                " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
+        );
+    });
+});

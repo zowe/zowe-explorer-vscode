@@ -1,155 +1,4 @@
 {
-  "Enter an allocation unit": "Enter an allocation unit",
-  "Enter the average block length (if allocation unit = BLK)": "Enter the average block length (if allocation unit = BLK)",
-  "Enter a block size": "Enter a block size",
-  "Enter an SMS data class": "Enter an SMS data class",
-  "Enter a device type (unit)": "Enter a device type (unit)",
-  "Enter the number of directory blocks": "Enter the number of directory blocks",
-  "Specify the data set type (DSNTYPE)": "Specify the data set type (DSNTYPE)",
-  "Enter the SMS management class": "Enter the SMS management class",
-  "Enter a data set name": "Enter a data set name",
-  "Select a data set organization (DSORG)": "Select a data set organization (DSORG)",
-  "Enter the primary space allocation": "Enter the primary space allocation",
-  "Enter the data set's record format": "Enter the data set's record format",
-  "Enter the logical record length": "Enter the logical record length",
-  "Enter the secondary space allocation": "Enter the secondary space allocation",
-  "Enter the size of the data set": "Enter the size of the data set",
-  "Enter the SMS storage class": "Enter the SMS storage class",
-  "Enter the volume serial on which the data set should be placed": "Enter the volume serial on which the data set should be placed",
-  "Recent": "Recent",
-  "Recent Filters": "Recent Filters",
-  "Options": "Options",
-  "Zowe Explorer's temp folder is located at {0}/Zowe temp folder": {
-    "message": "Zowe Explorer's temp folder is located at {0}",
-    "comment": [
-      "Zowe temp folder"
-    ]
-  },
-  "Zowe Explorer has activated successfully.": "Zowe Explorer has activated successfully.",
-  "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.": "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.",
-  "Failed to update Zowe schema: insufficient permissions or read-only file. {0}/Error message": {
-    "message": "Failed to update Zowe schema: insufficient permissions or read-only file. {0}",
-    "comment": [
-      "Error message"
-    ]
-  },
-  "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.": "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.",
-  "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.": "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.",
-  "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.": "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.",
-  "Internal error: A Zowe Explorer extension client tried to register an invalid Command API.": "Internal error: A Zowe Explorer extension client tried to register an invalid Command API.",
-  "Internal error: Tried to call a non-existing USS API in API register: {0}/Profile type": {
-    "message": "Internal error: Tried to call a non-existing USS API in API register: {0}",
-    "comment": [
-      "Profile type"
-    ]
-  },
-  "Internal error: Tried to call a non-existing MVS API in API register: {0}/Profile type": {
-    "message": "Internal error: Tried to call a non-existing MVS API in API register: {0}",
-    "comment": [
-      "Profile type"
-    ]
-  },
-  "Internal error: Tried to call a non-existing JES API in API register: {0}/Profile type": {
-    "message": "Internal error: Tried to call a non-existing JES API in API register: {0}",
-    "comment": [
-      "Profile type"
-    ]
-  },
-  "Internal error: Tried to call a non-existing Command API in API register: {0}/Profile type": {
-    "message": "Internal error: Tried to call a non-existing Command API in API register: {0}",
-    "comment": [
-      "Profile type"
-    ]
-  },
-  "Internal error: Tried to call a non-existing Common API in API register: {0}/Profile type": {
-    "message": "Internal error: Tried to call a non-existing Common API in API register: {0}",
-    "comment": [
-      "Profile type"
-    ]
-  },
-  "Operation Cancelled": "Operation Cancelled",
-  "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.",
-  "Token auth error": "Token auth error",
-  "Profile was found using token auth, please log in to continue.": "Profile was found using token auth, please log in to continue.",
-  "Choose \"Create new...\" to define or select a profile to add to the DATA SETS Explorer": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS Explorer",
-  "Choose \"Create new...\" to define or select a profile to add to the JOBS Explorer": "Choose \"Create new...\" to define or select a profile to add to the JOBS Explorer",
-  "Choose \"Create new...\" to define or select a profile to add to the USS Explorer": "Choose \"Create new...\" to define or select a profile to add to the USS Explorer",
-  "Profile selection has been cancelled.": "Profile selection has been cancelled.",
-  "The profile {0} has been added to the {1} tree./chosen profiletree type": {
-    "message": "The profile {0} has been added to the {1} tree.",
-    "comment": [
-      "chosen profile",
-      "tree type"
-    ]
-  },
-  "Profile Type": "Profile Type",
-  "User Name": "User Name",
-  "Enter the user name for the connection. Leave blank to not store.": "Enter the user name for the connection. Leave blank to not store.",
-  "Password": "Password",
-  "Enter the password for the connection. Leave blank to not store.": "Enter the password for the connection. Leave blank to not store.",
-  "No profiles available": "No profiles available",
-  "Select the profile you want to delete": "Select the profile you want to delete",
-  "Validating {0} Profile./The profile name": {
-    "message": "Validating {0} Profile.",
-    "comment": [
-      "The profile name"
-    ]
-  },
-  "Validating {0} was cancelled./The profile name": {
-    "message": "Validating {0} was cancelled.",
-    "comment": [
-      "The profile name"
-    ]
-  },
-  "Profile validation failed for {0}./The profile name": {
-    "message": "Profile validation failed for {0}.",
-    "comment": [
-      "The profile name"
-    ]
-  },
-  "This profile is using basic authentication and does not support token authentication.": "This profile is using basic authentication and does not support token authentication.",
-  "Error getting supported tokenType value for profile {0}/Service profile name": {
-    "message": "Error getting supported tokenType value for profile {0}",
-    "comment": [
-      "Service profile name"
-    ]
-  },
-  "Login to authentication service was successful for {0}./Service profile name": {
-    "message": "Login to authentication service was successful for {0}.",
-    "comment": [
-      "Service profile name"
-    ]
-  },
-  "Unable to log in with {0}. {1}/Service profile nameError message": {
-    "message": "Unable to log in with {0}. {1}",
-    "comment": [
-      "Service profile name",
-      "Error message"
-    ]
-  },
-  "Logout from authentication service was successful for {0}./Service profile name": {
-    "message": "Logout from authentication service was successful for {0}.",
-    "comment": [
-      "Service profile name"
-    ]
-  },
-  "Unable to log out with {0}. {1}/Service profile nameError message": {
-    "message": "Unable to log out with {0}. {1}",
-    "comment": [
-      "Service profile name",
-      "Error message"
-    ]
-  },
-  "Select the location where the config file will be initialized": "Select the location where the config file will be initialized",
-  "Select the location of the config file to edit": "Select the location of the config file to edit",
-  "Global: in the Zowe home directory": "Global: in the Zowe home directory",
-  "Project: in the current working directory": "Project: in the current working directory",
-  "Create New": "Create New",
-  "Do you wish to apply this for all trees?": "Do you wish to apply this for all trees?",
-  "Yes": "Yes",
-  "Apply to all trees": "Apply to all trees",
-  "No": "No",
-  "Apply to current tree selected": "Apply to current tree selected",
   "Refresh": "Refresh",
   "Delete Selected": "Delete Selected",
   "Select an item before deleting": "Select an item before deleting",
@@ -157,31 +6,6 @@
   "Add New History Item": "Add New History Item",
   "Item": "Item",
   "Select": "Select",
-  "Error encountered while activating and initializing logger": "Error encountered while activating and initializing logger",
-  "Error encountered when creating temporary folder!": "Error encountered when creating temporary folder!",
-  "Unable to delete temporary folder. {0}/Error message": {
-    "message": "Unable to delete temporary folder. {0}",
-    "comment": [
-      "Error message"
-    ]
-  },
-  "Reload Window": "Reload Window",
-  "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.": "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.",
-  "Required parameter 'host' must not be blank.": "Required parameter 'host' must not be blank.",
-  "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out./Label": {
-    "message": "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
-    "comment": [
-      "Label"
-    ]
-  },
-  "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection./Label": {
-    "message": "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
-    "comment": [
-      "Label"
-    ]
-  },
-  "Log in to Authentication Service": "Log in to Authentication Service",
-  "Update Credentials": "Update Credentials",
   "Zowe explorer profiles are being set as unsecured.": "Zowe explorer profiles are being set as unsecured.",
   "Zowe explorer profiles are being set as secured.": "Zowe explorer profiles are being set as secured.",
   "Custom credential manager failed to activate": "Custom credential manager failed to activate",
@@ -199,6 +23,7 @@
     ]
   },
   "Do you wish to use this credential manager instead?": "Do you wish to use this credential manager instead?",
+  "Yes": "Yes",
   "Don't ask again": "Don't ask again",
   "Plugin of name '{0}' was defined for custom credential management on imperative.json file./Credential manager display name": {
     "message": "Plugin of name '{0}' was defined for custom credential management on imperative.json file.",
@@ -209,12 +34,12 @@
   "Please install associated VS Code extension for custom credential manager or revert to default.": "Please install associated VS Code extension for custom credential manager or revert to default.",
   "Use Default": "Use Default",
   "Install": "Install",
-  "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager": "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager",
   "Reload": "Reload",
   "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.": "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.",
   "\"Update Credentials\" operation not supported when \"autoStore\" is false": "\"Update Credentials\" operation not supported when \"autoStore\" is false",
   "Connection Name": "Connection Name",
   "Enter a name for the connection.": "Enter a name for the connection.",
+  "Operation Cancelled": "Operation Cancelled",
   "Credentials for {0} were successfully updated/Profile name": {
     "message": "Credentials for {0} were successfully updated",
     "comment": [
@@ -255,44 +80,10 @@
   },
   "Zowe Profiles initialized successfully.": "Zowe Profiles initialized successfully.",
   "Zowe Temp folder initialized successfully.": "Zowe Temp folder initialized successfully.",
+  "Create New": "Create New",
   "Convert Existing Profiles": "Convert Existing Profiles",
   "Operation cancelled": "Operation cancelled",
   "Tree Item is not a Zowe Explorer item.": "Tree Item is not a Zowe Explorer item.",
-  "$(plus) Add Credentials": "$(plus) Add Credentials",
-  "Add username and password for basic authentication": "Add username and password for basic authentication",
-  "$(refresh) Update Credentials": "$(refresh) Update Credentials",
-  "Update stored username and password": "Update stored username and password",
-  "$(trash) Delete Profile": "$(trash) Delete Profile",
-  "$(workspace-untrusted) Disable Profile Validation": "$(workspace-untrusted) Disable Profile Validation",
-  "Disable validation of server check for profile": "Disable validation of server check for profile",
-  "$(workspace-trusted) Enable Profile Validation": "$(workspace-trusted) Enable Profile Validation",
-  "Enable validation of server check for profile": "Enable validation of server check for profile",
-  "$(pencil) Edit Profile": "$(pencil) Edit Profile",
-  "Update profile connection information": "Update profile connection information",
-  "$(eye-closed) Hide Profile": "$(eye-closed) Hide Profile",
-  "Hide profile name from tree view": "Hide profile name from tree view",
-  "$(arrow-right) Log in to authentication service": "$(arrow-right) Log in to authentication service",
-  "Log in to obtain a new token value": "Log in to obtain a new token value",
-  "$(arrow-left) Log out of authentication service": "$(arrow-left) Log out of authentication service",
-  "Log out to invalidate and remove stored token value": "Log out to invalidate and remove stored token value",
-  "Profile {0} is using basic authentication. Choose a profile action./Profile name": {
-    "message": "Profile {0} is using basic authentication. Choose a profile action.",
-    "comment": [
-      "Profile name"
-    ]
-  },
-  "Profile {0} is using token authentication. Choose a profile action./Profile name": {
-    "message": "Profile {0} is using token authentication. Choose a profile action.",
-    "comment": [
-      "Profile name"
-    ]
-  },
-  "Profile {0} doesn't specify an authentication method. Choose a profile action./Profile name": {
-    "message": "Profile {0} doesn't specify an authentication method. Choose a profile action.",
-    "comment": [
-      "Profile name"
-    ]
-  },
   "Zowe Explorer": "Zowe Explorer",
   "Initialized logger for Zowe Explorer": "Initialized logger for Zowe Explorer",
   "This log file can be found at {0}/Log file location": {
@@ -314,45 +105,33 @@
       "CLI setting"
     ]
   },
-  "Binary": "Binary",
-  "Downloaded: {0}/Download time": {
-    "message": "Downloaded: {0}",
+  "Zowe Explorer's temp folder is located at {0}/Zowe temp folder": {
+    "message": "Zowe Explorer's temp folder is located at {0}",
     "comment": [
-      "Download time"
+      "Zowe temp folder"
     ]
   },
-  "Encoding: {0}/Encoding name": {
-    "message": "Encoding: {0}",
+  "Required parameter 'host' must not be blank.": "Required parameter 'host' must not be blank.",
+  "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out./Label": {
+    "message": "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
     "comment": [
-      "Encoding name"
+      "Label"
     ]
   },
-  "{0} location/Node type": {
-    "message": "{0} location",
+  "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection./Label": {
+    "message": "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
     "comment": [
-      "Node type"
+      "Label"
     ]
   },
-  "Choose a location to create the {0}/Node type": {
-    "message": "Choose a location to create the {0}",
+  "Log in to Authentication Service": "Log in to Authentication Service",
+  "Update Credentials": "Update Credentials",
+  "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct./Profile name": {
+    "message": "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
     "comment": [
-      "Node type"
+      "Profile name"
     ]
   },
-  "Name of file or directory": "Name of file or directory",
-  "Unable to create node:": "Unable to create node:",
-  "Uploading USS file": "Uploading USS file",
-  "Delete": "Delete",
-  "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}/File names": {
-    "message": "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
-    "comment": [
-      "File names"
-    ]
-  },
-  "Delete action was canceled.": "Delete action was canceled.",
-  "Copying file structure...": "Copying file structure...",
-  "The paste operation is not supported for this node.": "The paste operation is not supported for this node.",
-  "Pasting files...": "Pasting files...",
   "Favorites": "Favorites",
   "Use the search button to list USS files": "Use the search button to list USS files",
   "Invalid node": "Invalid node",
@@ -404,6 +183,19 @@
       "Error message"
     ]
   },
+  "Downloaded: {0}/Download time": {
+    "message": "Downloaded: {0}",
+    "comment": [
+      "Download time"
+    ]
+  },
+  "Encoding: {0}/Encoding name": {
+    "message": "Encoding: {0}",
+    "comment": [
+      "Encoding name"
+    ]
+  },
+  "Binary": "Binary",
   "$(plus) Create a new filter": "$(plus) Create a new filter",
   "Failed to move file {0}: {1}": "Failed to move file {0}: {1}",
   "Confirm": "Confirm",
@@ -460,12 +252,32 @@
   },
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
-  "Disabled": "Disabled",
-  "Your jobs": "Your jobs",
-  "Other user jobs": "Other user jobs",
-  "All jobs": "All jobs",
-  "Ascending": "Ascending",
-  "Descending": "Descending",
+  "{0} location/Node type": {
+    "message": "{0} location",
+    "comment": [
+      "Node type"
+    ]
+  },
+  "Choose a location to create the {0}/Node type": {
+    "message": "Choose a location to create the {0}",
+    "comment": [
+      "Node type"
+    ]
+  },
+  "Name of file or directory": "Name of file or directory",
+  "Unable to create node:": "Unable to create node:",
+  "Uploading USS file": "Uploading USS file",
+  "Delete": "Delete",
+  "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}/File names": {
+    "message": "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
+    "comment": [
+      "File names"
+    ]
+  },
+  "Delete action was canceled.": "Delete action was canceled.",
+  "Copying file structure...": "Copying file structure...",
+  "The paste operation is not supported for this node.": "The paste operation is not supported for this node.",
+  "Pasting files...": "Pasting files...",
   "Invalid job owner": "Invalid job owner",
   "Invalid job prefix": "Invalid job prefix",
   "Failed to parse a saved favorite. Attempted to parse: {0}/Plaintext line": {
@@ -502,15 +314,21 @@
   "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",
   "Team config file deleted, refreshing Zowe Explorer.": "Team config file deleted, refreshing Zowe Explorer.",
   "Team config file updated.": "Team config file updated.",
+  "Zowe Explorer has activated successfully.": "Zowe Explorer has activated successfully.",
+  "Type the new pattern to add to history": "Type the new pattern to add to history",
+  "action is not supported for this property type.": "action is not supported for this property type.",
+  "Clear all history items for this persistent property?": "Clear all history items for this persistent property?",
+  "No": "No",
   "Enter a filter": "Enter a filter",
   "No items are loaded in the tree.": "No items are loaded in the tree.",
   "You must enter a pattern.": "You must enter a pattern.",
   "Prompting the user to choose a recent member for editing": "Prompting the user to choose a recent member for editing",
   "Select a recent member to open": "Select a recent member to open",
   "No recent members found.": "No recent members found.",
-  "Type the new pattern to add to history": "Type the new pattern to add to history",
-  "action is not supported for this property type.": "action is not supported for this property type.",
-  "Clear all history items for this persistent property?": "Clear all history items for this persistent property?",
+  "Use the search button to display jobs": "Use the search button to display jobs",
+  "There are no JES spool messages to display": "There are no JES spool messages to display",
+  "No jobs found": "No jobs found",
+  "Retrieving response from zowe.GetJobs": "Retrieving response from zowe.GetJobs",
   "$(list-ordered) Job ID (default)": "$(list-ordered) Job ID (default)",
   "$(calendar) Date Submitted": "$(calendar) Date Submitted",
   "$(case-sensitive) Job Name": "$(case-sensitive) Job Name",
@@ -518,81 +336,6 @@
   "$(fold) Sort Direction": "$(fold) Sort Direction",
   "Go to Local Filtering": "Go to Local Filtering",
   "$(clear-all) Clear filter for profile": "$(clear-all) Clear filter for profile",
-  "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).": "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).",
-  "$(sync~spin) Polling: {0}.../Document file name": {
-    "message": "$(sync~spin) Polling: {0}...",
-    "comment": [
-      "Document file name"
-    ]
-  },
-  "Modify Command": "Modify Command",
-  "Command response: {0}/Command response": {
-    "message": "Command response: {0}",
-    "comment": [
-      "Command response"
-    ]
-  },
-  "jobActions.modifyCommand.apiNonExisting": "jobActions.modifyCommand.apiNonExisting",
-  "Not implemented yet for profile of type: {0}/Job profile type": {
-    "message": "Not implemented yet for profile of type: {0}",
-    "comment": [
-      "Job profile type"
-    ]
-  },
-  "Owner": "Owner",
-  "Prefix": "Prefix",
-  "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}/Job name": {
-    "message": "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}",
-    "comment": [
-      "Job name"
-    ]
-  },
-  "Job {0} was deleted./Job name": {
-    "message": "Job {0} was deleted.",
-    "comment": [
-      "Job name"
-    ]
-  },
-  "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}/Jobs lengthJob names": {
-    "message": "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}",
-    "comment": [
-      "Jobs length",
-      "Job names"
-    ]
-  },
-  "The following jobs were deleted: {0}/Deleted jobs": {
-    "message": "The following jobs were deleted: {0}",
-    "comment": [
-      "Deleted jobs"
-    ]
-  },
-  "The selected jobs were already cancelled.": "The selected jobs were already cancelled.",
-  "The cancel function is not implemented in this API.": "The cancel function is not implemented in this API.",
-  "The job was not cancelled.": "The job was not cancelled.",
-  "One or more jobs failed to cancel: {0}/Failed to cancel jobs": {
-    "message": "One or more jobs failed to cancel: {0}",
-    "comment": [
-      "Failed to cancel jobs"
-    ]
-  },
-  "Cancelled selected jobs successfully.": "Cancelled selected jobs successfully.",
-  "Select a sorting option for jobs in {0}/Session label": {
-    "message": "Select a sorting option for jobs in {0}",
-    "comment": [
-      "Session label"
-    ]
-  },
-  "Select a sorting direction": "Select a sorting direction",
-  "$(check) Sorting updated for {0}/Session label": {
-    "message": "$(check) Sorting updated for {0}",
-    "comment": [
-      "Session label"
-    ]
-  },
-  "Use the search button to display jobs": "Use the search button to display jobs",
-  "There are no JES spool messages to display": "There are no JES spool messages to display",
-  "No jobs found": "No jobs found",
-  "Retrieving response from zowe.GetJobs": "Retrieving response from zowe.GetJobs",
   "Create new...": "Create new...",
   "$(check) Submit this query": "$(check) Submit this query",
   "Enter job owner ID": "Enter job owner ID",
@@ -665,183 +408,77 @@
   },
   "$(sync~spin) Fetching spool file...": "$(sync~spin) Fetching spool file...",
   "Failed to fetch jobs: getJobsByParameters is not implemented for this session's JES API.": "Failed to fetch jobs: getJobsByParameters is not implemented for this session's JES API.",
-  "$(case-sensitive) Name (default)": "$(case-sensitive) Name (default)",
-  "$(calendar) Date Created": "$(calendar) Date Created",
-  "$(calendar) Date Modified": "$(calendar) Date Modified",
-  "$(account) User ID": "$(account) User ID",
-  "Partitioned Data Set: Binary": "Partitioned Data Set: Binary",
-  "Partitioned Data Set: C": "Partitioned Data Set: C",
-  "Partitioned Data Set: Classic": "Partitioned Data Set: Classic",
-  "Partitioned Data Set: Default": "Partitioned Data Set: Default",
-  "Partitioned Data Set: Extended": "Partitioned Data Set: Extended",
-  "Sequential Data Set": "Sequential Data Set",
-  "Copying File(s)": "Copying File(s)",
-  "Profile is invalid, check connection details.": "Profile is invalid, check connection details.",
-  "Allocate Data Set": "Allocate Data Set",
-  "Edit Attributes": "Edit Attributes",
-  "Select the profile to which the original data set belongs": "Select the profile to which the original data set belongs",
-  "You must select a profile.": "You must select a profile.",
-  "Enter the name of the data set to copy attributes from": "Enter the name of the data set to copy attributes from",
-  "Enter a valid data set name.": "Enter a valid data set name.",
-  "You must enter a new data set name.": "You must enter a new data set name.",
-  "Allocating data set like {0}./Like Data Set name": {
-    "message": "Allocating data set like {0}.",
+  "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}/Job name": {
+    "message": "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}",
     "comment": [
-      "Like Data Set name"
+      "Job name"
     ]
   },
-  "Enter a name for the new data set": "Enter a name for the new data set",
-  "Unable to create data set.": "Unable to create data set.",
-  "{0} was created like {1}./New Data Set nameLike Data Set name": {
-    "message": "{0} was created like {1}.",
+  "Job {0} was deleted./Job name": {
+    "message": "Job {0} was deleted.",
     "comment": [
-      "New Data Set name",
-      "Like Data Set name"
+      "Job name"
     ]
   },
-  "Uploading to data set": "Uploading to data set",
-  "Upload action was cancelled.": "Upload action was cancelled.",
-  "No data sets selected for deletion, cancelling...": "No data sets selected for deletion, cancelling...",
-  "Deleting data set(s): {0}/Data Sets to delete": {
-    "message": "Deleting data set(s): {0}",
+  "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}/Jobs lengthJob names": {
+    "message": "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}",
     "comment": [
-      "Data Sets to delete"
+      "Jobs length",
+      "Job names"
     ]
   },
-  "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}/Data Sets to delete lengthData Sets to delete": {
-    "message": "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}",
+  "The following jobs were deleted: {0}/Deleted jobs": {
+    "message": "The following jobs were deleted: {0}",
     "comment": [
-      "Data Sets to delete length",
-      "Data Sets to delete"
+      "Deleted jobs"
     ]
   },
-  "Deleting items": "Deleting items",
-  "The following {0} item(s) were deleted: {1}/Data Sets deleted lengthData Sets deleted": {
-    "message": "The following {0} item(s) were deleted: {1}",
-    "comment": [
-      "Data Sets deleted length",
-      "Data Sets deleted"
-    ]
-  },
-  "Name of Member": "Name of Member",
-  "Enter valid member name": "Enter valid member name",
-  "Creating new data set member {0}/Data Set member name": {
-    "message": "Creating new data set member {0}",
-    "comment": [
-      "Data Set member name"
-    ]
-  },
-  "Unable to create member.": "Unable to create member.",
-  "Allocating new data set": "Allocating new data set",
-  "Attempting to allocate new data set": "Attempting to allocate new data set",
-  "Click on parameters to change them": "Click on parameters to change them",
-  "Name of Data Set": "Name of Data Set",
-  "Enter valid dataset name": "Enter valid dataset name",
-  "Template of Data Set to be Created": "Template of Data Set to be Created",
-  "Error encountered when creating data set.": "Error encountered when creating data set.",
-  "Name of Data Set Template": "Name of Data Set Template",
-  "Showing attributes for {0}./Label": {
-    "message": "Showing attributes for {0}.",
-    "comment": [
-      "Label"
-    ]
-  },
-  "No matching names found for query: {0}/Label": {
-    "message": "No matching names found for query: {0}",
-    "comment": [
-      "Label"
-    ]
-  },
-  "Unable to list attributes.": "Unable to list attributes.",
-  "Attributes": "Attributes",
-  "No editor with a document that could be submitted as JCL is currently open.": "No editor with a document that could be submitted as JCL is currently open.",
-  "Submitting as JCL in document {0}/Document file name": {
-    "message": "Submitting as JCL in document {0}",
+  "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).": "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).",
+  "$(sync~spin) Polling: {0}.../Document file name": {
+    "message": "$(sync~spin) Polling: {0}...",
     "comment": [
       "Document file name"
     ]
   },
-  "Select the Profile to use to submit the job": "Select the Profile to use to submit the job",
-  "Session for submitting JCL was null or undefined!": "Session for submitting JCL was null or undefined!",
-  "Job submitted {0}/Job ID and set job command": {
-    "message": "Job submitted {0}",
+  "Modify Command": "Modify Command",
+  "Command response: {0}/Command response": {
+    "message": "Command response: {0}",
     "comment": [
-      "Job ID and set job command"
+      "Command response"
     ]
   },
-  "Job submitted {0} using profile {1}./Job IDProfile name": {
-    "message": "Job submitted {0} using profile {1}.",
+  "jobActions.modifyCommand.apiNonExisting": "jobActions.modifyCommand.apiNonExisting",
+  "Not implemented yet for profile of type: {0}/Job profile type": {
+    "message": "Not implemented yet for profile of type: {0}",
     "comment": [
-      "Job ID",
-      "Profile name"
+      "Job profile type"
     ]
   },
-  "Job submission failed.": "Job submission failed.",
-  "Are you sure you want to submit the following job?\n\n{0}/JCL name": {
-    "message": "Are you sure you want to submit the following job?\n\n{0}",
+  "Owner": "Owner",
+  "Prefix": "Prefix",
+  "The selected jobs were already cancelled.": "The selected jobs were already cancelled.",
+  "The cancel function is not implemented in this API.": "The cancel function is not implemented in this API.",
+  "The job was not cancelled.": "The job was not cancelled.",
+  "One or more jobs failed to cancel: {0}/Failed to cancel jobs": {
+    "message": "One or more jobs failed to cancel: {0}",
     "comment": [
-      "JCL name"
+      "Failed to cancel jobs"
     ]
   },
-  "Cannot submit, item invalid.": "Cannot submit, item invalid.",
-  "Job submitted {0} using profile {1}./Job IDSession name": {
-    "message": "Job submitted {0} using profile {1}.",
+  "Cancelled selected jobs successfully.": "Cancelled selected jobs successfully.",
+  "Select a sorting option for jobs in {0}/Session label": {
+    "message": "Select a sorting option for jobs in {0}",
     "comment": [
-      "Job ID",
-      "Session name"
+      "Session label"
     ]
   },
-  "Cannot delete, item invalid.": "Cannot delete, item invalid.",
-  "Error encountered when deleting data set. {0}/Stringified JSON error": {
-    "message": "Error encountered when deleting data set. {0}",
+  "Select a sorting direction": "Select a sorting direction",
+  "$(check) Sorting updated for {0}/Session label": {
+    "message": "$(check) Sorting updated for {0}",
     "comment": [
-      "Stringified JSON error"
+      "Session label"
     ]
   },
-  "Unable to find file {0}/Label": {
-    "message": "Unable to find file {0}",
-    "comment": [
-      "Label"
-    ]
-  },
-  "Item invalid.": "Item invalid.",
-  "$(sync~spin) Fetching data set...": "$(sync~spin) Fetching data set...",
-  "Error encountered when refreshing data set view. {0}/Stringified JSON error": {
-    "message": "Error encountered when refreshing data set view. {0}",
-    "comment": [
-      "Stringified JSON error"
-    ]
-  },
-  "Search Data Sets: use a comma to separate multiple patterns": "Search Data Sets: use a comma to separate multiple patterns",
-  "Prompted for a data set pattern, recieved {0}./Data Set pattern": {
-    "message": "Prompted for a data set pattern, recieved {0}.",
-    "comment": [
-      "Data Set pattern"
-    ]
-  },
-  "Cannot perform the copy operation as the data sets selected have different types": "Cannot perform the copy operation as the data sets selected have different types",
-  "Migration of data set {0} requested./Data Set name": {
-    "message": "Migration of data set {0} requested.",
-    "comment": [
-      "Data Set name"
-    ]
-  },
-  "Recall of data set {0} requested./Data Set name": {
-    "message": "Recall of data set {0} requested.",
-    "comment": [
-      "Data Set name"
-    ]
-  },
-  "Unable to gather more information": "Unable to gather more information",
-  "Invalid paste. Copy data set(s) first.": "Invalid paste. Copy data set(s) first.",
-  "Name of Data Set Member": "Name of Data Set Member",
-  "Copying data sets is not supported.": "Copying data sets is not supported.",
-  "Replace": "Replace",
-  "Cancel": "Cancel",
-  "The data set member already exists.\nDo you want to replace it?": "The data set member already exists.\nDo you want to replace it?",
-  "The physical sequential (PS) data set already exists.\nDo you want to replace it?": "The physical sequential (PS) data set already exists.\nDo you want to replace it?",
-  "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?": "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?",
-  "Unable to copy data set.": "Unable to copy data set.",
   "Use the search button to display data sets": "Use the search button to display data sets",
   "The response from Zowe CLI was not successful": "The response from Zowe CLI was not successful",
   "Cannot access member with control characters in the name: {0}/Data Set member": {
@@ -852,6 +489,10 @@
   },
   "No data sets found": "No data sets found",
   "Cannot download, item invalid.": "Cannot download, item invalid.",
+  "$(case-sensitive) Name (default)": "$(case-sensitive) Name (default)",
+  "$(calendar) Date Created": "$(calendar) Date Created",
+  "$(calendar) Date Modified": "$(calendar) Date Modified",
+  "$(account) User ID": "$(account) User ID",
   "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
   "Initializing profiles with data set favorites.": "Initializing profiles with data set favorites.",
   "No data set favorites found.": "No data set favorites found.",
@@ -884,6 +525,8 @@
   },
   "Node does not exist. It may have been deleted.": "Node does not exist. It may have been deleted.",
   "Prompting the user for a data set pattern": "Prompting the user for a data set pattern",
+  "Search Data Sets: use a comma to separate multiple patterns": "Search Data Sets: use a comma to separate multiple patterns",
+  "Enter valid member name": "Enter valid member name",
   "Rename operation cancelled.": "Rename operation cancelled.",
   "Renaming data set {0}/Old Data Set name": {
     "message": "Renaming data set {0}",
@@ -891,6 +534,7 @@
       "Old Data Set name"
     ]
   },
+  "Enter a valid data set name.": "Enter a valid data set name.",
   "all PDS members in {0}/Node label": {
     "message": "all PDS members in {0}",
     "comment": [
@@ -958,6 +602,373 @@
       "Error message"
     ]
   },
+  "Partitioned Data Set: Binary": "Partitioned Data Set: Binary",
+  "Partitioned Data Set: C": "Partitioned Data Set: C",
+  "Partitioned Data Set: Classic": "Partitioned Data Set: Classic",
+  "Partitioned Data Set: Default": "Partitioned Data Set: Default",
+  "Partitioned Data Set: Extended": "Partitioned Data Set: Extended",
+  "Sequential Data Set": "Sequential Data Set",
+  "Copying File(s)": "Copying File(s)",
+  "Profile is invalid, check connection details.": "Profile is invalid, check connection details.",
+  "Allocate Data Set": "Allocate Data Set",
+  "Edit Attributes": "Edit Attributes",
+  "Click on parameters to change them": "Click on parameters to change them",
+  "Name of Data Set": "Name of Data Set",
+  "Enter valid dataset name": "Enter valid dataset name",
+  "Template of Data Set to be Created": "Template of Data Set to be Created",
+  "Error encountered when creating data set.": "Error encountered when creating data set.",
+  "Name of Data Set Template": "Name of Data Set Template",
+  "Select the profile to which the original data set belongs": "Select the profile to which the original data set belongs",
+  "You must select a profile.": "You must select a profile.",
+  "Enter the name of the data set to copy attributes from": "Enter the name of the data set to copy attributes from",
+  "You must enter a new data set name.": "You must enter a new data set name.",
+  "Allocating data set like {0}./Like Data Set name": {
+    "message": "Allocating data set like {0}.",
+    "comment": [
+      "Like Data Set name"
+    ]
+  },
+  "Enter a name for the new data set": "Enter a name for the new data set",
+  "Unable to create data set.": "Unable to create data set.",
+  "{0} was created like {1}./New Data Set nameLike Data Set name": {
+    "message": "{0} was created like {1}.",
+    "comment": [
+      "New Data Set name",
+      "Like Data Set name"
+    ]
+  },
+  "Uploading to data set": "Uploading to data set",
+  "Upload action was cancelled.": "Upload action was cancelled.",
+  "No data sets selected for deletion, cancelling...": "No data sets selected for deletion, cancelling...",
+  "Deleting data set(s): {0}/Data Sets to delete": {
+    "message": "Deleting data set(s): {0}",
+    "comment": [
+      "Data Sets to delete"
+    ]
+  },
+  "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}/Data Sets to delete lengthData Sets to delete": {
+    "message": "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}",
+    "comment": [
+      "Data Sets to delete length",
+      "Data Sets to delete"
+    ]
+  },
+  "Deleting items": "Deleting items",
+  "The following {0} item(s) were deleted: {1}/Data Sets deleted lengthData Sets deleted": {
+    "message": "The following {0} item(s) were deleted: {1}",
+    "comment": [
+      "Data Sets deleted length",
+      "Data Sets deleted"
+    ]
+  },
+  "Name of Member": "Name of Member",
+  "Creating new data set member {0}/Data Set member name": {
+    "message": "Creating new data set member {0}",
+    "comment": [
+      "Data Set member name"
+    ]
+  },
+  "Unable to create member.": "Unable to create member.",
+  "Allocating new data set": "Allocating new data set",
+  "Attempting to allocate new data set": "Attempting to allocate new data set",
+  "Showing attributes for {0}./Label": {
+    "message": "Showing attributes for {0}.",
+    "comment": [
+      "Label"
+    ]
+  },
+  "No matching names found for query: {0}/Label": {
+    "message": "No matching names found for query: {0}",
+    "comment": [
+      "Label"
+    ]
+  },
+  "Unable to list attributes.": "Unable to list attributes.",
+  "Attributes": "Attributes",
+  "No editor with a document that could be submitted as JCL is currently open.": "No editor with a document that could be submitted as JCL is currently open.",
+  "Submitting as JCL in document {0}/Document file name": {
+    "message": "Submitting as JCL in document {0}",
+    "comment": [
+      "Document file name"
+    ]
+  },
+  "Select the Profile to use to submit the job": "Select the Profile to use to submit the job",
+  "No profiles available": "No profiles available",
+  "Session for submitting JCL was null or undefined!": "Session for submitting JCL was null or undefined!",
+  "Job submitted {0}/Job ID and set job command": {
+    "message": "Job submitted {0}",
+    "comment": [
+      "Job ID and set job command"
+    ]
+  },
+  "Job submitted {0} using profile {1}./Job IDProfile name": {
+    "message": "Job submitted {0} using profile {1}.",
+    "comment": [
+      "Job ID",
+      "Profile name"
+    ]
+  },
+  "Job submission failed.": "Job submission failed.",
+  "Are you sure you want to submit the following job?\n\n{0}/JCL name": {
+    "message": "Are you sure you want to submit the following job?\n\n{0}",
+    "comment": [
+      "JCL name"
+    ]
+  },
+  "Cannot submit, item invalid.": "Cannot submit, item invalid.",
+  "Job submitted {0} using profile {1}./Job IDSession name": {
+    "message": "Job submitted {0} using profile {1}.",
+    "comment": [
+      "Job ID",
+      "Session name"
+    ]
+  },
+  "Cannot delete, item invalid.": "Cannot delete, item invalid.",
+  "Error encountered when deleting data set. {0}/Stringified JSON error": {
+    "message": "Error encountered when deleting data set. {0}",
+    "comment": [
+      "Stringified JSON error"
+    ]
+  },
+  "Unable to find file {0}/Label": {
+    "message": "Unable to find file {0}",
+    "comment": [
+      "Label"
+    ]
+  },
+  "Item invalid.": "Item invalid.",
+  "$(sync~spin) Fetching data set...": "$(sync~spin) Fetching data set...",
+  "Error encountered when refreshing data set view. {0}/Stringified JSON error": {
+    "message": "Error encountered when refreshing data set view. {0}",
+    "comment": [
+      "Stringified JSON error"
+    ]
+  },
+  "Prompted for a data set pattern, recieved {0}./Data Set pattern": {
+    "message": "Prompted for a data set pattern, recieved {0}.",
+    "comment": [
+      "Data Set pattern"
+    ]
+  },
+  "Cannot perform the copy operation as the data sets selected have different types": "Cannot perform the copy operation as the data sets selected have different types",
+  "Migration of data set {0} requested./Data Set name": {
+    "message": "Migration of data set {0} requested.",
+    "comment": [
+      "Data Set name"
+    ]
+  },
+  "Recall of data set {0} requested./Data Set name": {
+    "message": "Recall of data set {0} requested.",
+    "comment": [
+      "Data Set name"
+    ]
+  },
+  "Unable to gather more information": "Unable to gather more information",
+  "Invalid paste. Copy data set(s) first.": "Invalid paste. Copy data set(s) first.",
+  "Name of Data Set Member": "Name of Data Set Member",
+  "Copying data sets is not supported.": "Copying data sets is not supported.",
+  "Replace": "Replace",
+  "Cancel": "Cancel",
+  "The data set member already exists.\nDo you want to replace it?": "The data set member already exists.\nDo you want to replace it?",
+  "The physical sequential (PS) data set already exists.\nDo you want to replace it?": "The physical sequential (PS) data set already exists.\nDo you want to replace it?",
+  "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?": "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?",
+  "Unable to copy data set.": "Unable to copy data set.",
+  "Failed to upload changes for {0}: {1}/Build file hyperlinkError message": {
+    "message": "Failed to upload changes for {0}: {1}",
+    "comment": [
+      "Build file hyperlink",
+      "Error message"
+    ]
+  },
+  "Error encountered while activating and initializing logger": "Error encountered while activating and initializing logger",
+  "$(plus) Add Credentials": "$(plus) Add Credentials",
+  "Add username and password for basic authentication": "Add username and password for basic authentication",
+  "$(refresh) Update Credentials": "$(refresh) Update Credentials",
+  "Update stored username and password": "Update stored username and password",
+  "$(trash) Delete Profile": "$(trash) Delete Profile",
+  "$(workspace-untrusted) Disable Profile Validation": "$(workspace-untrusted) Disable Profile Validation",
+  "Disable validation of server check for profile": "Disable validation of server check for profile",
+  "$(workspace-trusted) Enable Profile Validation": "$(workspace-trusted) Enable Profile Validation",
+  "Enable validation of server check for profile": "Enable validation of server check for profile",
+  "$(pencil) Edit Profile": "$(pencil) Edit Profile",
+  "Update profile connection information": "Update profile connection information",
+  "$(eye-closed) Hide Profile": "$(eye-closed) Hide Profile",
+  "Hide profile name from tree view": "Hide profile name from tree view",
+  "$(arrow-right) Log in to authentication service": "$(arrow-right) Log in to authentication service",
+  "Log in to obtain a new token value": "Log in to obtain a new token value",
+  "$(arrow-left) Log out of authentication service": "$(arrow-left) Log out of authentication service",
+  "Log out to invalidate and remove stored token value": "Log out to invalidate and remove stored token value",
+  "Profile {0} is using basic authentication. Choose a profile action./Profile name": {
+    "message": "Profile {0} is using basic authentication. Choose a profile action.",
+    "comment": [
+      "Profile name"
+    ]
+  },
+  "Profile {0} is using token authentication. Choose a profile action./Profile name": {
+    "message": "Profile {0} is using token authentication. Choose a profile action.",
+    "comment": [
+      "Profile name"
+    ]
+  },
+  "Profile {0} doesn't specify an authentication method. Choose a profile action./Profile name": {
+    "message": "Profile {0} doesn't specify an authentication method. Choose a profile action.",
+    "comment": [
+      "Profile name"
+    ]
+  },
+  "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.": "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.",
+  "Failed to update Zowe schema: insufficient permissions or read-only file. {0}/Error message": {
+    "message": "Failed to update Zowe schema: insufficient permissions or read-only file. {0}",
+    "comment": [
+      "Error message"
+    ]
+  },
+  "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.": "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.",
+  "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.": "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.",
+  "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.": "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.",
+  "Internal error: A Zowe Explorer extension client tried to register an invalid Command API.": "Internal error: A Zowe Explorer extension client tried to register an invalid Command API.",
+  "Internal error: Tried to call a non-existing USS API in API register: {0}/Profile type": {
+    "message": "Internal error: Tried to call a non-existing USS API in API register: {0}",
+    "comment": [
+      "Profile type"
+    ]
+  },
+  "Internal error: Tried to call a non-existing MVS API in API register: {0}/Profile type": {
+    "message": "Internal error: Tried to call a non-existing MVS API in API register: {0}",
+    "comment": [
+      "Profile type"
+    ]
+  },
+  "Internal error: Tried to call a non-existing JES API in API register: {0}/Profile type": {
+    "message": "Internal error: Tried to call a non-existing JES API in API register: {0}",
+    "comment": [
+      "Profile type"
+    ]
+  },
+  "Internal error: Tried to call a non-existing Command API in API register: {0}/Profile type": {
+    "message": "Internal error: Tried to call a non-existing Command API in API register: {0}",
+    "comment": [
+      "Profile type"
+    ]
+  },
+  "Internal error: Tried to call a non-existing Common API in API register: {0}/Profile type": {
+    "message": "Internal error: Tried to call a non-existing Common API in API register: {0}",
+    "comment": [
+      "Profile type"
+    ]
+  },
+  "Error encountered when creating temporary folder!": "Error encountered when creating temporary folder!",
+  "Unable to delete temporary folder. {0}/Error message": {
+    "message": "Unable to delete temporary folder. {0}",
+    "comment": [
+      "Error message"
+    ]
+  },
+  "Reload Window": "Reload Window",
+  "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.",
+  "Token auth error": "Token auth error",
+  "Profile was found using token auth, please log in to continue.": "Profile was found using token auth, please log in to continue.",
+  "Choose \"Create new...\" to define or select a profile to add to the DATA SETS Explorer": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS Explorer",
+  "Choose \"Create new...\" to define or select a profile to add to the JOBS Explorer": "Choose \"Create new...\" to define or select a profile to add to the JOBS Explorer",
+  "Choose \"Create new...\" to define or select a profile to add to the USS Explorer": "Choose \"Create new...\" to define or select a profile to add to the USS Explorer",
+  "Profile selection has been cancelled.": "Profile selection has been cancelled.",
+  "The profile {0} has been added to the {1} tree./chosen profiletree type": {
+    "message": "The profile {0} has been added to the {1} tree.",
+    "comment": [
+      "chosen profile",
+      "tree type"
+    ]
+  },
+  "Profile Type": "Profile Type",
+  "User Name": "User Name",
+  "Enter the user name for the connection. Leave blank to not store.": "Enter the user name for the connection. Leave blank to not store.",
+  "Password": "Password",
+  "Enter the password for the connection. Leave blank to not store.": "Enter the password for the connection. Leave blank to not store.",
+  "Select the profile you want to delete": "Select the profile you want to delete",
+  "Validating {0} Profile./The profile name": {
+    "message": "Validating {0} Profile.",
+    "comment": [
+      "The profile name"
+    ]
+  },
+  "Validating {0} was cancelled./The profile name": {
+    "message": "Validating {0} was cancelled.",
+    "comment": [
+      "The profile name"
+    ]
+  },
+  "Profile validation failed for {0}./The profile name": {
+    "message": "Profile validation failed for {0}.",
+    "comment": [
+      "The profile name"
+    ]
+  },
+  "This profile is using basic authentication and does not support token authentication.": "This profile is using basic authentication and does not support token authentication.",
+  "Error getting supported tokenType value for profile {0}/Service profile name": {
+    "message": "Error getting supported tokenType value for profile {0}",
+    "comment": [
+      "Service profile name"
+    ]
+  },
+  "Login to authentication service was successful for {0}./Service profile name": {
+    "message": "Login to authentication service was successful for {0}.",
+    "comment": [
+      "Service profile name"
+    ]
+  },
+  "Unable to log in with {0}. {1}/Service profile nameError message": {
+    "message": "Unable to log in with {0}. {1}",
+    "comment": [
+      "Service profile name",
+      "Error message"
+    ]
+  },
+  "Logout from authentication service was successful for {0}./Service profile name": {
+    "message": "Logout from authentication service was successful for {0}.",
+    "comment": [
+      "Service profile name"
+    ]
+  },
+  "Unable to log out with {0}. {1}/Service profile nameError message": {
+    "message": "Unable to log out with {0}. {1}",
+    "comment": [
+      "Service profile name",
+      "Error message"
+    ]
+  },
+  "Select the location where the config file will be initialized": "Select the location where the config file will be initialized",
+  "Select the location of the config file to edit": "Select the location of the config file to edit",
+  "Global: in the Zowe home directory": "Global: in the Zowe home directory",
+  "Project: in the current working directory": "Project: in the current working directory",
+  "Do you wish to apply this for all trees?": "Do you wish to apply this for all trees?",
+  "Apply to all trees": "Apply to all trees",
+  "Apply to current tree selected": "Apply to current tree selected",
+  "Enter an allocation unit": "Enter an allocation unit",
+  "Enter the average block length (if allocation unit = BLK)": "Enter the average block length (if allocation unit = BLK)",
+  "Enter a block size": "Enter a block size",
+  "Enter an SMS data class": "Enter an SMS data class",
+  "Enter a device type (unit)": "Enter a device type (unit)",
+  "Enter the number of directory blocks": "Enter the number of directory blocks",
+  "Specify the data set type (DSNTYPE)": "Specify the data set type (DSNTYPE)",
+  "Enter the SMS management class": "Enter the SMS management class",
+  "Enter a data set name": "Enter a data set name",
+  "Select a data set organization (DSORG)": "Select a data set organization (DSORG)",
+  "Enter the primary space allocation": "Enter the primary space allocation",
+  "Enter the data set's record format": "Enter the data set's record format",
+  "Enter the logical record length": "Enter the logical record length",
+  "Enter the secondary space allocation": "Enter the secondary space allocation",
+  "Enter the size of the data set": "Enter the size of the data set",
+  "Enter the SMS storage class": "Enter the SMS storage class",
+  "Enter the volume serial on which the data set should be placed": "Enter the volume serial on which the data set should be placed",
+  "Recent": "Recent",
+  "Recent Filters": "Recent Filters",
+  "Options": "Options",
+  "Disabled": "Disabled",
+  "Your jobs": "Your jobs",
+  "Other user jobs": "Other user jobs",
+  "All jobs": "All jobs",
+  "Ascending": "Ascending",
+  "Descending": "Descending",
   "$(plus) Create a new Unix command": "$(plus) Create a new Unix command",
   "Issuing commands is not supported for this profile type, {0}./Profile type": {
     "message": "Issuing commands is not supported for this profile type, {0}.",
@@ -1042,18 +1053,5 @@
     ]
   },
   "Enter or update the MVS command": "Enter or update the MVS command",
-  "MVS command submitted.": "MVS command submitted.",
-  "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct./Profile name": {
-    "message": "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
-    "comment": [
-      "Profile name"
-    ]
-  },
-  "Failed to upload changes for {0}: {1}/Build file hyperlinkError message": {
-    "message": "Failed to upload changes for {0}: {1}",
-    "comment": [
-      "Build file hyperlink",
-      "Error message"
-    ]
-  }
+  "MVS command submitted.": "MVS command submitted."
 }
