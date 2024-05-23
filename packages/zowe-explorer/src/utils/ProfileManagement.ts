@@ -125,7 +125,7 @@ export class ProfileManagement {
     public static switchAuthenticationQpItems: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.switch]: {
             label: localize("switchAuthenticationQpItems.switchAuthentication.qpLabel", "$(key) Change the Authentication Method"),
-            description: localize("switchAuthenticationQpItems.switchAuthentication.qpDetail", "To change the authentication method"),
+            description: localize("switchAuthenticationQpItems.switchAuthentication.qpDetail", "Change the authentication method"),
         },
     };
     public static tokenAuthLoginQpItem: Record<string, vscode.QuickPickItem> = {

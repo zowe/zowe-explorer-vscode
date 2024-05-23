@@ -23,7 +23,7 @@
   "hideProfileQpItems.hideProfile.qpLabel": "$(eye-closed) Hide Profile",
   "hideProfileQpItems.hideProfile.qpDetail": "Hide profile name from tree view",
   "switchAuthenticationQpItems.switchAuthentication.qpLabel": "$(key) Change the Authentication Method",
-  "switchAuthenticationQpItems.switchAuthentication.qpDetail": "To change the authentication method",
+  "switchAuthenticationQpItems.switchAuthentication.qpDetail": "Change the authentication method",
   "loginQpItem.login.qpLabel": "$(arrow-right) Log in to authentication service",
   "loginQpItem.login.qpDetail": "Log in to obtain a new token value",
   "logoutQpItem.logout.qpLabel": "$(arrow-left) Log out of authentication service",
