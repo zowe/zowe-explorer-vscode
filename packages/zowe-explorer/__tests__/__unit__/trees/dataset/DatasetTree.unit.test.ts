@@ -74,7 +74,7 @@ function createGlobalMocks() {
 
     Object.defineProperty(ZoweLocalStorage, "storage", {
         value: {
-            get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [], templates: [] }),
+            get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
             update: jest.fn(),
             keys: () => [],
         },
@@ -3009,39 +3009,10 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
         });
     });
 
-    describe("addDsTemplate", () => {
-        it("adds a new DS template to the persistent object", () => {
-            tree.addDsTemplate({ test: "test" } as any);
-            expect(tree["mHistory"]["mDsTemplates"].length).toEqual(1);
-        });
-    });
-
     describe("getSessions", () => {
         it("gets all the available sessions from persistent object", () => {
             tree["mHistory"]["mSessions"] = ["sestest"];
             expect(tree.getSessions()).toEqual(["sestest"]);
-        });
-    });
-
-    describe("getDsTemplates", () => {
-        it("gets all the DS templates from persistent object", () => {
-            Object.defineProperty(ZoweLocalStorage, "storage", {
-                value: {
-                    get: () => ({
-                        persistence: true,
-                        favorites: [],
-                        history: [],
-                        sessions: ["zosmf"],
-                        searchHistory: [],
-                        fileHistory: [],
-                        templates: ["test1", "test2", "test3"],
-                    }),
-                    update: jest.fn(),
-                    keys: () => [],
-                },
-                configurable: true,
-            });
-            expect(tree.getDsTemplates()).toEqual(["test1", "test2", "test3"]);
         });
     });
 
