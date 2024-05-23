@@ -86,9 +86,10 @@ export class SettingsConfig {
 
     public static async standardizeSettings(): Promise<void> {
         // mock setting being false for dev & test!!!!!!!!!!!!
-        ZoweLocalStorage.setValue<boolean>(Definitions.LocalStorageKey.SETTINGS_LOCAL_STORAGE_MIGRATED, false);
+        // uncomment next line to test on next branch if local storage already been activated.
+        // ZoweLocalStorage.setValue<boolean>(Definitions.LocalStorageKey.SETTINGS_LOCAL_STORAGE_MIGRATED, false);
         // remove line above before merging!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        ZoweLogger.debug("standardizeSettings during initialization happening!!!!!!!!!!!!");
+
         const localStorageIsMigrated = ZoweLocalStorage.getValue<boolean>(Definitions.LocalStorageKey.SETTINGS_LOCAL_STORAGE_MIGRATED);
         const globalIsMigrated = ZoweLocalStorage.getValue<boolean>(Definitions.LocalStorageKey.SETTINGS_OLD_SETTINGS_MIGRATED);
         const workspaceIsMigrated = SettingsConfig.configurations.inspect(Definitions.LocalStorageKey.SETTINGS_OLD_SETTINGS_MIGRATED).workspaceValue;
@@ -224,7 +225,7 @@ export class SettingsConfig {
         }
     }
 
-    private static async setMigratedDsTemplates(): Promise<void> {
+    public static async setMigratedDsTemplates(): Promise<void> {
         const settings: any = this.getDirectValue(PersistenceSchemaEnum.Dataset);
         for (const key in settings) {
             if (key === "templates") {
