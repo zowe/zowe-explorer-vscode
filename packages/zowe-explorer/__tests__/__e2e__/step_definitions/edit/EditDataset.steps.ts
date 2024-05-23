@@ -10,6 +10,7 @@
  */
 
 import { Then, When } from "@cucumber/cucumber";
+import { paneDivForTree } from "../shared.steps";
 
 Then("the user can select a PDS member in the list and open it", async function () {
     await expect(this.children.length).not.toBe(0);
@@ -20,7 +21,12 @@ Then("the user can select a PDS member in the list and open it", async function 
     await expect(this.editorForFile).toBeDefined();
 });
 Then("the user can select a PS in the list and open it", async function () {
-    this.ps = await this.profileNode.findChildItem(process.env.ZE_TEST_PS);
+    const dsPane = await paneDivForTree("data sets");
+    const jobsPane = await paneDivForTree("jobs");
+    await jobsPane.collapse();
+    const ussPane = await paneDivForTree("uss");
+    await ussPane.collapse();
+    this.ps = await dsPane.findItem(process.env.ZE_TEST_PS);
     await this.ps.select();
     this.editorView = (await browser.getWorkbench()).getEditorView();
     this.editorForFile = await this.editorView.openEditor(process.env.ZE_TEST_PS);
