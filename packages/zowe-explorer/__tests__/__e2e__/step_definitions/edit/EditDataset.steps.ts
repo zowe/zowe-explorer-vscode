@@ -27,7 +27,7 @@ Then("the user can select a PS in the list and open it", async function () {
     await expect(this.editorForFile).toBeDefined();
 });
 When("the user edits the PDS member", async function () {
-    await this.editorForFile.setText("Hello from a Data Set test for a PDS member!");
+    await this.editorForFile.setText(`Hello from a Data Set test for a ${this.editingFavorite ? "favorited " : ""}PDS member!`);
 });
 When("the user edits the PS", async function () {
     await this.editorForFile.setText("Hello from a Data Set test for a PS!");

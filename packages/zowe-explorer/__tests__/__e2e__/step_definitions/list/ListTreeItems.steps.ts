@@ -28,7 +28,7 @@ async function setFilterForProfile(world: IWorld, profileNode: TreeItem, tree: s
     const searchButton = actionButtons[actionButtons.length - 1];
     const isUss = tree.toLowerCase() === "uss" || tree.toLowerCase() === "unix system services (uss)";
     const isJobs = !isUss && tree.toLowerCase() === "jobs";
-
+    await searchButton.elem.waitForClickable();
     await searchButton.elem.click();
     world.filterQuickPick = await $(".quick-input-widget");
     await world.filterQuickPick.waitForClickable();

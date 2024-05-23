@@ -20,5 +20,5 @@ Then("the user can select a USS file in the list and open it", async function ()
     await expect(this.editorForFile).toBeDefined();
 });
 When("the user edits the USS file", async function () {
-    await this.editorForFile.setText("Hello from a USS test!");
+    await this.editorForFile.setText(`Hello from a USS test on a ${this.editingFavorite ? "favorited " : ""}file!`);
 });

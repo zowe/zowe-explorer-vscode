@@ -33,13 +33,13 @@ Then("the user can click on the Zowe Explorer icon", async () => {
 //
 // Scenario: User collapses/expands the Favorites node
 //
-Given("a user who is looking at the Zowe Explorer tree views", async () => {
+Given("a user who is looking at the Zowe Explorer tree views", async function () {
     const activityBar = (await browser.getWorkbench()).getActivityBar();
     await activityBar.wait();
     const zeContainer = await activityBar.getViewControl("Zowe Explorer");
     await zeContainer.wait();
-    const zeView = await zeContainer.openView();
-    await zeView.wait();
+    this.zeView = await zeContainer.openView();
+    await this.zeView.wait();
 });
 When(/a user (.*) the Favorites node in the (.*) view/, async (state: string, tree: string) => {
     const pane = await paneDivForTree(tree);
