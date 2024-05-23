@@ -29,7 +29,7 @@ import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { Gui, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, IZoweTreeNode, IZoweUSSTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { LocalStorageKey, ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
@@ -1101,6 +1101,42 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
     });
 });
 
+describe("Shared utils unit tests - function confirmForUnsavedDoc", () => {
+    it("returns false for boolean properties if data set node doesn't have getDsDocumentFilePath", async () => {
+        const fakeNode = { pattern: "someuser.*" } as IZoweDatasetTreeNode;
+        await expect(sharedUtils.confirmForUnsavedDoc(fakeNode)).resolves.toStrictEqual({
+            actionConfirmed: false,
+            isUnsaved: false,
+        });
+    });
+    it("returns false for boolean properties if USS node doesn't have getUSSDocumentFilePath", async () => {
+        const fakeNode = { openUSS: jest.fn() } as any as IZoweUSSTreeNode;
+        await expect(sharedUtils.confirmForUnsavedDoc(fakeNode)).resolves.toStrictEqual({
+            actionConfirmed: false,
+            isUnsaved: false,
+        });
+    });
+    it("calls warningMessage when the editor for a file is dirty", async () => {
+        vscode.window.visibleTextEditors = [
+            {
+                document: {
+                    fileName: "fakeNode",
+                    uri: {
+                        fsPath: "/fakeNode",
+                        path: "/fakeNode",
+                    } as any,
+                    isDirty: true,
+                } as any,
+            } as vscode.TextEditor,
+        ];
+        const fakeNode = { openUSS: jest.fn(), getUSSDocumentFilePath: jest.fn().mockReturnValue("/fakeNode") } as any as IZoweUSSTreeNode;
+        const warnMessageMock = jest.spyOn(Gui, "warningMessage").mockResolvedValue("Confirm");
+        const result = await sharedUtils.confirmForUnsavedDoc(fakeNode);
+        expect(result.actionConfirmed).toBe(true);
+        expect(result.isUnsaved).toBe(true);
+        expect(warnMessageMock).toHaveBeenCalled();
+    });
+});
 describe("Shared utils unit tests - function initializeFileOpening", () => {
     it("successfully handles binary data sets that should be re-downloaded", async () => {
         const globalMocks = await createGlobalMocks();

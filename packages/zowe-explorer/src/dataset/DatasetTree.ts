@@ -32,7 +32,16 @@ import {
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, getDocumentFilePath, SORT_DIRS, promptForEncoding, updateOpenFiles, isClosedFileDirty } from "../shared/utils";
+import {
+    sortTreeItems,
+    getAppName,
+    getDocumentFilePath,
+    SORT_DIRS,
+    promptForEncoding,
+    updateOpenFiles,
+    isClosedFileDirty,
+    confirmForUnsavedDoc,
+} from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconById, getIconByNode, IconId, IIconItem } from "../generators/icons";
@@ -1527,9 +1536,16 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     public async openWithEncoding(node: IZoweDatasetTreeNode, encoding?: ZosEncoding): Promise<void> {
         encoding ??= await promptForEncoding(node);
+        const docResult = await confirmForUnsavedDoc(node);
+        if (docResult.isUnsaved && !docResult.actionConfirmed) {
+            return;
+        }
         if (encoding !== undefined) {
             node.setEncoding(encoding);
             await node.openDs(true, false, this);
+            if (docResult.isUnsaved && docResult.editor == vscode.window.activeTextEditor) {
+                await vscode.commands.executeCommand("workbench.action.files.revert");
+            }
         }
     }
 }
