@@ -141,6 +141,35 @@ export const config: Options.Testrunner = {
     // before running any tests.
     framework: "mocha",
 
+    mochaOpts: {
+        // Add or extend basic functionality
+        require: [],
+        // Use the given module(s) to compile files - included before `requires`
+        compilers: [],
+        // Propagate uncaught errors
+        allowUncaught: false,
+        // Bail after first test failure
+        bail: true,
+        // Check for global variable leaks
+        checkLeaks: false,
+        // Test filter given a string
+        fgrep: null,
+        // Full stack trace upon failure
+        fullTrace: true,
+        // Variables expected in global scope
+        global: [],
+        // Test filter given a regular expression
+        grep: null,
+        // Invert test filter matches
+        invert: false,
+        // Number of times to retry failed tests
+        retries: 0,
+        // Timeout threshold value (in ms)
+        timeout: 30000,
+        // Interface style for writing tests in Mocha (supported: `bdd, tdd, qunit`)
+        ui: "tdd",
+    },
+
     //
     // The number of times to retry the entire specfile when it fails as a whole
     // specFileRetries: 1,
