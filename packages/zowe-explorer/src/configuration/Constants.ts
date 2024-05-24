@@ -76,7 +76,7 @@ export class Constants {
     public static SETTINGS_DS_DEFAULT_PDS = "zowe.ds.default.pds";
     public static SETTINGS_DS_DEFAULT_EXTENDED = "zowe.ds.default.extended";
     public static SETTINGS_DS_DEFAULT_PS = "zowe.ds.default.ps";
-    public static SETTINGS_DS_TEMPLATES = "zowe.ds.templates";
+    public static readonly SETTINGS_DS_TEMPLATES = "zowe.ds.templates";
     public static SETTINGS_COMMANDS_ALWAYS_EDIT = "zowe.commands.alwaysEdit";
     public static SETTINGS_AUTOMATIC_PROFILE_VALIDATION = "zowe.automaticProfileValidation";
     public static SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";

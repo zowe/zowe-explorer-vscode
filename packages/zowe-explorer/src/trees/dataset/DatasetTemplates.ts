@@ -46,7 +46,7 @@ export class DataSetTemplates {
                 userPick = await this.promptForSaveLocation();
             }
             let target = vscode.ConfigurationTarget.Global;
-            if (userPick && userPick.label.includes("Workspace")) {
+            if (userPick?.label.includes("Workspace")) {
                 target = vscode.ConfigurationTarget.Workspace;
             }
             let templateSettings = this.getTemplatesPerLocation(target);

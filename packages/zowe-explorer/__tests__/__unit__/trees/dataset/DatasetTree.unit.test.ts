@@ -28,7 +28,7 @@ import {
     createMockNode,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree, createDatasetFavoritesNode } from "../../../__mocks__/mockCreators/datasets";
-import { ProfilesCache, imperative, Gui, Validation, Types } from "@zowe/zowe-explorer-api";
+import { ProfilesCache, imperative, Gui, Validation } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../../../src/configuration/Constants";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { join } from "path";
@@ -54,7 +54,6 @@ import { ZoweScheme } from "../../../../../zowe-explorer-api/src/fs/types/abstra
 import { Sorting } from "../../../../../zowe-explorer-api/src/tree";
 import { IconUtils } from "../../../../src/icons/IconUtils";
 import { ExtensionUtils } from "../../../../src/utils/ExtensionUtils";
-import { DataSetTemplates } from "../../../../src/trees/dataset/DatasetTemplates";
 
 jest.mock("fs");
 jest.mock("util");

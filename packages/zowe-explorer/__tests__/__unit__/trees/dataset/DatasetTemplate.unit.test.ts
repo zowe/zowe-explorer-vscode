@@ -11,7 +11,6 @@
 
 import { Types } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
-import { Constants } from "../../../../src/configuration/Constants";
 import { DataSetTemplates } from "../../../../src/trees/dataset/DatasetTemplates";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
