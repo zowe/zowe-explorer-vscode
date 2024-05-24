@@ -13,14 +13,13 @@ import { Given, Then, When } from "@cucumber/cucumber";
 import { paneDivForTree } from "../shared.steps";
 import { Key } from "webdriverio";
 
-// Given
 Given("a user who is looking at the Add Config quick pick", async function () {
     // use the data sets pane for the sake of testing
     const dsPane = await paneDivForTree("data sets");
     const plusIcon = await dsPane.getAction(`Add Profile to Data Sets View`);
     await expect(plusIcon).toBeDefined();
     await dsPane.elem.moveTo();
-    await plusIcon.elem.click();
+    await plusIcon?.elem.click();
 
     this.addConfigQuickPick = await $(".quick-input-widget");
     await this.addConfigQuickPick.waitForClickable();

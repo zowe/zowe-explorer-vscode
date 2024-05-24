@@ -18,7 +18,7 @@ export const config: Options.Testrunner = {
     // Runner Configuration
     // ====================
     // WebdriverIO supports running e2e tests as well as unit and component tests.
-    runner: "browser",
+    runner: "local",
     autoCompileOpts: {
         autoCompile: true,
         tsNodeOpts: {
@@ -42,7 +42,7 @@ export const config: Options.Testrunner = {
     // The path of the spec files will be resolved relative from the directory of
     // of the config file unless it's absolute.
     //
-    specs: ["./**/*.integration.test.ts"],
+    specs: ["./features/**/*.feature"],
     // Patterns to exclude.
     exclude: [
         // 'path/to/excluded/files'
@@ -75,7 +75,7 @@ export const config: Options.Testrunner = {
             browserVersion: "stable", // also possible: "insiders" or a specific version e.g. "1.80.0"
             "wdio:vscodeOptions": {
                 // points to directory where extension package.json is located
-                extensionPath: join(__dirname, "..", ".."),
+                extensionPath: join(__dirname, "..", "..", ".."),
                 // optional VS Code settings
                 userSettings: {
                     "editor.fontSize": 14,
@@ -139,36 +139,7 @@ export const config: Options.Testrunner = {
     //
     // Make sure you have the wdio adapter package for the specific framework installed
     // before running any tests.
-    framework: "mocha",
-
-    mochaOpts: {
-        // Add or extend basic functionality
-        require: [],
-        // Use the given module(s) to compile files - included before `requires`
-        compilers: [],
-        // Propagate uncaught errors
-        allowUncaught: false,
-        // Bail after first test failure
-        bail: true,
-        // Check for global variable leaks
-        checkLeaks: false,
-        // Test filter given a string
-        fgrep: null,
-        // Full stack trace upon failure
-        fullTrace: true,
-        // Variables expected in global scope
-        global: [],
-        // Test filter given a regular expression
-        grep: null,
-        // Invert test filter matches
-        invert: false,
-        // Number of times to retry failed tests
-        retries: 0,
-        // Timeout threshold value (in ms)
-        timeout: 30000,
-        // Interface style for writing tests in Mocha (supported: `bdd, tdd, qunit`)
-        ui: "tdd",
-    },
+    framework: "cucumber",
 
     //
     // The number of times to retry the entire specfile when it fails as a whole
@@ -197,6 +168,36 @@ export const config: Options.Testrunner = {
             },
         ],
     ],
+
+    // If you are using Cucumber you need to specify the location of your step definitions.
+    cucumberOpts: {
+        // <string[]> (file/dir) require files before executing features
+        require: ["./step_definitions/**/*.steps.ts"],
+        // <boolean> show full backtrace for errors
+        backtrace: false,
+        // <string[]> ("extension:module") require files with the given EXTENSION after requiring MODULE (repeatable)
+        requireModule: ["ts-node/register"],
+        // <boolean> invoke formatters without executing steps
+        dryRun: false,
+        // <boolean> abort the run on first failure
+        failFast: false,
+        format: ["pretty"],
+        colors: true,
+        // <string[]> Only execute the scenarios with name matching the expression (repeatable).
+        name: [],
+        // <boolean> hide step definition snippets for pending steps
+        snippets: true,
+        // <boolean> hide source uris
+        source: true,
+        // <boolean> fail if there are any undefined or pending steps
+        strict: false,
+        // <string> (expression) only execute the features or scenarios with tags matching the expression
+        tagExpression: "",
+        // <number> timeout for step definitions
+        timeout: 60000,
+        // <boolean> Enable this config to treat undefined definitions as warnings.
+        ignoreUndefinedDefinitions: false,
+    },
 
     //
     // =====
