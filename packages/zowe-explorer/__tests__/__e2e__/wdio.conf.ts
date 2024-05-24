@@ -12,17 +12,16 @@
 import type { Options } from "@wdio/types";
 import { existsSync } from "fs";
 import { mkdirpSync } from "fs-extra";
-import { join } from "path";
+import { join as joinPath, relative as relativePath } from "path";
 
 if (process.env.ZOWE_TEST_DIR) {
-    // Set ZOWE_CLI_HOME relative to __tests__/__e2e__ folder
-    const homeDir = (process.env["ZOWE_CLI_HOME"] = join(__dirname, process.env.ZOWE_TEST_DIR));
+    const homeDir = (process.env["ZOWE_CLI_HOME"] = joinPath(__dirname, relativePath(__dirname, process.env.ZOWE_TEST_DIR)));
     if (!existsSync(homeDir)) {
         mkdirpSync(homeDir);
     }
 
-    // TODO: create config if it does not exist
-    if (!existsSync(join(homeDir, "zowe.config.json"))) {
+    // Display error to user if config does not exist in test directory
+    if (!existsSync(joinPath(homeDir, "zowe.config.json"))) {
         console.error(
             "Zowe config was not present in ZOWE_TEST_DIR. Please run `zowe config init` in this directory, edit the config and re-run the script."
         );
@@ -93,7 +92,7 @@ export const config: Options.Testrunner = {
             browserVersion: "stable", // also possible: "insiders" or a specific version e.g. "1.80.0"
             "wdio:vscodeOptions": {
                 // points to directory where extension package.json is located
-                extensionPath: join(__dirname, "..", ".."),
+                extensionPath: joinPath(__dirname, "..", ".."),
                 // optional VS Code settings
                 userSettings: {
                     "editor.fontSize": 14,
