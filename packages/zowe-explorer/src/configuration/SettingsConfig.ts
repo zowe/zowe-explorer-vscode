@@ -85,10 +85,8 @@ export class SettingsConfig {
     }
 
     public static async standardizeSettings(): Promise<void> {
-        // mock setting being false for dev & test!!!!!!!!!!!!
-        // uncomment next line to test on next branch if local storage already been activated.
+        // uncomment next line to mock setting being false for dev & test if local storage already been activated.
         // ZoweLocalStorage.setValue<boolean>(Definitions.LocalStorageKey.SETTINGS_LOCAL_STORAGE_MIGRATED, false);
-        // remove line above before merging!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         const localStorageIsMigrated = ZoweLocalStorage.getValue<boolean>(Definitions.LocalStorageKey.SETTINGS_LOCAL_STORAGE_MIGRATED);
         const globalIsMigrated = ZoweLocalStorage.getValue<boolean>(Definitions.LocalStorageKey.SETTINGS_OLD_SETTINGS_MIGRATED);
