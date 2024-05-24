@@ -10,10 +10,11 @@
  */
 
 import * as vscode from "vscode";
-import { Types } from "@zowe/zowe-explorer-api";
+import { Gui, Types } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { Constants } from "../../configuration/Constants";
+import { FilterItem } from "../../management/FilterManagement";
 
 export class DataSetTemplates {
     public static getDsTemplates(): Types.DataSetAllocTemplate[] {
@@ -26,9 +27,12 @@ export class DataSetTemplates {
         await this.updateDsTemplateSetting();
     }
 
-    public static async updateDsTemplateSetting(templates: Types.DataSetAllocTemplate[] = []): Promise<void> {
+    public static async updateDsTemplateSetting(
+        templates: Types.DataSetAllocTemplate[] = [],
+        target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global
+    ): Promise<void> {
         ZoweLogger.trace(vscode.l10n.t("Updating data set templates."));
-        await SettingsConfig.setDirectValue(Constants.SETTINGS_DS_TEMPLATES, templates);
+        await SettingsConfig.setDirectValue(Constants.SETTINGS_DS_TEMPLATES, templates, target);
     }
 
     public static async addDsTemplateSetting(criteria: Types.DataSetAllocTemplate): Promise<void> {
@@ -37,8 +41,15 @@ export class DataSetTemplates {
             Object.entries(criteria).forEach(([key]) => {
                 newTemplateName = key;
             });
-            ZoweLogger.info(vscode.l10n.t("Adding new data set template {0}.", newTemplateName));
-            let templateSettings = this.getDsTemplates();
+            let userPick;
+            if (vscode.workspace.workspaceFolders?.[0] != null) {
+                userPick = await this.promptForSaveLocation();
+            }
+            let target = vscode.ConfigurationTarget.Global;
+            if (userPick && userPick.label.includes("Workspace")) {
+                target = vscode.ConfigurationTarget.Workspace;
+            }
+            let templateSettings = this.getTemplatesPerLocation(target);
             // Remove any entries that match
             templateSettings = templateSettings.filter((template) => {
                 let historyName: string;
@@ -49,7 +60,33 @@ export class DataSetTemplates {
             });
             // Add value to front of stack
             templateSettings.unshift(criteria);
-            await this.updateDsTemplateSetting(templateSettings);
+            ZoweLogger.info(vscode.l10n.t("Adding new data set template {0}.", newTemplateName));
+            await this.updateDsTemplateSetting(templateSettings, target);
+        }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    private static promptForSaveLocation() {
+        const qpOptions: vscode.QuickPickOptions = {
+            title: vscode.l10n.t("Data set template save location"),
+            placeHolder: vscode.l10n.t("Choose the setting location to save the data set template..."),
+            ignoreFocusOut: true,
+            canPickMany: false,
+        };
+        const qpItems = [];
+        qpItems.push(new FilterItem({ text: vscode.l10n.t("Save as User setting"), show: true }));
+        qpItems.push(new FilterItem({ text: vscode.l10n.t("Save as Workspace setting"), show: true }));
+        return Gui.showQuickPick(qpItems, qpOptions);
+    }
+
+    private static getTemplatesPerLocation(target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global): Types.DataSetAllocTemplate[] {
+        const key = Constants.SETTINGS_DS_TEMPLATES;
+        const [first, ...rest] = key.split(".");
+        const config = vscode.workspace.getConfiguration(first).inspect(rest.join("."));
+        if (target === vscode.ConfigurationTarget.Global) {
+            return (config.globalValue ?? []) as Types.DataSetAllocTemplate[];
+        } else {
+            return (config.workspaceValue ?? []) as Types.DataSetAllocTemplate[];
         }
     }
 }

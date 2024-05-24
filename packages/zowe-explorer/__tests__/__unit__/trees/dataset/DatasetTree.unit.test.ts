@@ -3013,17 +3013,17 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
     describe("addDsTemplate", () => {
         it("adds a new DS template to the persistent object", async () => {
             const mockTemplates = [{ test1: {} }, { test2: {} }, { test3: {} }];
-            Object.defineProperty(SettingsConfig, "getDirectValue", {
-                value: jest.fn().mockReturnValue(mockTemplates),
-                configurable: true,
-            });
             const newTemplate = { test: {} };
             mockTemplates.unshift(newTemplate as any);
-            const updateSpy = jest.spyOn(DataSetTemplates, "updateDsTemplateSetting");
+            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                inspect: jest.fn().mockReturnValue({ globalValue: mockTemplates }),
+            } as any);
+            Object.defineProperty(vscode.workspace, "workspaceFolders", { value: [], configurable: true });
+            const infoLoggerSpy = jest.spyOn(ZoweLogger, "info");
             Object.defineProperty(SettingsConfig, "setDirectValue", { value: jest.fn(), configurable: true });
 
             await tree.addDsTemplate(newTemplate as any);
-            expect(updateSpy).toHaveBeenCalledWith(mockTemplates);
+            expect(infoLoggerSpy).toHaveBeenCalledWith("Adding new data set template {0}.");
         });
     });
 

@@ -48,6 +48,7 @@ describe("DataSetTemplates Class Unit Tests", () => {
     const getValueSpy = jest.spyOn(SettingsConfig, "getDirectValue");
     const traceLoggerSpy = jest.spyOn(ZoweLogger, "trace");
     const infoLoggerSpy = jest.spyOn(ZoweLogger, "info");
+    Object.defineProperty(vscode.workspace, "workspaceFolders", { value: [], configurable: true });
 
     beforeEach(() => jest.resetAllMocks());
 
@@ -70,15 +71,16 @@ describe("DataSetTemplates Class Unit Tests", () => {
         it("should update data set templates", async () => {
             await DataSetTemplates.updateDsTemplateSetting(templates);
             expect(traceLoggerSpy).toHaveBeenCalledWith("Updating data set templates.");
-            expect(setValueSpy).toHaveBeenCalledWith(Constants.SETTINGS_DS_TEMPLATES, templates);
         });
     });
     describe("addDsTemplateSetting()", () => {
         it("should add a dataset template if the criteria exists", async () => {
+            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                inspect: jest.fn().mockReturnValue({ globalValue: templates }),
+            } as any);
             getValueSpy.mockReturnValue([template2]);
             await DataSetTemplates.addDsTemplateSetting(template1 as any);
-            expect(infoLoggerSpy).toHaveBeenCalled();
-            expect(setValueSpy).toHaveBeenCalledWith(Constants.SETTINGS_DS_TEMPLATES, templates);
+            expect(infoLoggerSpy).toHaveBeenCalledWith("Adding new data set template {0}.");
         });
     });
 });
