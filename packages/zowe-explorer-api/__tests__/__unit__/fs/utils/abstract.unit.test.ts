@@ -9,25 +9,16 @@
  *
  */
 
-import {
-    DirEntry,
-    FileEntry,
-    FilterEntry,
-    findDocMatchingUri,
-    getInfoForUri,
-    isDirectoryEntry,
-    isFileEntry,
-    isFilterEntry,
-    ZoweScheme,
-} from "../../../../src";
+import { DirEntry, FileEntry, FilterEntry, ZoweScheme } from "../../../../src";
 import { MockedProperty } from "../../../../__mocks__/mockUtils";
 import * as vscode from "vscode";
+import { FsAbstractUtils } from "../../../../src/fs/utils/FsAbstractUtils";
 
 const fakeUri = vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/test.lpar/file.txt" });
 
 describe("getInfoForUri", () => {
     it("returns the correct info for an inner URI", () => {
-        expect(getInfoForUri(fakeUri)).toStrictEqual({
+        expect(FsAbstractUtils.getInfoForUri(fakeUri)).toStrictEqual({
             isRoot: false,
             slashAfterProfilePos: fakeUri.path.indexOf("/", 1),
             profileName: "test.lpar",
@@ -36,7 +27,7 @@ describe("getInfoForUri", () => {
     });
 
     it("returns the correct info for a root URI", () => {
-        expect(getInfoForUri(vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/test.lpar" }))).toStrictEqual({
+        expect(FsAbstractUtils.getInfoForUri(vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/test.lpar" }))).toStrictEqual({
             isRoot: true,
             slashAfterProfilePos: -1,
             profileName: "test.lpar",
@@ -49,13 +40,13 @@ describe("findDocMatchingUri", () => {
     it("returns a TextDocument if found", () => {
         const fakeDoc = { uri: fakeUri };
         const mockedTextDocs = new MockedProperty(vscode.workspace, "textDocuments", undefined, [fakeDoc]);
-        expect(findDocMatchingUri(fakeUri)).toBe(fakeDoc);
+        expect(FsAbstractUtils.findDocMatchingUri(fakeUri)).toBe(fakeDoc);
         mockedTextDocs[Symbol.dispose]();
     });
 
     it("returns undefined if not found", () => {
         const mockedTextDocs = new MockedProperty(vscode.workspace, "textDocuments", undefined, []);
-        expect(findDocMatchingUri(fakeUri)).toBeUndefined();
+        expect(FsAbstractUtils.findDocMatchingUri(fakeUri)).toBeUndefined();
         mockedTextDocs[Symbol.dispose]();
     });
 });
@@ -63,35 +54,35 @@ describe("findDocMatchingUri", () => {
 describe("isDirectoryEntry", () => {
     it("returns true if value is a DirEntry", () => {
         const dirEntry = new DirEntry("testFolder");
-        expect(isDirectoryEntry(dirEntry)).toBe(true);
+        expect(FsAbstractUtils.isDirectoryEntry(dirEntry)).toBe(true);
     });
 
     it("returns false if value is not a DirEntry", () => {
         const file = new FileEntry("test");
-        expect(isDirectoryEntry(file)).toBe(false);
+        expect(FsAbstractUtils.isDirectoryEntry(file)).toBe(false);
     });
 });
 
 describe("isFileEntry", () => {
     it("returns true if value is a FileEntry", () => {
         const file = new FileEntry("test");
-        expect(isFileEntry(file)).toBe(true);
+        expect(FsAbstractUtils.isFileEntry(file)).toBe(true);
     });
 
     it("returns false if value is not a FileEntry", () => {
         const dirEntry = new DirEntry("testFolder");
-        expect(isFileEntry(dirEntry)).toBe(false);
+        expect(FsAbstractUtils.isFileEntry(dirEntry)).toBe(false);
     });
 });
 
 describe("isFilterEntry", () => {
     it("returns true if value is a FilterEntry", () => {
         const filterEntry = new FilterEntry("testFilter");
-        expect(isFilterEntry(filterEntry)).toBe(true);
+        expect(FsAbstractUtils.isFilterEntry(filterEntry)).toBe(true);
     });
 
     it("returns false if value is not a FilterEntry", () => {
         const file = new FileEntry("test");
-        expect(isFilterEntry(file)).toBe(false);
+        expect(FsAbstractUtils.isFilterEntry(file)).toBe(false);
     });
 });

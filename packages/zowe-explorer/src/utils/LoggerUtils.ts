@@ -11,11 +11,11 @@
 
 /* eslint-disable @typescript-eslint/restrict-plus-operands */
 
-import { Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
-import { SettingsConfig } from "./SettingsConfig";
-import * as globals from "../globals";
-import { ZoweLogger } from "./ZoweLogger";
+import { Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
+import { Constants } from "../configuration/Constants";
+import { SettingsConfig } from "../configuration/SettingsConfig";
+import { ZoweLogger } from "../tools/ZoweLogger";
 
 export class LoggerUtils {
     public static async initVscLogger(context: vscode.ExtensionContext, logFileLocation: string): Promise<vscode.OutputChannel> {
@@ -76,7 +76,7 @@ export class LoggerUtils {
     }
 
     private static setLogSetting(setting: string): void {
-        SettingsConfig.setDirectValue(globals.LOGGER_SETTINGS, setting);
+        SettingsConfig.setDirectValue(Constants.LOGGER_SETTINGS, setting);
     }
 
     private static getZoweLogEnvVar(): string {
