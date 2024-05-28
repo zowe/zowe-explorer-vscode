@@ -314,8 +314,13 @@ export const config: Options.Testrunner = {
      * @param {number}             result.duration  duration of scenario in milliseconds
      * @param {object}             context          Cucumber World object
      */
-    // afterStep: function (step, scenario, result, context) {
-    // },
+    afterStep: async function (step, scenario, result, context) {
+        if (!result.passed) {
+            const screenshotDir = joinPath(__dirname, "results", "screenshots");
+            mkdirpSync(screenshotDir);
+            await browser.saveScreenshot(joinPath(screenshotDir, `${scenario.name} - ${step.text}.png`));
+        }
+    },
     /**
      *
      * Runs after a Cucumber Scenario.
