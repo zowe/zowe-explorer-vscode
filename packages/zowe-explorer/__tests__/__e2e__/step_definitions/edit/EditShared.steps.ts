@@ -40,7 +40,6 @@ When("the user finds the child node in Favorites", async function () {
     await favoritesNode.expand();
     this.profileNode = await favoritesNode.findChildItem(process.env.ZE_TEST_PROFILE_NAME);
     await this.profileNode.expand();
-    await browser.waitUntil((): Promise<boolean> => this.profileNode.hasChildren());
     if (this.tree.toLowerCase() === "data sets") {
         // PDS member
         const pds: TreeItem = await this.profileNode.findChildItem(process.env.ZE_TEST_PDS);

@@ -60,7 +60,9 @@
       "name": "End-to-end Tests",
       "request": "launch",
       "runtimeExecutable": "pnpm",
+      "runtimeVersion": "20",
       "runtimeArgs": ["test:e2e"],
+      "console": "integratedTerminal",
       "cwd": "${workspaceFolder}/packages/zowe-explorer"
     },
     {
@@ -68,7 +70,9 @@
       "name": "Behavior-driven Integration Tests",
       "request": "launch",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["test:integration-bd"],
+      "runtimeVersion": "20",
+      "runtimeArgs": ["test:integration"],
+      "console": "integratedTerminal",
       "cwd": "${workspaceFolder}/packages/zowe-explorer"
     },
     {
@@ -76,7 +80,9 @@
       "name": "Mocha Integration Tests",
       "request": "launch",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["test:integration"],
+      "runtimeVersion": "20",
+      "runtimeArgs": ["test:integration-mocha"],
+      "console": "integratedTerminal",
       "cwd": "${workspaceFolder}/packages/zowe-explorer"
     }
   ]
