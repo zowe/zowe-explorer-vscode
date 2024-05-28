@@ -6,11 +6,20 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+### Bug fixes
+
+## `2.16.0`
+
+### New features and enhancements
+
 - Added optional `consoleName` argument to `ZosmfCommandApi.issueMvsCommand`. [#1667](https://github.com/zowe/vscode-extension-for-zowe/issues/1667)
 - Added "Date Completed" attribute to JobSortOpts enum type. [#1685](https://github.com/zowe/vscode-extension-for-zowe/issues/1685)
 - Added PEM certificate support as an authentication method for logging into the API ML. [#2621](https://github.com/zowe/zowe-explorer-vscode/issues/2621)
 
 ### Bug fixes
+
+- Updated `@zowe/cli` dependency to fix issue where "Log out of authentication service" doesn't show in Manage Profile menu. [#2633](https://github.com/zowe/zowe-explorer-vscode/issues/2633)
+- Fixed regression of issue where the `ProfilesCache` class would retain old service profiles, even if they were removed from the team config. [#2910](https://github.com/zowe/zowe-explorer-vscode/issues/2910)
 
 ## `2.15.4`
 

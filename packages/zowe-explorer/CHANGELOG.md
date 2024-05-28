@@ -6,11 +6,17 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-- Added support for `consoleName` property in z/OSMF profiles when issuing MVS commands [#1667](https://github.com/zowe/vscode-extension-for-zowe/issues/1667)
-- Updated sorting of PDS members to show items without stats at bottom of list [#2660](https://github.com/zowe/vscode-extension-for-zowe/issues/2660)
-- Added support to view the Encoding history for MVS and Dataset in the History View [#2776](https://github.com/zowe/zowe-explorer-vscode/pull/2776)
+### Bug fixes
+
+## `2.16.0`
+
+### New features and enhancements
+
+- Added support for `consoleName` property in z/OSMF profiles when issuing MVS commands. [#1667](https://github.com/zowe/vscode-extension-for-zowe/issues/1667)
+- Updated sorting of PDS members to show items without stats at bottom of list. [#2660](https://github.com/zowe/vscode-extension-for-zowe/issues/2660)
+- Added support to view the Encoding history for MVS and Dataset in the History View. [#2776](https://github.com/zowe/zowe-explorer-vscode/pull/2776)
 - Updated MVS view progress indicator for entering a filter search. [#2181](https://github.com/zowe/zowe-explorer-vscode/issues/2181)
-- Added error handling for when the default credential manager is unable to initialize [#2811](https://github.com/zowe/zowe-explorer-vscode/issues/2811)
+- Added error handling for when the default credential manager is unable to initialize. [#2811](https://github.com/zowe/zowe-explorer-vscode/issues/2811)
 - Provide users with the option to upload binary files by implementing a "Upload Files (Binary)" right-click option in the USS tree. [#1956](https://github.com/zowe/zowe-explorer-vscode/issues/1956)
 - Added Status bar to indicate that data is being pulled from mainframe. [#2484](https://github.com/zowe/zowe-explorer-vscode/issues/2484)
 - Added PEM certificate support as an authentication method for logging into the API ML. [#2621](https://github.com/zowe/zowe-explorer-vscode/issues/2621)
@@ -21,7 +27,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
-- To fix clicking submitted job hyperlink throws error [#2813](https://github.com/zowe/vscode-extension-for-zowe/issues/2813)
+- Fixed issue where clicking on a submitted job hyperlink throws an error. [#2813](https://github.com/zowe/vscode-extension-for-zowe/issues/2813)
 - Omitted the following Zowe Explorer commands from the Command Palette that do not execute properly when run as a standalone command: [#2853](https://github.com/zowe/zowe-explorer-vscode/pull/2853)
   - `Zowe Explorer: Cancel job`
   - `Zowe Explorer: Filter jobs`
@@ -33,6 +39,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Duplicated profile schema writing on repeated Team Config file initialization:
   [#2828](https://github.com/zowe/zowe-explorer-vscode/pull/2828)
 - Fixed issue where saving changes to favorited PDS member fails when custom temp folder is set on Windows. [#2880](https://github.com/zowe/zowe-explorer-vscode/issues/2880)
+- Fixed issue where data sets or members containing binary content cannot be opened. [#2696](https://github.com/zowe/zowe-explorer-vscode/issues/2696)
 
 ## `2.15.4`
 
