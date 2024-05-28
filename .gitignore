@@ -30,3 +30,4 @@ packages/zowe-explorer/__tests__/**/.zowe
 packages/zowe-explorer/__tests__/**/.env
 package.nls.*.json
 bundle.l10n.*.json
+zedc/target

@@ -28,5 +28,8 @@
     { "directory": "packages/zowe-explorer-ftp-extension", "changeProcessCWD": true },
     { "directory": "packages/zowe-explorer-api", "changeProcessCWD": true },
     { "directory": "packages/zowe-explorer", "changeProcessCWD": true }
-  ]
+  ],
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer"
+  }
 }
