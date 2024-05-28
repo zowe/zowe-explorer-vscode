@@ -13,7 +13,7 @@
 // Scenario: User wants to toggle a profile node in a tree view
 
 import { TreeItem } from "wdio-vscode-service";
-import { paneDivForTree } from "../shared.steps";
+import { paneDivForTree } from "../../../../__common__/shared.wdio";
 import { Then, When } from "@cucumber/cucumber";
 
 //

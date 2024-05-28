@@ -10,7 +10,7 @@
  */
 
 import { Then, When } from "@cucumber/cucumber";
-import { paneDivForTree } from "../shared.steps";
+import { paneDivForTree } from "../../../__common__/shared.wdio";
 
 Then("the user can select a PDS member in the list and open it", async function () {
     await expect(this.children.length).not.toBe(0);

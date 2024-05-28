@@ -10,7 +10,7 @@
  */
 
 import { Then, When } from "@cucumber/cucumber";
-import { paneDivForTree } from "../shared.steps";
+import { paneDivForTree } from "../../../__common__/shared.wdio";
 import { TreeItem } from "wdio-vscode-service";
 import { Key } from "webdriverio";
 

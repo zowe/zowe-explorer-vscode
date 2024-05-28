@@ -12,7 +12,7 @@
 import { Given, Then, When } from "@cucumber/cucumber";
 import { TreeItem } from "wdio-vscode-service";
 import { Key } from "webdriverio";
-import { paneDivForTree } from "../shared.steps";
+import { paneDivForTree } from "../../../../__common__/shared.wdio";
 
 //
 // Scenario: User clicks on the "Zowe Explorer" icon in the Activity Bar

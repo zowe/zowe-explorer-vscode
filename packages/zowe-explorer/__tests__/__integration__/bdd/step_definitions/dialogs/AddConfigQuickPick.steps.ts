@@ -10,7 +10,7 @@
  */
 
 import { Given, Then, When } from "@cucumber/cucumber";
-import { paneDivForTree } from "../shared.steps";
+import { paneDivForTree } from "../../../../__common__/shared.wdio";
 import { Key } from "webdriverio";
 
 Given("a user who is looking at the Add Config quick pick", async function () {
