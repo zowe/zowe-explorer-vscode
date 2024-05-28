@@ -10,7 +10,7 @@
  */
 
 import type { Options } from "@wdio/types";
-import { join } from "path";
+import { join as joinPath } from "path";
 import { baseConfig } from "../../__common__/base.wdio.conf";
 
 export const config: Options.Testrunner = {
@@ -76,7 +76,7 @@ export const config: Options.Testrunner = {
             browserVersion: "stable", // also possible: "insiders" or a specific version e.g. "1.80.0"
             "wdio:vscodeOptions": {
                 // points to directory where extension package.json is located
-                extensionPath: join(__dirname, "..", "..", ".."),
+                extensionPath: joinPath(__dirname, "..", "..", ".."),
                 // optional VS Code settings
                 userSettings: {
                     "editor.fontSize": 14,
@@ -91,6 +91,12 @@ export const config: Options.Testrunner = {
     // ===================
     // Define all options that are relevant for the WebdriverIO instance here
     //
+
+    // Test runner services
+    // Services take over a specific job you don't want to take care of. They enhance
+    // your test setup with almost no effort. Unlike plugins, they don't add new
+    // commands. Instead, they hook themselves up into the test process.
+    services: [["vscode", { cachePath: joinPath(__dirname, "..", "..", "__common__", ".wdio-vscode-service") }]],
 
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
