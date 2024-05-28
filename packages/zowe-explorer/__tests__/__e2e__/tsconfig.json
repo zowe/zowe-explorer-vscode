@@ -6,6 +6,8 @@
   "include": [
     "./step_definitions/**/*.steps.ts",
     "../../__common__/*.wdio.ts",
+    "../../__common__/*.wdio.conf.ts",
+    "./wdio.conf.ts",
     "../../node_modules/vscode/vscode.d.ts",
     "../../node_modules/vscode/lib/*"
   ],

@@ -3,6 +3,14 @@
   "compilerOptions": {
     "types": ["node", "@wdio/globals/types", "@wdio/mocha-framework", "wdio-vscode-service", "expect-webdriverio", "jest"]
   },
-  "include": ["../../../src/**/*.ts", "./**/*.integration.test.ts", "../../../node_modules/vscode/vscode.d.ts", "../../../node_modules/vscode/lib/*"],
+  "include": [
+    "../../../src/**/*.ts",
+    "./**/*.integration.test.ts",
+    "../../__common__/*.wdio.ts",
+    "../../__common__/*.wdio.conf.ts",
+    "./wdio.conf.ts",
+    "../../../node_modules/vscode/vscode.d.ts",
+    "../../../node_modules/vscode/lib/*"
+  ],
   "references": [{ "path": "../../../../zowe-explorer-api" }]
 }
