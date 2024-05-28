@@ -22,6 +22,7 @@ import { Then, When } from "@cucumber/cucumber";
 When(/a user clicks on the first profile in the (.*) view/, async function (tree: string) {
     const dsPane = await paneDivForTree(tree);
     const treeItems = (await dsPane.getVisibleItems()) as TreeItem[];
+    // index is "1" because Favorites is the first node in the array
     await treeItems[1].select();
     this.selectedTreeItem = treeItems[1];
 });
@@ -29,14 +30,4 @@ Then(/the profile node will (.*)/, async function (state: string) {
     const expandedState = await this.selectedTreeItem.elem.getAttribute("aria-expanded");
     const shouldBeExpanded = (state === "expand").toString();
     await expect(expandedState).toBe(shouldBeExpanded);
-});
-
-//
-// Scenario: User clicks on a verified profile node in a tree view
-//
-When(/the first profile in the (.*) view is verified/, async function (_tree: string) {
-    // TODO: requires a test system to validate behavior
-});
-Then("the profile will list its results based on the filter", async function () {
-    // TODO: requires a test system to validate behavior
 });

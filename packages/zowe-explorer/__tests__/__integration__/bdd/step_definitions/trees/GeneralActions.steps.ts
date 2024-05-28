@@ -109,7 +109,7 @@ Then(/the (.*) view is no longer displayed/, async (tree: string) => {
     const visibleSections = await sidebarContent.getSections();
     expect(visibleSections.find(async (s) => (await s.getTitle()) === tree)).not.toBeDisplayedInViewport();
 
-    // re-enable the view for the next scenario
+    // re-enable the view for the next test scenario
     const zeTitlePart = zeView.getTitlePart();
     const ctxMenu = await zeTitlePart.openContextMenu();
     const menuItem = await ctxMenu.getItem(tree);
@@ -117,6 +117,9 @@ Then(/the (.*) view is no longer displayed/, async (tree: string) => {
     await ctxMenu.close();
 });
 
+// This step may fail if the VS Code version that's used for testing has an issue with tree item selection.
+// If this test fails and the VS Code version does not have any issues with tree item selection, then this
+// indicates a potential issue with one of Zowe Explorer's tree views.
 Then("a user can select multiple nodes in a tree view", async function () {
     const pane = await paneDivForTree("data sets");
     const treeItems = await pane.getVisibleItems();

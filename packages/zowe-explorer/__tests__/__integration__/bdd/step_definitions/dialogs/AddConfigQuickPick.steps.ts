@@ -29,7 +29,6 @@ Given("a user who is looking at the Add Config quick pick", async function () {
 // Scenario: User wants to create a new Team Configuration file
 //
 When('a user selects "Create a new Team Configuration file"', async function () {
-    //const wb = await browser.getWorkbench();
     const createTeamConfigEntry = await $('.monaco-list-row[aria-label="＋ Create a New Team Configuration File"]');
     await createTeamConfigEntry.waitForClickable();
     await createTeamConfigEntry.click();
@@ -82,6 +81,7 @@ When("a user selects the first profile in the list", async function () {
     const firstProfileEntry = await this.addConfigQuickPick.$('.monaco-list-row[data-index="2"]');
     await firstProfileEntry.waitForClickable();
     const profileLabelAttr = await firstProfileEntry.getAttribute("aria-label");
+    // strip off any extra details added to the label of the profile node
     this.profileName = profileLabelAttr.substring(profileLabelAttr.lastIndexOf(" ")).trim();
     await firstProfileEntry.click();
 });

@@ -22,13 +22,15 @@ When("a user selects a profile", async function () {
     let qpItems = await this.input.getQuickPicks();
     await qpItems.at(0).select();
     await this.input.wait();
+
+    // Issue TSO command has an extra quick pick to select from
     if (this.openedCommand === "Issue TSO Command") {
         qpItems = await this.input.getQuickPicks();
         await qpItems.at(0).select();
     }
 });
+// TODO: Handle profiles that do not yet have credentials stored
 Then(/a user can enter in (.*) as the command and submit it/, async function (command: string) {
-    // TODO: Handle profiles that do not yet have credentials stored
     if (this.openedCommand === "Issue TSO Command") {
         await this.input.setText("IZUACCT");
         await this.input.confirm();
