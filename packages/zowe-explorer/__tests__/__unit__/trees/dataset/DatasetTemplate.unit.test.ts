@@ -9,11 +9,13 @@
  *
  */
 
-import { Types } from "@zowe/zowe-explorer-api";
+import { Gui, Types } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { DataSetTemplates } from "../../../../src/trees/dataset/DatasetTemplates";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
+import { text } from "stream/consumers";
+import { FilterItem } from "../../../../src/management/FilterManagement";
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -40,6 +42,17 @@ describe("DataSetTemplates Class Unit Tests", () => {
             primary: 1,
             recfm: "FB",
             lrecl: 80,
+        },
+    };
+    const newTemplate = {
+        mockNewTemp: {
+            alcunit: "CYL",
+            blksize: 3130,
+            dirblk: 10,
+            dsorg: "PO",
+            lrecl: 40,
+            primary: 1,
+            recfm: "FB",
         },
     };
     templates.push(...[template1, template2]);
@@ -73,13 +86,60 @@ describe("DataSetTemplates Class Unit Tests", () => {
         });
     });
     describe("addDsTemplateSetting()", () => {
-        it("should add a dataset template if the criteria exists", async () => {
+        it("should add a dataset template to global setting by default", async () => {
             jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
                 inspect: jest.fn().mockReturnValue({ globalValue: templates }),
             } as any);
             getValueSpy.mockReturnValue([template2]);
             await DataSetTemplates.addDsTemplateSetting(template1 as any);
             expect(infoLoggerSpy).toHaveBeenCalledWith("Adding new data set template {0}.");
+        });
+        it("should add a dataset template to global setting by choice", async () => {
+            Object.defineProperty(vscode.workspace, "workspaceFolders", {
+                value: [
+                    {
+                        uri: {
+                            fsPath: "test",
+                        },
+                    },
+                ],
+                configurable: true,
+            });
+            Object.defineProperty(Gui, "showQuickPick", {
+                value: jest.fn().mockResolvedValue(new FilterItem({ text: "Save as User setting" })),
+                configurable: true,
+            });
+            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                inspect: jest.fn().mockReturnValue({ globalValue: [], workspaceValue: templates }),
+            } as any);
+            getValueSpy.mockReturnValue([]);
+            await DataSetTemplates.addDsTemplateSetting(newTemplate as any);
+            expect(infoLoggerSpy).toHaveBeenCalledWith("Adding new data set template {0}.");
+            expect(setValueSpy).toHaveBeenCalledWith("zowe.ds.templates", [newTemplate], vscode.ConfigurationTarget.Global);
+        });
+        it("should add a dataset template to workspace setting by choice", async () => {
+            Object.defineProperty(vscode.workspace, "workspaceFolders", {
+                value: [
+                    {
+                        uri: {
+                            fsPath: "test",
+                        },
+                    },
+                ],
+                configurable: true,
+            });
+            Object.defineProperty(Gui, "showQuickPick", {
+                value: jest.fn().mockResolvedValue(new FilterItem({ text: "Save as Workspace setting" })),
+                configurable: true,
+            });
+            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                inspect: jest.fn().mockReturnValue({ globalValue: [], workspaceValue: templates }),
+            } as any);
+            getValueSpy.mockReturnValue([]);
+            templates.unshift(newTemplate);
+            await DataSetTemplates.addDsTemplateSetting(newTemplate as any);
+            expect(infoLoggerSpy).toHaveBeenCalledWith("Adding new data set template {0}.");
+            expect(setValueSpy).toHaveBeenCalledWith("zowe.ds.templates", templates, vscode.ConfigurationTarget.Workspace);
         });
     });
 });
