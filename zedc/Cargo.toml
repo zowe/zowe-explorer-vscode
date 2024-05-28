@@ -1,0 +1,29 @@
+[package]
+name = "zedc"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[profile.release]
+lto = true
+strip = true
+opt-level = "z"
+
+[dependencies]
+anyhow = "1.0.82"
+cfg-if = "1.0.0"
+clap = { version = "4.5.4", features = ["derive"] }
+glob = "0.3.1"
+homedir = "0.2.1"
+indicatif = "0.17.8"
+octocrab = "0.38.0"
+owo-colors = "4.0.0"
+reqwest = { version = "0.12.4", features = ["blocking"] }
+tokio = { version = "1", features = ["fs", "macros", "rt-multi-thread"] }
+tokio-util = { version = "0.7.10", features = ["codec"] }
+zip = "1.2.3"
+
+[target.'cfg(not(windows))'.dependencies]
+flate2 = "1.0.30"
+tar = "0.4.40"
