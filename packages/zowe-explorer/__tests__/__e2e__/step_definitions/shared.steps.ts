@@ -10,7 +10,7 @@
  */
 
 import { Given } from "@cucumber/cucumber";
-import { ViewSection } from "wdio-vscode-service";
+import { ViewContent, ViewSection } from "wdio-vscode-service";
 
 Given("a user who is looking at the Zowe Explorer tree views", async () => {
     const activityBar = (await browser.getWorkbench()).getActivityBar();
@@ -22,12 +22,13 @@ Given("a user who is looking at the Zowe Explorer tree views", async () => {
 });
 
 /* Helper functions */
+
 export async function paneDivForTree(tree: string): Promise<ViewSection> {
     const activityBar = (await browser.getWorkbench()).getActivityBar();
     await activityBar.wait();
     const zeContainer = await activityBar.getViewControl("Zowe Explorer");
     await zeContainer.wait();
-    const sidebarContent = (await zeContainer.openView()).getContent();
+    const sidebarContent: ViewContent = (await zeContainer.openView()).getContent();
     switch (tree.toLowerCase()) {
         case "data sets":
             return sidebarContent.getSection("DATA SETS");

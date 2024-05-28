@@ -16,18 +16,25 @@ Then("the user can select a PDS member in the list and open it", async function 
     await expect(this.children.length).not.toBe(0);
     this.pdsMember = await this.pds.findChildItem(process.env.ZE_TEST_PDS_MEMBER);
     await this.pdsMember.select();
+
+    // Wait for editor object to become available before editing/saving
     this.editorView = (await browser.getWorkbench()).getEditorView();
     this.editorForFile = await this.editorView.openEditor(process.env.ZE_TEST_PDS_MEMBER);
     await expect(this.editorForFile).toBeDefined();
 });
 Then("the user can select a PS in the list and open it", async function () {
     const dsPane = await paneDivForTree("data sets");
+
+    // collapse remaining trees to make room for tree items to render in DOM
     const jobsPane = await paneDivForTree("jobs");
     await jobsPane.collapse();
     const ussPane = await paneDivForTree("uss");
     await ussPane.collapse();
+
     this.ps = await dsPane.findItem(process.env.ZE_TEST_PS);
     await this.ps.select();
+
+    // Wait for editor object to become available before editing/saving
     this.editorView = (await browser.getWorkbench()).getEditorView();
     this.editorForFile = await this.editorView.openEditor(process.env.ZE_TEST_PS);
     await expect(this.editorForFile).toBeDefined();

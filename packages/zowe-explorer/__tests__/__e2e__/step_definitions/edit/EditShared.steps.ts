@@ -14,10 +14,12 @@ import { TreeItem } from "wdio-vscode-service";
 
 Then("the user should be able to save it successfully", async function () {
     await this.editorForFile.save();
+    // Wait for the editor to remove "dirty" (unsaved) flag to verify successful save operation
     await browser.waitUntil(async () => !(await this.editorForFile.isDirty()));
     await this.editorView.closeEditor(await this.editorForFile.getTitle());
 });
 Then("the user can right-click on the child node and add it as a favorite", async function () {
+    // Determine which action button to use to add the child node to favorites
     let addToFavsBtn;
     if (this.tree.toLowerCase() === "data sets") {
         this.pds = await this.profileNode.findChildItem(process.env.ZE_TEST_PDS);

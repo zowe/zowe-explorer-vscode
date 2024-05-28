@@ -25,6 +25,8 @@ const testInfo = {
 async function setFilterForProfile(world: IWorld, profileNode: TreeItem, tree: string): Promise<void> {
     await profileNode.elem.moveTo();
     const actionButtons = await profileNode.getActionButtons();
+
+    // Locate and select the search button on the profile node
     const searchButton = actionButtons[actionButtons.length - 1];
     const isUss = tree.toLowerCase() === "uss" || tree.toLowerCase() === "unix system services (uss)";
     const isJobs = !isUss && tree.toLowerCase() === "jobs";

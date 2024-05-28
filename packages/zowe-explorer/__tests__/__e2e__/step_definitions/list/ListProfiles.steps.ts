@@ -33,7 +33,7 @@ Then(/a user can (.*) a profile with a filter set/, async function (action: stri
         await browser.waitUntil(async () => !(await this.profileNode.isExpanded()));
     } else {
         await this.profileNode.expand();
-        await browser.waitUntil(async () => await this.profileNode.isExpanded());
+        await browser.waitUntil(async () => (await this.profileNode.isExpanded()) as boolean);
     }
 });
 
@@ -42,12 +42,15 @@ Then("the user can set an existing filter on the profile", async function () {
         await this.profileNode.collapse();
     }
     await this.profileNode.elem.moveTo();
+
+    // Locate and click on the search icon beside the profile node
     const actionButtons = await this.profileNode.getActionButtons();
     const searchButton = actionButtons[actionButtons.length - 1];
     await searchButton.elem.click();
     const quickInput = await $(".quick-input-widget");
     await quickInput.waitForClickable();
 
+    // Simple arrow function to build the filter used in quick pick
     const getFilter = (tree: string): string => {
         switch (tree) {
             case "data sets":
@@ -60,10 +63,12 @@ Then("the user can set an existing filter on the profile", async function () {
     };
 
     const treeLowercased = this.tree.toLowerCase();
+    // Add ", Recent Filters" suffix to label as it is added by VS Code in DOM
     const existingFilterSelector = await $(`.monaco-list-row[role="option"][aria-label="${getFilter(treeLowercased)}, Recent Filters"]`);
     await expect(existingFilterSelector).toBeClickable();
     await existingFilterSelector.click();
     if (treeLowercased === "jobs") {
+        // For the Jobs tree, the "Submit this query" entry will need selected after entering filter
         const submitEntry = await $(`.monaco-list-row[role="option"][data-index="0"]`);
         await expect(submitEntry).toBeClickable();
         await submitEntry.click();
@@ -71,5 +76,5 @@ Then("the user can set an existing filter on the profile", async function () {
         await browser.keys(Key.Enter);
     }
 
-    await browser.waitUntil(async () => await this.profileNode.isExpanded());
+    await browser.waitUntil(async () => (await this.profileNode.isExpanded()) as boolean);
 });
