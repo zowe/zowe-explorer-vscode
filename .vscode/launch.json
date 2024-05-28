@@ -6,7 +6,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Run Zowe Explorer VS Code Extension",
+      "name": "Run VS Code Extension",
       "type": "extensionHost",
       "request": "launch",
       "runtimeExecutable": "${execPath}",
@@ -18,7 +18,7 @@
       "envFile": "${workspaceFolder}/.vscode/.env"
     },
     {
-      "name": "Run Zowe Explorer FTP VS Code Extension",
+      "name": "Run FTP VS Code Extension",
       "type": "extensionHost",
       "request": "launch",
       "runtimeExecutable": "${execPath}",
@@ -30,7 +30,7 @@
     },
     {
       "type": "node",
-      "name": "Zowe Explorer Unit Tests (Jest)",
+      "name": "Unit Tests (Jest)",
       "request": "launch",
       "runtimeArgs": ["--inspect-brk", "${workspaceFolder}/node_modules/jest/bin/jest", "-i"],
       "cwd": "${workspaceFolder}/packages/zowe-explorer",
@@ -39,7 +39,7 @@
     },
     {
       "type": "node",
-      "name": "Zowe Explorer API Unit Tests (Jest)",
+      "name": "API Unit Tests (Jest)",
       "request": "launch",
       "runtimeArgs": ["--inspect-brk", "${workspaceFolder}/node_modules/jest/bin/jest", "-i"],
       "cwd": "${workspaceFolder}/packages/zowe-explorer-api",
@@ -48,7 +48,7 @@
     },
     {
       "type": "node",
-      "name": "Zowe Explorer FTP Unit Tests (Jest)",
+      "name": "FTP Unit Tests (Jest)",
       "request": "launch",
       "runtimeArgs": ["--inspect-brk", "${workspaceFolder}/node_modules/jest/bin/jest", "-i"],
       "cwd": "${workspaceFolder}/packages/zowe-explorer-ftp-extension",
@@ -56,18 +56,28 @@
       "sourceMaps": true
     },
     {
-      "name": "Zowe Explorer Integration Tests (Mocha)",
-      "type": "extensionHost",
+      "type": "node",
+      "name": "End-to-end Tests",
       "request": "launch",
-      "runtimeExecutable": "${execPath}",
-      "args": [
-        "--disable-extensions",
-        "--extensionDevelopmentPath=${workspaceFolder}/packages/zowe-explorer",
-        "--extensionTestsPath=${workspaceFolder}/packages/zowe-explorer/out/__tests__/__integration__/index"
-      ],
-      "outFiles": ["${workspaceFolder}/out/__tests__/**/*.js"],
-      "preLaunchTask": "Build",
-      "postDebugTask": "Posttest"
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["test:e2e"],
+      "cwd": "${workspaceFolder}/packages/zowe-explorer"
+    },
+    {
+      "type": "node",
+      "name": "Behavior-driven Integration Tests",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["test:integration-bd"],
+      "cwd": "${workspaceFolder}/packages/zowe-explorer"
+    },
+    {
+      "type": "node",
+      "name": "Mocha Integration Tests",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["test:integration"],
+      "cwd": "${workspaceFolder}/packages/zowe-explorer"
     }
   ]
 }
