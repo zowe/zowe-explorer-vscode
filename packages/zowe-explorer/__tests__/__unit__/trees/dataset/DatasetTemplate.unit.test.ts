@@ -86,6 +86,26 @@ describe("DataSetTemplates Class Unit Tests", () => {
         });
     });
     describe("addDsTemplateSetting()", () => {
+        function createBlockMocks() {
+            const newMocks = {
+                mockWsFolder: [
+                    {
+                        uri: {
+                            fsPath: "test",
+                        },
+                    },
+                ],
+            };
+            Object.defineProperty(vscode.workspace, "workspaceFolders", {
+                value: [newMocks.mockWsFolder],
+                configurable: true,
+            });
+
+            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                inspect: jest.fn().mockReturnValue({ globalValue: [], workspaceValue: templates }),
+            } as any);
+            return newMocks;
+        }
         it("should add a dataset template to global setting by default", async () => {
             jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
                 inspect: jest.fn().mockReturnValue({ globalValue: templates }),
@@ -95,47 +115,21 @@ describe("DataSetTemplates Class Unit Tests", () => {
             expect(infoLoggerSpy).toHaveBeenCalledWith("Adding new data set template {0}.");
         });
         it("should add a dataset template to global setting by choice", async () => {
-            Object.defineProperty(vscode.workspace, "workspaceFolders", {
-                value: [
-                    {
-                        uri: {
-                            fsPath: "test",
-                        },
-                    },
-                ],
-                configurable: true,
-            });
+            createBlockMocks();
             Object.defineProperty(Gui, "showQuickPick", {
                 value: jest.fn().mockResolvedValue(new FilterItem({ text: "Save as User setting" })),
                 configurable: true,
             });
-            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
-                inspect: jest.fn().mockReturnValue({ globalValue: [], workspaceValue: templates }),
-            } as any);
-            getValueSpy.mockReturnValue([]);
             await DataSetTemplates.addDsTemplateSetting(newTemplate as any);
             expect(infoLoggerSpy).toHaveBeenCalledWith("Adding new data set template {0}.");
             expect(setValueSpy).toHaveBeenCalledWith("zowe.ds.templates", [newTemplate], vscode.ConfigurationTarget.Global);
         });
         it("should add a dataset template to workspace setting by choice", async () => {
-            Object.defineProperty(vscode.workspace, "workspaceFolders", {
-                value: [
-                    {
-                        uri: {
-                            fsPath: "test",
-                        },
-                    },
-                ],
-                configurable: true,
-            });
+            createBlockMocks();
             Object.defineProperty(Gui, "showQuickPick", {
                 value: jest.fn().mockResolvedValue(new FilterItem({ text: "Save as Workspace setting" })),
                 configurable: true,
             });
-            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
-                inspect: jest.fn().mockReturnValue({ globalValue: [], workspaceValue: templates }),
-            } as any);
-            getValueSpy.mockReturnValue([]);
             templates.unshift(newTemplate);
             await DataSetTemplates.addDsTemplateSetting(newTemplate as any);
             expect(infoLoggerSpy).toHaveBeenCalledWith("Adding new data set template {0}.");
