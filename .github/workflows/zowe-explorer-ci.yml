@@ -52,8 +52,10 @@ jobs:
       - name: Integration tests
         uses: coactions/setup-xvfb@v1
         if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20.x'
+        env:
+          ZOWE_CLI_HOME: ./packages/zowe-explorer/__tests__/__integration__/ci
         with:
-          run: ZOWE_CLI_HOME=./packages/zowe-explorer/__tests__/__integration__/ci pnpm test:integration
+          run: pnpm test:integration
           working-directory: ./packages/zowe-explorer
           options: #optional
 
