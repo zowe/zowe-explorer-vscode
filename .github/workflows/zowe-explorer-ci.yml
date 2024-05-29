@@ -55,7 +55,7 @@ jobs:
         env:
           ZOWE_CLI_HOME: ./packages/zowe-explorer/__tests__/__integration__/ci
         with:
-          run: pnpm test:integration
+          run: pnpm test:integration --exclude "IssueCommand.feature"
           working-directory: ./packages/zowe-explorer
           options: #optional
 

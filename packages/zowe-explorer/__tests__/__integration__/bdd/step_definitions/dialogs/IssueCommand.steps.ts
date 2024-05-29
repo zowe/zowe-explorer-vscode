@@ -29,7 +29,8 @@ When("a user selects a profile", async function () {
         await qpItems.at(0).select();
     }
 });
-// TODO: Handle profiles that do not yet have credentials stored
+
+// TODO: Handle profiles that do not yet have credentials stored or are unverified
 Then(/a user can enter in (.*) as the command and submit it/, async function (command: string) {
     if (this.openedCommand === "Issue TSO Command") {
         await this.input.setText("IZUACCT");
