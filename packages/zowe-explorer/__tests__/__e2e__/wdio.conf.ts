@@ -11,7 +11,7 @@
 
 import type { Options } from "@wdio/types";
 import { existsSync } from "fs";
-import { mkdirpSync } from "fs-extra";
+import { emptyDirSync, mkdirpSync } from "fs-extra";
 import { join as joinPath, relative as relativePath } from "path";
 import { baseConfig } from "../__common__/base.wdio.conf";
 
@@ -29,6 +29,8 @@ if (process.env.ZOWE_TEST_DIR) {
         process.exit(1);
     }
 }
+
+const screenshotDir = joinPath(__dirname, "results", "screenshots");
 
 export const config: Options.Testrunner = {
     ...baseConfig,
@@ -189,6 +191,9 @@ export const config: Options.Testrunner = {
     // it and to build services around it. You can either apply a single function or an array of
     // methods to it. If one of them returns with a promise, WebdriverIO will wait until that promise got
     // resolved to continue.
+    onPrepare: function (config, caps) {
+        emptyDirSync(screenshotDir);
+    },
 
     /**
      * Cucumber Hooks
@@ -229,8 +234,6 @@ export const config: Options.Testrunner = {
      */
     afterStep: async function (step, scenario, result, context) {
         if (!result.passed) {
-            const screenshotDir = joinPath(__dirname, "results", "screenshots");
-            mkdirpSync(screenshotDir);
             await browser.saveScreenshot(joinPath(screenshotDir, `${scenario.name} - ${step.text}.png`));
         }
     },
