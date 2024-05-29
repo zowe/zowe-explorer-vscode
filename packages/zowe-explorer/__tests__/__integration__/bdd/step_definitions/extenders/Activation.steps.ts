@@ -2,10 +2,11 @@ import { Given, When, Then } from "@cucumber/cucumber";
 import { join } from "path";
 import type * as vscode from "vscode";
 
-// extension.js template for activation test:
+// Activation test templates:
+
+// extension.js:
 /*
 import * as vscode from "vscode";
-
 export const MyTestProfile = {
   type: "{{profileType}}",
   schema: {
@@ -46,7 +47,7 @@ export async function activate(context) {
 }
 */
 
-// package.json template for activation test:
+// package.json:
 /*
 {
   "name": "{{profileType}}-profile-sample",
