@@ -13,6 +13,10 @@ import type { Options } from "@wdio/types";
 import { join as joinPath } from "path";
 import { baseConfig } from "../../__common__/base.wdio.conf";
 
+const dataDir = joinPath(__dirname, "..", "..", "__common__", ".wdio-vscode-service", "data");
+// const profileTypes = ["alpha", "beta", "gamma", "delta"];
+// const profileVsixs = profileTypes.map((profType) => joinPath(extensionsDir, `${profType}.vsix`));
+
 export const config: Options.Testrunner = {
     ...baseConfig,
     //
@@ -47,6 +51,7 @@ export const config: Options.Testrunner = {
     // Patterns to exclude.
     exclude: [
         // 'path/to/excluded/files'
+        "./features/extenders/Activation.feature",
     ],
     //
     // ============
@@ -77,9 +82,13 @@ export const config: Options.Testrunner = {
             "wdio:vscodeOptions": {
                 // points to directory where extension package.json is located
                 extensionPath: joinPath(__dirname, "..", "..", ".."),
+                storagePath: dataDir,
                 // optional VS Code settings
                 userSettings: {
                     "editor.fontSize": 14,
+                },
+                vscodeArgs: {
+                    // installExtension: profileVsixs,
                 },
             },
         },
@@ -134,5 +143,31 @@ export const config: Options.Testrunner = {
         timeout: 60000,
         // <boolean> Enable this config to treat undefined definitions as warnings.
         ignoreUndefinedDefinitions: false,
+    },
+
+    // Hooks
+    beforeSession: function (config, caps, specs) {
+        // TODO: Uncomment once WDIO supports arrays for VS Code args
+        // const extensionsDir = joinPath(__dirname, "..", "..", "__common__", ".wdio-vscode-service", "data");
+        // // For the sake of time, this step compiles the extenders and copies each one into the extension dir rather than packaging 3 VSIXs
+        // const templateDir = joinPath(__dirname, "..", "..", "..", "..", "..", "samples", "__integration__", "profile-type-sample");
+        // const extJsTemplate = readFileSync(joinPath(templateDir, "src", "extension.js.template")).toString();
+        // const pkgJsonTemplate = readFileSync(joinPath(templateDir, "package.json.template")).toString();
+        // for (const profileType of profileTypes) {
+        //     const sampleDir = joinPath(extensionsDir, `${profileType}-sample`);
+        //     if (existsSync(sampleDir)) {
+        //         rmSync(sampleDir, { force: true, recursive: true });
+        //     }
+        //     const extensionJs = Handlebars.compile(extJsTemplate)({
+        //         profileType,
+        //     });
+        //     const packageJson = Handlebars.compile(pkgJsonTemplate)({
+        //         profileType,
+        //     });
+        //     mkdirSync(sampleDir);
+        //     writeFileSync(joinPath(sampleDir, "extension.js"), extensionJs);
+        //     writeFileSync(joinPath(sampleDir, "package.json"), packageJson);
+        //     spawnSync(`npx vsce package ${sampleDir} --skip-license -o ${joinPath(extensionsDir, `${profileType}.vsix`)}`);
+        // }
     },
 };
