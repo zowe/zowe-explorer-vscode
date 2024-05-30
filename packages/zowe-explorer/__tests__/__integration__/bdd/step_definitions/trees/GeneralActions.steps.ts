@@ -113,8 +113,8 @@ Then(/the (.*) view is no longer displayed/, async (tree: string) => {
 });
 
 // This step may fail if the VS Code version that's used for testing has an issue with tree item selection.
-// If this test fails and the VS Code version does not have any issues with tree item selection, then this
-// indicates a potential issue with one of Zowe Explorer's tree views.
+// If this test fails and the VS Code version does not have any known issues with tree item selection, then this
+// indicates a potential issue problem in one of Zowe Explorer's tree views.
 Then("a user can select multiple nodes in a tree view", async function () {
     const pane = await paneDivForTree("data sets");
     const treeItems = await pane.getVisibleItems();

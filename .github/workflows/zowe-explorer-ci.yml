@@ -49,6 +49,11 @@ jobs:
           CI: true
           NODE_OPTIONS: --max_old_space_size=4096
 
+      - name: Unlock Keyring
+        id: unlock-keyring
+        if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20.x'
+        uses: t1m0thyj/unlock-keyring@v1
+      
       - name: Integration tests
         if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20.x'
         env:
