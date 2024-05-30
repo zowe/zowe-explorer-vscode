@@ -14,8 +14,6 @@ import { join as joinPath } from "path";
 import { baseConfig } from "../../__common__/base.wdio.conf";
 
 const dataDir = joinPath(__dirname, "..", "..", "__common__", ".wdio-vscode-service", "data");
-// const profileTypes = ["alpha", "beta", "gamma", "delta"];
-// const profileVsixs = profileTypes.map((profType) => joinPath(extensionsDir, `${profType}.vsix`));
 
 export const config: Options.Testrunner = {
     ...baseConfig,

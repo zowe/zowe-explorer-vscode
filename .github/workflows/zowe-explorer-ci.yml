@@ -52,7 +52,7 @@ jobs:
       - name: Integration tests
         if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20.x'
         env:
-          ZOWE_CLI_HOME: $GITHUB_WORKSPACE/packages/zowe-explorer/__tests__/__integration__/ci
+          ZOWE_CLI_HOME: "${{ github.workspace }}/packages/zowe-explorer/__tests__/__integration__/ci"
         run: xvfb-run pnpm test:integration --exclude "IssueCommand.feature"
         working-directory: packages/zowe-explorer
 
