@@ -17,7 +17,7 @@ Then("the user should be able to save it successfully", async function () {
     // Wait for the editor to remove "dirty" (unsaved) flag to verify successful save operation
     await browser.waitUntil(async () => !(await this.editorForFile.isDirty()));
     // Give time for the LPAR to finish handling the save
-    await browser.pause(1000);
+    await browser.pause(3000);
     await this.editorView.closeEditor(await this.editorForFile.getTitle());
 });
 Then("the user can right-click on the child node and add it as a favorite", async function () {
