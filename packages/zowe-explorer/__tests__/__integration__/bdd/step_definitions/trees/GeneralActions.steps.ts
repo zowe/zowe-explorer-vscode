@@ -13,6 +13,7 @@ import { Given, Then, When } from "@cucumber/cucumber";
 import { TreeItem } from "wdio-vscode-service";
 import { Key } from "webdriverio";
 import { paneDivForTree } from "../../../../__common__/shared.wdio";
+import quickPick from "../../../../__pageobjects__/QuickPick";
 
 //
 // Scenario: User clicks on the "Zowe Explorer" icon in the Activity Bar
@@ -77,16 +78,15 @@ When(/a user clicks the plus button in the (.*) view/, async (tree: string) => {
 
     const plusIcon = await pane.getAction(`Add Profile to ${tree} View`);
     await expect(plusIcon).toBeDefined();
-    await plusIcon.elem.waitForClickable();
+    await expect(plusIcon.elem).toBeClickable();
     await plusIcon.elem.click();
 });
 Then("the Add Config quick pick menu appears", async () => {
-    const elem = await $(".quick-input-widget");
-    await expect(elem).toBeDefined();
+    await browser.waitUntil(() => quickPick.isDisplayed());
 
     // dismiss the quick pick after verifying that it is visible
     await browser.keys(Key.Escape);
-    await elem.waitForDisplayed({ reverse: true });
+    await browser.waitUntil(async () => !(await quickPick.isDisplayed()));
 });
 
 //

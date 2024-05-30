@@ -12,6 +12,7 @@
 import { Given, Then, When } from "@cucumber/cucumber";
 import { paneDivForTree } from "../../../../__common__/shared.wdio";
 import { Key } from "webdriverio";
+import quickPick from "../../../../__pageobjects__/QuickPick";
 
 Given("a user who is looking at the Add Config quick pick", async function () {
     // use the data sets pane for the sake of testing
@@ -21,37 +22,36 @@ Given("a user who is looking at the Add Config quick pick", async function () {
     await dsPane.elem.moveTo();
     await plusIcon?.elem.click();
 
-    this.addConfigQuickPick = await $(".quick-input-widget");
-    await this.addConfigQuickPick.waitForClickable();
+    await browser.waitUntil(() => quickPick.isClickable());
 });
 
 //
 // Scenario: User wants to create a new Team Configuration file
 //
 When('a user selects "Create a new Team Configuration file"', async function () {
-    const createTeamConfigEntry = await $('.monaco-list-row[aria-label="＋ Create a New Team Configuration File"]');
-    await createTeamConfigEntry.waitForClickable();
+    const createTeamConfigEntry = await quickPick.findItem("＋ Create a New Team Configuration File");
+    await expect(createTeamConfigEntry).toBeClickable();
     await createTeamConfigEntry.click();
 });
 
 Then("it will ask the user for the desired config location", async function () {
-    this.globalCfgOpt = await $('.monaco-list-row[aria-label="Global: in the Zowe home directory"]');
+    this.globalCfgOpt = await quickPick.findItem("Global: in the Zowe home directory");
     await expect(this.globalCfgOpt).toBeDisplayedInViewport();
 
-    this.projectCfgOpt = await $('.monaco-list-row[aria-label="Project: in the current working directory"]');
+    this.projectCfgOpt = await quickPick.findItem("Project: in the current working directory");
     await expect(this.projectCfgOpt).toBeDisplayedInViewport();
 });
 
 Then("the user can dismiss the dialog", async function () {
     await browser.keys(Key.Escape);
-    await expect(this.addConfigQuickPick).not.toBeDisplayedInViewport();
+    await browser.waitUntil((): Promise<boolean> => quickPick.isNotInViewport());
 });
 
 //
 // Scenario: User creates a global Team Configuration
 //
 When("the user selects the global option", async function () {
-    await this.globalCfgOpt.waitForClickable();
+    await expect(this.globalCfgOpt).toBeClickable();
     await this.globalCfgOpt.click();
 });
 Then("it will open the config in the editor", async function () {
@@ -69,8 +69,8 @@ Then("it will open the config in the editor", async function () {
 // Scenario: User wants to edit existing Team Configuration file
 //
 When('a user selects "Edit Team Configuration File"', async function () {
-    const editTeamConfigEntry = await $('.monaco-list-row[aria-label="✏ Edit Team Configuration File"]');
-    await editTeamConfigEntry.waitForClickable();
+    const editTeamConfigEntry = await quickPick.findItem("✏ Edit Team Configuration File");
+    await expect(editTeamConfigEntry).toBeClickable();
     await editTeamConfigEntry.click();
 });
 
@@ -78,27 +78,26 @@ When('a user selects "Edit Team Configuration File"', async function () {
 // Scenario: User wants to add a profile to a tree
 //
 When("a user selects the first profile in the list", async function () {
-    const firstProfileEntry = await this.addConfigQuickPick.$('.monaco-list-row[data-index="2"]');
-    await firstProfileEntry.waitForClickable();
+    const firstProfileEntry = await quickPick.findItemByIndex(2);
+    await expect(firstProfileEntry).toBeClickable();
     const profileLabelAttr = await firstProfileEntry.getAttribute("aria-label");
     // strip off any extra details added to the label of the profile node
     this.profileName = profileLabelAttr.substring(profileLabelAttr.lastIndexOf(" ")).trim();
     await firstProfileEntry.click();
 });
 Then("it will prompt the user to add the profile to one or all trees", async function () {
-    this.quickPickTreeSelection = await $(".quick-input-widget");
-    this.yesOpt = await $('.monaco-list-row[aria-label="Yes, Apply to all trees"]');
+    this.yesOpt = await quickPick.findItem("Yes, Apply to all trees");
     await expect(this.yesOpt).toBeDefined();
-    this.noOpt = await $('.monaco-list-row[aria-label="No, Apply to current tree selected"]');
+    this.noOpt = await quickPick.findItem("No, Apply to current tree selected");
     await expect(this.noOpt).toBeDefined();
 });
 When(/a user selects (.*) to apply to all trees/, async function (choice: string) {
     this.userSelectedYes = choice === "Yes";
     if (this.userSelectedYes) {
-        await this.yesOpt.waitForClickable();
+        await expect(this.yesOpt).toBeClickable();
         await this.yesOpt.click();
     } else {
-        await this.noOpt.waitForClickable();
+        await expect(this.noOpt).toBeClickable();
         await this.noOpt.click();
     }
 });

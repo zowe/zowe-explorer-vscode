@@ -13,6 +13,7 @@ import { Given, Then, When, IWorld } from "@cucumber/cucumber";
 import { paneDivForTree } from "../../../__common__/shared.wdio";
 import { TreeItem } from "wdio-vscode-service";
 import { Key } from "webdriverio";
+import quickPick from "../../../__pageobjects__/QuickPick";
 
 const testInfo = {
     profileName: process.env.ZE_TEST_PROFILE_NAME,
@@ -30,25 +31,29 @@ async function setFilterForProfile(world: IWorld, profileNode: TreeItem, tree: s
     const searchButton = actionButtons[actionButtons.length - 1];
     const isUss = tree.toLowerCase() === "uss" || tree.toLowerCase() === "unix system services (uss)";
     const isJobs = !isUss && tree.toLowerCase() === "jobs";
-    await searchButton.elem.waitForClickable();
+    await expect(searchButton.elem).toBeDefined();
     await searchButton.elem.click();
-    world.filterQuickPick = await $(".quick-input-widget");
-    await world.filterQuickPick.waitForClickable();
+
+    await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());
 
     if (isJobs) {
         // Jobs
-        const createFilterSelector = await $(`.monaco-list-row[aria-label="plus  Create job search filter"]`);
-        await createFilterSelector.waitForClickable();
+        const createFilterSelector = await quickPick.findItem("plus  Create job search filter");
+        await expect(createFilterSelector).toBeClickable();
         await createFilterSelector.click();
-        const submitSelector = await $(`.monaco-list-row[aria-label="check  Submit this query"]`);
-        await expect(submitSelector).toBeDefined();
+        const submitSelector = await quickPick.findItem("check  Submit this query");
+        await expect(submitSelector).toBeClickable();
         await submitSelector.click();
     } else {
         // Data sets or USS
-        const filterLabel = isUss ? "plus  Create a new filter" : "plus  Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)";
-        const createFilterSelector = (await $$(`.monaco-list-row[aria-label="${filterLabel}"]`))?.[0];
-        if (createFilterSelector != undefined) {
-            await createFilterSelector.waitForClickable();
+        if (await quickPick.hasOptions()) {
+            // Only click the "Create a new filter" button if there are existing filters and the option is presented
+            const filterLabel = isUss
+                ? "plus  Create a new filter"
+                : "plus  Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)";
+
+            const createFilterSelector = await quickPick.findItem(filterLabel);
+            await expect(createFilterSelector).toBeClickable();
             await createFilterSelector.click();
         }
         const inputBox = await $('.input[aria-describedby="quickInput_message"]');
@@ -70,13 +75,12 @@ Given(/the user has a profile in their (.*) tree/, async function (tree: string)
         const plusIcon = await this.treePane.getAction(`Add Profile to ${tree} View`);
         await expect(plusIcon).toBeDefined();
         await plusIcon.elem.click();
-        this.addConfigQuickPick = await $(".quick-input-widget");
-        await this.addConfigQuickPick.waitForClickable();
-        const firstProfileEntry = await this.addConfigQuickPick.$('.monaco-list-row[data-index="2"]');
-        await firstProfileEntry.waitForClickable();
+        await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());
+        const firstProfileEntry = await quickPick.findItemByIndex(2);
+        await expect(firstProfileEntry).toBeClickable();
         await firstProfileEntry.click();
-        this.yesOpt = await $('.monaco-list-row[aria-label="Yes, Apply to all trees"]');
-        await expect(this.yesOpt).toBeDefined();
+        this.yesOpt = await quickPick.findItem("Yes, Apply to all trees");
+        await expect(this.yesOpt).toBeClickable();
         await this.yesOpt.click();
         this.profileNode = (await this.treePane.findItem(testInfo.profileName)) as TreeItem;
     }

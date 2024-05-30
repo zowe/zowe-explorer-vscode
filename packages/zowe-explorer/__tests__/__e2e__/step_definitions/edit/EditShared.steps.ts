@@ -16,6 +16,8 @@ Then("the user should be able to save it successfully", async function () {
     await this.editorForFile.save();
     // Wait for the editor to remove "dirty" (unsaved) flag to verify successful save operation
     await browser.waitUntil(async () => !(await this.editorForFile.isDirty()));
+    // Give time for the LPAR to finish handling the save
+    await browser.pause(1000);
     await this.editorView.closeEditor(await this.editorForFile.getTitle());
 });
 Then("the user can right-click on the child node and add it as a favorite", async function () {
@@ -38,6 +40,7 @@ Then("the user can right-click on the child node and add it as a favorite", asyn
 When("the user finds the child node in Favorites", async function () {
     const favoritesNode = await this.treePane.findItem("Favorites");
     await favoritesNode.expand();
+    await browser.waitUntil((): Promise<boolean> => favoritesNode.isExpanded());
     this.profileNode = await favoritesNode.findChildItem(process.env.ZE_TEST_PROFILE_NAME);
     await this.profileNode.expand();
     if (this.tree.toLowerCase() === "data sets") {
