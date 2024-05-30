@@ -11,9 +11,11 @@
 
 import type { Options } from "@wdio/types";
 import { join as joinPath } from "path";
+import { emptyDirSync } from "fs-extra";
 import { baseConfig } from "../../__common__/base.wdio.conf";
 
 const dataDir = joinPath(__dirname, "..", "..", "__common__", ".wdio-vscode-service", "data");
+const screenshotDir = joinPath(__dirname, "results", "screenshots");
 
 export const config: Options.Testrunner = {
     ...baseConfig,
@@ -144,6 +146,16 @@ export const config: Options.Testrunner = {
     },
 
     // Hooks
+    onPrepare: function (config, caps) {
+        emptyDirSync(screenshotDir);
+    },
+
+    afterStep: async function (step, scenario, result, context) {
+        if (!result.passed) {
+            await browser.saveScreenshot(joinPath(screenshotDir, `${scenario.name} - ${step.text}.png`));
+        }
+    },
+
     beforeSession: function (config, caps, specs) {
         // TODO: Uncomment once WDIO supports arrays for VS Code args
         // const extensionsDir = joinPath(__dirname, "..", "..", "__common__", ".wdio-vscode-service", "data");
