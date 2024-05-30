@@ -10,12 +10,11 @@
  */
 
 import { Given } from "@cucumber/cucumber";
+import { getZoweExplorerContainer } from "../../__common__/shared.wdio";
 
 Given("a user who is looking at the Zowe Explorer tree views", async () => {
-    const activityBar = (await browser.getWorkbench()).getActivityBar();
-    await activityBar.wait();
-    const zeContainer = await activityBar.getViewControl("Zowe Explorer");
-    await zeContainer.wait();
+    const zeContainer = await getZoweExplorerContainer();
     const zeView = await zeContainer.openView();
-    await zeView.wait();
+    await expect(zeView).toBeDefined();
+    await expect(zeView.elem).toBeDisplayedInViewport();
 });

@@ -12,35 +12,29 @@
 import { Given, Then, When } from "@cucumber/cucumber";
 import { TreeItem } from "wdio-vscode-service";
 import { Key } from "webdriverio";
-import { paneDivForTree } from "../../../../__common__/shared.wdio";
+import { getZoweExplorerContainer, paneDivForTree } from "../../../../__common__/shared.wdio";
 import quickPick from "../../../../__pageobjects__/QuickPick";
 
 //
 // Scenario: User clicks on the "Zowe Explorer" icon in the Activity Bar
 //
 When("a user locates the Zowe Explorer icon in the side bar", async () => {
-    const activityBar = (await browser.getWorkbench()).getActivityBar();
-    const zeContainer = activityBar.getViewControl("Zowe Explorer");
+    const zeContainer = await getZoweExplorerContainer();
     await expect(zeContainer).toBeDefined();
 });
 Then("the user can click on the Zowe Explorer icon", async () => {
-    const activityBar = (await browser.getWorkbench()).getActivityBar();
-    await activityBar.wait();
-    const zeContainer = await activityBar.getViewControl("Zowe Explorer");
-    await zeContainer.wait();
-    await zeContainer.openView();
+    const zeContainer = await getZoweExplorerContainer();
+    await expect(await zeContainer.openView()).toBeDefined();
 });
 
 //
 // Scenario: User collapses/expands the Favorites node
 //
 Given("a user who is looking at the Zowe Explorer tree views", async function () {
-    const activityBar = (await browser.getWorkbench()).getActivityBar();
-    await activityBar.wait();
-    const zeContainer = await activityBar.getViewControl("Zowe Explorer");
-    await zeContainer.wait();
+    const zeContainer = await getZoweExplorerContainer();
     this.zeView = await zeContainer.openView();
-    await this.zeView.wait();
+    await expect(this.zeView).toBeDefined();
+    await expect(this.zeView.elem).toBeDisplayedInViewport();
 });
 When(/a user (.*) the Favorites node in the (.*) view/, async (state: string, tree: string) => {
     const pane = await paneDivForTree(tree);
@@ -51,6 +45,7 @@ When(/a user (.*) the Favorites node in the (.*) view/, async (state: string, tr
     }
 
     const favoritesItem = (await pane.findItem("Favorites")) as TreeItem;
+    await expect(favoritesItem).toBeDefined();
     if (shouldExpand) {
         await favoritesItem.expand();
     } else {

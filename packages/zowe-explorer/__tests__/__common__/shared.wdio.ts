@@ -9,15 +9,20 @@
  *
  */
 
-import { ViewContent, ViewSection } from "wdio-vscode-service";
+import { ViewContent, ViewControl, ViewSection } from "wdio-vscode-service";
 
 /* Helper functions */
 
-export async function paneDivForTree(tree: string): Promise<ViewSection> {
+export async function getZoweExplorerContainer(): Promise<ViewControl> {
     const activityBar = (await browser.getWorkbench()).getActivityBar();
-    await activityBar.wait();
     const zeContainer = await activityBar.getViewControl("Zowe Explorer");
-    await zeContainer.wait();
+    await expect(zeContainer).toBeDefined();
+
+    return zeContainer;
+}
+
+export async function paneDivForTree(tree: string): Promise<ViewSection> {
+    const zeContainer = await getZoweExplorerContainer();
     // specifying type here as eslint fails to deduce return type
     const sidebarContent: ViewContent = (await zeContainer.openView()).getContent();
     switch (tree.toLowerCase()) {

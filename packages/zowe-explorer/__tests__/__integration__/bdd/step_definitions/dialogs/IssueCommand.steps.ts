@@ -19,9 +19,10 @@ Then("a quick pick appears to select a profile", async function () {
     await expect(this.input.elem).toBeDisplayedInViewport();
 });
 When("a user selects a profile", async function () {
+    await expect(this.input).toBeDefined();
     let qpItems = await this.input.getQuickPicks();
     await qpItems.at(0).select();
-    await this.input.wait();
+    await expect(this.input.elem).toBeDisplayedInViewport();
 
     // Issue TSO command has an extra quick pick to select from
     if (this.openedCommand === "Issue TSO Command") {

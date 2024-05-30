@@ -57,7 +57,8 @@ When("the user selects the global option", async function () {
 });
 Then("it will open the config in the editor", async function () {
     const editorView = (await browser.getWorkbench()).getEditorView();
-    await editorView.wait();
+    await expect(editorView).toBeDefined();
+    await expect(editorView.elem).toBeDisplayedInViewport();
     const activeEditor = await editorView.getActiveTab();
     const editorTitle = await activeEditor.getTitle();
 
