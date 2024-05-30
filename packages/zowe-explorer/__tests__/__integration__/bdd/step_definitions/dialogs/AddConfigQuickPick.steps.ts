@@ -20,9 +20,10 @@ Given("a user who is looking at the Add Config quick pick", async function () {
     const plusIcon = await dsPane.getAction(`Add Profile to Data Sets View`);
     await expect(plusIcon).toBeDefined();
     await dsPane.elem.moveTo();
-    await plusIcon?.elem.click();
+    await expect(plusIcon.elem).toBeClickable();
+    await plusIcon.elem.click();
 
-    await browser.waitUntil(() => quickPick.isClickable());
+    await browser.waitUntil(() => quickPick.isDisplayed());
 });
 
 //
