@@ -19,8 +19,9 @@ Then("the user can select a USS file in the list and open it", async function ()
     // Wait for editor object to become available before editing/saving
     this.editorView = (await browser.getWorkbench()).getEditorView();
     this.editorForFile = await this.editorView.openEditor(process.env.ZE_TEST_USS_FILE);
-    await expect(this.editorForFile).toBeDefined();
+    await this.editorForFile.wait();
 });
 When("the user edits the USS file", async function () {
+    await this.editorForFile.clearText();
     await this.editorForFile.setText(`Hello from a USS test on a ${this.editingFavorite ? "favorited " : ""}file!`);
 });
