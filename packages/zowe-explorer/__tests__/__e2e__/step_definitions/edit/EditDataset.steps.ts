@@ -37,11 +37,13 @@ Then("the user can select a PS in the list and open it", async function () {
     // Wait for editor object to become available before editing/saving
     this.editorView = (await browser.getWorkbench()).getEditorView();
     this.editorForFile = await this.editorView.openEditor(process.env.ZE_TEST_PS);
-    await expect(this.editorForFile).toBeDefined();
+    await this.editorForFile.wait();
 });
 When("the user edits the PDS member", async function () {
+    await this.editorForFile.clearText();
     await this.editorForFile.setText(`Hello from a Data Set test for a ${this.editingFavorite ? "favorited " : ""}PDS member!`);
 });
 When("the user edits the PS", async function () {
+    await this.editorForFile.clearText();
     await this.editorForFile.setText("Hello from a Data Set test for a PS!");
 });
