@@ -83,7 +83,7 @@
       "args": [
         "--disable-extensions",
         "--extensionDevelopmentPath=${workspaceFolder}/packages/zowe-explorer",
-        "--extensionTestsPath=${workspaceFolder}/packages/zowe-explorer/out/__tests__/__integration__/tdd/index.ts"
+        "--extensionTestsPath=${workspaceFolder}/packages/zowe-explorer/out/__tests__/__integration__/tdd/index"
       ],
       "outFiles": ["${workspaceFolder}/out/__tests__/**/*.js"],
       "preLaunchTask": "Build",
