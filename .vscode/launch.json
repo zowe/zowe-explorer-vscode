@@ -67,7 +67,7 @@
     },
     {
       "type": "node",
-      "name": "Behavior-driven Integration Tests",
+      "name": "BDD Integration Tests (Cucumber)",
       "request": "launch",
       "runtimeExecutable": "pnpm",
       "runtimeVersion": "20",
@@ -76,14 +76,18 @@
       "cwd": "${workspaceFolder}/packages/zowe-explorer"
     },
     {
-      "type": "node",
-      "name": "Mocha Integration Tests",
+      "type": "extensionHost",
+      "name": "TDD Integration Tests (Mocha)",
       "request": "launch",
-      "runtimeExecutable": "pnpm",
-      "runtimeVersion": "20",
-      "runtimeArgs": ["test:integration-mocha"],
-      "console": "integratedTerminal",
-      "cwd": "${workspaceFolder}/packages/zowe-explorer"
+      "runtimeExecutable": "${execPath}",
+      "args": [
+        "--disable-extensions",
+        "--extensionDevelopmentPath=${workspaceFolder}/packages/zowe-explorer",
+        "--extensionTestsPath=${workspaceFolder}/packages/zowe-explorer/out/__tests__/__integration__/tdd/index.ts"
+      ],
+      "outFiles": ["${workspaceFolder}/out/__tests__/**/*.js"],
+      "preLaunchTask": "Build",
+      "postDebugTask": "Posttest"
     }
   ]
 }
