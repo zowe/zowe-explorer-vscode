@@ -20,14 +20,14 @@ ZE_TEST_PROFILE_USER="testUser" # The user to leverage during the e2e tests
 
 # USS variables
 ZE_TEST_USS_FILTER="/u/users/testUser" # The filter to apply when searching on a USS profile
-ZE_TEST_USS_DIR="test" # The USS directory to use for edit and list testing - should be relative to USS filter
+ZE_TEST_USS_DIR="test" # The USS directory to use for edit and list testing; should be relative to USS filter
 ZE_TEST_USS_FILE="testFile.txt" # The USS file to edit and save with, relative to USS dir
 
 # Data Set variables
 ZE_TEST_DS_FILTER="TESTUSER.*" # The filter to apply when searching on a Data Sets profile
-ZE_TEST_PDS="TESTUSER.C" # The PDS to use for edit and list testing - must be matched by the defined filter
-ZE_TEST_PDS_MEMBER="TESTC" # The PDS member to use for edit and list testing - relative to the defined PDS
-ZE_TEST_PS="TESTUSER.TESTPS" # The PS to use for editing - must be mathced by the defined filter
+ZE_TEST_PDS="TESTUSER.C" # The PDS to use for edit and list testing; must be matched by the defined filter
+ZE_TEST_PDS_MEMBER="TESTC" # The PDS member to use for edit and list testing; relative to the defined PDS
+ZE_TEST_PS="TESTUSER.TESTPS" # The PS to use for editing; must be matched by the defined filter
 ```
 
 ## Run tests
