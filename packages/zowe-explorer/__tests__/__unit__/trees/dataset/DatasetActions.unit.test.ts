@@ -744,7 +744,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         jest.spyOn(DatasetFSProvider.instance, "delete").mockRejectedValueOnce(Error(""));
         await expect(DatasetActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toThrow("");
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Error");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error");
     });
     it("Checking Favorite PDS dataset deletion", async () => {
         createGlobalMocks();
@@ -789,7 +789,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         await DatasetActions.deleteDataset(child, blockMocks.testDatasetTree);
         expect(deleteSpy).toHaveBeenCalledWith(child.resourceUri, { recursive: false });
-        expect(blockMocks.testDatasetTree.removeFavorite).toBeCalledWith(child);
+        expect(blockMocks.testDatasetTree.removeFavorite).toHaveBeenCalledWith(child);
     });
     it("Checking Favorite PS dataset deletion", async () => {
         createGlobalMocks();
@@ -2216,27 +2216,27 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Binary" as any);
         await DatasetActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(Constants.SETTINGS_DS_DEFAULT_BINARY);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_BINARY);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: C" as any);
         await DatasetActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(Constants.SETTINGS_DS_DEFAULT_C);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_C);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Classic" as any);
         await DatasetActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(Constants.SETTINGS_DS_DEFAULT_CLASSIC);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_CLASSIC);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Default" as any);
         await DatasetActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(Constants.SETTINGS_DS_DEFAULT_PDS);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_PDS);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Sequential Data Set" as any);
         await DatasetActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(Constants.SETTINGS_DS_DEFAULT_PS);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_PS);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Extended" as any);
         await DatasetActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(Constants.SETTINGS_DS_DEFAULT_EXTENDED);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_EXTENDED);
 
         expect(createDataSetSpy).toHaveBeenCalledTimes(6);
     });
@@ -2267,27 +2267,27 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Binary" as any);
         await DatasetActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(Constants.SETTINGS_DS_DEFAULT_BINARY);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_BINARY);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: C" as any);
         await DatasetActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(Constants.SETTINGS_DS_DEFAULT_C);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_C);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Classic" as any);
         await DatasetActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(Constants.SETTINGS_DS_DEFAULT_CLASSIC);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_CLASSIC);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Default" as any);
         await DatasetActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(Constants.SETTINGS_DS_DEFAULT_PDS);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_PDS);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Sequential Data Set" as any);
         await DatasetActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(Constants.SETTINGS_DS_DEFAULT_PS);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_PS);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Extended" as any);
         await DatasetActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(Constants.SETTINGS_DS_DEFAULT_EXTENDED);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_EXTENDED);
 
         expect(createDataSetSpy).toHaveBeenCalledTimes(6);
     });
@@ -2317,27 +2317,27 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Binary" as any);
         await DatasetActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(Constants.SETTINGS_DS_DEFAULT_BINARY);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_BINARY);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: C" as any);
         await DatasetActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(Constants.SETTINGS_DS_DEFAULT_C);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_C);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Classic" as any);
         await DatasetActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(Constants.SETTINGS_DS_DEFAULT_CLASSIC);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_CLASSIC);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Default" as any);
         await DatasetActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(Constants.SETTINGS_DS_DEFAULT_PDS);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_PDS);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Sequential Data Set" as any);
         await DatasetActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(Constants.SETTINGS_DS_DEFAULT_PS);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_PS);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Extended" as any);
         await DatasetActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(Constants.SETTINGS_DS_DEFAULT_EXTENDED);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_EXTENDED);
 
         expect(createDataSetSpy).toHaveBeenCalledTimes(6);
         createDataSetSpy.mockClear();
@@ -2368,7 +2368,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Sequential Data Set" as any);
         await DatasetActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(Constants.SETTINGS_DS_DEFAULT_PS);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_PS);
         expect(createDataSetSpy).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
             alcunit: "CYL",
             blksize: 6160,
@@ -2420,7 +2420,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         }
 
         expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error encountered when creating data set. Error: Generic Error");
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(Constants.SETTINGS_DS_DEFAULT_PS);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_PS);
         expect(createDataSetSpy).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
             alcunit: "CYL",
             blksize: 6160,

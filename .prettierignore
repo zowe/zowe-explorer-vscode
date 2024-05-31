@@ -8,3 +8,5 @@ scripts
 node_modules
 pnpm-lock.yaml
 **/bundle.l10n.json
+**/.wdio-vscode-service
+zedc/target
