@@ -15,7 +15,7 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { Gui, IZoweJobTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, ProfilesCache, ValidProfileEnum, JobSortOpts, SortDirection } from "@zowe/zowe-explorer-api";
 import { createIJobFile, createIJobObject, createJobFavoritesNode, createJobSessionNode, MockJobDetail } from "../../../__mocks__/mockCreators/jobs";
 import { ZoweJobNode, ZoweSpoolNode } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
@@ -378,10 +378,9 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         const node = new ZoweJobNode({
             label: "Owner:USER Prefix:*",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: favProfileNode,
         });
-        node.command = { command: "zowe.jobs.search", title: "", arguments: [node] };
         node.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         const targetIcon = getIconByNode(node);
         if (targetIcon) {
@@ -418,7 +417,6 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
         if (targetIcon) {
             node.iconPath = targetIcon.path;
         }
-        // node.command = undefined;
 
         const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("testJob(JOB123)", globals.JOBS_JOB_CONTEXT, favProfileNode);
 
@@ -441,6 +439,30 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
 
         expect(favChildNodeForProfile.label).toEqual("testJob(JOB456)");
         expect(favChildNodeForProfile.command).toBeUndefined();
+    });
+
+    it("To set proper values to node to display jobs when clicked on favorited job search label", async () => {
+        await createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testTree = new ZosJobsProvider();
+
+        const favProfileNode = new ZoweJobNode({
+            label: "testProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.jobFavoritesNode,
+        });
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+
+        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile(
+            "Owner: testUser | Prefix: * | Status: *",
+            globals.JOBS_JOB_CONTEXT,
+            favProfileNode
+        );
+
+        expect(favChildNodeForProfile.label).toEqual("Owner: testUser | Prefix: * | Status: *");
+        expect(favChildNodeForProfile.command).toBeUndefined();
+        expect(favChildNodeForProfile.collapsibleState).not.toEqual(vscode.TreeItemCollapsibleState.None);
+        expect(favChildNodeForProfile.sort).toEqual({ method: JobSortOpts.Id, direction: SortDirection.Ascending });
     });
 });
 

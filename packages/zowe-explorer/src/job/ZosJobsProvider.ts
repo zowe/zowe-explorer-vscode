@@ -397,10 +397,9 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             // for search
             favJob = new ZoweJobNode({
                 label,
-                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 parentNode,
             });
-            favJob.command = { command: "zowe.jobs.search", title: "", arguments: [favJob] };
             favJob.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         }
         const icon = getIconByNode(favJob);
@@ -513,14 +512,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             // Favorite a search/session
             favJob = new ZoweJobNode({
                 label: this.createSearchLabel(node.owner, node.prefix, node.searchId, node.status),
-                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 parentNode: profileNodeInFavorites,
                 session: node.getSession(),
                 profile: node.getProfile(),
                 job: node.job,
             });
             favJob.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
-            favJob.command = { command: "zowe.jobs.search", title: "", arguments: [favJob] };
             this.saveSearch(favJob);
         } else {
             // Favorite a job

@@ -591,6 +591,24 @@ describe("ZoweJobNode unit tests - Function addFavorite", () => {
         expect(profileNodeInFavs.children[0].label).toEqual("Owner: myHLQ | Prefix: * | Status: *");
         expect(profileNodeInFavs.children[0].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX);
     });
+
+    it("Tests that addFavorite correctly sets properties when favorites a search", async () => {
+        const globalMocks = await createGlobalMocks();
+        await createBlockMocks(globalMocks);
+        globalMocks.testJobsProvider.mFavorites = [];
+        globalMocks.testJobsProvider.mSessionNodes[1].owner = "testUser";
+        globalMocks.testJobsProvider.mSessionNodes[1].prefix = "*";
+        globalMocks.testJobsProvider.mSessionNodes[1].contextValue = globals.JOBS_SESSION_CONTEXT;
+
+        await globalMocks.testJobsProvider.addFavorite(globalMocks.testJobsProvider.mSessionNodes[1]);
+        const profileNodeInFavs: IZoweJobTreeNode = globalMocks.testJobsProvider.mFavorites[0];
+
+        expect(profileNodeInFavs.children.length).toEqual(1);
+        expect(profileNodeInFavs.children[0].label).toEqual("Owner: testUser | Prefix: * | Status: *");
+        expect(profileNodeInFavs.children[0].sort).toEqual({ method: JobSortOpts.Id, direction: SortDirection.Ascending });
+        expect(profileNodeInFavs.children[0].collapsibleState).not.toEqual(vscode.TreeItemCollapsibleState.None);
+        expect(profileNodeInFavs.children[0].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX);
+    });
 });
 
 describe("ZoweJobNode unit tests - Function removeFavorite", () => {
