@@ -14,7 +14,6 @@ import { createISession, createIProfile } from "../../../__mocks__/mockCreators/
 import { createJobNode, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { IJestIt, ITestContext, processSubscriptions } from "../../../__common__/testUtils";
 import { JobActions } from "../../../../src/trees/job/JobActions";
-import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { JobTree } from "../../../../src/trees/job/JobTree";
@@ -50,8 +49,6 @@ describe("Test src/jobs/extension", () => {
             removeFavorite: jest.fn(),
             saveSearch: jest.fn(),
             removeFavProfile: jest.fn(),
-            ssoLogin: jest.fn(),
-            ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
             onDidCloseTextDocument: jest.fn(),
             pollData: jest.fn(),
@@ -160,26 +157,6 @@ describe("Test src/jobs/extension", () => {
                 name: "zowe.jobs.removeFavProfile",
                 parm: [{ label: test.value }],
                 mock: [{ spy: jest.spyOn(jobsProvider, "removeFavProfile"), arg: [test.value, true] }],
-            },
-            {
-                name: "zowe.jobs.disableValidation",
-                mock: [
-                    {
-                        spy: jest.spyOn(Profiles, "getInstance"),
-                        arg: [],
-                        ret: { disableValidation: jest.fn() },
-                    },
-                ],
-            },
-            {
-                name: "zowe.jobs.enableValidation",
-                mock: [
-                    {
-                        spy: jest.spyOn(Profiles, "getInstance"),
-                        arg: [],
-                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
-                    },
-                ],
             },
             {
                 name: "onDidChangeConfiguration",

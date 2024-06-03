@@ -14,7 +14,6 @@ import { IZoweJobTreeNode, IZoweTreeNode, ZoweScheme, imperative } from "@zowe/z
 import { JobTree } from "./JobTree";
 import { JobActions } from "./JobActions";
 import { ZoweJobNode } from "./ZoweJobNode";
-import { Profiles } from "../../configuration/Profiles";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedActions } from "../shared/SharedActions";
 import { SharedContext } from "../shared/SharedContext";
@@ -144,18 +143,6 @@ export class JobInit {
                 "zowe.jobs.removeFavProfile",
                 async (node): Promise<void> => jobsProvider.removeFavProfile(node.label, true)
             )
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.jobs.disableValidation", (node) => {
-                Profiles.getInstance().disableValidation(node);
-                jobsProvider.refreshElement(node);
-            })
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.jobs.enableValidation", (node) => {
-                Profiles.getInstance().enableValidation(node);
-                jobsProvider.refreshElement(node);
-            })
         );
         const spoolFileTogglePoll =
             (startPolling: boolean) =>

@@ -13,7 +13,6 @@ import * as vscode from "vscode";
 import { IJestIt, ITestContext, processSubscriptions } from "../../../__common__/testUtils";
 import { ZoweScheme } from "@zowe/zowe-explorer-api";
 import { SharedActions } from "../../../../src/trees/shared/SharedActions";
-import { Profiles } from "../../../../src/configuration/Profiles";
 import { DatasetTree } from "../../../../src/trees/dataset/DatasetTree";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
@@ -221,26 +220,6 @@ describe("Test src/dataset/extension", () => {
                 mock: [
                     { spy: jest.spyOn(SharedContext, "hasFileError"), arg: [test.value], ret: true },
                     { spy: jest.spyOn(DatasetActions, "showFileErrorDetails"), arg: [test.value] },
-                ],
-            },
-            {
-                name: "zowe.ds.disableValidation",
-                mock: [
-                    {
-                        spy: jest.spyOn(Profiles, "getInstance"),
-                        arg: [],
-                        ret: { disableValidation: jest.fn() },
-                    },
-                ],
-            },
-            {
-                name: "zowe.ds.enableValidation",
-                mock: [
-                    {
-                        spy: jest.spyOn(Profiles, "getInstance"),
-                        arg: [],
-                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
-                    },
                 ],
             },
             {

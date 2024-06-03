@@ -165,32 +165,12 @@
         }
       },
       {
-        "command": "zowe.ds.disableValidation",
+        "command": "zowe.disableValidation",
         "title": "%disableValidation%",
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.uss.disableValidation",
-        "title": "%disableValidation%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.jobs.disableValidation",
-        "title": "%disableValidation%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.ds.enableValidation",
-        "title": "%enableValidation%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.uss.enableValidation",
-        "title": "%enableValidation%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.jobs.enableValidation",
+        "command": "zowe.enableValidation",
         "title": "%enableValidation%",
         "category": "Zowe Explorer"
       },
@@ -1497,27 +1477,11 @@
           "when": "never"
         },
         {
-          "command": "zowe.ds.disableValidation",
+          "command": "zowe.disableValidation",
           "when": "never"
         },
         {
-          "command": "zowe.ds.enableValidation",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.disableValidation",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.enableValidation",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.disableValidation",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.enableValidation",
+          "command": "zowe.enableValidation",
           "when": "never"
         },
         {

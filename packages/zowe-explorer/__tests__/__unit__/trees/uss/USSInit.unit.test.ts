@@ -11,7 +11,6 @@
 
 import * as vscode from "vscode";
 import { USSActions } from "../../../../src/trees/uss/USSActions";
-import { Profiles } from "../../../../src/configuration/Profiles";
 import { IJestIt, ITestContext, processSubscriptions } from "../../../__common__/testUtils";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { USSInit } from "../../../../src/trees/uss/USSInit";
@@ -39,8 +38,6 @@ describe("Test src/uss/extension", () => {
             rename: jest.fn(),
             saveSearch: jest.fn(),
             removeFavProfile: jest.fn(),
-            ssoLogin: jest.fn(),
-            ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
             onDidCloseTextDocument: jest.fn(),
             getTreeView: jest.fn().mockReturnValue({
@@ -144,26 +141,6 @@ describe("Test src/uss/extension", () => {
                 name: "zowe.uss.removeFavProfile",
                 parm: [{ label: test.value }],
                 mock: [{ spy: jest.spyOn(ussFileProvider, "removeFavProfile"), arg: [test.value, true] }],
-            },
-            {
-                name: "zowe.uss.disableValidation",
-                mock: [
-                    {
-                        spy: jest.spyOn(Profiles, "getInstance"),
-                        arg: [],
-                        ret: { disableValidation: jest.fn() },
-                    },
-                ],
-            },
-            {
-                name: "zowe.uss.enableValidation",
-                mock: [
-                    {
-                        spy: jest.spyOn(Profiles, "getInstance"),
-                        arg: [],
-                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
-                    },
-                ],
             },
             {
                 name: "zowe.uss.pasteUssFile",

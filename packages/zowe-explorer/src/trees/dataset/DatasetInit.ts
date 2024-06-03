@@ -15,7 +15,6 @@ import { DatasetTree } from "./DatasetTree";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { DatasetActions } from "./DatasetActions";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
-import { Profiles } from "../../configuration/Profiles";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedActions } from "../shared/SharedActions";
@@ -199,18 +198,6 @@ export class DatasetInit {
                 for (const item of selectedNodes) {
                     await DatasetActions.showFileErrorDetails(item as ZoweDatasetNode);
                 }
-            })
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.disableValidation", (node) => {
-                Profiles.getInstance().disableValidation(node);
-                datasetProvider.refreshElement(node);
-            })
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.enableValidation", (node) => {
-                Profiles.getInstance().enableValidation(node);
-                datasetProvider.refreshElement(node);
             })
         );
         context.subscriptions.push(

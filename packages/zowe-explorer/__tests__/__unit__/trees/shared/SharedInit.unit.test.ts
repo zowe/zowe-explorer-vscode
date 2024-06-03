@@ -50,9 +50,27 @@ describe("Test src/shared/extension", () => {
             },
             _: { _: "_" },
         };
-        const profileMocks = { deleteProfile: jest.fn(), refresh: jest.fn() };
-        const treeProvider = { ssoLogin: jest.fn(), ssoLogout: jest.fn() };
+        const profileMocks = { deleteProfile: jest.fn(), disableValidation: jest.fn(), enableValidation: jest.fn(), refresh: jest.fn() };
+        const treeProvider = { refreshElement: jest.fn(), ssoLogin: jest.fn(), ssoLogout: jest.fn() };
         const commands: IJestIt[] = [
+            {
+                name: "zowe.disableValidation",
+                mock: [
+                    { spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks },
+                    { spy: jest.spyOn(profileMocks, "disableValidation"), arg: [test.value] },
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "refreshElement"), arg: [test.value] },
+                ],
+            },
+            {
+                name: "zowe.enableValidation",
+                mock: [
+                    { spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks },
+                    { spy: jest.spyOn(profileMocks, "enableValidation"), arg: [test.value] },
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "refreshElement"), arg: [test.value] },
+                ],
+            },
             {
                 name: "zowe.ssoLogin",
                 mock: [

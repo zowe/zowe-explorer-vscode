@@ -14,7 +14,6 @@ import { IZoweUSSTreeNode, ZosEncoding, imperative, ZoweScheme, FsAbstractUtils,
 import { USSTree } from "./USSTree";
 import { USSActions } from "./USSActions";
 import { UssFSProvider } from "./UssFSProvider";
-import { Profiles } from "../../configuration/Profiles";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedActions } from "../shared/SharedActions";
@@ -178,18 +177,6 @@ export class USSInit {
                 "zowe.uss.removeFavProfile",
                 async (node): Promise<void> => ussFileProvider.removeFavProfile(node.label, true)
             )
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.disableValidation", (node) => {
-                Profiles.getInstance().disableValidation(node);
-                ussFileProvider.refreshElement(node);
-            })
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.enableValidation", (node) => {
-                Profiles.getInstance().enableValidation(node);
-                ussFileProvider.refreshElement(node);
-            })
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.pasteUssFile", async (node: IZoweUSSTreeNode) => {

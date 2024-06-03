@@ -60,6 +60,18 @@ export class SharedInit {
         ZoweLogger.trace("shared.init.registerCommonCommands called.");
 
         context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.disableValidation", (node) => {
+                Profiles.getInstance().disableValidation(node);
+                SharedTreeProviders.getProviderForNode(node).refreshElement(node);
+            })
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.enableValidation", (node) => {
+                Profiles.getInstance().enableValidation(node);
+                SharedTreeProviders.getProviderForNode(node).refreshElement(node);
+            })
+        );
+        context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ssoLogin", (node: IZoweTreeNode) => SharedTreeProviders.getProviderForNode(node).ssoLogin(node))
         );
         context.subscriptions.push(
