@@ -262,8 +262,7 @@ export class ProfileManagement {
             await Profiles.getInstance().editSession(profile);
             return;
         }
-        const type: string = SharedContext.getSessionType(node);
-        await vscode.commands.executeCommand(`zowe.${type}.deleteProfile`, node);
+        await vscode.commands.executeCommand("zowe.deleteProfile", node);
     }
 
     private static async handleHideProfiles(node: IZoweTreeNode): Promise<void> {
@@ -277,13 +276,11 @@ export class ProfileManagement {
     }
 
     private static async handleEnableProfileValidation(node: IZoweTreeNode): Promise<void> {
-        const type: string = SharedContext.getSessionType(node);
-        return vscode.commands.executeCommand(`zowe.${type}.enableValidation`, node);
+        return vscode.commands.executeCommand("zowe.enableValidation", node);
     }
 
     private static async handleDisableProfileValidation(node: IZoweTreeNode): Promise<void> {
-        const type: string = SharedContext.getSessionType(node);
-        return vscode.commands.executeCommand(`zowe.${type}.disableValidation`, node);
+        return vscode.commands.executeCommand("zowe.disableValidation", node);
     }
 
     private static isProfileRegisteredWithTree(tree: Definitions.Trees, profile: imperative.IProfileLoaded): boolean {

@@ -179,16 +179,7 @@ export class SharedInit {
         }
         if (providers.ds || providers.uss || providers.job) {
             context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.ds.deleteProfile", async (node) => Profiles.getInstance().deleteProfile(node))
-            );
-            context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.cmd.deleteProfile", async (node) => Profiles.getInstance().deleteProfile(node))
-            );
-            context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.uss.deleteProfile", async (node) => Profiles.getInstance().deleteProfile(node))
-            );
-            context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.jobs.deleteProfile", async (node) => Profiles.getInstance().deleteProfile(node))
+                vscode.commands.registerCommand("zowe.deleteProfile", async (node) => Profiles.getInstance().deleteProfile(node))
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.issueTsoCmd", async (node?, command?) => {

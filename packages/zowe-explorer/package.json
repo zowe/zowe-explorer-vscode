@@ -165,26 +165,6 @@
         }
       },
       {
-        "command": "zowe.disableValidation",
-        "title": "%disableValidation%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.enableValidation",
-        "title": "%enableValidation%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.ssoLogin",
-        "title": "%ssoLogin%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.ssoLogout",
-        "title": "%ssoLogout%",
-        "category": "Zowe Explorer"
-      },
-      {
         "command": "zowe.uss.copyPath",
         "title": "%uss.copyPath%",
         "category": "Zowe Explorer"
@@ -237,11 +217,6 @@
         }
       },
       {
-        "command": "zowe.ds.deleteProfile",
-        "title": "%deleteProfile%",
-        "category": "Zowe Explorer"
-      },
-      {
         "command": "zowe.ds.filterBy",
         "title": "%ds.filterBy%",
         "category": "Zowe Explorer",
@@ -254,8 +229,8 @@
         "icon": "$(list-ordered)"
       },
       {
-        "command": "zowe.cmd.deleteProfile",
-        "title": "%cmd.deleteProfile%",
+        "command": "zowe.deleteProfile",
+        "title": "%deleteProfile%",
         "category": "Zowe Explorer"
       },
       {
@@ -453,11 +428,6 @@
         }
       },
       {
-        "command": "zowe.uss.deleteProfile",
-        "title": "%deleteProfile%",
-        "category": "Zowe Explorer"
-      },
-      {
         "command": "zowe.uss.editFile",
         "title": "%uss.editFile%",
         "category": "Zowe Explorer",
@@ -588,16 +558,6 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.jobs.setOwner",
-        "title": "%setOwner%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.jobs.setPrefix",
-        "title": "%setPrefix%",
-        "category": "Zowe Explorer"
-      },
-      {
         "command": "zowe.jobs.refreshJobsServer",
         "title": "%refreshJobsServer%",
         "category": "Zowe Explorer",
@@ -614,11 +574,6 @@
           "light": "./resources/light/edit.svg",
           "dark": "./resources/dark/edit.svg"
         }
-      },
-      {
-        "command": "zowe.jobs.deleteProfile",
-        "title": "%deleteProfile%",
-        "category": "Zowe Explorer"
       },
       {
         "command": "zowe.jobs.refreshAllJobs",
@@ -639,11 +594,6 @@
         }
       },
       {
-        "command": "zowe.jobs.removeSession",
-        "title": "%removeSession%",
-        "category": "Zowe Explorer"
-      },
-      {
         "command": "zowe.jobs.downloadSpool",
         "title": "%downloadSpool%",
         "category": "Zowe Explorer",
@@ -660,11 +610,6 @@
       {
         "command": "zowe.jobs.getJobJcl",
         "title": "%getJobJcl%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.jobs.setJobSpool",
-        "title": "%setJobSpool%",
         "category": "Zowe Explorer"
       },
       {
@@ -755,11 +700,6 @@
       {
         "command": "zowe.compareWithSelectedReadOnly",
         "title": "%compareWithSelectedReadOnly%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.compareFileStarted",
-        "title": "%compareFileStarted%",
         "category": "Zowe Explorer"
       },
       {
@@ -1465,31 +1405,7 @@
           "when": "never"
         },
         {
-          "command": "zowe.ds.removeSession",
-          "when": "never"
-        },
-        {
           "command": "zowe.ds.removeFavProfile",
-          "when": "never"
-        },
-        {
-          "command": "zowe.ds.deleteProfile",
-          "when": "never"
-        },
-        {
-          "command": "zowe.disableValidation",
-          "when": "never"
-        },
-        {
-          "command": "zowe.enableValidation",
-          "when": "never"
-        },
-        {
-          "command": "zowe.ssoLogin",
-          "when": "never"
-        },
-        {
-          "command": "zowe.ssoLogout",
           "when": "never"
         },
         {
@@ -1565,15 +1481,7 @@
           "when": "never"
         },
         {
-          "command": "zowe.uss.deleteProfile",
-          "when": "never"
-        },
-        {
           "command": "zowe.uss.removeSavedSearch",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.removeSession",
           "when": "never"
         },
         {
@@ -1590,18 +1498,6 @@
         },
         {
           "command": "zowe.uss.removeFavProfile",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.setPrefix",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.setOwner",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.setJobSpool",
           "when": "never"
         },
         {
@@ -1653,14 +1549,6 @@
           "when": "never"
         },
         {
-          "command": "zowe.jobs.removeSession",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.deleteProfile",
-          "when": "never"
-        },
-        {
           "command": "zowe.jobs.refreshJob",
           "when": "never"
         },
@@ -1682,10 +1570,6 @@
         },
         {
           "command": "zowe.profileManagement",
-          "when": "never"
-        },
-        {
-          "command": "zowe.compareFileStarted",
           "when": "never"
         },
         {

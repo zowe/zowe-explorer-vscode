@@ -182,19 +182,7 @@ describe("Test src/shared/extension", () => {
                 mock: [],
             },
             {
-                name: "zowe.ds.deleteProfile",
-                mock: [{ spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks }],
-            },
-            {
-                name: "zowe.cmd.deleteProfile",
-                mock: [{ spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks }],
-            },
-            {
-                name: "zowe.uss.deleteProfile",
-                mock: [{ spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks }],
-            },
-            {
-                name: "zowe.jobs.deleteProfile",
+                name: "zowe.deleteProfile",
                 mock: [{ spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks }],
             },
             {
