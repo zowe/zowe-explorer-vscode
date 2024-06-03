@@ -59,6 +59,13 @@ export class SharedInit {
     public static registerCommonCommands(context: vscode.ExtensionContext, providers: Definitions.IZoweProviders): void {
         ZoweLogger.trace("shared.init.registerCommonCommands called.");
 
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.ssoLogin", (node: IZoweTreeNode) => SharedTreeProviders.getProviderForNode(node).ssoLogin(node))
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.ssoLogout", (node: IZoweTreeNode) => SharedTreeProviders.getProviderForNode(node).ssoLogout(node))
+        );
+
         // Update imperative.json to false only when VS Code setting is set to false
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.updateSecureCredentials", (customCredentialManager?: string) => {

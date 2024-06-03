@@ -157,10 +157,6 @@ export class JobInit {
                 jobsProvider.refreshElement(node);
             })
         );
-        context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.ssoLogin", async (node): Promise<void> => jobsProvider.ssoLogin(node)));
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.jobs.ssoLogout", async (node): Promise<void> => jobsProvider.ssoLogout(node))
-        );
         const spoolFileTogglePoll =
             (startPolling: boolean) =>
             async (node: IZoweTreeNode, nodeList: IZoweTreeNode[]): Promise<void> => {

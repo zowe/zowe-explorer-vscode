@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweDatasetTreeNode, IZoweTreeNode, ZosEncoding, ZoweScheme, imperative } from "@zowe/zowe-explorer-api";
+import { IZoweDatasetTreeNode, ZosEncoding, ZoweScheme, imperative } from "@zowe/zowe-explorer-api";
 import { DatasetTree } from "./DatasetTree";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { DatasetActions } from "./DatasetActions";
@@ -213,8 +213,6 @@ export class DatasetInit {
                 datasetProvider.refreshElement(node);
             })
         );
-        context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.ssoLogin", (node: IZoweTreeNode) => datasetProvider.ssoLogin(node)));
-        context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.ssoLogout", (node: IZoweTreeNode) => datasetProvider.ssoLogout(node)));
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.sortBy", async (node: IZoweDatasetTreeNode) => datasetProvider.sortPdsMembersDialog(node))
         );

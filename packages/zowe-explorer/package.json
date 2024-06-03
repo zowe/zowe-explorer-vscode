@@ -195,32 +195,12 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.ds.ssoLogin",
+        "command": "zowe.ssoLogin",
         "title": "%ssoLogin%",
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.uss.ssoLogin",
-        "title": "%ssoLogin%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.jobs.ssoLogin",
-        "title": "%ssoLogin%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.ds.ssoLogout",
-        "title": "%ssoLogout%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.uss.ssoLogout",
-        "title": "%ssoLogout%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.jobs.ssoLogout",
+        "command": "zowe.ssoLogout",
         "title": "%ssoLogout%",
         "category": "Zowe Explorer"
       },
@@ -274,15 +254,6 @@
         "icon": {
           "light": "./resources/light/plus.svg",
           "dark": "./resources/dark/plus.svg"
-        }
-      },
-      {
-        "command": "zowe.ds.editSession",
-        "title": "%editSession%",
-        "category": "Zowe Explorer",
-        "icon": {
-          "light": "./resources/light/edit.svg",
-          "dark": "./resources/dark/edit.svg"
         }
       },
       {
@@ -478,11 +449,6 @@
         }
       },
       {
-        "command": "zowe.ds.removeSession",
-        "title": "%removeSession%",
-        "category": "Zowe Explorer"
-      },
-      {
         "command": "zowe.ds.saveSearch",
         "title": "%saveSearch%",
         "category": "Zowe Explorer"
@@ -504,15 +470,6 @@
         "icon": {
           "light": "./resources/light/plus.svg",
           "dark": "./resources/dark/plus.svg"
-        }
-      },
-      {
-        "command": "zowe.uss.editSession",
-        "title": "%editSession%",
-        "category": "Zowe Explorer",
-        "icon": {
-          "light": "./resources/light/edit.svg",
-          "dark": "./resources/dark/edit.svg"
         }
       },
       {
@@ -564,11 +521,6 @@
           "light": "./resources/light/refresh.svg",
           "dark": "./resources/dark/refresh.svg"
         }
-      },
-      {
-        "command": "zowe.uss.removeSession",
-        "title": "%uss.removeSession%",
-        "category": "Zowe Explorer"
       },
       {
         "command": "zowe.uss.saveSearch",
@@ -1569,27 +1521,11 @@
           "when": "never"
         },
         {
-          "command": "zowe.ds.ssoLogin",
+          "command": "zowe.ssoLogin",
           "when": "never"
         },
         {
-          "command": "zowe.ds.ssoLogout",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.ssoLogin",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.ssoLogout",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.ssoLogin",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.ssoLogout",
+          "command": "zowe.ssoLogout",
           "when": "never"
         },
         {

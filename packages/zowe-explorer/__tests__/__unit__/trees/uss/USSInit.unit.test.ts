@@ -166,14 +166,6 @@ describe("Test src/uss/extension", () => {
                 ],
             },
             {
-                name: "zowe.uss.ssoLogin",
-                mock: [{ spy: jest.spyOn(ussFileProvider, "ssoLogin"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.uss.ssoLogout",
-                mock: [{ spy: jest.spyOn(ussFileProvider, "ssoLogout"), arg: [test.value] }],
-            },
-            {
                 name: "zowe.uss.pasteUssFile",
                 mock: [{ spy: jest.spyOn(USSActions, "pasteUss"), arg: [ussFileProvider, test.value] }],
             },

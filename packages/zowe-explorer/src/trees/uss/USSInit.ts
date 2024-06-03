@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweUSSTreeNode, IZoweTreeNode, ZosEncoding, imperative, ZoweScheme, FsAbstractUtils, Gui } from "@zowe/zowe-explorer-api";
+import { IZoweUSSTreeNode, ZosEncoding, imperative, ZoweScheme, FsAbstractUtils, Gui } from "@zowe/zowe-explorer-api";
 import { USSTree } from "./USSTree";
 import { USSActions } from "./USSActions";
 import { UssFSProvider } from "./UssFSProvider";
@@ -190,12 +190,6 @@ export class USSInit {
                 Profiles.getInstance().enableValidation(node);
                 ussFileProvider.refreshElement(node);
             })
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.ssoLogin", async (node: IZoweTreeNode): Promise<void> => ussFileProvider.ssoLogin(node))
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.ssoLogout", async (node: IZoweTreeNode): Promise<void> => ussFileProvider.ssoLogout(node))
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.pasteUssFile", async (node: IZoweUSSTreeNode) => {

@@ -182,14 +182,6 @@ describe("Test src/jobs/extension", () => {
                 ],
             },
             {
-                name: "zowe.jobs.ssoLogin",
-                mock: [{ spy: jest.spyOn(jobsProvider, "ssoLogin"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.jobs.ssoLogout",
-                mock: [{ spy: jest.spyOn(jobsProvider, "ssoLogout"), arg: [test.value] }],
-            },
-            {
                 name: "onDidChangeConfiguration",
                 mock: [{ spy: jest.spyOn(jobsProvider, "onDidChangeConfiguration"), arg: [test.value] }],
             },

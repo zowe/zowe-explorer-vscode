@@ -45,8 +45,6 @@ describe("Test src/dataset/extension", () => {
             removeFavorite: jest.fn(),
             removeFavProfile: jest.fn(),
             rename: jest.fn(),
-            ssoLogin: jest.fn(),
-            ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
             onDidCloseTextDocument: jest.fn(),
             getTreeView: jest.fn(),
@@ -244,14 +242,6 @@ describe("Test src/dataset/extension", () => {
                         ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
                     },
                 ],
-            },
-            {
-                name: "zowe.ds.ssoLogin",
-                mock: [{ spy: jest.spyOn(dsProvider, "ssoLogin"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.ds.ssoLogout",
-                mock: [{ spy: jest.spyOn(dsProvider, "ssoLogout"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.sortBy",

@@ -26,6 +26,7 @@ import { SharedInit } from "../../../../src/trees/shared/SharedInit";
 import { TsoCommandHandler } from "../../../../src/commands/TsoCommandHandler";
 import { MvsCommandHandler } from "../../../../src/commands/MvsCommandHandler";
 import { UnixCommandHandler } from "../../../../src/commands/UnixCommandHandler";
+import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
@@ -50,7 +51,22 @@ describe("Test src/shared/extension", () => {
             _: { _: "_" },
         };
         const profileMocks = { deleteProfile: jest.fn(), refresh: jest.fn() };
+        const treeProvider = { ssoLogin: jest.fn(), ssoLogout: jest.fn() };
         const commands: IJestIt[] = [
+            {
+                name: "zowe.ssoLogin",
+                mock: [
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "ssoLogin"), arg: [test.value] },
+                ],
+            },
+            {
+                name: "zowe.ssoLogout",
+                mock: [
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "ssoLogout"), arg: [test.value] },
+                ],
+            },
             {
                 name: "zowe.updateSecureCredentials",
                 parm: ["@zowe/cli"],
