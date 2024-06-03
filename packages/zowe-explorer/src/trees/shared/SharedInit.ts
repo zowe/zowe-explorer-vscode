@@ -32,6 +32,9 @@ import { ProfilesUtils } from "../../utils/ProfilesUtils";
 import { DatasetFSProvider } from "../dataset/DatasetFSProvider";
 import { ExtensionUtils } from "../../utils/ExtensionUtils";
 import type { Definitions } from "../../configuration/Definitions";
+import { SharedUtils } from "./SharedUtils";
+import { SharedContext } from "./SharedContext";
+import { TreeViewUtils } from "../../utils/TreeViewUtils";
 
 export class SharedInit {
     public static registerRefreshCommand(
@@ -180,6 +183,20 @@ export class SharedInit {
         if (providers.ds || providers.uss || providers.job) {
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.deleteProfile", async (node) => Profiles.getInstance().deleteProfile(node))
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand(
+                    "zowe.removeSession",
+                    async (node: IZoweTreeNode, nodeList: IZoweTreeNode[], hideFromAllTrees: boolean) => {
+                        const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList).filter((sNode) => SharedContext.isSession(sNode));
+                        for (const tempNode of selectedNodes) {
+                            SharedTreeProviders.getProviderForNode(tempNode).deleteSession(tempNode, hideFromAllTrees);
+                        }
+                        if (selectedNodes.length) {
+                            await TreeViewUtils.fixVsCodeMultiSelect(SharedTreeProviders.getProviderForNode(selectedNodes[0]));
+                        }
+                    }
+                )
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.issueTsoCmd", async (node?, command?) => {

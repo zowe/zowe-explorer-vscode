@@ -83,15 +83,6 @@ export class JobInit {
         context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.addJobsSession", () => jobsProvider.createZoweSession(jobsProvider)));
         context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.setOwner", (job) => JobActions.setOwner(job, jobsProvider)));
         context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.setPrefix", (job) => JobActions.setPrefix(job, jobsProvider)));
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.jobs.removeSession", (job, jobList, hideFromAllTrees) => {
-                let selectedNodes = SharedUtils.getSelectedNodeList(job, jobList);
-                selectedNodes = selectedNodes.filter((element) => SharedContext.isJobsSession(element));
-                for (const item of selectedNodes) {
-                    jobsProvider.deleteSession(item, hideFromAllTrees);
-                }
-            })
-        );
 
         const downloadSpoolHandler = (binary: boolean) => async (node, nodeList) => {
             const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];

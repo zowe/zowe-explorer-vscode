@@ -15,7 +15,6 @@ import { USSTree } from "./USSTree";
 import { USSActions } from "./USSActions";
 import { UssFSProvider } from "./UssFSProvider";
 import { ZoweLogger } from "../../tools/ZoweLogger";
-import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedActions } from "../shared/SharedActions";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedInit } from "../shared/SharedInit";
@@ -109,16 +108,6 @@ export class USSInit {
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.editSession", async (node) => ussFileProvider.editSession(node, ussFileProvider))
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.removeSession", async (node: IZoweUSSTreeNode, nodeList, hideFromAllTrees: boolean) => {
-                let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
-                selectedNodes = selectedNodes.filter((element) => SharedContext.isUssSession(element));
-                for (const item of selectedNodes) {
-                    ussFileProvider.deleteSession(item as IZoweUSSTreeNode, hideFromAllTrees);
-                }
-                await TreeViewUtils.fixVsCodeMultiSelect(ussFileProvider);
-            })
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.createFile", async (node: IZoweUSSTreeNode) =>

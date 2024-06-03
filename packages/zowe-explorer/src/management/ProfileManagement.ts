@@ -271,8 +271,7 @@ export class ProfileManagement {
             Gui.infoMessage(vscode.l10n.t("Operation Cancelled"));
             return;
         }
-        const type: string = SharedContext.getSessionType(node);
-        return vscode.commands.executeCommand(`zowe.${type}.removeSession`, node, null, shouldHideFromAllTrees);
+        return vscode.commands.executeCommand("zowe.removeSession", node, null, shouldHideFromAllTrees);
     }
 
     private static async handleEnableProfileValidation(node: IZoweTreeNode): Promise<void> {

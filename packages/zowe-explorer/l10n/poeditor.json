@@ -119,9 +119,6 @@
   "removeSavedSearch": {
     "Remove Search": ""
   },
-  "removeSession": {
-    "Hide Profile": ""
-  },
   "saveSearch": {
     "Add to Favorites": ""
   },
@@ -136,9 +133,6 @@
   },
   "uss.copyPath": {
     "Copy Path": ""
-  },
-  "uss.createDirectory": {
-    "Create New Directory": ""
   },
   "uss.editFile": {
     "Edit File": ""
@@ -155,17 +149,8 @@
   "uss.refreshDirectory": {
     "Refresh Directory": ""
   },
-  "uss.removeSession": {
-    "Hide Profile": ""
-  },
-  "uss.binary": {
-    "Toggle Binary": ""
-  },
   "uss.uploadDialog": {
     "Upload Files...": ""
-  },
-  "uss.text": {
-    "Toggle Text": ""
   },
   "jobs.search": {
     "Search Jobs": ""
@@ -178,12 +163,6 @@
   },
   "runStopCommand": {
     "Issue Stop command": ""
-  },
-  "setOwner": {
-    "Set Owner": ""
-  },
-  "setPrefix": {
-    "Set Job Prefix": ""
   },
   "refreshJobsServer": {
     "Refresh": ""
@@ -205,9 +184,6 @@
   },
   "getJobJcl": {
     "Get JCL": ""
-  },
-  "setJobSpool": {
-    "Set Spool": ""
   },
   "configuration.title": {
     "Zowe Explorer": ""
@@ -335,12 +311,6 @@
   "zowe.pollInterval.info": {
     "Default interval (in milliseconds) when polling spool files.": ""
   },
-  "zowe.separator.recentFilters": {
-    "Recent Filters": ""
-  },
-  "zowe.settings.version": {
-    "Track if migration has been processed": ""
-  },
   "zowe.security.checkForCustomCredentialManagers": {
     "Check for any installed VS Code extensions for handling credentials when activating Zowe Explorer": ""
   },
@@ -351,9 +321,6 @@
     "Issue TSO Command": ""
   },
   "deleteProfile": {
-    "Delete Profile": ""
-  },
-  "cmd.deleteProfile": {
     "Delete a Profile Permanently...": ""
   },
   "renameDataSet": {
@@ -361,9 +328,6 @@
   },
   "renameMember": {
     "Rename Member": ""
-  },
-  "copyDataSet": {
-    "Copy Data Set": ""
   },
   "paste": {
     "Paste": ""
@@ -376,33 +340,6 @@
   },
   "showFileErrorDetails": {
     "Show Error Details": ""
-  },
-  "profile.configuration.title": {
-    "Zowe z/OSMF Profiles": ""
-  },
-  "profile.configuration.name": {
-    "Profile Name": ""
-  },
-  "profile.configuration.url": {
-    "z/OSMF URL": ""
-  },
-  "profile.configuration.user": {
-    "z/OSMF User Name": ""
-  },
-  "profile.configuration.ru": {
-    "Profile Reject Unauthorize": ""
-  },
-  "disableValidation": {
-    "Disable Validation for Profile": ""
-  },
-  "enableValidation": {
-    "Enable Validation for Profile": ""
-  },
-  "ssoLogin": {
-    "Log in to Authentication Service": ""
-  },
-  "ssoLogout": {
-    "Log out from Authentication Service": ""
   },
   "jobs.refreshJob": {
     "Refresh Job": ""
@@ -418,9 +355,6 @@
   },
   "downloadSingleSpoolBinary": {
     "Download (Binary)": ""
-  },
-  "downloadSingleSpool.error": {
-    "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).": ""
   },
   "all.configInit": {
     "Initialize Team Configuration File": ""
@@ -454,9 +388,6 @@
   },
   "compareWithSelectedReadOnly": {
     "Compare with Selected (Read-Only)": ""
-  },
-  "compareFileStarted": {
-    "A file has been chosen for compare": ""
   },
   "openWithEncoding": {
     "Open with Encoding": ""

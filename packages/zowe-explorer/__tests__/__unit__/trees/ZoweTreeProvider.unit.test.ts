@@ -211,7 +211,7 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
             refresh: jest.fn(),
             removeSession: jest.fn(),
         } as any;
-        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({ job: mockJobProvider } as any);
+        jest.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue(mockJobProvider);
         jest.spyOn(blockMocks.jobNode, "getSession").mockReturnValue(null);
         blockMocks.jobNode.contextValue = Constants.JOBS_SESSION_CONTEXT;
         await blockMocks.testJobsProvider.editSession(blockMocks.jobNode, globalMocks.testUSSTree);

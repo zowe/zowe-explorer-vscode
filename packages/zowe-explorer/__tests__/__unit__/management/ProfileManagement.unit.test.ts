@@ -162,7 +162,7 @@ describe("ProfileManagement unit tests", () => {
             mocks.mockResolveQp.mockResolvedValueOnce(Profiles["getPromptChangeForAllTreesOptions"]()[1]);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
-            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.ds.removeSession", mocks.mockDsSessionNode, null, false);
+            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.removeSession", mocks.mockDsSessionNode, null, false);
         });
     });
     describe("unit tests around token auth selections", () => {
@@ -201,7 +201,7 @@ describe("ProfileManagement unit tests", () => {
             mocks.mockResolveQp.mockResolvedValueOnce(Profiles["getPromptChangeForAllTreesOptions"]()[1]);
             await ProfileManagement.manageProfile(mocks.mockUnixSessionNode);
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
-            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.uss.removeSession", mocks.mockUnixSessionNode, null, false);
+            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.removeSession", mocks.mockUnixSessionNode, null, false);
         });
         it("profile using token authentication should see correct command called for enabling validation a unix tree session node", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
@@ -288,7 +288,7 @@ describe("ProfileManagement unit tests", () => {
             mocks.mockJobSessionNode.contextValue = Constants.JOBS_SESSION_CONTEXT;
             mocks.mockJobSessionNode.getLabel = jest.fn(() => "test");
             await expect(ProfileManagement["handleHideProfiles"](mocks.mockJobSessionNode)).resolves.toEqual(undefined);
-            expect(commandSpy).toHaveBeenCalledWith("zowe.jobs.removeSession", mocks.mockJobSessionNode, null, false);
+            expect(commandSpy).toHaveBeenCalledWith("zowe.removeSession", mocks.mockJobSessionNode, null, false);
         });
     });
 

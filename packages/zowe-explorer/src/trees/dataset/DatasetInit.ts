@@ -16,7 +16,6 @@ import { DatasetFSProvider } from "./DatasetFSProvider";
 import { DatasetActions } from "./DatasetActions";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { ZoweLogger } from "../../tools/ZoweLogger";
-import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedActions } from "../shared/SharedActions";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedInit } from "../shared/SharedInit";
@@ -116,19 +115,6 @@ export class DatasetInit {
                     await vscode.commands.executeCommand(item.command.command, item.resourceUri);
                 }
             })
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand(
-                "zowe.ds.removeSession",
-                async (node: IZoweDatasetTreeNode, nodeList: IZoweDatasetTreeNode[], hideFromAllTrees: boolean) => {
-                    let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
-                    selectedNodes = selectedNodes.filter((sNode) => SharedContext.isDsSession(sNode));
-                    for (const select of selectedNodes) {
-                        datasetProvider.deleteSession(select as IZoweDatasetTreeNode, hideFromAllTrees);
-                    }
-                    await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider);
-                }
-            )
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.removeFavorite", async (node, nodeList) => {

@@ -132,13 +132,6 @@ describe("Test src/dataset/extension", () => {
                 ],
             },
             {
-                name: "zowe.ds.removeSession",
-                mock: [
-                    { spy: jest.spyOn(SharedContext, "isDsSession"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(dsProvider, "deleteSession"), arg: [test.value, undefined] },
-                ],
-            },
-            {
                 name: "zowe.ds.removeFavorite",
                 mock: [{ spy: jest.spyOn(dsProvider, "removeFavorite"), arg: [test.value] }],
             },

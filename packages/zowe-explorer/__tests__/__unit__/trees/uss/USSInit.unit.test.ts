@@ -90,13 +90,6 @@ describe("Test src/uss/extension", () => {
                 mock: [{ spy: jest.spyOn(ussFileProvider, "editSession"), arg: [test.value, ussFileProvider] }],
             },
             {
-                name: "zowe.uss.removeSession",
-                mock: [
-                    { spy: jest.spyOn(SharedContext, "isUssSession"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(ussFileProvider, "deleteSession"), arg: [test.value, undefined] },
-                ],
-            },
-            {
                 name: "zowe.uss.createFile",
                 mock: [{ spy: jest.spyOn(USSActions, "createUSSNode"), arg: [test.value, ussFileProvider, "file"] }],
             },

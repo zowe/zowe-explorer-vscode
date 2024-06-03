@@ -103,13 +103,6 @@ describe("Test src/jobs/extension", () => {
                 mock: [{ spy: jest.spyOn(JobActions, "setPrefix"), arg: [test.value, jobsProvider] }],
             },
             {
-                name: "zowe.jobs.removeSession",
-                mock: [
-                    { spy: jest.spyOn(SharedContext, "isJobsSession"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(jobsProvider, "deleteSession"), arg: [test.value, undefined] },
-                ],
-            },
-            {
                 name: "zowe.jobs.downloadSpool",
                 mock: [{ spy: jest.spyOn(JobActions, "downloadSpool"), arg: [[test.value], false] }],
             },

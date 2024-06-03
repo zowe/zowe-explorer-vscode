@@ -30,6 +30,7 @@ import { DatasetTree } from "../../src/trees/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../src/trees/dataset/ZoweDatasetNode";
 import { USSTree } from "../../src/trees/uss/USSTree";
 import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
+import { JobTree } from "../../src/trees/job/JobTree";
 
 jest.mock("../../src/utils/LoggerUtils");
 jest.mock("../../src/tools/ZoweLogger");
@@ -157,7 +158,6 @@ function createGlobalMocks() {
             "zowe.ds.deleteMember",
             "zowe.ds.editDataSet",
             "zowe.ds.editMember",
-            "zowe.ds.removeSession",
             "zowe.ds.removeFavorite",
             "zowe.ds.saveSearch",
             "zowe.ds.removeSavedSearch",
@@ -184,7 +184,6 @@ function createGlobalMocks() {
             "zowe.uss.refreshDirectory",
             "zowe.uss.fullPath",
             "zowe.uss.editSession",
-            "zowe.uss.removeSession",
             "zowe.uss.createFile",
             "zowe.uss.createFolder",
             "zowe.uss.deleteNode",
@@ -211,7 +210,6 @@ function createGlobalMocks() {
             "zowe.jobs.addJobsSession",
             "zowe.jobs.setOwner",
             "zowe.jobs.setPrefix",
-            "zowe.jobs.removeSession",
             "zowe.jobs.downloadSpool",
             "zowe.jobs.downloadSpoolBinary",
             "zowe.jobs.getJobJcl",
@@ -242,6 +240,7 @@ function createGlobalMocks() {
             "zowe.openRecentMember",
             "zowe.searchInAllLoadedItems",
             "zowe.deleteProfile",
+            "zowe.removeSession",
             "zowe.issueTsoCmd",
             "zowe.issueUnixCmd",
             "zowe.issueMvsCmd",
@@ -530,10 +529,14 @@ describe("Extension Unit Tests", () => {
                 };
             },
         });
-        await removeSessionTest("zowe.ds.removeSession", Constants.DS_SESSION_CONTEXT, DatasetTree);
+        await removeSessionTest("zowe.removeSession", Constants.DS_SESSION_CONTEXT, DatasetTree);
     });
 
     it("zowe.uss.removeSession", async () => {
-        await removeSessionTest("zowe.uss.removeSession", Constants.USS_SESSION_CONTEXT, USSTree);
+        await removeSessionTest("zowe.removeSession", Constants.USS_SESSION_CONTEXT, USSTree);
+    });
+
+    it("zowe.jobs.removeSession", async () => {
+        await removeSessionTest("zowe.removeSession", Constants.JOBS_SESSION_CONTEXT, JobTree);
     });
 });

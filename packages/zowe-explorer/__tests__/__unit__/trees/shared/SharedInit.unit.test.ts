@@ -27,6 +27,7 @@ import { TsoCommandHandler } from "../../../../src/commands/TsoCommandHandler";
 import { MvsCommandHandler } from "../../../../src/commands/MvsCommandHandler";
 import { UnixCommandHandler } from "../../../../src/commands/UnixCommandHandler";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
+import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
@@ -51,7 +52,7 @@ describe("Test src/shared/extension", () => {
             _: { _: "_" },
         };
         const profileMocks = { deleteProfile: jest.fn(), disableValidation: jest.fn(), enableValidation: jest.fn(), refresh: jest.fn() };
-        const treeProvider = { refreshElement: jest.fn(), ssoLogin: jest.fn(), ssoLogout: jest.fn() };
+        const treeProvider = { deleteSession: jest.fn(), getTreeView: jest.fn().mockReturnValue({ reveal: jest.fn() }), refreshElement: jest.fn(), ssoLogin: jest.fn(), ssoLogout: jest.fn() };
         const commands: IJestIt[] = [
             {
                 name: "zowe.disableValidation",
@@ -185,6 +186,14 @@ describe("Test src/shared/extension", () => {
                 name: "zowe.deleteProfile",
                 mock: [{ spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks }],
             },
+            {
+                name: "zowe.removeSession",
+                mock: [
+                    { spy: jest.spyOn(SharedContext, "isSession"), arg: [test.value], ret: true },
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "deleteSession"), arg: [test.value, undefined] },
+                ],
+            }
             {
                 name: "zowe.issueTsoCmd:1",
                 mock: [{ spy: jest.spyOn(TsoCommandHandler, "getInstance"), arg: [], ret: { issueTsoCommand: jest.fn() } }],
