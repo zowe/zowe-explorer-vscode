@@ -1354,18 +1354,6 @@ export class DatasetActions {
     }
 
     /**
-     * Copy data set info
-     *
-     * @export
-     * @deprecated Please use copyDataSets
-     * @param {IZoweNodeType} node - The node to copy
-     */
-    public static async copyDataSet(node: Types.IZoweNodeType): Promise<void> {
-        ZoweLogger.trace("dataset.actions.copyDataSet called.");
-        return vscode.env.clipboard.writeText(JSON.stringify(DatasetUtils.getNodeLabels(node)));
-    }
-
-    /**
      * Copy data sets
      *
      * @export

@@ -11,6 +11,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Set up [POEditor project](https://poeditor.com/join/project/Siy3KCNFKk) for contributing translations and cleaned up redundant localization strings. [#546](https://github.com/zowe/zowe-explorer-vscode/issues/546)
 - Replaced `ts-loader` with `esbuild-loader` to improve build speed for developers. [#2909](https://github.com/zowe/zowe-explorer-vscode/pull/2909)
 - Grouped Common methods into Singleton classes. [#2109](https://github.com/zowe/zowe-explorer-vscode/issues/2109)
+- Removed deprecated methods: [#2238](https://github.com/zowe/zowe-explorer-vscode/issues/2238)
+  - `DatasetActions.copyDataSet` - use `DatasetActions.copyDataSets` instead
+  - `USSActions.pasteUssFile` - use `DatasetActions.pasteUss` instead
+  - `ZoweUSSNode.refreshAndReopen` - use `ZoweUSSNode.reopen` instead
 
 ### Bug fixes
 

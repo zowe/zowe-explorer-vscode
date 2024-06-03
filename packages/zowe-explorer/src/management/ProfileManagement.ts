@@ -262,7 +262,8 @@ export class ProfileManagement {
             await Profiles.getInstance().editSession(profile);
             return;
         }
-        await vscode.commands.executeCommand("zowe.ds.deleteProfile", node);
+        const type: string = SharedContext.getSessionType(node);
+        await vscode.commands.executeCommand(`zowe.${type}.deleteProfile`, node);
     }
 
     private static async handleHideProfiles(node: IZoweTreeNode): Promise<void> {
