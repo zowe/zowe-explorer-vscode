@@ -358,7 +358,7 @@ export class ProfilesCache {
         const zoweDir = FileManagement.getZoweDir();
         const profilesPath = path.join(zoweDir, "profiles");
         const oldProfilesPath = `${profilesPath.replace(/[\\/]$/, "")}-old`;
-        const convertResult = await imperative.ConfigBuilder.convert(profilesPath);
+        const convertResult = await imperative.ConvertV1Profiles.convert({ deleteV1Profs: false });
         for (const [k, v] of Object.entries(convertResult.profilesConverted)) {
             successMsg.push(`Converted ${k} profile: ${v.join(", ")}\n`);
         }
@@ -372,23 +372,23 @@ export class ProfilesCache {
                 }
             }
         }
-        const teamConfig = await imperative.Config.load("zowe", {
-            homeDir: zoweDir,
-            projectDir: false,
-        });
-        teamConfig.api.layers.activate(false, true);
-        teamConfig.api.layers.merge(convertResult.config);
-        const knownCliConfig: imperative.ICommandProfileTypeConfiguration[] = this.getCoreProfileTypes();
-        knownCliConfig.push(ProfileConstants.BaseProfile);
-        this.addToConfigArray(knownCliConfig);
-        teamConfig.setSchema(imperative.ConfigSchema.buildSchema(this.getConfigArray()));
-        await teamConfig.save();
+        // const teamConfig = await imperative.Config.load("zowe", {
+        //     homeDir: zoweDir,
+        //     projectDir: false,
+        // });
+        // teamConfig.api.layers.activate(false, true);
+        // teamConfig.api.layers.merge(convertResult.profilesConverted);
+        // const knownCliConfig: imperative.ICommandProfileTypeConfiguration[] = this.getCoreProfileTypes();
+        // knownCliConfig.push(ProfileConstants.BaseProfile);
+        // this.addToConfigArray(knownCliConfig);
+        // teamConfig.setSchema(imperative.ConfigSchema.buildSchema(this.getConfigArray()));
+        // await teamConfig.save();
         try {
             fs.renameSync(profilesPath, oldProfilesPath);
         } catch (error) {
             warningMsg.push(`Failed to rename profiles directory to ${oldProfilesPath}:\n    ${String(error)}`);
         }
-        successMsg.push(`Your new profiles have been saved to ${teamConfig.layerActive().path}.\n`);
+        successMsg.push(`Your new profiles have been saved to ${convertResult.cfgFilePathNm}.\n`);
         return {
             success: String(successMsg.join("")),
             warnings: String(warningMsg.join("")),

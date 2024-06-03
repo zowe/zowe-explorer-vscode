@@ -14,5 +14,5 @@ import * as imperative from "@zowe/imperative";
 export interface ZeApiConvertResponse {
     success: string;
     warnings: string;
-    convertResult: imperative.IConfigConvertResult;
+    convertResult: imperative.ConvertV1Profiles;
 }
