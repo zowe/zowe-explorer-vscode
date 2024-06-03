@@ -127,31 +127,6 @@ describe("Test src/jobs/extension", () => {
                 mock: [{ spy: jest.spyOn(jobsProvider, "filterPrompt"), arg: [test.value] }],
             },
             {
-                name: "zowe.jobs.editSession",
-                mock: [{ spy: jest.spyOn(jobsProvider, "editSession"), arg: [test.value, jobsProvider] }],
-            },
-            {
-                name: "zowe.jobs.addFavorite",
-                mock: [{ spy: jest.spyOn(jobsProvider, "addFavorite"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.jobs.removeFavorite",
-                mock: [{ spy: jest.spyOn(jobsProvider, "removeFavorite"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.jobs.saveSearch",
-                mock: [{ spy: jest.spyOn(jobsProvider, "saveSearch"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.jobs.removeSearchFavorite",
-                mock: [{ spy: jest.spyOn(jobsProvider, "removeFavorite"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.jobs.removeFavProfile",
-                parm: [{ label: test.value }],
-                mock: [{ spy: jest.spyOn(jobsProvider, "removeFavProfile"), arg: [test.value, true] }],
-            },
-            {
                 name: "onDidChangeConfiguration",
                 mock: [{ spy: jest.spyOn(jobsProvider, "onDidChangeConfiguration"), arg: [test.value] }],
             },

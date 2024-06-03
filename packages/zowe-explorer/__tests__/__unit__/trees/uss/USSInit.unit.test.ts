@@ -48,14 +48,6 @@ describe("Test src/uss/extension", () => {
         };
         const commands: IJestIt[] = [
             {
-                name: "zowe.uss.addFavorite",
-                mock: [{ spy: jest.spyOn(ussFileProvider, "addFavorite"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.uss.removeFavorite",
-                mock: [{ spy: jest.spyOn(ussFileProvider, "removeFavorite"), arg: [test.value] }],
-            },
-            {
                 name: "zowe.uss.addSession",
                 mock: [{ spy: jest.spyOn(ussFileProvider, "createZoweSession"), arg: [ussFileProvider] }],
             },
@@ -84,10 +76,6 @@ describe("Test src/uss/extension", () => {
             {
                 name: "zowe.uss.fullPath",
                 mock: [{ spy: jest.spyOn(ussFileProvider, "filterPrompt"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.uss.editSession",
-                mock: [{ spy: jest.spyOn(ussFileProvider, "editSession"), arg: [test.value, ussFileProvider] }],
             },
             {
                 name: "zowe.uss.createFile",
@@ -121,19 +109,6 @@ describe("Test src/uss/extension", () => {
             {
                 name: "zowe.uss.editFile",
                 mock: [{ spy: jest.spyOn(test.value, "openUSS"), arg: [false, false, ussFileProvider] }],
-            },
-            {
-                name: "zowe.uss.saveSearch",
-                mock: [{ spy: jest.spyOn(ussFileProvider, "saveSearch"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.uss.removeSavedSearch",
-                mock: [{ spy: jest.spyOn(ussFileProvider, "removeFavorite"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.uss.removeFavProfile",
-                parm: [{ label: test.value }],
-                mock: [{ spy: jest.spyOn(ussFileProvider, "removeFavProfile"), arg: [test.value, true] }],
             },
             {
                 name: "zowe.uss.pasteUssFile",

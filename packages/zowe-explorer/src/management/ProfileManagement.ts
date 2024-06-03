@@ -16,7 +16,6 @@ import { Profiles } from "../configuration/Profiles";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
-import { SharedContext } from "../trees/shared/SharedContext";
 import { AuthUtils } from "../utils/AuthUtils";
 import { Definitions } from "../configuration/Definitions";
 

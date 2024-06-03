@@ -46,14 +46,6 @@ export class DatasetInit {
             vscode.commands.registerCommand("zowe.ds.addSession", async () => datasetProvider.createZoweSession(datasetProvider))
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.addFavorite", async (node, nodeList) => {
-                const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
-                for (const item of selectedNodes) {
-                    await datasetProvider.addFavorite(item as IZoweDatasetTreeNode);
-                }
-            })
-        );
-        context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.refreshAll", async () => {
                 await SharedActions.refreshAll(datasetProvider);
             })
@@ -77,9 +69,6 @@ export class DatasetInit {
             })
         );
         context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.pattern", (node) => datasetProvider.filterPrompt(node)));
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.editSession", async (node) => datasetProvider.editSession(node, datasetProvider))
-        );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.createDataset", async (node) => DatasetActions.createFile(node, datasetProvider))
         );
@@ -115,19 +104,6 @@ export class DatasetInit {
                     await vscode.commands.executeCommand(item.command.command, item.resourceUri);
                 }
             })
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.removeFavorite", async (node, nodeList) => {
-                const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
-                for (const item of selectedNodes) {
-                    await datasetProvider.removeFavorite(item as IZoweDatasetTreeNode);
-                }
-            })
-        );
-        context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.saveSearch", (node) => datasetProvider.addFavorite(node)));
-        context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.removeSavedSearch", (node) => datasetProvider.removeFavorite(node)));
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.removeFavProfile", (node) => datasetProvider.removeFavProfile(node.label, true))
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.submitJcl", async (file) => DatasetActions.submitJcl(datasetProvider, file))

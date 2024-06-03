@@ -106,35 +106,6 @@ export class JobInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.jobs.search", async (node): Promise<void> => jobsProvider.filterPrompt(node))
         );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.jobs.editSession", async (node): Promise<void> => jobsProvider.editSession(node, jobsProvider))
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.jobs.addFavorite", async (node, nodeList) => {
-                const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
-                for (const item of selectedNodes) {
-                    await jobsProvider.addFavorite(item);
-                }
-            })
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.jobs.removeFavorite", async (node, nodeList) => {
-                const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
-                for (const item of selectedNodes) {
-                    await jobsProvider.removeFavorite(item);
-                }
-            })
-        );
-        context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.saveSearch", (node): void => jobsProvider.saveSearch(node)));
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.jobs.removeSearchFavorite", async (node): Promise<void> => jobsProvider.removeFavorite(node))
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand(
-                "zowe.jobs.removeFavProfile",
-                async (node): Promise<void> => jobsProvider.removeFavProfile(node.label, true)
-            )
-        );
         const spoolFileTogglePoll =
             (startPolling: boolean) =>
             async (node: IZoweTreeNode, nodeList: IZoweTreeNode[]): Promise<void> => {

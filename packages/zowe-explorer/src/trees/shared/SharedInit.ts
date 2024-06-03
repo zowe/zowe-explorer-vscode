@@ -182,20 +182,53 @@ export class SharedInit {
         }
         if (providers.ds || providers.uss || providers.job) {
             context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.deleteProfile", async (node) => Profiles.getInstance().deleteProfile(node))
+                vscode.commands.registerCommand("zowe.deleteProfile", async (node: IZoweTreeNode) => Profiles.getInstance().deleteProfile(node))
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.editSession", async (node: IZoweTreeNode) => {
+                    const treeProvider = SharedTreeProviders.getProviderForNode(node);
+                    await treeProvider.editSession(node, treeProvider);
+                })
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand(
                     "zowe.removeSession",
                     async (node: IZoweTreeNode, nodeList: IZoweTreeNode[], hideFromAllTrees: boolean) => {
                         const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList).filter((sNode) => SharedContext.isSession(sNode));
-                        for (const tempNode of selectedNodes) {
-                            SharedTreeProviders.getProviderForNode(tempNode).deleteSession(tempNode, hideFromAllTrees);
+                        for (const item of selectedNodes) {
+                            SharedTreeProviders.getProviderForNode(item).deleteSession(item, hideFromAllTrees);
                         }
                         if (selectedNodes.length) {
                             await TreeViewUtils.fixVsCodeMultiSelect(SharedTreeProviders.getProviderForNode(selectedNodes[0]));
                         }
                     }
+                )
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.saveSearch", async (node: IZoweTreeNode) => {
+                    await SharedTreeProviders.getProviderForNode(node).saveSearch(node);
+                })
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.addFavorite", async (node: IZoweTreeNode, nodeList: IZoweTreeNode[]) => {
+                    const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
+                    for (const item of selectedNodes) {
+                        await SharedTreeProviders.getProviderForNode(item).addFavorite(item);
+                    }
+                })
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.removeFavorite", async (node: IZoweTreeNode, nodeList: IZoweTreeNode[]) => {
+                    const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
+                    for (const item of selectedNodes) {
+                        await SharedTreeProviders.getProviderForNode(item).removeFavorite(item);
+                    }
+                })
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand(
+                    "zowe.removeFavProfile",
+                    async (node: IZoweTreeNode) => await SharedTreeProviders.getProviderForNode(node).removeFavProfile(node.label as string, true)
                 )
             );
             context.subscriptions.push(

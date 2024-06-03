@@ -192,7 +192,7 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
         return newMocks;
     }
 
-    it("Tests that editSession is executed successfully ", async () => {
+    it("Tests that editSession is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         const spy = jest.spyOn(ZoweLogger, "trace");

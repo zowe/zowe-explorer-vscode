@@ -44,22 +44,6 @@ export class USSInit {
         }
 
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.addFavorite", async (node, nodeList) => {
-                const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
-                for (const item of selectedNodes) {
-                    await ussFileProvider.addFavorite(item as IZoweUSSTreeNode);
-                }
-            })
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.removeFavorite", async (node, nodeList) => {
-                const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
-                for (const item of selectedNodes) {
-                    await ussFileProvider.removeFavorite(item as IZoweUSSTreeNode);
-                }
-            })
-        );
-        context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.addSession", async () => ussFileProvider.createZoweSession(ussFileProvider))
         );
         context.subscriptions.push(
@@ -107,9 +91,6 @@ export class USSInit {
             vscode.commands.registerCommand("zowe.uss.fullPath", async (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.filterPrompt(node))
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.editSession", async (node) => ussFileProvider.editSession(node, ussFileProvider))
-        );
-        context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.createFile", async (node: IZoweUSSTreeNode) =>
                 USSActions.createUSSNode(node, ussFileProvider, "file")
             )
@@ -148,23 +129,6 @@ export class USSInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.editAttributes", (node: IZoweUSSTreeNode) =>
                 USSActions.editAttributes(context, ussFileProvider, node)
-            )
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.saveSearch", async (node: IZoweUSSTreeNode): Promise<void> => {
-                await ussFileProvider.saveSearch(node);
-            })
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand(
-                "zowe.uss.removeSavedSearch",
-                async (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.removeFavorite(node)
-            )
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand(
-                "zowe.uss.removeFavProfile",
-                async (node): Promise<void> => ussFileProvider.removeFavProfile(node.label, true)
             )
         );
         context.subscriptions.push(

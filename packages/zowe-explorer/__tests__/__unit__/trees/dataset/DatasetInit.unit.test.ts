@@ -62,10 +62,6 @@ describe("Test src/dataset/extension", () => {
                 mock: [{ spy: jest.spyOn(dsProvider, "createZoweSession"), arg: [dsProvider] }],
             },
             {
-                name: "zowe.ds.addFavorite",
-                mock: [{ spy: jest.spyOn(dsProvider, "addFavorite"), arg: [test.value] }],
-            },
-            {
                 name: "zowe.ds.refreshAll",
                 mock: [{ spy: jest.spyOn(SharedActions, "refreshAll"), arg: [dsProvider] }],
             },
@@ -88,10 +84,6 @@ describe("Test src/dataset/extension", () => {
             {
                 name: "zowe.ds.pattern",
                 mock: [{ spy: jest.spyOn(dsProvider, "filterPrompt"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.ds.editSession",
-                mock: [{ spy: jest.spyOn(dsProvider, "editSession"), arg: [test.value, dsProvider] }],
             },
             {
                 name: "zowe.ds.createDataset",
@@ -130,22 +122,6 @@ describe("Test src/dataset/extension", () => {
                     { spy: jest.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
                     { spy: jest.spyOn(SharedContext, "isDsMember"), arg: [test.value], ret: true },
                 ],
-            },
-            {
-                name: "zowe.ds.removeFavorite",
-                mock: [{ spy: jest.spyOn(dsProvider, "removeFavorite"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.ds.saveSearch",
-                mock: [{ spy: jest.spyOn(dsProvider, "addFavorite"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.ds.removeSavedSearch",
-                mock: [{ spy: jest.spyOn(dsProvider, "removeFavorite"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.ds.removeFavProfile",
-                mock: [{ spy: jest.spyOn(dsProvider, "removeFavProfile"), arg: [test.value.label, true] }],
             },
             {
                 name: "zowe.ds.submitJcl",

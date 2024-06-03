@@ -59,9 +59,6 @@
   "addSession": {
     "Add Profile to Data Sets View": ""
   },
-  "editSession": {
-    "Edit Team Config File": ""
-  },
   "createDataset": {
     "Create New Data Set": ""
   },
@@ -115,9 +112,6 @@
   },
   "removeFavorite": {
     "Remove Favorite": ""
-  },
-  "removeSavedSearch": {
-    "Remove Search": ""
   },
   "saveSearch": {
     "Add to Favorites": ""
