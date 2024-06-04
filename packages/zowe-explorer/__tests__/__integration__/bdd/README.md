@@ -7,13 +7,11 @@ Zowe Explorer has two types of integration tests:
 
 ## CucumberJS behavior-driven tests
 
-To run the CucumberJS features, you will need **at least three** service profiles in your Zowe config.
-These profiles need a valid hostname in order to pass profile validation, specifically to execute tests for commands such as "Issue TSO Command."
-However, credentials are required to navigate through certain menus, but as they are not used for anything impactful, the credentials do not have to be valid.
+These tests use the fake integration profiles provided in the `__tests__/__integration__/ci` folder. No additional configuration is necessary as the tests will use this directory as the Zowe home folder.
 
 **Note:** The credentials provided with each service profile will still be sent to the APIs during the UI-oriented tests, as stubbing is not possible with tests that leverage both Cucumber and WebdriverIO. Tests that do not require a user interface should be implemented as a Mocha test (see [Mocha tests](#mocha-tests) below for more info).
 
-After preparing your Zowe config to meet the above requirements, run the tests by executing the `pnpm test:integration` command.
+Run the tests by executing the `pnpm test:integration` command.
 
 ## Mocha tests
 
