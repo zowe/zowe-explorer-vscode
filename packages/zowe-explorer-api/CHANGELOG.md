@@ -6,7 +6,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
-- Update dependencies for technical currency purposes.
+- Update dependencies for technical currency purposes. [#2934](https://github.com/zowe/zowe-explorer-vscode/pull/2934)
 
 ## `1.22.7`
 
