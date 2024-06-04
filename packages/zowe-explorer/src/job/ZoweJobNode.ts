@@ -34,7 +34,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
     public children: IZoweJobTreeNode[] = [];
     public dirty = true;
-    public sort: NodeSort;
+    public sort: NodeSort = { method: JobSortOpts.Id, direction: SortDirection.Ascending };
     private _owner: string;
     private _prefix: string;
     private _searchId: string;
