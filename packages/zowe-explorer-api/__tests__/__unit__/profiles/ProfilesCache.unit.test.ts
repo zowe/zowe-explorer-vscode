@@ -13,7 +13,7 @@ import * as path from "path";
 import * as fs from "fs";
 import * as imperative from "@zowe/imperative";
 import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
-import { FileManagement, ZoweExplorerApi } from "../../../src";
+import { FileManagement, Types } from "../../../src";
 
 jest.mock("fs");
 
@@ -260,7 +260,7 @@ describe("ProfilesCache", () => {
         it("should refresh profile data for multiple profile types", async () => {
             const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as unknown as imperative.Logger);
             const getProfInfoSpy = jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, zftpProfile]));
-            await profCache.refresh(fakeApiRegister as unknown as ZoweExplorerApi.IApiRegisterClient);
+            await profCache.refresh(fakeApiRegister as unknown as Types.IApiRegisterClient);
             expect(profCache.allProfiles.length).toEqual(2);
             expect(profCache.allProfiles[0]).toMatchObject(lpar1Profile);
             expect(profCache.allProfiles[1]).toMatchObject(zftpProfile);
@@ -273,7 +273,7 @@ describe("ProfilesCache", () => {
             jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(
                 createProfInfoMock([lpar1ProfileWithToken, lpar2ProfileWithToken, baseProfileWithToken])
             );
-            await profCache.refresh(fakeApiRegister as unknown as ZoweExplorerApi.IApiRegisterClient);
+            await profCache.refresh(fakeApiRegister as unknown as Types.IApiRegisterClient);
             expect(profCache.allProfiles.length).toEqual(3);
             expect(profCache.allProfiles[0]).toMatchObject(lpar1ProfileWithToken);
             expect(profCache.allProfiles[1]).toMatchObject(lpar2Profile); // without token
@@ -288,7 +288,7 @@ describe("ProfilesCache", () => {
             jest.spyOn(profCache, "getProfileInfo").mockImplementation(() => {
                 throw fakeError;
             });
-            await profCache.refresh(fakeApiRegister as unknown as ZoweExplorerApi.IApiRegisterClient);
+            await profCache.refresh(fakeApiRegister as unknown as Types.IApiRegisterClient);
             expect(profCache.allProfiles.length).toEqual(0);
             expect(profCache.getAllTypes().length).toEqual(0);
             expect(mockLogError).toHaveBeenCalledWith(fakeError);
@@ -442,7 +442,7 @@ describe("ProfilesCache", () => {
         Object.defineProperty(ProfilesCache, "getConfigArray", { value: jest.fn(), configurable: true });
         it("Should convert v1 profiles to config file", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-            jest.spyOn(imperative.ConfigBuilder, "convert").mockImplementationOnce(() => {
+            jest.spyOn(imperative.ConvertV1Profiles, "convert").mockImplementationOnce(() => {
                 return {
                     profilesConverted: { zosmf: ["profile1"] },
                     profilesFailed: {},
@@ -453,7 +453,7 @@ describe("ProfilesCache", () => {
         });
         it("Should convert v1 profiles to config file with profilesFailed", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-            jest.spyOn(imperative.ConfigBuilder, "convert").mockImplementationOnce(() => {
+            jest.spyOn(imperative.ConvertV1Profiles, "convert").mockImplementationOnce(() => {
                 return {
                     profilesConverted: {},
                     profilesFailed: [{ name: ["profile2"], types: "zosmf", error: "Error converting" }],
@@ -470,7 +470,7 @@ describe("ProfilesCache", () => {
                 configurable: true,
             });
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-            jest.spyOn(imperative.ConfigBuilder, "convert").mockImplementationOnce(() => {
+            jest.spyOn(imperative.ConvertV1Profiles, "convert").mockImplementationOnce(() => {
                 return {
                     profilesConverted: {},
                     profilesFailed: [{ name: ["profile2"], types: "zosmf", error: "Error converting" }],
@@ -481,7 +481,7 @@ describe("ProfilesCache", () => {
         });
         it("Should reject if error thrown other than renaming profiles directory", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-            jest.spyOn(imperative.ConfigBuilder, "convert").mockImplementationOnce(() => {
+            jest.spyOn(imperative.ConvertV1Profiles, "convert").mockImplementationOnce(() => {
                 throw new Error("Error converting config");
             });
             await expect(profCache.convertV1ProfToConfig()).rejects.toThrow("Error converting config");
