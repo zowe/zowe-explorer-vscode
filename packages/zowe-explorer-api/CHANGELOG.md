@@ -6,6 +6,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Update dependencies for technical currency purposes.
+
 ## `1.22.7`
 
 ### Bug fixes
