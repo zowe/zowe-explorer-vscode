@@ -66,38 +66,6 @@ describe("Test src/shared/extension", () => {
         };
         const commands: IJestIt[] = [
             {
-                name: "zowe.disableValidation",
-                mock: [
-                    { spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks },
-                    { spy: jest.spyOn(profileMocks, "disableValidation"), arg: [test.value] },
-                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
-                    { spy: jest.spyOn(treeProvider, "refreshElement"), arg: [test.value] },
-                ],
-            },
-            {
-                name: "zowe.enableValidation",
-                mock: [
-                    { spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks },
-                    { spy: jest.spyOn(profileMocks, "enableValidation"), arg: [test.value] },
-                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
-                    { spy: jest.spyOn(treeProvider, "refreshElement"), arg: [test.value] },
-                ],
-            },
-            {
-                name: "zowe.ssoLogin",
-                mock: [
-                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
-                    { spy: jest.spyOn(treeProvider, "ssoLogin"), arg: [test.value] },
-                ],
-            },
-            {
-                name: "zowe.ssoLogout",
-                mock: [
-                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
-                    { spy: jest.spyOn(treeProvider, "ssoLogout"), arg: [test.value] },
-                ],
-            },
-            {
                 name: "zowe.updateSecureCredentials",
                 parm: ["@zowe/cli"],
                 mock: [
@@ -192,6 +160,38 @@ describe("Test src/shared/extension", () => {
                 name: "onDidSaveTextDocument:2",
                 parm: [{ isDirty: true, fileName: "NOT_DATASET" }],
                 mock: [],
+            },
+            {
+                name: "zowe.disableValidation",
+                mock: [
+                    { spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks },
+                    { spy: jest.spyOn(profileMocks, "disableValidation"), arg: [test.value] },
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "refreshElement"), arg: [test.value] },
+                ],
+            },
+            {
+                name: "zowe.enableValidation",
+                mock: [
+                    { spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks },
+                    { spy: jest.spyOn(profileMocks, "enableValidation"), arg: [test.value] },
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "refreshElement"), arg: [test.value] },
+                ],
+            },
+            {
+                name: "zowe.ssoLogin",
+                mock: [
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "ssoLogin"), arg: [test.value] },
+                ],
+            },
+            {
+                name: "zowe.ssoLogout",
+                mock: [
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "ssoLogout"), arg: [test.value] },
+                ],
             },
             {
                 name: "zowe.deleteProfile",

@@ -71,7 +71,7 @@ describe("Test src/jobs/extension", () => {
             },
             {
                 name: "zowe.jobs.refreshJobsServer",
-                mock: [{ spy: jest.spyOn(JobActions, "refreshJobsServer"), arg: [test.value, jobsProvider] }],
+                mock: [{ spy: jest.spyOn(JobActions, "refreshJob"), arg: [test.value, jobsProvider] }],
             },
             {
                 name: "zowe.jobs.refreshAllJobs",
