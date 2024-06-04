@@ -15,7 +15,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
   - `attributes` property on the `IZoweUSSTreeNode` interface - use the `getAttributes` and `setAttributes` functions instead.
 - **Breaking:** Added return type of `Promise<void>` to `MainframeInteractions.ICommon.logout`. [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783).
 - Grouped Common methods into Singleton classes. [#2109](https://github.com/zowe/zowe-explorer-vscode/issues/2109)
-- Removed deprecated methods: [#2238](https://github.com/zowe/zowe-explorer-vscode/issues/2238)
+- **Breaking:** Removed deprecated methods: [#2238](https://github.com/zowe/zowe-explorer-vscode/issues/2238)
   - `refreshAndReopen` function on the `IZoweTreeNode` interface - use the `reopen` function instead.
   - `copyUssFile` function on the `IZoweTreeNode` interface - use the `pasteUssTree` function instead.
   - `ZoweVsCodeExtension.showVsCodeMessage` - use `Gui.showMessage` instead.

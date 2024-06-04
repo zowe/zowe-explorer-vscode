@@ -29,15 +29,9 @@ describe("Test src/uss/extension", () => {
             _: { _: "_" },
         };
         const ussFileProvider: { [key: string]: jest.Mock } = {
-            addFavorite: jest.fn(),
-            removeFavorite: jest.fn(),
             createZoweSession: jest.fn(),
             filterPrompt: jest.fn(),
-            editSession: jest.fn(),
-            deleteSession: jest.fn(),
             rename: jest.fn(),
-            saveSearch: jest.fn(),
-            removeFavProfile: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
             onDidCloseTextDocument: jest.fn(),
             getTreeView: jest.fn().mockReturnValue({

@@ -42,17 +42,10 @@ describe("Test src/jobs/extension", () => {
         const jobsProvider: { [key: string]: jest.Mock } = {
             createZoweSchema: jest.fn(),
             createZoweSession: jest.fn(),
-            deleteSession: jest.fn(),
             filterPrompt: jest.fn(),
-            editSession: jest.fn(),
-            addFavorite: jest.fn(),
-            removeFavorite: jest.fn(),
-            saveSearch: jest.fn(),
-            removeFavProfile: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
             onDidCloseTextDocument: jest.fn(),
             pollData: jest.fn(),
-            refreshElement: jest.fn(),
             filterJobsDialog: jest.fn(),
         };
         const commands: IJestIt[] = [
