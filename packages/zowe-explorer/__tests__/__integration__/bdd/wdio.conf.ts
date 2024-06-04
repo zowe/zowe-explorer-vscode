@@ -10,12 +10,14 @@
  */
 
 import type { Options } from "@wdio/types";
-import { join as joinPath } from "path";
+import { join as joinPath, resolve as resolvePath } from "path";
 import { emptyDirSync } from "fs-extra";
 import { baseConfig } from "../../__common__/base.wdio.conf";
 
 const dataDir = joinPath(__dirname, "..", "..", "__common__", ".wdio-vscode-service", "data");
 const screenshotDir = joinPath(__dirname, "results", "screenshots");
+
+process.env["ZOWE_CLI_HOME"] = resolvePath("../ci");
 
 export const config: Options.Testrunner = {
     ...baseConfig,
