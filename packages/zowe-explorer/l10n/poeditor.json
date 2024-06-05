@@ -137,6 +137,9 @@
   "uss.copyPath": {
     "Copy Path": ""
   },
+  "uss.copyRelativePath": {
+    "Copy Relative Path": ""
+  },
   "uss.createDirectory": {
     "Create New Directory": ""
   },

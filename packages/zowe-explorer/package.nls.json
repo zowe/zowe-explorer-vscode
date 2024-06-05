@@ -45,6 +45,7 @@
   "submitMember": "Submit Job",
   "uss.addSession": "Add Profile to USS View",
   "uss.copyPath": "Copy Path",
+  "uss.copyRelativePath": "Copy Relative Path",
   "uss.createDirectory": "Create New Directory",
   "uss.editFile": "Edit File",
   "uss.fullPath": "Search Unix System Services (USS)",
