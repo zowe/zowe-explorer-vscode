@@ -20,6 +20,6 @@ When("a user navigates to VS Code Settings", async function () {
     await this.settingsEditor.wait();
 });
 Then("the user can access the Zowe Explorer settings section", async function () {
-    const zeSettings = this.settingsEditor.findSetting("Secure Credentials Enabled", "Zowe", "Security");
+    const zeSettings = await this.settingsEditor.findSetting("Secure Credentials Enabled", "Zowe", "Security");
     await expect(zeSettings).toBeDefined();
 });

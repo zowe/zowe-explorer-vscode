@@ -110,8 +110,7 @@
       "options": {
         "cwd": "${workspaceFolder}/packages/zowe-explorer"
       },
-      "command": "pnpm",
-      "args": ["build:integration"]
+      "command": "pnpm"
     }
   ]
 }
