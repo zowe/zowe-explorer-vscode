@@ -23,6 +23,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
   - `Zowe Explorer: Sort PDS members`
   - `Zowe Explorer: Start Polling`
   - `Zowe Explorer: Stop Polling`
+- Moved schema warnings into the log file (rather than a UI message) to minimize end-user disruption.
 
 ## `3.0.0-next.202404242037`
 
