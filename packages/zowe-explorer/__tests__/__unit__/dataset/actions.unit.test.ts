@@ -79,6 +79,7 @@ function createGlobalMocks() {
     newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
     newMocks.datasetSessionFavNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
     newMocks.testFavoritesNode.children.push(newMocks.datasetSessionFavNode);
+    jest.spyOn(Gui, "createTreeView").mockReturnValue({ onDidCollapseElement: jest.fn() } as any);
     newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView, newMocks.testFavoritesNode);
     newMocks.mvsApi = createMvsApi(newMocks.imperativeProfile);
     newMocks.getContentsSpy = jest.spyOn(newMocks.mvsApi, "getContents");
@@ -3035,6 +3036,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
+        mocked(vscode.workspace.getConfiguration).mockClear();
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
         createDataSetSpy.mockReset();
         const node = new ZoweDatasetNode({

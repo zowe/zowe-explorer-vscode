@@ -72,7 +72,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 export async function createDatasetTree(log: imperative.Logger): Promise<DatasetTree> {
     const tree = new DatasetTree();
     tree.initializeFavorites(log);
-    await tree.addSession(undefined, undefined, tree);
+    await tree.addSession();
     return tree;
 }
 
@@ -446,7 +446,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param {string} [sessionName] - optional; loads default profile if not passed
      * @param {string} [profileType] - optional; loads profiles of a certain type if passed
      */
-    public async addSession(sessionName?: string, profileType?: string, provider?: IZoweTree<IZoweTreeNode>): Promise<void> {
+    public async addSession(sessionName?: string, profileType?: string, provider: IZoweTree<IZoweTreeNode> = this): Promise<void> {
         ZoweLogger.trace("DatasetTree.addSession called.");
         await super.addSession(sessionName, profileType, provider);
     }

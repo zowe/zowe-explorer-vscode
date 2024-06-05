@@ -1003,7 +1003,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
             } as any,
         ];
         jest.spyOn((testTree as any).mHistory, "getSessions").mockReturnValue(["sestest"]);
-        jest.spyOn(Profiles.getInstance(), "fetchAllProfiles").mockReturnValue(Promise.resolve([blockMocks.imperativeProfile]));
+        jest.spyOn(Profiles.getInstance(), "fetchAllProfilesByType").mockReturnValue(Promise.resolve([blockMocks.imperativeProfile]));
         jest.spyOn(sharedActions, "resetValidationSettings").mockImplementation();
 
         await expect(testTree.addSession(null, "test")).resolves.not.toThrow();

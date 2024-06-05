@@ -52,7 +52,7 @@ function createGlobalMocks(): any {
         value: jest.fn().mockReturnValue(createInstanceOfProfile(globalMocks.imperativeProfile)),
         configurable: true,
     });
-    Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn().mockReturnValueOnce(globalMocks.treeView), configurable: true });
+    Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn().mockReturnValue(globalMocks.treeView), configurable: true });
 
     return globalMocks;
 }
@@ -277,7 +277,7 @@ describe("HistoryView Unit Tests", () => {
                 favorites: undefined,
                 fileHistory: [],
                 search: undefined,
-                sessions: undefined,
+                sessions: [],
                 encodingHistory: [],
             });
         });
