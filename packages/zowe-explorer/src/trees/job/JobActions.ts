@@ -518,4 +518,8 @@ export class JobActions {
             Constants.MS_PER_SEC * 4
         );
     }
+
+    public static async copyName(node: IZoweJobTreeNode): Promise<void> {
+        await vscode.env.clipboard.writeText(node.label as string);
+    }
 }
