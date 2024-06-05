@@ -1400,3 +1400,13 @@ describe("sortJobs function", () => {
         expect(jobsSortBy).not.toHaveBeenCalled();
     });
 });
+
+describe("copyName function", () => {
+    it("copies the node label", async () => {
+        const node = new ZoweJobNode({ label: "JOBNAME(ID123456) - ACTIVE", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const writeTextSpy = jest.spyOn(vscode.env.clipboard, "writeText");
+        await JobActions.copyName(node);
+        expect(writeTextSpy).toHaveBeenCalledWith("JOBNAME(ID123456) - ACTIVE");
+        writeTextSpy.mockRestore();
+    });
+});

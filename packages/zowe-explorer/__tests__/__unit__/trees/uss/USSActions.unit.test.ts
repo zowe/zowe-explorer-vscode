@@ -41,6 +41,7 @@ import { IZoweTree } from "../../../../../zowe-explorer-api/src/tree/IZoweTree";
 import { IZoweUSSTreeNode } from "../../../../../zowe-explorer-api/src/tree";
 import { USSAtributeView } from "../../../../src/trees/uss/USSAttributeView";
 import { ExtensionUtils } from "../../../../src/utils/ExtensionUtils";
+import { mocked } from "../../../__mocks__/mockUtils";
 
 jest.mock("../../../../src/tools/ZoweLogger");
 jest.mock("fs");
@@ -817,5 +818,26 @@ describe("USS Action Unit Tests - function editAttributes", () => {
             { label: "some/node", getProfile: jest.fn() } as unknown as IZoweUSSTreeNode
         );
         expect(view).toBeInstanceOf(USSAtributeView);
+    });
+});
+
+describe("USS Action Unit Tests - function copyRelativePath", () => {
+    it("copies the correct path for a USS file", async () => {
+        const dir = createUSSNode(createISession(), createIProfile());
+        const textFile = new ZoweUSSNode({
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            label: "file.txt",
+            parentNode: dir,
+            parentPath: dir.fullPath,
+        });
+        textFile.fullPath = path.posix.join(dir.fullPath, "file.txt");
+        await USSActions.copyRelativePath(textFile);
+        expect(mocked(vscode.env.clipboard.writeText)).toHaveBeenCalledWith("usstest/file.txt");
+    });
+
+    it("copies the correct path for a USS directory", async () => {
+        const testNode = createUSSNode(createISession(), createIProfile());
+        await USSActions.copyRelativePath(testNode);
+        expect(mocked(vscode.env.clipboard.writeText)).toHaveBeenCalledWith("usstest");
     });
 });
