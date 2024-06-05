@@ -2101,7 +2101,6 @@
     "@types/fs-extra": "^7.0.0",
     "@types/promise-queue": "^2.2.0",
     "@types/sinon": "^17.0.3",
-    "@wdio/browser-runner": "^8.37.0",
     "@wdio/cli": "^8.36.1",
     "@wdio/cucumber-framework": "^8.36.1",
     "@wdio/junit-reporter": "^8.36.1",
