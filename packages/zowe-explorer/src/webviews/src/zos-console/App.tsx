@@ -60,6 +60,7 @@ export function App() {
           height: "100%",
           overflow: "auto",
           display: "block",
+          "font-family": "monospace",
         }}
       ></VSCodeTextArea>
       <VSCodeTextField
@@ -69,6 +70,7 @@ export function App() {
         onKeyDown={(e: KeyboardEvent) => sendCommand(e)}
         style={{
           width: "100%",
+          "font-family": "monospace",
         }}
       >
         <span slot="start" class="codicon codicon-chevron-right"></span>
