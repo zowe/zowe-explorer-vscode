@@ -103,16 +103,6 @@
       ]
     },
     {
-      "label": "Pretest",
-      "group": "build",
-      "isBackground": false,
-      "type": "shell",
-      "options": {
-        "cwd": "${workspaceFolder}/scripts"
-      },
-      "command": "npx tsx create-env.ts"
-    },
-    {
       "label": "Build",
       "group": "build",
       "isBackground": false,
@@ -121,18 +111,7 @@
         "cwd": "${workspaceFolder}/packages/zowe-explorer"
       },
       "command": "pnpm",
-      "args": ["build:integration"],
-      "dependsOn": "Pretest"
-    },
-    {
-      "label": "Posttest",
-      "group": "build",
-      "isBackground": false,
-      "type": "shell",
-      "options": {
-        "cwd": "${workspaceFolder}/scripts"
-      },
-      "command": "npx tsx clean-env.ts"
+      "args": ["build:integration"]
     }
   ]
 }

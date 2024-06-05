@@ -56,7 +56,7 @@ jobs:
       
       - name: Integration tests
         if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20.x'
-        run: xvfb-run pnpm test:integration --exclude "Activation.feature" --exclude "IssueCommand.feature"
+        run: xvfb-run pnpm test:integration --exclude "Activation.feature"
         working-directory: packages/zowe-explorer
 
       - name: Upload test results

@@ -73,9 +73,8 @@
     "test": "pnpm -r --sequential --color --reporter append-only test",
     "test:parallel": "pnpm -r --parallel --color test",
     "package": "pnpm -r --sequential package",
-    "pretest:integration": "tsx ./scripts/create-env.ts",
-    "posttest:integration": "tsx ./scripts/clean-env.ts",
     "preinstall": "npx only-allow pnpm",
     "update-sdks": "pnpm -r update \"@zowe/*@next\" \"!@zowe/zowe-explorer-api\""
-  }
+  },
+  "packageManager": "pnpm@9.2.0+sha512.98a80fd11c2e7096747762304106432b3ddc67dcf54b5a8c01c93f68a2cd5e05e6821849522a06fb76284d41a2660d5e334f2ee3bbf29183bf2e739b1dafa771"
 }
