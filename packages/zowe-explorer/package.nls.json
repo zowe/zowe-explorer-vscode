@@ -149,6 +149,7 @@
   "ds.sortBy": "Sort PDS members...",
   "issueUnixCmd": "Issue Unix Command",
   "selectForCompare": "Select for Compare",
+  "copyName": "Copy Name",
   "compareWithSelected": "Compare with Selected",
   "compareWithSelectedReadOnly": "Compare with Selected (Read-Only)",
   "compareFileStarted": "A file has been chosen for compare",
