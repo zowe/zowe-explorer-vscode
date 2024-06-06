@@ -352,48 +352,26 @@ export class ProfilesCache {
         };
     }
 
-    public async convertV1ProfToConfig(): Promise<ZeApiConvertResponse> {
-        const successMsg: string[] = [];
-        const warningMsg: string[] = [];
-        const zoweDir = FileManagement.getZoweDir();
-        const profilesPath = path.join(zoweDir, "profiles");
-        const oldProfilesPath = `${profilesPath.replace(/[\\/]$/, "")}-old`;
-        const convertResult = await imperative.ConvertV1Profiles.convert({ deleteV1Profs: false });
-        for (const [k, v] of Object.entries(convertResult.profilesConverted)) {
-            successMsg.push(`Converted ${k} profile: ${v.join(", ")}\n`);
-        }
-        if (convertResult.profilesFailed.length > 0) {
-            warningMsg.push(`Failed to convert ${convertResult.profilesFailed.length} profile(s). See details below\n`);
-            for (const { name, type, error } of convertResult.profilesFailed) {
-                if (name != null) {
-                    warningMsg.push(`Failed to load ${type} profile "${name}":\n${String(error)}\n`);
-                } else {
-                    warningMsg.push(`Failed to find default ${type} profile:\n${String(error)}\n`);
-                }
-            }
-        }
+    public async convertV1ProfToConfig(deleteV1Profs: boolean = false): Promise<imperative.IConvertV1ProfResult> {
+        const convertResult = await imperative.ConvertV1Profiles.convert({ deleteV1Profs });
         // const teamConfig = await imperative.Config.load("zowe", {
         //     homeDir: zoweDir,
         //     projectDir: false,
         // });
+        // console.log(convertResult.profilesConverted);
         // teamConfig.api.layers.activate(false, true);
-        // teamConfig.api.layers.merge(convertResult.profilesConverted);
+        // teamConfig.api.layers.merge(convertResult.profilesConverted as any);
         // const knownCliConfig: imperative.ICommandProfileTypeConfiguration[] = this.getCoreProfileTypes();
         // knownCliConfig.push(ProfileConstants.BaseProfile);
         // this.addToConfigArray(knownCliConfig);
         // teamConfig.setSchema(imperative.ConfigSchema.buildSchema(this.getConfigArray()));
         // await teamConfig.save();
-        try {
-            fs.renameSync(profilesPath, oldProfilesPath);
-        } catch (error) {
-            warningMsg.push(`Failed to rename profiles directory to ${oldProfilesPath}:\n    ${String(error)}`);
-        }
-        successMsg.push(`Your new profiles have been saved to ${convertResult.cfgFilePathNm}.\n`);
-        return {
-            success: String(successMsg.join("")),
-            warnings: String(warningMsg.join("")),
-            convertResult,
-        };
+        // try {
+        //     fs.renameSync(profilesPath, oldProfilesPath);
+        // } catch (error) {
+        //     warningMsg.push(`Failed to rename profiles directory to ${oldProfilesPath}:\n    ${String(error)}`);
+        // }
+        return convertResult;
     }
 
     protected getCoreProfileTypes(): imperative.IProfileTypeConfiguration[] {
