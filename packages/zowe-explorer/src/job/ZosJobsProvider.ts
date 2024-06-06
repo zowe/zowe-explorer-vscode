@@ -72,7 +72,7 @@ export async function createJobsTree(log: imperative.Logger): Promise<ZosJobsPro
     ZoweLogger.trace("ZosJobsProvider.createJobsTree called.");
     const tree = new ZosJobsProvider();
     await tree.initializeJobsTree(log);
-    await tree.addSession(undefined, undefined, tree);
+    await tree.addSession();
     return tree;
 }
 
@@ -223,7 +223,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param {string} [sessionName] - optional; loads default profile if not passed
      * @param {string} [profileType] - optional; loads profiles of a certain type if passed
      */
-    public async addSession(sessionName?: string, profileType?: string, provider?: IZoweTree<IZoweTreeNode>): Promise<void> {
+    public async addSession(sessionName?: string, profileType?: string, provider: IZoweTree<IZoweTreeNode> = this): Promise<void> {
         ZoweLogger.trace("ZosJobsProvider.addSession called.");
         await super.addSession(sessionName, profileType, provider);
     }
