@@ -1,40 +1,38 @@
 import { WebView } from "./WebView";
-import { EventEmitter } from "vscode";
+import { EventEmitter, ExtensionContext } from "vscode";
 import { AnyComponent, JSX } from "preact";
+import { randomUUID } from "crypto";
 
-type TableData = {
-    rows: object[];
-};
+export namespace Table {
+    export type Action = AnyComponent | JSX.Element;
+    export type Index = number | "start" | "end";
+    export type Coord = [Index, Index];
 
-type TableAction = AnyComponent | JSX.Element;
-
-type TableIndex = number | "start" | "end";
-type TableCoord = [TableIndex, TableIndex];
-
-class TableView extends WebView {}
-
-class TableBuilder {
-    private data: {
-        actions: TableAction[];
-        dividers: TableCoord[];
+    export type RowData = Record<string | number, string | number | boolean | string[] | Action | Action[]>;
+    export type Data = {
+        actions: Action[];
+        dividers: Coord[];
         headers: string[];
+        rows: RowData[];
+        title?: string;
     };
 
-    public headers(newHeaders: string[]): void {
-        this.data.headers = newHeaders;
-    }
+    export class View extends WebView {
+        private data: Data;
+        private onTableDataReceived: EventEmitter<RowData | RowData[]>;
+        private onTableDisplayChange: EventEmitter<RowData | RowData[]>;
 
-    public columnAction(action: TableAction): void {}
+        public constructor(context: ExtensionContext, data: Data) {
+            super(data.title, "table-view", context);
+            this.data = data;
+        }
 
-    public rowAction(action: TableAction): void {
-        this.data.actions.push(action);
-    }
+        public getId(): string {
+            return `${this.data.title ?? randomUUID()}##${this.context.extension.id}`;
+        }
 
-    public divider(coordinates: TableCoord): void {
-        this.data.dividers.push(coordinates);
-    }
-
-    public build(): TableView {
-        //return new TableView();
+        public dispose(): void {
+            super.dispose();
+        }
     }
 }

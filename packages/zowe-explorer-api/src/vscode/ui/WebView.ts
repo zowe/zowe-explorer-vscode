@@ -16,11 +16,15 @@ import { Disposable, ExtensionContext, Uri, ViewColumn, WebviewPanel, window } f
 import { join as joinPath } from "path";
 import { randomUUID } from "crypto";
 
+export type WebViewOpts = {
+    retainContext: boolean;
+};
+
 export class WebView {
-    private disposables: Disposable[];
+    protected disposables: Disposable[];
 
     // The webview HTML content to render after filling the HTML template.
-    private webviewContent: string;
+    protected webviewContent: string;
     public panel: WebviewPanel;
 
     // Resource identifiers for the on-disk content and vscode-webview resource.
@@ -31,8 +35,9 @@ export class WebView {
 
     // Unique identifier
     private nonce: string;
+    protected title: string;
 
-    private title: string;
+    protected context: ExtensionContext;
 
     /**
      * Constructs a webview for use with bundled assets.
@@ -50,6 +55,7 @@ export class WebView {
         onDidReceiveMessage?: (message: object) => void | Promise<void>,
         retainContext?: boolean
     ) {
+        this.context = context;
         this.disposables = [];
 
         // Generate random nonce for loading the bundled script
@@ -90,7 +96,7 @@ export class WebView {
     /**
      * Disposes of the webview instance
      */
-    private dispose(): void {
+    protected dispose(): void {
         this.panel.dispose();
 
         for (const disp of this.disposables) {
