@@ -21,6 +21,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
   - `zowe.ds.deleteProfile`, `zowe.uss.deleteProfile`, `zowe.jobs.deleteProfile`, `zowe.cmd.deleteProfile` - use `zowe.deleteProfile` instead
   - `zowe.ds.editSession`, `zowe.uss.editSession`, `zowe.jobs.editSession` - use `zowe.editSession` instead
   - `zowe.ds.enableValidation`, `zowe.uss.enableValidation`, `zowe.jobs.enableValidation` - use `zowe.enableValidation` instead
+  - `zowe.ds.openWithEncoding`, `zowe.uss.openWithEncoding` - use `zowe.openWithEncoding` instead
   - `zowe.ds.removeFavorite`, `zowe.uss.removeFavorite`, `zowe.jobs.removeFavorite` - use `zowe.removeFavorite` instead
   - `zowe.ds.removeFavProfile`, `zowe.uss.removeFavProfile`, `zowe.jobs.removeFavProfile` - use `zowe.removeFavProfile` instead
   - `zowe.ds.removeSavedSearch`, `zowe.uss.removeSavedSearch`, `zowe.jobs.removeSearchFavorite` - use `zowe.removeFavorite` instead

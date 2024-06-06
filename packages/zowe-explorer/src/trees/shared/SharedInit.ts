@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { FileManagement, IZoweTree, IZoweTreeNode, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { FileManagement, IZoweTree, IZoweTreeNode, Validation, ZosEncoding, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { SharedActions } from "./SharedActions";
 import { SharedHistoryView } from "./SharedHistoryView";
 import { SharedTreeProviders } from "./SharedTreeProviders";
@@ -183,7 +183,7 @@ export class SharedInit {
                 )
             );
             context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.deleteProfile", async (node: IZoweTreeNode) => Profiles.getInstance().deleteProfile(node))
+                vscode.commands.registerCommand("zowe.deleteProfile", (node: IZoweTreeNode) => Profiles.getInstance().deleteProfile(node))
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.editSession", async (node: IZoweTreeNode) => {
@@ -206,8 +206,8 @@ export class SharedInit {
                 )
             );
             context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.saveSearch", async (node: IZoweTreeNode) => {
-                    await SharedTreeProviders.getProviderForNode(node).saveSearch(node);
+                vscode.commands.registerCommand("zowe.saveSearch", (node: IZoweTreeNode) => {
+                    SharedTreeProviders.getProviderForNode(node).saveSearch(node);
                 })
             );
             context.subscriptions.push(
@@ -227,10 +227,19 @@ export class SharedInit {
                 })
             );
             context.subscriptions.push(
-                vscode.commands.registerCommand(
-                    "zowe.removeFavProfile",
-                    async (node: IZoweTreeNode) => await SharedTreeProviders.getProviderForNode(node).removeFavProfile(node.label as string, true)
+                vscode.commands.registerCommand("zowe.removeFavProfile", (node: IZoweTreeNode) =>
+                    SharedTreeProviders.getProviderForNode(node).removeFavProfile(node.label as string, true)
                 )
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.openWithEncoding", async (node: IZoweTreeNode, encoding?: ZosEncoding): Promise<void> => {
+                    const treeProvider = SharedTreeProviders.getProviderForNode(node);
+                    if (treeProvider.openWithEncoding) {
+                        await treeProvider.openWithEncoding(node, encoding);
+                    } else {
+                        throw new Error("Method not implemented.");
+                    }
+                })
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.issueTsoCmd", async (node?, command?) => {

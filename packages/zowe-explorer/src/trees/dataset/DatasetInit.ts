@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweDatasetTreeNode, ZosEncoding, ZoweScheme, imperative } from "@zowe/zowe-explorer-api";
+import { IZoweDatasetTreeNode, ZoweScheme, imperative } from "@zowe/zowe-explorer-api";
 import { DatasetTree } from "./DatasetTree";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { DatasetActions } from "./DatasetActions";
@@ -169,12 +169,6 @@ export class DatasetInit {
             vscode.commands.registerCommand(
                 "zowe.ds.filterBy",
                 async (node: IZoweDatasetTreeNode): Promise<void> => datasetProvider.filterPdsMembersDialog(node)
-            )
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand(
-                "zowe.ds.openWithEncoding",
-                (node: IZoweDatasetTreeNode, encoding?: ZosEncoding): Promise<void> => datasetProvider.openWithEncoding(node, encoding)
             )
         );
         context.subscriptions.push(

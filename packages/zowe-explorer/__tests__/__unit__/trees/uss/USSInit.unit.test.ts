@@ -117,10 +117,6 @@ describe("Test src/uss/extension", () => {
                 mock: [{ spy: jest.spyOn(USSActions, "editAttributes"), arg: [test.context, ussFileProvider, test.value] }],
             },
             {
-                name: "zowe.uss.openWithEncoding",
-                mock: [{ spy: jest.spyOn(ussFileProvider, "openWithEncoding"), arg: [test.value, undefined] }],
-            },
-            {
                 name: "onDidChangeConfiguration",
                 mock: [{ spy: jest.spyOn(ussFileProvider, "onDidChangeConfiguration"), arg: [test.value] }],
             },

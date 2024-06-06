@@ -194,10 +194,6 @@ describe("Test src/dataset/extension", () => {
                 mock: [{ spy: jest.spyOn(dsProvider, "filterPdsMembersDialog"), arg: [test.value] }],
             },
             {
-                name: "zowe.ds.openWithEncoding",
-                mock: [{ spy: jest.spyOn(dsProvider, "openWithEncoding"), arg: [test.value, undefined] }],
-            },
-            {
                 name: "onDidChangeConfiguration",
                 mock: [{ spy: jest.spyOn(dsProvider, "onDidChangeConfiguration"), arg: [test.value] }],
             },

@@ -57,6 +57,7 @@ describe("Test src/shared/extension", () => {
             deleteSession: jest.fn(),
             editSession: jest.fn(),
             getTreeView: jest.fn().mockReturnValue({ reveal: jest.fn() }),
+            openWithEncoding: jest.fn(),
             refreshElement: jest.fn(),
             removeFavorite: jest.fn(),
             removeFavProfile: jest.fn(),
@@ -239,6 +240,13 @@ describe("Test src/shared/extension", () => {
                 mock: [
                     { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
                     { spy: jest.spyOn(treeProvider, "removeFavProfile"), arg: [test.value, true] },
+                ],
+            },
+            {
+                name: "zowe.openWithEncoding",
+                mock: [
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "openWithEncoding"), arg: [test.value, undefined] },
                 ],
             },
             {

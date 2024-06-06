@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweUSSTreeNode, ZosEncoding, imperative, ZoweScheme, FsAbstractUtils, Gui } from "@zowe/zowe-explorer-api";
+import { IZoweUSSTreeNode, imperative, ZoweScheme, FsAbstractUtils, Gui } from "@zowe/zowe-explorer-api";
 import { USSTree } from "./USSTree";
 import { USSActions } from "./USSActions";
 import { UssFSProvider } from "./UssFSProvider";
@@ -145,12 +145,6 @@ export class USSInit {
                 ussFileProvider.copying = USSActions.copyUssFiles(node, nodeList, ussFileProvider);
                 await ussFileProvider.copying;
             })
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand(
-                "zowe.uss.openWithEncoding",
-                (node: IZoweUSSTreeNode, encoding?: ZosEncoding): Promise<void> => ussFileProvider.openWithEncoding(node, encoding)
-            )
         );
         context.subscriptions.push(
             vscode.workspace.onDidChangeConfiguration(async (e) => {

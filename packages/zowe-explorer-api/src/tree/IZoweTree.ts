@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as imperative from "@zowe/imperative";
-import { IZoweTreeNode } from "./IZoweTreeNode";
+import { IZoweTreeNode, ZosEncoding } from "./IZoweTreeNode";
 import { PersistenceSchemaEnum } from "../profiles/UserSettings";
 import { Types } from "../Types";
 
@@ -319,4 +319,10 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
      * @param {IZoweTreeNode} node the node to poll data for
      */
     pollData?(node: IZoweTreeNode): any;
+    /**
+     * Opens resource for the provided node using encoding specified by user.
+     * @param {IZoweTreeNode} node
+     * @param {ZosEncoding} encoding File encoding, user will be prompted if undefined
+     */
+    openWithEncoding?(node: IZoweTreeNode, encoding?: ZosEncoding): Promise<void>;
 }

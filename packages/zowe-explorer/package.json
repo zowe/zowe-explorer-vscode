@@ -611,12 +611,7 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.ds.openWithEncoding",
-        "title": "%openWithEncoding%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.uss.openWithEncoding",
+        "command": "zowe.openWithEncoding",
         "title": "%openWithEncoding%",
         "category": "Zowe Explorer"
       },
@@ -728,7 +723,7 @@
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(textFile.*|binaryFile.*)/",
-          "command": "zowe.uss.openWithEncoding",
+          "command": "zowe.openWithEncoding",
           "group": "000_zowe_ussMainframeInteraction@3"
         },
         {
@@ -878,7 +873,7 @@
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(member.*|ds.*)/",
-          "command": "zowe.ds.openWithEncoding",
+          "command": "zowe.openWithEncoding",
           "group": "000_zowe_dsMainframeInteraction@0"
         },
         {
@@ -1437,11 +1432,7 @@
           "when": "never"
         },
         {
-          "command": "zowe.ds.openWithEncoding",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.openWithEncoding",
+          "command": "zowe.openWithEncoding",
           "when": "never"
         }
       ]
