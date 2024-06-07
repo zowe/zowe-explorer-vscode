@@ -41,8 +41,10 @@ export default defineConfig({
             typescript: true,
         }),
     ],
+
     root: path.resolve(__dirname, "src"),
     build: {
+        cssCodeSplit: false,
         emptyOutDir: true,
         outDir: path.resolve(__dirname, "dist"),
         rollupOptions: {
@@ -50,8 +52,14 @@ export default defineConfig({
             output: {
                 entryFileNames: `[name]/[name].js`,
                 chunkFileNames: `[name]/[name].js`,
-                assetFileNames: `assets/[name].[ext]`,
+                assetFileNames: `[name]/[name].[ext]`,
             },
         },
     },
+    resolve: {
+        alias: {
+            "react": "preact/compat",
+            "react-dom": "preact/compat"
+        }
+    }
 });

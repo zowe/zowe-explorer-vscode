@@ -10,6 +10,7 @@
  */
 
 import * as Handlebars from "handlebars";
+import * as fs from "fs";
 import HTMLTemplate from "./utils/HTMLTemplate";
 import { Types } from "../../Types";
 import { Disposable, ExtensionContext, Uri, ViewColumn, WebviewPanel, window } from "vscode";
@@ -62,10 +63,14 @@ export class WebView {
         this.nonce = randomUUID();
         this.title = title;
 
+        const cssPath = joinPath(context.extensionPath, "src", "webviews", "dist", "style", "style.css");
+        const cssExists = fs.existsSync(cssPath);
+
         // Build URIs for the webview directory and get the paths as VScode resources
         this.uris.disk = {
             build: Uri.file(joinPath(context.extensionPath, "src", "webviews")),
             script: Uri.file(joinPath(context.extensionPath, "src", "webviews", "dist", webviewName, `${webviewName}.js`)),
+            css: cssExists ? Uri.file(cssPath) : undefined
         };
 
         this.panel = window.createWebviewPanel("ZEAPIWebview", this.title, ViewColumn.Beside, {
@@ -78,6 +83,7 @@ export class WebView {
         this.uris.resource = {
             build: this.panel.webview.asWebviewUri(this.uris.disk.build),
             script: this.panel.webview.asWebviewUri(this.uris.disk.script),
+            css: this.uris.disk.css ? this.panel.webview.asWebviewUri(this.uris.disk.css) : undefined
         };
 
         const template = Handlebars.compile(HTMLTemplate);

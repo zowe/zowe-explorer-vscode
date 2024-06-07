@@ -15,24 +15,10 @@ import { useContext } from "preact/hooks";
 
 export const DataPanelContext = createContext<DataPanelContextType | null>(null);
 
-export function isSecureOrigin(origin: string): boolean {
-    const eventUrl = new URL(origin);
-    const isWebUser =
-        (eventUrl.protocol === document.location.protocol && eventUrl.hostname === document.location.hostname) ||
-        eventUrl.hostname.endsWith(".github.dev");
-    const isLocalVSCodeUser = eventUrl.protocol === "vscode-webview:";
-
-    if (!isWebUser && !isLocalVSCodeUser) {
-        return false;
-    }
-
-    return true;
-}
-
 export function useDataPanelContext(): DataPanelContextType {
-    const dataPanelContext = useContext(DataPanelContext);
-    if (!dataPanelContext) {
-        throw new Error("DataPanelContext has to be used within <DataPanelContext.Provider>");
-    }
-    return dataPanelContext;
+  const dataPanelContext = useContext(DataPanelContext);
+  if (!dataPanelContext) {
+    throw new Error("DataPanelContext has to be used within <DataPanelContext.Provider>");
+  }
+  return dataPanelContext;
 }
