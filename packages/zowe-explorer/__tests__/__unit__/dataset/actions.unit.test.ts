@@ -495,14 +495,6 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
             profile: globalMocks.imperativeProfile,
             contextOverride: globals.DS_MEMBER_CONTEXT,
         });
-        const testMemberNode1 = new ZoweDatasetNode({
-            label: "MEMB",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: testDatasetNode,
-            session: globalMocks.session,
-            profile: globalMocks.imperativeProfile,
-            contextOverride: globals.DS_MEMBER_CONTEXT,
-        });
         const testFavoritedNode = new ZoweDatasetNode({
             label: "HLQ.TEST.FAV",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
