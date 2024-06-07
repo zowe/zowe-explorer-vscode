@@ -1,3 +1,14 @@
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
+ */
+
 import { WebView } from "./WebView";
 import { Event, EventEmitter, ExtensionContext } from "vscode";
 import { AnyComponent, JSX } from "preact";
@@ -8,6 +19,10 @@ export namespace Table {
     export type Axes = "row" | "column";
 
     export type RowContent = Record<string | number, string | number | boolean | string[] | Action | Action[]>;
+    export type Dividers = {
+        rows: number[];
+        columns: number[];
+    };
     export type Data = {
         // Actions to apply to the given row or column index
         actions: {
@@ -115,8 +130,9 @@ export namespace Table {
         /**
          * Adds a divider to the given row and column
          *
-         * @param coord The coordinate
-         * @returns
+         * @param axis The axis to add the divider to
+         * @param index The index on the axis where the divider should be added
+         * @returns Whether the webview successfully received the new divider
          */
         public async addDivider(axis: Axes, index: number): Promise<boolean> {
             (axis === "row" ? this.data.dividers.row : this.data.dividers.column).push(index);
@@ -148,11 +164,18 @@ export namespace Table {
         /**
          * Sets the dividers for the table; replaces any pre-existing dividers.
          *
-         * @param rows The dividers to use for the table
+         * @param rows The row dividers to use for the table
+         * @param columns The column dividers to use for the table
          * @returns Whether the webview successfully received the new dividers
          */
-        public async setDividers(): Promise<boolean> {
-            // TODO: implement
+        public async setDividers(dividers: Pick<Dividers, "rows"> | Pick<Dividers, "columns">): Promise<boolean> {
+            if ("rows" in dividers) {
+                this.data.dividers.row = dividers.rows;
+            }
+            if ("columns" in dividers) {
+                this.data.dividers.column = dividers.columns;
+            }
+
             return this.updateWebview();
         }
 

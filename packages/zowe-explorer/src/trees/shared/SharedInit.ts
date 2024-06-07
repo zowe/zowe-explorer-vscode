@@ -32,6 +32,7 @@ import { ProfilesUtils } from "../../utils/ProfilesUtils";
 import { DatasetFSProvider } from "../dataset/DatasetFSProvider";
 import { ExtensionUtils } from "../../utils/ExtensionUtils";
 import type { Definitions } from "../../configuration/Definitions";
+import { Table } from "@zowe/zowe-explorer-api";
 
 export class SharedInit {
     public static registerRefreshCommand(
@@ -221,6 +222,11 @@ export class SharedInit {
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.placeholderCommand", () => {
                     // This command does nothing, its here to let us disable individual items in the tree view
+                })
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.tableView", () => {
+                    new Table.View(context, {} as any);
                 })
             );
             // initialize the Constants.filesToCompare array during initialization

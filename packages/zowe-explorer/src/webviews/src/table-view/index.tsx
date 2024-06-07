@@ -9,5 +9,7 @@
  *
  */
 
-export * from "./TableView";
-export * from "./WebView";
+import { render } from "preact";
+import { App } from "./App";
+
+render(<App />, document.getElementById("webviewRoot")!);

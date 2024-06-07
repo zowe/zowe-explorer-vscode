@@ -854,6 +854,11 @@
         "command": "zowe.placeholderCommand",
         "title": "%zowe.placeholderCommand%",
         "enablement": "false"
+      },
+      {
+        "command": "zowe.tableView",
+        "title": "Open table view",
+        "category": "Zowe Explorer"
       }
     ],
     "menus": {
