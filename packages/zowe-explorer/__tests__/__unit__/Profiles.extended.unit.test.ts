@@ -1785,7 +1785,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
             getTokenTypeName: () => "apimlAuthenticationToken",
         } as never);
-        jest.spyOn(utils.ProfilesUtils, "promptCredentials").mockImplementationOnce((node) => modifiedTestNode);
+        jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValue(["testUser", "6789"]);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
         expect(Gui.infoMessage).toBeCalled();
         expect(testNode.profile.profile.user).toBe("testUser");
