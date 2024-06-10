@@ -1249,9 +1249,10 @@ export class Profiles extends ProfilesCache {
     public async tokenAuthClearSecureArray(profileName?: string): Promise<void> {
         const profAttrs = await this.getProfileFromConfig(profileName);
         const configApi = (await this.getProfileInfo()).getTeamConfig();
-        configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, []);
+        configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, ["user", "password"]);
         configApi.delete(`${profAttrs.profLoc.jsonLoc}.properties.tokenType`);
         configApi.delete(`${profAttrs.profLoc.jsonLoc}.properties.tokenValue`);
+        configApi.delete(`${profAttrs.profLoc.jsonLoc}.properties.tokenExpiration`);
         await configApi.save();
     }
 
@@ -1314,12 +1315,20 @@ export class Profiles extends ProfilesCache {
                         serviceProfile.name
                     )
                 );
-                await this.ssoLogout(node);
-                await this.tokenAuthClearSecureArray(serviceProfile.name);
-                if (loginTokenType.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)) {
-                    await this.tokenAuthClearSecureArray("base");
+                const profile: string | zowe.imperative.IProfileLoaded = node?.getProfile();
+                const creds = await Profiles.getInstance().promptCredentials(profile, true);
+
+                if (creds != null) {
+                    const successMsg = localize(
+                        "promptCredentials.updatedCredentials",
+                        "Credentials for {0} were successfully updated",
+                        typeof profile === "string" ? profile : profile.name
+                    );
+                    ZoweLogger.info(successMsg);
+                    Gui.showMessage(successMsg);
+                    await this.tokenAuthClearSecureArray(serviceProfile.name);
+                    await vscode.commands.executeCommand("zowe.extRefresh");
                 }
-                await ProfilesUtils.promptCredentials(node);
                 break;
             }
             default: {
