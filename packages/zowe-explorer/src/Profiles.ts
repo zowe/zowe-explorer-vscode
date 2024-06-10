@@ -1270,7 +1270,11 @@ export class Profiles extends ProfilesCache {
         } catch (error) {
             ZoweLogger.warn(error);
             Gui.showMessage(
-                localize("handleSwitchAuthentication.tokenType.error", "Cannot switch to Token Authentication for profile {0}", serviceProfile.name)
+                localize(
+                    "handleSwitchAuthentication.tokenType.error",
+                    "Cannot switch to Token-based Authentication for profile {0}",
+                    serviceProfile.name
+                )
             );
             return;
         }
@@ -1279,7 +1283,7 @@ export class Profiles extends ProfilesCache {
                 Gui.infoMessage(
                     localize(
                         "handleSwitchAuthentication.switchBaseToTokenAuth",
-                        "Switching from Basic to Token Authentication for profile {0}",
+                        "Switching from Basic to Token-based Authentication for profile {0}",
                         serviceProfile.name
                     )
                 );
@@ -1291,7 +1295,9 @@ export class Profiles extends ProfilesCache {
                 }
 
                 if (loginOk) {
-                    Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
+                    Gui.showMessage(
+                        localize("handleSwitchAuthentication.tokenAuth.successful", "Login using token-based authentication service was successful.")
+                    );
                     await Profiles.getInstance().refresh(zeInstance);
                     await this.basicAuthClearSecureArray(serviceProfile.name);
                     const updBaseProfile: zowe.imperative.IProfile = {
@@ -1311,7 +1317,7 @@ export class Profiles extends ProfilesCache {
                 Gui.infoMessage(
                     localize(
                         "handleSwitchAuthentication.switchTokenToBaseAuth",
-                        "Switching from Token to Basic Authentication for profile {0}",
+                        "Switching from Token-based to Basic Authentication for profile {0}",
                         serviceProfile.name
                     )
                 );
@@ -1320,8 +1326,8 @@ export class Profiles extends ProfilesCache {
 
                 if (creds != null) {
                     const successMsg = localize(
-                        "promptCredentials.updatedCredentials",
-                        "Credentials for {0} were successfully updated",
+                        "handleSwitchAuthentication.basicAuth.successful",
+                        "Login using basic authentication was successful.",
                         typeof profile === "string" ? profile : profile.name
                     );
                     ZoweLogger.info(successMsg);
