@@ -179,6 +179,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
 
+        expect(parent.children.find((node) => node.label === "TESTMEMBER")).toBeDefined();
         expect(mySpy).toHaveBeenCalledWith({
             placeHolder: "Name of Member",
             validateInput: expect.any(Function),
@@ -186,7 +187,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         expect(mocked(zosfiles.Upload.bufferToDataSet)).toHaveBeenCalledWith(
             blockMocks.zosmfSession,
             Buffer.from(""),
-            (parent.label as string) + "(testMember)",
+            (parent.label as string) + "(TESTMEMBER)",
             {
                 responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
             }
@@ -254,11 +255,12 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
 
+        expect(parent.children.find((node) => node.label === "TESTMEMBER")).toBeDefined();
         expect(mySpy).toHaveBeenCalledWith({ placeHolder: "Name of Member", validateInput: expect.any(Function) });
         expect(mocked(zosfiles.Upload.bufferToDataSet)).toHaveBeenCalledWith(
             blockMocks.zosmfSession,
             Buffer.from(""),
-            (nonFavoriteLabel as string) + "(testMember)",
+            (nonFavoriteLabel as string) + "(TESTMEMBER)",
             {
                 responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
             }
