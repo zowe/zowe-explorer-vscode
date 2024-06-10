@@ -1681,7 +1681,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         );
     });
 
-    it("To switch from Basic to Token Based Authentication", async () => {
+    it("To switch from Basic to Token Based Authentication with Base Profile", async () => {
         jest.spyOn(utils.ProfilesUtils, "isProfileUsingBasicAuth").mockReturnValueOnce(true);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             getTeamConfig: () => ({
@@ -1726,6 +1726,64 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         jest.spyOn(Gui, "infoMessage").mockImplementation();
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
             getTokenTypeName: () => "apimlAuthenticationToken",
+        } as never);
+
+        jest.spyOn(ZoweVsCodeExtension, "loginWithBaseProfile").mockResolvedValue(true);
+        await Profiles.getInstance().handleSwitchAuthentication(testNode);
+        expect(Gui.infoMessage).toBeCalled();
+        expect(testNode.profile.profile.tokenType).toBe("testToken");
+        expect(testNode.profile.profile.tokenValue).toBe("12345");
+        expect(testNode.profile.profile.secure.length).toBe(1);
+        expect(testNode.profile.profile.secure).toEqual(["tokenType"]);
+        expect(testNode.profile.profile.user).toBeUndefined();
+        expect(testNode.profile.profile.password).toBeUndefined();
+    });
+
+    it("To switch from Basic to Token Based Authentication with Regular Profile", async () => {
+        jest.spyOn(utils.ProfilesUtils, "isProfileUsingBasicAuth").mockReturnValueOnce(true);
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: () => ({
+                properties: jest.fn(),
+                set: jest.fn(),
+                delete: jest.fn(),
+                save: jest.fn(),
+            }),
+            getAllProfiles: () => [
+                {
+                    profName: "sestest",
+                    profLoc: {
+                        osLoc: ["test"],
+                    },
+                },
+            ],
+        } as any);
+        testNode.profile.profile = {
+            type: "zosmf",
+            host: "test",
+            port: 1443,
+            name: "base",
+            rejectUnauthorized: false,
+            user: "testUser",
+            password: "***",
+            tokenType: undefined,
+            tokenValue: undefined,
+            secure: ["user", "password"],
+        };
+        modifiedTestNode.profile.profile = {
+            type: "zosmf",
+            host: "test",
+            port: 1443,
+            name: "base",
+            rejectUnauthorized: false,
+            user: undefined,
+            password: undefined,
+            tokenType: "testToken",
+            tokenValue: "12345",
+            secure: ["tokenType"],
+        };
+        jest.spyOn(Gui, "infoMessage").mockImplementation();
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
+            getTokenTypeName: () => "jwtToken",
         } as never);
 
         jest.spyOn(ZoweVsCodeExtension, "loginWithBaseProfile").mockResolvedValue(true);
