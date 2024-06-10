@@ -1271,8 +1271,8 @@ export class Profiles extends ProfilesCache {
             ZoweLogger.warn(error);
             Gui.showMessage(
                 localize(
-                    "handleSwitchAuthentication.tokenType.error",
-                    "Cannot switch to Token-based Authentication for profile {0}",
+                    "handleSwitchAuthentication.getTokenTypeName.error",
+                    "Cannot switch to Token-based Authentication for profile {0}.",
                     serviceProfile.name
                 )
             );
@@ -1280,13 +1280,6 @@ export class Profiles extends ProfilesCache {
         }
         switch (true) {
             case ProfilesUtils.isProfileUsingBasicAuth(serviceProfile): {
-                Gui.infoMessage(
-                    localize(
-                        "handleSwitchAuthentication.switchBaseToTokenAuth",
-                        "Switching from Basic to Token-based Authentication for profile {0}",
-                        serviceProfile.name
-                    )
-                );
                 let loginOk = false;
                 if (loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken")) {
                     loginOk = await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, loginTokenType, node, zeInstance, this);
@@ -1296,7 +1289,11 @@ export class Profiles extends ProfilesCache {
 
                 if (loginOk) {
                     Gui.showMessage(
-                        localize("handleSwitchAuthentication.tokenAuth.successful", "Login using token-based authentication service was successful.")
+                        localize(
+                            "handleSwitchAuthentication.switchFromBasicToTokenAuth.successful",
+                            "Login using token-based authentication service was successful for profile {0}.",
+                            serviceProfile.name
+                        )
                     );
                     await Profiles.getInstance().refresh(zeInstance);
                     await this.basicAuthClearSecureArray(serviceProfile.name);
@@ -1309,37 +1306,46 @@ export class Profiles extends ProfilesCache {
                         profile: { ...node.getProfile().profile, ...updBaseProfile },
                     });
                 } else {
-                    Gui.showMessage(this.profilesOpCancelled);
+                    Gui.errorMessage(
+                        localize(
+                            "handleSwitchAuthentication.switchFromBasicToTokenAuth.error",
+                            "Unable to switch to Token-based authentication for profile {0}.",
+                            serviceProfile.name
+                        )
+                    );
+                    return;
                 }
                 break;
             }
             case await ProfilesUtils.isUsingTokenAuth(serviceProfile.name): {
-                Gui.infoMessage(
-                    localize(
-                        "handleSwitchAuthentication.switchTokenToBaseAuth",
-                        "Switching from Token-based to Basic Authentication for profile {0}",
-                        serviceProfile.name
-                    )
-                );
                 const profile: string | zowe.imperative.IProfileLoaded = node?.getProfile();
                 const creds = await Profiles.getInstance().promptCredentials(profile, true);
 
                 if (creds != null) {
                     const successMsg = localize(
-                        "handleSwitchAuthentication.basicAuth.successful",
-                        "Login using basic authentication was successful.",
+                        "handleSwitchAuthentication.switchFromTokenToBasicAuth.successful",
+                        "Login using basic authentication was successful for profile {0}.",
                         typeof profile === "string" ? profile : profile.name
                     );
                     ZoweLogger.info(successMsg);
                     Gui.showMessage(successMsg);
                     await this.tokenAuthClearSecureArray(serviceProfile.name);
                     await vscode.commands.executeCommand("zowe.extRefresh");
+                } else {
+                    Gui.errorMessage(
+                        localize(
+                            "handleSwitchAuthentication.switchFromTokenToBasicAuth.error",
+                            "Unable to switch to Basic authentication for profile {0}.",
+                            serviceProfile.name
+                        )
+                    );
+                    return;
                 }
                 break;
             }
             default: {
-                Gui.infoMessage(
-                    localize("handleSwitchAuthentication.noAuth", "Unable to Switch Authentication for profile {0}", serviceProfile.name)
+                Gui.errorMessage(
+                    localize("handleSwitchAuthentication.noAuth", "Unable to Switch Authentication for profile {0}.", serviceProfile.name)
                 );
             }
         }
