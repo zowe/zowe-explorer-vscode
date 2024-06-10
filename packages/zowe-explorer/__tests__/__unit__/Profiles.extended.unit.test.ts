@@ -1795,7 +1795,6 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         expect(testNode.profile.profile.tokenType).toBeUndefined();
         expect(testNode.profile.profile.tokenValue).toBeUndefined();
     });
-
     it("When authentication method is unknown", async () => {
         jest.spyOn(utils.ProfilesUtils, "isProfileUsingBasicAuth").mockReturnValueOnce(false);
         jest.spyOn(utils.ProfilesUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
@@ -1815,6 +1814,17 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
                 throw new Error("test error.");
             },
         } as never);
+        await Profiles.getInstance().handleSwitchAuthentication(testNode);
+        expect(Gui.showMessage).toBeCalled();
+    });
+
+    it("To check profile using basic authentication does not support token based authentication", async () => {
+        jest.spyOn(utils.ProfilesUtils, "isProfileUsingBasicAuth").mockReturnValueOnce(true);
+        jest.spyOn(Gui, "showMessage").mockImplementation();
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
+            getTokenTypeName: () => "apimlAuthenticationToken",
+        } as never);
+        jest.spyOn(ZoweVsCodeExtension, "loginWithBaseProfile").mockResolvedValue(false);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
         expect(Gui.showMessage).toBeCalled();
     });
