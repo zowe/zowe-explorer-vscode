@@ -130,7 +130,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     }
     public filterPrompt(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("DatasetTree.filterPrompt called.");
-        return this.datasetFilterPrompt(node);
+        Gui.withProgress({ location: { viewId: "zowe.ds.explorer" } }, async () => {
+            await this.datasetFilterPrompt(node);
+        });
+        return;
     }
 
     /**
