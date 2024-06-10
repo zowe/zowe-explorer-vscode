@@ -1269,7 +1269,7 @@ export class Profiles extends ProfilesCache {
             loginTokenType = await zeInstance.getCommonApi(serviceProfile).getTokenTypeName();
         } catch (error) {
             ZoweLogger.warn(error);
-            Gui.showMessage(
+            Gui.errorMessage(
                 localize(
                     "handleSwitchAuthentication.getTokenTypeName.error",
                     "Cannot switch to Token-based Authentication for profile {0}.",
@@ -1475,7 +1475,7 @@ export class Profiles extends ProfilesCache {
             .map((arg) => arg.argName);
     }
 
-    private async loginWithRegularProfile(serviceProfile: zowe.imperative.IProfileLoaded, node?: IZoweNodeType): Promise<boolean> {
+    public async loginWithRegularProfile(serviceProfile: zowe.imperative.IProfileLoaded, node?: IZoweNodeType): Promise<boolean> {
         let session: zowe.imperative.Session;
         if (node) {
             session = node.getSession();
