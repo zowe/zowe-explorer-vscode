@@ -3053,16 +3053,6 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(tree.getFavorites()).toEqual(["test1", "test2", "test3"]);
         });
     });
-
-    describe("onDidCloseTextDocument", () => {
-        it("sets the entry in openFiles record to null if Data Set URI is valid", () => {
-            const doc = { uri: { fsPath: join(Constants.DS_DIR, "lpar", "SOME.PS") } } as vscode.TextDocument;
-
-            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(tree);
-            DatasetTree.onDidCloseTextDocument(doc);
-            expect(tree.openFiles[doc.uri.fsPath]).toBeNull();
-        });
-    });
 });
 
 describe("Dataset Tree Unit Tests - Function openWithEncoding", () => {

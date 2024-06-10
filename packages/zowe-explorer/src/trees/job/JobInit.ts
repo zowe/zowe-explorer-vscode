@@ -205,8 +205,6 @@ export class JobInit {
             })
         );
 
-        context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(JobTree.onDidCloseTextDocument));
-
         SharedInit.initSubscribers(context, jobsProvider);
         return jobsProvider;
     }

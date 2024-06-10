@@ -232,7 +232,6 @@ export class USSInit {
                 UssFSProvider.instance.cacheOpenedUri(doc.uri);
             })
         );
-        context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(USSTree.onDidCloseTextDocument));
 
         SharedInit.initSubscribers(context, ussFileProvider);
         return ussFileProvider;

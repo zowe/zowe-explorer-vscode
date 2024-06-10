@@ -52,6 +52,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
 
     /**
      * A record of open files from this tree.
+     * @deprecated Unused in v3 since open files are now tracked by the `FileSystemProvider`
      */
     openFiles?: Record<string, IZoweTreeNode>;
 

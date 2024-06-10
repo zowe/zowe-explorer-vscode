@@ -66,7 +66,6 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.Job;
     private static readonly submitJobQueryLabel = vscode.l10n.t("$(check) Submit this query");
     private static readonly chooseJobStatusLabel = "Job Status";
-    public openFiles: Record<string, IZoweJobTreeNode> = {};
     public dragMimeTypes: string[] = ["application/vnd.code.tree.zowe.jobs.explorer"];
     public dropMimeTypes: string[] = ["application/vnd.code.tree.zowe.jobs.explorer"];
 
@@ -1207,17 +1206,6 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         });
         inputBox.show();
         return inputBox;
-    }
-
-    /**
-     * Event listener to mark a job doc URI as null in the openFiles record
-     * @param this (resolves ESlint warning about unbound methods)
-     * @param doc A doc URI that was closed
-     */
-    public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): void {
-        if (doc.uri.scheme === "zosspool") {
-            SharedUtils.updateOpenFiles(SharedTreeProviders.job, doc.uri.path, null);
-        }
     }
 }
 

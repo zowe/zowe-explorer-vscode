@@ -48,7 +48,6 @@ describe("Test src/dataset/extension", () => {
             ssoLogin: jest.fn(),
             ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
-            onDidCloseTextDocument: jest.fn(),
             getTreeView: jest.fn(),
             refreshElement: jest.fn(),
             sortPdsMembersDialog: jest.fn(),
@@ -284,7 +283,6 @@ describe("Test src/dataset/extension", () => {
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
 
             spyCreateDatasetTree.mockResolvedValue(dsProvider as any);
-            jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(dsProvider.onDidCloseTextDocument);
             await DatasetInit.initDatasetProvider(test.context);
         });
         beforeEach(() => {
@@ -300,10 +298,6 @@ describe("Test src/dataset/extension", () => {
             spyCreateDatasetTree.mockResolvedValue(null);
             const myProvider = await DatasetInit.initDatasetProvider(test.context);
             expect(myProvider).toBe(null);
-        });
-
-        it("should register onDidCloseTextDocument event listener from DatasetTree", () => {
-            expect(dsProvider.onDidCloseTextDocument).toHaveBeenCalledWith(DatasetTree.onDidCloseTextDocument);
         });
     });
 });

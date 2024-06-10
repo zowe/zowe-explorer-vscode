@@ -236,7 +236,6 @@ export class DatasetInit {
             })
         );
         context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(DatasetFSProvider.onDidOpenTextDocument));
-        context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(DatasetTree.onDidCloseTextDocument));
 
         SharedInit.initSubscribers(context, datasetProvider);
         return datasetProvider;

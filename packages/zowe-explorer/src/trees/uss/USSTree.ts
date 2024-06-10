@@ -68,7 +68,6 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     public lastOpened: Types.ZoweNodeInteraction = {};
     private treeView: vscode.TreeView<IZoweUSSTreeNode>;
     public copying: Promise<unknown>;
-    public openFiles: Record<string, IZoweUSSTreeNode> = {};
 
     // only support drag and drop ops within the USS tree at this point
     public dragMimeTypes: string[] = [];
@@ -1166,17 +1165,6 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             }
         }
         return match as IZoweUSSTreeNode;
-    }
-
-    /**
-     * Event listener to mark a USS doc URI as null in the openFiles record
-     * @param this (resolves ESlint warning about unbound methods)
-     * @param doc A doc URI that was closed
-     */
-    public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): void {
-        if (doc.uri.fsPath.includes(Constants.USS_DIR)) {
-            SharedUtils.updateOpenFiles(SharedTreeProviders.uss, doc.uri.fsPath, null);
-        }
     }
 
     public async openWithEncoding(node: IZoweUSSTreeNode, encoding?: ZosEncoding): Promise<void> {

@@ -50,7 +50,6 @@ function createGlobalMocks() {
         mockCreateTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         mockExecuteCommand: jest.fn(),
         mockRegisterCommand: jest.fn(),
-        mockOnDidCloseTextDocument: jest.fn(),
         mockOnDidSaveTextDocument: jest.fn(),
         mockOnDidChangeSelection: jest.fn(),
         mockOnDidChangeConfiguration: jest.fn(),
@@ -376,8 +375,6 @@ function createGlobalMocks() {
         get: globalMocks.mockImperativeProfileInfo,
         configurable: true,
     });
-
-    jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(globalMocks.onDidCloseTextDocument);
 
     // Create a mocked extension context
     const mockExtensionCreator = jest.fn(

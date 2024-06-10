@@ -42,7 +42,6 @@ describe("Test src/uss/extension", () => {
             ssoLogin: jest.fn(),
             ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
-            onDidCloseTextDocument: jest.fn(),
             getTreeView: jest.fn().mockReturnValue({
                 reveal: jest.fn(),
             }),
@@ -208,7 +207,6 @@ describe("Test src/uss/extension", () => {
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
 
             spyCreateUssTree.mockResolvedValue(ussFileProvider as any);
-            jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(ussFileProvider.onDidCloseTextDocument);
             await USSInit.initUSSProvider(test.context);
         });
         beforeEach(() => {
@@ -224,10 +222,6 @@ describe("Test src/uss/extension", () => {
             spyCreateUssTree.mockResolvedValue(null);
             const myProvider = await USSInit.initUSSProvider(test.context);
             expect(myProvider).toBe(null);
-        });
-
-        it("should register onDidCloseTextDocument event listener from USSTree", () => {
-            expect(ussFileProvider.onDidCloseTextDocument).toHaveBeenCalledWith(USSTree.onDidCloseTextDocument);
         });
     });
 });

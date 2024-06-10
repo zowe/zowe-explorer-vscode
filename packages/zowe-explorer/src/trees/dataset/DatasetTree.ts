@@ -38,7 +38,6 @@ import { ZoweTreeProvider } from "../ZoweTreeProvider";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedContext } from "../shared/SharedContext";
-import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { SharedUtils } from "../shared/SharedUtils";
 import { FilterDescriptor, FilterItem } from "../../management/FilterManagement";
 import { IconUtils } from "../../icons/IconUtils";
@@ -63,7 +62,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public lastOpened: Types.ZoweNodeInteraction = {};
     // public memberPattern: IZoweDatasetTreeNode[] = [];
     private treeView: vscode.TreeView<IZoweDatasetTreeNode>;
-    public openFiles: Record<string, IZoweDatasetTreeNode> = {};
 
     public dragMimeTypes: string[] = ["application/vnd.code.tree.zowe.ds.explorer"];
     public dropMimeTypes: string[] = ["application/vnd.code.tree.zowe.ds.explorer"];
@@ -1547,17 +1545,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }),
             Constants.MS_PER_SEC * 4
         );
-    }
-
-    /**
-     * Event listener to mark a Data Set doc URI as null in the openFiles record
-     * @param this (resolves ESlint warning about unbound methods)
-     * @param doc A doc URI that was closed
-     */
-    public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): void {
-        if (doc.uri.fsPath.includes(Constants.DS_DIR)) {
-            SharedUtils.updateOpenFiles(SharedTreeProviders.ds, doc.uri.fsPath, null);
-        }
     }
 
     public async openWithEncoding(node: IZoweDatasetTreeNode, encoding?: ZosEncoding): Promise<void> {
