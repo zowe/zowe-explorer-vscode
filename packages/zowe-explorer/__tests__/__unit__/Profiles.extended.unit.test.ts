@@ -1728,7 +1728,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             getTokenTypeName: () => "apimlAuthenticationToken",
         } as never);
 
-        jest.spyOn(Profiles.getInstance(), "ssoLogin").mockImplementationOnce((node) => modifiedTestNode);
+        jest.spyOn(ZoweVsCodeExtension, "loginWithBaseProfile").mockResolvedValue(true);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
         expect(Gui.infoMessage).toBeCalled();
         expect(testNode.profile.profile.tokenType).toBe("testToken");

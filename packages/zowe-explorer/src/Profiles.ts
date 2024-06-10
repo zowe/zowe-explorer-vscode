@@ -1284,7 +1284,7 @@ export class Profiles extends ProfilesCache {
                     )
                 );
                 let loginOk = false;
-                if (loginTokenType && loginTokenType.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)) {
+                if (loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken")) {
                     loginOk = await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, loginTokenType, node, zeInstance, this);
                 } else {
                     loginOk = await this.loginWithRegularProfile(serviceProfile, node);
