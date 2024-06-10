@@ -324,12 +324,14 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         const blockMocks = createGlobalMocks();
         const iJobFile = createIJobFile();
         const jobs: IZoweJobTreeNode[] = [];
-        const node = new ZoweJobNode({
+        const spool: zowe.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1 };
+        const node = new ZoweSpoolNode({
             label: "test:dd - 1",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             session: blockMocks.session,
             profile: blockMocks.imperativeProfile,
             job: blockMocks.iJob,
+            spool,
         });
         const fileUri = {
             fsPath: "/tmp/foo",
@@ -342,7 +344,6 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         jobs.push(node);
         mocked(Gui.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
         const downloadFileSpy = jest.spyOn(blockMocks.jesApi, "downloadSingleSpool");
-        const spool: zowe.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1 };
         const getSpoolFilesSpy = jest.spyOn(SpoolProvider, "getSpoolFiles").mockResolvedValue([spool]);
 
         await jobActions.downloadSingleSpool(jobs, true);
@@ -360,12 +361,14 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         const blockMocks = createGlobalMocks();
         const iJobFile = createIJobFile();
         const jobs: IZoweJobTreeNode[] = [];
-        const node = new ZoweJobNode({
+        const spool: zowe.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1 };
+        const node = new ZoweSpoolNode({
             label: "test:dd - 1",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             session: blockMocks.session,
             profile: blockMocks.imperativeProfile,
             job: blockMocks.iJob,
+            spool,
         });
         const fileUri = {
             fsPath: "/tmp/foo",
@@ -378,7 +381,6 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         jobs.push(node);
         mocked(Gui.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
         blockMocks.jesApi.downloadSingleSpool = undefined;
-        const spool: zowe.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1 };
         const getSpoolFilesSpy = jest.spyOn(SpoolProvider, "getSpoolFiles").mockResolvedValue([spool]);
 
         await jobActions.downloadSingleSpool(jobs, true);

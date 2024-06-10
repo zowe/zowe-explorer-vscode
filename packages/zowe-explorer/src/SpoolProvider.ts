@@ -146,7 +146,8 @@ export async function getSpoolFiles(node: IZoweJobTreeNode): Promise<zowe.IJobFi
  * @returns true if the selected node matches the spool file, false otherwise
  */
 export function matchSpool(spool: zowe.IJobFile, node: IZoweJobTreeNode): boolean {
-    return spool.jobid === node.job?.jobid && spool.id === (node as ZoweSpoolNode).spool.id;
+    const nodeSpool = (node as ZoweSpoolNode).spool;
+    return nodeSpool != null && spool.jobid === nodeSpool.jobid && spool.id === nodeSpool.id;
 }
 
 /**

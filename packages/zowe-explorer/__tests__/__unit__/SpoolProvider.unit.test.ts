@@ -236,27 +236,20 @@ describe("SpoolProvider Unit Tests", () => {
 
     describe("matchSpool", () => {
         it("should match spool to the selected node", () => {
-            const spool: zowe.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1, procstep: "proc" };
-            let match = matchSpool(spool, { label: "test:dd - 1" } as any);
+            const spool: zowe.IJobFile = { ...iJobFile };
+            let match = matchSpool(spool, { spool } as any);
             expect(match).toBe(true);
 
-            match = matchSpool(spool, { label: "test:dd - proc" } as any);
-            expect(match).toBe(true);
-
-            // Different record-count
-            match = matchSpool(spool, { label: "test:dd - 2" } as any);
+            // Different job id
+            match = matchSpool(spool, { spool: { ...spool, jobid: "101" } } as any);
             expect(match).toBe(false);
 
-            // Different procstep
-            match = matchSpool(spool, { label: "test:dd - abc" } as any);
+            // Different spool id
+            match = matchSpool(spool, { spool: { ...spool, id: 101 } } as any);
             expect(match).toBe(false);
 
-            // Different stepname
-            match = matchSpool(spool, { label: "other:dd - 1" } as any);
-            expect(match).toBe(false);
-
-            // Different ddname
-            match = matchSpool(spool, { label: "test:new - proc" } as any);
+            // Missing spool property
+            match = matchSpool(spool, { label: "missingSpool" } as any);
             expect(match).toBe(false);
         });
     });

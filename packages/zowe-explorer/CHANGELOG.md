@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed issue where Download Spool action could fail to find spool files to download. [#2943](https://github.com/zowe/zowe-explorer-vscode/pull/2943)
+
 ## `2.16.1`
 
 ### Bug fixes
