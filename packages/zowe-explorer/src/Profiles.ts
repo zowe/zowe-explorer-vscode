@@ -1240,7 +1240,7 @@ export class Profiles extends ProfilesCache {
     public async basicAuthClearSecureArray(profileName?: string): Promise<void> {
         const profAttrs = await this.getProfileFromConfig(profileName);
         const configApi = (await this.getProfileInfo()).getTeamConfig();
-        configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, []);
+        configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, ["tokenValue"]);
         configApi.delete(`${profAttrs.profLoc.jsonLoc}.properties.user`);
         configApi.delete(`${profAttrs.profLoc.jsonLoc}.properties.password`);
         await configApi.save();
@@ -1282,19 +1282,28 @@ export class Profiles extends ProfilesCache {
                         serviceProfile.name
                     )
                 );
-                await this.basicAuthClearSecureArray(serviceProfile.name);
-                if (loginTokenType.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)) {
-                    await this.basicAuthClearSecureArray("base");
+                let loginOk = false;
+                if (loginTokenType && loginTokenType.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)) {
+                    loginOk = await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, loginTokenType, node, zeInstance, this);
+                } else {
+                    loginOk = await this.loginWithRegularProfile(serviceProfile, node);
                 }
-                const updBaseProfile: zowe.imperative.IProfile = {
-                    user: undefined,
-                    password: undefined,
-                };
-                node.setProfileToChoice({
-                    ...node.getProfile(),
-                    profile: { ...node.getProfile().profile, ...updBaseProfile },
-                });
-                await this.ssoLogin(node, serviceProfile.name);
+
+                if (loginOk) {
+                    Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
+                    await Profiles.getInstance().refresh(zeInstance);
+                    await this.basicAuthClearSecureArray(serviceProfile.name);
+                    const updBaseProfile: zowe.imperative.IProfile = {
+                        user: undefined,
+                        password: undefined,
+                    };
+                    node.setProfileToChoice({
+                        ...node.getProfile(),
+                        profile: { ...node.getProfile().profile, ...updBaseProfile },
+                    });
+                } else {
+                    Gui.showMessage(this.profilesOpCancelled);
+                }
                 break;
             }
             case await ProfilesUtils.isUsingTokenAuth(serviceProfile.name): {
