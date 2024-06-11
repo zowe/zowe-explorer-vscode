@@ -498,6 +498,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.ds.copyName",
+        "title": "%copyName%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.uss.addSession",
         "title": "%uss.addSession%",
         "category": "Zowe Explorer",
@@ -602,6 +607,11 @@
       {
         "command": "zowe.uss.pasteUssFile",
         "title": "%pasteFile%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.uss.copyRelativePath",
+        "title": "%uss.copyRelativePath%",
         "category": "Zowe Explorer"
       },
       {
@@ -816,6 +826,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.jobs.copyName",
+        "title": "%copyName%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.selectForCompare",
         "title": "%selectForCompare%",
         "category": "Zowe Explorer"
@@ -1022,6 +1037,11 @@
           "group": "002_zowe_ussSystemSpecific@4"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/ && !listMultiSelection",
+          "command": "zowe.uss.copyRelativePath",
+          "group": "002_zowe_ussSystemSpecific@5"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
           "command": "zowe.uss.addFavorite",
           "group": "003_zowe_ussWorkspace@0"
@@ -1207,14 +1227,19 @@
           "group": "002_zowe_dsWorkspace@4"
         },
         {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member).*/ && !listMultiSelection",
+          "command": "zowe.ds.copyName",
+          "group": "098_zowe_dsMisc@0"
+        },
+        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|session).*/ && !listMultiSelection",
           "command": "zowe.ds.filterBy",
-          "group": "098_zowe_dsSort@0"
+          "group": "098_zowe_dsMisc@1"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|session).*/ && !listMultiSelection",
           "command": "zowe.ds.sortBy",
-          "group": "098_zowe_dsSort@1"
+          "group": "098_zowe_dsMisc@2"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^fileError.*/",
@@ -1385,6 +1410,11 @@
           "when": "view == zowe.jobs.explorer && viewItem == profile_fav && !listMultiSelection",
           "command": "zowe.jobs.removeFavProfile",
           "group": "002_zowe_jobsWorkspace"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(job|spool).*/",
+          "command": "zowe.jobs.copyName",
+          "group": "003_zowe_jobsMisc@0"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^spool.*/",
@@ -1817,6 +1847,34 @@
         {
           "command": "zowe.uss.openWithEncoding",
           "when": "never"
+        },
+        {
+          "command": "zowe.jobs.cancelJob",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.filterJobs",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.filterBy",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.sortBy",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.sortBy",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.startPolling",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.stopPolling",
+          "when": "never"
         }
       ]
     },
@@ -2087,8 +2145,8 @@
     "lint:pretty": "prettier --write . && prettier --check .",
     "lint": "pnpm lint:src && pnpm lint:tests && pnpm lint:pretty && pnpm markdown",
     "lint:html": "eslint . --format html > results/eslint.html",
-    "lint:src": "eslint --format stylish src/**/*.ts",
-    "lint:tests": "eslint --format stylish __tests__/**/*.ts",
+    "lint:src": "eslint --format stylish \"src/**/*.ts\"",
+    "lint:tests": "eslint --format stylish \"__tests__/**/*.ts\"",
     "clean:bundle": "rimraf out || true",
     "clean:dependencies": "rimraf node_modules || true",
     "fresh-clone": "pnpm clean:bundle && pnpm clean:dependencies",

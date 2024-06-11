@@ -187,7 +187,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
                         sourceApp: "Zowe Explorer (for VS Code)",
                     });
                     if (addResult.info.length > 0) {
-                        Gui.warningMessage(addResult.info);
+                        ZoweLogger.warn(addResult.info);
                     }
                 }
             } catch (err) {

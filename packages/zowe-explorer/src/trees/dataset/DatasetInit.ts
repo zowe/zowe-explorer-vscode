@@ -231,6 +231,10 @@ export class DatasetInit {
             )
         );
         context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.ds.copyName", async (node: IZoweDatasetTreeNode) => DatasetActions.copyName(node))
+        );
+
+        context.subscriptions.push(
             vscode.workspace.onDidChangeConfiguration(async (e) => {
                 await datasetProvider.onDidChangeConfiguration(e);
             })
