@@ -35,9 +35,9 @@ export namespace Table {
             row: number[];
         };
         // Column headers for the top of the table
-        columns: { field: string }[];
+        columns: { field: string }[] | null;
         // The row data for the table. Each row contains a set of variables corresponding to the data for each column in that row
-        rows: RowContent[];
+        rows: RowContent[] | null;
         // The display title for the table
         title?: string;
     };

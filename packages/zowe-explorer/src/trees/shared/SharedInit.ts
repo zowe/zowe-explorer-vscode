@@ -225,7 +225,7 @@ export class SharedInit {
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.tableView", async () => {
-                    new TableBuilder(context)
+                    const table = new TableBuilder(context)
                         .title("Cars for sale")
                         .rows(
                             {
@@ -241,6 +241,7 @@ export class SharedInit {
                         )
                         .columns(["make", "model", "year"])
                         .build();
+                    await table.addContent({ make: "Toyota", model: "Corolla", year: 2007 });
                 })
             );
             // initialize the Constants.filesToCompare array during initialization

@@ -14,13 +14,22 @@ import "ag-grid-community/styles/ag-theme-quartz.css"; // Optional Theme
 import { AgGridReact } from "ag-grid-react";
 import { useEffect, useState } from "preact/hooks";
 import { isSecureOrigin } from "../utils";
+import type { Table } from "@zowe/zowe-explorer-api";
 
 const vscodeApi = acquireVsCodeApi();
 
 export function App() {
-  const [tableData, setTableData] = useState({
-    rows: null,
+  const [tableData, setTableData] = useState<Table.Data>({
+    actions: {
+      column: new Map(),
+      row: new Map(),
+    },
+    dividers: {
+      column: [],
+      row: [],
+    },
     columns: null,
+    rows: null,
     title: "",
   });
 
@@ -49,11 +58,14 @@ export function App() {
 
   return (
     // wrapping container with theme & size
-    <div
-      className="ag-theme-quartz-dark" // applying the grid theme
-      style={{ height: 500, marginTop: "1em", "--ag-icon-font-family": "agGridQuartz" }} // the grid will fill the size of the parent container
-    >
-      <AgGridReact rowData={tableData.rows} columnDefs={tableData.columns} />
-    </div>
+    <>
+      {tableData.title ? <h1>{tableData.title}</h1> : null}
+      <div
+        className="ag-theme-quartz-dark" // applying the grid theme
+        style={{ height: 500, marginTop: "1em", "--ag-icon-font-family": "agGridQuartz" }} // the grid will fill the size of the parent container
+      >
+        <AgGridReact rowData={tableData.rows} columnDefs={tableData.columns} pagination />
+      </div>
+    </>
   );
 }
