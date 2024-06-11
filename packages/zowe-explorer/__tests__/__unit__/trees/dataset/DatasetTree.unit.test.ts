@@ -3019,10 +3019,14 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             } as any);
             Object.defineProperty(vscode.workspace, "workspaceFolders", { value: [], configurable: true });
             const infoLoggerSpy = jest.spyOn(ZoweLogger, "info");
-            Object.defineProperty(SettingsConfig, "setDirectValue", { value: jest.fn(), configurable: true });
+            const setValueSpy = jest.spyOn(SettingsConfig, "setDirectValue").mockImplementation();
+            // Object.defineProperty(SettingsConfig, "setDirectValue", { value: jest.fn(), configurable: true });
 
             await tree.addDsTemplate(newTemplate as any);
             expect(infoLoggerSpy).toHaveBeenCalledWith("Adding new data set template {0}.");
+            expect(setValueSpy).toHaveBeenCalled();
+            infoLoggerSpy.mockClear();
+            setValueSpy.mockClear();
         });
     });
 
