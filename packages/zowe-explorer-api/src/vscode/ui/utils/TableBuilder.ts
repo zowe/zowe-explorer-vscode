@@ -34,19 +34,42 @@ import { TableMediator } from "./TableMediator";
  */
 export class TableBuilder {
     private context: ExtensionContext;
-    private data: Table.Data;
+    private data: Table.Data = {
+        actions: {
+            column: new Map(),
+            row: new Map(),
+        },
+        dividers: {
+            column: [],
+            row: [],
+        },
+        columns: [],
+        rows: [],
+        title: "",
+    };
 
     public constructor(context: ExtensionContext) {
         this.context = context;
     }
 
     /**
-     * Set the content for the next table.
+     * Set the title for the next table.
+     *
+     * @param name The name of the table
+     * @returns The same {@link TableBuilder} instance with the title added
+     */
+    public title(name: string): TableBuilder {
+        this.data.title = name;
+        return this;
+    }
+
+    /**
+     * Set the rows for the next table.
      *
      * @param rows The rows of content to use for the table
-     * @returns The same {@link TableBuilder} instance with the content added
+     * @returns The same {@link TableBuilder} instance with the rows added
      */
-    public content(...rows: Table.RowContent[]): TableBuilder {
+    public rows(...rows: Table.RowContent[]): TableBuilder {
         this.data.rows = rows;
         return this;
     }
@@ -57,8 +80,8 @@ export class TableBuilder {
      * @param rows The headers to use for the table
      * @returns The same {@link TableBuilder} instance with the headers added
      */
-    public headers(newHeaders: string[]): TableBuilder {
-        this.data.headers = newHeaders;
+    public columns(newColumns: string[]): TableBuilder {
+        this.data.columns = newColumns.map((column) => ({ field: column }));
         return this;
     }
 
@@ -185,7 +208,7 @@ export class TableBuilder {
         this.data.dividers.row = [];
         this.data.dividers.column = [];
 
-        this.data.headers = [];
+        this.data.columns = [];
         this.data.rows = [];
         this.data.title = "";
     }

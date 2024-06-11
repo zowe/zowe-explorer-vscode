@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { FileManagement, IZoweTree, IZoweTreeNode, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { FileManagement, IZoweTree, IZoweTreeNode, TableBuilder, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { SharedActions } from "./SharedActions";
 import { SharedHistoryView } from "./SharedHistoryView";
 import { SharedTreeProviders } from "./SharedTreeProviders";
@@ -32,7 +32,6 @@ import { ProfilesUtils } from "../../utils/ProfilesUtils";
 import { DatasetFSProvider } from "../dataset/DatasetFSProvider";
 import { ExtensionUtils } from "../../utils/ExtensionUtils";
 import type { Definitions } from "../../configuration/Definitions";
-import { Table } from "@zowe/zowe-explorer-api";
 
 export class SharedInit {
     public static registerRefreshCommand(
@@ -225,8 +224,23 @@ export class SharedInit {
                 })
             );
             context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.tableView", () => {
-                    new Table.View(context, {} as any);
+                vscode.commands.registerCommand("zowe.tableView", async () => {
+                    new TableBuilder(context)
+                        .title("Cars for sale")
+                        .rows(
+                            {
+                                make: "Ford",
+                                model: "Model T",
+                                year: 1908,
+                            },
+                            {
+                                make: "Tesla",
+                                model: "Model Y",
+                                year: 2022,
+                            }
+                        )
+                        .columns(["make", "model", "year"])
+                        .build();
                 })
             );
             // initialize the Constants.filesToCompare array during initialization

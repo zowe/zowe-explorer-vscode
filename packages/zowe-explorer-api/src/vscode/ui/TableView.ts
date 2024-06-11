@@ -34,8 +34,8 @@ export namespace Table {
             column: number[];
             row: number[];
         };
-        // Headers for the top of the table
-        headers: string[];
+        // Column headers for the top of the table
+        columns: { field: string }[];
         // The row data for the table. Each row contains a set of variables corresponding to the data for each column in that row
         rows: RowContent[];
         // The display title for the table
@@ -56,10 +56,12 @@ export namespace Table {
         private onTableDataReceived: Event<RowContent | RowContent[]>;
         private onTableDisplayChanged: EventEmitter<RowContent | RowContent[]>;
 
-        public constructor(context: ExtensionContext, data: Data) {
-            super(data.title, "table-view", context);
-            this.data = data;
+        public constructor(context: ExtensionContext, data?: Data) {
+            super(data.title ?? "Table view", "table-view", context);
             this.panel.webview.onDidReceiveMessage((message) => this.onMessageReceived(message));
+            if (data) {
+                this.data = data;
+            }
         }
 
         /**
@@ -68,9 +70,17 @@ export namespace Table {
          *
          * @param message The message received from the webview
          */
-        private onMessageReceived(message: any): void {
-            if (message.command === "ondisplaychanged") {
-                this.onTableDisplayChanged.fire(message.data);
+        private async onMessageReceived(message: any): Promise<void> {
+            if (!("command" in message)) {
+                return;
+            }
+            switch (message.command) {
+                case "ondisplaychanged":
+                    this.onTableDisplayChanged.fire(message.data);
+                    break;
+                case "ready":
+                    await this.updateWebview();
+                    break;
             }
         }
 
@@ -109,7 +119,7 @@ export namespace Table {
         public addAction(axis: Axes, index: number, ...actions: Action[]): Promise<boolean> {
             const actionMap = axis === "row" ? this.data.actions.row : this.data.actions.column;
             if (actionMap.has(index)) {
-                const existingActions = actionMap.get(index);
+                const existingActions = actionMap.get(index)!;
                 actionMap.set(index, [...existingActions, ...actions]);
             } else {
                 actionMap.set(index, actions);
@@ -145,8 +155,8 @@ export namespace Table {
          * @param headers The headers to add to the existing header list
          * @returns Whether the webview successfully received the list of headers
          */
-        public async addHeaders(...headers: string[]): Promise<boolean> {
-            this.data.headers.push(...headers);
+        public async addColumns(...columns: string[]): Promise<boolean> {
+            this.data.columns.push(...columns.map((column) => ({ field: column })));
             return this.updateWebview();
         }
 
@@ -185,8 +195,8 @@ export namespace Table {
          * @param headers The new headers to use for the table
          * @returns Whether the webview successfully received the new headers
          */
-        public async setHeaders(headers: string[]): Promise<boolean> {
-            this.data.headers = headers;
+        public async setColumns(columns: string[]): Promise<boolean> {
+            this.data.columns = columns.map((column) => ({ field: column }));
             return this.updateWebview();
         }
 

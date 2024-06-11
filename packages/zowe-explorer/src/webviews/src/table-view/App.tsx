@@ -11,40 +11,49 @@
 
 import "ag-grid-community/styles/ag-grid.css"; // Mandatory CSS required by the grid
 import "ag-grid-community/styles/ag-theme-quartz.css"; // Optional Theme
-import { AgGridReact, AgGridReactProps } from "ag-grid-react";
+import { AgGridReact } from "ag-grid-react";
 import { useEffect, useState } from "preact/hooks";
 import { isSecureOrigin } from "../utils";
 
-export function App() {
-  const [rowData, _setRowData] = useState([
-    { make: "Tesla", model: "Model Y", price: 64950, electric: true },
-    { make: "Ford", model: "F-Series", price: 33850, electric: false },
-    { make: "Toyota", model: "Corolla", price: 29600, electric: false },
-  ]);
+const vscodeApi = acquireVsCodeApi();
 
-  // Column Definitions: Defines the columns to be displayed.
-  const [colDefs, _setColDefs] = useState<Exclude<AgGridReactProps["gridOptions"], undefined>["columnDefs"]>([
-    { field: "make" },
-    { field: "model" },
-    { field: "price" },
-    { field: "electric" },
-  ]);
+export function App() {
+  const [tableData, setTableData] = useState({
+    rows: null,
+    columns: null,
+    title: "",
+  });
 
   useEffect(() => {
-    window.addEventListener("message", (event): void => {
+    window.addEventListener("message", (event: any): void => {
       if (!isSecureOrigin(event.origin)) {
         return;
       }
+
+      if (!("data" in event)) {
+        return;
+      }
+
+      const eventInfo = event.data;
+
+      switch (eventInfo.command) {
+        case "ondatachanged":
+          setTableData(eventInfo.data);
+          break;
+        default:
+          break;
+      }
     });
+    vscodeApi.postMessage({ command: "ready" });
   }, []);
 
   return (
     // wrapping container with theme & size
     <div
       className="ag-theme-quartz-dark" // applying the grid theme
-      style={{ height: 500, "--ag-background-color": "--vscode-editor-background", "--ag-icon-font-family": "agGridQuartz" }} // the grid will fill the size of the parent container
+      style={{ height: 500, marginTop: "1em", "--ag-icon-font-family": "agGridQuartz" }} // the grid will fill the size of the parent container
     >
-      <AgGridReact rowData={rowData} columnDefs={colDefs} />
+      <AgGridReact rowData={tableData.rows} columnDefs={tableData.columns} />
     </div>
   );
 }
