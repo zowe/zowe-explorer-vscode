@@ -21,6 +21,12 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
   - `ZoweVsCodeExtension.showVsCodeMessage` - use `Gui.showMessage` instead.
   - `ZoweVsCodeExtension.inputBox` - use `Gui.showInputBox` instead.
   - `ZoweVsCodeExtension.promptCredentials` - use `ZoweVsCodeExtension.updateCredentials` instead.
+- **Breaking:** Added return type of `Promise<void>` to the following `IZoweTree` methods: [#2238](https://github.com/zowe/zowe-explorer-vscode/issues/2238)
+  - addFavorite
+  - removeFavorite
+  - removeFavProfile
+  - ssoLogin
+  - ssoLogout
 - Added an optional function `openWithEncoding` to the `IZoweTree` interface to open file using encoding specified by user. [#2931](https://github.com/zowe/zowe-explorer-vscode/pull/2931)
 
 ### Bug fixes

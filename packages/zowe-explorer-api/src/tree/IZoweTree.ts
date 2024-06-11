@@ -102,29 +102,29 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
      * Log in to authentication service
      * @param node This parameter identifies the node that needs to be called
      */
-    ssoLogin(node: IZoweTreeNode);
+    ssoLogin(node: IZoweTreeNode): Promise<void>;
 
     /**
      * Log out from authentication service
      * @param node This parameter identifies the node that needs to be called
      */
-    ssoLogout(node: IZoweTreeNode);
+    ssoLogout(node: IZoweTreeNode): Promise<void>;
 
     /**
      * Adds a favorite node
      * @param favorite Adds a favorite node
      */
-    addFavorite(favorite: IZoweTreeNode);
+    addFavorite(favorite: IZoweTreeNode): Promise<void>;
     /**
      * Removes a favorite node
      * @param favorite Adds a favorite node
      */
-    removeFavorite(node: IZoweTreeNode);
+    removeFavorite(node: IZoweTreeNode): Promise<void>;
     /**
      * Removes profile node from Favorites section
      * @param profileName
      */
-    removeFavProfile(profileName: string, userSelected: boolean);
+    removeFavProfile(profileName: string, userSelected: boolean): Promise<void>;
     /**
      * Refreshes the tree
      */
