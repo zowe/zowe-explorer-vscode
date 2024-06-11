@@ -8,6 +8,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Fixed an issue where the `onProfilesUpdate` event did not fire after secure credentials were updated.
+
 ## `2.16.1`
 
 ## `2.16.0`
