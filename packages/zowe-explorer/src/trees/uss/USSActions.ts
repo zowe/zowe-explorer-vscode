@@ -394,4 +394,28 @@ export class USSActions {
         );
         ussFileProvider.refreshElement(node);
     }
+
+    public static async copyRelativePath(node: IZoweUSSTreeNode): Promise<void> {
+        const sesNode = node.getSessionNode();
+        if (!node.fullPath) {
+            ZoweLogger.warn(
+                vscode.l10n.t({
+                    message: "copyName was called on USS node {0}, but its fullPath is invalid.",
+                    args: [node.label as string],
+                    comment: "USS node label",
+                })
+            );
+            return;
+        }
+
+        if (sesNode != null && !SharedContext.isFavorite(sesNode)) {
+            let relPath = node.fullPath.replace(sesNode.fullPath, "");
+            if (relPath.startsWith("/")) {
+                relPath = relPath.slice(1);
+            }
+            await vscode.env.clipboard.writeText(relPath);
+        } else {
+            await vscode.env.clipboard.writeText(node.fullPath);
+        }
+    }
 }

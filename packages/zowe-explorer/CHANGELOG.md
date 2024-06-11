@@ -12,10 +12,23 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Replaced `ts-loader` with `esbuild-loader` to improve build speed for developers. [#2909](https://github.com/zowe/zowe-explorer-vscode/pull/2909)
 - Grouped Common methods into Singleton classes. [#2109](https://github.com/zowe/zowe-explorer-vscode/issues/2109)
 - **BREAKING** Moved data set templates out of data set history settings into new setting "zowe.ds.templates". [#2345](https://github.com/zowe/zowe-explorer-vscode/issues/2345)
+- Ported the following enhancements from v2:
+  - Added a "Copy Relative Path" context option for USS files and directories in the tree view. [#2908](https://github.com/zowe/zowe-explorer-vscode/pull/2908)
+  - Added a "Copy Name" context option for data sets, jobs and spool files in the tree view. [#2908](https://github.com/zowe/zowe-explorer-vscode/pull/2908)
 
 ### Bug fixes
 
 - Fixed vNext-only issue where users are not able to create data sets. [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783).
+- Omitted the following Zowe Explorer commands from the Command Palette that do not execute properly when run as a standalone command:
+  - `Zowe Explorer: Cancel job`
+  - `Zowe Explorer: Filter jobs`
+  - `Zowe Explorer: Filter PDS members`
+  - `Zowe Explorer: Sort jobs`
+  - `Zowe Explorer: Sort PDS members`
+  - `Zowe Explorer: Start Polling`
+  - `Zowe Explorer: Stop Polling`
+- Ported the following fixes from v2:
+  - Moved schema warnings into the log file (rather than a UI message) to minimize end-user disruption. [#2860](https://github.com/zowe/zowe-explorer-vscode/pull/2860)
 
 ## `3.0.0-next.202404242037`
 
