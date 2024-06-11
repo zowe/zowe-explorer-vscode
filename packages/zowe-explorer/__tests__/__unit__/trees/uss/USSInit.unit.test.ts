@@ -122,7 +122,11 @@ describe("Test src/uss/extension", () => {
             },
             {
                 name: "zowe.uss.uploadDialog",
-                mock: [{ spy: jest.spyOn(USSActions, "uploadDialog"), arg: [test.value, ussFileProvider] }],
+                mock: [{ spy: jest.spyOn(USSActions, "uploadDialog"), arg: [test.value, ussFileProvider, false] }],
+            },
+            {
+                name: "zowe.uss.uploadDialogBinary",
+                mock: [{ spy: jest.spyOn(USSActions, "uploadDialog"), arg: [test.value, ussFileProvider, true] }],
             },
             {
                 name: "zowe.uss.copyPath",

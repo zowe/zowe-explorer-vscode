@@ -22,7 +22,7 @@ export class Constants {
     public static USS_DIR: string;
     public static DS_DIR: string;
     public static CONFIG_PATH: string;
-    public static COMMAND_COUNT = 121;
+    public static COMMAND_COUNT = 122;
     public static MAX_SEARCH_HISTORY = 5;
     public static MAX_FILE_HISTORY = 10;
     public static MS_PER_SEC = 1000;

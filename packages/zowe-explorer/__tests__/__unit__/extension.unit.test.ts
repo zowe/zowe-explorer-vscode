@@ -194,6 +194,7 @@ function createGlobalMocks() {
             "zowe.uss.deleteNode",
             "zowe.uss.renameNode",
             "zowe.uss.uploadDialog",
+            "zowe.uss.uploadDialogBinary",
             "zowe.uss.copyPath",
             "zowe.uss.editFile",
             "zowe.uss.editAttributes",

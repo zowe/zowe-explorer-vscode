@@ -151,7 +151,7 @@ export class USSActions {
         }
     }
 
-    public static async uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
+    public static async uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: Types.IZoweUSSTreeType, isBinary?: boolean): Promise<void> {
         ZoweLogger.trace("uss.actions.uploadDialog called.");
         const fileOpenOptions = {
             canSelectFiles: true,
@@ -162,19 +162,37 @@ export class USSActions {
 
         const value = await Gui.showOpenDialog(fileOpenOptions);
 
-        await Promise.all(
-            value.map(async (item) => {
-                const isBinary = isBinaryFileSync(item.fsPath);
-
-                if (isBinary) {
-                    await USSActions.uploadBinaryFile(node, item.fsPath);
-                } else {
-                    const doc = await vscode.workspace.openTextDocument(item);
-                    await USSActions.uploadFile(node, doc);
+        if (value?.length > 0) {
+            await Gui.withProgress(
+                {
+                    location: vscode.ProgressLocation.Notification,
+                    title: vscode.l10n.t("Uploading file to USS tree"),
+                    cancellable: true,
+                },
+                async (progress, token) => {
+                    let index = 0;
+                    for (const item of value) {
+                        if (token.isCancellationRequested) {
+                            Gui.showMessage(vscode.l10n.t("Upload action was cancelled."));
+                            break;
+                        }
+                        Gui.reportProgress(progress, value.length, index, "Uploading");
+                        const binaryFile = isBinaryFileSync(item.fsPath);
+                        if (isBinary || binaryFile) {
+                            await USSActions.uploadBinaryFile(node, item.fsPath);
+                        } else {
+                            const doc = await vscode.workspace.openTextDocument(item);
+                            await USSActions.uploadFile(node, doc);
+                        }
+                    }
+                    index++;
                 }
-            })
-        );
-        ussFileProvider.refreshElement(node);
+            );
+            ussFileProvider.refreshElement(node);
+            ussFileProvider.getTreeView().reveal(node, { expand: true, focus: true });
+        } else {
+            Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
+        }
     }
 
     public static async uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string): Promise<void> {

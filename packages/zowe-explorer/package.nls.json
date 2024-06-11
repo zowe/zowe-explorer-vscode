@@ -54,6 +54,7 @@
   "uss.removeSession": "Hide Profile",
   "uss.binary": "Toggle Binary",
   "uss.uploadDialog": "Upload Files...",
+  "uss.uploadDialogBinary": "Upload Files... (Binary)",
   "uss.text": "Toggle Text",
   "jobs.search": "Search Jobs",
   "deleteJob": "Delete Job",
