@@ -51,7 +51,7 @@ export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUS
 
 export function createUSSNode(session, profile) {
     const parentNode = new ZoweUSSNode({
-        label: "parentNode",
+        label: "sestest",
         collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
         session,
         profile,
@@ -62,7 +62,7 @@ export function createUSSNode(session, profile) {
         label: "usstest",
         collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
         parentNode,
-        session,
+        parentPath: parentNode.fullPath,
         profile,
         contextOverride: Constants.USS_DIR_CONTEXT,
     });
