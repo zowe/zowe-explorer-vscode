@@ -179,7 +179,7 @@ export class DatasetInit {
                 let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
                 selectedNodes = selectedNodes.filter((element) => SharedContext.isDs(element) || SharedContext.isPdsNotFav(element));
                 for (const item of selectedNodes) {
-                    await DatasetActions.hMigrateDataSet(item as ZoweDatasetNode);
+                    await DatasetActions.hMigrateDataSet(datasetProvider, item as ZoweDatasetNode);
                 }
             })
         );
@@ -188,7 +188,7 @@ export class DatasetInit {
                 let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
                 selectedNodes = selectedNodes.filter((element) => SharedContext.isMigrated(element));
                 for (const item of selectedNodes) {
-                    await DatasetActions.hRecallDataSet(item as ZoweDatasetNode);
+                    await DatasetActions.hRecallDataSet(datasetProvider, item as ZoweDatasetNode);
                 }
             })
         );

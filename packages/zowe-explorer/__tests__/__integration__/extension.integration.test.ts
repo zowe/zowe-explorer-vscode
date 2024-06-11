@@ -608,7 +608,7 @@ describe("Extension Integration Tests", async () => {
                         });
                         node.contextValue = globals.DS_DS_CONTEXT;
 
-                        await dsActions.hMigrateDataSet(node);
+                        await dsActions.hMigrateDataSet(testTree, node);
                     } catch (err) {
                         error = err;
                     }
@@ -639,7 +639,7 @@ describe("Extension Integration Tests", async () => {
                         });
                         node.contextValue = globals.DS_DS_CONTEXT;
 
-                        await dsActions.hMigrateDataSet(node);
+                        await dsActions.hMigrateDataSet(testTree, node);
                     } catch (err) {
                         error = err;
                     }
@@ -663,7 +663,7 @@ describe("Extension Integration Tests", async () => {
                         });
                         node.contextValue = globals.DS_DS_CONTEXT;
 
-                        await dsActions.hMigrateDataSet(node);
+                        await dsActions.hMigrateDataSet(testTree, node);
                     } catch (err) {
                         error = err;
                     }
@@ -699,7 +699,7 @@ describe("Extension Integration Tests", async () => {
                         });
                         node.contextValue = globals.DS_DS_CONTEXT;
 
-                        await dsActions.hRecallDataSet(node);
+                        await dsActions.hRecallDataSet(testTree, node);
                     } catch (err) {
                         error = err;
                     }
@@ -730,7 +730,7 @@ describe("Extension Integration Tests", async () => {
                         });
                         node.contextValue = globals.DS_DS_CONTEXT;
 
-                        await dsActions.hRecallDataSet(node);
+                        await dsActions.hRecallDataSet(testTree, node);
                     } catch (err) {
                         error = err;
                     }
@@ -754,7 +754,7 @@ describe("Extension Integration Tests", async () => {
                         });
                         node.contextValue = globals.DS_DS_CONTEXT;
 
-                        await dsActions.hRecallDataSet(node);
+                        await dsActions.hRecallDataSet(testTree, node);
                     } catch (err) {
                         error = err;
                     }
