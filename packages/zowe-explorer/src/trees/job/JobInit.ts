@@ -62,7 +62,7 @@ export class JobInit {
             })
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.jobs.refreshJobsServer", async (job) => JobActions.refreshJobsServer(job, jobsProvider))
+            vscode.commands.registerCommand("zowe.jobs.refreshJobsServer", (job) => JobActions.refreshJobsServer(job, jobsProvider))
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.jobs.refreshAllJobs", async () => {
@@ -195,6 +195,7 @@ export class JobInit {
                 async (job: IZoweJobTreeNode): Promise<vscode.InputBox> => jobsProvider.filterJobsDialog(job)
             )
         );
+        context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.copyName", async (job: IZoweJobTreeNode) => JobActions.copyName(job)));
         context.subscriptions.push(
             vscode.workspace.onDidOpenTextDocument((doc) => {
                 if (doc.uri.scheme !== ZoweScheme.Jobs) {

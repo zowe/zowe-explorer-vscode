@@ -219,6 +219,9 @@ export class USSInit {
             )
         );
         context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.uss.copyRelativePath", async (node: IZoweUSSTreeNode) => USSActions.copyRelativePath(node))
+        );
+        context.subscriptions.push(
             vscode.workspace.onDidChangeConfiguration(async (e) => {
                 await ussFileProvider.onDidChangeConfiguration(e);
             })
