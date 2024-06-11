@@ -490,7 +490,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         await USSActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree, false);
         expect(globalMocks.showOpenDialog).toHaveBeenCalled();
         expect(globalMocks.openTextDocument).toHaveBeenCalled();
-        expect(blockMocks.testUSSTree.refreshElement).toBeCalledWith(blockMocks.ussNode);
+        expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalledWith(blockMocks.ussNode);
     });
 
     it("Tests that uploadDialog() works for binary file", async () => {
@@ -503,7 +503,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
 
         await USSActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree, true);
         expect(globalMocks.showOpenDialog).toHaveBeenCalled();
-        expect(blockMocks.testUSSTree.refreshElement).toBeCalledWith(blockMocks.ussNode);
+        expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalledWith(blockMocks.ussNode);
     });
 
     it("shouldn't call upload dialog and not upload file if selection is empty", async () => {
@@ -511,7 +511,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         globalMocks.showOpenDialog.mockReturnValue(undefined);
         await USSActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree, true);
-        expect(globalMocks.showOpenDialog).toBeCalled();
+        expect(globalMocks.showOpenDialog).toHaveBeenCalled();
         expect(globalMocks.showInformationMessage.mock.calls.map((call) => call[0])).toEqual(["Operation Cancelled"]);
     });
 
