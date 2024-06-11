@@ -709,6 +709,21 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         expect(mocked(vscode.window.withProgress).mock.calls.length).toBe(0);
     });
+
+    it("test when selected node is sent", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [blockMocks.testMemberNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree, blockMocks.testMemberNode);
+        expect(mocked(Gui.showMessage)).toBeCalledWith(
+            `The following 1 item(s) were deleted: ${blockMocks.testMemberNode.getParent().getLabel()}(${blockMocks.testMemberNode.getLabel()})`
+        );
+    });
 });
 
 describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
