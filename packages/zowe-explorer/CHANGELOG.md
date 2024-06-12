@@ -8,6 +8,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Update dependencies for technical currency purposes.
+- Fix issue Right-click-delete option deleting the currently open/selected file and not the file which is right-clicked when members having same name [#2941](https://github.com/zowe/zowe-explorer-vscode/issues/2941)
+- Fixed issue where Download Spool action could fail to find spool files to download. [#2943](https://github.com/zowe/zowe-explorer-vscode/pull/2943)
+
 ## `2.16.1`
 
 ### Bug fixes

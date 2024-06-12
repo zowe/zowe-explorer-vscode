@@ -94,6 +94,7 @@ function createGlobalMocks() {
     Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "warningMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(Gui, "infoMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "showOpenDialog", { value: jest.fn(), configurable: true });
     Object.defineProperty(sharedUtils, "getDefaultUri", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showWarningMessage", { value: jest.fn(), configurable: true });
@@ -324,12 +325,14 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         const blockMocks = createGlobalMocks();
         const iJobFile = createIJobFile();
         const jobs: IZoweJobTreeNode[] = [];
-        const node = new ZoweJobNode({
+        const spool: zowe.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1 };
+        const node = new ZoweSpoolNode({
             label: "test:dd - 1",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             session: blockMocks.session,
             profile: blockMocks.imperativeProfile,
             job: blockMocks.iJob,
+            spool,
         });
         const fileUri = {
             fsPath: "/tmp/foo",
@@ -339,33 +342,35 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
             path: "",
             query: "",
         };
-        jobs.push(node);
+        jobs.push(node, node);
         mocked(Gui.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
-        const downloadFileSpy = jest.spyOn(blockMocks.jesApi, "downloadSingleSpool");
-        const spool: zowe.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1 };
-        const getSpoolFilesSpy = jest.spyOn(SpoolProvider, "getSpoolFiles").mockResolvedValue([spool]);
+        const downloadFileSpy = jest.spyOn(blockMocks.jesApi, "downloadSingleSpool").mockResolvedValue(undefined);
+        const getSpoolFilesSpy = jest.spyOn(SpoolProvider, "getSpoolFiles").mockResolvedValueOnce([spool]).mockResolvedValueOnce([]);
 
         await jobActions.downloadSingleSpool(jobs, true);
         expect(mocked(Gui.showOpenDialog)).toBeCalled();
         expect(getSpoolFilesSpy).toHaveBeenCalledWith(node);
-        expect(downloadFileSpy).toBeCalled();
+        expect(downloadFileSpy).toHaveBeenCalledTimes(1);
         expect(downloadFileSpy.mock.calls[0][0]).toEqual({
             jobFile: spool,
             binary: true,
             outDir: fileUri.fsPath,
         });
+        expect(mocked(Gui.infoMessage)).toBeCalled();
     });
 
     it("should fail to download single spool files if the extender has not implemented the operation", async () => {
         const blockMocks = createGlobalMocks();
         const iJobFile = createIJobFile();
         const jobs: IZoweJobTreeNode[] = [];
-        const node = new ZoweJobNode({
+        const spool: zowe.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1 };
+        const node = new ZoweSpoolNode({
             label: "test:dd - 1",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             session: blockMocks.session,
             profile: blockMocks.imperativeProfile,
             job: blockMocks.iJob,
+            spool,
         });
         const fileUri = {
             fsPath: "/tmp/foo",
@@ -378,7 +383,6 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         jobs.push(node);
         mocked(Gui.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
         blockMocks.jesApi.downloadSingleSpool = undefined;
-        const spool: zowe.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1 };
         const getSpoolFilesSpy = jest.spyOn(SpoolProvider, "getSpoolFiles").mockResolvedValue([spool]);
 
         await jobActions.downloadSingleSpool(jobs, true);
