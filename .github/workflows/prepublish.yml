@@ -1,0 +1,28 @@
+name: vscode:prepublish
+
+on: [push, pull_request]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - run: |
+          npm install -g pnpm@9
+          pnpm install
+
+      - name: Check if vscode:prepublish script was executed
+        run: |
+          pnpm --filter "vscode-extension-for-zowe" vscode:prepublish
+          (git diff-index --quiet HEAD --) || [$? -eq 1] && \
+            echo "Changes detected after running the pre-publish command. Please run 'pnpm --filter \"vscode-extension-for-zowe\" vscode:prepublish' and commit the changes." 
