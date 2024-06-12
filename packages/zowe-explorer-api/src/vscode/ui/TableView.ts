@@ -210,6 +210,12 @@ export namespace Table {
             this.data.title = title;
             return this.updateWebview();
         }
+    }
+
+    export class Instance extends View {
+        public constructor(context: ExtensionContext, data: Table.Data) {
+            super(context, data);
+        }
 
         /**
          * Closes the table view and marks it as disposed.

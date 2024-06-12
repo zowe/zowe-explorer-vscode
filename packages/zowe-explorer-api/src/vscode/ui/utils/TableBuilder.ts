@@ -181,19 +181,19 @@ export class TableBuilder {
     /**
      * Builds the table with the given data.
      *
-     * @returns A new {@link Table.View} instance with the given data/options
+     * @returns A new {@link Table.Instance} with the given data/options
      */
-    public build(): Table.View {
-        return new Table.View(this.context, this.data);
+    public build(): Table.Instance {
+        return new Table.Instance(this.context, this.data);
     }
 
     /**
      * Builds the table with the given data and shares it with the TableMediator singleton.
      *
-     * @returns A new, **shared** {@link Table.View} instance with the given data/options
+     * @returns A new, **shared** {@link Table.Instance} with the given data/options
      */
-    public buildAndShare(): Table.View {
-        const table = new Table.View(this.context, this.data);
+    public buildAndShare(): Table.Instance {
+        const table = new Table.Instance(this.context, this.data);
         TableMediator.getInstance().addTable(table);
         return table;
     }

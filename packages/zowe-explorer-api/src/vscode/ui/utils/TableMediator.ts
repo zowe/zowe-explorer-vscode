@@ -44,6 +44,7 @@ import { Table } from "../TableView";
  *
  * **Note** that this does not prevent an extender with access to the ID from disposing the table once they've received access to the instance.
  */
+
 export class TableMediator {
     private static instance: TableMediator;
     #tables: Map<string, Table.View>;
@@ -86,18 +87,17 @@ export class TableMediator {
     }
 
     /**
-     * Removes a table and disposes of it from within the mediator.
+     * Removes a table from the mediator.
+     * Note that the
      *
      * @param id The unique ID of the table to delete
      * @returns `true` if the table was deleted; `false` otherwise
      */
-    public deleteTable(id: string): boolean {
+    public removeTable(id: string): boolean {
         if (this.#tables.has(id)) {
             return false;
         }
 
-        const table = this.#tables.get(id);
-        table.dispose();
         return this.#tables.delete(id);
     }
 }

@@ -26,7 +26,7 @@ export class WebView {
 
     // The webview HTML content to render after filling the HTML template.
     protected webviewContent: string;
-    public panel: WebviewPanel;
+    protected panel: WebviewPanel;
 
     // Resource identifiers for the on-disk content and vscode-webview resource.
     private uris: {
