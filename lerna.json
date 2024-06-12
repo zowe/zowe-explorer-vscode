@@ -1,5 +1,5 @@
 {
-  "version": "1.22.8",
+  "version": "1.22.9-SNAPSHOT",
   "command": {
     "version": {
       "forcePublish": true,
