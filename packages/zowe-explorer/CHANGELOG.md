@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Update dependencies for technical currency purposes. [#2934](https://github.com/zowe/zowe-explorer-vscode/pull/2934)
+
 ## `1.22.7`
 
 ### Bug fixes
