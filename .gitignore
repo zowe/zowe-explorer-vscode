@@ -25,6 +25,11 @@ v8-compile-cache-0/
 dist/
 prebuilds/
 samples/**/pnpm-lock.yaml
+packages/zowe-explorer/**/.wdio-vscode-service
+packages/zowe-explorer/__tests__/**/.zowe
+packages/zowe-explorer/__tests__/**/.env
+packages/zowe-explorer/__tests__/__integration__/ci
+!packages/zowe-explorer/__tests__/__integration__/ci/zowe.config.json
 package.nls.*.json
 bundle.l10n.*.json
 zedc/target
