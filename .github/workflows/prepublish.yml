@@ -3,7 +3,7 @@ name: vscode:prepublish
 on: [push, pull_request]
 
 jobs:
-  audit:
+  prepare:
     runs-on: ubuntu-latest
 
     if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
@@ -22,7 +22,8 @@ jobs:
           pnpm install
 
       - name: Check if vscode:prepublish script was executed
+        env:
+          CHANGES_DETECTED: "Changes detected after running vscode:pre-publish. Please run 'pnpm --filter \"vscode-extension-for-zowe\" vscode:prepublish' and commit the changes from the pre-publish command."
         run: |
           pnpm --filter "vscode-extension-for-zowe" vscode:prepublish
-          (git diff-index --quiet HEAD --) || [$? -eq 1] && \
-            echo "Changes detected after running the pre-publish command. Please run 'pnpm --filter \"vscode-extension-for-zowe\" vscode:prepublish' and commit the changes." 
+          git diff-index --quiet HEAD -- || { [$? -eq 1] && echo $CHANGES_DETECTED && exit 1; }
