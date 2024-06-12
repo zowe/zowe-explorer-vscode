@@ -30,23 +30,20 @@ _Put an `x` in all boxes that apply. You can also fill these out after creating 
 **General**
 
 - [ ] I have read the [CONTRIBUTOR GUIDANCE](https://github.com/zowe/zowe-explorer-vscode/wiki/Best-Practices:-Contributor-Guidance) wiki
-- [ ] PR title follows the [Conventional Commits Guidelines](https://www.conventionalcommits.org/en/v1.0.0/)
-- [ ] PR description is included
 - [ ] All PR dependencies have been merged and published (if applicable)
-- [ ] All checks have passed (DCO, Codecov, SonarCloud)
+- [ ] A GIF or screenshot is included in the PR for visual changes
 
 **Testing**
 
+- [ ] There is coverage for the code that I have added
 - [ ] I have added new test cases and they are passing
-- [ ] There is pre-existing coverage for the code that I have added
 - [ ] I have manually tested the changes
 
 **Publishing**
 
-- [ ] I have added documentation (if applicable)
-- [ ] A GIF or screenshot is included in the PR for visual changes
-  - [ ] (optional) the GIF/screenshot with the new behavior should be added to Zowe Docs
-- [ ] These changes may need ported to the appropriate branches (e.g., `next` or a previous LTS branch)
+- [ ] I have added developer documentation (if applicable)
+- [ ] Documentation should be added to Zowe Docs
+- [ ] These changes may need ported to the appropriate branches (list here):
 
 ## Further comments
 
