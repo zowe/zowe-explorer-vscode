@@ -26,4 +26,4 @@ jobs:
           CHANGES_DETECTED: "Changes detected after running vscode:pre-publish. Please run 'pnpm --filter \"vscode-extension-for-zowe\" vscode:prepublish' and commit the changes from the pre-publish command."
         run: |
           pnpm --filter "vscode-extension-for-zowe" vscode:prepublish
-          git diff-index --quiet HEAD -- || { [$? -eq 1] && echo $CHANGES_DETECTED && exit 1; }
+          git diff-index --quiet HEAD -- || { [ $? -eq 1 ] && echo $CHANGES_DETECTED && exit 1; }
