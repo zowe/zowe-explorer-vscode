@@ -115,7 +115,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     dsEntry.filter["pattern"]
                         .toUpperCase()
                         .split(",")
-                        .map((p) => p.trim())
+                        .map((p: string) => p.trim())
                 ),
             ];
 
