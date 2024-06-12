@@ -14,29 +14,39 @@ Changelog:
 ## Types of changes
 
 What types of changes does your code introduce to Zowe Explorer?
-_Put an `x` in the boxes that apply_
+_Put an `x` in all boxes that apply._
 
-- [ ] Bugfix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
+- [ ] Bug fix (non-breaking change which fixes an issue)
+- [ ] Enhancement (non-breaking change which adds or improves functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Updates to Documentation or Tests (if none of the other choices apply)
+- [ ] Documentation (Markdown, README updates)
+- [ ] Test cases (unit, integration, and/or end-to-end tests)
+- [ ] Other (please specify above in "Proposed changes" section)
 
 ## Checklist
 
-_Put an `x` in the boxes that apply. You can also fill these out after creating the PR. If you're unsure about any of them, don't hesitate to ask. We're here to help! This checklist will be used as reference for both the contributor and the reviewer_
+_Put an `x` in all boxes that apply. You can also fill these out after creating the PR. If you're unsure about any of them, don't hesitate to ask. We're here to help! This checklist will be used as reference for both the contributor and the reviewer._
+
+**General**
 
 - [ ] I have read the [CONTRIBUTOR GUIDANCE](https://github.com/zowe/zowe-explorer-vscode/wiki/Best-Practices:-Contributor-Guidance) wiki
-- [ ] PR title follows [Conventional Commits Guidelines](https://www.conventionalcommits.org/en/v1.0.0-beta.2/)
-- [ ] PR Description is included
-- [ ] gif or screenshot is included if visual changes are made
-- [ ] `yarn workspace vscode-extension-for-zowe vscode:prepublish` has been executed
-- [ ] All checks have passed (DCO, Jenkins and Code Coverage)
-- [ ] I have added unit test and it is passing
-- [ ] I have added integration test and it is passing
-- [ ] There is coverage for the code that I have added
-- [ ] I have tested it manually and there are no regressions found
-- [ ] I have added necessary documentation (if appropriate)
-- [ ] Any PR dependencies have been merged and published (if appropriate)
+- [ ] PR title follows the [Conventional Commits Guidelines](https://www.conventionalcommits.org/en/v1.0.0/)
+- [ ] PR description is included
+- [ ] All PR dependencies have been merged and published (if applicable)
+- [ ] All checks have passed (DCO, Codecov, SonarCloud)
+
+**Testing**
+
+- [ ] I have added new test cases and they are passing
+- [ ] There is pre-existing coverage for the code that I have added
+- [ ] I have manually tested the changes
+
+**Publishing**
+
+- [ ] I have added documentation (if applicable)
+- [ ] A GIF or screenshot is included in the PR for visual changes
+  - [ ] (optional) the GIF/screenshot with the new behavior should be added to Zowe Docs
+- [ ] These changes may need ported to the appropriate branches (e.g., `next` or a previous LTS branch)
 
 ## Further comments
 
