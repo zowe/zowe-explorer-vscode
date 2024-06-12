@@ -21,9 +21,9 @@ jobs:
           npm install -g pnpm@9
           pnpm install
 
-      - name: Check if vscode:prepublish script was executed
+      - name: Check if vscode:prepublish script adds changes
         env:
-          CHANGES_DETECTED: "Changes detected after running vscode:pre-publish. Please run 'pnpm --filter \"vscode-extension-for-zowe\" vscode:prepublish' and commit the changes from the pre-publish command."
+          CHANGES_DETECTED: "\nChanges detected after running vscode:prepublish. Please run 'pnpm --filter \"vscode-extension-for-zowe\" vscode:prepublish' and commit the changes from the command."
         run: |
           pnpm --filter "vscode-extension-for-zowe" vscode:prepublish
           git diff-index --quiet HEAD -- || { [ $? -eq 1 ] && echo $CHANGES_DETECTED && exit 1; }
