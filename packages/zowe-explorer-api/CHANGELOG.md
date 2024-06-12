@@ -4,8 +4,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
 
 - Update dependencies for technical currency purposes.
