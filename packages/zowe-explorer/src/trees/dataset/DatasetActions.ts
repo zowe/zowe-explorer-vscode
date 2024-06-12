@@ -1212,7 +1212,7 @@ export class DatasetActions {
         } else {
             node.getSessionNode().dirty = true;
         }
-        datasetProvider.removeFavorite(node);
+        await datasetProvider.removeFavorite(node);
 
         const isMember = SharedContext.isDsMember(node);
 
