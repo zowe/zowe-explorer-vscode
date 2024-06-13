@@ -39,7 +39,7 @@ jobs:
         with:
           node-version: '18.x'
 
-      # use pnpm version 8 until Octorelease supports pnpm@9
+      # use pnpm version 8 until Octorelease supports pnpm@8
       - name: Install pnpm and Lerna
         run: npm install -g pnpm@8 lerna@6
 
