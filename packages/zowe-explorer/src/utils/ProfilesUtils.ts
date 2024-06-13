@@ -340,11 +340,6 @@ export class ProfilesUtils {
             });
             ZoweLogger.info(successMsg);
             Gui.showMessage(successMsg);
-            // If secure credentials are enabled, the config file won't change after updating existing credentials
-            // (as the "secure" fields are already set). Fire the event emitter to notify extenders of the change.
-            if (SettingsConfig.getDirectValue<boolean>(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
-                ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
-            }
         }
     }
 

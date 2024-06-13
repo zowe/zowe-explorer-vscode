@@ -23,6 +23,7 @@ import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtende
 import { FilterItem } from "../../../src/management/FilterManagement";
 import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
+import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
 
 jest.mock("../../../src/tools/ZoweLogger");
 jest.mock("fs");
@@ -454,7 +455,7 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn(),
                 configurable: true,
             });
-            jest.spyOn(Profiles.prototype, "promptCredentials").mockResolvedValue(["some_user", "some_pass", "c29tZV9iYXNlNjRfc3RyaW5n"]);
+            jest.spyOn(Profiles.prototype, "promptCredentials").mockResolvedValueOnce(["some_user", "some_pass", "c29tZV9iYXNlNjRfc3RyaW5n"]);
             await ProfilesUtils.promptCredentials(null as any);
             expect(Gui.showMessage).toHaveBeenCalledWith("Credentials for testConfig were successfully updated");
         });
@@ -500,10 +501,22 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn(),
                 configurable: true,
             });
-            jest.spyOn(Profiles.prototype, "promptCredentials").mockResolvedValue(["some_user", "some_pass", "c29tZV9iYXNlNjRfc3RyaW5n"]);
-            const eventFireMock = jest.spyOn(vscode.EventEmitter.prototype, "fire");
+            const eventFireMock = jest.spyOn(ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter, "fire");
             const secureCredsMock = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
-            await ProfilesUtils.promptCredentials(null as any);
+            const testConfig = {
+                name: "testConfig",
+                profile: {
+                    type: "test-type",
+                    user: "user",
+                    password: "pass",
+                    base64EncodedAuth: "user-pass",
+                } as imperative.IProfile,
+            } as imperative.IProfileLoaded;
+            const updCredsMock = jest.spyOn(ZoweVsCodeExtension, "updateCredentials").mockResolvedValueOnce(testConfig);
+            await ProfilesUtils.promptCredentials({
+                getProfile: () => testConfig,
+            } as any);
+            expect(updCredsMock).toHaveBeenCalled();
             expect(Gui.showMessage).toHaveBeenCalledWith("Credentials for testConfig were successfully updated");
             expect(eventFireMock).toHaveBeenCalledWith(Validation.EventType.UPDATE);
             secureCredsMock.mockRestore();
