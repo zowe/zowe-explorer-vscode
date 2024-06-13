@@ -12,12 +12,13 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
-import { IZoweTreeNode, ZoweTreeNode, FileManagement, Gui, ProfilesCache, imperative } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, ZoweTreeNode, FileManagement, Gui, ProfilesCache, imperative, Validation } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { AuthUtils } from "./AuthUtils";
+import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 
 export class ProfilesUtils {
     public static PROFILE_SECURITY: string | boolean = Constants.ZOWE_CLI_SCM;
@@ -339,8 +340,11 @@ export class ProfilesUtils {
             });
             ZoweLogger.info(successMsg);
             Gui.showMessage(successMsg);
-            // config file watcher isn't noticing changes for secure fields
-            await vscode.commands.executeCommand("zowe.extRefresh");
+            // If secure credentials are enabled, the config file won't change after updating existing credentials
+            // (as the "secure" fields are already set). Fire the event emitter to notify extenders of the change.
+            if (SettingsConfig.getDirectValue<boolean>(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
+                ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
+            }
         }
     }
 
