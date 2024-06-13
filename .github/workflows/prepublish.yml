@@ -25,5 +25,6 @@ jobs:
         env:
           CHANGES_DETECTED: "\nChanges detected after running vscode:prepublish. Please run 'pnpm --filter \"vscode-extension-for-zowe\" vscode:prepublish' and commit the changes from the command."
         run: |
+          git status
           pnpm --filter "vscode-extension-for-zowe" vscode:prepublish
           test -z "$(git status --porcelain)" || { echo $CHANGES_DETECTED && exit 1; }
