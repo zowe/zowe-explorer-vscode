@@ -32,14 +32,15 @@ _Put an `x` in all boxes that apply. You can also fill these out after creating 
 - [ ] I have read the [CONTRIBUTOR GUIDANCE](https://github.com/zowe/zowe-explorer-vscode/wiki/Best-Practices:-Contributor-Guidance) wiki
 - [ ] All PR dependencies have been merged and published (if applicable)
 - [ ] A GIF or screenshot is included in the PR for visual changes
+- [ ] `yarn workspace vscode-extension-for-zowe vscode:prepublish` has been executed
 
-**Testing**
+**Code coverage**
 
 - [ ] There is coverage for the code that I have added
 - [ ] I have added new test cases and they are passing
 - [ ] I have manually tested the changes
 
-**Publishing**
+**Deployment**
 
 - [ ] I have added developer documentation (if applicable)
 - [ ] Documentation should be added to Zowe Docs
