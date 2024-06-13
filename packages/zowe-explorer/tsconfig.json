@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "es6",
+    "target": "es2019",
     "outDir": "out",
     "jsx": "react",
     "lib": ["es6", "dom"],
@@ -20,8 +20,8 @@
     "rootDir": ".",
     "paths": {
       "@zowe/zowe-explorer-api": ["../zowe-explorer-api"]
-    }
-    // "types": ["node", "jest", "mocha"]
+    },
+    "types": ["node", "jest"]
   },
   "exclude": ["node_modules", ".vscode-test"],
   "include": [
