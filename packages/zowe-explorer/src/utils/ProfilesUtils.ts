@@ -12,13 +12,12 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
-import { IZoweTreeNode, ZoweTreeNode, FileManagement, Gui, ProfilesCache, imperative, Validation } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, ZoweTreeNode, FileManagement, Gui, ProfilesCache, imperative } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { AuthUtils } from "./AuthUtils";
-import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 
 export class ProfilesUtils {
     public static PROFILE_SECURITY: string | boolean = Constants.ZOWE_CLI_SCM;
