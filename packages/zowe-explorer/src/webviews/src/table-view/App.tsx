@@ -15,6 +15,7 @@ import { AgGridReact } from "ag-grid-react";
 import { useEffect, useState } from "preact/hooks";
 import { isSecureOrigin } from "../utils";
 import type { Table } from "@zowe/zowe-explorer-api";
+import { tableStyle } from "./types";
 
 const vscodeApi = acquireVsCodeApi();
 
@@ -59,24 +60,7 @@ export function App() {
   return (
     <>
       {tableData.title ? <h1>{tableData.title}</h1> : null}
-      <div
-        className="ag-theme-quartz-dark"
-        style={{
-          height: 500,
-          marginTop: "1em",
-          "--ag-icon-font-family": "agGridQuartz",
-          "--ag-row-hover-color": "var(--vscode-list-hoverBackground)",
-          "--ag-range-selection-background-color": "var(--vscode-list-activeSelectionBackground)",
-          "--ag-range-selection-highlight-color": "var(--vscode-list-activeSelectionForeground)",
-          "--ag-background-color": "var(--vscode-editor-background)",
-          "--ag-control-panel-background-color": "var(--vscode-editorWidget-background)",
-          "--ag-border-color": "var(--vscode-editorWidget-border)",
-          "--ag-header-background-color": "var(--vscode-keybindingTable-headerBackground)",
-          "--ag-range-selection-border-color": "var(--vscode-tab-activeForeground)",
-          "--ag-foreground-color": "var(--vscode-foreground)",
-          "--ag-selected-row-background-color": "var(--vscode-notebook-selectedCellBackground)",
-        }}
-      >
+      <div className="ag-theme-quartz-dark" style={tableStyle}>
         <AgGridReact enableCellTextSelection ensureDomOrder rowData={tableData.rows} columnDefs={tableData.columns} pagination />
       </div>
     </>
