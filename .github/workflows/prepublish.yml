@@ -1,3 +1,4 @@
+# Workflow is disabled until the l10n bug is resolved with re-ordering localized strings. 
 name: vscode:prepublish
 
 on: [push, pull_request]
