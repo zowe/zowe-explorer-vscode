@@ -29,6 +29,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
   - `Zowe Explorer: Stop Polling`
 - Ported the following fixes from v2:
   - Moved schema warnings into the log file (rather than a UI message) to minimize end-user disruption. [#2860](https://github.com/zowe/zowe-explorer-vscode/pull/2860)
+- Fixed an issue where the `onProfilesUpdate` event did not fire after secure credentials were updated. [#2822](https://github.com/zowe/zowe-explorer-vscode/issues/2822)
 
 ## `3.0.0-next.202404242037`
 
