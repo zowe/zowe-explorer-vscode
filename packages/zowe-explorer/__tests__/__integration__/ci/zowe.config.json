@@ -1,0 +1,47 @@
+{
+  "$schema": "./zowe.schema.json",
+  "profiles": {
+    "zosmf1": {
+      "type": "zosmf",
+      "properties": {
+        "host": "localhost",
+        "rejectUnauthorized": false,
+        "user": "fakeuser",
+        "password": "fakepass"
+      }
+    },
+    "zosmf2": {
+      "type": "zosmf",
+      "properties": {
+        "host": "localhost",
+        "rejectUnauthorized": false,
+        "user": "fakeuser",
+        "password": "fakepass"
+      },
+      "secure": []
+    },
+    "zosmf3": {
+      "type": "zosmf",
+      "properties": {
+        "host": "localhost",
+        "rejectUnauthorized": false,
+        "user": "fakeuser",
+        "password": "fakepass"
+      },
+      "secure": []
+    },
+    "base": {
+      "type": "base",
+      "properties": {
+        "host": "localhost",
+        "rejectUnauthorized": false
+      },
+      "secure": []
+    }
+  },
+  "defaults": {
+    "zosmf": "zosmf1",
+    "base": "base"
+  },
+  "autoStore": true
+}

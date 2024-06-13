@@ -103,16 +103,6 @@
       ]
     },
     {
-      "label": "Pretest",
-      "group": "build",
-      "isBackground": false,
-      "type": "shell",
-      "options": {
-        "cwd": "${workspaceFolder}/scripts"
-      },
-      "command": "tsx create-env.ts"
-    },
-    {
       "label": "Build",
       "group": "build",
       "isBackground": false,
@@ -120,19 +110,7 @@
       "options": {
         "cwd": "${workspaceFolder}/packages/zowe-explorer"
       },
-      "command": "pnpm",
-      "args": ["build:integration"],
-      "dependsOn": "Pretest"
-    },
-    {
-      "label": "Posttest",
-      "group": "build",
-      "isBackground": false,
-      "type": "shell",
-      "options": {
-        "cwd": "${workspaceFolder}/scripts"
-      },
-      "command": "tsx clean-env.ts"
+      "command": "pnpm"
     }
   ]
 }
