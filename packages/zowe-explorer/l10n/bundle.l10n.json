@@ -434,6 +434,12 @@
     ]
   },
   "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).": "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).",
+  "No spool files found for {0}/Spool node label": {
+    "message": "No spool files found for {0}",
+    "comment": [
+      "Spool node label"
+    ]
+  },
   "$(sync~spin) Polling: {0}.../Document file name": {
     "message": "$(sync~spin) Polling: {0}...",
     "comment": [

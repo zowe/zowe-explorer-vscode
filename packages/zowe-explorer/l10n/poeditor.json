@@ -644,6 +644,7 @@
   "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}": "",
   "The following jobs were deleted: {0}": "",
   "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).": "",
+  "No spool files found for {0}": "",
   "Modify Command": "",
   "Command response: {0}": "",
   "jobActions.modifyCommand.apiNonExisting": "",

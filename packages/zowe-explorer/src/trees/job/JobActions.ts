@@ -209,6 +209,15 @@ export class JobActions {
                     const spools = (await JobSpoolProvider.getSpoolFiles(node)).filter((spool: zosjobs.IJobFile) =>
                         JobSpoolProvider.matchSpool(spool, node)
                     );
+                    if (!spools.length) {
+                        await Gui.infoMessage(
+                            vscode.l10n.t({
+                                message: "No spool files found for {0}",
+                                args: [node.label as string],
+                                comment: ["Spool node label"],
+                            })
+                        );
+                    }
                     for (const spool of spools) {
                         await ZoweExplorerApiRegister.getJesApi(nodes[0].getProfile()).downloadSingleSpool({
                             jobFile: spool,
