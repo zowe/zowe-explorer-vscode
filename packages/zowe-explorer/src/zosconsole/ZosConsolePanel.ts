@@ -91,9 +91,27 @@ export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
                   <!--<meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; 
                         style-src ${webview.cspSource}; script-src 'nonce-${nonce}';" />-->
                   <link href="${codiconsUri.toString()}" rel="stylesheet" />
+                  <style>
+                    html,
+                    body {
+                        display: flex;
+                        height: 100%;
+                        width: 100%;
+                        overflow: hidden;
+                        margin: 0px;
+                        padding: 0px;
+                    }
+
+                    .box {
+                        display: flex;
+                        height: 100%;
+                        width: 100%;
+                        flex-direction: column;
+                    }
+                 </style>
               </head>
               <body>
-                <div id="webviewRoot"></div>
+                <div id="webviewRoot" style="width: 100%;"></div>
                 <script>
                     const vscode = acquireVsCodeApi();
                     window.onload = function() {
