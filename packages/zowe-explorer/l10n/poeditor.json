@@ -245,6 +245,9 @@
   "zowe.ds.history": {
     "Toggle if favorite files persist locally": ""
   },
+  "zowe.ds.templates": {
+    "Zowe Explorer saved data set templates": ""
+  },
   "zowe.files.logsFolder.path": {
     "Path to Zowe Explorer logs folder": ""
   },
@@ -702,6 +705,14 @@
   "Invalid date format specified": "",
   "Enter a value to filter by": "",
   "Invalid filter specified": "",
+  "Getting data set templates.": "",
+  "Resetting data set templates array.": "",
+  "Updating data set templates.": "",
+  "Adding new data set template {0}.": "",
+  "Data set template save location": "",
+  "Choose the setting location to save the data set template...": "",
+  "Save as User setting": "",
+  "Save as Workspace setting": "",
   "$(sync~spin) Saving data set...": "",
   "Partitioned Data Set: Binary": "",
   "Partitioned Data Set: C": "",

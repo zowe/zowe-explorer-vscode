@@ -1983,11 +1983,16 @@
             "persistence": true,
             "favorites": [],
             "history": [],
-            "sessions": [],
-            "templates": []
+            "sessions": []
           },
           "description": "%zowe.ds.history%",
           "scope": "application"
+        },
+        "zowe.ds.templates": {
+          "type": "array",
+          "default": [],
+          "description": "%zowe.ds.templates%",
+          "scope": "window"
         },
         "zowe.files.logsFolder.path": {
           "type": "string",
