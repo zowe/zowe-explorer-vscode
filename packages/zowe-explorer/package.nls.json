@@ -80,6 +80,7 @@
   "zowe.ds.default.extended": "Default values of Partitioned data set extended creation",
   "zowe.ds.default.ps": "Default values of Sequential data set creation",
   "zowe.ds.history": "Toggle if favorite files persist locally",
+  "zowe.ds.templates": "Zowe Explorer saved data set templates",
   "zowe.files.logsFolder.path": "Path to Zowe Explorer logs folder",
   "zowe.files.temporaryDownloadsFolder.path": "Path to temporary folder location",
   "zowe.uss.history": "Toggle if USS favorite files persist locally",

@@ -11,6 +11,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Set up [POEditor project](https://poeditor.com/join/project/Siy3KCNFKk) for contributing translations and cleaned up redundant localization strings. [#546](https://github.com/zowe/zowe-explorer-vscode/issues/546)
 - Replaced `ts-loader` with `esbuild-loader` to improve build speed for developers. [#2909](https://github.com/zowe/zowe-explorer-vscode/pull/2909)
 - Grouped Common methods into Singleton classes. [#2109](https://github.com/zowe/zowe-explorer-vscode/issues/2109)
+- **BREAKING** Moved data set templates out of data set history settings into new setting "zowe.ds.templates". [#2345](https://github.com/zowe/zowe-explorer-vscode/issues/2345)
 - Ported the following enhancements from v2:
   - Added a "Copy Relative Path" context option for USS files and directories in the tree view. [#2908](https://github.com/zowe/zowe-explorer-vscode/pull/2908)
   - Added a "Copy Name" context option for data sets, jobs and spool files in the tree view. [#2908](https://github.com/zowe/zowe-explorer-vscode/pull/2908)
@@ -30,6 +31,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Ported the following fixes from v2:
   - Moved schema warnings into the log file (rather than a UI message) to minimize end-user disruption. [#2860](https://github.com/zowe/zowe-explorer-vscode/pull/2860)
 - Fix issue with base profile not being included in fresh team configuration file. [#2887](https://github.com/zowe/zowe-explorer-vscode/issues/2887)
+- Fixed an issue where the `onProfilesUpdate` event did not fire after secure credentials were updated. [#2822](https://github.com/zowe/zowe-explorer-vscode/issues/2822)
 
 ## `3.0.0-next.202404242037`
 
@@ -126,6 +128,13 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Updated activation event to `onStartupFinished`. [#1910](https://github.com/zowe/vscode-extension-for-zowe/issues/1910)
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Migrated to new package manager PNPM from Yarn.
+
+## `2.16.0`
+
+## New features and enhancements
+
+- Added Status bar to indicate that data is being pulled from mainframe. [#2484](https://github.com/zowe/zowe-explorer-vscode/issues/2484)
+- Updated MVS view progress indicator for entering a filter search. [#2181](https://github.com/zowe/zowe-explorer-vscode/issues/2181)
 
 ## `2.14.0`
 
