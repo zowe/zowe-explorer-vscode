@@ -25,7 +25,6 @@ import { Gui } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
-import { Constants } from "../../../../src/configuration/Constants";
 
 async function initializeHistoryViewMock(blockMocks: any, globalMocks: any): Promise<SharedHistoryView> {
     return new SharedHistoryView(
@@ -59,7 +58,7 @@ function createGlobalMocks(): any {
         value: jest.fn().mockReturnValue(createInstanceOfProfile(globalMocks.imperativeProfile)),
         configurable: true,
     });
-    Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn().mockReturnValueOnce(globalMocks.treeView), configurable: true });
+    Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn().mockReturnValue(globalMocks.treeView), configurable: true });
     Object.defineProperty(ZoweLocalStorage, "storage", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
@@ -255,7 +254,7 @@ describe("HistoryView Unit Tests", () => {
                 favorites: undefined,
                 fileHistory: [],
                 search: undefined,
-                sessions: undefined,
+                sessions: [],
             });
         });
     });

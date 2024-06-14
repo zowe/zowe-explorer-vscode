@@ -23,7 +23,6 @@ import { ProfilesUtils } from "../utils/ProfilesUtils";
 import { SharedActions } from "./shared/SharedActions";
 import { IconUtils } from "../icons/IconUtils";
 import { AuthUtils } from "../utils/AuthUtils";
-import { Definitions } from "../configuration/Definitions";
 
 export class ZoweTreeProvider<T extends IZoweTreeNode> {
     // Event Emitters used to notify subscribers that the refresh event has fired
