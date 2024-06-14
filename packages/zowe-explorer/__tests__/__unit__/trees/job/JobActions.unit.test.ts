@@ -39,9 +39,9 @@ import { ProfileManagement } from "../../../../src/management/ProfileManagement"
 import { mocked } from "../../../__mocks__/mockUtils";
 import { JobActions } from "../../../../src/trees/job/JobActions";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
-import { JobSpoolProvider } from "../../../../src/trees/job/JobSpoolProvider";
 import { ExtensionUtils } from "../../../../src/utils/ExtensionUtils";
 import { Definitions } from "../../../../src/configuration/Definitions";
+import { SpoolUtils } from "../../../../src/utils/SpoolUtils";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -114,8 +114,6 @@ function createGlobalMocks() {
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn().mockResolvedValue(newMocks.mockProfileInstance), configurable: true });
     const executeCommand = jest.fn();
     Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand, configurable: true });
-    Object.defineProperty(JobSpoolProvider, "encodeJobFile", { value: jest.fn(), configurable: true });
-    Object.defineProperty(JobSpoolProvider, "toUniqueJobFileUri", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
@@ -340,7 +338,7 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         mocked(Gui.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
         const downloadFileSpy = jest.spyOn(blockMocks.jesApi, "downloadSingleSpool");
         const spool: zosjobs.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1 };
-        const getSpoolFilesSpy = jest.spyOn(JobSpoolProvider, "getSpoolFiles").mockResolvedValue([spool]);
+        const getSpoolFilesSpy = jest.spyOn(SpoolUtils, "getSpoolFiles").mockResolvedValue([spool]);
 
         await JobActions.downloadSingleSpool(jobs, true);
         expect(mocked(Gui.showOpenDialog)).toHaveBeenCalled();
@@ -376,7 +374,7 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         mocked(Gui.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
         blockMocks.jesApi.downloadSingleSpool = undefined;
         const spool: zosjobs.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1 };
-        const getSpoolFilesSpy = jest.spyOn(JobSpoolProvider, "getSpoolFiles").mockResolvedValue([spool]);
+        const getSpoolFilesSpy = jest.spyOn(SpoolUtils, "getSpoolFiles").mockResolvedValue([spool]);
 
         await JobActions.downloadSingleSpool(jobs, true);
         expect(getSpoolFilesSpy).not.toHaveBeenCalled();
