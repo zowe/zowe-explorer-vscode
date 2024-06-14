@@ -251,7 +251,6 @@ describe("HistoryView Unit Tests", () => {
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
 
             expect(historyView["getHistoryData"]("ds")).toEqual({
-                dsTemplates: undefined,
                 favorites: undefined,
                 fileHistory: [],
                 search: undefined,
