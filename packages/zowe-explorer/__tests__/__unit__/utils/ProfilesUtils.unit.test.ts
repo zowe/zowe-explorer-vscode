@@ -13,7 +13,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as util from "util";
 import * as vscode from "vscode";
-import { Gui, imperative, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, ProfilesCache, Validation, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { createAltTypeIProfile, createInstanceOfProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
 import { Constants } from "../../../src/configuration/Constants";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
@@ -23,6 +23,7 @@ import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtende
 import { FilterItem } from "../../../src/management/FilterManagement";
 import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
+import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
 
 jest.mock("../../../src/tools/ZoweLogger");
 jest.mock("fs");
@@ -454,7 +455,7 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn(),
                 configurable: true,
             });
-            jest.spyOn(Profiles.prototype, "promptCredentials").mockResolvedValue(["some_user", "some_pass", "c29tZV9iYXNlNjRfc3RyaW5n"]);
+            jest.spyOn(Profiles.prototype, "promptCredentials").mockResolvedValueOnce(["some_user", "some_pass", "c29tZV9iYXNlNjRfc3RyaW5n"]);
             await ProfilesUtils.promptCredentials(null as any);
             expect(Gui.showMessage).toHaveBeenCalledWith("Credentials for testConfig were successfully updated");
         });
@@ -483,6 +484,42 @@ describe("ProfilesUtils unit tests", () => {
             await ProfilesUtils.promptCredentials(null as any);
             expect(mockProfileInstance.getProfileInfo).toHaveBeenCalled();
             expect(Gui.showMessage).toHaveBeenCalledWith('"Update Credentials" operation not supported when "autoStore" is false');
+        });
+
+        it("fires onProfilesUpdate event if secure credentials are enabled", async () => {
+            const mockProfileInstance = new Profiles(imperative.Logger.getAppLogger());
+            Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
+            jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as any);
+            jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
+                profile: prof,
+            } as unknown as imperative.IProfileLoaded);
+            Object.defineProperty(vscode.window, "showInputBox", {
+                value: jest.fn().mockResolvedValue("testConfig"),
+                configurable: true,
+            });
+            Object.defineProperty(Gui, "showMessage", {
+                value: jest.fn(),
+                configurable: true,
+            });
+            const eventFireMock = jest.spyOn(ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter, "fire");
+            const secureCredsMock = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
+            const testConfig = {
+                name: "testConfig",
+                profile: {
+                    type: "test-type",
+                    user: "user",
+                    password: "pass",
+                    base64EncodedAuth: "user-pass",
+                } as imperative.IProfile,
+            } as imperative.IProfileLoaded;
+            const updCredsMock = jest.spyOn(ZoweVsCodeExtension, "updateCredentials").mockResolvedValueOnce(testConfig);
+            await ProfilesUtils.promptCredentials({
+                getProfile: () => testConfig,
+            } as any);
+            expect(updCredsMock).toHaveBeenCalled();
+            expect(Gui.showMessage).toHaveBeenCalledWith("Credentials for testConfig were successfully updated");
+            expect(eventFireMock).toHaveBeenCalledWith(Validation.EventType.UPDATE);
+            secureCredsMock.mockRestore();
         });
     });
 

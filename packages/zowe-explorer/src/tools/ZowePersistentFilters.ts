@@ -9,7 +9,7 @@
  *
  */
 
-import { PersistenceSchemaEnum, Types } from "@zowe/zowe-explorer-api";
+import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "./ZoweLogger";
 import { ZoweLocalStorage } from "./ZoweLocalStorage";
@@ -31,7 +31,6 @@ export class ZowePersistentFilters {
     private mSearchHistory: string[] = [];
     private mFileHistory: string[] = [];
     private mSessions: string[] = [];
-    private mDsTemplates: Types.DataSetAllocTemplate[] = [];
 
     public constructor(
         schema: PersistenceSchemaEnum,
@@ -110,26 +109,6 @@ export class ZowePersistentFilters {
         }
     }
 
-    public addDsTemplateHistory(criteria: Types.DataSetAllocTemplate): void {
-        if (criteria) {
-            let newTemplateName: string;
-            Object.entries(criteria).forEach(([key]) => {
-                newTemplateName = key;
-            });
-            // Remove any entries that match
-            this.mDsTemplates = this.mDsTemplates.filter((template) => {
-                let historyName: string;
-                Object.entries(template).forEach(([key]) => {
-                    historyName = key;
-                });
-                return historyName !== newTemplateName;
-            });
-            // Add value to front of stack
-            this.mDsTemplates.unshift(criteria);
-            this.updateDsTemplateHistory();
-        }
-    }
-
     /**
      * Adds one line of session history to the local store and
      * updates persistent store.
@@ -169,16 +148,6 @@ export class ZowePersistentFilters {
     public getFileHistory(): string[] {
         ZoweLogger.trace("PersistentFilters.getFileHistory called.");
         return this.mFileHistory;
-    }
-
-    public getDsTemplates(): Types.DataSetAllocTemplate[] {
-        const dsTemplateLines: Types.DataSetAllocTemplate[] =
-            // See https://github.com/zowe/vscode-extension-for-zowe/issues/2770
-            ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema).templates ?? [];
-        if (dsTemplateLines.length !== this.mDsTemplates.length) {
-            this.mDsTemplates = dsTemplateLines;
-        }
-        return this.mDsTemplates;
     }
 
     public readFavorites(): string[] {
@@ -248,11 +217,6 @@ export class ZowePersistentFilters {
         this.updateFileHistory();
     }
 
-    public resetDsTemplateHistory(): void {
-        this.mDsTemplates = [];
-        this.updateDsTemplateHistory();
-    }
-
     /*********************************************************************************************************************************************/
     /* Update functions, for updating the settings.json file in VSCode
     /*********************************************************************************************************************************************/
@@ -289,15 +253,6 @@ export class ZowePersistentFilters {
         const settings = { ...ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema) };
         if (settings.persistence) {
             settings.fileHistory = this.mFileHistory;
-            ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(this.schema, settings);
-        }
-    }
-
-    private updateDsTemplateHistory(): void {
-        // settings are read-only, so make a clone
-        const settings: any = { ...ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema) };
-        if (settings.persistence) {
-            settings.templates = this.mDsTemplates;
             ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(this.schema, settings);
         }
     }

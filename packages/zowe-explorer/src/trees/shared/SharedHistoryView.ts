@@ -14,7 +14,6 @@ import type { Definitions } from "../../configuration/Definitions";
 import { WebView, Gui } from "@zowe/zowe-explorer-api";
 import { ExtensionContext } from "vscode";
 import { ZoweLogger } from "../../tools/ZoweLogger";
-import { DatasetTree } from "../dataset/DatasetTree";
 import { JobTree } from "../job/JobTree";
 import { Constants } from "../../configuration/Constants";
 
@@ -74,7 +73,6 @@ export class SharedHistoryView extends WebView {
             search: treeProvider.getSearchHistory(),
             sessions: treeProvider.getSessions(),
             fileHistory: treeProvider.getFileHistory(),
-            dsTemplates: type === "ds" ? (treeProvider as DatasetTree).getDsTemplates() : undefined,
             favorites: treeProvider.getFavorites(),
         };
     }

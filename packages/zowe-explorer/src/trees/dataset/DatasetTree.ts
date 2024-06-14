@@ -43,6 +43,7 @@ import { SharedUtils } from "../shared/SharedUtils";
 import { FilterDescriptor, FilterItem } from "../../management/FilterManagement";
 import { IconUtils } from "../../icons/IconUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
+import { DataSetTemplates } from "./DatasetTemplates";
 
 /**
  * A tree that contains nodes of sessions and data sets
@@ -794,14 +795,13 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         this.mHistory.resetFileHistory();
     }
 
-    public addDsTemplate(criteria: Types.DataSetAllocTemplate): void {
-        this.mHistory.addDsTemplateHistory(criteria);
+    public async addDsTemplate(criteria: Types.DataSetAllocTemplate): Promise<void> {
+        await DataSetTemplates.addDsTemplateSetting(criteria);
         this.refresh();
     }
 
     public getDsTemplates(): Types.DataSetAllocTemplate[] {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return this.mHistory.getDsTemplates();
+        return DataSetTemplates.getDsTemplates();
     }
 
     public getSessions(): string[] {
