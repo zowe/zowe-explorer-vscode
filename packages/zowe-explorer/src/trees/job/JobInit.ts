@@ -35,7 +35,7 @@ export class JobInit {
         ZoweLogger.trace("ZosJobsProvider.createJobsTree called.");
         const tree = new JobTree();
         await tree.initializeJobsTree(log);
-        await tree.addSession(undefined, undefined, tree);
+        await tree.addSession();
         return tree;
     }
 
@@ -117,7 +117,7 @@ export class JobInit {
             vscode.commands.registerCommand("zowe.jobs.search", async (node): Promise<void> => jobsProvider.filterPrompt(node))
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.jobs.editSession", async (node): Promise<void> => jobsProvider.editSession(node, jobsProvider))
+            vscode.commands.registerCommand("zowe.jobs.editSession", async (node): Promise<void> => jobsProvider.editSession(node))
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.jobs.addFavorite", async (node, nodeList) => {

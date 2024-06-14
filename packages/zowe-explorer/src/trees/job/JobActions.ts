@@ -134,7 +134,7 @@ export class JobActions {
         let sessionNode: IZoweJobTreeNode | undefined = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label.toString() === sessionName.trim());
         if (!sessionNode) {
             try {
-                await jobsProvider.addSession(sessionName.trim());
+                await jobsProvider.addSession({ sessionName: sessionName.trim() });
             } catch (error) {
                 await AuthUtils.errorHandling(error);
                 return;

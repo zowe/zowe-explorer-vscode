@@ -982,7 +982,7 @@ describe("focusing on a job in the tree view", () => {
         await JobActions.focusOnJob(jobTreeProvider, datasetSessionName, submittedJob.jobid);
         expect((newJobSession as IZoweJobTreeNode).filtered).toBe(true);
         // assert
-        expect(mocked(jobTreeProvider.addSession)).toHaveBeenCalledWith(datasetSessionName);
+        expect(mocked(jobTreeProvider.addSession)).toHaveBeenCalledWith({ sessionName: datasetSessionName });
         expect(mocked(jobTreeProvider.refreshElement)).toHaveBeenCalledWith(newJobSession);
         // comparison between tree views is not working properly
         // const expectedTreeView = jobTree;
@@ -1024,7 +1024,7 @@ describe("focusing on a job in the tree view", () => {
         // act
         await JobActions.focusOnJob(jobTreeProvider, datasetSessionName, submittedJob.jobid);
         // assert
-        expect(mocked(jobTreeProvider.addSession)).toHaveBeenCalledWith(datasetSessionName);
+        expect(mocked(jobTreeProvider.addSession)).toHaveBeenCalledWith({ sessionName: datasetSessionName });
         expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
         expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
     });

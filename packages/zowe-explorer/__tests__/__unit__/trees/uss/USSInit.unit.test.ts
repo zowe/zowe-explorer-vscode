@@ -89,7 +89,7 @@ describe("Test src/uss/extension", () => {
             },
             {
                 name: "zowe.uss.editSession",
-                mock: [{ spy: jest.spyOn(ussFileProvider, "editSession"), arg: [test.value, ussFileProvider] }],
+                mock: [{ spy: jest.spyOn(ussFileProvider, "editSession"), arg: [test.value] }],
             },
             {
                 name: "zowe.uss.removeSession",

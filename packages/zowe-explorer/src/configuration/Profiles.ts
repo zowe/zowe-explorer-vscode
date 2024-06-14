@@ -389,11 +389,10 @@ export class Profiles extends ProfilesCache {
                     comment: ["chosen profile", "tree type"],
                 })
             );
-            if (await Profiles.handleChangeForAllTrees(chosenProfile, true)) {
-                await zoweFileProvider.addSession(chosenProfile);
-            } else {
-                await zoweFileProvider.addSession(chosenProfile, undefined, zoweFileProvider);
-            }
+            await zoweFileProvider.addSession({
+                sessionName: chosenProfile,
+                addToAllTrees: await Profiles.handleChangeForAllTrees(chosenProfile, true),
+            });
         } else {
             ZoweLogger.debug(debugMsg);
         }

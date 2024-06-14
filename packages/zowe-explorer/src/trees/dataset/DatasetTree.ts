@@ -430,17 +430,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     }
 
     /**
-     * Adds a new session to the data set tree
-     *
-     * @param {string} [sessionName] - optional; loads default profile if not passed
-     * @param {string} [profileType] - optional; loads profiles of a certain type if passed
-     */
-    public async addSession(sessionName?: string, profileType?: string, provider?: IZoweTree<IZoweTreeNode>): Promise<void> {
-        ZoweLogger.trace("DatasetTree.addSession called.");
-        await super.addSession(sessionName, profileType, provider);
-    }
-
-    /**
      * Adds a single session to the tree
      * @param profile the profile to add to the tree
      */
@@ -968,7 +957,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 // executing search from saved search in favorites
                 pattern = node.getLabel() as string;
                 const sessionName = node.getProfileName();
-                await this.addSession(sessionName);
+                await this.addSession({ sessionName });
                 const nonFavNode = this.mSessionNodes.find((tempNode) => tempNode.label.toString() === sessionName);
                 if (!nonFavNode.getSession().ISession.user || !nonFavNode.getSession().ISession.password) {
                     nonFavNode.getSession().ISession.user = node.getSession().ISession.user;

@@ -179,7 +179,10 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
 
-        expect(parent.children.find((node) => node.label === "TESTMEMBER")).toBeDefined();
+        const newNode = parent.children.find((node) => node.label === "TESTMEMBER");
+        expect(newNode).toBeDefined();
+        expect(newNode?.contextValue).toBe(Constants.DS_MEMBER_CONTEXT);
+        expect(newNode?.command.command).toBe("vscode.open");
         expect(mySpy).toHaveBeenCalledWith({
             placeHolder: "Name of Member",
             validateInput: expect.any(Function),
@@ -893,7 +896,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
         const favoriteSample = new ZoweDatasetNode({ label: "[sestest]: HLQ.TEST", collapsibleState: vscode.TreeItemCollapsibleState.None });
 
         await DatasetActions.enterPattern(favoriteSample, blockMocks.testDatasetTree);
-        expect(blockMocks.testDatasetTree.addSession).toHaveBeenCalledWith("sestest");
+        expect(blockMocks.testDatasetTree.addSession).toHaveBeenCalledWith({ sessionName: "sestest" });
     });
 });
 

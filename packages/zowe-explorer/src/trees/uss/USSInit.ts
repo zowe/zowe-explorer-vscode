@@ -32,7 +32,7 @@ export class USSInit {
         ZoweLogger.trace("uss.USSTree.createUSSTree called.");
         const tree = new USSTree();
         await tree.initializeFavorites(log);
-        await tree.addSession(undefined, undefined, tree);
+        await tree.addSession();
         return tree;
     }
 
@@ -108,9 +108,7 @@ export class USSInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.fullPath", async (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.filterPrompt(node))
         );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.editSession", async (node) => ussFileProvider.editSession(node, ussFileProvider))
-        );
+        context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.editSession", async (node) => ussFileProvider.editSession(node)));
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.removeSession", async (node: IZoweUSSTreeNode, nodeList, hideFromAllTrees: boolean) => {
                 let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);

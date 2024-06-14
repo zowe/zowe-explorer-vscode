@@ -27,7 +27,7 @@ export class DatasetInit {
     public static async createDatasetTree(log: imperative.Logger): Promise<DatasetTree> {
         const tree = new DatasetTree();
         await tree.initializeFavorites(log);
-        await tree.addSession(undefined, undefined, tree);
+        await tree.addSession();
         return tree;
     }
 
@@ -79,9 +79,7 @@ export class DatasetInit {
             })
         );
         context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.pattern", (node) => datasetProvider.filterPrompt(node)));
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.editSession", async (node) => datasetProvider.editSession(node, datasetProvider))
-        );
+        context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.editSession", async (node) => datasetProvider.editSession(node)));
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.createDataset", async (node) => DatasetActions.createFile(node, datasetProvider))
         );

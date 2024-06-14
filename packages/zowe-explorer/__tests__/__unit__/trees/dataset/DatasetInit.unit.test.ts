@@ -93,7 +93,7 @@ describe("Test src/dataset/extension", () => {
             },
             {
                 name: "zowe.ds.editSession",
-                mock: [{ spy: jest.spyOn(dsProvider, "editSession"), arg: [test.value, dsProvider] }],
+                mock: [{ spy: jest.spyOn(dsProvider, "editSession"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.createDataset",

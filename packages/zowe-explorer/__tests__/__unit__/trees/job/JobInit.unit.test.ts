@@ -136,7 +136,7 @@ describe("Test src/jobs/extension", () => {
             },
             {
                 name: "zowe.jobs.editSession",
-                mock: [{ spy: jest.spyOn(jobsProvider, "editSession"), arg: [test.value, jobsProvider] }],
+                mock: [{ spy: jest.spyOn(jobsProvider, "editSession"), arg: [test.value] }],
             },
             {
                 name: "zowe.jobs.addFavorite",

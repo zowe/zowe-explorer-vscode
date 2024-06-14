@@ -1338,7 +1338,7 @@ export class DatasetActions {
             // executing search from saved search in favorites
             pattern = node.label.toString().substring(node.label.toString().indexOf(":") + 2);
             const sessionName = node.label.toString().substring(node.label.toString().indexOf("[") + 1, node.label.toString().indexOf("]"));
-            await datasetProvider.addSession(sessionName.trim());
+            await datasetProvider.addSession({ sessionName: sessionName.trim() });
             node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.label.toString().trim() === sessionName.trim()) as IZoweDatasetTreeNode;
         }
 
