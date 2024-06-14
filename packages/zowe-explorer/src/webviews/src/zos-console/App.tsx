@@ -50,18 +50,18 @@ export function App() {
   };
 
   return (
-    <div>
-      <VSCodeDropdown id="systems" style={{ float: "right" }}></VSCodeDropdown>
+    <div class="box">
+      <VSCodeDropdown id="systems" style={{ "align-self": "flex-end" }}></VSCodeDropdown>
       <VSCodeTextArea
         id="output"
         readonly
-        rows="8"
         resize="vertical"
+        rows="8"
         style={{
           width: "100%",
           height: "100%",
           overflow: "auto",
-          display: "block",
+          display: "flex",
           "font-family": "monospace",
         }}
       ></VSCodeTextArea>
