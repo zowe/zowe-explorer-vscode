@@ -128,6 +128,13 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Migrated to new package manager PNPM from Yarn.
 
+## `2.16.0`
+
+## New features and enhancements
+
+- Added Status bar to indicate that data is being pulled from mainframe. [#2484](https://github.com/zowe/zowe-explorer-vscode/issues/2484)
+- Updated MVS view progress indicator for entering a filter search. [#2181](https://github.com/zowe/zowe-explorer-vscode/issues/2181)
+
 ## `2.14.0`
 
 ### New features and enhancements
