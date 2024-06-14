@@ -21,6 +21,11 @@ export type WebViewOpts = {
     retainContext: boolean;
 };
 
+export type UriPair = {
+    disk?: Types.WebviewUris;
+    resource?: Types.WebviewUris;
+};
+
 export class WebView {
     protected disposables: Disposable[];
 
@@ -29,10 +34,7 @@ export class WebView {
     protected panel: WebviewPanel;
 
     // Resource identifiers for the on-disk content and vscode-webview resource.
-    private uris: {
-        disk?: Types.WebviewUris;
-        resource?: Types.WebviewUris;
-    } = {};
+    protected uris: UriPair = {};
 
     // Unique identifier
     private nonce: string;
@@ -70,7 +72,7 @@ export class WebView {
         this.uris.disk = {
             build: Uri.file(joinPath(context.extensionPath, "src", "webviews")),
             script: Uri.file(joinPath(context.extensionPath, "src", "webviews", "dist", webviewName, `${webviewName}.js`)),
-            css: cssExists ? Uri.file(cssPath) : undefined
+            css: cssExists ? Uri.file(cssPath) : undefined,
         };
 
         this.panel = window.createWebviewPanel("ZEAPIWebview", this.title, ViewColumn.Beside, {
@@ -83,7 +85,7 @@ export class WebView {
         this.uris.resource = {
             build: this.panel.webview.asWebviewUri(this.uris.disk.build),
             script: this.panel.webview.asWebviewUri(this.uris.disk.script),
-            css: this.uris.disk.css ? this.panel.webview.asWebviewUri(this.uris.disk.css) : undefined
+            css: this.uris.disk.css ? this.panel.webview.asWebviewUri(this.uris.disk.css) : undefined,
         };
 
         const template = Handlebars.compile(HTMLTemplate);

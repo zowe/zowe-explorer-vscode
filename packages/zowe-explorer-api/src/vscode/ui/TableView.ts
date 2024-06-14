@@ -9,7 +9,7 @@
  *
  */
 
-import { WebView } from "./WebView";
+import { UriPair, WebView } from "./WebView";
 import { Event, EventEmitter, ExtensionContext } from "vscode";
 import { AnyComponent, JSX } from "preact";
 import { randomUUID } from "crypto";
@@ -56,6 +56,14 @@ export namespace Table {
         private onTableDataReceived: Event<RowContent | RowContent[]>;
         private onTableDisplayChanged: EventEmitter<RowContent | RowContent[]>;
 
+        public getUris(): UriPair {
+            return this.uris;
+        }
+
+        public getHtml(): string {
+            return this.htmlContent;
+        }
+
         public constructor(context: ExtensionContext, data?: Data) {
             super(data.title ?? "Table view", "table-view", context);
             this.panel.webview.onDidReceiveMessage((message) => this.onMessageReceived(message));
@@ -70,7 +78,7 @@ export namespace Table {
          *
          * @param message The message received from the webview
          */
-        private async onMessageReceived(message: any): Promise<void> {
+        public async onMessageReceived(message: any): Promise<void> {
             if (!("command" in message)) {
                 return;
             }
