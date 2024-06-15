@@ -18,7 +18,7 @@ export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
 
     private _view?: vscode.WebviewView;
 
-    private profiles: Map<String, IProfAttrs> = new Map();
+    private profiles: Map<string, IProfAttrs> = new Map();
     private defaultProfileName: string | undefined;
 
     public constructor(private readonly _extensionUri: vscode.Uri) {
