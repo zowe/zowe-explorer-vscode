@@ -1,19 +1,19 @@
 import { Dropdown, Option, TextArea, TextField } from "@vscode/webview-ui-toolkit";
 import { VSCodeDropdown, VSCodeTextArea, VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
-import { useEffect } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 
 declare const vscode: any;
 
 export function App() {
+  const [consoleContent, setConsoleContent] = useState("");
   useEffect(() => {
     window.addEventListener("message", (event) => {
       const message = event.data;
       switch (message.type) {
         case "commandResult":
-          const consoleResponse = document.getElementById("output") as TextArea;
-          consoleResponse!.value += `> ${message.cmd} (${message.profile})\n`;
-          consoleResponse!.value += message.result;
-          consoleResponse!.control.scrollTop = consoleResponse!.control.scrollHeight;
+          setConsoleContent(consoleContent + `> ${message.cmd} (${message.profile})\n${message.result}`);
+          // const consoleResponse = document.getElementById("output") as TextArea;
+          // consoleResponse.control.scrollTop = consoleResponse.control.scrollHeight;
           break;
         case "optionsList":
           const profileList = document.getElementById("systems") as Option;
@@ -28,16 +28,16 @@ export function App() {
           break;
       }
     });
+    const consoleResponse = document.getElementById("output") as TextArea;
+    consoleResponse.control.scrollTop = consoleResponse.control.scrollHeight;
   });
 
   const sendCommand = (e: KeyboardEvent) => {
     const consoleField = document.getElementById("command-input") as TextField;
-    const consoleResponse = document.getElementById("output") as TextArea;
     const profileList = document.getElementById("systems") as Dropdown;
     if (e.key === "Enter") {
       if (consoleField!.value === "clear") {
-        consoleResponse.value = "";
-        consoleResponse.control.scrollTop = 0;
+        setConsoleContent("");
       } else {
         vscode.postMessage({
           command: "opercmd",
@@ -55,8 +55,8 @@ export function App() {
       <VSCodeTextArea
         id="output"
         readonly
-        resize="vertical"
-        rows="8"
+        resize="none"
+        value={consoleContent}
         style={{
           width: "100%",
           height: "100%",
@@ -69,7 +69,7 @@ export function App() {
         id="command-input"
         name="command-input"
         type="text"
-        onKeyDown={(e: KeyboardEvent) => sendCommand(e)}
+        onKeyDown={sendCommand}
         style={{
           width: "100%",
           "font-family": "monospace",
