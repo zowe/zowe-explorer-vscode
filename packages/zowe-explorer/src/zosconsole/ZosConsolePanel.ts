@@ -16,7 +16,7 @@ import { IIssueParms, IssueCommand } from "@zowe/zos-console-for-zowe-sdk";
 export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = "zosconsole";
 
-    private profiles: Map<String, IProfAttrs> = new Map();
+    private profiles: Map<string, IProfAttrs> = new Map();
     private defaultProfileName: string | undefined;
 
     public constructor(private readonly _extensionUri: vscode.Uri) {

@@ -6,15 +6,25 @@ export function App() {
   const [consoleContent, setConsoleContent] = useState("");
   useEffect(() => {
     window.addEventListener("message", (event) => {
+      // Prevent users from sending data into webview outside of extension/webview context
+      const eventUrl = new URL(event.origin);
+      const isWebUser =
+        (eventUrl.protocol === document.location.protocol && eventUrl.hostname === document.location.hostname) ||
+        eventUrl.hostname.endsWith(".github.dev");
+      const isLocalVSCodeUser = eventUrl.protocol === "vscode-webview:";
+
+      if (!isWebUser && !isLocalVSCodeUser) {
+        return;
+      }
+
       const message = event.data;
+      const profileList = document.getElementById("systems") as Option;
+
       switch (message.type) {
         case "commandResult":
           setConsoleContent(consoleContent + `> ${message.cmd} (${message.profile})\n${message.result}`);
-          // const consoleResponse = document.getElementById("output") as TextArea;
-          // consoleResponse.control.scrollTop = consoleResponse.control.scrollHeight;
           break;
         case "optionsList":
-          const profileList = document.getElementById("systems") as Option;
           for (const profile in message.profiles) {
             const option = document.createElement("vscode-option");
             option.textContent = message.profiles[profile];
@@ -48,7 +58,7 @@ export function App() {
   };
 
   return (
-    <div class="box">
+    <div className="box">
       <VSCodeDropdown id="systems" style={{ "align-self": "flex-end" }}></VSCodeDropdown>
       <VSCodeTextArea
         id="output"
@@ -73,7 +83,7 @@ export function App() {
           "font-family": "monospace",
         }}
       >
-        <span slot="start" class="codicon codicon-chevron-right"></span>
+        <span slot="start" className="codicon codicon-chevron-right"></span>
       </VSCodeTextField>
     </div>
   );
