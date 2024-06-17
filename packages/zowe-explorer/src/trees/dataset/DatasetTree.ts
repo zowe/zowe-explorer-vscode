@@ -17,7 +17,6 @@ import {
     Gui,
     Validation,
     imperative,
-    IZoweTree,
     IZoweDatasetTreeNode,
     PersistenceSchemaEnum,
     Types,

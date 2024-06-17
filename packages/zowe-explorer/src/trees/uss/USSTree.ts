@@ -15,8 +15,6 @@ import {
     FsAbstractUtils,
     Gui,
     imperative,
-    IZoweTree,
-    IZoweTreeNode,
     IZoweUSSTreeNode,
     PersistenceSchemaEnum,
     Types,

@@ -12,17 +12,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { IJob } from "@zowe/zos-jobs-for-zowe-sdk";
-import {
-    Gui,
-    Validation,
-    imperative,
-    IZoweTree,
-    IZoweTreeNode,
-    IZoweJobTreeNode,
-    PersistenceSchemaEnum,
-    Poller,
-    Types,
-} from "@zowe/zowe-explorer-api";
+import { Gui, Validation, imperative, IZoweJobTreeNode, PersistenceSchemaEnum, Poller, Types } from "@zowe/zowe-explorer-api";
 import { ZoweJobNode } from "./ZoweJobNode";
 import { JobFSProvider } from "./JobFSProvider";
 import { JobUtils } from "./JobUtils";
