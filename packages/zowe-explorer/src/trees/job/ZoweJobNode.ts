@@ -24,6 +24,7 @@ import { SharedContext } from "../shared/SharedContext";
 import { SharedUtils } from "../shared/SharedUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
 import type { Definitions } from "../../configuration/Definitions";
+import { JobSpoolProvider } from "./JobSpoolProvider";
 
 export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
     public children: IZoweJobTreeNode[] = [];
@@ -420,6 +421,10 @@ export class ZoweSpoolNode extends ZoweJobNode {
         this.spool = opts.spool;
         const icon = IconGenerator.getIconByNode(this);
 
+        // parent of parent should be the session; tie resourceUri with TreeItem for file decorator
+        if (opts.spool && opts.parentNode && opts.parentNode.getParent()) {
+            this.resourceUri = JobSpoolProvider.encodeJobFile(opts.parentNode.getParent().label as string, opts.spool);
+        }
         if (icon) {
             this.iconPath = icon.path;
         }

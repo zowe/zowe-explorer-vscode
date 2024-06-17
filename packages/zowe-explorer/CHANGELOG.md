@@ -30,6 +30,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
   - `Zowe Explorer: Stop Polling`
 - Ported the following fixes from v2:
   - Moved schema warnings into the log file (rather than a UI message) to minimize end-user disruption. [#2860](https://github.com/zowe/zowe-explorer-vscode/pull/2860)
+- Fixed an issue where the `onProfilesUpdate` event did not fire after secure credentials were updated. [#2822](https://github.com/zowe/zowe-explorer-vscode/issues/2822)
 
 ## `3.0.0-next.202404242037`
 
@@ -131,6 +132,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## New features and enhancements
 
+- Added Status bar to indicate that data is being pulled from mainframe. [#2484](https://github.com/zowe/zowe-explorer-vscode/issues/2484)
+- Updated MVS view progress indicator for entering a filter search. [#2181](https://github.com/zowe/zowe-explorer-vscode/issues/2181)
 - Provide users with the option to upload binary files by implementing a "Upload Files (Binary)" right-click option in the USS tree. [#1956](https://github.com/zowe/zowe-explorer-vscode/issues/1956)
 
 ## `2.15.0`
