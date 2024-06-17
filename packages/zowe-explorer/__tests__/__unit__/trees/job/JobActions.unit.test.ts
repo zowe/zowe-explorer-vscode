@@ -149,7 +149,13 @@ afterEach(() => {
 describe("Jobs Actions Unit Tests - Function setPrefix", () => {
     it("Checking that the prefix is set correctly on the job", async () => {
         const blockMocks = createGlobalMocks();
-        const node = new ZoweJobNode({ label: "job", collapsibleState: vscode.TreeItemCollapsibleState.None, session: blockMocks.session });
+        const parentNode = createJobSessionNode(blockMocks.session, blockMocks.imperativeProfile);
+        const node = new ZoweJobNode({
+            label: "job",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            parentNode,
+        });
 
         const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("*");
         await JobActions.setPrefix(node, blockMocks.testJobsTree);

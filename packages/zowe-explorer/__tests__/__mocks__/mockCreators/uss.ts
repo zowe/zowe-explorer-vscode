@@ -104,7 +104,7 @@ export function createFavoriteUSSNode(session, profile) {
         session,
         profile,
     });
-    parentNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
+    parentNode.contextValue = Constants.USS_SESSION_CONTEXT + Constants.FAV_SUFFIX;
     ussNodeF.contextValue = Constants.USS_TEXT_FILE_CONTEXT + Constants.FAV_SUFFIX;
     ussNodeF.fullPath = "/u/myuser/usstest";
     ussNodeF.tooltip = "/u/myuser/usstest";

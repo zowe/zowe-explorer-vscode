@@ -21,8 +21,8 @@ export function createDatasetSessionNode(session: imperative.Session, profile: i
         collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
         session,
         profile,
+        contextOverride: Constants.DS_SESSION_CONTEXT,
     });
-    datasetNode.contextValue = Constants.DS_SESSION_CONTEXT;
 
     return datasetNode;
 }
@@ -31,8 +31,8 @@ export function createDatasetFavoritesNode() {
     const datasetNode = new ZoweDatasetNode({
         label: "Favorites",
         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+        contextOverride: Constants.DS_SESSION_FAV_CONTEXT,
     });
-    datasetNode.contextValue = Constants.FAVORITE_CONTEXT;
 
     return datasetNode;
 }

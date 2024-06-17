@@ -63,7 +63,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         this.job = opts.job ?? null; // null instead of undefined to satisfy isZoweJobTreeNode
 
         const isFavoritesNode = opts.label === vscode.l10n.t("Favorites");
-        const sessionLabel = opts.profile?.name ?? SharedUtils.getSessionLabel(this);
+        const sessionLabel = isFavoritesNode ? undefined : opts.profile?.name ?? SharedUtils.getSessionLabel(this);
 
         if (!isFavoritesNode && this.job == null) {
             // non-favorited, session node
@@ -309,7 +309,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
 
     public getSessionNode(): IZoweJobTreeNode {
         ZoweLogger.trace("ZoweJobNode.getSessionNode called.");
-        return this.getParent() ? this.getParent().getSessionNode() : this;
+        return SharedContext.isSession(this) ? this : this.getParent()?.getSessionNode();
     }
 
     public set owner(newOwner: string) {
