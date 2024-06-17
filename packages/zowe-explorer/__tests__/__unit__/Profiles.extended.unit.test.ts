@@ -2048,17 +2048,6 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
         expect(Gui.errorMessage).toBeCalled();
     });
-
-    // it("To check profile using basic authentication does not support token-based authentication", async () => {
-    //     jest.spyOn(utils.ProfilesUtils, "isProfileUsingBasicAuth").mockReturnValueOnce(true);
-    //     jest.spyOn(Gui, "showMessage").mockImplementation();
-    //     jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
-    //         getTokenTypeName: () => "apimlAuthenticationToken",
-    //     } as never);
-    //     jest.spyOn(ZoweVsCodeExtension, "loginWithBaseProfile").mockResolvedValue(false);
-    //     await Profiles.getInstance().handleSwitchAuthentication(testNode);
-    //     expect(Gui.showMessage).toBeCalled();
-    // });
 });
 
 describe("Profiles Unit Tests - function ssoLogout", () => {

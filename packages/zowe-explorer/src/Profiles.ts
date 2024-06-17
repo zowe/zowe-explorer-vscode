@@ -1295,7 +1295,6 @@ export class Profiles extends ProfilesCache {
                             serviceProfile.name
                         )
                     );
-                    await Profiles.getInstance().refresh(zeInstance);
                     await this.basicAuthClearSecureArray(serviceProfile.name);
                     const updBaseProfile: zowe.imperative.IProfile = {
                         user: undefined,
@@ -1330,7 +1329,6 @@ export class Profiles extends ProfilesCache {
                     ZoweLogger.info(successMsg);
                     Gui.showMessage(successMsg);
                     await this.tokenAuthClearSecureArray(serviceProfile.name);
-                    await vscode.commands.executeCommand("zowe.extRefresh");
                 } else {
                     Gui.errorMessage(
                         localize(
