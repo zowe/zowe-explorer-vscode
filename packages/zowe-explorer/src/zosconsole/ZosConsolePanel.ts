@@ -150,8 +150,15 @@ export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
         let text = "";
         const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         for (let i = 0; i < 32; i++) {
-            text += possible.charAt(Math.floor(Math.random() * possible.length));
+            text += possible.charAt(Math.floor(this.cryptoRandom() * possible.length));
         }
         return text;
+    }
+
+    private cryptoRandom(): number {
+        const typedArray = new Uint8Array(1);
+        const randomValue = crypto.getRandomValues(typedArray)[0];
+        const randomFloat = randomValue / Math.pow(2, 8);
+        return randomFloat;
     }
 }
