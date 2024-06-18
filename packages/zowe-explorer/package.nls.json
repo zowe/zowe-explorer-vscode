@@ -50,6 +50,8 @@
   "uss.refreshUSS": "Pull from Mainframe",
   "uss.refreshDirectory": "Refresh Directory",
   "uss.uploadDialog": "Upload Files...",
+  "uss.uploadDialogBinary": "Upload Files (Binary)...",
+  "uss.text": "Toggle Text",
   "jobs.search": "Search Jobs",
   "deleteJob": "Delete Job",
   "runModifyCommand": "Issue Modify command",

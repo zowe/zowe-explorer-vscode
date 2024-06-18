@@ -152,6 +152,12 @@
   "uss.uploadDialog": {
     "Upload Files...": ""
   },
+  "uss.uploadDialogBinary": {
+    "Upload Files... (Binary)": ""
+  },
+  "uss.text": {
+    "Toggle Text": ""
+  },
   "jobs.search": {
     "Search Jobs": ""
   },
@@ -505,6 +511,8 @@
   "Choose a location to create the {0}": "",
   "Name of file or directory": "",
   "Unable to create node:": "",
+  "Uploading file to USS tree": "",
+  "Upload action was cancelled.": "",
   "Uploading USS file": "",
   "Delete": "",
   "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}": "",
@@ -662,7 +670,6 @@
   "Unable to create data set.": "",
   "{0} was created like {1}.": "",
   "Uploading to data set": "",
-  "Upload action was cancelled.": "",
   "No data sets selected for deletion, cancelling...": "",
   "Deleting data set(s): {0}": "",
   "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}": "",

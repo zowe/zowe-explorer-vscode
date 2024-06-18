@@ -168,14 +168,14 @@ describe("Test src/dataset/extension", () => {
                 mock: [
                     { spy: jest.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
                     { spy: jest.spyOn(SharedContext, "isPdsNotFav"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(DatasetActions, "hMigrateDataSet"), arg: [test.value] },
+                    { spy: jest.spyOn(DatasetActions, "hMigrateDataSet"), arg: [dsProvider, test.value] },
                 ],
             },
             {
                 name: "zowe.ds.hRecallDataSet",
                 mock: [
                     { spy: jest.spyOn(SharedContext, "isMigrated"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(DatasetActions, "hRecallDataSet"), arg: [test.value] },
+                    { spy: jest.spyOn(DatasetActions, "hRecallDataSet"), arg: [dsProvider, test.value] },
                 ],
             },
             {

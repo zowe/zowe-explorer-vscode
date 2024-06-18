@@ -451,6 +451,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.uss.uploadDialogBinary",
+        "title": "%uss.uploadDialogBinary%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.uss.copyUssFile",
         "title": "%copyFile%",
         "category": "Zowe Explorer"
@@ -787,14 +792,19 @@
           "group": "001_zowe_ussCreate@3"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/ && !listMultiSelection",
+          "command": "zowe.uss.uploadDialogBinary",
+          "group": "001_zowe_ussCreate@4"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
           "command": "zowe.uss.copyUssFile",
-          "group": "001_zowe_ussCreate@4"
+          "group": "001_zowe_ussCreate@5"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*|ussSession.*_isFilterSearch)/",
           "command": "zowe.uss.pasteUssFile",
-          "group": "001_zowe_ussCreate@5"
+          "group": "001_zowe_ussCreate@6"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/ && !listMultiSelection",
