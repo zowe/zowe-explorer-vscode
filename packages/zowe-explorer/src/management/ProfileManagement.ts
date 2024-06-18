@@ -68,8 +68,7 @@ export class ProfileManagement {
         edit: "edit-profile",
         enable: "enable-validation",
         hide: "hide-profile",
-        loginBasic: "obtain-token-basic",
-        loginCert: "obtain-token-cert",
+        login: "obtain-token",
         logout: "invalidate-token",
         update: "update-credentials",
     };
@@ -114,16 +113,10 @@ export class ProfileManagement {
             description: vscode.l10n.t("Hide profile name from tree view"),
         },
     };
-    public static tokenAuthLoginBasicQpItem: Record<string, vscode.QuickPickItem> = {
-        [this.AuthQpLabels.loginBasic]: {
-            label: vscode.l10n.t("$(arrow-right) Log in to authentication service with user and password"),
-            description: vscode.l10n.t("Log in with user and password to obtain a new token value"),
-        },
-    };
-    public static tokenAuthLoginCertQpItem: Record<string, vscode.QuickPickItem> = {
-        [this.AuthQpLabels.loginCert]: {
-            label: vscode.l10n.t("$(arrow-right) Log in to authentication service with certificate"),
-            description: vscode.l10n.t("Log in with certificate to obtain a new token value"),
+    public static tokenAuthLoginQpItem: Record<string, vscode.QuickPickItem> = {
+        [this.AuthQpLabels.login]: {
+            label: vscode.l10n.t("$(arrow-right) Log in to authentication service"),
+            description: vscode.l10n.t("Log in to obtain a new token value"),
         },
     };
     public static tokenAuthLogoutQpItem: Record<string, vscode.QuickPickItem> = {
@@ -172,12 +165,8 @@ export class ProfileManagement {
                 await Profiles.getInstance().editSession(profile);
                 break;
             }
-            case this.tokenAuthLoginBasicQpItem[this.AuthQpLabels.loginBasic]: {
-                await Profiles.getInstance().ssoLogin(node, profile.name, false);
-                break;
-            }
-            case this.tokenAuthLoginCertQpItem[this.AuthQpLabels.loginCert]: {
-                await Profiles.getInstance().ssoLogin(node, profile.name, true);
+            case this.tokenAuthLoginQpItem[this.AuthQpLabels.login]: {
+                await Profiles.getInstance().ssoLogin(node, profile.name);
                 break;
             }
             case this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]: {
@@ -237,8 +226,7 @@ export class ProfileManagement {
     }
     private static tokenAuthQp(node: IZoweTreeNode): vscode.QuickPickItem[] {
         const profile = node.getProfile();
-        const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.tokenAuthLoginBasicQpItem);
-        quickPickOptions.push(this.tokenAuthLoginCertQpItem[this.AuthQpLabels.loginCert]);
+        const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.tokenAuthLoginQpItem);
         if (profile.profile.tokenValue) {
             quickPickOptions.push(this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]);
         }
@@ -249,8 +237,7 @@ export class ProfileManagement {
         const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.basicAuthAddQpItems);
         try {
             ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getTokenTypeName();
-            quickPickOptions.push(this.tokenAuthLoginBasicQpItem[this.AuthQpLabels.loginBasic]);
-            quickPickOptions.push(this.tokenAuthLoginCertQpItem[this.AuthQpLabels.loginCert]);
+            quickPickOptions.push(this.tokenAuthLoginQpItem[this.AuthQpLabels.login]);
         } catch {
             ZoweLogger.debug(`Profile ${profile.name} doesn't support token authentication, will not provide option.`);
         }

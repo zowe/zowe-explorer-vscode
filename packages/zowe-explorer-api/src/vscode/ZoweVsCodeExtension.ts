@@ -117,8 +117,7 @@ export class ZoweVsCodeExtension {
         loginTokenType?: string,
         node?: Types.IZoweNodeType,
         zeRegister?: Types.IApiRegisterClient, // ZoweExplorerApiRegister
-        zeProfiles?: ProfilesCache, // Profiles extends ProfilesCache
-        useCerts?: boolean
+        zeProfiles?: ProfilesCache // Profiles extends ProfilesCache
     ): Promise<boolean> {
         const cache: ProfilesCache = zeProfiles ?? ZoweVsCodeExtension.profilesCache;
         const baseProfile = await cache.fetchBaseProfile();
@@ -141,13 +140,18 @@ export class ZoweVsCodeExtension {
         });
         delete updSession.ISession.user;
         delete updSession.ISession.password;
-        if (!useCerts) {
+        const qpItems: vscode.QuickPickItem[] = [
+            { label: "$(account) User and Password", description: "Log in with basic authentication" },
+            { label: "$(note) Certificate", description: "Log in with PEM format certificate file" },
+        ];
+        const response = await Gui.showQuickPick(qpItems, { placeHolder: "Select an authentication method for obtaining token" });
+        if (response === qpItems[0]) {
             const creds = await ZoweVsCodeExtension.promptUserPass({ session: updSession.ISession, rePrompt: true });
             if (!creds) {
                 return false;
             }
             updSession.ISession.base64EncodedAuth = imperative.AbstractSession.getBase64Auth(creds[0], creds[1]);
-        } else {
+        } else if (response === qpItems[1]) {
             const creds = await ZoweVsCodeExtension.promptCertificate({ session: updSession.ISession, rePrompt: true });
             if (!creds) {
                 return false;
@@ -155,6 +159,8 @@ export class ZoweVsCodeExtension {
             delete updSession.ISession.base64EncodedAuth;
             updSession.ISession.storeCookie = true;
             updSession.ISession.type = imperative.SessConstants.AUTH_TYPE_CERT_PEM;
+        } else {
+            return false;
         }
 
         const loginToken = await (zeRegister?.getCommonApi(serviceProfile).login ?? Login.apimlLogin)(updSession);
