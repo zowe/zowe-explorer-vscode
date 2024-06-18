@@ -19,6 +19,7 @@ export namespace Table {
     export type Axes = "row" | "column";
 
     export type RowContent = Record<string | number, string | number | boolean | string[] | Action | Action[]>;
+    export type Column = { field: string; filter?: boolean };
     export type Dividers = {
         rows: number[];
         columns: number[];
@@ -35,7 +36,7 @@ export namespace Table {
             row: number[];
         };
         // Column headers for the top of the table
-        columns: { field: string }[] | null;
+        columns: Column[] | null;
         // The row data for the table. Each row contains a set of variables corresponding to the data for each column in that row
         rows: RowContent[] | null;
         // The display title for the table
@@ -163,8 +164,8 @@ export namespace Table {
          * @param headers The headers to add to the existing header list
          * @returns Whether the webview successfully received the list of headers
          */
-        public async addColumns(...columns: string[]): Promise<boolean> {
-            this.data.columns.push(...columns.map((column) => ({ field: column })));
+        public async addColumns(...columns: Column[]): Promise<boolean> {
+            this.data.columns.push(...columns);
             return this.updateWebview();
         }
 
@@ -203,8 +204,8 @@ export namespace Table {
          * @param headers The new headers to use for the table
          * @returns Whether the webview successfully received the new headers
          */
-        public async setColumns(columns: string[]): Promise<boolean> {
-            this.data.columns = columns.map((column) => ({ field: column }));
+        public async setColumns(columns: Column[]): Promise<boolean> {
+            this.data.columns = columns;
             return this.updateWebview();
         }
 

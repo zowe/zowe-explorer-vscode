@@ -857,7 +857,17 @@
       },
       {
         "command": "zowe.tableView",
-        "title": "Open table view",
+        "title": "Show table view (basic)",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.tableView2",
+        "title": "Show table view (several entries)",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.tableView3",
+        "title": "Show table view (all features)",
         "category": "Zowe Explorer"
       }
     ],

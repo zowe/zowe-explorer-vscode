@@ -32,6 +32,7 @@ import { ProfilesUtils } from "../../utils/ProfilesUtils";
 import { DatasetFSProvider } from "../dataset/DatasetFSProvider";
 import { ExtensionUtils } from "../../utils/ExtensionUtils";
 import type { Definitions } from "../../configuration/Definitions";
+import { randomInt, randomUUID } from "crypto";
 
 export class SharedInit {
     public static registerRefreshCommand(
@@ -239,9 +240,23 @@ export class SharedInit {
                                 year: 2022,
                             }
                         )
-                        .columns(["make", "model", "year"])
+                        .columns([{ field: "make" }, { field: "model" }, { field: "year" }])
                         .build();
                     await table.addContent({ make: "Toyota", model: "Corolla", year: 2007 });
+                })
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.tableView2", () => {
+                    new TableBuilder(context)
+                        .title("Random data")
+                        .rows(
+                            ...Array.from({ length: 1024 }, (val) => ({
+                                name: randomUUID(),
+                                value: randomInt(2147483647),
+                            }))
+                        )
+                        .columns([{ field: "name", filter: true }, { field: "value" }])
+                        .build();
                 })
             );
             // initialize the Constants.filesToCompare array during initialization

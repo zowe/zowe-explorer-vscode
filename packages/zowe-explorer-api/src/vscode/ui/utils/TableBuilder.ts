@@ -80,8 +80,8 @@ export class TableBuilder {
      * @param rows The headers to use for the table
      * @returns The same {@link TableBuilder} instance with the headers added
      */
-    public columns(newColumns: string[]): TableBuilder {
-        this.data.columns = newColumns.map((column) => ({ field: column }));
+    public columns(newColumns: Table.Column[]): TableBuilder {
+        this.data.columns = newColumns;
         return this;
     }
 
