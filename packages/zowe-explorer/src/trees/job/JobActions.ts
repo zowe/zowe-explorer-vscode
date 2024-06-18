@@ -241,17 +241,6 @@ export class JobActions {
     }
 
     /**
-     * Refresh a node in the job tree
-     *
-     * @param node The node to refresh
-     * @param jobsProvider The tree to which the refreshed node belongs
-     */
-    public static refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: Types.IZoweJobTreeType): void {
-        ZoweLogger.trace("job.actions.refreshJobsServer called.");
-        jobsProvider.refreshElement(node);
-    }
-
-    /**
      * Refresh a job node information and spool files in the job tree
      *
      * @param job The job node to refresh

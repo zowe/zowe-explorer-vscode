@@ -59,9 +59,6 @@
   "addSession": {
     "Add Profile to Data Sets View": ""
   },
-  "editSession": {
-    "Edit Team Config File": ""
-  },
   "createDataset": {
     "Create New Data Set": ""
   },
@@ -116,12 +113,6 @@
   "removeFavorite": {
     "Remove Favorite": ""
   },
-  "removeSavedSearch": {
-    "Remove Search": ""
-  },
-  "removeSession": {
-    "Hide Profile": ""
-  },
   "saveSearch": {
     "Add to Favorites": ""
   },
@@ -158,17 +149,8 @@
   "uss.refreshDirectory": {
     "Refresh Directory": ""
   },
-  "uss.removeSession": {
-    "Hide Profile": ""
-  },
-  "uss.binary": {
-    "Toggle Binary": ""
-  },
   "uss.uploadDialog": {
     "Upload Files...": ""
-  },
-  "uss.text": {
-    "Toggle Text": ""
   },
   "jobs.search": {
     "Search Jobs": ""
@@ -181,12 +163,6 @@
   },
   "runStopCommand": {
     "Issue Stop command": ""
-  },
-  "setOwner": {
-    "Set Owner": ""
-  },
-  "setPrefix": {
-    "Set Job Prefix": ""
   },
   "refreshJobsServer": {
     "Refresh": ""
@@ -208,9 +184,6 @@
   },
   "getJobJcl": {
     "Get JCL": ""
-  },
-  "setJobSpool": {
-    "Set Spool": ""
   },
   "configuration.title": {
     "Zowe Explorer": ""
@@ -341,12 +314,6 @@
   "zowe.pollInterval.info": {
     "Default interval (in milliseconds) when polling spool files.": ""
   },
-  "zowe.separator.recentFilters": {
-    "Recent Filters": ""
-  },
-  "zowe.settings.version": {
-    "Track if migration has been processed": ""
-  },
   "zowe.security.checkForCustomCredentialManagers": {
     "Check for any installed VS Code extensions for handling credentials when activating Zowe Explorer": ""
   },
@@ -357,9 +324,6 @@
     "Issue TSO Command": ""
   },
   "deleteProfile": {
-    "Delete Profile": ""
-  },
-  "cmd.deleteProfile": {
     "Delete a Profile Permanently...": ""
   },
   "renameDataSet": {
@@ -367,9 +331,6 @@
   },
   "renameMember": {
     "Rename Member": ""
-  },
-  "copyDataSet": {
-    "Copy Data Set": ""
   },
   "paste": {
     "Paste": ""
@@ -382,33 +343,6 @@
   },
   "showFileErrorDetails": {
     "Show Error Details": ""
-  },
-  "profile.configuration.title": {
-    "Zowe z/OSMF Profiles": ""
-  },
-  "profile.configuration.name": {
-    "Profile Name": ""
-  },
-  "profile.configuration.url": {
-    "z/OSMF URL": ""
-  },
-  "profile.configuration.user": {
-    "z/OSMF User Name": ""
-  },
-  "profile.configuration.ru": {
-    "Profile Reject Unauthorize": ""
-  },
-  "disableValidation": {
-    "Disable Validation for Profile": ""
-  },
-  "enableValidation": {
-    "Enable Validation for Profile": ""
-  },
-  "ssoLogin": {
-    "Log in to Authentication Service": ""
-  },
-  "ssoLogout": {
-    "Log out from Authentication Service": ""
   },
   "jobs.refreshJob": {
     "Refresh Job": ""
@@ -424,9 +358,6 @@
   },
   "downloadSingleSpoolBinary": {
     "Download (Binary)": ""
-  },
-  "downloadSingleSpool.error": {
-    "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).": ""
   },
   "all.configInit": {
     "Initialize Team Configuration File": ""
@@ -463,9 +394,6 @@
   },
   "compareWithSelectedReadOnly": {
     "Compare with Selected (Read-Only)": ""
-  },
-  "compareFileStarted": {
-    "A file has been chosen for compare": ""
   },
   "openWithEncoding": {
     "Open with Encoding": ""
@@ -540,6 +468,12 @@
   "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.": "",
   "Uploading USS files...": "",
   "Error uploading files": "",
+  "The 'move' function is not implemented for this USS API.": "",
+  "Could not list USS files: Empty path provided in URI": "",
+  "Profile does not exist for this file.": "",
+  "$(sync~spin) Saving USS file...": "",
+  "Renaming {0} failed due to API error: {1}": "",
+  "Deleting {0} failed due to API error: {1}": "",
   "Downloaded: {0}": "",
   "Encoding: {0}": "",
   "Binary": "",
@@ -567,12 +501,6 @@
   "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: {0}.\n                     To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's USS view.\n                      Would you like to do this now? {1}": "",
   "initializeUSSFavorites.error.buttonRemove": "",
   "File does not exist. It may have been deleted.": "",
-  "The 'move' function is not implemented for this USS API.": "",
-  "Could not list USS files: Empty path provided in URI": "",
-  "Profile does not exist for this file.": "",
-  "$(sync~spin) Saving USS file...": "",
-  "Renaming {0} failed due to API error: {1}": "",
-  "Deleting {0} failed due to API error: {1}": "",
   "{0} location": "",
   "Choose a location to create the {0}": "",
   "Name of file or directory": "",

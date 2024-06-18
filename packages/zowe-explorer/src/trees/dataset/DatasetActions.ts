@@ -1212,7 +1212,7 @@ export class DatasetActions {
         } else {
             node.getSessionNode().dirty = true;
         }
-        datasetProvider.removeFavorite(node);
+        await datasetProvider.removeFavorite(node);
 
         const isMember = SharedContext.isDsMember(node);
 
@@ -1351,18 +1351,6 @@ export class DatasetActions {
             node.iconPath = icon.path;
         }
         datasetProvider.addSearchHistory(node.pattern);
-    }
-
-    /**
-     * Copy data set info
-     *
-     * @export
-     * @deprecated Please use copyDataSets
-     * @param {IZoweNodeType} node - The node to copy
-     */
-    public static async copyDataSet(node: Types.IZoweNodeType): Promise<void> {
-        ZoweLogger.trace("dataset.actions.copyDataSet called.");
-        return vscode.env.clipboard.writeText(JSON.stringify(DatasetUtils.getNodeLabels(node)));
     }
 
     /**

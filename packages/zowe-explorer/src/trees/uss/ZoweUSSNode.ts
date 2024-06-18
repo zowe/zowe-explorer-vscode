@@ -423,16 +423,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     /**
-     * Refreshes node and reopens it.
-     * @param hasClosedInstance
-     * @deprecated To be removed by version 2.0. Use reopen instead.
-     */
-    public async refreshAndReopen(hasClosedInstance = false): Promise<void> {
-        ZoweLogger.trace("ZoweUSSNode.refreshAndReopen called.");
-        await this.reopen(hasClosedInstance);
-    }
-
-    /**
      * Helper method which sets an icon of node and initiates reloading of tree
      * @param iconPath
      */

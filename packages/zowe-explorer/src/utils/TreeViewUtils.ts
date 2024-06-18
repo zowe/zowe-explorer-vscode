@@ -58,7 +58,7 @@ export class TreeViewUtils {
         };
     }
 
-    public static removeSession(treeProvider: IZoweTree<IZoweTreeNode>, profileName: string): void {
+    public static async removeSession(treeProvider: IZoweTree<IZoweTreeNode>, profileName: string): Promise<void> {
         ZoweLogger.trace("SessionUtils.removeSession called.");
         const treeType = treeProvider.getTreeType();
         if (treeType !== PersistenceSchemaEnum.Job) {
@@ -73,7 +73,7 @@ export class TreeViewUtils {
                 });
         }
         // Delete from Favorites
-        treeProvider.removeFavProfile(profileName, false);
+        await treeProvider.removeFavProfile(profileName, false);
         // Delete from Tree
         treeProvider.mSessionNodes.forEach((sessNode) => {
             if (sessNode.getProfileName() === profileName) {
