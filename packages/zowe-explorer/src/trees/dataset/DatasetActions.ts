@@ -293,7 +293,7 @@ export class DatasetActions {
                 const newTemplate: Types.DataSetAllocTemplate = {
                     [templateName]: dsPropsForAPI,
                 };
-                datasetProvider.addDsTemplate(newTemplate);
+                await datasetProvider.addDsTemplate(newTemplate);
             }
         });
     }

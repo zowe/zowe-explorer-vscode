@@ -5,6 +5,7 @@
 - Removed support for v1 Profiles
 - Updated supported VS Code engine to 1.79.0
 - Drop support for Theia IDE
+- Moved Data Set Templates, formerly in `zowe.ds.history` that has moved to internal storage. With the request to have data set templates shareable via workspace it will now migrate existing to `zowe.ds.templates` when other history items are moved.
 
 ## Removal of deprecated APIs from Extensibility API for Zowe Explorer
 

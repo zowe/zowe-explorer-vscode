@@ -21,7 +21,15 @@ describe("SettingsConfig Unit Tests", () => {
         Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
         Object.defineProperty(ZoweLocalStorage, "storage", {
             value: {
-                get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
+                get: () => ({
+                    persistence: true,
+                    favorites: [],
+                    history: [],
+                    sessions: ["zosmf"],
+                    searchHistory: [],
+                    fileHistory: [],
+                    templates: [],
+                }),
                 update: jest.fn(),
                 keys: () => [],
             },
@@ -41,6 +49,41 @@ describe("SettingsConfig Unit Tests", () => {
             const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
             const promptReloadSpy = jest.spyOn(SettingsConfig as any, "promptReload");
             await (SettingsConfig as any).migrateToLocalStorage();
+            expect(setValueSpy).toHaveBeenCalledTimes(6);
+            expect(promptReloadSpy).toHaveBeenCalledTimes(1);
+        });
+        it("should successfully migrate to local storage and update data set templates to new setting", async () => {
+            jest.spyOn(SettingsConfig as any, "configurations", "get").mockReturnValue({
+                inspect: () => ({ globalValue: "test" }),
+            });
+            jest.spyOn(SettingsConfig as any, "getDirectValue").mockReturnValue({
+                get: () => ({
+                    persistence: true,
+                    favorites: [],
+                    history: [],
+                    sessions: ["zosmf"],
+                    searchHistory: [],
+                    fileHistory: [],
+                    templates: [
+                        {
+                            mockTemplate1: {
+                                alcunit: "CYL",
+                                blksize: 3130,
+                                dirblk: 35,
+                                dsorg: "PO",
+                                lrecl: 40,
+                                primary: 1,
+                                recfm: "FB",
+                            },
+                        },
+                    ],
+                }),
+            });
+            const templateSpy = jest.spyOn(SettingsConfig, "setMigratedDsTemplates");
+            const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
+            const promptReloadSpy = jest.spyOn(SettingsConfig as any, "promptReload");
+            await (SettingsConfig as any).migrateToLocalStorage();
+            expect(templateSpy).toHaveBeenCalledTimes(1);
             expect(setValueSpy).toHaveBeenCalledTimes(6);
             expect(promptReloadSpy).toHaveBeenCalledTimes(1);
         });

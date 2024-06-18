@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweDatasetTreeNode, ZoweScheme, imperative } from "@zowe/zowe-explorer-api";
+import { IZoweDatasetTreeNode, ZoweScheme, imperative, Gui } from "@zowe/zowe-explorer-api";
 import { DatasetTree } from "./DatasetTree";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { DatasetActions } from "./DatasetActions";
@@ -52,11 +52,13 @@ export class DatasetInit {
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.refreshNode", async (node, nodeList) => {
+                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Pulling from Mainframe..."));
                 let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
                 selectedNodes = selectedNodes.filter((element) => SharedContext.isDs(element) || SharedContext.isDsMember(element));
                 for (const item of selectedNodes) {
                     await DatasetActions.refreshPS(item as IZoweDatasetTreeNode);
                 }
+                statusMsg.dispose();
             })
         );
         context.subscriptions.push(

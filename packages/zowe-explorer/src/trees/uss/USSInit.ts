@@ -53,6 +53,7 @@ export class USSInit {
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.refreshUSS", async (node, nodeList) => {
+                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Pulling from Mainframe..."));
                 let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
                 selectedNodes = selectedNodes.filter((x) => SharedContext.isDocument(x));
                 for (const item of selectedNodes) {
@@ -63,13 +64,14 @@ export class USSInit {
                         if (!(await FsAbstractUtils.confirmForUnsavedDoc(node.resourceUri))) {
                             return;
                         }
-                        const statusMsg = Gui.setStatusBarMessage("$(sync~spin) Fetching USS file...");
+                        const statusMsg2 = Gui.setStatusBarMessage("$(sync~spin) Fetching USS file...");
                         // need to pull content for file and apply to FS entry
                         await UssFSProvider.instance.fetchFileAtUri(item.resourceUri, {
                             editor: vscode.window.visibleTextEditors.find((v) => v.document.uri.path === item.resourceUri.path),
                         });
-                        statusMsg.dispose();
+                        statusMsg2.dispose();
                     }
+                    statusMsg.dispose();
                 }
             })
         );

@@ -14,6 +14,7 @@ import { Gui, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Constants } from "./Constants";
 import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
 import { Definitions } from "./Definitions";
+import { ZoweLogger } from "../tools/ZoweLogger";
 
 export class SettingsConfig {
     /**
@@ -84,6 +85,9 @@ export class SettingsConfig {
     }
 
     public static async standardizeSettings(): Promise<void> {
+        // uncomment next line to mock setting being false for dev & test if local storage already been activated.
+        // ZoweLocalStorage.setValue<boolean>(Definitions.LocalStorageKey.SETTINGS_LOCAL_STORAGE_MIGRATED, false);
+
         const localStorageIsMigrated = ZoweLocalStorage.getValue<boolean>(Definitions.LocalStorageKey.SETTINGS_LOCAL_STORAGE_MIGRATED);
         const globalIsMigrated = ZoweLocalStorage.getValue<boolean>(Definitions.LocalStorageKey.SETTINGS_OLD_SETTINGS_MIGRATED);
         const workspaceIsMigrated = SettingsConfig.configurations.inspect(Definitions.LocalStorageKey.SETTINGS_OLD_SETTINGS_MIGRATED).workspaceValue;
@@ -205,12 +209,27 @@ export class SettingsConfig {
             return SettingsConfig.configurations.inspect(setting).globalValue;
         });
         if (vscodePersistentSettings.length > 0) {
-            vscodePersistentSettings.forEach((setting) => {
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
+            vscodePersistentSettings.forEach(async (setting) => {
+                ZoweLogger.debug(setting.toString());
+                if (setting === PersistenceSchemaEnum.Dataset) {
+                    await this.setMigratedDsTemplates();
+                }
                 ZoweLocalStorage.setValue(setting, SettingsConfig.configurations.inspect(setting).globalValue);
                 SettingsConfig.setDirectValue(setting, undefined, vscode.ConfigurationTarget.Global);
             });
             ZoweLocalStorage.setValue(Definitions.LocalStorageKey.SETTINGS_LOCAL_STORAGE_MIGRATED, true);
             await SettingsConfig.promptReload();
+        }
+    }
+
+    public static async setMigratedDsTemplates(): Promise<void> {
+        const settings: any = this.getDirectValue(PersistenceSchemaEnum.Dataset);
+        for (const key in settings) {
+            if (key === "templates") {
+                const templateSetting = settings[key];
+                await this.setDirectValue(Constants.SETTINGS_DS_TEMPLATES, templateSetting);
+            }
         }
     }
 
