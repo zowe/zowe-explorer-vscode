@@ -33,8 +33,13 @@ export function App() {
     rows: null,
     title: "",
   });
+  const [baseTheme, setBaseTheme] = useState<string>("ag-theme-quartz");
 
   useEffect(() => {
+    const userTheme = document.body.getAttribute("data-vscode-theme-kind");
+    if (userTheme === "vscode-dark") {
+      setBaseTheme("ag-theme-quartz-dark");
+    }
     window.addEventListener("message", (event: any): void => {
       if (!isSecureOrigin(event.origin)) {
         return;
@@ -55,12 +60,18 @@ export function App() {
       }
     });
     vscodeApi.postMessage({ command: "ready" });
+
+    const mutationObserver = new MutationObserver((_mutations, _observer) => {
+      const themeAttr = document.body.getAttribute("data-vscode-theme-kind");
+      setBaseTheme(themeAttr === "vscode-dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz");
+    });
+    mutationObserver.observe(document.body, { attributes: true });
   }, []);
 
   return (
     <>
       {tableData.title ? <h1>{tableData.title}</h1> : null}
-      <div className="ag-theme-quartz-dark ag-theme-vsc">
+      <div className={`${baseTheme} ag-theme-vsc`}>
         <AgGridReact {...tableProps(tableData)} />
       </div>
     </>

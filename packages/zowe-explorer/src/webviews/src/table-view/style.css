@@ -7,6 +7,7 @@
     --ag-range-selection-highlight-color: var(--vscode-list-activeSelectionForeground);
     --ag-background-color: var(--vscode-editor-background);
     --ag-control-panel-background-color: var(--vscode-editorWidget-background);
+    --ag-tooltip-background-color: var(--vscode-editorWidget-background);
     --ag-border-color: var(--vscode-editorWidget-border);
     --ag-header-background-color: var(--vscode-keybindingTable-headerBackground);
     --ag-range-selection-border-color: var(--vscode-tab-activeForeground);
