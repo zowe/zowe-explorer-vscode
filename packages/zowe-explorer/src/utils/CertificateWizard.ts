@@ -11,11 +11,12 @@
 
 import { Gui, WebView } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
+import { ZoweLogger } from "../tools/ZoweLogger";
 
 export type CertWizardOpts = {
     cert?: string;
     certKey?: string;
-    dialogOpts: vscode.OpenDialogOptions;
+    dialogOpts?: vscode.OpenDialogOptions;
 };
 
 class DeferredPromise<T> {
@@ -31,10 +32,10 @@ class DeferredPromise<T> {
     }
 }
 
+const allFiles = vscode.l10n.t("All Files");
 const userDismissed = vscode.l10n.t("User dismissed the certificate wizard.");
 
 export class CertificateWizard extends WebView {
-    private onUpdateDisposable: Disposable;
     private opts: CertWizardOpts;
     public userSubmission: DeferredPromise<{
         cert: string;
@@ -42,7 +43,7 @@ export class CertificateWizard extends WebView {
     }> = new DeferredPromise();
 
     public constructor(context: vscode.ExtensionContext, opts: CertWizardOpts) {
-        super("Certificate Wizard", "certificate-wizard", context, (message: object) => this.onDidReceiveMessage(message));
+        super(vscode.l10n.t("Certificate Wizard"), "certificate-wizard", context, (message: object) => this.onDidReceiveMessage(message));
         this.opts = opts;
         this.panel.onDidDispose(() => {
             this.userSubmission.reject(userDismissed);
@@ -54,13 +55,13 @@ export class CertificateWizard extends WebView {
             case "promptCert":
                 {
                     const tempCert = await Gui.showOpenDialog({
-                        title: "Enter the path to the certificate for authenticating the connection.",
-                        canSelectFiles: true,
-                        canSelectFolders: false,
-                        canSelectMany: false,
+                        title: vscode.l10n.t("Enter the path to the certificate for authenticating the connection."),
                         defaultUri: this.opts.cert ? vscode.Uri.file(this.opts.cert) : undefined,
-                        filters: { "Certificate Files": ["cer", "crt", "pem"], "All Files": ["*"] },
-                        openLabel: "Select Certificate",
+                        filters: {
+                            [vscode.l10n.t("Certificate Files")]: ["cer", "crt", "pem"],
+                            [allFiles]: ["*"],
+                        },
+                        openLabel: vscode.l10n.t("Select Certificate"),
                         ...(this.opts.dialogOpts ?? {}),
                     });
                     if (tempCert != null && tempCert[0] != null) {
@@ -76,13 +77,13 @@ export class CertificateWizard extends WebView {
             case "promptCertKey":
                 {
                     const tempCertKey = await Gui.showOpenDialog({
-                        title: "Enter the path to the certificate key for authenticating the connection.",
-                        canSelectFiles: true,
-                        canSelectFolders: false,
-                        canSelectMany: false,
+                        title: vscode.l10n.t("Enter the path to the certificate key for authenticating the connection."),
                         defaultUri: this.opts.certKey ? vscode.Uri.file(this.opts.certKey) : undefined,
-                        filters: { "Certificate Keys": ["cer", "crt", "pem", "key"], "All Files": ["*"] },
-                        openLabel: "Select Certificate Key",
+                        filters: {
+                            [vscode.l10n.t("Certificate Keys")]: ["cer", "crt", "pem", "key"],
+                            [allFiles]: ["*"],
+                        },
+                        openLabel: vscode.l10n.t("Select Certificate Key"),
                         ...(this.opts.dialogOpts ?? {}),
                     });
                     if (tempCertKey != null && tempCertKey[0] != null) {
@@ -110,6 +111,7 @@ export class CertificateWizard extends WebView {
                 setImmediate(() => {
                     this.panel.dispose();
                 });
+                ZoweLogger.trace(userDismissed);
                 break;
             default:
                 break;

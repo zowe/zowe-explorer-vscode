@@ -29,6 +29,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
   - ssoLogin
   - ssoLogout
 - Added an optional function `openWithEncoding` to the `IZoweTree` interface to open file using encoding specified by user. [#2931](https://github.com/zowe/zowe-explorer-vscode/pull/2931)
+- Added PEM certificate support as an authentication method for logging into the API ML. [#2621](https://github.com/zowe/zowe-explorer-vscode/issues/2621)
 
 ### Bug fixes
 

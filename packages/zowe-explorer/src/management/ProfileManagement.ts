@@ -114,7 +114,7 @@ export class ProfileManagement {
         },
     };
     public static tokenAuthLoginQpItem: Record<string, vscode.QuickPickItem> = {
-        [this.AuthQpLabels.login]: {
+        [ProfileManagement.AuthQpLabels.login]: {
             label: vscode.l10n.t("$(arrow-right) Log in to authentication service"),
             description: vscode.l10n.t("Log in to obtain a new token value"),
         },
