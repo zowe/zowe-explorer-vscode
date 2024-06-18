@@ -25,6 +25,10 @@ import { getZoweDir, Gui, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
+import { DatasetTree } from "../../src/dataset/DatasetTree";
+import { USSTree } from "../../src/uss/USSTree";
+import { ZosJobsProvider } from "../../src/job/ZosJobsProvider";
+import { TreeProviders } from "../../src/shared/TreeProviders";
 jest.mock("fs");
 
 describe("ZoweExplorerExtender unit tests", () => {
@@ -74,6 +78,7 @@ describe("ZoweExplorerExtender unit tests", () => {
             value: jest.fn(),
             configurable: true,
         });
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation();
         return newMocks;
     }
 
@@ -103,6 +108,31 @@ describe("ZoweExplorerExtender unit tests", () => {
         jest.spyOn(blockMocks.instTest.jobsProvider, "addSession");
         await blockMocks.instTest.reloadProfiles();
         expect(blockMocks.instTest.jobsProvider.addSession).toHaveBeenCalled();
+    });
+
+    it("calls all addSessions once when extender profiles are reloaded", async () => {
+        const blockMocks = await createBlockMocks();
+        const datasetSessionNode = createDatasetSessionNode(blockMocks.session, blockMocks.altTypeProfile);
+        const datasetTree = createDatasetTree(datasetSessionNode, blockMocks.altTypeProfile);
+        const ussSessionNode = createUSSSessionNode(blockMocks.session, blockMocks.imperativeProfile);
+        const ussTree = createUSSTree([], [ussSessionNode], blockMocks.treeView);
+        const testJob = createIJobObject();
+        const jobsTree = createJobsTree(blockMocks.session, testJob, blockMocks.altTypeProfile, blockMocks.treeView);
+        ZoweExplorerExtender.createInstance(datasetTree, ussTree, jobsTree);
+        jest.spyOn(TreeProviders, "providers", "get").mockReturnValue({ ds: datasetTree, uss: ussTree, job: jobsTree });
+        jest.spyOn(blockMocks.instTest.datasetProvider, "addSession").mockImplementation(DatasetTree.prototype.addSession);
+        jest.spyOn(blockMocks.instTest.ussFileProvider, "addSession").mockImplementation(USSTree.prototype.addSession);
+        jest.spyOn(blockMocks.instTest.jobsProvider, "addSession").mockImplementation(ZosJobsProvider.prototype.addSession);
+        jest.spyOn(blockMocks.instTest.datasetProvider as any, "addSessionForProvider");
+        jest.spyOn(blockMocks.instTest.ussFileProvider as any, "addSessionForProvider");
+        jest.spyOn(blockMocks.instTest.jobsProvider as any, "addSessionForProvider");
+        await blockMocks.instTest.reloadProfiles();
+        expect(blockMocks.instTest.datasetProvider.addSession).toHaveBeenCalledTimes(1);
+        expect(blockMocks.instTest.ussFileProvider.addSession).toHaveBeenCalledTimes(1);
+        expect(blockMocks.instTest.jobsProvider.addSession).toHaveBeenCalledTimes(1);
+        expect((blockMocks.instTest.datasetProvider as any).addSessionForProvider).toHaveBeenCalledTimes(1);
+        expect((blockMocks.instTest.ussFileProvider as any).addSessionForProvider).toHaveBeenCalledTimes(1);
+        expect((blockMocks.instTest.jobsProvider as any).addSessionForProvider).toHaveBeenCalledTimes(1);
     });
     it("does not use any tree providers when the created instance does not provide them", async () => {
         const blockMocks = await createBlockMocks();

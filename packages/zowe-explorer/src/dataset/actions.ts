@@ -254,12 +254,14 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
     let includedSelection = false;
     if (node) {
         for (const item of selectedNodes) {
-            if (node.getLabel().toString() === item.getLabel().toString()) {
+            if (
+                node.getLabel().toString() === item.getLabel().toString() &&
+                node.getParent().getLabel().toString() === item.getParent().getLabel().toString()
+            ) {
                 includedSelection = true;
             }
         }
     }
-
     // Check that child and parent aren't both in array, removing children whose parents are in
     // array to avoid errors from host when deleting none=existent children.
     const childArray: api.IZoweDatasetTreeNode[] = [];
@@ -273,7 +275,6 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
         }
     }
     selectedNodes = selectedNodes.filter((val) => !childArray.includes(val));
-
     if (includedSelection || !node) {
         // Filter out sessions and information messages
         nodes = selectedNodes.filter(

@@ -62,7 +62,7 @@ export async function createUSSTree(log: imperative.Logger): Promise<USSTree> {
     ZoweLogger.trace("uss.USSTree.createUSSTree called.");
     const tree = new USSTree();
     await tree.initializeFavorites(log);
-    await tree.addSession(undefined, undefined, tree);
+    await tree.addSession();
     return tree;
 }
 
@@ -330,7 +330,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param {string} [sessionName] - optional; loads persisted profiles or default if not passed
      * @param {string} [profileType] - optional; loads profiles of a certain type if passed
      */
-    public async addSession(sessionName?: string, profileType?: string, provider?: IZoweTree<IZoweTreeNode>): Promise<void> {
+    public async addSession(sessionName?: string, profileType?: string, provider: IZoweTree<IZoweTreeNode> = this): Promise<void> {
         ZoweLogger.trace("USSTree.addSession called.");
         await super.addSession(sessionName, profileType, provider);
     }

@@ -225,7 +225,7 @@ export class ZoweTreeProvider {
             } else {
                 zoweFileProvider.deleteSession(node.getSessionNode());
                 this.mHistory.addSession(node.label as string);
-                await zoweFileProvider.addSession(node.getProfileName(), undefined, zoweFileProvider);
+                await zoweFileProvider.addSession(node.getProfileName());
             }
             this.refresh();
             // Remove the edited profile from profilesForValidation
@@ -360,22 +360,18 @@ export class ZoweTreeProvider {
         profileType: string,
         isUsingAutomaticProfileValidation: boolean
     ): Promise<void> {
-        const profiles: imperative.IProfileLoaded[] = await Profiles.getInstance().fetchAllProfiles();
-        if (profiles) {
-            for (const profile of profiles) {
-                if (!treeProvider.mSessionNodes.find((mSessionNode) => mSessionNode.label.toString().trim() === profile.name.trim())) {
-                    for (const session of treeProvider.getSessions()) {
-                        if (session && session.trim() === profile.name) {
-                            await treeProvider.addSingleSession(profile);
-                            for (const node of treeProvider.mSessionNodes) {
-                                if (node.label !== "Favorites") {
-                                    const name = node.getProfileName();
-                                    if (name === profile.name) {
-                                        resetValidationSettings(node, isUsingAutomaticProfileValidation);
-                                    }
-                                }
-                            }
-                        }
+        const profiles: imperative.IProfileLoaded[] = profileType
+            ? await Profiles.getInstance().fetchAllProfilesByType(profileType)
+            : await Profiles.getInstance().fetchAllProfiles();
+        for (const profile of profiles) {
+            const existingSessionNode = treeProvider.mSessionNodes.find((node) => node.label.toString().trim() === profile.name);
+            const sessionInHistory = treeProvider.getSessions().some((session) => session?.trim() === profile.name);
+            if (!existingSessionNode && sessionInHistory) {
+                await treeProvider.addSingleSession(profile);
+                for (const node of treeProvider.mSessionNodes) {
+                    if (node.label !== "Favorites" && node.getProfileName() === profile.name) {
+                        resetValidationSettings(node, isUsingAutomaticProfileValidation);
+                        break;
                     }
                 }
             }

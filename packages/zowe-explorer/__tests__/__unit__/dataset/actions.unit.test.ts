@@ -79,6 +79,7 @@ function createGlobalMocks() {
     newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
     newMocks.datasetSessionFavNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
     newMocks.testFavoritesNode.children.push(newMocks.datasetSessionFavNode);
+    jest.spyOn(Gui, "createTreeView").mockReturnValue({ onDidCollapseElement: jest.fn() } as any);
     newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView, newMocks.testFavoritesNode);
     newMocks.mvsApi = createMvsApi(newMocks.imperativeProfile);
     newMocks.getContentsSpy = jest.spyOn(newMocks.mvsApi, "getContents");
@@ -707,6 +708,21 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.withProgress).mock.calls.length).toBe(0);
+    });
+
+    it("test when selected node is sent", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [blockMocks.testMemberNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree, blockMocks.testMemberNode);
+        expect(mocked(Gui.showMessage)).toBeCalledWith(
+            `The following 1 item(s) were deleted: ${blockMocks.testMemberNode.getParent().getLabel()}(${blockMocks.testMemberNode.getLabel()})`
+        );
     });
 });
 
@@ -3035,6 +3051,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
+        mocked(vscode.workspace.getConfiguration).mockClear();
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
         createDataSetSpy.mockReset();
         const node = new ZoweDatasetNode({
