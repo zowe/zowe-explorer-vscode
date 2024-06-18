@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweJobTreeNode, IZoweTreeNode, ZoweScheme, imperative } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, IZoweTreeNode, ZoweScheme, imperative, Gui } from "@zowe/zowe-explorer-api";
 import { JobTree } from "./JobTree";
 import { JobActions } from "./JobActions";
 import { ZoweJobNode } from "./ZoweJobNode";
@@ -62,7 +62,7 @@ export class JobInit {
             })
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.jobs.refreshJobsServer", async (job) => JobActions.refreshJobsServer(job, jobsProvider))
+            vscode.commands.registerCommand("zowe.jobs.refreshJobsServer", (job) => JobActions.refreshJobsServer(job, jobsProvider))
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.jobs.refreshAllJobs", async () => {
@@ -72,7 +72,13 @@ export class JobInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.jobs.refreshJob", (job) => JobActions.refreshJob(job.mParent, jobsProvider))
         );
-        context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.refreshSpool", async (node) => JobFSProvider.refreshSpool(node)));
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.jobs.refreshSpool", async (node) => {
+                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Pulling from Mainframe..."));
+                await JobFSProvider.refreshSpool(node);
+                statusMsg.dispose();
+            })
+        );
 
         const downloadSingleSpoolHandler = (binary: boolean) => async (node, nodeList) => {
             const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
@@ -195,6 +201,7 @@ export class JobInit {
                 async (job: IZoweJobTreeNode): Promise<vscode.InputBox> => jobsProvider.filterJobsDialog(job)
             )
         );
+        context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.copyName", async (job: IZoweJobTreeNode) => JobActions.copyName(job)));
         context.subscriptions.push(
             vscode.workspace.onDidOpenTextDocument((doc) => {
                 if (doc.uri.scheme !== ZoweScheme.Jobs) {

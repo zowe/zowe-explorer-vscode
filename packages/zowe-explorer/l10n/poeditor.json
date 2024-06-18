@@ -137,6 +137,9 @@
   "uss.copyPath": {
     "Copy Path": ""
   },
+  "uss.copyRelativePath": {
+    "Copy Relative Path": ""
+  },
   "uss.createDirectory": {
     "Create New Directory": ""
   },
@@ -238,6 +241,9 @@
   },
   "zowe.ds.history": {
     "Toggle if favorite files persist locally": ""
+  },
+  "zowe.ds.templates": {
+    "Zowe Explorer saved data set templates": ""
   },
   "zowe.files.logsFolder.path": {
     "Path to Zowe Explorer logs folder": ""
@@ -449,6 +455,9 @@
   "selectForCompare": {
     "Select for Compare": ""
   },
+  "copyName": {
+    "Copy Name": ""
+  },
   "compareWithSelected": {
     "Compare with Selected": ""
   },
@@ -531,12 +540,6 @@
   "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.": "",
   "Uploading USS files...": "",
   "Error uploading files": "",
-  "The 'move' function is not implemented for this USS API.": "",
-  "Could not list USS files: Empty path provided in URI": "",
-  "Profile does not exist for this file.": "",
-  "$(sync~spin) Saving USS file...": "",
-  "Renaming {0} failed due to API error: {1}": "",
-  "Deleting {0} failed due to API error: {1}": "",
   "Downloaded: {0}": "",
   "Encoding: {0}": "",
   "Binary": "",
@@ -564,6 +567,12 @@
   "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: {0}.\n                     To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's USS view.\n                      Would you like to do this now? {1}": "",
   "initializeUSSFavorites.error.buttonRemove": "",
   "File does not exist. It may have been deleted.": "",
+  "The 'move' function is not implemented for this USS API.": "",
+  "Could not list USS files: Empty path provided in URI": "",
+  "Profile does not exist for this file.": "",
+  "$(sync~spin) Saving USS file...": "",
+  "Renaming {0} failed due to API error: {1}": "",
+  "Deleting {0} failed due to API error: {1}": "",
   "{0} location": "",
   "Choose a location to create the {0}": "",
   "Name of file or directory": "",
@@ -575,6 +584,7 @@
   "Copying file structure...": "",
   "The paste operation is not supported for this node.": "",
   "Pasting files...": "",
+  "copyName was called on USS node {0}, but its fullPath is invalid.": "",
   "Invalid job owner": "",
   "Invalid job prefix": "",
   "Failed to parse a saved favorite. Attempted to parse: {0}": "",
@@ -691,6 +701,14 @@
   "Invalid date format specified": "",
   "Enter a value to filter by": "",
   "Invalid filter specified": "",
+  "Getting data set templates.": "",
+  "Resetting data set templates array.": "",
+  "Updating data set templates.": "",
+  "Adding new data set template {0}.": "",
+  "Data set template save location": "",
+  "Choose the setting location to save the data set template...": "",
+  "Save as User setting": "",
+  "Save as Workspace setting": "",
   "$(sync~spin) Saving data set...": "",
   "Partitioned Data Set: Binary": "",
   "Partitioned Data Set: C": "",

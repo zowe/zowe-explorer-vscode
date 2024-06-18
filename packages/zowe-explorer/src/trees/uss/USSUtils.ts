@@ -82,7 +82,7 @@ export class USSUtils {
     }
 
     public static async autoDetectEncoding(node: IZoweUSSTreeNode, profile?: imperative.IProfileLoaded): Promise<void> {
-        if (node.binary || node.encoding !== undefined) {
+        if ((await node.getEncoding())?.kind === "binary" || (await node.getEncoding()) !== undefined) {
             return;
         }
         const ussApi = ZoweExplorerApiRegister.getUssApi(profile ?? node.getProfile());

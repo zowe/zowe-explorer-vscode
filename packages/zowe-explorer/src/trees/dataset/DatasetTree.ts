@@ -41,6 +41,7 @@ import { SharedUtils } from "../shared/SharedUtils";
 import { FilterDescriptor, FilterItem } from "../../management/FilterManagement";
 import { IconUtils } from "../../icons/IconUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
+import { DataSetTemplates } from "./DatasetTemplates";
 
 /**
  * A tree that contains nodes of sessions and data sets
@@ -125,9 +126,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public uploadDialog(_node: IZoweDatasetTreeNode): void {
         throw new Error("Method not implemented.");
     }
-    public filterPrompt(node: IZoweDatasetTreeNode): Promise<void> {
+    public async filterPrompt(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("DatasetTree.filterPrompt called.");
-        return this.datasetFilterPrompt(node);
+        await this.datasetFilterPrompt(node);
     }
 
     /**
@@ -780,14 +781,13 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         this.mHistory.resetFileHistory();
     }
 
-    public addDsTemplate(criteria: Types.DataSetAllocTemplate): void {
-        this.mHistory.addDsTemplateHistory(criteria);
+    public async addDsTemplate(criteria: Types.DataSetAllocTemplate): Promise<void> {
+        await DataSetTemplates.addDsTemplateSetting(criteria);
         this.refresh();
     }
 
     public getDsTemplates(): Types.DataSetAllocTemplate[] {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return this.mHistory.getDsTemplates();
+        return DataSetTemplates.getDsTemplates();
     }
 
     public getSessions(): string[] {
@@ -1006,7 +1006,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
             let response: IZoweDatasetTreeNode[] = [];
             try {
-                response = await this.getChildren(sessionNode);
+                await Gui.withProgress({ location: { viewId: "zowe.ds.explorer" } }, async () => {
+                    response = await this.getChildren(sessionNode);
+                });
             } catch (err) {
                 await AuthUtils.errorHandling(err, String(node.label));
             }

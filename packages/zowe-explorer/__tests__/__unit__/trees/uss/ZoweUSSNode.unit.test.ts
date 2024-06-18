@@ -617,7 +617,7 @@ describe("ZoweUSSNode Unit Tests - node.setEncoding() and encoding behaviors", (
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
         });
         node.contextValue = Constants.USS_SESSION_CONTEXT;
-        expect(node.setEncoding.bind(node)).toThrowError("Cannot set encoding for node with context ussSession");
+        expect(node.setEncoding.bind(node)).toThrow("Cannot set encoding for node with context ussSession");
     });
 });
 
@@ -963,7 +963,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
 
         // Tests that correct file is downloaded
         await node.openUSS(false, true, blockMocks.testUSSTree);
-        expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Downloading USS file...");
+        expect(globalMocks.setStatusBarMessage).toHaveBeenCalledWith("$(sync~spin) Downloading USS file...");
 
         // Tests that correct URI is passed to initializeFileOpening
         expect(blockMocks.initializeFileOpening).toHaveBeenCalledWith(node.resourceUri);

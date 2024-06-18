@@ -13,7 +13,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
   - `encoding` property on the `IZoweDatasetTreeNode` and `IZoweUSSTreeNode` interfaces - use the `getEncoding` and `setEncoding` functions instead.
   - `shortLabel` property on the `IZoweUSSTreeNode` interface - use the `getBaseName` function instead.
   - `attributes` property on the `IZoweUSSTreeNode` interface - use the `getAttributes` and `setAttributes` functions instead.
-- **Breaking:** Added return type of `Promise<void>` to `MainframeInteractions.ICommon.logout`. [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783).
+- **Breaking:** Added return type of `Promise<void>` to `IZoweTree.addDsTemplate`. [#2345](https://github.com/zowe/vscode-extension-for-zowe/pull/2345)
+- **Breaking:** Added return type of `Promise<void>` to `MainframeInteractions.ICommon.logout`. [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783)
 - Grouped Common methods into Singleton classes. [#2109](https://github.com/zowe/zowe-explorer-vscode/issues/2109)
 - Deprecated the `openFiles` property on `IZoweTree` interface - in v3 open files are tracked by the `FileSystemProvider` instead. [#2947](https://github.com/zowe/zowe-explorer-vscode/pull/2947)
 - **Breaking:** Changed the parameters of the `addSession` method on the `IZoweTree` interface since they were all optional. It now receives an object of type `AddSessionOpts`. [#2947](https://github.com/zowe/zowe-explorer-vscode/pull/2947)
@@ -22,6 +23,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Fixed an issue where the `onProfilesUpdate` event did not fire after secure credentials were updated. [#2822](https://github.com/zowe/zowe-explorer-vscode/issues/2822)
 - Fixed an issue where `ProfilesCache` may return missing or incorrect profile values when multiple extensions call it during activation. [#2831](https://github.com/zowe/zowe-explorer-vscode/issues/2831)
 
 ## `3.0.0-next.202404242037`
