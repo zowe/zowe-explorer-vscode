@@ -12,6 +12,7 @@
 import type { Table } from "@zowe/zowe-explorer-api";
 import { AgGridReactProps } from "ag-grid-react";
 
+// Define props for the AG Grid table here
 export const tableProps = (tableData: Table.Data): Partial<AgGridReactProps> => ({
     enableCellTextSelection: true,
     ensureDomOrder: true,

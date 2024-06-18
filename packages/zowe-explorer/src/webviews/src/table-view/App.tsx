@@ -9,13 +9,16 @@
  *
  */
 
-import "ag-grid-community/styles/ag-grid.css"; // Mandatory CSS required by the grid
-import "ag-grid-community/styles/ag-theme-quartz.css"; // Optional Theme
+// Required CSS for AG Grid
+import "ag-grid-community/styles/ag-grid.css";
+// AG Grid Quartz Theme (used as base theme)
+import "ag-grid-community/styles/ag-theme-quartz.css";
 import { AgGridReact } from "ag-grid-react";
 import { useEffect, useState } from "preact/hooks";
 import { isSecureOrigin } from "../utils";
 import type { Table } from "@zowe/zowe-explorer-api";
 import { tableProps } from "./types";
+// Custom styling (font family, VS Code color scheme, etc.)
 import "./style.css";
 
 const vscodeApi = acquireVsCodeApi();
