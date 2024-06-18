@@ -7,6 +7,9 @@ export class TableViewProvider implements WebviewViewProvider {
 
     public setTableView(tableView: Table.View): void {
         this.tableView = tableView;
+        if (this.view && this.view.webview.html !== this.tableView.getHtml()) {
+            this.view.webview.html = this.tableView.getHtml();
+        }
     }
 
     public getTableView(): Table.View {
