@@ -35,6 +35,7 @@ import type { Definitions } from "../../configuration/Definitions";
 import { SharedUtils } from "./SharedUtils";
 import { SharedContext } from "./SharedContext";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
+import { CertificateWizard } from "../utils/CertificateWizard";
 
 export class SharedInit {
     public static registerRefreshCommand(
@@ -117,6 +118,12 @@ export class SharedInit {
                 } else if (localUri.scheme === ZoweScheme.DS) {
                     await DatasetFSProvider.instance.diffUseRemote(localUri);
                 }
+            })
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.certificateWizard", () => {
+                return new CertificateWizard(context);
             })
         );
 
