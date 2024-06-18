@@ -21,7 +21,7 @@ const HTMLTemplate: string = `
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta 
             http-equiv="Content-Security-Policy" 
-            content="default-src 'none'; font-src data:; img-src vscode-resource: https:; script-src 'nonce-{{ nonce }}';
+            content="default-src 'none'; font-src data:; img-src data: vscode-resource: https:; script-src 'nonce-{{ nonce }}';
             style-src vscode-resource: 'unsafe-inline' http: https: data:;"
         />
         <base href="{{ uris.resource.build }}">

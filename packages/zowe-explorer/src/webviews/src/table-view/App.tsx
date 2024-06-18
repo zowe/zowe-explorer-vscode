@@ -15,7 +15,8 @@ import { AgGridReact } from "ag-grid-react";
 import { useEffect, useState } from "preact/hooks";
 import { isSecureOrigin } from "../utils";
 import type { Table } from "@zowe/zowe-explorer-api";
-import { tableProps, tableStyle } from "./types";
+import { tableProps } from "./types";
+import "./style.css";
 
 const vscodeApi = acquireVsCodeApi();
 
@@ -56,7 +57,7 @@ export function App() {
   return (
     <>
       {tableData.title ? <h1>{tableData.title}</h1> : null}
-      <div className="ag-theme-quartz-dark" style={tableStyle}>
+      <div className="ag-theme-quartz-dark ag-theme-vsc">
         <AgGridReact {...tableProps(tableData)} />
       </div>
     </>
