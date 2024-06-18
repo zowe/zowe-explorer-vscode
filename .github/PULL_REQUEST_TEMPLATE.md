@@ -20,7 +20,6 @@ _Put an `x` in all boxes that apply._
 - [ ] Enhancement (non-breaking change which adds or improves functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
 - [ ] Documentation (Markdown, README updates)
-- [ ] Test cases (unit, integration, and/or end-to-end tests)
 - [ ] Other (please specify above in "Proposed changes" section)
 
 ## Checklist
