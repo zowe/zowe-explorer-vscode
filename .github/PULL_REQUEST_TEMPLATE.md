@@ -32,7 +32,9 @@ _Put an `x` in all boxes that apply. You can also fill these out after creating 
 - [ ] I have read the [CONTRIBUTOR GUIDANCE](https://github.com/zowe/zowe-explorer-vscode/wiki/Best-Practices:-Contributor-Guidance) wiki
 - [ ] All PR dependencies have been merged and published (if applicable)
 - [ ] A GIF or screenshot is included in the PR for visual changes
-- [ ] `yarn workspace vscode-extension-for-zowe vscode:prepublish` has been executed
+- [ ] The pre-publish command has been executed:
+  - **v2 and below:** `yarn workspace vscode-extension-for-zowe vscode:prepublish`
+  - **v3:** `pnpm --filter vscode-extension-for-zowe vscode:prepublish`
 
 **Code coverage**
 
