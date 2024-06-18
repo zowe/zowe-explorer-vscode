@@ -32,5 +32,6 @@ export namespace PromptCredentialsOptions {
 
     export interface CertificateOptions extends UserPassOptions {
         openDialogOptions?: OpenDialogOptions;
+        profile?: imperative.IProfileLoaded;
     }
 }

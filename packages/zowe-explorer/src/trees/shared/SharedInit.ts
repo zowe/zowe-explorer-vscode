@@ -35,7 +35,7 @@ import type { Definitions } from "../../configuration/Definitions";
 import { SharedUtils } from "./SharedUtils";
 import { SharedContext } from "./SharedContext";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
-import { CertificateWizard } from "../utils/CertificateWizard";
+import { CertificateWizard } from "../../utils/CertificateWizard";
 
 export class SharedInit {
     public static registerRefreshCommand(
@@ -122,8 +122,11 @@ export class SharedInit {
         );
 
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.certificateWizard", (opts) => {
-                return new CertificateWizard(context, opts);
+            vscode.commands.registerCommand("zowe.certificateWizard", async (opts) => {
+                const certWizard = new CertificateWizard(context, opts);
+                const ret = await certWizard.userSubmission.promise;
+                certWizard.panel.dispose();
+                return ret;
             })
         );
 

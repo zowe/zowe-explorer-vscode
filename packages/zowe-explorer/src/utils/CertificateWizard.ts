@@ -10,21 +10,43 @@
  */
 
 import { Gui, WebView } from "@zowe/zowe-explorer-api";
-import { Disposable, ExtensionContext, OpenDialogOptions, Uri } from "vscode";
+import * as vscode from "vscode";
 
 export type CertWizardOpts = {
-    certUri?: Uri;
-    keyUri?: Uri;
-    dialogOpts: OpenDialogOptions;
+    cert?: string;
+    certKey?: string;
+    dialogOpts: vscode.OpenDialogOptions;
 };
+
+class DeferredPromise<T> {
+    public promise: Promise<T>;
+    public resolve: (value: T | PromiseLike<T>) => void;
+    public reject: (reason?: any) => void;
+
+    public constructor() {
+        this.promise = new Promise<T>((resolve, reject) => {
+            this.resolve = resolve;
+            this.reject = reject;
+        });
+    }
+}
+
+const userDismissed = vscode.l10n.t("User dismissed the certificate wizard.");
 
 export class CertificateWizard extends WebView {
     private onUpdateDisposable: Disposable;
     private opts: CertWizardOpts;
+    public userSubmission: DeferredPromise<{
+        cert: string;
+        certKey: string;
+    }> = new DeferredPromise();
 
-    public constructor(context: ExtensionContext, opts: CertWizardOpts) {
+    public constructor(context: vscode.ExtensionContext, opts: CertWizardOpts) {
         super("Certificate Wizard", "certificate-wizard", context, (message: object) => this.onDidReceiveMessage(message));
         this.opts = opts;
+        this.panel.onDidDispose(() => {
+            this.userSubmission.reject(userDismissed);
+        });
     }
 
     protected async onDidReceiveMessage(message: any): Promise<void> {
@@ -36,13 +58,18 @@ export class CertificateWizard extends WebView {
                         canSelectFiles: true,
                         canSelectFolders: false,
                         canSelectMany: false,
-                        defaultUri: this.opts.certUri,
+                        defaultUri: this.opts.cert ? vscode.Uri.file(this.opts.cert) : undefined,
                         filters: { "Certificate Files": ["cer", "crt", "pem"], "All Files": ["*"] },
                         openLabel: "Select Certificate",
                         ...(this.opts.dialogOpts ?? {}),
                     });
                     if (tempCert != null && tempCert[0] != null) {
-                        this.opts.certUri = tempCert[0];
+                        this.opts.cert = tempCert[0].fsPath;
+                        await this.panel.webview.postMessage({
+                            opts: {
+                                cert: tempCert[0].fsPath,
+                            },
+                        });
                     }
                 }
                 break;
@@ -53,26 +80,39 @@ export class CertificateWizard extends WebView {
                         canSelectFiles: true,
                         canSelectFolders: false,
                         canSelectMany: false,
-                        defaultUri: this.opts.keyUri,
+                        defaultUri: this.opts.certKey ? vscode.Uri.file(this.opts.certKey) : undefined,
                         filters: { "Certificate Keys": ["cer", "crt", "pem", "key"], "All Files": ["*"] },
                         openLabel: "Select Certificate Key",
                         ...(this.opts.dialogOpts ?? {}),
                     });
                     if (tempCertKey != null && tempCertKey[0] != null) {
-                        this.opts.keyUri = tempCertKey[0];
+                        this.opts.certKey = tempCertKey[0].fsPath;
+                        await this.panel.webview.postMessage({
+                            opts: {
+                                certKey: tempCertKey[0].fsPath,
+                            },
+                        });
                     }
                 }
                 break;
             case "submitted":
-                // TODO: update session w/ cert and key
+                this.userSubmission.resolve({
+                    cert: this.opts.cert,
+                    certKey: this.opts.certKey,
+                });
                 return;
+            case "ready":
+                await this.panel.webview.postMessage({
+                    opts: this.opts,
+                });
+                break;
+            case "close":
+                setImmediate(() => {
+                    this.panel.dispose();
+                });
+                break;
             default:
                 break;
         }
-
-        await this.panel.webview.postMessage({
-            opts: this.opts,
-        });
-        return Promise.resolve();
     }
 }

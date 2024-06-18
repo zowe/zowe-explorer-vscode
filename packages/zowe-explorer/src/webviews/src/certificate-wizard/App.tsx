@@ -27,27 +27,34 @@ export function App() {
         return;
       }
 
-      setCertPath(event.data.opts.certUri.fsPath);
-      setCertKeyPath(event.data.opts.keyUri.fsPath);
+      if (!event.data.opts || Object.keys(event.data.opts).length === 0) {
+        return;
+      }
+
+      if (event.data.opts.cert) {
+        setCertPath(event.data.opts.cert);
+      }
+
+      if (event.data.opts.certKey) {
+        setCertKeyPath(event.data.opts.certKey);
+      }
     });
-    // signal to extension that webview is ready for data; prevents race condition during initialization
+
     vscodeApi.postMessage({ command: "ready" });
   }, []);
 
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1>Certificate wizard</h1>
+        <h1>Log in to Authentication Service</h1>
       </div>
       <VSCodeDivider />
       <div style={{ marginTop: "1em" }}>
         <div style={{ maxWidth: "fit-content" }}>
           <VSCodeDataGrid style={{ marginTop: "1em" }} gridTemplateColumns="15vw 45vw 30vw">
-            <h3>Select a certificate and certificate key in PEM format.</h3>
+            <h3>Select a certificate and certificate key in PEM format:</h3>
             <VSCodeDataGridRow rowType="header">
-              <VSCodeDataGridCell cellType="columnheader" gridColumn="1">
-                Type
-              </VSCodeDataGridCell>
+              <VSCodeDataGridCell cellType="columnheader" gridColumn="1"></VSCodeDataGridCell>
               <VSCodeDataGridCell cellType="columnheader" gridColumn="2">
                 Value
               </VSCodeDataGridCell>
@@ -56,29 +63,51 @@ export function App() {
               </VSCodeDataGridCell>
             </VSCodeDataGridRow>
             <VSCodeDataGridRow>
-              <VSCodeDataGridCell gridColumn="1">Certificate File</VSCodeDataGridCell>
+              <VSCodeDataGridCell gridColumn="1">
+                <strong>Certificate File</strong>
+              </VSCodeDataGridCell>
               <VSCodeDataGridCell gridColumn="2">
                 <i>{certPath}</i>
               </VSCodeDataGridCell>
               <VSCodeDataGridCell gridColumn="3">
-                <VSCodeButton appearance="secondary" style={{ height: "24px" }} onClick={() => vscodeApi.postMessage({ command: "promptCert" })}>
+                <VSCodeButton appearance="secondary" onClick={() => vscodeApi.postMessage({ command: "promptCert" })}>
                   Browse
                 </VSCodeButton>
               </VSCodeDataGridCell>
             </VSCodeDataGridRow>
             <VSCodeDataGridRow>
-              <VSCodeDataGridCell gridColumn="1">Certificate Key File</VSCodeDataGridCell>
+              <VSCodeDataGridCell gridColumn="1">
+                <strong>Certificate Key File</strong>
+              </VSCodeDataGridCell>
               <VSCodeDataGridCell gridColumn="2">
                 <i>{certKeyPath}</i>
               </VSCodeDataGridCell>
               <VSCodeDataGridCell gridColumn="3">
-                <VSCodeButton appearance="secondary" style={{ height: "24px" }} onClick={() => vscodeApi.postMessage({ command: "promptCertKey" })}>
+                <VSCodeButton appearance="secondary" onClick={() => vscodeApi.postMessage({ command: "promptCertKey" })}>
                   Browse
                 </VSCodeButton>
               </VSCodeDataGridCell>
             </VSCodeDataGridRow>
           </VSCodeDataGrid>
-          <VSCodeButton style={{ marginTop: "1em" }}>Submit</VSCodeButton>
+          <div style={{ display: "flex" }}>
+            <VSCodeButton
+              style={{ marginTop: "1em" }}
+              onClick={() => {
+                vscodeApi.postMessage({ command: "submitted" });
+              }}
+            >
+              Submit
+            </VSCodeButton>
+            <VSCodeButton
+              appearance="secondary"
+              style={{ marginTop: "1em", marginLeft: "1em" }}
+              onClick={() => {
+                vscodeApi.postMessage({ command: "close" });
+              }}
+            >
+              Cancel
+            </VSCodeButton>
+          </div>
         </div>
       </div>
     </div>
