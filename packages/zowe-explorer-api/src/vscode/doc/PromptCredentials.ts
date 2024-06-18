@@ -10,7 +10,7 @@
  */
 
 import * as imperative from "@zowe/imperative";
-import { InputBoxOptions } from "vscode";
+import { InputBoxOptions, OpenDialogOptions } from "vscode";
 
 export namespace PromptCredentialsOptions {
     export interface CommonOptions {
@@ -28,5 +28,9 @@ export namespace PromptCredentialsOptions {
 
     export interface UserPassOptions extends CommonOptions {
         session: imperative.ISession;
+    }
+
+    export interface CertificateOptions extends UserPassOptions {
+        openDialogOptions?: OpenDialogOptions;
     }
 }
