@@ -45,6 +45,8 @@ _Put an `x` in all boxes that apply. You can also fill these out after creating 
 
 - [ ] I have added developer documentation (if applicable)
 - [ ] Documentation should be added to Zowe Docs
+  - If you're an outside contributor, please contact @anaxceron (ana.ceron@broadcom.com) to coordinate documentation.
+  - Otherwise, please check with the rest of the squad about any needed documentation before merging.
 - [ ] These changes may need ported to the appropriate branches (list here):
 
 ## Further comments
