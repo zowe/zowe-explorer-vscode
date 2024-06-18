@@ -767,13 +767,13 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         expect(SharedUtils.getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([blockMocks.treeNodes.ussNode]);
     });
 
-    it("tests pasteUssFile executed successfully with selected nodes", async () => {
+    it("tests pasteUss executed successfully with selected nodes", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         await USSActions.pasteUss(blockMocks.treeNodes.testUSSTree, blockMocks.nodes[0]);
         expect(SharedUtils.getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([blockMocks.treeNodes.ussNode]);
     });
-    it("tests pasteUssFile executed successfully with one node", async () => {
+    it("tests pasteUss executed successfully with one node", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         const parent = blockMocks.treeNodes.testUSSTree.getTreeView();

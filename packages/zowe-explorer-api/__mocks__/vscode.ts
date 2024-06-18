@@ -922,16 +922,6 @@ export namespace workspace {
     }
 
     /**
-     * ~~The folder that is open in the editor. `undefined` when no folder
-     * has been opened.~~
-     *
-     * @deprecated Use [`workspaceFolders`](#workspace.workspaceFolders) instead.
-     *
-     * @readonly
-     */
-    export let rootPath: string | undefined;
-
-    /**
      * A workspace folder is one of potentially many roots opened by the editor. All workspace folders
      * are equal which means there is no notion of an active or master workspace folder.
      */

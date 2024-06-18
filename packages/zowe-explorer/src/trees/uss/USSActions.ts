@@ -379,16 +379,6 @@ export class USSActions {
     }
 
     /**
-     * @deprecated use `pasteUss`
-     * @param ussFileProvider File provider for USS tree
-     * @param node The node to paste within
-     */
-    public static async pasteUssFile(ussFileProvider: Types.IZoweUSSTreeType, node: IZoweUSSTreeNode): Promise<void> {
-        ZoweLogger.trace("uss.actions.pasteUssFile called.");
-        return USSActions.pasteUss(ussFileProvider, node);
-    }
-
-    /**
      * Paste copied USS nodes into the selected node.
      * @param ussFileProvider File provider for USS tree
      * @param node The node to paste within
@@ -396,7 +386,7 @@ export class USSActions {
     public static async pasteUss(ussFileProvider: Types.IZoweUSSTreeType, node: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("uss.actions.pasteUss called.");
         /* eslint-disable-next-line deprecation/deprecation */
-        if (node.pasteUssTree == null && node.copyUssFile == null) {
+        if (node.pasteUssTree == null) {
             await Gui.infoMessage(vscode.l10n.t("The paste operation is not supported for this node."));
             return;
         }
@@ -407,7 +397,7 @@ export class USSActions {
             },
             async () => {
                 /* eslint-disable-next-line deprecation/deprecation */
-                await (node.pasteUssTree ? node.pasteUssTree() : node.copyUssFile());
+                await node.pasteUssTree();
             }
         );
         ussFileProvider.refreshElement(node);
