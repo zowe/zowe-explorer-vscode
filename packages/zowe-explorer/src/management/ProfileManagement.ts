@@ -16,7 +16,6 @@ import { Profiles } from "../configuration/Profiles";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
-import { SharedContext } from "../trees/shared/SharedContext";
 import { AuthUtils } from "../utils/AuthUtils";
 import { Definitions } from "../configuration/Definitions";
 
@@ -262,7 +261,7 @@ export class ProfileManagement {
             await Profiles.getInstance().editSession(profile);
             return;
         }
-        await vscode.commands.executeCommand("zowe.ds.deleteProfile", node);
+        await vscode.commands.executeCommand("zowe.deleteProfile", node);
     }
 
     private static async handleHideProfiles(node: IZoweTreeNode): Promise<void> {
@@ -271,18 +270,15 @@ export class ProfileManagement {
             Gui.infoMessage(vscode.l10n.t("Operation Cancelled"));
             return;
         }
-        const type: string = SharedContext.getSessionType(node);
-        return vscode.commands.executeCommand(`zowe.${type}.removeSession`, node, null, shouldHideFromAllTrees);
+        return vscode.commands.executeCommand("zowe.removeSession", node, null, shouldHideFromAllTrees);
     }
 
     private static async handleEnableProfileValidation(node: IZoweTreeNode): Promise<void> {
-        const type: string = SharedContext.getSessionType(node);
-        return vscode.commands.executeCommand(`zowe.${type}.enableValidation`, node);
+        return vscode.commands.executeCommand("zowe.enableValidation", node);
     }
 
     private static async handleDisableProfileValidation(node: IZoweTreeNode): Promise<void> {
-        const type: string = SharedContext.getSessionType(node);
-        return vscode.commands.executeCommand(`zowe.${type}.disableValidation`, node);
+        return vscode.commands.executeCommand("zowe.disableValidation", node);
     }
 
     private static isProfileRegisteredWithTree(tree: Definitions.Trees, profile: imperative.IProfileLoaded): boolean {

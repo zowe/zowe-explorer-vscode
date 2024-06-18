@@ -1034,7 +1034,7 @@ describe("focusing on a job in the tree view", () => {
     });
 });
 
-describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
+describe("Jobs Actions Unit Tests - Function refreshJob", () => {
     function createBlockMocks() {
         const session = createISessionWithoutCredentials();
         const iJob = createIJobObject();
@@ -1074,7 +1074,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
         job.contextValue = Constants.JOBS_SESSION_CONTEXT;
         mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValueOnce(blockMocks.session.ISession);
 
-        await JobActions.refreshJobsServer(job, blockMocks.testJobTree);
+        await JobActions.refreshJob(job, blockMocks.testJobTree);
         expect(blockMocks.testJobTree.refreshElement).toHaveBeenCalledWith(job);
     });
     it("Checking common execution of function with Unverified", async () => {
@@ -1090,7 +1090,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
         job.contextValue = Constants.JOBS_SESSION_CONTEXT;
         mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValueOnce(blockMocks.session.ISession);
 
-        await JobActions.refreshJobsServer(job, blockMocks.testJobTree);
+        await JobActions.refreshJob(job, blockMocks.testJobTree);
         expect(blockMocks.testJobTree.refreshElement).toHaveBeenCalledWith(job);
     });
 });

@@ -5,9 +5,6 @@
 - Removed support for v1 Profiles
 - Updated supported VS Code engine to 1.79.0
 - Drop support for Theia IDE
-- Removed the `zowe.jobs.zosJobsOpenSpool` command in favor of using `vscode.open` with a spool URI.
-- Removed the `zowe.ds.ZoweNode.openPS` command in favor of using `vscode.open` with a data set URI.
-- Removed the `zowe.uss.ZoweUSSNode.open` command in favor of using `vscode.open` with a USS URI.
 - Moved Data Set Templates, formerly in `zowe.ds.history` that has moved to internal storage. With the request to have data set templates shareable via workspace it will now migrate existing to `zowe.ds.templates` when other history items are moved.
 
 ## Removal of deprecated APIs from Extensibility API for Zowe Explorer
@@ -66,6 +63,27 @@
 - Renamed `IPromptcredentialsOptions` to `ComplexOptions`.
 - Renamed `IPromptUserPassOptions` to `UserPassOptions`.
 - Removed `ProfilesCache.getSchema()`, `ProfilesCache.getCliProfileManager()`, `ProfilesCache.saveProfile()` & `ProfilesCache.deleteProfileOnDisk()` v1 Profiles manipulation endpoints.
+- `refreshAndReopen` function on the `IZoweTreeNode` interface - use the `reopen` function instead.
+- `copyUssFile` function on the `IZoweTreeNode` interface - use the `pasteUssTree` function instead.
+
+## Removed or renamed VS Code commands
+
+- `zowe.jobs.zosJobsOpenSpool` - use `vscode.open` with a spool URI instead
+- `zowe.ds.ZoweNode.openPS` - use `vscode.open` with a data set URI instead
+- `zowe.uss.ZoweUSSNode.open` - use `vscode.open` with a USS URI instead
+- `zowe.ds.addFavorite`, `zowe.uss.addFavorite`, `zowe.jobs.addFavorite` - use `zowe.addFavorite` instead
+- `zowe.ds.disableValidation`, `zowe.uss.disableValidation`, `zowe.jobs.disableValidation` - use `zowe.disableValidation` instead
+- `zowe.ds.deleteProfile`, `zowe.uss.deleteProfile`, `zowe.jobs.deleteProfile`, `zowe.cmd.deleteProfile` - use `zowe.deleteProfile` instead
+- `zowe.ds.editSession`, `zowe.uss.editSession`, `zowe.jobs.editSession` - use `zowe.editSession` instead
+- `zowe.ds.enableValidation`, `zowe.uss.enableValidation`, `zowe.jobs.enableValidation` - use `zowe.enableValidation` instead
+- `zowe.ds.openWithEncoding`, `zowe.uss.openWithEncoding` - use `zowe.openWithEncoding` instead
+- `zowe.ds.removeFavorite`, `zowe.uss.removeFavorite`, `zowe.jobs.removeFavorite` - use `zowe.removeFavorite` instead
+- `zowe.ds.removeFavProfile`, `zowe.uss.removeFavProfile`, `zowe.jobs.removeFavProfile` - use `zowe.removeFavProfile` instead
+- `zowe.ds.removeSavedSearch`, `zowe.uss.removeSavedSearch`, `zowe.jobs.removeSearchFavorite` - use `zowe.removeFavorite` instead
+- `zowe.ds.removeSession`, `zowe.uss.removeSession`, `zowe.jobs.removeSession` - use `zowe.removeSession` instead
+- `zowe.ds.saveSearch`, `zowe.uss.saveSearch`, `zowe.jobs.saveSearch` - use `zowe.saveSearch` instead
+- `zowe.ds.ssoLogin`, `zowe.uss.ssoLogin`, `zowe.jobs.ssoLogin` - use `zowe.ssoLogin` instead
+- `zowe.ds.ssoLogout`, `zowe.uss.ssoLogout`, `zowe.jobs.ssoLogout` - use `zowe.ssoLogout` instead
 
 ## New APIs Added
 

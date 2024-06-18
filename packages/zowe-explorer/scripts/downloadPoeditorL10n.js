@@ -32,7 +32,7 @@ const defaultHeaders = { "Content-Type": "application/x-www-form-urlencoded" };
                 l10nBundle[message] = v || undefined;
             }
         }
-        fs.writeFileSync(`${__dirname}/../package.nls.${code}.json`, JSON.stringify(packageNls, null, 2));
-        fs.writeFileSync(`${__dirname}/../l10n/bundle.l10n.${code}.json`, JSON.stringify(l10nBundle, null, 2));
+        fs.writeFileSync(`${__dirname}/../package.nls.${code}.json`, JSON.stringify(packageNls, null, 2) + "\n");
+        fs.writeFileSync(`${__dirname}/../l10n/bundle.l10n.${code}.json`, JSON.stringify(l10nBundle, null, 2) + "\n");
     }
 })();

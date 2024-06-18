@@ -16,6 +16,19 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - **Breaking:** Added return type of `Promise<void>` to `IZoweTree.addDsTemplate`. [#2345](https://github.com/zowe/vscode-extension-for-zowe/pull/2345)
 - **Breaking:** Added return type of `Promise<void>` to `MainframeInteractions.ICommon.logout`. [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783)
 - Grouped Common methods into Singleton classes. [#2109](https://github.com/zowe/zowe-explorer-vscode/issues/2109)
+- **Breaking:** Removed deprecated methods: [#2238](https://github.com/zowe/zowe-explorer-vscode/issues/2238)
+  - `refreshAndReopen` function on the `IZoweTreeNode` interface - use the `reopen` function instead.
+  - `copyUssFile` function on the `IZoweTreeNode` interface - use the `pasteUssTree` function instead.
+  - `ZoweVsCodeExtension.showVsCodeMessage` - use `Gui.showMessage` instead.
+  - `ZoweVsCodeExtension.inputBox` - use `Gui.showInputBox` instead.
+  - `ZoweVsCodeExtension.promptCredentials` - use `ZoweVsCodeExtension.updateCredentials` instead.
+- **Breaking:** Added return type of `Promise<void>` to the following `IZoweTree` methods: [#2238](https://github.com/zowe/zowe-explorer-vscode/issues/2238)
+  - addFavorite
+  - removeFavorite
+  - removeFavProfile
+  - ssoLogin
+  - ssoLogout
+- Added an optional function `openWithEncoding` to the `IZoweTree` interface to open file using encoding specified by user. [#2931](https://github.com/zowe/zowe-explorer-vscode/pull/2931)
 - Deprecated the `openFiles` property on `IZoweTree` interface - in v3 open files are tracked by the `FileSystemProvider` instead. [#2947](https://github.com/zowe/zowe-explorer-vscode/pull/2947)
 - **Breaking:** Changed the parameters of the `addSession` method on the `IZoweTree` interface since they were all optional. It now receives an object of type `AddSessionOpts`. [#2947](https://github.com/zowe/zowe-explorer-vscode/pull/2947)
 - **Breaking:** Removed the redundant `zoweFileProvider` parameter from `editSession` method on the `IZoweTree` interface. [#2947](https://github.com/zowe/zowe-explorer-vscode/pull/2947)

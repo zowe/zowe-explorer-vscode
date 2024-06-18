@@ -151,7 +151,7 @@ export class USSActions {
         }
     }
 
-    public static async uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
+    public static async uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: Types.IZoweUSSTreeType, isBinary?: boolean): Promise<void> {
         ZoweLogger.trace("uss.actions.uploadDialog called.");
         const fileOpenOptions = {
             canSelectFiles: true,
@@ -162,19 +162,37 @@ export class USSActions {
 
         const value = await Gui.showOpenDialog(fileOpenOptions);
 
-        await Promise.all(
-            value.map(async (item) => {
-                const isBinary = isBinaryFileSync(item.fsPath);
-
-                if (isBinary) {
-                    await USSActions.uploadBinaryFile(node, item.fsPath);
-                } else {
-                    const doc = await vscode.workspace.openTextDocument(item);
-                    await USSActions.uploadFile(node, doc);
+        if (value?.length > 0) {
+            await Gui.withProgress(
+                {
+                    location: vscode.ProgressLocation.Notification,
+                    title: vscode.l10n.t("Uploading file to USS tree"),
+                    cancellable: true,
+                },
+                async (progress, token) => {
+                    let index = 0;
+                    for (const item of value) {
+                        if (token.isCancellationRequested) {
+                            Gui.showMessage(vscode.l10n.t("Upload action was cancelled."));
+                            break;
+                        }
+                        Gui.reportProgress(progress, value.length, index, "Uploading");
+                        const binaryFile = isBinaryFileSync(item.fsPath);
+                        if (isBinary || binaryFile) {
+                            await USSActions.uploadBinaryFile(node, item.fsPath);
+                        } else {
+                            const doc = await vscode.workspace.openTextDocument(item);
+                            await USSActions.uploadFile(node, doc);
+                        }
+                    }
+                    index++;
                 }
-            })
-        );
-        ussFileProvider.refreshElement(node);
+            );
+            ussFileProvider.refreshElement(node);
+            ussFileProvider.getTreeView().reveal(node, { expand: true, focus: true });
+        } else {
+            Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
+        }
     }
 
     public static async uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string): Promise<void> {
@@ -361,16 +379,6 @@ export class USSActions {
     }
 
     /**
-     * @deprecated use `pasteUss`
-     * @param ussFileProvider File provider for USS tree
-     * @param node The node to paste within
-     */
-    public static async pasteUssFile(ussFileProvider: Types.IZoweUSSTreeType, node: IZoweUSSTreeNode): Promise<void> {
-        ZoweLogger.trace("uss.actions.pasteUssFile called.");
-        return USSActions.pasteUss(ussFileProvider, node);
-    }
-
-    /**
      * Paste copied USS nodes into the selected node.
      * @param ussFileProvider File provider for USS tree
      * @param node The node to paste within
@@ -378,7 +386,7 @@ export class USSActions {
     public static async pasteUss(ussFileProvider: Types.IZoweUSSTreeType, node: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("uss.actions.pasteUss called.");
         /* eslint-disable-next-line deprecation/deprecation */
-        if (node.pasteUssTree == null && node.copyUssFile == null) {
+        if (node.pasteUssTree == null) {
             await Gui.infoMessage(vscode.l10n.t("The paste operation is not supported for this node."));
             return;
         }
@@ -389,7 +397,7 @@ export class USSActions {
             },
             async () => {
                 /* eslint-disable-next-line deprecation/deprecation */
-                await (node.pasteUssTree ? node.pasteUssTree() : node.copyUssFile());
+                await node.pasteUssTree();
             }
         );
         ussFileProvider.refreshElement(node);

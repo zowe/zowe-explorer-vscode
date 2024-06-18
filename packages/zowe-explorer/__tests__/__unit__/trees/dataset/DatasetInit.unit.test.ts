@@ -13,7 +13,6 @@ import * as vscode from "vscode";
 import { IJestIt, ITestContext, processSubscriptions } from "../../../__common__/testUtils";
 import { ZoweScheme } from "@zowe/zowe-explorer-api";
 import { SharedActions } from "../../../../src/trees/shared/SharedActions";
-import { Profiles } from "../../../../src/configuration/Profiles";
 import { DatasetTree } from "../../../../src/trees/dataset/DatasetTree";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
@@ -38,18 +37,10 @@ describe("Test src/dataset/extension", () => {
         const dsProvider: { [key: string]: jest.Mock } = {
             createZoweSchema: jest.fn(),
             createZoweSession: jest.fn(),
-            addFavorite: jest.fn(),
             filterPrompt: jest.fn(),
-            editSession: jest.fn(),
-            deleteSession: jest.fn(),
-            removeFavorite: jest.fn(),
-            removeFavProfile: jest.fn(),
             rename: jest.fn(),
-            ssoLogin: jest.fn(),
-            ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
             getTreeView: jest.fn(),
-            refreshElement: jest.fn(),
             sortPdsMembersDialog: jest.fn(),
             filterPdsMembersDialog: jest.fn(),
             openWithEncoding: jest.fn(),
@@ -62,10 +53,6 @@ describe("Test src/dataset/extension", () => {
             {
                 name: "zowe.ds.addSession",
                 mock: [{ spy: jest.spyOn(dsProvider, "createZoweSession"), arg: [dsProvider] }],
-            },
-            {
-                name: "zowe.ds.addFavorite",
-                mock: [{ spy: jest.spyOn(dsProvider, "addFavorite"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.refreshAll",
@@ -90,10 +77,6 @@ describe("Test src/dataset/extension", () => {
             {
                 name: "zowe.ds.pattern",
                 mock: [{ spy: jest.spyOn(dsProvider, "filterPrompt"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.ds.editSession",
-                mock: [{ spy: jest.spyOn(dsProvider, "editSession"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.createDataset",
@@ -132,29 +115,6 @@ describe("Test src/dataset/extension", () => {
                     { spy: jest.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
                     { spy: jest.spyOn(SharedContext, "isDsMember"), arg: [test.value], ret: true },
                 ],
-            },
-            {
-                name: "zowe.ds.removeSession",
-                mock: [
-                    { spy: jest.spyOn(SharedContext, "isDsSession"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(dsProvider, "deleteSession"), arg: [test.value, undefined] },
-                ],
-            },
-            {
-                name: "zowe.ds.removeFavorite",
-                mock: [{ spy: jest.spyOn(dsProvider, "removeFavorite"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.ds.saveSearch",
-                mock: [{ spy: jest.spyOn(dsProvider, "addFavorite"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.ds.removeSavedSearch",
-                mock: [{ spy: jest.spyOn(dsProvider, "removeFavorite"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.ds.removeFavProfile",
-                mock: [{ spy: jest.spyOn(dsProvider, "removeFavProfile"), arg: [test.value.label, true] }],
             },
             {
                 name: "zowe.ds.submitJcl",
@@ -207,14 +167,14 @@ describe("Test src/dataset/extension", () => {
                 mock: [
                     { spy: jest.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
                     { spy: jest.spyOn(SharedContext, "isPdsNotFav"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(DatasetActions, "hMigrateDataSet"), arg: [test.value] },
+                    { spy: jest.spyOn(DatasetActions, "hMigrateDataSet"), arg: [dsProvider, test.value] },
                 ],
             },
             {
                 name: "zowe.ds.hRecallDataSet",
                 mock: [
                     { spy: jest.spyOn(SharedContext, "isMigrated"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(DatasetActions, "hRecallDataSet"), arg: [test.value] },
+                    { spy: jest.spyOn(DatasetActions, "hRecallDataSet"), arg: [dsProvider, test.value] },
                 ],
             },
             {
@@ -225,44 +185,12 @@ describe("Test src/dataset/extension", () => {
                 ],
             },
             {
-                name: "zowe.ds.disableValidation",
-                mock: [
-                    {
-                        spy: jest.spyOn(Profiles, "getInstance"),
-                        arg: [],
-                        ret: { disableValidation: jest.fn() },
-                    },
-                ],
-            },
-            {
-                name: "zowe.ds.enableValidation",
-                mock: [
-                    {
-                        spy: jest.spyOn(Profiles, "getInstance"),
-                        arg: [],
-                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
-                    },
-                ],
-            },
-            {
-                name: "zowe.ds.ssoLogin",
-                mock: [{ spy: jest.spyOn(dsProvider, "ssoLogin"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.ds.ssoLogout",
-                mock: [{ spy: jest.spyOn(dsProvider, "ssoLogout"), arg: [test.value] }],
-            },
-            {
                 name: "zowe.ds.sortBy",
                 mock: [{ spy: jest.spyOn(dsProvider, "sortPdsMembersDialog"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.filterBy",
                 mock: [{ spy: jest.spyOn(dsProvider, "filterPdsMembersDialog"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.ds.openWithEncoding",
-                mock: [{ spy: jest.spyOn(dsProvider, "openWithEncoding"), arg: [test.value, undefined] }],
             },
             {
                 name: "onDidChangeConfiguration",

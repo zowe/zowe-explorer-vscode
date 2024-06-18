@@ -10,13 +10,11 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweUSSTreeNode, IZoweTreeNode, ZosEncoding, imperative, ZoweScheme, FsAbstractUtils, Gui } from "@zowe/zowe-explorer-api";
+import { IZoweUSSTreeNode, imperative, ZoweScheme, FsAbstractUtils, Gui } from "@zowe/zowe-explorer-api";
 import { USSTree } from "./USSTree";
 import { USSActions } from "./USSActions";
 import { UssFSProvider } from "./UssFSProvider";
-import { Profiles } from "../../configuration/Profiles";
 import { ZoweLogger } from "../../tools/ZoweLogger";
-import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedActions } from "../shared/SharedActions";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedInit } from "../shared/SharedInit";
@@ -45,22 +43,6 @@ export class USSInit {
             return null;
         }
 
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.addFavorite", async (node, nodeList) => {
-                const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
-                for (const item of selectedNodes) {
-                    await ussFileProvider.addFavorite(item as IZoweUSSTreeNode);
-                }
-            })
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.removeFavorite", async (node, nodeList) => {
-                const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
-                for (const item of selectedNodes) {
-                    await ussFileProvider.removeFavorite(item as IZoweUSSTreeNode);
-                }
-            })
-        );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.addSession", async () => ussFileProvider.createZoweSession(ussFileProvider))
         );
@@ -110,17 +92,6 @@ export class USSInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.fullPath", async (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.filterPrompt(node))
         );
-        context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.editSession", async (node) => ussFileProvider.editSession(node)));
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.removeSession", async (node: IZoweUSSTreeNode, nodeList, hideFromAllTrees: boolean) => {
-                let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
-                selectedNodes = selectedNodes.filter((element) => SharedContext.isUssSession(element));
-                for (const item of selectedNodes) {
-                    ussFileProvider.deleteSession(item as IZoweUSSTreeNode, hideFromAllTrees);
-                }
-                await TreeViewUtils.fixVsCodeMultiSelect(ussFileProvider);
-            })
-        );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.createFile", async (node: IZoweUSSTreeNode) =>
                 USSActions.createUSSNode(node, ussFileProvider, "file")
@@ -134,7 +105,9 @@ export class USSInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.deleteNode", async (node, nodeList) => {
                 let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
-                selectedNodes = selectedNodes.filter((x) => SharedContext.isDocument(x) || SharedContext.isUssDirectory(x));
+                selectedNodes = selectedNodes.filter(
+                    (x) => SharedContext.isDocument(x) || SharedContext.isUssDirectory(x) || SharedContext.isBinary(x)
+                );
                 const cancelled = await USSActions.deleteUSSFilesPrompt(selectedNodes);
                 if (cancelled) {
                     return;
@@ -148,9 +121,11 @@ export class USSInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.renameNode", async (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.rename(node))
         );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.uploadDialog", async (node: IZoweUSSTreeNode) => USSActions.uploadDialog(node, ussFileProvider))
-        );
+        const uploadDialogHandler = (binary: boolean) => async (node) => {
+            await USSActions.uploadDialog(node, ussFileProvider, binary);
+        };
+        context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.uploadDialog", uploadDialogHandler(false)));
+        context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.uploadDialogBinary", uploadDialogHandler(true)));
         context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.copyPath", (node: IZoweUSSTreeNode): void => USSActions.copyPath(node)));
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.editFile", async (node: IZoweUSSTreeNode): Promise<void> => {
@@ -161,41 +136,6 @@ export class USSInit {
             vscode.commands.registerCommand("zowe.uss.editAttributes", (node: IZoweUSSTreeNode) =>
                 USSActions.editAttributes(context, ussFileProvider, node)
             )
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.saveSearch", async (node: IZoweUSSTreeNode): Promise<void> => {
-                await ussFileProvider.saveSearch(node);
-            })
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand(
-                "zowe.uss.removeSavedSearch",
-                async (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.removeFavorite(node)
-            )
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand(
-                "zowe.uss.removeFavProfile",
-                async (node): Promise<void> => ussFileProvider.removeFavProfile(node.label, true)
-            )
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.disableValidation", (node) => {
-                Profiles.getInstance().disableValidation(node);
-                ussFileProvider.refreshElement(node);
-            })
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.enableValidation", (node) => {
-                Profiles.getInstance().enableValidation(node);
-                ussFileProvider.refreshElement(node);
-            })
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.ssoLogin", async (node: IZoweTreeNode): Promise<void> => ussFileProvider.ssoLogin(node))
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.ssoLogout", async (node: IZoweTreeNode): Promise<void> => ussFileProvider.ssoLogout(node))
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.pasteUssFile", async (node: IZoweUSSTreeNode) => {
@@ -211,12 +151,6 @@ export class USSInit {
                 ussFileProvider.copying = USSActions.copyUssFiles(node, nodeList, ussFileProvider);
                 await ussFileProvider.copying;
             })
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand(
-                "zowe.uss.openWithEncoding",
-                (node: IZoweUSSTreeNode, encoding?: ZosEncoding): Promise<void> => ussFileProvider.openWithEncoding(node, encoding)
-            )
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.copyRelativePath", async (node: IZoweUSSTreeNode) => USSActions.copyRelativePath(node))

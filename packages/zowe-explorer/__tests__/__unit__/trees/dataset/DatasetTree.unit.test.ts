@@ -1254,6 +1254,7 @@ describe("Dataset Tree Unit Tests - Function deleteSession", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
 
+        jest.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue(globalMocks.mockTreeProviders.ds);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes = globalMocks.mockTreeProviders.ds.mSessionNodes;

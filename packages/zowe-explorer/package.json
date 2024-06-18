@@ -165,66 +165,6 @@
         }
       },
       {
-        "command": "zowe.ds.disableValidation",
-        "title": "%disableValidation%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.uss.disableValidation",
-        "title": "%disableValidation%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.jobs.disableValidation",
-        "title": "%disableValidation%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.ds.enableValidation",
-        "title": "%enableValidation%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.uss.enableValidation",
-        "title": "%enableValidation%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.jobs.enableValidation",
-        "title": "%enableValidation%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.ds.ssoLogin",
-        "title": "%ssoLogin%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.uss.ssoLogin",
-        "title": "%ssoLogin%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.jobs.ssoLogin",
-        "title": "%ssoLogin%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.ds.ssoLogout",
-        "title": "%ssoLogout%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.uss.ssoLogout",
-        "title": "%ssoLogout%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.jobs.ssoLogout",
-        "title": "%ssoLogout%",
-        "category": "Zowe Explorer"
-      },
-      {
         "command": "zowe.uss.copyPath",
         "title": "%uss.copyPath%",
         "category": "Zowe Explorer"
@@ -250,16 +190,7 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.ds.addFavorite",
-        "title": "%addFavorite%",
-        "category": "Zowe Explorer",
-        "icon": {
-          "dark": "./resources/dark/favorites-open-dark.svg",
-          "light": "./resources/light/favorites-open-light.svg"
-        }
-      },
-      {
-        "command": "zowe.uss.addFavorite",
+        "command": "zowe.addFavorite",
         "title": "%addFavorite%",
         "category": "Zowe Explorer",
         "icon": {
@@ -277,20 +208,6 @@
         }
       },
       {
-        "command": "zowe.ds.editSession",
-        "title": "%editSession%",
-        "category": "Zowe Explorer",
-        "icon": {
-          "light": "./resources/light/edit.svg",
-          "dark": "./resources/dark/edit.svg"
-        }
-      },
-      {
-        "command": "zowe.ds.deleteProfile",
-        "title": "%deleteProfile%",
-        "category": "Zowe Explorer"
-      },
-      {
         "command": "zowe.ds.filterBy",
         "title": "%ds.filterBy%",
         "category": "Zowe Explorer",
@@ -303,8 +220,8 @@
         "icon": "$(list-ordered)"
       },
       {
-        "command": "zowe.cmd.deleteProfile",
-        "title": "%cmd.deleteProfile%",
+        "command": "zowe.deleteProfile",
+        "title": "%deleteProfile%",
         "category": "Zowe Explorer"
       },
       {
@@ -441,7 +358,7 @@
         }
       },
       {
-        "command": "zowe.ds.removeFavorite",
+        "command": "zowe.removeFavorite",
         "title": "%removeFavorite%",
         "category": "Zowe Explorer",
         "icon": {
@@ -450,40 +367,12 @@
         }
       },
       {
-        "command": "zowe.ds.removeFavProfile",
+        "command": "zowe.removeFavProfile",
         "title": "%removeFavProfile%",
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.uss.removeFavorite",
-        "title": "%removeFavorite%",
-        "category": "Zowe Explorer",
-        "icon": {
-          "dark": "./resources/dark/favorites-close-dark.svg",
-          "light": "./resources/light/favorites-close-light.svg"
-        }
-      },
-      {
-        "command": "zowe.uss.removeFavProfile",
-        "title": "%removeFavProfile%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.ds.removeSavedSearch",
-        "title": "%removeSavedSearch%",
-        "category": "Zowe Explorer",
-        "icon": {
-          "dark": "./resources/dark/favorites-close-dark.svg",
-          "light": "./resources/light/favorites-close-light.svg"
-        }
-      },
-      {
-        "command": "zowe.ds.removeSession",
-        "title": "%removeSession%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.ds.saveSearch",
+        "command": "zowe.saveSearch",
         "title": "%saveSearch%",
         "category": "Zowe Explorer"
       },
@@ -510,20 +399,6 @@
           "light": "./resources/light/plus.svg",
           "dark": "./resources/dark/plus.svg"
         }
-      },
-      {
-        "command": "zowe.uss.editSession",
-        "title": "%editSession%",
-        "category": "Zowe Explorer",
-        "icon": {
-          "light": "./resources/light/edit.svg",
-          "dark": "./resources/dark/edit.svg"
-        }
-      },
-      {
-        "command": "zowe.uss.deleteProfile",
-        "title": "%deleteProfile%",
-        "category": "Zowe Explorer"
       },
       {
         "command": "zowe.uss.editFile",
@@ -571,27 +446,13 @@
         }
       },
       {
-        "command": "zowe.uss.removeSession",
-        "title": "%uss.removeSession%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.uss.saveSearch",
-        "title": "%saveSearch%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.uss.removeSavedSearch",
-        "title": "%removeSavedSearch%",
-        "category": "Zowe Explorer",
-        "icon": {
-          "dark": "./resources/dark/favorites-close-dark.svg",
-          "light": "./resources/light/favorites-close-light.svg"
-        }
-      },
-      {
         "command": "zowe.uss.uploadDialog",
         "title": "%uss.uploadDialog%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.uss.uploadDialogBinary",
+        "title": "%uss.uploadDialogBinary%",
         "category": "Zowe Explorer"
       },
       {
@@ -619,43 +480,6 @@
         }
       },
       {
-        "command": "zowe.jobs.addFavorite",
-        "title": "%addFavorite%",
-        "category": "Zowe Explorer",
-        "icon": {
-          "dark": "./resources/dark/favorites-open-dark.svg",
-          "light": "./resources/light/favorites-open-light.svg"
-        }
-      },
-      {
-        "command": "zowe.jobs.removeFavorite",
-        "title": "%removeFavorite%",
-        "category": "Zowe Explorer",
-        "icon": {
-          "dark": "./resources/dark/favorites-close-dark.svg",
-          "light": "./resources/light/favorites-close-light.svg"
-        }
-      },
-      {
-        "command": "zowe.jobs.removeSearchFavorite",
-        "title": "%removeSavedSearch%",
-        "category": "Zowe Explorer",
-        "icon": {
-          "dark": "./resources/dark/favorites-close-dark.svg",
-          "light": "./resources/light/favorites-close-light.svg"
-        }
-      },
-      {
-        "command": "zowe.jobs.removeFavProfile",
-        "title": "%removeFavProfile%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.jobs.saveSearch",
-        "title": "%saveSearch%",
-        "category": "Zowe Explorer"
-      },
-      {
         "command": "zowe.jobs.runModifyCommand",
         "title": "%runModifyCommand%",
         "category": "Zowe Explorer"
@@ -666,16 +490,6 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.jobs.setOwner",
-        "title": "%setOwner%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.jobs.setPrefix",
-        "title": "%setPrefix%",
-        "category": "Zowe Explorer"
-      },
-      {
         "command": "zowe.jobs.refreshJobsServer",
         "title": "%refreshJobsServer%",
         "category": "Zowe Explorer",
@@ -683,20 +497,6 @@
           "light": "./resources/light/refresh.svg",
           "dark": "./resources/dark/refresh.svg"
         }
-      },
-      {
-        "command": "zowe.jobs.editSession",
-        "title": "%editSession%",
-        "category": "Zowe Explorer",
-        "icon": {
-          "light": "./resources/light/edit.svg",
-          "dark": "./resources/dark/edit.svg"
-        }
-      },
-      {
-        "command": "zowe.jobs.deleteProfile",
-        "title": "%deleteProfile%",
-        "category": "Zowe Explorer"
       },
       {
         "command": "zowe.jobs.refreshAllJobs",
@@ -717,11 +517,6 @@
         }
       },
       {
-        "command": "zowe.jobs.removeSession",
-        "title": "%removeSession%",
-        "category": "Zowe Explorer"
-      },
-      {
         "command": "zowe.jobs.downloadSpool",
         "title": "%downloadSpool%",
         "category": "Zowe Explorer",
@@ -738,11 +533,6 @@
       {
         "command": "zowe.jobs.getJobJcl",
         "title": "%getJobJcl%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.jobs.setJobSpool",
-        "title": "%setJobSpool%",
         "category": "Zowe Explorer"
       },
       {
@@ -841,17 +631,7 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.compareFileStarted",
-        "title": "%compareFileStarted%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.ds.openWithEncoding",
-        "title": "%openWithEncoding%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.uss.openWithEncoding",
+        "command": "zowe.openWithEncoding",
         "title": "%openWithEncoding%",
         "category": "Zowe Explorer"
       },
@@ -938,17 +718,17 @@
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
-          "command": "zowe.uss.addFavorite",
+          "command": "zowe.addFavorite",
           "group": "inline"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession.*|profile.*|directory.*)).*_fav.*/",
-          "command": "zowe.uss.removeFavorite",
+          "command": "zowe.removeFavorite",
           "group": "inline"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^ussSession.*_fav.*/ && !listMultiSelection",
-          "command": "zowe.uss.removeSavedSearch",
+          "command": "zowe.removeFavorite",
           "group": "inline"
         },
         {
@@ -963,7 +743,7 @@
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(textFile.*|binaryFile.*)/",
-          "command": "zowe.uss.openWithEncoding",
+          "command": "zowe.openWithEncoding",
           "group": "000_zowe_ussMainframeInteraction@3"
         },
         {
@@ -1012,14 +792,19 @@
           "group": "001_zowe_ussCreate@3"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/ && !listMultiSelection",
+          "command": "zowe.uss.uploadDialogBinary",
+          "group": "001_zowe_ussCreate@4"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
           "command": "zowe.uss.copyUssFile",
-          "group": "001_zowe_ussCreate@4"
+          "group": "001_zowe_ussCreate@5"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*|ussSession.*_isFilterSearch)/",
           "command": "zowe.uss.pasteUssFile",
-          "group": "001_zowe_ussCreate@5"
+          "group": "001_zowe_ussCreate@6"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/ && !listMultiSelection",
@@ -1033,27 +818,27 @@
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
-          "command": "zowe.uss.addFavorite",
+          "command": "zowe.addFavorite",
           "group": "003_zowe_ussWorkspace@0"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession.*|profile.*)).*_fav.*/",
-          "command": "zowe.uss.removeFavorite",
+          "command": "zowe.removeFavorite",
           "group": "003_zowe_ussWorkspace@1"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
-          "command": "zowe.uss.addFavorite",
+          "command": "zowe.addFavorite",
           "group": "003_zowe_ussWorkspace@3"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^ussSession.*_fav.*/ && !listMultiSelection",
-          "command": "zowe.uss.removeSavedSearch",
+          "command": "zowe.removeFavorite",
           "group": "003_zowe_ussWorkspace@4"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem == profile_fav && !listMultiSelection",
-          "command": "zowe.uss.removeFavProfile",
+          "command": "zowe.removeFavProfile",
           "group": "003_zowe_ussWorkspace@5"
         },
         {
@@ -1103,22 +888,22 @@
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr).*_fav.*/",
-          "command": "zowe.ds.removeFavorite",
+          "command": "zowe.removeFavorite",
           "group": "inline"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav|.*isFilterSearch)(member|migr|ds|pds).*/",
-          "command": "zowe.ds.addFavorite",
+          "command": "zowe.addFavorite",
           "group": "inline"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^session.*_fav.*/ && !listMultiSelection",
-          "command": "zowe.ds.removeSavedSearch",
+          "command": "zowe.removeFavorite",
           "group": "inline"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(member.*|ds.*)/",
-          "command": "zowe.ds.openWithEncoding",
+          "command": "zowe.openWithEncoding",
           "group": "000_zowe_dsMainframeInteraction@0"
         },
         {
@@ -1193,27 +978,27 @@
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
-          "command": "zowe.ds.saveSearch",
+          "command": "zowe.saveSearch",
           "group": "002_zowe_dsWorkspace@0"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav|.*isFilterSearch)(member|migr|ds|pds).*/",
-          "command": "zowe.ds.addFavorite",
+          "command": "zowe.addFavorite",
           "group": "002_zowe_dsWorkspace@0"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^session.*_fav.*/ && !listMultiSelection",
-          "command": "zowe.ds.removeSavedSearch",
+          "command": "zowe.removeFavorite",
           "group": "002_zowe_dsWorkspace@1"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr).*_fav.*/",
-          "command": "zowe.ds.removeFavorite",
+          "command": "zowe.removeFavorite",
           "group": "002_zowe_dsWorkspace@1"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem == profile_fav && !listMultiSelection",
-          "command": "zowe.ds.removeFavProfile",
+          "command": "zowe.removeFavProfile",
           "group": "002_zowe_dsWorkspace@4"
         },
         {
@@ -1313,17 +1098,17 @@
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)job.*/",
-          "command": "zowe.jobs.addFavorite",
+          "command": "zowe.addFavorite",
           "group": "inline"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^job.*_fav.*/",
-          "command": "zowe.jobs.removeFavorite",
+          "command": "zowe.removeFavorite",
           "group": "inline"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^server.*_fav.*/ && !listMultiSelection",
-          "command": "zowe.jobs.removeSearchFavorite",
+          "command": "zowe.removeFavorite",
           "group": "inline"
         },
         {
@@ -1383,22 +1168,22 @@
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)(server|job).*/",
-          "command": "zowe.jobs.addFavorite",
+          "command": "zowe.addFavorite",
           "group": "002_zowe_jobsWorkspace@0"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^job.*_fav.*/",
-          "command": "zowe.jobs.removeFavorite",
+          "command": "zowe.removeFavorite",
           "group": "002_zowe_jobsWorkspace@2"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^server.*_fav.*/ && !listMultiSelection",
-          "command": "zowe.jobs.removeSearchFavorite",
+          "command": "zowe.removeFavorite",
           "group": "002_zowe_jobsWorkspace@0"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem == profile_fav && !listMultiSelection",
-          "command": "zowe.jobs.removeFavProfile",
+          "command": "zowe.removeFavProfile",
           "group": "002_zowe_jobsWorkspace"
         },
         {
@@ -1503,10 +1288,6 @@
           "when": "never"
         },
         {
-          "command": "zowe.ds.editSession",
-          "when": "never"
-        },
-        {
           "command": "zowe.ds.createMember",
           "when": "never"
         },
@@ -1555,79 +1336,19 @@
           "when": "never"
         },
         {
-          "command": "zowe.ds.addFavorite",
+          "command": "zowe.addFavorite",
           "when": "never"
         },
         {
-          "command": "zowe.ds.removeFavorite",
+          "command": "zowe.removeFavorite",
           "when": "never"
         },
         {
-          "command": "zowe.ds.removeSession",
+          "command": "zowe.removeFavProfile",
           "when": "never"
         },
         {
-          "command": "zowe.ds.removeFavProfile",
-          "when": "never"
-        },
-        {
-          "command": "zowe.ds.deleteProfile",
-          "when": "never"
-        },
-        {
-          "command": "zowe.ds.disableValidation",
-          "when": "never"
-        },
-        {
-          "command": "zowe.ds.enableValidation",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.disableValidation",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.enableValidation",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.disableValidation",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.enableValidation",
-          "when": "never"
-        },
-        {
-          "command": "zowe.ds.ssoLogin",
-          "when": "never"
-        },
-        {
-          "command": "zowe.ds.ssoLogout",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.ssoLogin",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.ssoLogout",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.ssoLogin",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.ssoLogout",
-          "when": "never"
-        },
-        {
-          "command": "zowe.ds.saveSearch",
-          "when": "never"
-        },
-        {
-          "command": "zowe.ds.removeSavedSearch",
+          "command": "zowe.saveSearch",
           "when": "never"
         },
         {
@@ -1687,75 +1408,11 @@
           "when": "never"
         },
         {
-          "command": "zowe.uss.saveSearch",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.editSession",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.deleteProfile",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.removeSavedSearch",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.removeSession",
-          "when": "never"
-        },
-        {
           "command": "zowe.ds.submitMember",
           "when": "never"
         },
         {
-          "command": "zowe.uss.addFavorite",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.removeFavorite",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.removeFavProfile",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.setPrefix",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.setOwner",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.setJobSpool",
-          "when": "never"
-        },
-        {
           "command": "zowe.jobs.refreshJobsServer",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.addFavorite",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.removeFavorite",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.removeSearchFavorite",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.removeFavProfile",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.saveSearch",
           "when": "never"
         },
         {
@@ -1776,18 +1433,6 @@
         },
         {
           "command": "zowe.jobs.downloadSpoolBinary",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.editSession",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.removeSession",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.deleteProfile",
           "when": "never"
         },
         {
@@ -1815,10 +1460,6 @@
           "when": "never"
         },
         {
-          "command": "zowe.compareFileStarted",
-          "when": "never"
-        },
-        {
           "command": "zowe.selectForCompare",
           "when": "never"
         },
@@ -1831,11 +1472,7 @@
           "when": "never"
         },
         {
-          "command": "zowe.ds.openWithEncoding",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.openWithEncoding",
+          "command": "zowe.openWithEncoding",
           "when": "never"
         },
         {

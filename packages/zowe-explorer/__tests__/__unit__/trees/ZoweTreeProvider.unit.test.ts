@@ -190,7 +190,7 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
         return newMocks;
     }
 
-    it("Tests that editSession is executed successfully ", async () => {
+    it("Tests that editSession is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         const spy = jest.spyOn(ZoweLogger, "trace");
@@ -203,6 +203,7 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         const deleteSessionSpy = jest.spyOn(blockMocks.testJobsProvider, "deleteSession");
+        jest.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue(blockMocks.testJobsProvider);
         jest.spyOn(blockMocks.jobNode, "getSession").mockReturnValue(null);
         blockMocks.jobNode.contextValue = Constants.JOBS_SESSION_CONTEXT;
         await blockMocks.testJobsProvider.editSession(blockMocks.jobNode);
