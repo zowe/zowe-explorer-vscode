@@ -15,7 +15,7 @@ import { AgGridReact } from "ag-grid-react";
 import { useEffect, useState } from "preact/hooks";
 import { isSecureOrigin } from "../utils";
 import type { Table } from "@zowe/zowe-explorer-api";
-import { tableStyle } from "./types";
+import { tableProps, tableStyle } from "./types";
 
 const vscodeApi = acquireVsCodeApi();
 
@@ -24,10 +24,6 @@ export function App() {
     actions: {
       column: new Map(),
       row: new Map(),
-    },
-    dividers: {
-      column: [],
-      row: [],
     },
     columns: null,
     rows: null,
@@ -61,7 +57,7 @@ export function App() {
     <>
       {tableData.title ? <h1>{tableData.title}</h1> : null}
       <div className="ag-theme-quartz-dark" style={tableStyle}>
-        <AgGridReact enableCellTextSelection ensureDomOrder rowData={tableData.rows} columnDefs={tableData.columns} pagination />
+        <AgGridReact {...tableProps(tableData)} />
       </div>
     </>
   );

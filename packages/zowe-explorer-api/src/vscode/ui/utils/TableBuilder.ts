@@ -39,10 +39,6 @@ export class TableBuilder {
             column: new Map(),
             row: new Map(),
         },
-        dividers: {
-            column: [],
-            row: [],
-        },
         columns: [],
         rows: [],
         title: "",
@@ -145,40 +141,6 @@ export class TableBuilder {
     }
 
     /**
-     * Adds a divider to the table at the specified axis and the given index.
-     *
-     * @param axis The axis to add a divider to (either "row" or "column")
-     * @param index The index where the divider should be added
-     * @returns The same {@link TableBuilder} instance with the divider added
-     */
-    private divider(axis: Table.Axes, index: number): TableBuilder {
-        (axis === "row" ? this.data.dividers.row : this.data.dividers.column).push(index);
-        return this;
-    }
-
-    /**
-     * Adds a divider to the table at the given row index.
-     *
-     * @param index The index where the divider should be added
-     * @returns The same {@link TableBuilder} instance with the row divider added
-     */
-    public rowDivider(index: number): TableBuilder {
-        this.divider("row", index);
-        return this;
-    }
-
-    /**
-     * Adds a divider to the table at the given column index.
-     *
-     * @param index The index where the divider should be added
-     * @returns The same {@link TableBuilder} instance with the column divider added
-     */
-    public columnDivider(index: number): TableBuilder {
-        this.divider("column", index);
-        return this;
-    }
-
-    /**
      * Builds the table with the given data.
      *
      * @returns A new {@link Table.Instance} with the given data/options
@@ -204,9 +166,6 @@ export class TableBuilder {
     public reset(): void {
         this.data.actions.row.clear();
         this.data.actions.column.clear();
-
-        this.data.dividers.row = [];
-        this.data.dividers.column = [];
 
         this.data.columns = [];
         this.data.rows = [];

@@ -9,6 +9,8 @@
  *
  */
 
+import type { Table } from "@zowe/zowe-explorer-api";
+import { AgGridReactProps } from "ag-grid-react";
 
 const tableColors = {
     "--ag-icon-font-family": "agGridQuartz",
@@ -27,5 +29,13 @@ const tableColors = {
 export const tableStyle = {
     height: 500,
     marginTop: "1em",
-    ...tableColors
+    ...tableColors,
 };
+
+export const tableProps = (tableData: Table.Data): Partial<AgGridReactProps> => ({
+    enableCellTextSelection: true,
+    ensureDomOrder: true,
+    rowData: tableData.rows,
+    columnDefs: tableData.columns,
+    pagination: true,
+});

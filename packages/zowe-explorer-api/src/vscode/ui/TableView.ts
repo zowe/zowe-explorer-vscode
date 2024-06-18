@@ -30,11 +30,6 @@ export namespace Table {
             column: Map<number, Action[]>;
             row: Map<number, Action[]>;
         };
-        // Dividers to place within the table at a specific row or column index
-        dividers: {
-            column: number[];
-            row: number[];
-        };
         // Column headers for the top of the table
         columns: Column[] | null;
         // The row data for the table. Each row contains a set of variables corresponding to the data for each column in that row
@@ -147,18 +142,6 @@ export namespace Table {
         }
 
         /**
-         * Adds a divider to the given row and column
-         *
-         * @param axis The axis to add the divider to
-         * @param index The index on the axis where the divider should be added
-         * @returns Whether the webview successfully received the new divider
-         */
-        public async addDivider(axis: Axes, index: number): Promise<boolean> {
-            (axis === "row" ? this.data.dividers.row : this.data.dividers.column).push(index);
-            return this.updateWebview();
-        }
-
-        /**
          * Adds headers to the end of the existing header list in the table view.
          *
          * @param headers The headers to add to the existing header list
@@ -177,24 +160,6 @@ export namespace Table {
          */
         public async setContent(rows: RowContent[]): Promise<boolean> {
             this.data.rows = rows;
-            return this.updateWebview();
-        }
-
-        /**
-         * Sets the dividers for the table; replaces any pre-existing dividers.
-         *
-         * @param rows The row dividers to use for the table
-         * @param columns The column dividers to use for the table
-         * @returns Whether the webview successfully received the new dividers
-         */
-        public async setDividers(dividers: Pick<Dividers, "rows"> | Pick<Dividers, "columns">): Promise<boolean> {
-            if ("rows" in dividers) {
-                this.data.dividers.row = dividers.rows;
-            }
-            if ("columns" in dividers) {
-                this.data.dividers.column = dividers.columns;
-            }
-
             return this.updateWebview();
         }
 

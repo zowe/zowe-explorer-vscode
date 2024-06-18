@@ -255,7 +255,27 @@ export class SharedInit {
                                 value: randomInt(2147483647),
                             }))
                         )
-                        .columns([{ field: "name", filter: true }, { field: "value" }])
+                        .columns([
+                            { field: "name", filter: true },
+                            { field: "value", filter: true },
+                        ])
+                        .build();
+                })
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.tableView3", () => {
+                    new TableBuilder(context)
+                        .title("Comprehensive table with actions")
+                        .rows(
+                            ...Array.from({ length: 1024 }, (val) => ({
+                                name: randomUUID(),
+                                value: randomInt(2147483647),
+                            }))
+                        )
+                        .columns([
+                            { field: "name", filter: true },
+                            { field: "value", filter: true },
+                        ])
                         .build();
                 })
             );
