@@ -122,8 +122,8 @@ export class SharedInit {
         );
 
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.certificateWizard", () => {
-                return new CertificateWizard(context);
+            vscode.commands.registerCommand("zowe.certificateWizard", (opts) => {
+                return new CertificateWizard(context, opts);
             })
         );
 
