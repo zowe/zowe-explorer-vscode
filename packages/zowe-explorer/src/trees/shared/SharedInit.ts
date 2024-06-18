@@ -186,8 +186,8 @@ export class SharedInit {
                 vscode.commands.registerCommand("zowe.deleteProfile", (node: IZoweTreeNode) => Profiles.getInstance().deleteProfile(node))
             );
             context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.editSession", (node: IZoweTreeNode) => {
-                    SharedTreeProviders.getProviderForNode(node).editSession(node);
+                vscode.commands.registerCommand("zowe.editSession", async (node: IZoweTreeNode) => {
+                    await SharedTreeProviders.getProviderForNode(node).editSession(node);
                 })
             );
             context.subscriptions.push(
