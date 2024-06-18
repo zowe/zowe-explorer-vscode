@@ -153,7 +153,7 @@
     "Upload Files...": ""
   },
   "uss.uploadDialogBinary": {
-    "Upload Files... (Binary)": ""
+    "Upload Files (Binary)...": ""
   },
   "uss.text": {
     "Toggle Text": ""
@@ -466,7 +466,7 @@
   "Delete action was cancelled.": "",
   "Unable to delete node: {0}": "",
   "The item {0} has been deleted.": "",
-  "open() called from invalid node.": "",
+  "openUSS() called from invalid node.": "",
   "$(sync~spin) Downloading USS file...": "",
   "refreshUSS() called from invalid node.": "",
   "not found": "",
@@ -507,6 +507,7 @@
   "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: {0}.\n                     To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's USS view.\n                      Would you like to do this now? {1}": "",
   "initializeUSSFavorites.error.buttonRemove": "",
   "File does not exist. It may have been deleted.": "",
+  "$(sync~spin) Pulling from Mainframe...": "",
   "{0} location": "",
   "Choose a location to create the {0}": "",
   "Name of file or directory": "",
