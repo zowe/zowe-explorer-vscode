@@ -22,6 +22,7 @@ import { LocalFileManagement } from "../../management/LocalFileManagement";
 import { JobSpoolProvider } from "./JobSpoolProvider";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { AuthUtils } from "../../utils/AuthUtils";
+import { SharedContext } from "../shared/SharedContext";
 
 export class JobActions {
     private static async deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: Types.IZoweJobTreeType): Promise<void> {
@@ -237,17 +238,6 @@ export class JobActions {
         );
         await JobFSProvider.instance.fetchSpoolAtUri(doc.uri);
         statusMsg.dispose();
-    }
-
-    /**
-     * Refresh a node in the job tree
-     *
-     * @param node The node to refresh
-     * @param jobsProvider The tree to which the refreshed node belongs
-     */
-    public static refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: Types.IZoweJobTreeType): void {
-        ZoweLogger.trace("job.actions.refreshJobsServer called.");
-        jobsProvider.refreshElement(node);
     }
 
     /**
@@ -517,5 +507,12 @@ export class JobActions {
             }),
             Constants.MS_PER_SEC * 4
         );
+    }
+
+    public static async copyName(node: IZoweJobTreeNode): Promise<void> {
+        if (SharedContext.isJob(node) && node.job) {
+            return vscode.env.clipboard.writeText(`${node.job.jobname}(${node.job.jobid})`);
+        }
+        return vscode.env.clipboard.writeText(node.label as string);
     }
 }

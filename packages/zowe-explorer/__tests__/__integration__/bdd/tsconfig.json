@@ -1,0 +1,17 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "@wdio/globals/types", "@wdio/cucumber-framework", "wdio-vscode-service", "expect-webdriverio", "jest"]
+  },
+  "include": [
+    "../../__pageobjects__/**/*.ts",
+    "../../../src/**/*.ts",
+    "./step_definitions/**/*.steps.ts",
+    "../../__common__/*.wdio.ts",
+    "../../__common__/*.wdio.conf.ts",
+    "./wdio.conf.ts",
+    "../../node_modules/vscode/vscode.d.ts",
+    "../../node_modules/vscode/lib/*"
+  ],
+  "references": [{ "path": "../../../../zowe-explorer-api" }]
+}

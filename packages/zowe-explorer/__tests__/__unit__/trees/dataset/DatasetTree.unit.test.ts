@@ -74,7 +74,7 @@ function createGlobalMocks() {
 
     Object.defineProperty(ZoweLocalStorage, "storage", {
         value: {
-            get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [], templates: [] }),
+            get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
             update: jest.fn(),
             keys: () => [],
         },
@@ -1254,7 +1254,7 @@ describe("Dataset Tree Unit Tests - Function deleteSession", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(globalMocks.mockTreeProviders);
+        jest.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue(globalMocks.mockTreeProviders.ds);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes = globalMocks.mockTreeProviders.ds.mSessionNodes;
@@ -1534,7 +1534,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("You must enter a pattern.");
     });
-    it("Checking usage of existing filter", async () => {
+    it("Checking usage of existing filter from filterPrompt", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -1551,7 +1551,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         testTree.addSearchHistory("test");
 
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
 
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
@@ -3010,9 +3010,23 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
     });
 
     describe("addDsTemplate", () => {
-        it("adds a new DS template to the persistent object", () => {
-            tree.addDsTemplate({ test: "test" } as any);
-            expect(tree["mHistory"]["mDsTemplates"].length).toEqual(1);
+        it("adds a new DS template to the persistent object", async () => {
+            const mockTemplates = [{ test1: {} }, { test2: {} }, { test3: {} }];
+            const newTemplate = { test: {} };
+            mockTemplates.unshift(newTemplate as any);
+            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                inspect: jest.fn().mockReturnValue({ globalValue: mockTemplates }),
+            } as any);
+            Object.defineProperty(vscode.workspace, "workspaceFolders", { value: [], configurable: true });
+            const infoLoggerSpy = jest.spyOn(ZoweLogger, "info");
+            const setValueSpy = jest.spyOn(SettingsConfig, "setDirectValue").mockImplementation();
+            // Object.defineProperty(SettingsConfig, "setDirectValue", { value: jest.fn(), configurable: true });
+
+            await tree.addDsTemplate(newTemplate as any);
+            expect(infoLoggerSpy).toHaveBeenCalledWith("Adding new data set template {0}.");
+            expect(setValueSpy).toHaveBeenCalled();
+            infoLoggerSpy.mockClear();
+            setValueSpy.mockClear();
         });
     });
 
@@ -3025,23 +3039,12 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
 
     describe("getDsTemplates", () => {
         it("gets all the DS templates from persistent object", () => {
-            Object.defineProperty(ZoweLocalStorage, "storage", {
-                value: {
-                    get: () => ({
-                        persistence: true,
-                        favorites: [],
-                        history: [],
-                        sessions: ["zosmf"],
-                        searchHistory: [],
-                        fileHistory: [],
-                        templates: ["test1", "test2", "test3"],
-                    }),
-                    update: jest.fn(),
-                    keys: () => [],
-                },
+            const mockTemplates = [{ test1: {} }, { test2: {} }, { test3: {} }];
+            Object.defineProperty(SettingsConfig, "getDirectValue", {
+                value: jest.fn().mockReturnValue(mockTemplates),
                 configurable: true,
             });
-            expect(tree.getDsTemplates()).toEqual(["test1", "test2", "test3"]);
+            expect(tree.getDsTemplates()).toEqual(mockTemplates);
         });
     });
 

@@ -204,10 +204,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
                 this.deleteSessionForProvider(node, currentProvider);
             }
         } else {
-            this.deleteSessionForProvider(
-                node,
-                SharedTreeProviders.providers[SharedContext.getSessionType(node) === "jobs" ? "job" : SharedContext.getSessionType(node)]
-            );
+            this.deleteSessionForProvider(node, SharedTreeProviders.getProviderForNode(node));
         }
     }
 

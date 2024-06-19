@@ -41,6 +41,7 @@ import { IZoweTree } from "../../../../../zowe-explorer-api/src/tree/IZoweTree";
 import { IZoweUSSTreeNode } from "../../../../../zowe-explorer-api/src/tree";
 import { USSAtributeView } from "../../../../src/trees/uss/USSAttributeView";
 import { ExtensionUtils } from "../../../../src/utils/ExtensionUtils";
+import { mocked } from "../../../__mocks__/mockUtils";
 
 jest.mock("../../../../src/tools/ZoweLogger");
 jest.mock("fs");
@@ -60,6 +61,7 @@ function createGlobalMocks() {
         openTextDocument: jest.fn(),
         withProgress: jest.fn(),
         writeText: jest.fn(),
+        showInformationMessage: jest.fn(),
         fileList: jest.fn(),
         setStatusBarMessage: jest.fn().mockReturnValue({ dispose: jest.fn() }),
         showWarningMessage: jest.fn(),
@@ -91,6 +93,7 @@ function createGlobalMocks() {
 
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
     Object.defineProperty(Gui, "setStatusBarMessage", { value: globalMocks.setStatusBarMessage, configurable: true });
+    Object.defineProperty(vscode.window, "showInformationMessage", { value: globalMocks.showInformationMessage, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.mockShowInputBox, configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.showQuickPick, configurable: true });
     Object.defineProperty(zosfiles, "Create", { value: globalMocks.Create, configurable: true });
@@ -435,6 +438,21 @@ describe("USS Action Unit Tests - Function copyPath", () => {
 
 describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
     async function createBlockMocks(globalMocks) {
+        Object.defineProperty(vscode.window, "withProgress", {
+            value: jest.fn().mockImplementation((progLocation, callback) => {
+                const progress = {
+                    report: (message) => {
+                        return;
+                    },
+                };
+                const token = {
+                    isCancellationRequested: false,
+                    onCancellationRequested: undefined,
+                };
+                return callback(progress, token);
+            }),
+            configurable: true,
+        });
         const newMocks = {
             node: null,
             mockGetEtag: null,
@@ -468,12 +486,11 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         globalMocks.openTextDocument.mockResolvedValue(blockMocks.testDoc);
         const fileUri = { fsPath: "/tmp/foo.txt" };
         globalMocks.showOpenDialog.mockReturnValue([fileUri]);
-        globalMocks.isBinaryFileSync.mockReturnValueOnce(false);
 
-        await USSActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
+        await USSActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree, false);
         expect(globalMocks.showOpenDialog).toHaveBeenCalled();
         expect(globalMocks.openTextDocument).toHaveBeenCalled();
-        expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalled();
+        expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalledWith(blockMocks.ussNode);
     });
 
     it("Tests that uploadDialog() works for binary file", async () => {
@@ -483,11 +500,19 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         globalMocks.openTextDocument.mockResolvedValue(blockMocks.testDoc);
         const fileUri = { fsPath: "/tmp/foo.zip" };
         globalMocks.showOpenDialog.mockReturnValue([fileUri]);
-        globalMocks.isBinaryFileSync.mockReturnValueOnce(true);
 
-        await USSActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
+        await USSActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree, true);
         expect(globalMocks.showOpenDialog).toHaveBeenCalled();
-        expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalled();
+        expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalledWith(blockMocks.ussNode);
+    });
+
+    it("shouldn't call upload dialog and not upload file if selection is empty", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        globalMocks.showOpenDialog.mockReturnValue(undefined);
+        await USSActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree, true);
+        expect(globalMocks.showOpenDialog).toHaveBeenCalled();
+        expect(globalMocks.showInformationMessage.mock.calls.map((call) => call[0])).toEqual(["Operation Cancelled"]);
     });
 
     it("Tests that uploadDialog() throws an error successfully", async () => {
@@ -504,7 +529,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         globalMocks.isBinaryFileSync.mockReturnValueOnce(false);
 
         try {
-            await USSActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
+            await USSActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree, false);
         } catch (err) {
             // prevent exception from failing test
         }
@@ -742,19 +767,19 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         expect(SharedUtils.getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([blockMocks.treeNodes.ussNode]);
     });
 
-    it("tests pasteUssFile executed successfully with selected nodes", async () => {
+    it("tests pasteUss executed successfully with selected nodes", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        await USSActions.pasteUssFile(blockMocks.treeNodes.testUSSTree, blockMocks.nodes[0]);
+        await USSActions.pasteUss(blockMocks.treeNodes.testUSSTree, blockMocks.nodes[0]);
         expect(SharedUtils.getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([blockMocks.treeNodes.ussNode]);
     });
-    it("tests pasteUssFile executed successfully with one node", async () => {
+    it("tests pasteUss executed successfully with one node", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         const parent = blockMocks.treeNodes.testUSSTree.getTreeView();
         parent.selection = blockMocks.nodes[0];
         jest.spyOn(USSActions, "copyUssFilesToClipboard").mockResolvedValueOnce();
-        await USSActions.pasteUssFile(blockMocks.treeNodes.testUSSTree, blockMocks.nodes[0]);
+        await USSActions.pasteUss(blockMocks.treeNodes.testUSSTree, blockMocks.nodes[0]);
         expect(SharedUtils.getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([blockMocks.treeNodes.ussNode]);
     });
     it("tests pasteUss returns early if APIs are not supported", async () => {
@@ -817,5 +842,26 @@ describe("USS Action Unit Tests - function editAttributes", () => {
             { label: "some/node", getProfile: jest.fn() } as unknown as IZoweUSSTreeNode
         );
         expect(view).toBeInstanceOf(USSAtributeView);
+    });
+});
+
+describe("USS Action Unit Tests - function copyRelativePath", () => {
+    it("copies the correct path for a USS file", async () => {
+        const dir = createUSSNode(createISession(), createIProfile());
+        const textFile = new ZoweUSSNode({
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            label: "file.txt",
+            parentNode: dir,
+            parentPath: dir.fullPath,
+        });
+        textFile.fullPath = path.posix.join(dir.fullPath, "file.txt");
+        await USSActions.copyRelativePath(textFile);
+        expect(mocked(vscode.env.clipboard.writeText)).toHaveBeenCalledWith("usstest/file.txt");
+    });
+
+    it("copies the correct path for a USS directory", async () => {
+        const testNode = createUSSNode(createISession(), createIProfile());
+        await USSActions.copyRelativePath(testNode);
+        expect(mocked(vscode.env.clipboard.writeText)).toHaveBeenCalledWith("usstest");
     });
 });

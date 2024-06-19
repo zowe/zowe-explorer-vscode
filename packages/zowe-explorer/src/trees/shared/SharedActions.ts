@@ -244,7 +244,7 @@ export class SharedActions {
                     AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getCommonApi(profile), sessNode);
                 }
             } else {
-                TreeViewUtils.removeSession(treeProvider, sessNode.label.toString().trim());
+                await TreeViewUtils.removeSession(treeProvider, sessNode.label.toString().trim());
             }
         }
         treeProvider.refresh();

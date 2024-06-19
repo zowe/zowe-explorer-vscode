@@ -32,7 +32,7 @@ import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
 import { JobTree } from "../../../../src/trees/job/JobTree";
-import { ZoweJobNode } from "../../../../src/trees/job/ZoweJobNode";
+import { ZoweJobNode, ZoweSpoolNode } from "../../../../src/trees/job/ZoweJobNode";
 import { SharedActions } from "../../../../src/trees/shared/SharedActions";
 import { LocalFileManagement } from "../../../../src/management/LocalFileManagement";
 import { ProfileManagement } from "../../../../src/management/ProfileManagement";
@@ -1030,7 +1030,7 @@ describe("focusing on a job in the tree view", () => {
     });
 });
 
-describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
+describe("Jobs Actions Unit Tests - Function refreshJob", () => {
     function createBlockMocks() {
         const session = createISessionWithoutCredentials();
         const iJob = createIJobObject();
@@ -1070,7 +1070,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
         job.contextValue = Constants.JOBS_SESSION_CONTEXT;
         mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValueOnce(blockMocks.session.ISession);
 
-        await JobActions.refreshJobsServer(job, blockMocks.testJobTree);
+        await JobActions.refreshJob(job, blockMocks.testJobTree);
         expect(blockMocks.testJobTree.refreshElement).toHaveBeenCalledWith(job);
     });
     it("Checking common execution of function with Unverified", async () => {
@@ -1086,7 +1086,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
         job.contextValue = Constants.JOBS_SESSION_CONTEXT;
         mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValueOnce(blockMocks.session.ISession);
 
-        await JobActions.refreshJobsServer(job, blockMocks.testJobTree);
+        await JobActions.refreshJob(job, blockMocks.testJobTree);
         expect(blockMocks.testJobTree.refreshElement).toHaveBeenCalledWith(job);
     });
 });
@@ -1398,5 +1398,28 @@ describe("sortJobs function", () => {
         expect(testtree.mSessionNodes[0].sort.direction).toBe(Sorting.SortDirection.Descending);
         expect(quickPickSpy).toHaveBeenCalledTimes(3);
         expect(jobsSortBy).not.toHaveBeenCalled();
+    });
+});
+
+describe("copyName function", () => {
+    it("copies the job with format JobName(JobId)", async () => {
+        const node = new ZoweJobNode({ label: "JOBNAME(ID123456) - ACTIVE", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
+        node.job = {
+            jobname: "JOBNAME",
+            jobid: "ID123456",
+        } as any;
+        node.contextValue = Constants.JOBS_JOB_CONTEXT;
+        const writeTextSpy = jest.spyOn(vscode.env.clipboard, "writeText");
+        await JobActions.copyName(node);
+        expect(writeTextSpy).toHaveBeenCalledWith("JOBNAME(ID123456)");
+        writeTextSpy.mockRestore();
+    });
+
+    it("copies a node's label for spools and nodes with missing job objects", async () => {
+        const node = new ZoweSpoolNode({ label: "JES2:JESMSGLG(2)", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const writeTextSpy = jest.spyOn(vscode.env.clipboard, "writeText");
+        await JobActions.copyName(node);
+        expect(writeTextSpy).toHaveBeenCalledWith("JES2:JESMSGLG(2)");
+        writeTextSpy.mockRestore();
     });
 });

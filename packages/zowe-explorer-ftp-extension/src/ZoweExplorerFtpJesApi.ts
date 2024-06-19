@@ -101,6 +101,8 @@ export class FtpJesApi extends AbstractFtpApi implements MainframeInteraction.IJ
                             ddname: file.ddName,
                         } as unknown as zosJobs.IJobFile;
                     });
+                } else {
+                    return [];
                 }
             }
             return [result];

@@ -162,7 +162,7 @@ describe("ProfileManagement unit tests", () => {
             mocks.mockResolveQp.mockResolvedValueOnce(Profiles["getPromptChangeForAllTreesOptions"]()[1]);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
-            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.ds.removeSession", mocks.mockDsSessionNode, null, false);
+            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.removeSession", mocks.mockDsSessionNode, null, false);
         });
     });
     describe("unit tests around token auth selections", () => {
@@ -201,7 +201,7 @@ describe("ProfileManagement unit tests", () => {
             mocks.mockResolveQp.mockResolvedValueOnce(Profiles["getPromptChangeForAllTreesOptions"]()[1]);
             await ProfileManagement.manageProfile(mocks.mockUnixSessionNode);
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
-            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.uss.removeSession", mocks.mockUnixSessionNode, null, false);
+            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.removeSession", mocks.mockUnixSessionNode, null, false);
         });
         it("profile using token authentication should see correct command called for enabling validation a unix tree session node", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
@@ -209,7 +209,7 @@ describe("ProfileManagement unit tests", () => {
             mocks.mockResolveQp.mockResolvedValueOnce(Profiles["getPromptChangeForAllTreesOptions"]()[1]);
             await ProfileManagement.manageProfile(mocks.mockTreeProviders.uss.mSessionNodes[0]);
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg.replace("sestest", "zosmf"));
-            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.uss.enableValidation", mocks.mockTreeProviders.uss.mSessionNodes[0]);
+            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.enableValidation", mocks.mockTreeProviders.uss.mSessionNodes[0]);
         });
         it("profile using token authentication should see correct command called for disabling validation a unix tree session node", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
@@ -217,7 +217,7 @@ describe("ProfileManagement unit tests", () => {
             mocks.mockResolveQp.mockResolvedValueOnce(Profiles["getPromptChangeForAllTreesOptions"]()[1]);
             await ProfileManagement.manageProfile(mocks.mockUnixSessionNode);
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
-            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.uss.disableValidation", mocks.mockUnixSessionNode);
+            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.disableValidation", mocks.mockUnixSessionNode);
         });
     });
     describe("unit tests around no auth declared selections", () => {
@@ -261,7 +261,7 @@ describe("ProfileManagement unit tests", () => {
             mocks.mockResolveQp.mockResolvedValueOnce(Profiles["getPromptChangeForAllTreesOptions"]()[0]);
             await ProfileManagement.manageProfile(mocks.mockTreeProviders.ds.mSessionNodes[1]);
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg.replace("sestest", "zosmf2"));
-            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.ds.enableValidation", mocks.mockTreeProviders.ds.mSessionNodes[1]);
+            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.enableValidation", mocks.mockTreeProviders.ds.mSessionNodes[1]);
         });
         it("profile using token authentication should see correct command called for disabling validation a data set tree session node", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
@@ -269,7 +269,7 @@ describe("ProfileManagement unit tests", () => {
             mocks.mockResolveQp.mockResolvedValueOnce(Profiles["getPromptChangeForAllTreesOptions"]()[0]);
             await ProfileManagement.manageProfile(mocks.mockTreeProviders.ds.mSessionNodes[0]);
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg.replace("sestest", "zosmf"));
-            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.ds.disableValidation", mocks.mockTreeProviders.ds.mSessionNodes[0]);
+            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.disableValidation", mocks.mockTreeProviders.ds.mSessionNodes[0]);
         });
     });
 
@@ -288,7 +288,7 @@ describe("ProfileManagement unit tests", () => {
             mocks.mockJobSessionNode.contextValue = Constants.JOBS_SESSION_CONTEXT;
             mocks.mockJobSessionNode.getLabel = jest.fn(() => "test");
             await expect(ProfileManagement["handleHideProfiles"](mocks.mockJobSessionNode)).resolves.toEqual(undefined);
-            expect(commandSpy).toHaveBeenCalledWith("zowe.jobs.removeSession", mocks.mockJobSessionNode, null, false);
+            expect(commandSpy).toHaveBeenCalledWith("zowe.removeSession", mocks.mockJobSessionNode, null, false);
         });
     });
 

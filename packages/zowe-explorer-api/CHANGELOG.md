@@ -13,11 +13,26 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
   - `encoding` property on the `IZoweDatasetTreeNode` and `IZoweUSSTreeNode` interfaces - use the `getEncoding` and `setEncoding` functions instead.
   - `shortLabel` property on the `IZoweUSSTreeNode` interface - use the `getBaseName` function instead.
   - `attributes` property on the `IZoweUSSTreeNode` interface - use the `getAttributes` and `setAttributes` functions instead.
-- **Breaking:** Added return type of `Promise<void>` to `MainframeInteractions.ICommon.logout`. [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783).
+- **Breaking:** Added return type of `Promise<void>` to `IZoweTree.addDsTemplate`. [#2345](https://github.com/zowe/vscode-extension-for-zowe/pull/2345)
+- **Breaking:** Added return type of `Promise<void>` to `MainframeInteractions.ICommon.logout`. [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783)
 - Grouped Common methods into Singleton classes. [#2109](https://github.com/zowe/zowe-explorer-vscode/issues/2109)
+- **Breaking:** Removed deprecated methods: [#2238](https://github.com/zowe/zowe-explorer-vscode/issues/2238)
+  - `refreshAndReopen` function on the `IZoweTreeNode` interface - use the `reopen` function instead.
+  - `copyUssFile` function on the `IZoweTreeNode` interface - use the `pasteUssTree` function instead.
+  - `ZoweVsCodeExtension.showVsCodeMessage` - use `Gui.showMessage` instead.
+  - `ZoweVsCodeExtension.inputBox` - use `Gui.showInputBox` instead.
+  - `ZoweVsCodeExtension.promptCredentials` - use `ZoweVsCodeExtension.updateCredentials` instead.
+- **Breaking:** Added return type of `Promise<void>` to the following `IZoweTree` methods: [#2238](https://github.com/zowe/zowe-explorer-vscode/issues/2238)
+  - addFavorite
+  - removeFavorite
+  - removeFavProfile
+  - ssoLogin
+  - ssoLogout
+- Added an optional function `openWithEncoding` to the `IZoweTree` interface to open file using encoding specified by user. [#2931](https://github.com/zowe/zowe-explorer-vscode/pull/2931)
 
 ### Bug fixes
 
+- Fixed an issue where the `onProfilesUpdate` event did not fire after secure credentials were updated. [#2822](https://github.com/zowe/zowe-explorer-vscode/issues/2822)
 - Update Zowe SDKs to `8.0.0-next.202405241828` for technical currency. [#2918](https://github.com/zowe/zowe-explorer-vscode/issues/2918)
 
 ## `3.0.0-next.202404242037`

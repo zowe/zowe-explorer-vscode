@@ -9,7 +9,7 @@
  *
  */
 
-import { Types } from "@zowe/zowe-explorer-api";
+import { IZoweTree, Types } from "@zowe/zowe-explorer-api";
 import { SharedContext } from "./SharedContext";
 import type { Definitions } from "../../configuration/Definitions";
 
@@ -68,5 +68,15 @@ export class SharedTreeProviders {
             (session) => session.contextValue.includes(contextValue) && SharedContext.getSessionType(session) !== SharedContext.getSessionType(node)
         );
         return sessionContextInOtherTree !== undefined;
+    }
+
+    public static getProviderForNode(node: Types.IZoweNodeType): IZoweTree<any> {
+        if (SharedContext.isDsSession(node)) {
+            return SharedTreeProviders.ds;
+        } else if (SharedContext.isUssSession(node)) {
+            return SharedTreeProviders.uss;
+        } else {
+            return SharedTreeProviders.job;
+        }
     }
 }
