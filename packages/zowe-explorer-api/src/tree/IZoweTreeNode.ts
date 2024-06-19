@@ -331,7 +331,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
     openUSS?(download: boolean, previewFile: boolean, ussFileProvider: Types.IZoweUSSTreeType): Promise<void>;
     /**
      * Returns the local file path for the ZoweUSSNode
-     *
+     * @deprecated Zowe Explorer no longer uses local file paths for uploading and downloading USS files.
      */
     getUSSDocumentFilePath?(): string;
     /**

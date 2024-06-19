@@ -21,7 +21,7 @@ export class SpoolUtils {
      * @returns Array of spool files
      */
     public static async getSpoolFiles(node: IZoweJobTreeNode): Promise<zosjobs.IJobFile[]> {
-        ZoweLogger.trace("SpoolProvider.getSpoolFiles called.");
+        ZoweLogger.trace("SpoolUtils.getSpoolFiles called.");
         if (node.job == null) {
             return [];
         }
