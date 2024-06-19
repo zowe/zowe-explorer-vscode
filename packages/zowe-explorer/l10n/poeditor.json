@@ -153,7 +153,7 @@
     "Upload Files...": ""
   },
   "uss.uploadDialogBinary": {
-    "Upload Files... (Binary)": ""
+    "Upload Files (Binary)...": ""
   },
   "uss.text": {
     "Toggle Text": ""
@@ -507,6 +507,7 @@
   "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: {0}.\n                     To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's USS view.\n                      Would you like to do this now? {1}": "",
   "initializeUSSFavorites.error.buttonRemove": "",
   "File does not exist. It may have been deleted.": "",
+  "$(sync~spin) Pulling from Mainframe...": "",
   "{0} location": "",
   "Choose a location to create the {0}": "",
   "Name of file or directory": "",
@@ -576,7 +577,6 @@
   "Job search cancelled.": "",
   "The polling interval must be greater than or equal to 1000ms.": "",
   "Poll interval (in ms) for: {0}": "",
-  "Polling dismissed for {0}; operation cancelled.": "",
   "$(sync~spin) Polling: {0}...": "",
   "Filter: {0}": "",
   "Set a filter...": "",
