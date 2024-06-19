@@ -90,6 +90,9 @@ export async function downloadSingleSpool(nodes: IZoweJobTreeNode[], binary?: bo
         if (dirUri !== undefined) {
             for (const node of nodes) {
                 const spools = (await getSpoolFiles(node)).filter((spool: zowe.IJobFile) => matchSpool(spool, node));
+                if (!spools.length) {
+                    await Gui.infoMessage(localize("downloadSingleSpool.notFound", "No spool files found for {0}", node.label as string));
+                }
                 for (const spool of spools) {
                     await ZoweExplorerApiRegister.getJesApi(nodes[0].getProfile()).downloadSingleSpool({
                         jobFile: spool,
