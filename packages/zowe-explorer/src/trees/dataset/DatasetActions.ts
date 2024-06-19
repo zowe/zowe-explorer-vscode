@@ -495,7 +495,10 @@ export class DatasetActions {
         let includedSelection = false;
         if (node) {
             for (const item of selectedNodes) {
-                if (node.getLabel().toString() === item.getLabel().toString()) {
+                if (
+                    node.getLabel().toString() === item.getLabel().toString() &&
+                    node.getParent().getLabel().toString() === item.getParent().getLabel().toString()
+                ) {
                     includedSelection = true;
                 }
             }
