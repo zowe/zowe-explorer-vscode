@@ -1,6 +1,7 @@
 {
   "downloadSpool.select": "Select",
   "downloadSingleSpool.error": "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).",
+  "downloadSingleSpool.notFound": "No spool files found for {0}",
   "jobActions.openSpoolFile": "$(sync~spin) Opening spool file...",
   "zowe.polling.statusBar": "$(sync~spin) Polling: {0}...",
   "jobActions.fetchSpoolFile": "$(sync~spin) Fetching spool files...",

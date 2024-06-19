@@ -15,6 +15,7 @@ import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { Profiles } from "./Profiles";
 import { ZoweLogger } from "./utils/LoggerUtils";
 import { IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import type { ZoweSpoolNode } from "./job/ZoweJobNode";
 
 export default class SpoolProvider implements vscode.TextDocumentContentProvider {
     // Track files that have been opened previously through the SpoolProvider
@@ -145,10 +146,8 @@ export async function getSpoolFiles(node: IZoweJobTreeNode): Promise<zowe.IJobFi
  * @returns true if the selected node matches the spool file, false otherwise
  */
 export function matchSpool(spool: zowe.IJobFile, node: IZoweJobTreeNode): boolean {
-    return (
-        `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}` === node.label.toString() ||
-        `${spool.stepname}:${spool.ddname} - ${spool.procstep}` === node.label.toString()
-    );
+    const nodeSpool = (node as ZoweSpoolNode).spool;
+    return nodeSpool != null && spool.jobid === nodeSpool.jobid && spool.id === nodeSpool.id;
 }
 
 /**
