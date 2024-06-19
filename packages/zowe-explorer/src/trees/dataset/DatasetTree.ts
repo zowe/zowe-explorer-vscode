@@ -117,8 +117,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public delete(_node: IZoweDatasetTreeNode): void {
         throw new Error("Method not implemented.");
     }
-    public saveSearch(_node: IZoweDatasetTreeNode): void {
-        throw new Error("Method not implemented.");
+    public saveSearch(node: IZoweDatasetTreeNode): Promise<void> {
+        ZoweLogger.trace("DatasetTree.saveSearch called.");
+        return this.addFavorite(node);
     }
     public saveFile(_document: vscode.TextDocument): void {
         throw new Error("Method not implemented.");

@@ -1212,7 +1212,7 @@ export class DatasetActions {
         } else {
             node.getSessionNode().dirty = true;
         }
-        datasetProvider.removeFavorite(node);
+        await datasetProvider.removeFavorite(node);
 
         const isMember = SharedContext.isDsMember(node);
 
@@ -1354,18 +1354,6 @@ export class DatasetActions {
     }
 
     /**
-     * Copy data set info
-     *
-     * @export
-     * @deprecated Please use copyDataSets
-     * @param {IZoweNodeType} node - The node to copy
-     */
-    public static async copyDataSet(node: Types.IZoweNodeType): Promise<void> {
-        ZoweLogger.trace("dataset.actions.copyDataSet called.");
-        return vscode.env.clipboard.writeText(JSON.stringify(DatasetUtils.getNodeLabels(node)));
-    }
-
-    /**
      * Copy data sets
      *
      * @export
@@ -1410,7 +1398,7 @@ export class DatasetActions {
      * @export
      * @param {IZoweDatasetTreeNode} node - The node to migrate
      */
-    public static async hMigrateDataSet(node: ZoweDatasetNode): Promise<zosfiles.IZosFilesResponse> {
+    public static async hMigrateDataSet(datasetProvider: Types.IZoweDatasetTreeType, node: ZoweDatasetNode): Promise<zosfiles.IZosFilesResponse> {
         ZoweLogger.trace("dataset.actions.hMigrateDataSet called.");
         await Profiles.getInstance().checkCurrentProfile(node.getProfile());
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
@@ -1424,6 +1412,9 @@ export class DatasetActions {
                         comment: ["Data Set name"],
                     })
                 );
+                node.contextValue = Constants.DS_MIGRATED_FILE_CONTEXT;
+                node.setIcon(IconGenerator.getIconByNode(node).path);
+                datasetProvider.refresh();
                 return response;
             } catch (err) {
                 ZoweLogger.error(err);
@@ -1441,7 +1432,7 @@ export class DatasetActions {
      * @export
      * @param {IZoweDatasetTreeNode} node - The node to recall
      */
-    public static async hRecallDataSet(node: ZoweDatasetNode): Promise<zosfiles.IZosFilesResponse> {
+    public static async hRecallDataSet(datasetProvider: Types.IZoweDatasetTreeType, node: ZoweDatasetNode): Promise<zosfiles.IZosFilesResponse> {
         ZoweLogger.trace("dataset.actions.hRecallDataSet called.");
         await Profiles.getInstance().checkCurrentProfile(node.getProfile());
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
@@ -1455,6 +1446,13 @@ export class DatasetActions {
                         comment: ["Data Set name"],
                     })
                 );
+                if (node.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
+                    node.contextValue = Constants.DS_PDS_CONTEXT;
+                } else {
+                    node.contextValue = (await node.getEncoding())?.kind === "binary" ? Constants.DS_DS_BINARY_CONTEXT : Constants.DS_DS_CONTEXT;
+                }
+                node.setIcon(IconGenerator.getIconByNode(node).path);
+                datasetProvider.refresh();
                 return response;
             } catch (err) {
                 ZoweLogger.error(err);

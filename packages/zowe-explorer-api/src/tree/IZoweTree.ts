@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as imperative from "@zowe/imperative";
-import { IZoweTreeNode } from "./IZoweTreeNode";
+import { IZoweTreeNode, ZosEncoding } from "./IZoweTreeNode";
 import { PersistenceSchemaEnum } from "../profiles/UserSettings";
 import { Types } from "../Types";
 
@@ -102,29 +102,29 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
      * Log in to authentication service
      * @param node This parameter identifies the node that needs to be called
      */
-    ssoLogin(node: IZoweTreeNode);
+    ssoLogin(node: IZoweTreeNode): Promise<void>;
 
     /**
      * Log out from authentication service
      * @param node This parameter identifies the node that needs to be called
      */
-    ssoLogout(node: IZoweTreeNode);
+    ssoLogout(node: IZoweTreeNode): Promise<void>;
 
     /**
      * Adds a favorite node
      * @param favorite Adds a favorite node
      */
-    addFavorite(favorite: IZoweTreeNode);
+    addFavorite(favorite: IZoweTreeNode): Promise<void>;
     /**
      * Removes a favorite node
      * @param favorite Adds a favorite node
      */
-    removeFavorite(node: IZoweTreeNode);
+    removeFavorite(node: IZoweTreeNode): Promise<void>;
     /**
      * Removes profile node from Favorites section
      * @param profileName
      */
-    removeFavProfile(profileName: string, userSelected: boolean);
+    removeFavProfile(profileName: string, userSelected: boolean): Promise<void>;
     /**
      * Refreshes the tree
      */
@@ -319,4 +319,10 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
      * @param {IZoweTreeNode} node the node to poll data for
      */
     pollData?(node: IZoweTreeNode): any;
+    /**
+     * Opens resource for the provided node using encoding specified by user.
+     * @param {IZoweTreeNode} node
+     * @param {ZosEncoding} encoding File encoding, user will be prompted if undefined
+     */
+    openWithEncoding?(node: IZoweTreeNode, encoding?: ZosEncoding): Promise<void>;
 }

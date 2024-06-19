@@ -59,9 +59,6 @@
   "addSession": {
     "Add Profile to Data Sets View": ""
   },
-  "editSession": {
-    "Edit Team Config File": ""
-  },
   "createDataset": {
     "Create New Data Set": ""
   },
@@ -116,12 +113,6 @@
   "removeFavorite": {
     "Remove Favorite": ""
   },
-  "removeSavedSearch": {
-    "Remove Search": ""
-  },
-  "removeSession": {
-    "Hide Profile": ""
-  },
   "saveSearch": {
     "Add to Favorites": ""
   },
@@ -158,14 +149,11 @@
   "uss.refreshDirectory": {
     "Refresh Directory": ""
   },
-  "uss.removeSession": {
-    "Hide Profile": ""
-  },
-  "uss.binary": {
-    "Toggle Binary": ""
-  },
   "uss.uploadDialog": {
     "Upload Files...": ""
+  },
+  "uss.uploadDialogBinary": {
+    "Upload Files (Binary)...": ""
   },
   "uss.text": {
     "Toggle Text": ""
@@ -181,12 +169,6 @@
   },
   "runStopCommand": {
     "Issue Stop command": ""
-  },
-  "setOwner": {
-    "Set Owner": ""
-  },
-  "setPrefix": {
-    "Set Job Prefix": ""
   },
   "refreshJobsServer": {
     "Refresh": ""
@@ -208,9 +190,6 @@
   },
   "getJobJcl": {
     "Get JCL": ""
-  },
-  "setJobSpool": {
-    "Set Spool": ""
   },
   "configuration.title": {
     "Zowe Explorer": ""
@@ -341,12 +320,6 @@
   "zowe.pollInterval.info": {
     "Default interval (in milliseconds) when polling spool files.": ""
   },
-  "zowe.separator.recentFilters": {
-    "Recent Filters": ""
-  },
-  "zowe.settings.version": {
-    "Track if migration has been processed": ""
-  },
   "zowe.security.checkForCustomCredentialManagers": {
     "Check for any installed VS Code extensions for handling credentials when activating Zowe Explorer": ""
   },
@@ -357,9 +330,6 @@
     "Issue TSO Command": ""
   },
   "deleteProfile": {
-    "Delete Profile": ""
-  },
-  "cmd.deleteProfile": {
     "Delete a Profile Permanently...": ""
   },
   "renameDataSet": {
@@ -367,9 +337,6 @@
   },
   "renameMember": {
     "Rename Member": ""
-  },
-  "copyDataSet": {
-    "Copy Data Set": ""
   },
   "paste": {
     "Paste": ""
@@ -382,33 +349,6 @@
   },
   "showFileErrorDetails": {
     "Show Error Details": ""
-  },
-  "profile.configuration.title": {
-    "Zowe z/OSMF Profiles": ""
-  },
-  "profile.configuration.name": {
-    "Profile Name": ""
-  },
-  "profile.configuration.url": {
-    "z/OSMF URL": ""
-  },
-  "profile.configuration.user": {
-    "z/OSMF User Name": ""
-  },
-  "profile.configuration.ru": {
-    "Profile Reject Unauthorize": ""
-  },
-  "disableValidation": {
-    "Disable Validation for Profile": ""
-  },
-  "enableValidation": {
-    "Enable Validation for Profile": ""
-  },
-  "ssoLogin": {
-    "Log in to Authentication Service": ""
-  },
-  "ssoLogout": {
-    "Log out from Authentication Service": ""
   },
   "jobs.refreshJob": {
     "Refresh Job": ""
@@ -424,9 +364,6 @@
   },
   "downloadSingleSpoolBinary": {
     "Download (Binary)": ""
-  },
-  "downloadSingleSpool.error": {
-    "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).": ""
   },
   "all.configInit": {
     "Initialize Team Configuration File": ""
@@ -463,9 +400,6 @@
   },
   "compareWithSelectedReadOnly": {
     "Compare with Selected (Read-Only)": ""
-  },
-  "compareFileStarted": {
-    "A file has been chosen for compare": ""
   },
   "openWithEncoding": {
     "Open with Encoding": ""
@@ -578,6 +512,8 @@
   "Choose a location to create the {0}": "",
   "Name of file or directory": "",
   "Unable to create node:": "",
+  "Uploading file to USS tree": "",
+  "Upload action was cancelled.": "",
   "Uploading USS file": "",
   "Delete": "",
   "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}": "",
@@ -735,7 +671,6 @@
   "Unable to create data set.": "",
   "{0} was created like {1}.": "",
   "Uploading to data set": "",
-  "Upload action was cancelled.": "",
   "No data sets selected for deletion, cancelling...": "",
   "Deleting data set(s): {0}": "",
   "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}": "",

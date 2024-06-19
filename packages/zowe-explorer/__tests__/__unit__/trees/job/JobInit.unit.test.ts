@@ -14,7 +14,6 @@ import { createISession, createIProfile } from "../../../__mocks__/mockCreators/
 import { createJobNode, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { IJestIt, ITestContext, processSubscriptions } from "../../../__common__/testUtils";
 import { JobActions } from "../../../../src/trees/job/JobActions";
-import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { JobTree } from "../../../../src/trees/job/JobTree";
@@ -43,19 +42,10 @@ describe("Test src/jobs/extension", () => {
         const jobsProvider: { [key: string]: jest.Mock } = {
             createZoweSchema: jest.fn(),
             createZoweSession: jest.fn(),
-            deleteSession: jest.fn(),
             filterPrompt: jest.fn(),
-            editSession: jest.fn(),
-            addFavorite: jest.fn(),
-            removeFavorite: jest.fn(),
-            saveSearch: jest.fn(),
-            removeFavProfile: jest.fn(),
-            ssoLogin: jest.fn(),
-            ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
             onDidCloseTextDocument: jest.fn(),
             pollData: jest.fn(),
-            refreshElement: jest.fn(),
             filterJobsDialog: jest.fn(),
         };
         const commands: IJestIt[] = [
@@ -74,7 +64,7 @@ describe("Test src/jobs/extension", () => {
             },
             {
                 name: "zowe.jobs.refreshJobsServer",
-                mock: [{ spy: jest.spyOn(JobActions, "refreshJobsServer"), arg: [test.value, jobsProvider] }],
+                mock: [{ spy: jest.spyOn(JobActions, "refreshJob"), arg: [test.value, jobsProvider] }],
             },
             {
                 name: "zowe.jobs.refreshAllJobs",
@@ -106,13 +96,6 @@ describe("Test src/jobs/extension", () => {
                 mock: [{ spy: jest.spyOn(JobActions, "setPrefix"), arg: [test.value, jobsProvider] }],
             },
             {
-                name: "zowe.jobs.removeSession",
-                mock: [
-                    { spy: jest.spyOn(SharedContext, "isJobsSession"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(jobsProvider, "deleteSession"), arg: [test.value, undefined] },
-                ],
-            },
-            {
                 name: "zowe.jobs.downloadSpool",
                 mock: [{ spy: jest.spyOn(JobActions, "downloadSpool"), arg: [[test.value], false] }],
             },
@@ -135,59 +118,6 @@ describe("Test src/jobs/extension", () => {
             {
                 name: "zowe.jobs.search",
                 mock: [{ spy: jest.spyOn(jobsProvider, "filterPrompt"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.jobs.editSession",
-                mock: [{ spy: jest.spyOn(jobsProvider, "editSession"), arg: [test.value, jobsProvider] }],
-            },
-            {
-                name: "zowe.jobs.addFavorite",
-                mock: [{ spy: jest.spyOn(jobsProvider, "addFavorite"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.jobs.removeFavorite",
-                mock: [{ spy: jest.spyOn(jobsProvider, "removeFavorite"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.jobs.saveSearch",
-                mock: [{ spy: jest.spyOn(jobsProvider, "saveSearch"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.jobs.removeSearchFavorite",
-                mock: [{ spy: jest.spyOn(jobsProvider, "removeFavorite"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.jobs.removeFavProfile",
-                parm: [{ label: test.value }],
-                mock: [{ spy: jest.spyOn(jobsProvider, "removeFavProfile"), arg: [test.value, true] }],
-            },
-            {
-                name: "zowe.jobs.disableValidation",
-                mock: [
-                    {
-                        spy: jest.spyOn(Profiles, "getInstance"),
-                        arg: [],
-                        ret: { disableValidation: jest.fn() },
-                    },
-                ],
-            },
-            {
-                name: "zowe.jobs.enableValidation",
-                mock: [
-                    {
-                        spy: jest.spyOn(Profiles, "getInstance"),
-                        arg: [],
-                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
-                    },
-                ],
-            },
-            {
-                name: "zowe.jobs.ssoLogin",
-                mock: [{ spy: jest.spyOn(jobsProvider, "ssoLogin"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.jobs.ssoLogout",
-                mock: [{ spy: jest.spyOn(jobsProvider, "ssoLogout"), arg: [test.value] }],
             },
             {
                 name: "onDidChangeConfiguration",

@@ -10,14 +10,12 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweDatasetTreeNode, IZoweTreeNode, ZosEncoding, ZoweScheme, imperative, Gui } from "@zowe/zowe-explorer-api";
+import { IZoweDatasetTreeNode, ZoweScheme, imperative, Gui } from "@zowe/zowe-explorer-api";
 import { DatasetTree } from "./DatasetTree";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { DatasetActions } from "./DatasetActions";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
-import { Profiles } from "../../configuration/Profiles";
 import { ZoweLogger } from "../../tools/ZoweLogger";
-import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedActions } from "../shared/SharedActions";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedInit } from "../shared/SharedInit";
@@ -48,14 +46,6 @@ export class DatasetInit {
             vscode.commands.registerCommand("zowe.ds.addSession", async () => datasetProvider.createZoweSession(datasetProvider))
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.addFavorite", async (node, nodeList) => {
-                const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
-                for (const item of selectedNodes) {
-                    await datasetProvider.addFavorite(item as IZoweDatasetTreeNode);
-                }
-            })
-        );
-        context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.refreshAll", async () => {
                 await SharedActions.refreshAll(datasetProvider);
             })
@@ -81,9 +71,6 @@ export class DatasetInit {
             })
         );
         context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.pattern", (node) => datasetProvider.filterPrompt(node)));
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.editSession", async (node) => datasetProvider.editSession(node, datasetProvider))
-        );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.createDataset", async (node) => DatasetActions.createFile(node, datasetProvider))
         );
@@ -121,32 +108,6 @@ export class DatasetInit {
             })
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand(
-                "zowe.ds.removeSession",
-                async (node: IZoweDatasetTreeNode, nodeList: IZoweDatasetTreeNode[], hideFromAllTrees: boolean) => {
-                    let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
-                    selectedNodes = selectedNodes.filter((sNode) => SharedContext.isDsSession(sNode));
-                    for (const select of selectedNodes) {
-                        datasetProvider.deleteSession(select as IZoweDatasetTreeNode, hideFromAllTrees);
-                    }
-                    await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider);
-                }
-            )
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.removeFavorite", async (node, nodeList) => {
-                const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
-                for (const item of selectedNodes) {
-                    await datasetProvider.removeFavorite(item as IZoweDatasetTreeNode);
-                }
-            })
-        );
-        context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.saveSearch", (node) => datasetProvider.addFavorite(node)));
-        context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.removeSavedSearch", (node) => datasetProvider.removeFavorite(node)));
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.removeFavProfile", (node) => datasetProvider.removeFavProfile(node.label, true))
-        );
-        context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.submitJcl", async (file) => DatasetActions.submitJcl(datasetProvider, file))
         );
         context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.submitMember", async (node) => DatasetActions.submitMember(node)));
@@ -181,7 +142,7 @@ export class DatasetInit {
                 let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
                 selectedNodes = selectedNodes.filter((element) => SharedContext.isDs(element) || SharedContext.isPdsNotFav(element));
                 for (const item of selectedNodes) {
-                    await DatasetActions.hMigrateDataSet(item as ZoweDatasetNode);
+                    await DatasetActions.hMigrateDataSet(datasetProvider, item as ZoweDatasetNode);
                 }
             })
         );
@@ -190,7 +151,7 @@ export class DatasetInit {
                 let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
                 selectedNodes = selectedNodes.filter((element) => SharedContext.isMigrated(element));
                 for (const item of selectedNodes) {
-                    await DatasetActions.hRecallDataSet(item as ZoweDatasetNode);
+                    await DatasetActions.hRecallDataSet(datasetProvider, item as ZoweDatasetNode);
                 }
             })
         );
@@ -204,32 +165,12 @@ export class DatasetInit {
             })
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.disableValidation", (node) => {
-                Profiles.getInstance().disableValidation(node);
-                datasetProvider.refreshElement(node);
-            })
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.enableValidation", (node) => {
-                Profiles.getInstance().enableValidation(node);
-                datasetProvider.refreshElement(node);
-            })
-        );
-        context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.ssoLogin", (node: IZoweTreeNode) => datasetProvider.ssoLogin(node)));
-        context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.ssoLogout", (node: IZoweTreeNode) => datasetProvider.ssoLogout(node)));
-        context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.sortBy", async (node: IZoweDatasetTreeNode) => datasetProvider.sortPdsMembersDialog(node))
         );
         context.subscriptions.push(
             vscode.commands.registerCommand(
                 "zowe.ds.filterBy",
                 async (node: IZoweDatasetTreeNode): Promise<void> => datasetProvider.filterPdsMembersDialog(node)
-            )
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand(
-                "zowe.ds.openWithEncoding",
-                (node: IZoweDatasetTreeNode, encoding?: ZosEncoding): Promise<void> => datasetProvider.openWithEncoding(node, encoding)
             )
         );
         context.subscriptions.push(

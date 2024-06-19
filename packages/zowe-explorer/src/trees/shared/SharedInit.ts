@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { FileManagement, IZoweTree, IZoweTreeNode, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { FileManagement, IZoweTree, IZoweTreeNode, Validation, ZosEncoding, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { SharedActions } from "./SharedActions";
 import { SharedHistoryView } from "./SharedHistoryView";
 import { SharedTreeProviders } from "./SharedTreeProviders";
@@ -32,6 +32,9 @@ import { ProfilesUtils } from "../../utils/ProfilesUtils";
 import { DatasetFSProvider } from "../dataset/DatasetFSProvider";
 import { ExtensionUtils } from "../../utils/ExtensionUtils";
 import type { Definitions } from "../../configuration/Definitions";
+import { SharedUtils } from "./SharedUtils";
+import { SharedContext } from "./SharedContext";
+import { TreeViewUtils } from "../../utils/TreeViewUtils";
 
 export class SharedInit {
     public static registerRefreshCommand(
@@ -160,16 +163,83 @@ export class SharedInit {
         }
         if (providers.ds || providers.uss || providers.job) {
             context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.ds.deleteProfile", async (node) => Profiles.getInstance().deleteProfile(node))
+                vscode.commands.registerCommand("zowe.disableValidation", (node) => {
+                    Profiles.getInstance().disableValidation(node);
+                    SharedTreeProviders.getProviderForNode(node).refreshElement(node);
+                })
             );
             context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.cmd.deleteProfile", async (node) => Profiles.getInstance().deleteProfile(node))
+                vscode.commands.registerCommand("zowe.enableValidation", (node) => {
+                    Profiles.getInstance().enableValidation(node);
+                    SharedTreeProviders.getProviderForNode(node).refreshElement(node);
+                })
             );
             context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.uss.deleteProfile", async (node) => Profiles.getInstance().deleteProfile(node))
+                vscode.commands.registerCommand("zowe.ssoLogin", (node: IZoweTreeNode) => SharedTreeProviders.getProviderForNode(node).ssoLogin(node))
             );
             context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.jobs.deleteProfile", async (node) => Profiles.getInstance().deleteProfile(node))
+                vscode.commands.registerCommand("zowe.ssoLogout", (node: IZoweTreeNode) =>
+                    SharedTreeProviders.getProviderForNode(node).ssoLogout(node)
+                )
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.deleteProfile", (node: IZoweTreeNode) => Profiles.getInstance().deleteProfile(node))
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.editSession", async (node: IZoweTreeNode) => {
+                    const treeProvider = SharedTreeProviders.getProviderForNode(node);
+                    await treeProvider.editSession(node, treeProvider);
+                })
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand(
+                    "zowe.removeSession",
+                    async (node: IZoweTreeNode, nodeList: IZoweTreeNode[], hideFromAllTrees: boolean) => {
+                        const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList).filter((sNode) => SharedContext.isSession(sNode));
+                        for (const item of selectedNodes) {
+                            SharedTreeProviders.getProviderForNode(item).deleteSession(item, hideFromAllTrees);
+                        }
+                        if (selectedNodes.length) {
+                            await TreeViewUtils.fixVsCodeMultiSelect(SharedTreeProviders.getProviderForNode(selectedNodes[0]));
+                        }
+                    }
+                )
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.saveSearch", (node: IZoweTreeNode) => {
+                    SharedTreeProviders.getProviderForNode(node).saveSearch(node);
+                })
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.addFavorite", async (node: IZoweTreeNode, nodeList: IZoweTreeNode[]) => {
+                    const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
+                    for (const item of selectedNodes) {
+                        await SharedTreeProviders.getProviderForNode(item).addFavorite(item);
+                    }
+                })
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.removeFavorite", async (node: IZoweTreeNode, nodeList: IZoweTreeNode[]) => {
+                    const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
+                    for (const item of selectedNodes) {
+                        await SharedTreeProviders.getProviderForNode(item).removeFavorite(item);
+                    }
+                })
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.removeFavProfile", (node: IZoweTreeNode) =>
+                    SharedTreeProviders.getProviderForNode(node).removeFavProfile(node.label as string, true)
+                )
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.openWithEncoding", async (node: IZoweTreeNode, encoding?: ZosEncoding): Promise<void> => {
+                    const treeProvider = SharedTreeProviders.getProviderForNode(node);
+                    if (treeProvider.openWithEncoding) {
+                        await treeProvider.openWithEncoding(node, encoding);
+                    } else {
+                        throw new Error("Method not implemented.");
+                    }
+                })
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.issueTsoCmd", async (node?, command?) => {
