@@ -37,7 +37,7 @@ export function App() {
 
   useEffect(() => {
     const userTheme = document.body.getAttribute("data-vscode-theme-kind");
-    if (userTheme === "vscode-dark") {
+    if (userTheme !== "vscode-light") {
       setBaseTheme("ag-theme-quartz-dark");
     }
     window.addEventListener("message", (event: any): void => {
@@ -63,7 +63,7 @@ export function App() {
 
     const mutationObserver = new MutationObserver((_mutations, _observer) => {
       const themeAttr = document.body.getAttribute("data-vscode-theme-kind");
-      setBaseTheme(themeAttr === "vscode-dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz");
+      setBaseTheme(themeAttr === "vscode-light" ? "ag-theme-quartz" : "ag-theme-quartz-dark");
     });
     mutationObserver.observe(document.body, { attributes: true });
   }, []);
