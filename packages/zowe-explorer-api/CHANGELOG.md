@@ -29,7 +29,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
   - ssoLogin
   - ssoLogout
 - Added an optional function `openWithEncoding` to the `IZoweTree` interface to open file using encoding specified by user. [#2931](https://github.com/zowe/zowe-explorer-vscode/pull/2931)
-- Deprecated the `getUSSDocumentFilePath` function on the `IZoweTreeNode` interface as Zowe Explorer no longer uses the local file system for storing USS files. **No replacement is planned**; please access data from tree nodes using their [resource URIs](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#operations-for-extenders) instead.
+- Deprecated the `getUSSDocumentFilePath` function on the `IZoweTreeNode` interface as Zowe Explorer no longer uses the local file system for storing USS files. **No replacement is planned**; please access data from tree nodes using their [resource URIs](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#operations-for-extenders) instead. [#2968](https://github.com/zowe/zowe-explorer-vscode/pull/2968)
 
 ### Bug fixes
 
