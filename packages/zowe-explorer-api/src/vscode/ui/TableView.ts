@@ -11,11 +11,10 @@
 
 import { UriPair, WebView } from "./WebView";
 import { Event, EventEmitter, ExtensionContext } from "vscode";
-import { AnyComponent, JSX } from "preact";
 import { randomUUID } from "crypto";
 
 export namespace Table {
-    export type Action = AnyComponent | JSX.Element;
+    export type Action = string;
     export type Axes = "row" | "column";
 
     export type RowContent = Record<string | number, string | number | boolean | string[] | Action | Action[]>;
@@ -31,9 +30,9 @@ export namespace Table {
             row: Map<number, Action[]>;
         };
         // Column headers for the top of the table
-        columns: Column[] | null;
+        columns: Column[] | null | undefined;
         // The row data for the table. Each row contains a set of variables corresponding to the data for each column in that row
-        rows: RowContent[] | null;
+        rows: RowContent[] | null | undefined;
         // The display title for the table
         title?: string;
     };

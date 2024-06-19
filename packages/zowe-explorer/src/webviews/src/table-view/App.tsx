@@ -15,7 +15,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import { AgGridReact } from "ag-grid-react";
 import { useEffect, useState } from "preact/hooks";
-import { isSecureOrigin } from "../utils";
+import { getVsCodeTheme, isSecureOrigin, useMutableObserver } from "../utils";
 import type { Table } from "@zowe/zowe-explorer-api";
 import { tableProps } from "./types";
 // Custom styling (font family, VS Code color scheme, etc.)
@@ -36,10 +36,13 @@ export function App() {
   const [baseTheme, setBaseTheme] = useState<string>("ag-theme-quartz");
 
   useEffect(() => {
-    const userTheme = document.body.getAttribute("data-vscode-theme-kind");
+    // Apply the dark version of the AG Grid theme if the user is using a dark or high-contrast theme in VS Code.
+    const userTheme = getVsCodeTheme();
     if (userTheme !== "vscode-light") {
       setBaseTheme("ag-theme-quartz-dark");
     }
+
+    // Set up event listener to handle data changes being sent to the webview.
     window.addEventListener("message", (event: any): void => {
       if (!isSecureOrigin(event.origin)) {
         return;
@@ -50,23 +53,47 @@ export function App() {
       }
 
       const eventInfo = event.data;
-
       switch (eventInfo.command) {
         case "ondatachanged":
-          setTableData(eventInfo.data);
+          const tableData: Table.Data = eventInfo.data;
+          if (tableData.actions && tableData.actions.row) {
+            // Add an extra column to the end of the table
+            const rows = tableData.rows?.map((row) => {
+              return { ...row, actions: "" };
+            });
+            const columns = [
+              ...(tableData.columns ?? []),
+              {
+                field: "actions",
+                sortable: false,
+                cellRenderer: (_params: any) => {
+                  return <b>custom cell renderer</b>;
+                },
+              },
+            ];
+            setTableData({ ...tableData, rows, columns });
+          } else {
+            setTableData(eventInfo.data);
+          }
           break;
         default:
           break;
       }
     });
-    vscodeApi.postMessage({ command: "ready" });
 
-    const mutationObserver = new MutationObserver((_mutations, _observer) => {
-      const themeAttr = document.body.getAttribute("data-vscode-theme-kind");
-      setBaseTheme(themeAttr === "vscode-light" ? "ag-theme-quartz" : "ag-theme-quartz-dark");
-    });
-    mutationObserver.observe(document.body, { attributes: true });
+    // Once the listener is in place, send a "ready signal" to the TableView instance to handle new data.
+    vscodeApi.postMessage({ command: "ready" });
   }, []);
+
+  // Observe attributes of the `body` element to detect VS Code theme changes.
+  useMutableObserver(
+    document.body,
+    (_mutations, _observer) => {
+      const themeAttr = getVsCodeTheme();
+      setBaseTheme(themeAttr === "vscode-light" ? "ag-theme-quartz" : "ag-theme-quartz-dark");
+    },
+    { attributes: true }
+  );
 
   return (
     <>
