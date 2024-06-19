@@ -29,6 +29,7 @@ import {
     ZoweVsCodeExtension,
     getFullPath,
     getZoweDir,
+    EventTypes,
 } from "@zowe/zowe-explorer-api";
 import { errorHandling, FilterDescriptor, FilterItem, ProfilesUtils } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
@@ -1329,6 +1330,7 @@ export class Profiles extends ProfilesCache {
                     ZoweLogger.info(successMsg);
                     Gui.showMessage(successMsg);
                     await this.tokenAuthClearSecureArray(serviceProfile.name);
+                    ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.UPDATE);
                 } else {
                     Gui.errorMessage(
                         localize(
