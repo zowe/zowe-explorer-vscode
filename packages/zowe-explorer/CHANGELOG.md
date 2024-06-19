@@ -146,6 +146,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Migrated to new package manager PNPM from Yarn.
 
+## `2.16.2`
+
+### Bug fixes
+
+- Fix issue Right-click-delete option deleting the currently open/selected file and not the file which is right-clicked when members having same name [#2941](https://github.com/zowe/zowe-explorer-vscode/issues/2941)
+
 ## `2.16.0`
 
 ## New features and enhancements
