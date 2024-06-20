@@ -4,8 +4,8 @@
 
 ## Release Notes
 
-<!-- Include the Milestone Number and a small description of your change that will be added to the changelog -->
-<!-- If there is a linked issue, it should have the same milestone as this PR -->
+<!-- Include the Milestone Number and a small description of your change that will be added to the changelog. -->
+<!-- If there is a linked issue, it should have the same milestone as this PR. -->
 
 Milestone:
 
@@ -13,18 +13,17 @@ Changelog:
 
 ## Types of changes
 
-What types of changes does your code introduce to Zowe Explorer?
-_Put an `x` in all boxes that apply._
+<!-- What types of changes does your code introduce to Zowe Explorer? Put an `x` in all boxes that apply. -->
 
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] Enhancement (non-breaking change which adds or improves functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ] Breaking change (a change that would cause existing functionality to not work as expected)
 - [ ] Documentation (Markdown, README updates)
 - [ ] Other (please specify above in "Proposed changes" section)
 
 ## Checklist
 
-_Put an `x` in all boxes that apply. You can also fill these out after creating the PR. If you're unsure about any of them, don't hesitate to ask. We're here to help! This checklist will be used as reference for both the contributor and the reviewer._
+<!-- Put an `x` in all boxes that apply. You can also fill these out after creating the PR. If you're unsure about any of them, don't hesitate to ask. We're here to help! This checklist will be used as reference for both the contributor and the reviewer. -->
 
 **General**
 
@@ -51,4 +50,4 @@ _Put an `x` in all boxes that apply. You can also fill these out after creating 
 
 ## Further comments
 
-<!-- If this is a relatively large or complex change, kick off the discussion by explaining why you chose the solution you did and what alternatives you considered, etc... -->
+<!-- If this is a relatively large or complex change, kick off the discussion by explaining why you chose the solution you did, what alternatives you considered, etc... -->
