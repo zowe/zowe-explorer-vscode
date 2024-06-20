@@ -16,7 +16,12 @@ const vscodeApi = acquireVsCodeApi();
 export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewProps) => {
   const [tableData, setTableData] = useState<Table.Data>(
     data ?? {
-      actions: {},
+      actions: {
+        all: [],
+      },
+      contextOpts: {
+        all: [],
+      },
       columns: null,
       rows: null,
       title: "",
@@ -30,6 +35,10 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
     if (userTheme !== "vscode-light") {
       setTheme("ag-theme-quartz-dark");
     }
+
+    // Add an event listener for the context menu to prevent VS Code from showing its right-click menu.
+    // Source: https://github.com/microsoft/vscode/issues/139824
+    window.addEventListener("contextmenu", (e) => e.stopImmediatePropagation(), true);
 
     // Set up event listener to handle data changes being sent to the webview.
     window.addEventListener("message", (event: any): void => {
@@ -48,7 +57,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
           const newData: Table.Data = response.data;
           if (newData.actions) {
             // Add an extra column to the end of each row if row actions are present
-            const rows = newData.rows?.map((row) => {
+            const rows = newData.rows?.map((row: Table.RowContent) => {
               return { ...row, actions: "" };
             });
             const columns = [
@@ -62,10 +71,10 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
                 cellRenderer:
                   actionsCellRenderer ??
                   ((params: any) => {
-                    if (newData.actions[params.rowIndex]) {
+                    if (newData.actions[params.rowIndex] || newData.actions["all"]) {
                       return (
                         <span style={{ display: "flex", alignItems: "center", marginTop: "0.5em", userSelect: "none" }}>
-                          {newData.actions[params.rowIndex].map((action) => (
+                          {[...(newData.actions[params.rowIndex] || []), ...(newData.actions["all"] || [])].map((action) => (
                             <VSCodeButton
                               appearance={action.type ?? "primary"}
                               onClick={(_e: any) => vscodeApi.postMessage({ command: action.command, row: newData.rows?.at(params.rowIndex) })}

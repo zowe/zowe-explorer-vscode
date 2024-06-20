@@ -38,18 +38,17 @@ export class TableBuilder {
         actions: {
             all: [],
         },
+        contextOpts: {},
         columns: [],
         rows: [],
         title: "",
     };
-
     public constructor(context: ExtensionContext) {
         this.context = context;
     }
 
     /**
      * Set the title for the next table.
-     *
      * @param name The name of the table
      * @returns The same {@link TableBuilder} instance with the title added
      */
@@ -60,7 +59,6 @@ export class TableBuilder {
 
     /**
      * Set the rows for the next table.
-     *
      * @param rows The rows of content to use for the table
      * @returns The same {@link TableBuilder} instance with the rows added
      */
@@ -71,7 +69,6 @@ export class TableBuilder {
 
     /**
      * Set the headers for the next table.
-     *
      * @param rows The headers to use for the table
      * @returns The same {@link TableBuilder} instance with the headers added
      */
@@ -82,7 +79,6 @@ export class TableBuilder {
 
     /**
      * Add row actions for the next table.
-     *
      * @param actions the record of indices to {@link Table.Action} arrays to use for the table
      * @returns The same {@link TableBuilder} instance with the row actions added
      */
@@ -93,7 +89,6 @@ export class TableBuilder {
 
     /**
      * Add a row action to the next table.
-     *
      * @param index The column index to add an action to
      * @returns The same {@link TableBuilder} instance with the row action added
      */
@@ -109,7 +104,6 @@ export class TableBuilder {
 
     /**
      * Builds the table with the given data.
-     *
      * @returns A new {@link Table.Instance} with the given data/options
      */
     public build(): Table.Instance {
@@ -118,7 +112,6 @@ export class TableBuilder {
 
     /**
      * Builds the table with the given data and shares it with the TableMediator singleton.
-     *
      * @returns A new, **shared** {@link Table.Instance} with the given data/options
      */
     public buildAndShare(): Table.Instance {

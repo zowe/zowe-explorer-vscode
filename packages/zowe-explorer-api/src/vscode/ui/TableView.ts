@@ -15,6 +15,7 @@ import { randomUUID } from "crypto";
 
 export namespace Table {
     export type Action = { title: string; command: string; type?: "primary" | "secondary" | "icon" };
+    export type ContextMenuOption = { title: string; command: string };
     export type Axes = "row" | "column";
 
     export type RowContent = Record<string | number, string | number | boolean | string[]>;
@@ -24,6 +25,7 @@ export namespace Table {
         actions: Record<number | "all", Action[]>;
         // Column headers for the top of the table
         columns: Column[] | null | undefined;
+        contextOpts: Record<number | string | "all", ContextMenuOption[]>;
         // The row data for the table. Each row contains a set of variables corresponding to the data for each column in that row
         rows: RowContent[] | null | undefined;
         // The display title for the table
@@ -117,6 +119,23 @@ export namespace Table {
                 this.data.actions[index] = [...existingActions, ...actions];
             } else {
                 this.data.actions[index] = actions;
+            }
+            return this.updateWebview();
+        }
+
+        /**
+         * Add one or more context menu options to the given row.
+         *
+         * @param id The row index or column ID where the action should be displayed
+         * @param actions The actions to add to the given row
+         * @returns Whether the webview successfully received the new context menu option(s)
+         */
+        public addContextOption(id: number | string, ...options: ContextMenuOption[]): Promise<boolean> {
+            if (this.data.contextOpts[id]) {
+                const existingOpts = this.data.contextOpts[id];
+                this.data.contextOpts[id] = [...existingOpts, ...options];
+            } else {
+                this.data.contextOpts[id] = options;
             }
             return this.updateWebview();
         }
