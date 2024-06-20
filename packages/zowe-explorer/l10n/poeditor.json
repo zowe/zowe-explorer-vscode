@@ -404,6 +404,9 @@
   "openWithEncoding": {
     "Open with Encoding": ""
   },
+  "zowe.history.deprecationMsg": {
+    "Changes made here will not be reflected in Zowe Explorer, use right-click Edit History option to access information from local storage.": ""
+  },
   "Refresh": "",
   "Delete Selected": "",
   "Select an item before deleting": "",
