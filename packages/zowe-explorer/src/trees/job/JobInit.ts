@@ -34,7 +34,7 @@ export class JobInit {
         ZoweLogger.trace("ZosJobsProvider.createJobsTree called.");
         const tree = new JobTree();
         await tree.initializeJobsTree(log);
-        await tree.addSession(undefined, undefined, tree);
+        await tree.addSession();
         return tree;
     }
 
@@ -154,8 +154,6 @@ export class JobInit {
                 JobFSProvider.instance.cacheOpenedUri(doc.uri);
             })
         );
-
-        context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(JobTree.onDidCloseTextDocument));
 
         SharedInit.initSubscribers(context, jobsProvider);
         return jobsProvider;

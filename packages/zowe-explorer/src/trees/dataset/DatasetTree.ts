@@ -17,7 +17,6 @@ import {
     Gui,
     Validation,
     imperative,
-    IZoweTree,
     IZoweDatasetTreeNode,
     PersistenceSchemaEnum,
     Types,
@@ -38,7 +37,6 @@ import { ZoweTreeProvider } from "../ZoweTreeProvider";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedContext } from "../shared/SharedContext";
-import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { SharedUtils } from "../shared/SharedUtils";
 import { FilterDescriptor, FilterItem } from "../../management/FilterManagement";
 import { IconUtils } from "../../icons/IconUtils";
@@ -64,7 +62,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public lastOpened: Types.ZoweNodeInteraction = {};
     // public memberPattern: IZoweDatasetTreeNode[] = [];
     private treeView: vscode.TreeView<IZoweDatasetTreeNode>;
-    public openFiles: Record<string, IZoweDatasetTreeNode> = {};
 
     public dragMimeTypes: string[] = ["application/vnd.code.tree.zowe.ds.explorer"];
     public dropMimeTypes: string[] = ["application/vnd.code.tree.zowe.ds.explorer"];
@@ -431,17 +428,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public getTreeView(): vscode.TreeView<IZoweDatasetTreeNode> {
         ZoweLogger.trace("DatasetTree.getTreeView called.");
         return this.treeView;
-    }
-
-    /**
-     * Adds a new session to the data set tree
-     *
-     * @param {string} [sessionName] - optional; loads default profile if not passed
-     * @param {string} [profileType] - optional; loads profiles of a certain type if passed
-     */
-    public async addSession(sessionName?: string, profileType?: string, provider?: IZoweTree<IZoweTreeNode>): Promise<void> {
-        ZoweLogger.trace("DatasetTree.addSession called.");
-        await super.addSession(sessionName, profileType, provider);
     }
 
     /**
@@ -971,7 +957,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 // executing search from saved search in favorites
                 pattern = node.getLabel() as string;
                 const sessionName = node.getProfileName();
-                await this.addSession(sessionName);
+                await this.addSession({ sessionName });
                 const nonFavNode = this.mSessionNodes.find((tempNode) => tempNode.label.toString() === sessionName);
                 if (!nonFavNode.getSession().ISession.user || !nonFavNode.getSession().ISession.password) {
                     nonFavNode.getSession().ISession.user = node.getSession().ISession.user;
@@ -1550,17 +1536,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }),
             Constants.MS_PER_SEC * 4
         );
-    }
-
-    /**
-     * Event listener to mark a Data Set doc URI as null in the openFiles record
-     * @param this (resolves ESlint warning about unbound methods)
-     * @param doc A doc URI that was closed
-     */
-    public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): void {
-        if (doc.uri.fsPath.includes(Constants.DS_DIR)) {
-            SharedUtils.updateOpenFiles(SharedTreeProviders.ds, doc.uri.fsPath, null);
-        }
     }
 
     public async openWithEncoding(node: IZoweDatasetTreeNode, encoding?: ZosEncoding): Promise<void> {

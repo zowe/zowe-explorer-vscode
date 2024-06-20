@@ -156,8 +156,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public getSessionNode(): IZoweUSSTreeNode {
         ZoweLogger.trace("ZoweUSSNode.getSessionNode called.");
-        const sessionNode = this.session ? this : (this.getParent()?.getSessionNode() as IZoweUSSTreeNode);
-        return (sessionNode ?? this) as IZoweUSSTreeNode;
+        return this.getParent() ? (this.getParent().getSessionNode() as IZoweUSSTreeNode) : this;
     }
 
     /**
@@ -530,7 +529,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public async openUSS(download: boolean, _previewFile: boolean, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.openUSS called.");
-        const errorMsg = vscode.l10n.t("open() called from invalid node.");
+        const errorMsg = vscode.l10n.t("openUSS() called from invalid node.");
         switch (true) {
             // For opening favorited and non-favorited files
             case this.getParent().contextValue === Constants.FAV_PROFILE_CONTEXT:
@@ -570,6 +569,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     // This is not a UI refresh.
     public async refreshUSS(): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.refreshUSS called.");
+        const errorMsg = vscode.l10n.t("refreshUSS() called from invalid node.");
         switch (true) {
             case SharedContext.isUssDirectory(this.getParent()):
                 break;
@@ -578,8 +578,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             case SharedContext.isUssSession(this.getParent()):
                 break;
             default:
-                Gui.errorMessage(vscode.l10n.t("refreshUSS() called from invalid node."));
-                throw Error(vscode.l10n.t("refreshUSS() called from invalid node."));
+                Gui.errorMessage(errorMsg);
+                throw Error(errorMsg);
         }
 
         try {

@@ -30,7 +30,7 @@ export class USSInit {
         ZoweLogger.trace("uss.USSTree.createUSSTree called.");
         const tree = new USSTree();
         await tree.initializeFavorites(log);
-        await tree.addSession(undefined, undefined, tree);
+        await tree.addSession();
         return tree;
     }
 
@@ -169,7 +169,6 @@ export class USSInit {
                 UssFSProvider.instance.cacheOpenedUri(doc.uri);
             })
         );
-        context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(USSTree.onDidCloseTextDocument));
 
         SharedInit.initSubscribers(context, ussFileProvider);
         return ussFileProvider;

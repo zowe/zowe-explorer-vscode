@@ -1555,21 +1555,6 @@ describe("USSTree Unit Tests - Function editSession", () => {
             expect(globalMocks.testTree.getFavorites()).toEqual(["test1", "test2", "test3"]);
         });
     });
-
-    describe("onDidCloseTextDocument", () => {
-        it("sets the entry in openFiles record to null if USS URI is valid", async () => {
-            const globalMocks = await createGlobalMocks();
-            const tree = globalMocks.testTree as unknown as any;
-            Object.defineProperty(Constants, "USS_DIR", {
-                value: path.join("some", "fspath", "_U_"),
-            });
-            const doc = { uri: { fsPath: path.join(Constants.USS_DIR, "lpar", "someFile.txt") } } as vscode.TextDocument;
-
-            jest.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(tree);
-            USSTree.onDidCloseTextDocument(doc);
-            expect(tree.openFiles[doc.uri.fsPath]).toBeNull();
-        });
-    });
 });
 
 describe("USSTree Unit Tests - Function openWithEncoding", () => {

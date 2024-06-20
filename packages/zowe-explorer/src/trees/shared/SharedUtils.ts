@@ -13,7 +13,7 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
-import { Gui, IZoweTreeNode, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweTree, Types, ZosEncoding } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTreeNode, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, Types, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { UssFSProvider } from "../uss/UssFSProvider";
 import { USSUtils } from "../uss/USSUtils";
 import { Constants } from "../../configuration/Constants";
@@ -131,12 +131,6 @@ export class SharedUtils {
             case "prefix":
             default:
                 return text.length > Constants.JOBS_MAX_PREFIX ? vscode.l10n.t("Invalid job prefix") : null;
-        }
-    }
-
-    public static updateOpenFiles<T extends IZoweTreeNode>(treeProvider: IZoweTree<T>, docPath: string, value: T | null): void {
-        if (treeProvider.openFiles) {
-            treeProvider.openFiles[docPath] = value;
         }
     }
 

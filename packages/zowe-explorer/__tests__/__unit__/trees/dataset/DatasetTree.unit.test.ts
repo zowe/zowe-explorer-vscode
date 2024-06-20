@@ -850,7 +850,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         jest.spyOn(Profiles.getInstance(), "fetchAllProfiles").mockReturnValue(Promise.resolve([blockMocks.imperativeProfile]));
         jest.spyOn(SharedActions, "resetValidationSettings").mockImplementation();
 
-        await expect(testTree.addSession(null, "test")).resolves.not.toThrow();
+        await expect(testTree.addSession({ profileType: "test" })).resolves.not.toThrow();
     });
 });
 
@@ -1260,10 +1260,10 @@ describe("Dataset Tree Unit Tests - Function deleteSession", () => {
         testTree.mSessionNodes = globalMocks.mockTreeProviders.ds.mSessionNodes;
         testTree.mSessionNodes.push(createMockNode("Favorites", Constants.DS_SESSION_CONTEXT));
 
-        testTree.deleteSession(testTree.mSessionNodes[0]);
-        testTree.deleteSession(testTree.mSessionNodes[1]);
+        testTree.deleteSession(globalMocks.mockTreeProviders.ds.mSessionNodes[0]);
+        testTree.deleteSession(globalMocks.mockTreeProviders.ds.mSessionNodes[1]);
 
-        expect(globalMocks.mockTreeProviders.ds.mSessionNodes.map((node) => node.label)).toEqual(["Favorites"]);
+        expect(testTree.mSessionNodes.map((node) => node.label)).toEqual(["Favorites"]);
     });
 
     it("Checking case profile needs to be hidden for all trees", () => {
@@ -1424,7 +1424,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         } as any);
 
         await testTree.datasetFilterPrompt(favoriteSearch);
-        expect(addSessionSpy).toHaveBeenLastCalledWith(blockMocks.datasetSessionNode.label.trim());
+        expect(addSessionSpy).toHaveBeenLastCalledWith({ sessionName: blockMocks.datasetSessionNode.label.trim() });
     });
     it("Checking adding of new filter", async () => {
         const globalMocks = createGlobalMocks();
@@ -3054,16 +3054,6 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
                 favorites: ["test1", "test2", "test3"],
             });
             expect(tree.getFavorites()).toEqual(["test1", "test2", "test3"]);
-        });
-    });
-
-    describe("onDidCloseTextDocument", () => {
-        it("sets the entry in openFiles record to null if Data Set URI is valid", () => {
-            const doc = { uri: { fsPath: join(Constants.DS_DIR, "lpar", "SOME.PS") } } as vscode.TextDocument;
-
-            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(tree);
-            DatasetTree.onDidCloseTextDocument(doc);
-            expect(tree.openFiles[doc.uri.fsPath]).toBeNull();
         });
     });
 });

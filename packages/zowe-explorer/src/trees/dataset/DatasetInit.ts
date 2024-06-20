@@ -25,7 +25,7 @@ export class DatasetInit {
     public static async createDatasetTree(log: imperative.Logger): Promise<DatasetTree> {
         const tree = new DatasetTree();
         await tree.initializeFavorites(log);
-        await tree.addSession(undefined, undefined, tree);
+        await tree.addSession();
         return tree;
     }
 
@@ -183,7 +183,6 @@ export class DatasetInit {
             })
         );
         context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(DatasetFSProvider.onDidOpenTextDocument));
-        context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(DatasetTree.onDidCloseTextDocument));
 
         SharedInit.initSubscribers(context, datasetProvider);
         return datasetProvider;
