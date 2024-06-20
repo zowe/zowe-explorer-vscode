@@ -35,10 +35,7 @@ import { TableMediator } from "./TableMediator";
 export class TableBuilder {
     private context: ExtensionContext;
     private data: Table.Data = {
-        actions: {
-            column: new Map(),
-            row: new Map(),
-        },
+        actions: {},
         columns: [],
         rows: [],
         title: "",
@@ -82,50 +79,13 @@ export class TableBuilder {
     }
 
     /**
-     * Add an action for the next table.
-     *
-     * @param actionMap the map of indices to {@link Table.Action} arrays to add to for the table
-     * @param index the index of the row or column to add an action to
-     */
-    private action(actionMap: Map<number, Table.Action[]>, index: number, action: Table.Action): void {
-        if (actionMap.has(index)) {
-            const actions = actionMap.get(index);
-            actionMap.set(index, [...actions, action]);
-        } else {
-            actionMap.set(index, [action]);
-        }
-    }
-
-    /**
-     * Add column actions for the next table.
-     *
-     * @param actionMap the map of indices to {@link Table.Action} arrays to use for the table
-     * @returns The same {@link TableBuilder} instance with the column actions added
-     */
-    public columnActions(actionMap: Map<number, Table.Action[]>): TableBuilder {
-        this.data.actions.column = actionMap;
-        return this;
-    }
-
-    /**
      * Add row actions for the next table.
      *
-     * @param actionMap the map of indices to {@link Table.Action} arrays to use for the table
+     * @param actions the record of indices to {@link Table.Action} arrays to use for the table
      * @returns The same {@link TableBuilder} instance with the row actions added
      */
-    public rowActions(actionMap: Map<number, Table.Action[]>): TableBuilder {
-        this.data.actions.row = actionMap;
-        return this;
-    }
-
-    /**
-     * Add a column action to the next table.
-     *
-     * @param index The column index to add an action to
-     * @returns The same {@link TableBuilder} instance with the column action added
-     */
-    public columnAction(index: number, action: Table.Action): TableBuilder {
-        this.action(this.data.actions.column, index, action);
+    public rowActions(actions: Record<number, Table.Action[]>): TableBuilder {
+        this.data.actions = actions;
         return this;
     }
 
@@ -136,7 +96,12 @@ export class TableBuilder {
      * @returns The same {@link TableBuilder} instance with the row action added
      */
     public rowAction(index: number, action: Table.Action): TableBuilder {
-        this.action(this.data.actions.row, index, action);
+        if (this.data.actions[index]) {
+            const actions = this.data.actions[index];
+            this.data.actions[index] = [...actions, action];
+        } else {
+            this.data.actions[index] = [action];
+        }
         return this;
     }
 
@@ -164,9 +129,7 @@ export class TableBuilder {
      * Resets all data configured in the builder from previously-created table views.
      */
     public reset(): void {
-        this.data.actions.row.clear();
-        this.data.actions.column.clear();
-
+        this.data.actions = {};
         this.data.columns = [];
         this.data.rows = [];
         this.data.title = "";

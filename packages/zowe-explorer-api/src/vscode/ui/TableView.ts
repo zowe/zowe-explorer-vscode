@@ -14,21 +14,14 @@ import { Event, EventEmitter, ExtensionContext } from "vscode";
 import { randomUUID } from "crypto";
 
 export namespace Table {
-    export type Action = string;
+    export type Action = { title: string; command: string };
     export type Axes = "row" | "column";
 
     export type RowContent = Record<string | number, string | number | boolean | string[] | Action | Action[]>;
     export type Column = { field: string; filter?: boolean };
-    export type Dividers = {
-        rows: number[];
-        columns: number[];
-    };
     export type Data = {
         // Actions to apply to the given row or column index
-        actions: {
-            column: Map<number, Action[]>;
-            row: Map<number, Action[]>;
-        };
+        actions: Record<number, Action[]>;
         // Column headers for the top of the table
         columns: Column[] | null | undefined;
         // The row data for the table. Each row contains a set of variables corresponding to the data for each column in that row
@@ -111,21 +104,19 @@ export namespace Table {
         }
 
         /**
-         * Add one or more actions to the given row or column index.
+         * Add one or more actions to the given row.
          *
-         * @param axis The axis to add an action to (either "row" or "column")
-         * @param index The index where the action should be displayed
-         * @param actions The actions to add to the given row/column index
+         * @param index The row index where the action should be displayed
+         * @param actions The actions to add to the given row
          *
          * @returns Whether the webview successfully received the new action(s)
          */
-        public addAction(axis: Axes, index: number, ...actions: Action[]): Promise<boolean> {
-            const actionMap = axis === "row" ? this.data.actions.row : this.data.actions.column;
-            if (actionMap.has(index)) {
-                const existingActions = actionMap.get(index)!;
-                actionMap.set(index, [...existingActions, ...actions]);
+        public addAction(index: number, ...actions: Action[]): Promise<boolean> {
+            if (this.data.actions[index]) {
+                const existingActions = this.data.actions[index];
+                this.data.actions[index] = [...existingActions, ...actions];
             } else {
-                actionMap.set(index, actions);
+                this.data.actions[index] = actions;
             }
             return this.updateWebview();
         }

@@ -11,6 +11,14 @@
 
 import type { Table } from "@zowe/zowe-explorer-api";
 import { AgGridReactProps } from "ag-grid-react";
+import { JSXInternal } from "preact/src/jsx";
+
+type AgGridThemes = "ag-theme-quartz" | "ag-theme-balham" | "ag-theme-material" | "ag-theme-alpine";
+export type TableViewProps = {
+    actionsCellRenderer?: (params: any) => JSXInternal.Element;
+    baseTheme?: AgGridThemes | string;
+    data?: Table.Data;
+};
 
 // Define props for the AG Grid table here
 export const tableProps = (tableData: Table.Data): Partial<AgGridReactProps> => ({

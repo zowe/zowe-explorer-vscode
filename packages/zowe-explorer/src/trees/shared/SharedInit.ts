@@ -259,7 +259,7 @@ export class SharedInit {
                             { field: "name", filter: true },
                             { field: "value", filter: true },
                         ])
-                        .rowAction(0, "test")
+                        .rowAction(1, { title: "Test Button", command: "test" })
                         .build();
                 })
             );
