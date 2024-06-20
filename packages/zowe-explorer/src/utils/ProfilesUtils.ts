@@ -16,13 +16,14 @@ import * as globals from "../globals";
 import * as path from "path";
 import * as fs from "fs";
 import * as util from "util";
-import { IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath, Gui, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath, Gui, ProfilesCache, EventTypes } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 import { imperative, getImperativeConfig } from "@zowe/cli";
 import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
 import { ZoweLogger } from "./LoggerUtils";
 import { SettingsConfig } from "./SettingsConfig";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 
 // Set up localization
 nls.config({
@@ -598,8 +599,12 @@ export class ProfilesUtils {
             );
             ZoweLogger.info(successMsg);
             Gui.showMessage(successMsg);
-            // config file watcher isn't noticing changes for secure fields
-            await vscode.commands.executeCommand("zowe.extRefresh");
+
+            // If secure credentials are enabled, the config file won't change after updating existing credentials
+            // (as the "secure" fields are already set). Fire the event emitter to notify extenders of the change.
+            if (SettingsConfig.getDirectValue<boolean>(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
+                ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.UPDATE);
+            }
         }
     }
 

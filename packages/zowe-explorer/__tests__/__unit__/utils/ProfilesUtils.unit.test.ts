@@ -11,7 +11,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { Gui, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { EventTypes, Gui, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as util from "util";
 import * as globals from "../../../src/globals";
 import * as profUtils from "../../../src/utils/ProfilesUtils";
@@ -494,6 +494,36 @@ describe("ProfilesUtils unit tests", () => {
             await profUtils.ProfilesUtils.promptCredentials(null as any);
             expect(mockProfileInstance.getProfileInfo).toHaveBeenCalled();
             expect(Gui.showMessage).toHaveBeenCalledWith('"Update Credentials" operation not supported when "autoStore" is false');
+        });
+
+        it("fires onProfilesUpdate event if secure credentials are enabled", async () => {
+            const mockProfileInstance = new Profiles(zowe.imperative.Logger.getAppLogger());
+            const prof = {
+                getAllProfiles: jest.fn().mockReturnValue([]),
+                isSecured: jest.fn().mockReturnValue(true),
+                readProfilesFromDisk: jest.fn(),
+            };
+            jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as any);
+            jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
+                profile: prof,
+            } as unknown as zowe.imperative.IProfileLoaded);
+            const getInstanceMock = jest.spyOn(Profiles, "getInstance").mockReturnValueOnce(mockProfileInstance);
+            Object.defineProperty(vscode.window, "showInputBox", {
+                value: jest.fn().mockResolvedValue("testConfig"),
+                configurable: true,
+            });
+            Object.defineProperty(Gui, "showMessage", {
+                value: jest.fn(),
+                configurable: true,
+            });
+            jest.spyOn(Profiles.prototype, "promptCredentials").mockResolvedValue(["some_user", "some_pass", "c29tZV9iYXNlNjRfc3RyaW5n"]);
+            const eventFireMock = jest.spyOn(vscode.EventEmitter.prototype, "fire");
+            const secureCredsMock = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
+            await profUtils.ProfilesUtils.promptCredentials(null as any);
+            expect(Gui.showMessage).toHaveBeenCalledWith("Credentials for testConfig were successfully updated");
+            expect(eventFireMock).toHaveBeenCalledWith(EventTypes.UPDATE);
+            secureCredsMock.mockRestore();
+            getInstanceMock.mockRestore();
         });
     });
 
