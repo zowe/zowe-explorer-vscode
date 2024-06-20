@@ -252,6 +252,7 @@
   },
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
+  "$(sync~spin) Pulling from Mainframe...": "$(sync~spin) Pulling from Mainframe...",
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -266,6 +267,8 @@
   },
   "Name of file or directory": "Name of file or directory",
   "Unable to create node:": "Unable to create node:",
+  "Uploading file to USS tree": "Uploading file to USS tree",
+  "Upload action was cancelled.": "Upload action was cancelled.",
   "Uploading USS file": "Uploading USS file",
   "Delete": "Delete",
   "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}/File names": {
@@ -652,7 +655,6 @@
     ]
   },
   "Uploading to data set": "Uploading to data set",
-  "Upload action was cancelled.": "Upload action was cancelled.",
   "No data sets selected for deletion, cancelling...": "No data sets selected for deletion, cancelling...",
   "Deleting data set(s): {0}/Data Sets to delete": {
     "message": "Deleting data set(s): {0}",
