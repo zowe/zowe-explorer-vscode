@@ -259,7 +259,6 @@ export class SharedInit {
                             { field: "name", filter: true },
                             { field: "value", filter: true },
                         ])
-                        .rowAction(1, { title: "Test Button", command: "test" })
                         .build();
                 })
             );
@@ -271,12 +270,16 @@ export class SharedInit {
                             ...Array.from({ length: 1024 }, (val) => ({
                                 name: randomUUID(),
                                 value: randomInt(2147483647),
+                                string: (Math.random() + 1).toString(36),
                             }))
                         )
                         .columns([
                             { field: "name", filter: true },
                             { field: "value", filter: true },
+                            { field: "string", filter: true },
                         ])
+                        .rowAction(1, { title: "Info", command: "test", type: "secondary" })
+                        .rowAction(1, { title: "Start", command: "test2", type: "primary" })
                         .build();
                 })
             );

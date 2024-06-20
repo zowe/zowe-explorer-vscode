@@ -14,14 +14,14 @@ import { Event, EventEmitter, ExtensionContext } from "vscode";
 import { randomUUID } from "crypto";
 
 export namespace Table {
-    export type Action = { title: string; command: string };
+    export type Action = { title: string; command: string; type?: "primary" | "secondary" | "icon" };
     export type Axes = "row" | "column";
 
-    export type RowContent = Record<string | number, string | number | boolean | string[] | Action | Action[]>;
+    export type RowContent = Record<string | number, string | number | boolean | string[]>;
     export type Column = { field: string; filter?: boolean };
     export type Data = {
         // Actions to apply to the given row or column index
-        actions: Record<number, Action[]>;
+        actions: Record<number | "all", Action[]>;
         // Column headers for the top of the table
         columns: Column[] | null | undefined;
         // The row data for the table. Each row contains a set of variables corresponding to the data for each column in that row

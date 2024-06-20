@@ -55,7 +55,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
               ...(newData.columns ?? []),
               {
                 // Prevent cells from being selectable
-                cellStyle: { border: "none !important", outline: "none" },
+                cellStyle: { border: "none", outline: "none" },
                 field: "actions",
                 sortable: false,
                 // Support a custom cell renderer for row actions
@@ -66,7 +66,11 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
                       return (
                         <span style={{ display: "flex", alignItems: "center", marginTop: "0.5em", userSelect: "none" }}>
                           {newData.actions[params.rowIndex].map((action) => (
-                            <VSCodeButton onClick={(_e: any) => vscodeApi.postMessage({ command: action.command })} style={{ marginRight: "0.25em" }}>
+                            <VSCodeButton
+                              appearance={action.type ?? "primary"}
+                              onClick={(_e: any) => vscodeApi.postMessage({ command: action.command, row: newData.rows?.at(params.rowIndex) })}
+                              style={{ marginRight: "0.25em" }}
+                            >
                               {action.title}
                             </VSCodeButton>
                           ))}

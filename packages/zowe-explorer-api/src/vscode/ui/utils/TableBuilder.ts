@@ -35,7 +35,9 @@ import { TableMediator } from "./TableMediator";
 export class TableBuilder {
     private context: ExtensionContext;
     private data: Table.Data = {
-        actions: {},
+        actions: {
+            all: [],
+        },
         columns: [],
         rows: [],
         title: "",
@@ -84,7 +86,7 @@ export class TableBuilder {
      * @param actions the record of indices to {@link Table.Action} arrays to use for the table
      * @returns The same {@link TableBuilder} instance with the row actions added
      */
-    public rowActions(actions: Record<number, Table.Action[]>): TableBuilder {
+    public rowActions(actions: Record<number | "all", Table.Action[]>): TableBuilder {
         this.data.actions = actions;
         return this;
     }
@@ -95,7 +97,7 @@ export class TableBuilder {
      * @param index The column index to add an action to
      * @returns The same {@link TableBuilder} instance with the row action added
      */
-    public rowAction(index: number, action: Table.Action): TableBuilder {
+    public rowAction(index: number | "all", action: Table.Action): TableBuilder {
         if (this.data.actions[index]) {
             const actions = this.data.actions[index];
             this.data.actions[index] = [...actions, action];
@@ -129,7 +131,9 @@ export class TableBuilder {
      * Resets all data configured in the builder from previously-created table views.
      */
     public reset(): void {
-        this.data.actions = {};
+        this.data.actions = {
+            all: [],
+        };
         this.data.columns = [];
         this.data.rows = [];
         this.data.title = "";
