@@ -44,7 +44,7 @@ Changelog:
 
 - [ ] I have added developer documentation (if applicable)
 - [ ] Documentation should be added to Zowe Docs
-  - If you're an outside contributor, please contact @anaxceron (ana.ceron@broadcom.com) to coordinate documentation.
+  - If you're an outside contributor, please post in the [#zowe-doc Slack channel](https://openmainframeproject.slack.com/archives/CC961JYMQ) to coordinate documentation.
   - Otherwise, please check with the rest of the squad about any needed documentation before merging.
 - [ ] These changes may need ported to the appropriate branches (list here):
 
