@@ -389,11 +389,10 @@ export class Profiles extends ProfilesCache {
                     comment: ["chosen profile", "tree type"],
                 })
             );
-            if (await Profiles.handleChangeForAllTrees(chosenProfile, true)) {
-                await zoweFileProvider.addSession(chosenProfile);
-            } else {
-                await zoweFileProvider.addSession(chosenProfile, undefined, zoweFileProvider);
-            }
+            await zoweFileProvider.addSession({
+                sessionName: chosenProfile,
+                addToAllTrees: await Profiles.handleChangeForAllTrees(chosenProfile, true),
+            });
         } else {
             ZoweLogger.debug(debugMsg);
         }
@@ -471,7 +470,7 @@ export class Profiles extends ProfilesCache {
 
             // Build new config and merge with existing layer
             const impConfig: Partial<imperative.IImperativeConfig> = {
-                profiles: this.getCoreProfileTypes(),
+                profiles: [...this.getCoreProfileTypes(), ProfileConstants.BaseProfile],
                 baseProfile: ProfileConstants.BaseProfile,
             };
             const newConfig: imperative.IConfig = await imperative.ConfigBuilder.build(impConfig, opts);

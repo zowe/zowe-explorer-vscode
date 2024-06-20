@@ -78,6 +78,7 @@ function createGlobalMocks() {
     newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
     newMocks.datasetSessionFavNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
     newMocks.testFavoritesNode.children.push(newMocks.datasetSessionFavNode);
+    jest.spyOn(Gui, "createTreeView").mockReturnValue({ onDidCollapseElement: jest.fn() } as any);
     newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView, newMocks.testFavoritesNode);
     newMocks.mvsApi = createMvsApi(newMocks.imperativeProfile);
     newMocks.getContentsSpy = jest.spyOn(newMocks.mvsApi, "getContents");
@@ -179,6 +180,10 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
 
+        const newNode = parent.children.find((node) => node.label === "TESTMEMBER");
+        expect(newNode).toBeDefined();
+        expect(newNode?.contextValue).toBe(Constants.DS_MEMBER_CONTEXT);
+        expect(newNode?.command.command).toBe("vscode.open");
         expect(mySpy).toHaveBeenCalledWith({
             placeHolder: "Name of Member",
             validateInput: expect.any(Function),
@@ -186,7 +191,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         expect(mocked(zosfiles.Upload.bufferToDataSet)).toHaveBeenCalledWith(
             blockMocks.zosmfSession,
             Buffer.from(""),
-            (parent.label as string) + "(testMember)",
+            (parent.label as string) + "(TESTMEMBER)",
             {
                 responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
             }
@@ -254,11 +259,12 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
 
+        expect(parent.children.find((node) => node.label === "TESTMEMBER")).toBeDefined();
         expect(mySpy).toHaveBeenCalledWith({ placeHolder: "Name of Member", validateInput: expect.any(Function) });
         expect(mocked(zosfiles.Upload.bufferToDataSet)).toHaveBeenCalledWith(
             blockMocks.zosmfSession,
             Buffer.from(""),
-            (nonFavoriteLabel as string) + "(testMember)",
+            (nonFavoriteLabel as string) + "(TESTMEMBER)",
             {
                 responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
             }
@@ -626,6 +632,21 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         expect(mocked(vscode.window.withProgress).mock.calls.length).toBe(0);
     });
+
+    it("test when selected node is sent", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [blockMocks.testMemberNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+
+        await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree, blockMocks.testMemberNode);
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
+            `The following 1 item(s) were deleted: ${blockMocks.testMemberNode.getParent().getLabel()}(${blockMocks.testMemberNode.getLabel()})`
+        );
+    });
 });
 
 describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
@@ -891,7 +912,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
         const favoriteSample = new ZoweDatasetNode({ label: "[sestest]: HLQ.TEST", collapsibleState: vscode.TreeItemCollapsibleState.None });
 
         await DatasetActions.enterPattern(favoriteSample, blockMocks.testDatasetTree);
-        expect(blockMocks.testDatasetTree.addSession).toHaveBeenCalledWith("sestest");
+        expect(blockMocks.testDatasetTree.addSession).toHaveBeenCalledWith({ sessionName: "sestest" });
     });
 });
 

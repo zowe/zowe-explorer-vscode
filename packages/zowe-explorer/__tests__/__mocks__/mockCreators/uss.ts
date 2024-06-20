@@ -23,7 +23,7 @@ export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUS
     newTree.mSessionNodes = [...sessionNodes];
     newTree.mFavorites = favoriteNodes;
     newTree.addSession = jest.fn();
-    newTree.getSessions = jest.fn();
+    newTree.getSessions = jest.fn().mockReturnValue([]);
     newTree.getFavorites = jest.fn();
     newTree.getSearchHistory = jest.fn();
     newTree.removeSearchHistory = jest.fn();

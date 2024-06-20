@@ -276,26 +276,6 @@ describe("Shared utils unit tests - function sortTreeItems", () => {
     });
 });
 
-describe("Shared utils unit tests - function updateOpenFiles", () => {
-    const someTree = { openFiles: {} };
-
-    it("sets a file entry to null in the openFiles record", () => {
-        SharedUtils.updateOpenFiles(someTree as any, "/a/doc/path", null);
-        expect(someTree.openFiles["/a/doc/path"]).toBeNull();
-    });
-
-    it("sets a file entry to a valid node in the openFiles record", () => {
-        SharedUtils.updateOpenFiles(someTree as any, "/a/doc/path", { label: "testLabel" } as IZoweTreeNode);
-        expect(someTree.openFiles["/a/doc/path"].label).toBe("testLabel");
-    });
-
-    it("does nothing if openFiles is not defined", () => {
-        someTree.openFiles = undefined as any;
-        SharedUtils.updateOpenFiles(someTree as any, "/a/doc/path", null);
-        expect(someTree.openFiles).toBeUndefined();
-    });
-});
-
 describe("Shared utils unit tests - function promptForEncoding", () => {
     const binaryEncoding: ZosEncoding = { kind: "binary" };
     const textEncoding: ZosEncoding = { kind: "text" };

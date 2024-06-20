@@ -495,7 +495,10 @@ export class DatasetActions {
         let includedSelection = false;
         if (node) {
             for (const item of selectedNodes) {
-                if (node.getLabel().toString() === item.getLabel().toString()) {
+                if (
+                    node.getLabel().toString() === item.getLabel().toString() &&
+                    node.getParent().getLabel().toString() === item.getParent().getLabel().toString()
+                ) {
                     includedSelection = true;
                 }
             }
@@ -654,7 +657,7 @@ export class DatasetActions {
                 return DatasetUtils.validateMemberName(text) === true ? null : vscode.l10n.t("Enter valid member name");
             },
         };
-        const name = await Gui.showInputBox(options);
+        const name = (await Gui.showInputBox(options))?.toUpperCase();
         ZoweLogger.debug(
             vscode.l10n.t({
                 message: "Creating new data set member {0}",
@@ -675,8 +678,6 @@ export class DatasetActions {
                 }
                 throw err;
             }
-            parent.dirty = true;
-            datasetProvider.refreshElement(parent);
 
             const newNode = new ZoweDatasetNode({
                 label: name,
@@ -685,6 +686,10 @@ export class DatasetActions {
                 profile: parent.getProfile(),
             });
             await vscode.workspace.fs.writeFile(newNode.resourceUri, new Uint8Array());
+
+            parent.children.push(newNode);
+            parent.dirty = true;
+            datasetProvider.refreshElement(parent);
 
             // Refresh corresponding tree parent to reflect addition
             const otherTreeParent = datasetProvider.findEquivalentNode(parent, SharedContext.isFavorite(parent));
@@ -1258,6 +1263,7 @@ export class DatasetActions {
                 return;
             }
 
+            ZoweLogger.info(`Refreshing data set ${label}`);
             const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching data set..."));
             await DatasetFSProvider.instance.fetchDatasetAtUri(node.resourceUri, {
                 editor: vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path),
@@ -1335,7 +1341,7 @@ export class DatasetActions {
             // executing search from saved search in favorites
             pattern = node.label.toString().substring(node.label.toString().indexOf(":") + 2);
             const sessionName = node.label.toString().substring(node.label.toString().indexOf("[") + 1, node.label.toString().indexOf("]"));
-            await datasetProvider.addSession(sessionName.trim());
+            await datasetProvider.addSession({ sessionName: sessionName.trim() });
             node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.label.toString().trim() === sessionName.trim()) as IZoweDatasetTreeNode;
         }
 

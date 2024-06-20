@@ -135,7 +135,7 @@ export class JobActions {
         let sessionNode: IZoweJobTreeNode | undefined = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label.toString() === sessionName.trim());
         if (!sessionNode) {
             try {
-                await jobsProvider.addSession(sessionName.trim());
+                await jobsProvider.addSession({ sessionName: sessionName.trim() });
             } catch (error) {
                 await AuthUtils.errorHandling(error);
                 return;
@@ -210,6 +210,15 @@ export class JobActions {
                     const spools = (await JobSpoolProvider.getSpoolFiles(node)).filter((spool: zosjobs.IJobFile) =>
                         JobSpoolProvider.matchSpool(spool, node)
                     );
+                    if (!spools.length) {
+                        await Gui.infoMessage(
+                            vscode.l10n.t({
+                                message: "No spool files found for {0}",
+                                args: [node.label as string],
+                                comment: ["Spool node label"],
+                            })
+                        );
+                    }
                     for (const spool of spools) {
                         await ZoweExplorerApiRegister.getJesApi(nodes[0].getProfile()).downloadSingleSpool({
                             jobFile: spool,

@@ -197,8 +197,7 @@ export class SharedInit {
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.editSession", async (node: IZoweTreeNode) => {
-                    const treeProvider = SharedTreeProviders.getProviderForNode(node);
-                    await treeProvider.editSession(node, treeProvider);
+                    await SharedTreeProviders.getProviderForNode(node).editSession(node);
                 })
             );
             context.subscriptions.push(
