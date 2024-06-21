@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { FileManagement, IZoweTree, IZoweTreeNode, TableBuilder, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { FileManagement, Gui, IZoweTree, IZoweTreeNode, TableBuilder, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { SharedActions } from "./SharedActions";
 import { SharedHistoryView } from "./SharedHistoryView";
 import { SharedTreeProviders } from "./SharedTreeProviders";
@@ -263,23 +263,41 @@ export class SharedInit {
                 })
             );
             context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.tableView3", () => {
+                vscode.commands.registerCommand("zowe.tableView3", async () => {
+                    const uriPath = await Gui.showInputBox({
+                        title: "Enter a URI path to list USS files",
+                    });
+                    if (uriPath == null) {
+                        return;
+                    }
+
+                    const files = await UssFSProvider.instance.listFiles(
+                        Profiles.getInstance().getDefaultProfile(),
+                        vscode.Uri.from({
+                            scheme: "zowe-uss",
+                            path: uriPath,
+                        })
+                    );
                     new TableBuilder(context)
                         .title("Comprehensive table with actions")
                         .rows(
-                            ...Array.from({ length: 1024 }, (val) => ({
-                                name: randomUUID(),
-                                value: randomInt(2147483647),
-                                string: (Math.random() + 1).toString(36),
+                            ...files.apiResponse.items.map((item) => ({
+                                name: item.name,
+                                gid: item.gid,
+                                uid: item.uid,
+                                group: item.group,
+                                perms: item.mode,
+                                owner: item.user,
                             }))
                         )
                         .columns([
                             { field: "name", filter: true },
-                            { field: "value", filter: true },
-                            { field: "string", filter: true },
+                            { field: "gid", filter: true },
+                            { field: "uid", filter: true },
+                            { field: "group", filter: true },
+                            { field: "perms", filter: true },
+                            { field: "owner", filter: true },
                         ])
-                        .rowAction(1, { title: "Info", command: "test", type: "secondary" })
-                        .rowAction(1, { title: "Start", command: "test2", type: "primary" })
                         .build();
                 })
             );
