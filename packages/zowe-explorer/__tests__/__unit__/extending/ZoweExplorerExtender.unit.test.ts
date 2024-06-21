@@ -24,6 +24,12 @@ import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { UssFSProvider } from "../../../src/trees/uss/UssFSProvider";
 import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
 import { FileManagement, Gui, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { DatasetTree } from "../../../src/trees/dataset/DatasetTree";
+import { USSTree } from "../../../src/trees/uss/USSTree";
+import { JobTree } from "../../../src/trees/job/JobTree";
+import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
+import { Profiles } from "../../../src/configuration/Profiles";
+import { ZoweTreeProvider } from "../../../src/trees/ZoweTreeProvider";
 
 jest.mock("fs");
 jest.mock("vscode");
@@ -51,6 +57,7 @@ describe("ZoweExplorerExtender unit tests", () => {
         jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
 
         Object.defineProperty(fs, "existsSync", { value: newMocks.mockExistsSync, configurable: true });
+        jest.spyOn(Profiles, "getInstance").mockReturnValue(newMocks.profiles);
         jest.spyOn(ZoweExplorerExtender.prototype, "getProfilesCache").mockReturnValue(newMocks.profiles);
         Object.defineProperty(vscode.window, "createTreeView", {
             value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
@@ -109,6 +116,27 @@ describe("ZoweExplorerExtender unit tests", () => {
         jest.spyOn(blockMocks.instTest.jobsProvider, "addSession");
         await blockMocks.instTest.reloadProfiles();
         expect(blockMocks.instTest.jobsProvider.addSession).toHaveBeenCalled();
+    });
+
+    it("calls all addSessions once when extender profiles are reloaded", async () => {
+        const blockMocks = await createBlockMocks();
+        const datasetSessionNode = createDatasetSessionNode(blockMocks.session, blockMocks.altTypeProfile);
+        const datasetTree = createDatasetTree(datasetSessionNode, blockMocks.altTypeProfile);
+        const ussSessionNode = createUSSSessionNode(blockMocks.session, blockMocks.imperativeProfile);
+        const ussTree = createUSSTree([], [ussSessionNode], blockMocks.treeView);
+        const testJob = createIJobObject();
+        const jobsTree = createJobsTree(blockMocks.session, testJob, blockMocks.altTypeProfile, blockMocks.treeView);
+        ZoweExplorerExtender.createInstance(datasetTree, ussTree, jobsTree);
+        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({ ds: datasetTree, uss: ussTree, job: jobsTree });
+        jest.spyOn(blockMocks.instTest.datasetProvider, "addSession").mockImplementation(DatasetTree.prototype.addSession);
+        jest.spyOn(blockMocks.instTest.ussFileProvider, "addSession").mockImplementation(USSTree.prototype.addSession);
+        jest.spyOn(blockMocks.instTest.jobsProvider, "addSession").mockImplementation(JobTree.prototype.addSession);
+        const loadProfileSpy = jest.spyOn(ZoweTreeProvider.prototype as any, "loadProfileByPersistedProfile");
+        await blockMocks.instTest.reloadProfiles();
+        expect(blockMocks.instTest.datasetProvider.addSession).toHaveBeenCalledTimes(1);
+        expect(blockMocks.instTest.ussFileProvider.addSession).toHaveBeenCalledTimes(1);
+        expect(blockMocks.instTest.jobsProvider.addSession).toHaveBeenCalledTimes(1);
+        expect(loadProfileSpy).toHaveBeenCalledTimes(3);
     });
     it("does not use any tree providers when the created instance does not provide them", async () => {
         const blockMocks = await createBlockMocks();

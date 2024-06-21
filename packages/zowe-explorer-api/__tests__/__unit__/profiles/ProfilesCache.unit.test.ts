@@ -264,7 +264,7 @@ describe("ProfilesCache", () => {
             expect(profCache.allProfiles.length).toEqual(2);
             expect(profCache.allProfiles[0]).toMatchObject(lpar1Profile);
             expect(profCache.allProfiles[1]).toMatchObject(zftpProfile);
-            expect(profCache.getAllTypes()).toEqual([...profileTypes, "ssh", "base"]);
+            expect(profCache.getAllTypes()).toEqual([...profileTypes, "base"]);
             expect(mockLogError).not.toHaveBeenCalled();
         });
 
@@ -278,7 +278,7 @@ describe("ProfilesCache", () => {
             expect(profCache.allProfiles[0]).toMatchObject(lpar1ProfileWithToken);
             expect(profCache.allProfiles[1]).toMatchObject(lpar2Profile); // without token
             expect(profCache.allProfiles[2]).toMatchObject(baseProfileWithToken);
-            expect(profCache.getAllTypes()).toEqual([...profileTypes, "ssh", "base"]);
+            expect(profCache.getAllTypes()).toEqual([...profileTypes, "base"]);
             expect(mockLogError).not.toHaveBeenCalled();
         });
 
@@ -294,18 +294,20 @@ describe("ProfilesCache", () => {
             expect(mockLogError).toHaveBeenCalledWith(fakeError);
         });
 
-        it("should clear the profilesByType and defaultProfileByType maps before reloading profiles", async () => {
-            const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as unknown as zowe.imperative.Logger);
-            const profInfoMock = jest.spyOn(profCache, "getProfileInfo").mockRejectedValueOnce("some error");
-            const errorMock = jest.spyOn((profCache as any).log, "error").mockImplementation();
-            (profCache as any).profilesByType["test-type"] = { name: "someProf" as any };
-            (profCache as any).defaultProfileByType["test-type"] = { name: "someProf" as any };
-            await profCache.refresh();
+        it("should remove old types from profilesByType and defaultProfileByType maps when reloading profiles", async () => {
+            const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as unknown as imperative.Logger);
+            jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([]));
+            (profCache as any).profilesByType.set("base", { name: "someProf" as any });
+            (profCache as any).defaultProfileByType.set("base", { name: "someProf" as any });
+            const promise = profCache.refresh();
+            expect((profCache as any).profilesByType.size).toBe(1);
+            expect((profCache as any).defaultProfileByType.size).toBe(1);
+            await promise;
             expect((profCache as any).profilesByType.size).toBe(0);
             expect((profCache as any).defaultProfileByType.size).toBe(0);
-            expect(errorMock).toHaveBeenCalledWith("some error");
-            profInfoMock.mockRestore();
-            errorMock.mockRestore();
+            expect((profCache as any).allProfiles.length).toBe(0);
+            expect((profCache as any).allTypes).toEqual(["base"]);
+            expect(mockLogError).not.toHaveBeenCalled();
         });
     });
 

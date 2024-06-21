@@ -28,12 +28,12 @@ describe("TreeViewUtils Unit Tests", () => {
             mockGetConfiguration: jest.fn(),
         };
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
-        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
-        newMocks.testDatasetTree.addFileHistory("[profile1]: TEST.NODE");
         Object.defineProperty(vscode.window, "createTreeView", {
             value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
             configurable: true,
         });
+        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
+        newMocks.testDatasetTree.addFileHistory("[profile1]: TEST.NODE");
         Object.defineProperty(ZoweLocalStorage, "storage", {
             value: createPersistentConfig(),
             configurable: true,

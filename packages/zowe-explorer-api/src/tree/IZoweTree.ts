@@ -52,16 +52,15 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
 
     /**
      * A record of open files from this tree.
+     * @deprecated Unused in v3 since open files are now tracked by the `FileSystemProvider`
      */
     openFiles?: Record<string, IZoweTreeNode>;
 
     /**
      * Adds a session to the container
-     * @param sessionName
-     * @param type e.g. zosmf
-     * @param provider tree provider to add to, undefined will add for all
+     * @param opts Options for adding sessions to tree
      */
-    addSession(sessionName?: string, type?: string, provider?: IZoweTree<IZoweTreeNode>): Promise<void>;
+    addSession(opts?: Types.AddSessionOpts): Promise<void>;
 
     /**
      * Adds a single session to the tree
@@ -73,7 +72,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
      * Edit a session to the container
      * @param node This parameter identifies the node that needs to be called
      */
-    editSession(node: IZoweTreeNode, zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<void>;
+    editSession(node: IZoweTreeNode): Promise<void>;
 
     /**
      * Get sessions from persistent object of provider

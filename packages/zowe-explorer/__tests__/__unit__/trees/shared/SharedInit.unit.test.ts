@@ -202,7 +202,7 @@ describe("Test src/shared/extension", () => {
                 name: "zowe.editSession",
                 mock: [
                     { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
-                    { spy: jest.spyOn(treeProvider, "editSession"), arg: [test.value, treeProvider] },
+                    { spy: jest.spyOn(treeProvider, "editSession"), arg: [test.value] },
                 ],
             },
             {

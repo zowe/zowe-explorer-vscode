@@ -14,6 +14,8 @@ import { Constants } from "../../../src/configuration/Constants";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { removeNodeFromArray } from "./shared";
 import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { DatasetTree } from "../../../src/trees/dataset/DatasetTree";
+import { ZowePersistentFilters } from "../../../src/tools/ZowePersistentFilters";
 
 export function createDatasetSessionNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
     const datasetNode = new ZoweDatasetNode({
@@ -38,7 +40,9 @@ export function createDatasetFavoritesNode() {
 }
 
 export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, favoritesNode?: ZoweDatasetNode): any {
-    const testDatasetTree = {
+    jest.spyOn(ZowePersistentFilters.prototype as any, "initialize").mockReturnValueOnce(undefined);
+    const testDatasetTree = new DatasetTree();
+    Object.assign(testDatasetTree, {
         mSessionNodes: [sessionNode],
         mFavorites: [],
         mFileHistory: [],
@@ -46,11 +50,11 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
         treeView,
         addSession: jest.fn(),
         addSearchHistory: jest.fn(),
-        addFileHistory: jest.fn(),
-        addFavorite: jest.fn(),
+        addFileHistory: jest.fn().mockImplementation((newFile) => testDatasetTree.mFileHistory.push(newFile)),
+        addFavorite: jest.fn().mockImplementation((newFavorite) => testDatasetTree.mFavorites.push(newFavorite)),
         getSearchHistory: jest.fn(),
-        getFileHistory: jest.fn(),
-        getSessions: jest.fn(),
+        getFileHistory: jest.fn().mockImplementation(() => testDatasetTree.mFileHistory),
+        getSessions: jest.fn().mockReturnValue([]),
         getFavorites: jest.fn(),
         removeSearchHistory: jest.fn(),
         resetSearchHistory: jest.fn(),
@@ -66,10 +70,15 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
         setItem: jest.fn(),
         getTreeView: jest.fn().mockReturnValue(treeView),
         getAllLoadedItems: jest.fn(),
-        removeFavorite: jest.fn(),
-        removeFavProfile: jest.fn(),
-        deleteSession: jest.fn(),
-        removeFileHistory: jest.fn(),
+        removeFavorite: jest.fn().mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testDatasetTree.mFavorites)),
+        removeFavProfile: jest.fn().mockImplementation((badFavProfileName) => {
+            const badFavProfileNode = testDatasetTree.mFavorites.find((treeNode) => treeNode.label === badFavProfileName);
+            removeNodeFromArray(badFavProfileNode, testDatasetTree.mFavorites);
+        }),
+        deleteSession: jest.fn().mockImplementation((badSession) => removeNodeFromArray(badSession, testDatasetTree.mSessionNodes)),
+        removeFileHistory: jest
+            .fn()
+            .mockImplementation((badFile) => testDatasetTree.mFileHistory.splice(testDatasetTree.mFileHistory.indexOf(badFile), 1)),
         enterPattern: jest.fn(),
         initializeFavorites: jest.fn(),
         openItemFromPath: jest.fn(),
@@ -85,19 +94,6 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
         getProfile: jest.fn(),
         getDsTemplates: jest.fn(),
         addDsTemplate: jest.fn(),
-    };
-    testDatasetTree.addFavorite.mockImplementation((newFavorite) => testDatasetTree.mFavorites.push(newFavorite));
-    testDatasetTree.addFileHistory.mockImplementation((newFile) => testDatasetTree.mFileHistory.push(newFile));
-    testDatasetTree.removeFileHistory.mockImplementation((badFile) =>
-        testDatasetTree.mFileHistory.splice(testDatasetTree.mFileHistory.indexOf(badFile), 1)
-    );
-    testDatasetTree.getSearchHistory.mockImplementation();
-    testDatasetTree.getFileHistory.mockImplementation(() => testDatasetTree.mFileHistory);
-    testDatasetTree.deleteSession.mockImplementation((badSession) => removeNodeFromArray(badSession, testDatasetTree.mSessionNodes));
-    testDatasetTree.removeFavorite.mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testDatasetTree.mFavorites));
-    testDatasetTree.removeFavProfile.mockImplementation((badFavProfileName) => {
-        const badFavProfileNode = testDatasetTree.mFavorites.find((treeNode) => treeNode.label === badFavProfileName);
-        removeNodeFromArray(badFavProfileNode, testDatasetTree.mFavorites);
     });
     if (!favoritesNode) {
         return testDatasetTree;

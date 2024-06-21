@@ -15,8 +15,6 @@ import {
     FsAbstractUtils,
     Gui,
     imperative,
-    IZoweTree,
-    IZoweTreeNode,
     IZoweUSSTreeNode,
     PersistenceSchemaEnum,
     Types,
@@ -40,19 +38,6 @@ import { FilterDescriptor, FilterItem } from "../../management/FilterManagement"
 import { AuthUtils } from "../../utils/AuthUtils";
 
 /**
- * Creates the USS tree that contains nodes of sessions and data sets
- *
- * @export
- */
-export async function createUSSTree(log: imperative.Logger): Promise<USSTree> {
-    ZoweLogger.trace("uss.USSTree.createUSSTree called.");
-    const tree = new USSTree();
-    await tree.initializeFavorites(log);
-    await tree.addSession(undefined, undefined, tree);
-    return tree;
-}
-
-/**
  * A tree that contains nodes of sessions and USS Files
  *
  * @export
@@ -68,7 +53,6 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     public lastOpened: Types.ZoweNodeInteraction = {};
     private treeView: vscode.TreeView<IZoweUSSTreeNode>;
     public copying: Promise<unknown>;
-    public openFiles: Record<string, IZoweUSSTreeNode> = {};
 
     // only support drag and drop ops within the USS tree at this point
     public dragMimeTypes: string[] = [];
@@ -488,17 +472,6 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     }
 
     /**
-     * Adds a new session to the uss files tree
-     *
-     * @param {string} [sessionName] - optional; loads persisted profiles or default if not passed
-     * @param {string} [profileType] - optional; loads profiles of a certain type if passed
-     */
-    public async addSession(sessionName?: string, profileType?: string, provider?: IZoweTree<IZoweTreeNode>): Promise<void> {
-        ZoweLogger.trace("USSTree.addSession called.");
-        await super.addSession(sessionName, profileType, provider);
-    }
-
-    /**
      * Adds a single session to the tree
      * @param profile the profile to add to the tree
      */
@@ -793,7 +766,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 remotepath = node.label as string;
                 // add the session if it doesn't already exist
                 const profileName = node.getProfileName();
-                await this.addSession(profileName);
+                await this.addSession({ sessionName: profileName });
                 // grab the session and check to see if the session on the favorited node needs updated
                 const nonFavNode = this.mSessionNodes.find((tempNode) => tempNode.getProfileName() === profileName);
                 if (nonFavNode && (!node.getSession().ISession.user || !node.getSession().ISession.password)) {
@@ -1166,17 +1139,6 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             }
         }
         return match as IZoweUSSTreeNode;
-    }
-
-    /**
-     * Event listener to mark a USS doc URI as null in the openFiles record
-     * @param this (resolves ESlint warning about unbound methods)
-     * @param doc A doc URI that was closed
-     */
-    public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): void {
-        if (doc.uri.fsPath.includes(Constants.USS_DIR)) {
-            SharedUtils.updateOpenFiles(SharedTreeProviders.uss, doc.uri.fsPath, null);
-        }
     }
 
     public async openWithEncoding(node: IZoweUSSTreeNode, encoding?: ZosEncoding): Promise<void> {

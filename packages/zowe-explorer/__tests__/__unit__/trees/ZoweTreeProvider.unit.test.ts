@@ -134,7 +134,10 @@ async function createGlobalMocks() {
                 ssoLogout: globalMocks.mockSsoLogout,
                 getProfileInfo: () => globalMocks.mockProfileInfo,
                 fetchAllProfiles: jest.fn(() => {
-                    return [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }];
+                    return [{ name: "profile1" }, { name: "profile2" }, { name: "base" }];
+                }),
+                fetchAllProfilesByType: jest.fn(() => {
+                    return [{ name: "profile1" }];
                 }),
             };
         }),
@@ -162,12 +165,7 @@ async function createGlobalMocks() {
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockEditSession.mockReturnValue(globalMocks.testProfile);
-    globalMocks.getConfiguration.mockReturnValue({
-        get: () => ["[test]: /u/aDir{directory}", "[test]: /u/myFile.txt{textFile}"],
-        update: jest.fn(() => {
-            return {};
-        }),
-    });
+
     return globalMocks;
 }
 
@@ -204,19 +202,13 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
     it("Tests that the session is edited and added to only the specific tree modified", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        const deleteSessionForProviderSpy = jest.spyOn(ZoweTreeProvider.prototype as any, "deleteSessionForProvider");
-        const mockJobProvider = {
-            addSingleSession: jest.fn(),
-            mSessionNodes: [blockMocks.jobNode],
-            refresh: jest.fn(),
-            removeSession: jest.fn(),
-        } as any;
-        jest.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue(mockJobProvider);
+        const deleteSessionSpy = jest.spyOn(blockMocks.testJobsProvider, "deleteSession");
+        jest.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue(blockMocks.testJobsProvider);
         jest.spyOn(blockMocks.jobNode, "getSession").mockReturnValue(null);
         blockMocks.jobNode.contextValue = Constants.JOBS_SESSION_CONTEXT;
-        await blockMocks.testJobsProvider.editSession(blockMocks.jobNode, globalMocks.testUSSTree);
+        await blockMocks.testJobsProvider.editSession(blockMocks.jobNode);
         expect(globalMocks.mockEditSession).toHaveBeenCalled();
-        expect(deleteSessionForProviderSpy).toHaveBeenCalledWith(blockMocks.jobNode, mockJobProvider);
+        expect(deleteSessionSpy).toHaveBeenCalledWith(blockMocks.jobNode);
     });
 });
 
@@ -262,6 +254,12 @@ describe("Tree Provider unit tests, function getParent", () => {
 describe("Tree Provider unit tests, function getTreeItem", () => {
     it("Testing the onDidConfiguration", async () => {
         const globalMocks = await createGlobalMocks();
+        globalMocks.getConfiguration.mockReturnValue({
+            get: () => ["[test]: /u/aDir{directory}", "[test]: /u/myFile.txt{textFile}"],
+            update: jest.fn(() => {
+                return {};
+            }),
+        });
 
         const Event = jest.fn().mockImplementation(() => {
             return {
@@ -528,34 +526,53 @@ describe("Tree Provider Unit Tests - function ssoLogout", () => {
 });
 
 describe("Tree Provider Unit Tests - function loadProfileByPersistedProfile", () => {
-    it("should reset validation settings and run successfully", async () => {
+    it("should load all profiles for a tree provider", async () => {
         const globalMocks = await createGlobalMocks();
         globalMocks.testDSTree = DatasetInit.createDatasetTree(imperative.Logger.getAppLogger());
         globalMocks.testDSTree.mSessionNodes = [
-            { label: "profile1", getProfileName: (): string => "sestest" },
-            { label: "profile2", getProfileName: (): string => "sestest" },
+            { label: "sestest", getProfileName: (): string => "profile1" },
+            { label: "sestest", getProfileName: (): string => "profile2" },
         ];
-        globalMocks.testDSTree.getSessions = (): string[] => ["sestest"];
+        globalMocks.testDSTree.getSessions = (): string[] => ["profile1", "profile2"];
         globalMocks.testDSTree.addSingleSession = jest.fn();
 
         const resetValidationSettingsSpy = jest.spyOn(SharedActions, "resetValidationSettings");
-        resetValidationSettingsSpy.mockImplementation();
-
+        resetValidationSettingsSpy.mockImplementation().mockClear();
         const zoweLoggerWarnSpy = jest.spyOn(ZoweLogger, "warn");
 
-        await expect(ZoweTreeProvider.prototype["loadProfileByPersistedProfile"](globalMocks.testDSTree, "zosmf", true)).resolves.not.toThrow();
-        expect(globalMocks.testDSTree.addSingleSession).toHaveBeenCalledTimes(1);
+        await expect(
+            (ZoweTreeProvider.prototype as any).loadProfileByPersistedProfile(globalMocks.testDSTree, undefined, true)
+        ).resolves.not.toThrow();
+        expect(globalMocks.testDSTree.addSingleSession).toHaveBeenCalledTimes(2);
         expect(resetValidationSettingsSpy).toHaveBeenCalledTimes(2);
-        expect(zoweLoggerWarnSpy).toHaveBeenCalledTimes(0);
-        resetValidationSettingsSpy.mockClear();
-        zoweLoggerWarnSpy.mockClear();
+        expect(zoweLoggerWarnSpy).not.toHaveBeenCalled();
+    });
+
+    it("should load all profiles of a given type for a tree provider", async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.testDSTree = DatasetInit.createDatasetTree(imperative.Logger.getAppLogger());
+        globalMocks.testDSTree.mSessionNodes = [
+            { label: "sestest", getProfileName: (): string => "profile1" },
+            { label: "sestest", getProfileName: (): string => "profile2" },
+        ];
+        globalMocks.testDSTree.getSessions = (): string[] => ["profile1", "profile2"];
+        globalMocks.testDSTree.addSingleSession = jest.fn();
+
+        const resetValidationSettingsSpy = jest.spyOn(SharedActions, "resetValidationSettings");
+        resetValidationSettingsSpy.mockImplementation().mockClear();
+        const zoweLoggerWarnSpy = jest.spyOn(ZoweLogger, "warn");
+
+        await expect((ZoweTreeProvider.prototype as any).loadProfileByPersistedProfile(globalMocks.testDSTree, "zosmf", true)).resolves.not.toThrow();
+        expect(globalMocks.testDSTree.addSingleSession).toHaveBeenCalledTimes(1);
+        expect(resetValidationSettingsSpy).toHaveBeenCalledTimes(1);
+        expect(zoweLoggerWarnSpy).not.toHaveBeenCalled();
     });
 
     it("should reset validation settings and warn the user of an error when loading default", async () => {
         const globalMocks = await createGlobalMocks();
         globalMocks.testDSTree = DatasetInit.createDatasetTree(imperative.Logger.getAppLogger());
-        globalMocks.testDSTree.mSessionNodes = [{ label: "profile1", getProfileName: (): string => "sestest" }];
-        globalMocks.testDSTree.getSessions = (): string[] => ["sestest"];
+        globalMocks.testDSTree.mSessionNodes = [{ label: "sestest", getProfileName: (): string => "profile1" }];
+        globalMocks.testDSTree.getSessions = (): string[] => ["profile1"];
         globalMocks.testDSTree.addSingleSession = jest.fn();
 
         const resetValidationSettingsSpy = jest.spyOn(SharedActions, "resetValidationSettings");

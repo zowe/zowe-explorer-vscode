@@ -12,17 +12,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { IJob } from "@zowe/zos-jobs-for-zowe-sdk";
-import {
-    Gui,
-    Validation,
-    imperative,
-    IZoweTree,
-    IZoweTreeNode,
-    IZoweJobTreeNode,
-    PersistenceSchemaEnum,
-    Poller,
-    Types,
-} from "@zowe/zowe-explorer-api";
+import { Gui, Validation, imperative, IZoweJobTreeNode, PersistenceSchemaEnum, Poller, Types } from "@zowe/zowe-explorer-api";
 import { ZoweJobNode } from "./ZoweJobNode";
 import { JobFSProvider } from "./JobFSProvider";
 import { JobUtils } from "./JobUtils";
@@ -53,7 +43,7 @@ export async function createJobsTree(log: imperative.Logger): Promise<JobTree> {
     ZoweLogger.trace("ZosJobsProvider.createJobsTree called.");
     const tree = new JobTree();
     await tree.initializeJobsTree(log);
-    await tree.addSession(undefined, undefined, tree);
+    await tree.addSession();
     return tree;
 }
 
@@ -66,7 +56,6 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.Job;
     private static readonly submitJobQueryLabel = vscode.l10n.t("$(check) Submit this query");
     private static readonly chooseJobStatusLabel = "Job Status";
-    public openFiles: Record<string, IZoweJobTreeNode> = {};
     public dragMimeTypes: string[] = ["application/vnd.code.tree.zowe.jobs.explorer"];
     public dropMimeTypes: string[] = ["application/vnd.code.tree.zowe.jobs.explorer"];
 
@@ -198,17 +187,6 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     public getTreeView(): vscode.TreeView<IZoweJobTreeNode> {
         ZoweLogger.trace("ZosJobsProvider.getTreeView called.");
         return this.treeView;
-    }
-
-    /**
-     * Adds a session to the data set tree
-     *
-     * @param {string} [sessionName] - optional; loads default profile if not passed
-     * @param {string} [profileType] - optional; loads profiles of a certain type if passed
-     */
-    public async addSession(sessionName?: string, profileType?: string, provider?: IZoweTree<IZoweTreeNode>): Promise<void> {
-        ZoweLogger.trace("ZosJobsProvider.addSession called.");
-        await super.addSession(sessionName, profileType, provider);
     }
 
     /**
@@ -814,7 +792,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         const searchCriteria = node.label as string;
         const session = node.getProfileName();
         const faveNode = node;
-        await this.addSession(session);
+        await this.addSession({ sessionName: session });
         node = this.mSessionNodes.find((tempNode) => tempNode.label?.toString() === session);
         if (!node.getSession().ISession.user || !node.getSession().ISession.password) {
             node.getSession().ISession.user = faveNode.getSession().ISession.user;
@@ -1200,17 +1178,6 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         });
         inputBox.show();
         return inputBox;
-    }
-
-    /**
-     * Event listener to mark a job doc URI as null in the openFiles record
-     * @param this (resolves ESlint warning about unbound methods)
-     * @param doc A doc URI that was closed
-     */
-    public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): void {
-        if (doc.uri.scheme === "zosspool") {
-            SharedUtils.updateOpenFiles(SharedTreeProviders.job, doc.uri.path, null);
-        }
     }
 }
 
