@@ -15,7 +15,7 @@ import { randomUUID } from "crypto";
 
 export namespace Table {
     export type Action = { title: string; command: string; type?: "primary" | "secondary" | "icon" };
-    export type ContextMenuOption = { title: string; command: string };
+    export type ContextMenuOption = Omit<Action, "type">;
     export type Axes = "row" | "column";
 
     export type RowContent = Record<string | number, string | number | boolean | string[]>;
