@@ -70,25 +70,21 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
                 // Support a custom cell renderer for row actions
                 cellRenderer:
                   actionsCellRenderer ??
-                  ((params: any) => {
-                    if (newData.actions[params.rowIndex] || newData.actions["all"]) {
-                      return (
-                        <span style={{ display: "flex", alignItems: "center", marginTop: "0.5em", userSelect: "none" }}>
-                          {[...(newData.actions[params.rowIndex] || []), ...(newData.actions["all"] || [])].map((action) => (
-                            <VSCodeButton
-                              appearance={action.type ?? "primary"}
-                              onClick={(_e: any) => vscodeApi.postMessage({ command: action.command, row: newData.rows?.at(params.rowIndex) })}
-                              style={{ marginRight: "0.25em" }}
-                            >
-                              {action.title}
-                            </VSCodeButton>
-                          ))}
-                        </span>
-                      );
-                    } else {
-                      return <></>;
-                    }
-                  }),
+                  ((params: any) =>
+                    // Render any actions for the given row and actions that apply to all rows
+                    newData.actions[params.rowIndex] || newData.actions["all"] ? (
+                      <span style={{ display: "flex", alignItems: "center", marginTop: "0.5em", userSelect: "none" }}>
+                        {[...(newData.actions[params.rowIndex] || []), ...(newData.actions["all"] || [])].map((action) => (
+                          <VSCodeButton
+                            appearance={action.type ?? "primary"}
+                            onClick={(_e: any) => vscodeApi.postMessage({ command: action.command, row: newData.rows!.at(params.rowIndex) })}
+                            style={{ marginRight: "0.25em" }}
+                          >
+                            {action.title}
+                          </VSCodeButton>
+                        ))}
+                      </span>
+                    ) : null),
               },
             ];
             setTableData({ ...newData, rows, columns });
