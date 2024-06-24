@@ -10,7 +10,7 @@
  */
 
 /**
- * HTML template that is compiled with Handlebars to load a WebView instance at runtime.
+ * HTML template that is compiled with Mustache to load a WebView instance at runtime.
  */
 const HTMLTemplate: string = `
 <!DOCTYPE html>
@@ -21,10 +21,13 @@ const HTMLTemplate: string = `
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta 
             http-equiv="Content-Security-Policy" 
-            content="default-src 'none'; img-src vscode-resource: https:; script-src 'nonce-{{ nonce }}';
+            content="default-src 'none'; font-src data:; img-src data: vscode-resource: https:; script-src 'nonce-{{ nonce }}';
             style-src vscode-resource: 'unsafe-inline' http: https: data:;"
         />
         <base href="{{ uris.resource.build }}">
+        {{#uris.resource.css}}
+        <link type="text/css" rel="stylesheet" href="{{ uris.resource.css }}" />
+        {{/uris.resource.css}}
     </head>
     <body>
         <noscript>You'll need to enable JavaScript to run this app.</noscript>
