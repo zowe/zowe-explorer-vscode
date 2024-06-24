@@ -156,7 +156,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public getSessionNode(): IZoweUSSTreeNode {
         ZoweLogger.trace("ZoweUSSNode.getSessionNode called.");
-        return this.getParent() ? (this.getParent().getSessionNode() as IZoweUSSTreeNode) : this;
+        return this.session ? this : (this.getParent()?.getSessionNode() as IZoweUSSTreeNode) ?? this;
     }
 
     /**
