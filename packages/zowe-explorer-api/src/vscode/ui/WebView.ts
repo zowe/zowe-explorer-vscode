@@ -9,7 +9,7 @@
  *
  */
 
-import * as Handlebars from "handlebars";
+import * as Mustache from "mustache";
 import HTMLTemplate from "./utils/HTMLTemplate";
 import { Types } from "../../Types";
 import { Disposable, ExtensionContext, Uri, ViewColumn, WebviewPanel, window } from "vscode";
@@ -74,12 +74,12 @@ export class WebView {
             script: this.panel.webview.asWebviewUri(this.uris.disk.script),
         };
 
-        const template = Handlebars.compile(HTMLTemplate);
-        this.webviewContent = template({
+        const builtHtml = Mustache.render(HTMLTemplate, {
             uris: this.uris,
             nonce: this.nonce,
             title: this.title,
         });
+        this.webviewContent = builtHtml;
         if (onDidReceiveMessage) {
             this.panel.webview.onDidReceiveMessage(async (message) => onDidReceiveMessage(message));
         }
