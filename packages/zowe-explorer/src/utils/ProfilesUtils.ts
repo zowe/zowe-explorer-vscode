@@ -298,7 +298,7 @@ export class ProfilesUtils {
             ZoweLogger.debug(`Summary of team configuration files considered for Zowe Explorer: ${JSON.stringify(layerSummary)}`);
         } else {
             if (imperative.ProfileInfo.onlyV1ProfilesExist) {
-                this.v1ProfileOptions();
+                await this.v1ProfileOptions();
             }
         }
     }
@@ -470,7 +470,7 @@ export class ProfilesUtils {
         }
     }
 
-    private static v1ProfileOptions(): void {
+    private static async v1ProfileOptions(): Promise<void> {
         const v1ProfileErrorMsg = vscode.l10n.t(
             // eslint-disable-next-line max-len
             "Zowe v1 profiles in use.\nZowe Explorer no longer supports v1 profiles, choose to convert existing profiles to a team configuration or create new."
@@ -478,7 +478,7 @@ export class ProfilesUtils {
         ZoweLogger.warn(v1ProfileErrorMsg);
         const createButton = vscode.l10n.t("Create New");
         const convertButton = vscode.l10n.t("Convert Existing Profiles");
-        Gui.infoMessage(v1ProfileErrorMsg, { items: [createButton, convertButton], vsCodeOpts: { modal: true } }).then(async (selection) => {
+        await Gui.infoMessage(v1ProfileErrorMsg, { items: [createButton, convertButton], vsCodeOpts: { modal: true } }).then(async (selection) => {
             switch (selection) {
                 case createButton: {
                     ZoweLogger.info("Create new team configuration chosen.");
