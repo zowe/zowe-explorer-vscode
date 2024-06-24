@@ -309,6 +309,14 @@ export namespace window {
         return undefined;
     }
 
+    export function showQuickPick<T extends QuickPickItem>(
+        items: readonly T[] | Thenable<readonly T[]>,
+        options?: QuickPickOptions & { canPickMany: true },
+        token?: CancellationToken
+    ): Thenable<T[] | undefined> {
+        return undefined;
+    }
+
     /**
      * Options to configure the behavior of the message.
      *
