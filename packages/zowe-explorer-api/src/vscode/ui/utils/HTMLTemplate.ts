@@ -25,9 +25,6 @@ const HTMLTemplate: string = `
             style-src vscode-resource: 'unsafe-inline' http: https: data:;"
         />
         <base href="{{ uris.resource.build }}">
-        {{#uris.resource.css}}
-        <link type="text/css" rel="stylesheet" href="{{ uris.resource.css }}" />
-        {{/uris.resource.css}}
     </head>
     <body>
         <noscript>You'll need to enable JavaScript to run this app.</noscript>
