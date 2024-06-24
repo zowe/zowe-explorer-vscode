@@ -11,7 +11,7 @@
 
 import { WebView } from "../../../../src/vscode/ui";
 import * as vscode from "vscode";
-import * as Mustache from "Mustache";
+import * as Mustache from "mustache";
 
 describe("WebView unit tests", () => {
     beforeAll(() => {
