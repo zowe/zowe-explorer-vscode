@@ -33,6 +33,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - **Breaking:** Changed the parameters of the `addSession` method on the `IZoweTree` interface since they were all optional. It now receives an object of type `AddSessionOpts`. [#2947](https://github.com/zowe/zowe-explorer-vscode/pull/2947)
 - **Breaking:** Removed the redundant `zoweFileProvider` parameter from `editSession` method on the `IZoweTree` interface. [#2947](https://github.com/zowe/zowe-explorer-vscode/pull/2947)
 - Updated the `ProfilesCache.getProfiles` method to return empty list instead of undefined when there are no profiles. [#2947](https://github.com/zowe/zowe-explorer-vscode/pull/2947)
+- Added PEM certificate support as an authentication method for logging into the API ML. [#2621](https://github.com/zowe/zowe-explorer-vscode/issues/2621)
 
 ### Bug fixes
 
