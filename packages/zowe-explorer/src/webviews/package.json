@@ -19,6 +19,7 @@
     "madge": "echo \"webviews: nothing to madge.\""
   },
   "dependencies": {
+    "@szhsin/react-menu": "^4.1.0",
     "@types/vscode-webview": "^1.57.1",
     "@vscode/webview-ui-toolkit": "^1.2.2",
     "ag-grid-community": "^31.3.2",

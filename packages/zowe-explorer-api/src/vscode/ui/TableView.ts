@@ -12,6 +12,7 @@
 import { UriPair, WebView } from "./WebView";
 import { Event, EventEmitter, ExtensionContext } from "vscode";
 import { randomUUID } from "crypto";
+import * as vscode from "vscode";
 
 export namespace Table {
     export type Action = { title: string; command: string; type?: "primary" | "secondary" | "icon" };
@@ -55,8 +56,7 @@ export namespace Table {
         }
 
         public constructor(context: ExtensionContext, data?: Data) {
-            super(data.title ?? "Table view", "table-view", context);
-            this.panel.webview.onDidReceiveMessage((message) => this.onMessageReceived(message));
+            super(data.title ?? "Table view", "table-view", context, (message) => this.onMessageReceived(message), true);
             if (data) {
                 this.data = data;
             }
@@ -78,6 +78,9 @@ export namespace Table {
                     break;
                 case "ready":
                     await this.updateWebview();
+                    break;
+                case "copy":
+                    await vscode.env.clipboard.writeText(JSON.stringify(message.data));
                     break;
             }
         }

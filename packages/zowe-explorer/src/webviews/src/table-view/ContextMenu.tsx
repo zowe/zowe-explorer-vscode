@@ -1,23 +1,24 @@
 import type { Table } from "@zowe/zowe-explorer-api";
-import { useState } from "preact/hooks";
-import { JSX } from "preact/jsx-runtime";
-import { ColDef } from "ag-grid-community";
-
-const vscodeApi = acquireVsCodeApi();
+import { useCallback, useRef, useState } from "preact/hooks";
+import { CellContextMenuEvent, ColDef } from "ag-grid-community";
+import { JSXInternal } from "preact/src/jsx";
+import { ControlledMenu, MenuItem } from "@szhsin/react-menu";
+import "@szhsin/react-menu/dist/index.css";
 
 type MousePt = { x: number; y: number };
 export type ContextMenuState = {
   open: boolean;
-  callback: Function;
-  component: JSX.Element | null;
+  callback: (event: any) => void;
+  component: JSXInternal.Element | null;
 };
 
 export type ContextMenuProps = {
+  selectRow: boolean;
   selectedRows: Table.RowContent[] | null | undefined;
   clickedRow: Table.RowContent;
   options: Table.ContextMenuOption[];
   colDef: ColDef;
-  close: () => void;
+  vscodeApi: any;
 };
 
 /**
@@ -30,23 +31,60 @@ export const useContextMenu = (contextMenu: ContextMenuProps) => {
   const [open, setOpen] = useState(false);
   const [anchor, setAnchor] = useState<MousePt>({ x: 0, y: 0 });
 
+  const clickedColDef = useRef<ColDef>(null!);
+  const selectedRows = useRef<any[]>([]);
+  const clickedRow = useRef<any>(null);
+
+  const openMenu = useCallback((e: PointerEvent | null | undefined) => {
+    if (!e) {
+      return;
+    }
+
+    setAnchor({ x: e.clientX, y: e.clientY });
+    setOpen(true);
+  }, []);
+
+  const cellMenu = useCallback(
+    (event: CellContextMenuEvent) => {
+      const cell = event.api.getFocusedCell();
+      if (contextMenu.selectRow && cell) {
+        event.api.setFocusedCell(cell.rowIndex, cell.column, cell.rowPinned);
+      }
+
+      clickedColDef.current = event.colDef;
+      selectedRows.current = event.api.getSelectedRows();
+      clickedRow.current = event.data;
+
+      openMenu(event.event as PointerEvent);
+      event.event?.stopImmediatePropagation();
+    },
+    [contextMenu.selectRow, selectedRows]
+  );
+
   return {
     open,
-    callback: () => {},
-    component: open ? <ContextMenu menuItems={contextMenu.options} /> : null,
+    callback: cellMenu,
+    component: open ? (
+      <ControlledMenu state={open ? "open" : "closed"} anchorPoint={anchor} direction="right" onClose={() => setOpen(false)}>
+        {ContextMenu(clickedRow.current, contextMenu.options, contextMenu.vscodeApi)}
+      </ControlledMenu>
+    ) : null,
   };
 };
 
-export const ContextMenu = ({ menuItems }: { menuItems?: Table.ContextMenuOption[] }) => {
-  return menuItems?.length == 0 ? null : (
-    <div style={{ color: "var(--vscode-menu-background)", border: "1px solid var(--vscode-menu-border)" }}>
-      <ul>
-        {menuItems!.map((item, i) => (
-          <li onClick={(_e) => vscodeApi.postMessage({ command: item.command })} style={{ borderBottom: "var(--vscode-menu-border)" }}>
-            {item.title}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+export type ContextMenuElemProps = {
+  anchor: MousePt;
+  menuItems: Table.ContextMenuOption[];
+  vscodeApi: any;
+};
+
+export const ContextMenu = (clickedRow: any, menuItems: Table.ContextMenuOption[], vscodeApi: any) => {
+  return menuItems?.map((item, _i) => (
+    <MenuItem
+      onClick={(_e: any) => vscodeApi.postMessage({ command: item.command, data: { ...clickedRow, actions: undefined } })}
+      style={{ borderBottom: "var(--vscode-menu-border)" }}
+    >
+      {item.title}
+    </MenuItem>
+  ));
 };

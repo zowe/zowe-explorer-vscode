@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { FileManagement, Gui, IZoweTree, IZoweTreeNode, TableBuilder, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { FileManagement, FsAbstractUtils, Gui, IZoweTree, IZoweTreeNode, TableBuilder, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { SharedActions } from "./SharedActions";
 import { SharedHistoryView } from "./SharedHistoryView";
 import { SharedTreeProviders } from "./SharedTreeProviders";
@@ -271,8 +271,15 @@ export class SharedInit {
                         return;
                     }
 
+                    const uriInfo = FsAbstractUtils.getInfoForUri(
+                        vscode.Uri.from({
+                            scheme: "zowe-uss",
+                            path: uriPath,
+                        })
+                    );
+
                     const files = await UssFSProvider.instance.listFiles(
-                        Profiles.getInstance().getDefaultProfile(),
+                        Profiles.getInstance().loadNamedProfile(uriInfo.profileName),
                         vscode.Uri.from({
                             scheme: "zowe-uss",
                             path: uriPath,

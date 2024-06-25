@@ -23,7 +23,7 @@
     }
     // "types": ["node", "jest", "mocha"]
   },
-  "exclude": ["node_modules", ".vscode-test"],
+  "exclude": ["node_modules", "src/webviews/**", ".vscode-test"],
   "include": [
     "src/**/*.ts",
     // Needed in production for vscode-nls localization to work:

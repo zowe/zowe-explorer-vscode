@@ -12,6 +12,7 @@
 import type { Table } from "@zowe/zowe-explorer-api";
 import { AgGridReactProps } from "ag-grid-react";
 import { JSXInternal } from "preact/src/jsx";
+import { ContextMenuState } from "./ContextMenu";
 
 type AgGridThemes = "ag-theme-quartz" | "ag-theme-balham" | "ag-theme-material" | "ag-theme-alpine";
 export type TableViewProps = {
@@ -21,11 +22,12 @@ export type TableViewProps = {
 };
 
 // Define props for the AG Grid table here
-export const tableProps = (tableData: Table.Data): Partial<AgGridReactProps> => ({
+export const tableProps = (contextMenu: ContextMenuState, tableData: Table.Data): Partial<AgGridReactProps> => ({
     domLayout: "autoHeight",
     enableCellTextSelection: true,
     ensureDomOrder: true,
     rowData: tableData.rows,
     columnDefs: tableData.columns,
     pagination: true,
+    onCellContextMenu: contextMenu.callback,
 });

@@ -8,6 +8,7 @@ import { useEffect, useState } from "preact/hooks";
 import { getVsCodeTheme, isSecureOrigin, useMutableObserver } from "../utils";
 import type { Table } from "@zowe/zowe-explorer-api";
 import { TableViewProps, tableProps } from "./types";
+import { useContextMenu } from "./ContextMenu";
 // Custom styling (font family, VS Code color scheme, etc.)
 import "./style.css";
 
@@ -29,6 +30,15 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
   );
   const [theme, setTheme] = useState<string>(baseTheme ?? "ag-theme-quartz");
 
+  const contextMenu = useContextMenu({
+    options: [{ title: "Copy", command: "copy" }],
+    selectRow: true,
+    selectedRows: [],
+    clickedRow: undefined as any,
+    colDef: undefined as any,
+    vscodeApi,
+  });
+
   useEffect(() => {
     // Apply the dark version of the AG Grid theme if the user is using a dark or high-contrast theme in VS Code.
     const userTheme = getVsCodeTheme();
@@ -36,9 +46,8 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
       setTheme("ag-theme-quartz-dark");
     }
 
-    // Add an event listener for the context menu to prevent VS Code from showing its right-click menu.
-    // Source: https://github.com/microsoft/vscode/issues/139824
-    window.addEventListener("contextmenu", (e) => e.stopImmediatePropagation(), true);
+    // Disable the event listener for the context menu in the active iframe to prevent VS Code from showing its right-click menu.
+    window.addEventListener("contextmenu", (e) => e.preventDefault(), true);
 
     // Set up event listener to handle data changes being sent to the webview.
     window.addEventListener("message", (event: any): void => {
@@ -115,7 +124,8 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
     <>
       {tableData.title ? <h1>{tableData.title}</h1> : null}
       <div className={`${theme} ag-theme-vsc`}>
-        <AgGridReact {...tableProps(tableData)} />
+        {contextMenu.component}
+        <AgGridReact {...tableProps(contextMenu, tableData)} />
       </div>
     </>
   );
