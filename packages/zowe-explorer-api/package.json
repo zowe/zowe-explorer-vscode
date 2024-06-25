@@ -16,6 +16,7 @@
     "lib"
   ],
   "devDependencies": {
+    "@types/mustache": "^4.2.5",
     "@types/semver": "^7.5.0",
     "copyfiles": "^2.4.1"
   },
@@ -30,7 +31,7 @@
     "@zowe/zos-tso-for-zowe-sdk": "8.0.0-next.202405241828",
     "@zowe/zos-uss-for-zowe-sdk": "8.0.0-next.202405241828",
     "@zowe/zosmf-for-zowe-sdk": "8.0.0-next.202405241828",
-    "handlebars": "^4.7.7",
+    "mustache": "^4.2.0",
     "semver": "^7.6.0"
   },
   "scripts": {

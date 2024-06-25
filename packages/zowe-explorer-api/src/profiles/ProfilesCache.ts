@@ -26,7 +26,7 @@ export class ProfilesCache {
     public profilesValidationSetting: Validation.IValidationSetting[] = [];
     public allProfiles: imperative.IProfileLoaded[] = [];
     public profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[] = [];
-    protected allTypes: string[];
+    protected allTypes: string[] = [];
     protected allExternalTypes = new Set<string>();
     protected profilesByType = new Map<string, imperative.IProfileLoaded[]>();
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
@@ -133,7 +133,7 @@ export class ProfilesCache {
      * @returns {IProfileLoaded[]}
      */
     public getProfiles(type = "zosmf"): imperative.IProfileLoaded[] {
-        return this.profilesByType.get(type);
+        return this.profilesByType.get(type) ?? [];
     }
 
     /**
@@ -149,17 +149,14 @@ export class ProfilesCache {
     }
 
     public async refresh(apiRegister?: IRegisterClient): Promise<void> {
-        this.allProfiles = [];
-        this.allTypes = [];
-        this.profilesByType.clear();
-        this.defaultProfileByType.clear();
+        const allProfiles: imperative.IProfileLoaded[] = [];
         try {
             const mProfileInfo = await this.getProfileInfo();
             if (!mProfileInfo.getTeamConfig().exists) {
                 return;
             }
             const allTypes = this.getAllProfileTypes(apiRegister?.registeredApiTypes() ?? []);
-            allTypes.push("ssh", "base");
+            allTypes.push("base");
             for (const type of allTypes) {
                 const tmpAllProfiles: imperative.IProfileLoaded[] = [];
                 // Step 1: Get all profiles for each registered type
@@ -178,10 +175,15 @@ export class ProfilesCache {
                         // Step 3: Update allProfiles list
                         tmpAllProfiles.push(profileFix);
                     }
-                    this.allProfiles.push(...tmpAllProfiles);
+                    allProfiles.push(...tmpAllProfiles);
                     this.profilesByType.set(type, tmpAllProfiles);
                 }
-                this.allTypes.push(type);
+            }
+            this.allProfiles = allProfiles;
+            this.allTypes = allTypes;
+            for (const oldType of [...this.profilesByType.keys()].filter((type) => !allProfiles.some((prof) => prof.type === type))) {
+                this.profilesByType.delete(oldType);
+                this.defaultProfileByType.delete(oldType);
             }
             // check for proper merging of apiml tokens
             this.checkMergingConfigAllProfiles();

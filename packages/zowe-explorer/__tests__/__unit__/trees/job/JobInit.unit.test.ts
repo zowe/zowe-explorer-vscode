@@ -16,7 +16,6 @@ import { IJestIt, ITestContext, processSubscriptions } from "../../../__common__
 import { JobActions } from "../../../../src/trees/job/JobActions";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
-import { JobTree } from "../../../../src/trees/job/JobTree";
 import { SharedActions } from "../../../../src/trees/shared/SharedActions";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { JobInit } from "../../../../src/trees/job/JobInit";
@@ -44,7 +43,6 @@ describe("Test src/jobs/extension", () => {
             createZoweSession: jest.fn(),
             filterPrompt: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
-            onDidCloseTextDocument: jest.fn(),
             pollData: jest.fn(),
             filterJobsDialog: jest.fn(),
         };
@@ -165,7 +163,6 @@ describe("Test src/jobs/extension", () => {
             });
 
             spyCreateJobsTree.mockResolvedValue(jobsProvider as any);
-            jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(jobsProvider.onDidCloseTextDocument);
             await JobInit.initJobsProvider(test.context);
         });
         beforeEach(() => {
@@ -181,10 +178,6 @@ describe("Test src/jobs/extension", () => {
             spyCreateJobsTree.mockResolvedValue(null);
             const myProvider = await JobInit.initJobsProvider(test.context);
             expect(myProvider).toBe(null);
-        });
-
-        it("should register onDidCloseTextDocument event listener from ZosJobsProvider", () => {
-            expect(jobsProvider.onDidCloseTextDocument).toHaveBeenCalledWith(JobTree.onDidCloseTextDocument);
         });
     });
 });

@@ -20,6 +20,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
   - `DatasetActions.copyDataSet` - use `DatasetActions.copyDataSets` instead
   - `USSActions.pasteUssFile` - use `DatasetActions.pasteUss` instead
   - `ZoweUSSNode.refreshAndReopen` - use `ZoweUSSNode.reopen` instead
+- Add deprecation message to history settings explaining to users how to edit items. [#2303](https://github.com/zowe/zowe-explorer-vscode/issues/2303)
 - **Breaking:** Consolidated VS Code commands:
   - `zowe.ds.addFavorite`, `zowe.uss.addFavorite`, `zowe.jobs.addFavorite` - use `zowe.addFavorite` instead
   - `zowe.ds.disableValidation`, `zowe.uss.disableValidation`, `zowe.jobs.disableValidation` - use `zowe.disableValidation` instead
@@ -34,6 +35,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
   - `zowe.ds.saveSearch`, `zowe.uss.saveSearch`, `zowe.jobs.saveSearch` - use `zowe.saveSearch` instead
   - `zowe.ds.ssoLogin`, `zowe.uss.ssoLogin`, `zowe.jobs.ssoLogin` - use `zowe.ssoLogin` instead
   - `zowe.ds.ssoLogout`, `zowe.uss.ssoLogout`, `zowe.jobs.ssoLogout` - use `zowe.ssoLogout` instead
+- Added PEM certificate support as an authentication method for logging into the API ML. [#2621](https://github.com/zowe/zowe-explorer-vscode/issues/2621)
 
 ### Bug fixes
 
@@ -48,7 +50,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
   - `Zowe Explorer: Stop Polling`
 - Ported the following fixes from v2:
   - Moved schema warnings into the log file (rather than a UI message) to minimize end-user disruption. [#2860](https://github.com/zowe/zowe-explorer-vscode/pull/2860)
+- Fix issue with base profile not being included in fresh team configuration file. [#2887](https://github.com/zowe/zowe-explorer-vscode/issues/2887)
 - Fixed an issue where the `onProfilesUpdate` event did not fire after secure credentials were updated. [#2822](https://github.com/zowe/zowe-explorer-vscode/issues/2822)
+- Fixed issue where saving changes to favorited PDS member fails when custom temp folder is set on Windows. [#2880](https://github.com/zowe/zowe-explorer-vscode/issues/2880)
+- Fixed issue where multiple extensions that contribute profiles to a tree view using the Zowe Explorer API may fail to load. [#2888](https://github.com/zowe/zowe-explorer-vscode/issues/2888)
 - Update Zowe SDKs to `8.0.0-next.202405241828` for technical currency. [#2918](https://github.com/zowe/zowe-explorer-vscode/issues/2918)
 
 ## `3.0.0-next.202404242037`
@@ -146,6 +151,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Updated activation event to `onStartupFinished`. [#1910](https://github.com/zowe/vscode-extension-for-zowe/issues/1910)
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Migrated to new package manager PNPM from Yarn.
+
+## `2.16.2`
+
+### Bug fixes
+
+- Fix issue Right-click-delete option deleting the currently open/selected file and not the file which is right-clicked when members having same name [#2941](https://github.com/zowe/zowe-explorer-vscode/issues/2941)
 
 ## `2.16.0`
 

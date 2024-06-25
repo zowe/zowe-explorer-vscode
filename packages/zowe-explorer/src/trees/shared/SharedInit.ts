@@ -35,6 +35,7 @@ import type { Definitions } from "../../configuration/Definitions";
 import { SharedUtils } from "./SharedUtils";
 import { SharedContext } from "./SharedContext";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
+import { CertificateWizard } from "../../utils/CertificateWizard";
 
 export class SharedInit {
     public static registerRefreshCommand(
@@ -120,6 +121,15 @@ export class SharedInit {
             })
         );
 
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.certificateWizard", async (opts) => {
+                const certWizard = new CertificateWizard(context, opts);
+                const ret = await certWizard.userSubmission.promise;
+                certWizard.panel.dispose();
+                return ret;
+            })
+        );
+
         // Register functions & event listeners
         context.subscriptions.push(
             vscode.workspace.onDidChangeConfiguration(async (e) => {
@@ -187,8 +197,7 @@ export class SharedInit {
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.editSession", async (node: IZoweTreeNode) => {
-                    const treeProvider = SharedTreeProviders.getProviderForNode(node);
-                    await treeProvider.editSession(node, treeProvider);
+                    await SharedTreeProviders.getProviderForNode(node).editSession(node);
                 })
             );
             context.subscriptions.push(

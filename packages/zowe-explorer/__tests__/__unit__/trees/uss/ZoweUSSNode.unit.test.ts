@@ -1146,7 +1146,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
 
         expect(blockMocks.initializeFileOpening.mock.calls.length).toBe(0);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("open() called from invalid node.");
+        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("openUSS() called from invalid node.");
     });
 });
 

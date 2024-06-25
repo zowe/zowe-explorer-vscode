@@ -51,7 +51,6 @@ function createGlobalMocks() {
         mockCreateTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         mockExecuteCommand: jest.fn(),
         mockRegisterCommand: jest.fn(),
-        mockOnDidCloseTextDocument: jest.fn(),
         mockOnDidSaveTextDocument: jest.fn(),
         mockOnDidChangeSelection: jest.fn(),
         mockOnDidChangeConfiguration: jest.fn(),
@@ -135,7 +134,8 @@ function createGlobalMocks() {
             disableValidationContext: jest.fn(),
             enableValidationContext: jest.fn(),
             validationArraySetup: jest.fn(),
-            fetchAllProfiles: jest.fn(),
+            fetchAllProfiles: jest.fn().mockResolvedValue([]),
+            fetchAllProfilesByType: jest.fn().mockResolvedValue([]),
             getProfileInfo: () => createInstanceOfProfileInfo(),
         },
         mockExtension: null,
@@ -217,6 +217,7 @@ function createGlobalMocks() {
             "zowe.profileManagement",
             "zowe.diff.useLocalContent",
             "zowe.diff.useRemoteContent",
+            "zowe.certificateWizard",
             "zowe.openRecentMember",
             "zowe.searchInAllLoadedItems",
             "zowe.disableValidation",
@@ -354,8 +355,6 @@ function createGlobalMocks() {
         get: globalMocks.mockImperativeProfileInfo,
         configurable: true,
     });
-
-    jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(globalMocks.onDidCloseTextDocument);
 
     // Create a mocked extension context
     const mockExtensionCreator = jest.fn(
