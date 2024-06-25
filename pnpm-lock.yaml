@@ -107,7 +107,7 @@ importers:
         version: 5.3.10(webpack@5.91.0)
       ts-jest:
         specifier: ^29.0.3
-        version: 29.1.2(@babel/core@7.24.5)(jest@29.7.0)(typescript@5.4.5)
+        version: 29.1.2(@babel/core@7.24.6)(jest@29.7.0)(typescript@5.4.5)
       tsconfig-paths-webpack-plugin:
         specifier: ^4.1.0
         version: 4.1.0
@@ -136,22 +136,22 @@ importers:
   packages/zowe-explorer:
     dependencies:
       '@zowe/core-for-zowe-sdk':
-        specifier: 8.0.0-next.202404032038
-        version: 8.0.0-next.202404032038(@zowe/imperative@8.0.0-next.202404032038)
+        specifier: 8.0.0-next.202405241828
+        version: 8.0.0-next.202405241828(@zowe/imperative@8.0.0-next.202405241828)
       '@zowe/secrets-for-zowe-sdk':
-        specifier: 8.0.0-next.202404032038
-        version: 8.0.0-next.202404032038
+        specifier: 8.0.0-next.202405241828
+        version: 8.0.0-next.202405241828
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: 8.0.0-next.202404032038
-        version: 8.0.0-next.202404032038(@zowe/core-for-zowe-sdk@8.0.0-next.202404032038)(@zowe/imperative@8.0.0-next.202404032038)
+        specifier: 8.0.0-next.202405241828
+        version: 8.0.0-next.202405241828(@zowe/core-for-zowe-sdk@8.0.0-next.202405241828)(@zowe/imperative@8.0.0-next.202405241828)
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: 8.0.0-next.202404032038
-        version: 8.0.0-next.202404032038(@zowe/core-for-zowe-sdk@8.0.0-next.202404032038)(@zowe/imperative@8.0.0-next.202404032038)
+        specifier: 8.0.0-next.202405241828
+        version: 8.0.0-next.202405241828(@zowe/core-for-zowe-sdk@8.0.0-next.202405241828)(@zowe/imperative@8.0.0-next.202405241828)
       '@zowe/zosmf-for-zowe-sdk':
-        specifier: 8.0.0-next.202404032038
-        version: 8.0.0-next.202404032038(@zowe/core-for-zowe-sdk@8.0.0-next.202404032038)(@zowe/imperative@8.0.0-next.202404032038)
+        specifier: 8.0.0-next.202405241828
+        version: 8.0.0-next.202405241828(@zowe/core-for-zowe-sdk@8.0.0-next.202405241828)(@zowe/imperative@8.0.0-next.202405241828)
       '@zowe/zowe-explorer-api':
-        specifier: workspace:3.0.0-next-SNAPSHOT
+        specifier: 3.0.0-next-SNAPSHOT
         version: link:../zowe-explorer-api
       dayjs:
         specifier: ^1.11.10
@@ -266,32 +266,32 @@ importers:
         specifier: ^1.53.2
         version: 1.89.0
       '@zowe/core-for-zowe-sdk':
-        specifier: 8.0.0-next.202404032038
-        version: 8.0.0-next.202404032038(@zowe/imperative@8.0.0-next.202404032038)
+        specifier: 8.0.0-next.202405241828
+        version: 8.0.0-next.202405241828(@zowe/imperative@8.0.0-next.202405241828)
       '@zowe/imperative':
-        specifier: 8.0.0-next.202404032038
-        version: 8.0.0-next.202404032038
+        specifier: 8.0.0-next.202405241828
+        version: 8.0.0-next.202405241828
       '@zowe/secrets-for-zowe-sdk':
-        specifier: 8.0.0-next.202404032038
-        version: 8.0.0-next.202404032038
+        specifier: 8.0.0-next.202405241828
+        version: 8.0.0-next.202405241828
       '@zowe/zos-console-for-zowe-sdk':
-        specifier: 8.0.0-next.202404032038
-        version: 8.0.0-next.202404032038(@zowe/core-for-zowe-sdk@8.0.0-next.202404032038)(@zowe/imperative@8.0.0-next.202404032038)
+        specifier: 8.0.0-next.202405241828
+        version: 8.0.0-next.202405241828(@zowe/core-for-zowe-sdk@8.0.0-next.202405241828)(@zowe/imperative@8.0.0-next.202405241828)
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: 8.0.0-next.202404032038
-        version: 8.0.0-next.202404032038(@zowe/core-for-zowe-sdk@8.0.0-next.202404032038)(@zowe/imperative@8.0.0-next.202404032038)
+        specifier: 8.0.0-next.202405241828
+        version: 8.0.0-next.202405241828(@zowe/core-for-zowe-sdk@8.0.0-next.202405241828)(@zowe/imperative@8.0.0-next.202405241828)
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: 8.0.0-next.202404032038
-        version: 8.0.0-next.202404032038(@zowe/core-for-zowe-sdk@8.0.0-next.202404032038)(@zowe/imperative@8.0.0-next.202404032038)
+        specifier: 8.0.0-next.202405241828
+        version: 8.0.0-next.202405241828(@zowe/core-for-zowe-sdk@8.0.0-next.202405241828)(@zowe/imperative@8.0.0-next.202405241828)
       '@zowe/zos-tso-for-zowe-sdk':
-        specifier: 8.0.0-next.202404032038
-        version: 8.0.0-next.202404032038(@zowe/core-for-zowe-sdk@8.0.0-next.202404032038)(@zowe/imperative@8.0.0-next.202404032038)
+        specifier: 8.0.0-next.202405241828
+        version: 8.0.0-next.202405241828(@zowe/core-for-zowe-sdk@8.0.0-next.202405241828)(@zowe/imperative@8.0.0-next.202405241828)
       '@zowe/zos-uss-for-zowe-sdk':
-        specifier: 8.0.0-next.202404032038
-        version: 8.0.0-next.202404032038(@zowe/imperative@8.0.0-next.202404032038)
+        specifier: 8.0.0-next.202405241828
+        version: 8.0.0-next.202405241828(@zowe/imperative@8.0.0-next.202405241828)
       '@zowe/zosmf-for-zowe-sdk':
-        specifier: 8.0.0-next.202404032038
-        version: 8.0.0-next.202404032038(@zowe/core-for-zowe-sdk@8.0.0-next.202404032038)(@zowe/imperative@8.0.0-next.202404032038)
+        specifier: 8.0.0-next.202405241828
+        version: 8.0.0-next.202405241828(@zowe/core-for-zowe-sdk@8.0.0-next.202405241828)(@zowe/imperative@8.0.0-next.202405241828)
       mustache:
         specifier: ^4.2.0
         version: 4.2.0
@@ -312,14 +312,14 @@ importers:
   packages/zowe-explorer-ftp-extension:
     dependencies:
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: 8.0.0-next.202404032038
-        version: 8.0.0-next.202404032038(@zowe/core-for-zowe-sdk@8.0.0-next.202404032038)(@zowe/imperative@8.0.0-next.202404032038)
+        specifier: 8.0.0-next.202405241828
+        version: 8.0.0-next.202405241828(@zowe/core-for-zowe-sdk@8.0.0-next.202405241828)(@zowe/imperative@8.0.0-next.202405241828)
       '@zowe/zos-ftp-for-zowe-cli':
         specifier: 3.0.0-next.202403191358
-        version: 3.0.0-next.202403191358(@zowe/imperative@8.0.0-next.202404032038)
+        version: 3.0.0-next.202403191358(@zowe/imperative@8.0.0-next.202405241828)
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: 8.0.0-next.202404032038
-        version: 8.0.0-next.202404032038(@zowe/core-for-zowe-sdk@8.0.0-next.202404032038)(@zowe/imperative@8.0.0-next.202404032038)
+        specifier: 8.0.0-next.202405241828
+        version: 8.0.0-next.202405241828(@zowe/core-for-zowe-sdk@8.0.0-next.202405241828)(@zowe/imperative@8.0.0-next.202405241828)
       '@zowe/zowe-explorer-api':
         specifier: 3.0.0-next-SNAPSHOT
         version: link:../zowe-explorer-api
@@ -348,7 +348,7 @@ importers:
     devDependencies:
       '@preact/preset-vite':
         specifier: ^2.5.0
-        version: 2.8.2(@babel/core@7.24.5)(preact@10.22.0)(vite@4.5.3)
+        version: 2.8.2(@babel/core@7.24.6)(preact@10.22.0)(vite@4.5.3)
       '@types/lodash':
         specifier: ^4.17.0
         version: 4.17.4
@@ -535,8 +535,21 @@ packages:
       picocolors: 1.0.1
     dev: true
 
+  /@babel/code-frame@7.24.6:
+    resolution: {integrity: sha512-ZJhac6FkEd1yhG2AHOmfcXG4ceoLltoCVJjN5XsWN9BifBQr+cHJbWi0h68HZuSORq+3WtJ2z0hwF2NG1b5kcA==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
+      '@babel/highlight': 7.24.6
+      picocolors: 1.0.1
+    dev: true
+
   /@babel/compat-data@7.24.4:
     resolution: {integrity: sha512-vg8Gih2MLK+kOkHJp4gBEIkyaIi00jgWot2D9QOmmfLC8jINSOzmCLta6Bvz/JSBCqnegV0L80jhxkol5GWNfQ==}
+    engines: {node: '>=6.9.0'}
+    dev: true
+
+  /@babel/compat-data@7.24.6:
+    resolution: {integrity: sha512-aC2DGhBq5eEdyXWqrDInSqQjO0k8xtPRf5YylULqx8MCd6jBtzqfta/3ETMRpuKIc5hyswfO80ObyA1MvkCcUQ==}
     engines: {node: '>=6.9.0'}
     dev: true
 
@@ -563,11 +576,44 @@ packages:
       - supports-color
     dev: true
 
+  /@babel/core@7.24.6:
+    resolution: {integrity: sha512-qAHSfAdVyFmIvl0VHELib8xar7ONuSHrE2hLnsaWkYNTI68dmi1x8GYDhJjMI/e7XWal9QBlZkwbOnkcw7Z8gQ==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
+      '@ampproject/remapping': 2.3.0
+      '@babel/code-frame': 7.24.6
+      '@babel/generator': 7.24.6
+      '@babel/helper-compilation-targets': 7.24.6
+      '@babel/helper-module-transforms': 7.24.6(@babel/core@7.24.6)
+      '@babel/helpers': 7.24.6
+      '@babel/parser': 7.24.6
+      '@babel/template': 7.24.6
+      '@babel/traverse': 7.24.6
+      '@babel/types': 7.24.6
+      convert-source-map: 2.0.0
+      debug: 4.3.5
+      gensync: 1.0.0-beta.2
+      json5: 2.2.3
+      semver: 6.3.1
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
   /@babel/generator@7.24.5:
     resolution: {integrity: sha512-x32i4hEXvr+iI0NEoEfDKzlemF8AmtOP8CcrRaEcpzysWuoEb1KknpcvMsHKPONoKZiDuItklgWhB18xEhr9PA==}
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/types': 7.24.5
+      '@jridgewell/gen-mapping': 0.3.5
+      '@jridgewell/trace-mapping': 0.3.25
+      jsesc: 2.5.2
+    dev: true
+
+  /@babel/generator@7.24.6:
+    resolution: {integrity: sha512-S7m4eNa6YAPJRHmKsLHIDJhNAGNKoWNiWefz1MBbpnt8g9lvMDl1hir4P9bo/57bQEmuwEhnRU/AMWsD0G/Fbg==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
+      '@babel/types': 7.24.6
       '@jridgewell/gen-mapping': 0.3.5
       '@jridgewell/trace-mapping': 0.3.25
       jsesc: 2.5.2
@@ -591,8 +637,24 @@ packages:
       semver: 6.3.1
     dev: true
 
+  /@babel/helper-compilation-targets@7.24.6:
+    resolution: {integrity: sha512-VZQ57UsDGlX/5fFA7GkVPplZhHsVc+vuErWgdOiysI9Ksnw0Pbbd6pnPiR/mmJyKHgyIW0c7KT32gmhiF+cirg==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
+      '@babel/compat-data': 7.24.6
+      '@babel/helper-validator-option': 7.24.6
+      browserslist: 4.23.0
+      lru-cache: 5.1.1
+      semver: 6.3.1
+    dev: true
+
   /@babel/helper-environment-visitor@7.22.20:
     resolution: {integrity: sha512-zfedSIzFhat/gFhWfHtgWvlec0nqB9YEIVrpuwjruLlXfUSnA8cJB0miHKwqDnQ7d32aKo2xt88/xZptwxbfhA==}
+    engines: {node: '>=6.9.0'}
+    dev: true
+
+  /@babel/helper-environment-visitor@7.24.6:
+    resolution: {integrity: sha512-Y50Cg3k0LKLMjxdPjIl40SdJgMB85iXn27Vk/qbHZCFx/o5XO3PSnpi675h1KEmmDb6OFArfd5SCQEQ5Q4H88g==}
     engines: {node: '>=6.9.0'}
     dev: true
 
@@ -604,6 +666,14 @@ packages:
       '@babel/types': 7.24.5
     dev: true
 
+  /@babel/helper-function-name@7.24.6:
+    resolution: {integrity: sha512-xpeLqeeRkbxhnYimfr2PC+iA0Q7ljX/d1eZ9/inYbmfG2jpl8Lu3DyXvpOAnrS5kxkfOWJjioIMQsaMBXFI05w==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
+      '@babel/template': 7.24.6
+      '@babel/types': 7.24.6
+    dev: true
+
   /@babel/helper-hoist-variables@7.22.5:
     resolution: {integrity: sha512-wGjk9QZVzvknA6yKIUURb8zY3grXCcOZt+/7Wcy8O2uctxhplmUPkOdlgoNhmdVee2c92JXbf1xpMtVNbfoxRw==}
     engines: {node: '>=6.9.0'}
@@ -611,11 +681,25 @@ packages:
       '@babel/types': 7.24.5
     dev: true
 
+  /@babel/helper-hoist-variables@7.24.6:
+    resolution: {integrity: sha512-SF/EMrC3OD7dSta1bLJIlrsVxwtd0UpjRJqLno6125epQMJ/kyFmpTT4pbvPbdQHzCHg+biQ7Syo8lnDtbR+uA==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
+      '@babel/types': 7.24.6
+    dev: true
+
   /@babel/helper-module-imports@7.24.3:
     resolution: {integrity: sha512-viKb0F9f2s0BCS22QSF308z/+1YWKV/76mwt61NBzS5izMzDPwdq1pTrzf+Li3npBWX9KdQbkeCt1jSAM7lZqg==}
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/types': 7.24.5
+    dev: true
+
+  /@babel/helper-module-imports@7.24.6:
+    resolution: {integrity: sha512-a26dmxFJBF62rRO9mmpgrfTLsAuyHk4e1hKTUkD/fcMfynt8gvEKwQPQDVxWhca8dHoDck+55DFt42zV0QMw5g==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
+      '@babel/types': 7.24.6
     dev: true
 
   /@babel/helper-module-transforms@7.24.5(@babel/core@7.24.5):
@@ -632,6 +716,20 @@ packages:
       '@babel/helper-validator-identifier': 7.24.5
     dev: true
 
+  /@babel/helper-module-transforms@7.24.6(@babel/core@7.24.6):
+    resolution: {integrity: sha512-Y/YMPm83mV2HJTbX1Qh2sjgjqcacvOlhbzdCCsSlblOKjSYmQqEbO6rUniWQyRo9ncyfjT8hnUjlG06RXDEmcA==}
+    engines: {node: '>=6.9.0'}
+    peerDependencies:
+      '@babel/core': ^7.0.0
+    dependencies:
+      '@babel/core': 7.24.6
+      '@babel/helper-environment-visitor': 7.24.6
+      '@babel/helper-module-imports': 7.24.6
+      '@babel/helper-simple-access': 7.24.6
+      '@babel/helper-split-export-declaration': 7.24.6
+      '@babel/helper-validator-identifier': 7.24.6
+    dev: true
+
   /@babel/helper-plugin-utils@7.24.5:
     resolution: {integrity: sha512-xjNLDopRzW2o6ba0gKbkZq5YWEBaK3PCyTOY1K2P/O07LGMhMqlMXPxwN4S5/RhWuCobT8z0jrlKGlYmeR1OhQ==}
     engines: {node: '>=6.9.0'}
@@ -644,6 +742,13 @@ packages:
       '@babel/types': 7.24.5
     dev: true
 
+  /@babel/helper-simple-access@7.24.6:
+    resolution: {integrity: sha512-nZzcMMD4ZhmB35MOOzQuiGO5RzL6tJbsT37Zx8M5L/i9KSrukGXWTjLe1knIbb/RmxoJE9GON9soq0c0VEMM5g==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
+      '@babel/types': 7.24.6
+    dev: true
+
   /@babel/helper-split-export-declaration@7.24.5:
     resolution: {integrity: sha512-5CHncttXohrHk8GWOFCcCl4oRD9fKosWlIRgWm4ql9VYioKm52Mk2xsmoohvm7f3JoiLSM5ZgJuRaf5QZZYd3Q==}
     engines: {node: '>=6.9.0'}
@@ -651,8 +756,20 @@ packages:
       '@babel/types': 7.24.5
     dev: true
 
+  /@babel/helper-split-export-declaration@7.24.6:
+    resolution: {integrity: sha512-CvLSkwXGWnYlF9+J3iZUvwgAxKiYzK3BWuo+mLzD/MDGOZDj7Gq8+hqaOkMxmJwmlv0iu86uH5fdADd9Hxkymw==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
+      '@babel/types': 7.24.6
+    dev: true
+
   /@babel/helper-string-parser@7.24.1:
     resolution: {integrity: sha512-2ofRCjnnA9y+wk8b9IAREroeUP02KHp431N2mhKniy2yKIDKpbrHv9eXwm8cBeWQYcJmzv5qKCu65P47eCF7CQ==}
+    engines: {node: '>=6.9.0'}
+    dev: true
+
+  /@babel/helper-string-parser@7.24.6:
+    resolution: {integrity: sha512-WdJjwMEkmBicq5T9fm/cHND3+UlFa2Yj8ALLgmoSQAJZysYbBjw+azChSGPN4DSPLXOcooGRvDwZWMcF/mLO2Q==}
     engines: {node: '>=6.9.0'}
     dev: true
 
@@ -661,8 +778,18 @@ packages:
     engines: {node: '>=6.9.0'}
     dev: true
 
+  /@babel/helper-validator-identifier@7.24.6:
+    resolution: {integrity: sha512-4yA7s865JHaqUdRbnaxarZREuPTHrjpDT+pXoAZ1yhyo6uFnIEpS8VMu16siFOHDpZNKYv5BObhsB//ycbICyw==}
+    engines: {node: '>=6.9.0'}
+    dev: true
+
   /@babel/helper-validator-option@7.23.5:
     resolution: {integrity: sha512-85ttAOMLsr53VgXkTbkx8oA6YTfT4q7/HzXSLEYmjcSTJPMPQtvq1BD79Byep5xMUYbGRzEpDsjUf3dyp54IKw==}
+    engines: {node: '>=6.9.0'}
+    dev: true
+
+  /@babel/helper-validator-option@7.24.6:
+    resolution: {integrity: sha512-Jktc8KkF3zIkePb48QO+IapbXlSapOW9S+ogZZkcO6bABgYAxtZcjZ/O005111YLf+j4M84uEgwYoidDkXbCkQ==}
     engines: {node: '>=6.9.0'}
     dev: true
 
@@ -677,11 +804,29 @@ packages:
       - supports-color
     dev: true
 
+  /@babel/helpers@7.24.6:
+    resolution: {integrity: sha512-V2PI+NqnyFu1i0GyTd/O/cTpxzQCYioSkUIRmgo7gFEHKKCg5w46+r/A6WeUR1+P3TeQ49dspGPNd/E3n9AnnA==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
+      '@babel/template': 7.24.6
+      '@babel/types': 7.24.6
+    dev: true
+
   /@babel/highlight@7.24.5:
     resolution: {integrity: sha512-8lLmua6AVh/8SLJRRVD6V8p73Hir9w5mJrhE+IPpILG31KKlI9iz5zmBYKcWPS59qSfgP9RaSBQSHHE81WKuEw==}
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/helper-validator-identifier': 7.24.5
+      chalk: 2.4.2
+      js-tokens: 4.0.0
+      picocolors: 1.0.1
+    dev: true
+
+  /@babel/highlight@7.24.6:
+    resolution: {integrity: sha512-2YnuOp4HAk2BsBrJJvYCbItHx0zWscI1C3zgWkz+wDyD9I7GIVrfnLyrR4Y1VR+7p+chAEcrgRQYZAGIKMV7vQ==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
+      '@babel/helper-validator-identifier': 7.24.6
       chalk: 2.4.2
       js-tokens: 4.0.0
       picocolors: 1.0.1
@@ -693,6 +838,14 @@ packages:
     hasBin: true
     dependencies:
       '@babel/types': 7.24.5
+    dev: true
+
+  /@babel/parser@7.24.6:
+    resolution: {integrity: sha512-eNZXdfU35nJC2h24RznROuOpO94h6x8sg9ju0tT9biNtLZ2vuP8SduLqqV+/8+cebSLV9SJEAN5Z3zQbJG/M+Q==}
+    engines: {node: '>=6.0.0'}
+    hasBin: true
+    dependencies:
+      '@babel/types': 7.24.6
     dev: true
 
   /@babel/plugin-syntax-async-generators@7.8.4(@babel/core@7.24.5):
@@ -747,6 +900,16 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.24.5
+      '@babel/helper-plugin-utils': 7.24.5
+    dev: true
+
+  /@babel/plugin-syntax-jsx@7.24.1(@babel/core@7.24.6):
+    resolution: {integrity: sha512-2eCtxZXf+kbkMIsXS4poTvT4Yu5rXiRa+9xGVT56raghjmBTKMpFNc9R4IDiB4emao9eO22Ox7CxuJG7BgExqA==}
+    engines: {node: '>=6.9.0'}
+    peerDependencies:
+      '@babel/core': ^7.0.0-0
+    dependencies:
+      '@babel/core': 7.24.6
       '@babel/helper-plugin-utils': 7.24.5
     dev: true
 
@@ -824,27 +987,27 @@ packages:
       '@babel/helper-plugin-utils': 7.24.5
     dev: true
 
-  /@babel/plugin-transform-react-jsx-development@7.22.5(@babel/core@7.24.5):
+  /@babel/plugin-transform-react-jsx-development@7.22.5(@babel/core@7.24.6):
     resolution: {integrity: sha512-bDhuzwWMuInwCYeDeMzyi7TaBgRQei6DqxhbyniL7/VG4RSS7HtSL2QbY4eESy1KJqlWt8g3xeEBGPuo+XqC8A==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
     dependencies:
-      '@babel/core': 7.24.5
-      '@babel/plugin-transform-react-jsx': 7.23.4(@babel/core@7.24.5)
+      '@babel/core': 7.24.6
+      '@babel/plugin-transform-react-jsx': 7.23.4(@babel/core@7.24.6)
     dev: true
 
-  /@babel/plugin-transform-react-jsx@7.23.4(@babel/core@7.24.5):
+  /@babel/plugin-transform-react-jsx@7.23.4(@babel/core@7.24.6):
     resolution: {integrity: sha512-5xOpoPguCZCRbo/JeHlloSkTA8Bld1J/E1/kLfD1nsuiW1m8tduTA1ERCgIZokDflX/IBzKcqR3l7VlRgiIfHA==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
     dependencies:
-      '@babel/core': 7.24.5
+      '@babel/core': 7.24.6
       '@babel/helper-annotate-as-pure': 7.22.5
       '@babel/helper-module-imports': 7.24.3
       '@babel/helper-plugin-utils': 7.24.5
-      '@babel/plugin-syntax-jsx': 7.24.1(@babel/core@7.24.5)
+      '@babel/plugin-syntax-jsx': 7.24.1(@babel/core@7.24.6)
       '@babel/types': 7.24.5
     dev: true
 
@@ -862,6 +1025,15 @@ packages:
       '@babel/code-frame': 7.24.2
       '@babel/parser': 7.24.5
       '@babel/types': 7.24.5
+    dev: true
+
+  /@babel/template@7.24.6:
+    resolution: {integrity: sha512-3vgazJlLwNXi9jhrR1ef8qiB65L1RK90+lEQwv4OxveHnqC3BfmnHdgySwRLzf6akhlOYenT+b7AfWq+a//AHw==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
+      '@babel/code-frame': 7.24.6
+      '@babel/parser': 7.24.6
+      '@babel/types': 7.24.6
     dev: true
 
   /@babel/traverse@7.24.5:
@@ -882,12 +1054,39 @@ packages:
       - supports-color
     dev: true
 
+  /@babel/traverse@7.24.6:
+    resolution: {integrity: sha512-OsNjaJwT9Zn8ozxcfoBc+RaHdj3gFmCmYoQLUII1o6ZrUwku0BMg80FoOTPx+Gi6XhcQxAYE4xyjPTo4SxEQqw==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
+      '@babel/code-frame': 7.24.6
+      '@babel/generator': 7.24.6
+      '@babel/helper-environment-visitor': 7.24.6
+      '@babel/helper-function-name': 7.24.6
+      '@babel/helper-hoist-variables': 7.24.6
+      '@babel/helper-split-export-declaration': 7.24.6
+      '@babel/parser': 7.24.6
+      '@babel/types': 7.24.6
+      debug: 4.3.5
+      globals: 11.12.0
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
   /@babel/types@7.24.5:
     resolution: {integrity: sha512-6mQNsaLeXTw0nxYUYu+NSa4Hx4BlF1x1x8/PMFbiR+GBSr+2DkECc69b8hgy2frEodNcvPffeH8YfWd3LI6jhQ==}
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/helper-string-parser': 7.24.1
       '@babel/helper-validator-identifier': 7.24.5
+      to-fast-properties: 2.0.0
+    dev: true
+
+  /@babel/types@7.24.6:
+    resolution: {integrity: sha512-WaMsgi6Q8zMgMth93GvWPXkhAIEobfsIkLTacoVZoK1J0CevIPGYY2Vo5YvJGqyHqXM6P4ppOYGsIRU8MM9pFQ==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
+      '@babel/helper-string-parser': 7.24.6
+      '@babel/helper-validator-identifier': 7.24.6
       to-fast-properties: 2.0.0
     dev: true
 
@@ -2075,12 +2274,12 @@ packages:
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dev: false
 
-  /@npmcli/package-json@5.1.0:
-    resolution: {integrity: sha512-1aL4TuVrLS9sf8quCLerU3H9J4vtCtgu8VauYozrmEyU57i/EdKleCnsQ7vpnABIH6c9mnTxcH5sFkO3BlV8wQ==}
+  /@npmcli/package-json@5.2.0:
+    resolution: {integrity: sha512-qe/kiqqkW0AGtvBjL8TJKZk/eBBSpnJkUWvHdQ9jM2lKHXRYYJuyNpJPlJw3c8QjC2ow6NZYiLExhUaeJelbxQ==}
     engines: {node: ^16.14.0 || >=18.0.0}
     dependencies:
       '@npmcli/git': 5.0.7
-      glob: 10.3.15
+      glob: 10.4.1
       hosted-git-info: 7.0.2
       json-parse-even-better-errors: 3.0.2
       normalize-package-data: 6.0.1
@@ -2107,7 +2306,7 @@ packages:
     engines: {node: ^16.14.0 || >=18.0.0}
     dependencies:
       '@npmcli/node-gyp': 3.0.0
-      '@npmcli/package-json': 5.1.0
+      '@npmcli/package-json': 5.2.0
       '@npmcli/promise-spawn': 7.0.2
       node-gyp: 10.1.0
       which: 4.0.0
@@ -2126,18 +2325,18 @@ packages:
     resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
     dev: true
 
-  /@preact/preset-vite@2.8.2(@babel/core@7.24.5)(preact@10.22.0)(vite@4.5.3):
+  /@preact/preset-vite@2.8.2(@babel/core@7.24.6)(preact@10.22.0)(vite@4.5.3):
     resolution: {integrity: sha512-m3tl+M8IO8jgiHnk+7LSTFl8axdPXloewi7iGVLdmCwf34XOzEUur0bZVewW4DUbUipFjTS2CXu27+5f/oexBA==}
     peerDependencies:
       '@babel/core': 7.x
       vite: 2.x || 3.x || 4.x || 5.x
     dependencies:
-      '@babel/core': 7.24.5
-      '@babel/plugin-transform-react-jsx': 7.23.4(@babel/core@7.24.5)
-      '@babel/plugin-transform-react-jsx-development': 7.22.5(@babel/core@7.24.5)
+      '@babel/core': 7.24.6
+      '@babel/plugin-transform-react-jsx': 7.23.4(@babel/core@7.24.6)
+      '@babel/plugin-transform-react-jsx-development': 7.22.5(@babel/core@7.24.6)
       '@prefresh/vite': 2.4.5(preact@10.22.0)(vite@4.5.3)
       '@rollup/pluginutils': 4.2.1
-      babel-plugin-transform-hook-names: 1.0.2(@babel/core@7.24.5)
+      babel-plugin-transform-hook-names: 1.0.2(@babel/core@7.24.6)
       debug: 4.3.4(supports-color@8.1.1)
       kolorist: 1.8.0
       magic-string: 0.30.5
@@ -3313,19 +3512,19 @@ packages:
     engines: {bun: '>=0.7.0', deno: '>=1.0.0', node: '>=16.5.0'}
     dev: true
 
-  /@zowe/core-for-zowe-sdk@8.0.0-next.202404032038(@zowe/imperative@8.0.0-next.202404032038):
-    resolution: {integrity: sha512-pjk5DXhnplzax2/P/CT5jN9ZnsMGxTTLraIgfp3k2bBC0lW4tIzw9E1lTQaz94Pra1A+oFkJVHHLVtoFXzn0rg==}
+  /@zowe/core-for-zowe-sdk@8.0.0-next.202405241828(@zowe/imperative@8.0.0-next.202405241828):
+    resolution: {integrity: sha512-JwbkREv26gH8aXMrwVpCxHex8jN0Lvy7hHFRDvRiFro2ta2KLwY1CqTDZW8IsEbj/J38t11KV8cG3OscIvLg+g==}
     engines: {node: '>=18.12.0'}
     peerDependencies:
       '@zowe/imperative': ^8.0.0-next
     dependencies:
-      '@zowe/imperative': 8.0.0-next.202404032038
+      '@zowe/imperative': 8.0.0-next.202405241828
       comment-json: 4.2.3
       string-width: 4.2.3
     dev: false
 
-  /@zowe/imperative@8.0.0-next.202404032038:
-    resolution: {integrity: sha512-jzO16DgJo9an4o89CvIyabscLm8n0MwszB8H0bmsVjUA+BPmCKzPjSPxlmXX9RxKihu0yCypgJnv5uK3Gtn2kg==}
+  /@zowe/imperative@8.0.0-next.202405241828:
+    resolution: {integrity: sha512-wba87FQn4VcFIEaeaE/XWtEkNnhgyHoT6/G5nEjIcSLy+zyVR/55M/pcWDwMFdVR4We7PhfnvzVwAqoUH6At7A==}
     engines: {node: '>=18.12.0'}
     dependencies:
       '@types/yargs': 17.0.32
@@ -3368,87 +3567,87 @@ packages:
       - supports-color
     dev: false
 
-  /@zowe/secrets-for-zowe-sdk@8.0.0-next.202404032038:
-    resolution: {integrity: sha512-yOqieH6Rap3y3sJULSkzVBMlkctUyzmux7EbHfozafO99X66ih5A0p+S9sKpgmU/qSxCcQkJpFFwvmM8b3kj1A==}
+  /@zowe/secrets-for-zowe-sdk@8.0.0-next.202405241828:
+    resolution: {integrity: sha512-48UQrJcBLrt0TckrS5j/Hfgyd1Wh21FG/Q/Np7aOTeJk8IrvgicdO6eL8z3kiLwmEDngCv2xd3wvIhcZgFyfpg==}
     engines: {node: '>=14'}
     requiresBuild: true
     dev: false
 
-  /@zowe/zos-console-for-zowe-sdk@8.0.0-next.202404032038(@zowe/core-for-zowe-sdk@8.0.0-next.202404032038)(@zowe/imperative@8.0.0-next.202404032038):
-    resolution: {integrity: sha512-JVv6UQaFsoCQJgSF0R8allcad0P1NsWJfm0m6VqWvKfXvr2/lcy6FR5ZVvqxpqhE4LsUujrbal+UayTaOahZBg==}
+  /@zowe/zos-console-for-zowe-sdk@8.0.0-next.202405241828(@zowe/core-for-zowe-sdk@8.0.0-next.202405241828)(@zowe/imperative@8.0.0-next.202405241828):
+    resolution: {integrity: sha512-pWHx4vk/QJpsFE575jgE/GsfgAgfSL8XaYi9lEKrgO8dz0i8I+fuGr0kp8vJoHqhYRhhT6h9/yXelLiwJGy2vg==}
     engines: {node: '>=18.12.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0-next
       '@zowe/imperative': ^8.0.0-next
     dependencies:
-      '@zowe/core-for-zowe-sdk': 8.0.0-next.202404032038(@zowe/imperative@8.0.0-next.202404032038)
-      '@zowe/imperative': 8.0.0-next.202404032038
+      '@zowe/core-for-zowe-sdk': 8.0.0-next.202405241828(@zowe/imperative@8.0.0-next.202405241828)
+      '@zowe/imperative': 8.0.0-next.202405241828
     dev: false
 
-  /@zowe/zos-files-for-zowe-sdk@8.0.0-next.202404032038(@zowe/core-for-zowe-sdk@8.0.0-next.202404032038)(@zowe/imperative@8.0.0-next.202404032038):
-    resolution: {integrity: sha512-9WMdXk/HF9Ml/susL1QSeQ7rSlvUnzSS0LX6geeZ8Ki5t6UrbGmeVaG/OY43i52DoCzuNsdlYQ3bESLOGelQzw==}
+  /@zowe/zos-files-for-zowe-sdk@8.0.0-next.202405241828(@zowe/core-for-zowe-sdk@8.0.0-next.202405241828)(@zowe/imperative@8.0.0-next.202405241828):
+    resolution: {integrity: sha512-+BPs44qjw+C7RbOaqC0vQDX1E5EBeHVVtoqUoYkA60djVU+cjZUvYvCBbw6gDSDq1t8HRlJF8UEno9uqfRRXqw==}
     engines: {node: '>=18.12.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0-next
       '@zowe/imperative': ^8.0.0-next
     dependencies:
-      '@zowe/core-for-zowe-sdk': 8.0.0-next.202404032038(@zowe/imperative@8.0.0-next.202404032038)
-      '@zowe/imperative': 8.0.0-next.202404032038
+      '@zowe/core-for-zowe-sdk': 8.0.0-next.202405241828(@zowe/imperative@8.0.0-next.202405241828)
+      '@zowe/imperative': 8.0.0-next.202405241828
       minimatch: 9.0.4
     dev: false
 
-  /@zowe/zos-ftp-for-zowe-cli@3.0.0-next.202403191358(@zowe/imperative@8.0.0-next.202404032038):
+  /@zowe/zos-ftp-for-zowe-cli@3.0.0-next.202403191358(@zowe/imperative@8.0.0-next.202405241828):
     resolution: {integrity: sha512-jTiGcqFZNKIanUQAWOT+2M+3X6P9FAlPrie999HjDm79DpEltkjNwdNLM8EZLtSXsTjBrifaTo/pMVVmmhfl4A==}
     peerDependencies:
       '@zowe/imperative': '>=8.0.0-next.0 <8.0.0'
     dependencies:
-      '@zowe/imperative': 8.0.0-next.202404032038
+      '@zowe/imperative': 8.0.0-next.202405241828
       zos-node-accessor: 2.0.9
     dev: false
 
-  /@zowe/zos-jobs-for-zowe-sdk@8.0.0-next.202404032038(@zowe/core-for-zowe-sdk@8.0.0-next.202404032038)(@zowe/imperative@8.0.0-next.202404032038):
-    resolution: {integrity: sha512-zj8jS4/D/XjvP9CIVPtsKmja/OCdRd5kslxc4bkWbP4DIjypc7AgXYTE0fT8DjrON/vGAiQU+GLcuqheXOBzLQ==}
+  /@zowe/zos-jobs-for-zowe-sdk@8.0.0-next.202405241828(@zowe/core-for-zowe-sdk@8.0.0-next.202405241828)(@zowe/imperative@8.0.0-next.202405241828):
+    resolution: {integrity: sha512-ldWGwVQh+Qf4jEh6kcWs6R1ISm06Zanjv1GaOsz5GPG6amfpv2vk6TOyGc1LaLfOrnRmhXoA9yf7MUJK7/71JQ==}
     engines: {node: '>=18.12.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0-next
       '@zowe/imperative': ^8.0.0-next
     dependencies:
-      '@zowe/core-for-zowe-sdk': 8.0.0-next.202404032038(@zowe/imperative@8.0.0-next.202404032038)
-      '@zowe/imperative': 8.0.0-next.202404032038
-      '@zowe/zos-files-for-zowe-sdk': 8.0.0-next.202404032038(@zowe/core-for-zowe-sdk@8.0.0-next.202404032038)(@zowe/imperative@8.0.0-next.202404032038)
+      '@zowe/core-for-zowe-sdk': 8.0.0-next.202405241828(@zowe/imperative@8.0.0-next.202405241828)
+      '@zowe/imperative': 8.0.0-next.202405241828
+      '@zowe/zos-files-for-zowe-sdk': 8.0.0-next.202405241828(@zowe/core-for-zowe-sdk@8.0.0-next.202405241828)(@zowe/imperative@8.0.0-next.202405241828)
     dev: false
 
-  /@zowe/zos-tso-for-zowe-sdk@8.0.0-next.202404032038(@zowe/core-for-zowe-sdk@8.0.0-next.202404032038)(@zowe/imperative@8.0.0-next.202404032038):
-    resolution: {integrity: sha512-xn4GtkEer/jsnOP+e7j/nXWzIinx2wCB5TLAGySWafpGMUIQJ1t76Yw5pOxBAXzfVPCEmgfpsT+jutfqg1/rdg==}
+  /@zowe/zos-tso-for-zowe-sdk@8.0.0-next.202405241828(@zowe/core-for-zowe-sdk@8.0.0-next.202405241828)(@zowe/imperative@8.0.0-next.202405241828):
+    resolution: {integrity: sha512-fWSfkDIzPCSKiQe8S6l1Dc5Vq85oYrphs5aJ9gmycaSPXtO43vLodjX9vFifSpM9oLTwuG9HEApUfNOfG5UsBg==}
     engines: {node: '>=18.12.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0-next
       '@zowe/imperative': ^8.0.0-next
     dependencies:
-      '@zowe/core-for-zowe-sdk': 8.0.0-next.202404032038(@zowe/imperative@8.0.0-next.202404032038)
-      '@zowe/imperative': 8.0.0-next.202404032038
-      '@zowe/zosmf-for-zowe-sdk': 8.0.0-next.202404032038(@zowe/core-for-zowe-sdk@8.0.0-next.202404032038)(@zowe/imperative@8.0.0-next.202404032038)
+      '@zowe/core-for-zowe-sdk': 8.0.0-next.202405241828(@zowe/imperative@8.0.0-next.202405241828)
+      '@zowe/imperative': 8.0.0-next.202405241828
+      '@zowe/zosmf-for-zowe-sdk': 8.0.0-next.202405241828(@zowe/core-for-zowe-sdk@8.0.0-next.202405241828)(@zowe/imperative@8.0.0-next.202405241828)
     dev: false
 
-  /@zowe/zos-uss-for-zowe-sdk@8.0.0-next.202404032038(@zowe/imperative@8.0.0-next.202404032038):
-    resolution: {integrity: sha512-YKq8Om6i84lh3d9Kv0nQ8Ux+v9UYHmvq+ni7US9jTlI+uMqi29QM1Ww24GhETxx4ecUPzHgQ5zdUhmpUhYUeaA==}
+  /@zowe/zos-uss-for-zowe-sdk@8.0.0-next.202405241828(@zowe/imperative@8.0.0-next.202405241828):
+    resolution: {integrity: sha512-Bc+bZCElq7QmHwWRQLfJiWFBAfJAIG93/PchGMcmFQTCUELUSuy9qCLq51Csd0i/wEyXzsMv3UTGTtldTW52Vw==}
     engines: {node: '>=18.12.0'}
     peerDependencies:
       '@zowe/imperative': ^8.0.0-next
     dependencies:
-      '@zowe/imperative': 8.0.0-next.202404032038
+      '@zowe/imperative': 8.0.0-next.202405241828
       ssh2: 1.15.0
     dev: false
 
-  /@zowe/zosmf-for-zowe-sdk@8.0.0-next.202404032038(@zowe/core-for-zowe-sdk@8.0.0-next.202404032038)(@zowe/imperative@8.0.0-next.202404032038):
-    resolution: {integrity: sha512-uKPq7l9K0aGZVDbtpv/E3pa+8g1Mk7hSNIKGVRwe4ygJka8BJZ4GgbrGL34IFYnGJb8XLqJcrdCDALiBRgNRtQ==}
+  /@zowe/zosmf-for-zowe-sdk@8.0.0-next.202405241828(@zowe/core-for-zowe-sdk@8.0.0-next.202405241828)(@zowe/imperative@8.0.0-next.202405241828):
+    resolution: {integrity: sha512-NKQdyFWN05Vi4J6BGehjiEIQXcxUScHv88ix3aMQeRnykz1Qh8oX1KkCdkDXlh959/Xxtl6WNSCtbaHsW6D3+g==}
     engines: {node: '>=18.12.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0-next
       '@zowe/imperative': ^8.0.0-next
     dependencies:
-      '@zowe/core-for-zowe-sdk': 8.0.0-next.202404032038(@zowe/imperative@8.0.0-next.202404032038)
-      '@zowe/imperative': 8.0.0-next.202404032038
+      '@zowe/core-for-zowe-sdk': 8.0.0-next.202405241828(@zowe/imperative@8.0.0-next.202405241828)
+      '@zowe/imperative': 8.0.0-next.202405241828
     dev: false
 
   /abbrev@1.1.1:
@@ -3906,12 +4105,12 @@ packages:
       '@types/babel__traverse': 7.20.5
     dev: true
 
-  /babel-plugin-transform-hook-names@1.0.2(@babel/core@7.24.5):
+  /babel-plugin-transform-hook-names@1.0.2(@babel/core@7.24.6):
     resolution: {integrity: sha512-5gafyjyyBTTdX/tQQ0hRgu4AhNHG/hqWi0ZZmg2xvs2FgRkJXzDNKBZCyoYqgFkovfDrgM8OoKg8karoUvWeCw==}
     peerDependencies:
       '@babel/core': ^7.12.10
     dependencies:
-      '@babel/core': 7.24.5
+      '@babel/core': 7.24.6
     dev: true
 
   /babel-preset-current-node-syntax@1.0.1(@babel/core@7.24.5):
@@ -4206,9 +4405,9 @@ packages:
     dependencies:
       '@npmcli/fs': 3.1.1
       fs-minipass: 3.0.3
-      glob: 10.3.15
+      glob: 10.4.1
       lru-cache: 10.2.2
-      minipass: 7.1.1
+      minipass: 7.1.2
       minipass-collect: 2.0.1
       minipass-flush: 1.0.5
       minipass-pipeline: 1.2.4
@@ -4963,6 +5162,17 @@ packages:
     dependencies:
       ms: 2.1.2
       supports-color: 8.1.1
+
+  /debug@4.3.5:
+    resolution: {integrity: sha512-pt0bNEmneDIvdL1Xsd9oDQ/wrQRkXDT4AUWlNZNPKvW5x/jyO9VFXkJUP07vQ2upmw5PlaITaPKc31jK13V+jg==}
+    engines: {node: '>=6.0'}
+    peerDependencies:
+      supports-color: '*'
+    peerDependenciesMeta:
+      supports-color:
+        optional: true
+    dependencies:
+      ms: 2.1.2
 
   /decamelize@4.0.0:
     resolution: {integrity: sha512-9iE1PgSik9HeIIw2JO94IidnE3eBoQrFJ3w7sFuzSX4DpmZ3v5sZpUiV5Swcf6mQEF+Y0ru8Neo+p+nyh2J+hQ==}
@@ -6586,7 +6796,7 @@ packages:
     resolution: {integrity: sha512-XUBA9XClHbnJWSfBzjkm6RvPsyg3sryZt06BEQoXcF7EK/xpGaQYJgQKDJSUH5SGZ76Y7pFx1QBnXz09rU5Fbw==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dependencies:
-      minipass: 7.1.1
+      minipass: 7.1.2
     dev: false
 
   /fs-monkey@1.0.6:
@@ -6830,6 +7040,19 @@ packages:
       minimatch: 9.0.4
       minipass: 7.1.1
       path-scurry: 1.11.1
+    dev: true
+
+  /glob@10.4.1:
+    resolution: {integrity: sha512-2jelhlq3E4ho74ZyVLN03oKdAZVUa6UDZzFLVH1H7dnoax+y9qyaq8zBkfDIggjniU19z0wU18y16jMB2eyVIw==}
+    engines: {node: '>=16 || 14 >=14.18'}
+    hasBin: true
+    dependencies:
+      foreground-child: 3.1.1
+      jackspeak: 3.2.3
+      minimatch: 9.0.4
+      minipass: 7.1.2
+      path-scurry: 1.11.1
+    dev: false
 
   /glob@7.1.7:
     resolution: {integrity: sha512-OvD9ENzPLbegENnYP5UUfJIirTg4+XwMWGaQfQTY0JenxNvvIKP3U3/tAQSPIu/lHxXYSZmpXlUHeqAIdKzBLQ==}
@@ -7819,6 +8042,16 @@ packages:
       '@isaacs/cliui': 8.0.2
     optionalDependencies:
       '@pkgjs/parseargs': 0.11.0
+    dev: true
+
+  /jackspeak@3.2.3:
+    resolution: {integrity: sha512-htOzIMPbpLid/Gq9/zaz9SfExABxqRe1sSCdxntlO/aMD6u0issZQiY25n2GKQUtJ02j7z5sfptlAOMpWWOmvw==}
+    engines: {node: '>=14'}
+    dependencies:
+      '@isaacs/cliui': 8.0.2
+    optionalDependencies:
+      '@pkgjs/parseargs': 0.11.0
+    dev: false
 
   /jake@10.9.1:
     resolution: {integrity: sha512-61btcOHNnLnsOdtLgA5efqQWjnSi/vow5HbI7HMdKKWqvrKR1bLK3BPlJn9gcSaP2ewuamUSMB5XEy76KUIS2w==}
@@ -8965,7 +9198,7 @@ packages:
       cacache: 18.0.3
       http-cache-semantics: 4.1.1
       is-lambda: 1.0.1
-      minipass: 7.1.1
+      minipass: 7.1.2
       minipass-fetch: 3.0.5
       minipass-flush: 1.0.5
       minipass-pipeline: 1.2.4
@@ -9204,14 +9437,14 @@ packages:
     resolution: {integrity: sha512-D7V8PO9oaz7PWGLbCACuI1qEOsq7UKfLotx/C0Aet43fCUB/wfQ7DYeq2oR/svFJGYDHPr38SHATeaj/ZoKHKw==}
     engines: {node: '>=16 || 14 >=14.17'}
     dependencies:
-      minipass: 7.1.1
+      minipass: 7.1.2
     dev: false
 
   /minipass-fetch@3.0.5:
     resolution: {integrity: sha512-2N8elDQAtSnFV0Dk7gt15KHsS0Fyz6CbYZ360h0WTYV1Ty46li3rAXVOQj1THMNLdmrD9Vt5pBPtWtVkpwGBqg==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dependencies:
-      minipass: 7.1.1
+      minipass: 7.1.2
       minipass-sized: 1.0.3
       minizlib: 2.1.2
     optionalDependencies:
@@ -9261,6 +9494,11 @@ packages:
   /minipass@7.1.1:
     resolution: {integrity: sha512-UZ7eQ+h8ywIRAW1hIEl2AqdwzJucU/Kp59+8kkZeSvafXhZjul247BvIJjEVFVeON6d7lM46XX1HXCduKAS8VA==}
     engines: {node: '>=16 || 14 >=14.17'}
+
+  /minipass@7.1.2:
+    resolution: {integrity: sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==}
+    engines: {node: '>=16 || 14 >=14.17'}
+    dev: false
 
   /minizlib@2.1.2:
     resolution: {integrity: sha512-bAxsR8BVfj60DWXHE3u30oHzfl4G7khkSuPW+qvpd7jFRHm7dLxOjUk1EHACJ/hxLY8phGJ0YhYHZo7jil7Qdg==}
@@ -9560,7 +9798,7 @@ packages:
     dependencies:
       env-paths: 2.2.1
       exponential-backoff: 3.1.1
-      glob: 10.3.15
+      glob: 10.4.1
       graceful-fs: 4.2.11
       make-fetch-happen: 13.0.1
       nopt: 7.2.1
@@ -9713,7 +9951,7 @@ packages:
     dependencies:
       '@npmcli/redact': 1.1.0
       make-fetch-happen: 13.0.1
-      minipass: 7.1.1
+      minipass: 7.1.2
       minipass-fetch: 3.0.5
       minipass-json-stream: 1.0.1
       minizlib: 2.1.2
@@ -10006,7 +10244,7 @@ packages:
       '@npmcli/run-script': 7.0.4
       cacache: 18.0.3
       fs-minipass: 3.0.3
-      minipass: 7.1.1
+      minipass: 7.1.2
       npm-package-arg: 11.0.2
       npm-packlist: 8.0.2
       npm-pick-manifest: 9.0.1
@@ -10630,8 +10868,9 @@ packages:
   /read-package-json@7.0.1:
     resolution: {integrity: sha512-8PcDiZ8DXUjLf687Ol4BR8Bpm2umR7vhoZOzNRt+uxD9GpBh/K+CAAALVIiYFknmvlmyg7hM7BSNUXPaCCqd0Q==}
     engines: {node: ^16.14.0 || >=18.0.0}
+    deprecated: This package is no longer supported. Please use @npmcli/package-json instead.
     dependencies:
-      glob: 10.3.15
+      glob: 10.4.1
       json-parse-even-better-errors: 3.0.2
       normalize-package-data: 6.0.1
       npm-normalize-package-bin: 3.0.1
@@ -11342,7 +11581,7 @@ packages:
     engines: {node: '>= 14'}
     dependencies:
       agent-base: 7.1.1
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.5
       socks: 2.8.3
     transitivePeerDependencies:
       - supports-color
@@ -11447,7 +11686,7 @@ packages:
     resolution: {integrity: sha512-kN9dJbvnySHULIluDHy32WHRUu3Og7B9sbY7tsFLctQkIqnMh3hErYgdMjTYuqmcXX+lK5T1lnUt3G7zNswmZA==}
     dependencies:
       spdx-expression-parse: 3.0.1
-      spdx-license-ids: 3.0.17
+      spdx-license-ids: 3.0.18
 
   /spdx-exceptions@2.5.0:
     resolution: {integrity: sha512-PiU42r+xO4UbUS1buo3LPJkjlO7430Xn5SVAhdpzzsPHsjbYVflnnFdATgabnLude+Cqu25p6N+g2lw/PFsa4w==}
@@ -11456,10 +11695,10 @@ packages:
     resolution: {integrity: sha512-cbqHunsQWnJNE6KhVSMsMeH5H/L9EpymbzqTQ3uLwNCLZ1Q481oWaofqH7nO6V07xlXwY6PhQdQ2IedWx/ZK4Q==}
     dependencies:
       spdx-exceptions: 2.5.0
-      spdx-license-ids: 3.0.17
+      spdx-license-ids: 3.0.18
 
-  /spdx-license-ids@3.0.17:
-    resolution: {integrity: sha512-sh8PWc/ftMqAAdFiBu6Fy6JUOYjqDJBJvIhpfDMyHrr0Rbp5liZqd4TjtQ/RgfLjKFZb+LMx5hpml5qOWy0qvg==}
+  /spdx-license-ids@3.0.18:
+    resolution: {integrity: sha512-xxRs31BqRYHwiMzudOrpSiHtZ8i/GeionCBDSilhYRj+9gIcI8wCZTlXZKu9vZIVqViP3dcp9qE5G6AlIaD+TQ==}
 
   /split-string@3.1.0:
     resolution: {integrity: sha512-NzNVhJDYpwceVVii8/Hu6DKfD2G+NrQHlS/V/qgv763EYudVwEcMQNxd2lh+0VrUByXN/oJkl5grOhYWvQUYiw==}
@@ -11495,7 +11734,7 @@ packages:
     resolution: {integrity: sha512-MGrFH9Z4NP9Iyhqn16sDtBpRRNJ0Y2hNa6D65h736fVSaPCHr4DM4sWUNvVaSuC+0OBGhwsrydQwmgfg5LncqQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dependencies:
-      minipass: 7.1.1
+      minipass: 7.1.2
     dev: false
 
   /stack-trace@0.0.10:
@@ -12077,7 +12316,7 @@ packages:
     engines: {node: '>=14.16'}
     dev: true
 
-  /ts-jest@29.1.2(@babel/core@7.24.5)(jest@29.7.0)(typescript@5.4.5):
+  /ts-jest@29.1.2(@babel/core@7.24.6)(jest@29.7.0)(typescript@5.4.5):
     resolution: {integrity: sha512-br6GJoH/WUX4pu7FbZXuWGKGNDuU7b8Uj77g/Sp7puZV6EXzuByl6JrECvm0MzVzSTkSHWTihsXt+5XYER5b+g==}
     engines: {node: ^16.10.0 || ^18.0.0 || >=20.0.0}
     hasBin: true
@@ -12098,7 +12337,7 @@ packages:
       esbuild:
         optional: true
     dependencies:
-      '@babel/core': 7.24.5
+      '@babel/core': 7.24.6
       bs-logger: 0.2.6
       fast-json-stable-stringify: 2.1.0
       jest: 29.7.0(@types/node@18.19.33)
@@ -12192,7 +12431,7 @@ packages:
     engines: {node: ^16.14.0 || >=18.0.0}
     dependencies:
       '@tufjs/models': 2.0.1
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.5
       make-fetch-happen: 13.0.1
     transitivePeerDependencies:
       - supports-color

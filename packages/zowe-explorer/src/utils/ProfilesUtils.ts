@@ -297,8 +297,8 @@ export class ProfilesUtils {
             );
             ZoweLogger.debug(`Summary of team configuration files considered for Zowe Explorer: ${JSON.stringify(layerSummary)}`);
         } else {
-            if (mProfileInfo.getAllProfiles()?.length > 0) {
-                this.v1ProfileOptions();
+            if (imperative.ProfileInfo.onlyV1ProfilesExist) {
+                await this.v1ProfileOptions();
             }
         }
     }
@@ -470,7 +470,7 @@ export class ProfilesUtils {
         }
     }
 
-    private static v1ProfileOptions(): void {
+    private static async v1ProfileOptions(): Promise<void> {
         const v1ProfileErrorMsg = vscode.l10n.t(
             // eslint-disable-next-line max-len
             "Zowe v1 profiles in use.\nZowe Explorer no longer supports v1 profiles, choose to convert existing profiles to a team configuration or create new."
@@ -478,7 +478,7 @@ export class ProfilesUtils {
         ZoweLogger.warn(v1ProfileErrorMsg);
         const createButton = vscode.l10n.t("Create New");
         const convertButton = vscode.l10n.t("Convert Existing Profiles");
-        Gui.infoMessage(v1ProfileErrorMsg, { items: [createButton, convertButton], vsCodeOpts: { modal: true } }).then(async (selection) => {
+        await Gui.infoMessage(v1ProfileErrorMsg, { items: [createButton, convertButton], vsCodeOpts: { modal: true } }).then(async (selection) => {
             switch (selection) {
                 case createButton: {
                     ZoweLogger.info("Create new team configuration chosen.");
@@ -487,16 +487,7 @@ export class ProfilesUtils {
                 }
                 case convertButton: {
                     ZoweLogger.info("Convert v1 profiles to team configuration chosen.");
-                    const convertResults = await Constants.PROFILES_CACHE.convertV1ProfToConfig();
-                    let responseMsg = "";
-                    if (convertResults.success) {
-                        responseMsg += `Success: ${convertResults.success}\n`;
-                    }
-                    if (convertResults.warnings) {
-                        responseMsg += `Warning: ${convertResults.warnings}\n`;
-                    }
-                    ZoweLogger.info(responseMsg);
-                    Gui.infoMessage(vscode.l10n.t(responseMsg), { vsCodeOpts: { modal: true } });
+                    await this.convertV1Profs();
                     break;
                 }
                 default: {
@@ -536,5 +527,59 @@ export class ProfilesUtils {
             return node.getProfile();
         }
         throw new Error(vscode.l10n.t("Tree Item is not a Zowe Explorer item."));
+    }
+
+    private static async convertV1Profs(): Promise<void> {
+        const convertResults: imperative.IConvertV1ProfResult = await imperative.ConvertV1Profiles.convert({ deleteV1Profs: false });
+        // await Constants.PROFILES_CACHE.convertV1ProfToConfig();
+        const successMsg: string[] = [];
+        const warningMsg: string[] = [];
+        if (convertResults.profilesConverted) {
+            for (const [k, v] of Object.entries(convertResults?.profilesConverted)) {
+                successMsg.push(`Converted ${k} profile: ${v.join(", ")}\n`);
+            }
+        }
+        if (convertResults?.profilesFailed?.length > 0) {
+            warningMsg.push(`Failed to convert ${convertResults?.profilesFailed.length} profile(s). See details below\n`);
+            for (const { name, type, error } of convertResults.profilesFailed) {
+                if (name != null) {
+                    warningMsg.push(`Failed to load ${String(type)} profile "${String(name)}":\n${String(error)}\n`);
+                } else {
+                    warningMsg.push(`Failed to find default ${String(type)} profile:\n${String(error)}\n`);
+                }
+            }
+        }
+        let responseMsg = "";
+        // console.log(convertResults.v1ScsPluginName);
+        // if (convertResults.v1ScsPluginName) {
+        //     try {
+        //         imperative.uninstallPlugin(convertResults.v1ScsPluginName);
+        //         const newMsg = new imperative.ConvertMsg(
+        //             imperative.ConvertMsgFmt.REPORT_LINE,
+        //             `Uninstalled plug-in "${convertResults.v1ScsPluginName}"`
+        //         );
+        //         convertResults.msgs.push(newMsg);
+        //     } catch (error) {
+        //         let newMsg = new imperative.ConvertMsg(
+        //             imperative.ConvertMsgFmt.ERROR_LINE,
+        //             `Failed to uninstall plug-in "${convertResults.v1ScsPluginName}"`
+        //         );
+        //         convertResults.msgs.push(newMsg);
+
+        //         newMsg = new imperative.ConvertMsg(imperative.ConvertMsgFmt.ERROR_LINE | imperative.ConvertMsgFmt.INDENT, error.message);
+        //         convertResults.msgs.push(newMsg);
+        //     }
+        // }
+        if (convertResults.msgs) {
+            responseMsg += `${String(convertResults.msgs.join(""))}\n`;
+        }
+        if (successMsg?.length > 0) {
+            responseMsg += `Success: ${String(successMsg.join(""))}\n`;
+        }
+        if (warningMsg?.length > 0) {
+            responseMsg += `Warning: ${String(warningMsg.join(""))}\n`;
+        }
+        ZoweLogger.info(responseMsg);
+        Gui.infoMessage(vscode.l10n.t(responseMsg), { vsCodeOpts: { modal: true } });
     }
 }

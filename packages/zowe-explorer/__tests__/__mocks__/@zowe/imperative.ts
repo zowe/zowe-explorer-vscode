@@ -393,3 +393,14 @@ export namespace SessConstants {
 export const apiErrorHeader = {
     message: "API Error",
 };
+
+export class ConvertV1Profiles {
+    public static convert() {
+        return {
+            msgs: "",
+            profilesConverted: [],
+            profilesFailed: [],
+            v1ScsPluginName: undefined,
+        };
+    }
+}

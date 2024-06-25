@@ -32,6 +32,8 @@ export class FakeStats implements Stats {
 
 export function access(path: string, callback: any): void {}
 
+export function appendFileSync(path: string, data: any, encoding: string): void {}
+
 export function closeSync(fd: number): void {}
 
 export function existsSync(path: string | Buffer): boolean {
