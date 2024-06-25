@@ -20,6 +20,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
   - `DatasetActions.copyDataSet` - use `DatasetActions.copyDataSets` instead
   - `USSActions.pasteUssFile` - use `DatasetActions.pasteUss` instead
   - `ZoweUSSNode.refreshAndReopen` - use `ZoweUSSNode.reopen` instead
+- Add deprecation message to history settings explaining to users how to edit items. [#2303](https://github.com/zowe/zowe-explorer-vscode/issues/2303)
 - **Breaking:** Consolidated VS Code commands:
   - `zowe.ds.addFavorite`, `zowe.uss.addFavorite`, `zowe.jobs.addFavorite` - use `zowe.addFavorite` instead
   - `zowe.ds.disableValidation`, `zowe.uss.disableValidation`, `zowe.jobs.disableValidation` - use `zowe.disableValidation` instead
