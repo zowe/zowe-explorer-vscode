@@ -15,7 +15,13 @@ import { randomUUID } from "crypto";
 import * as vscode from "vscode";
 
 export namespace Table {
-    export type Action = { title: string; command: string; type?: "primary" | "secondary" | "icon" };
+    export type Callback = (data: RowContent) => void | PromiseLike<void>;
+    export type Action = {
+        title: string;
+        command: string;
+        type?: "primary" | "secondary" | "icon";
+        callback: Callback;
+    };
     export type ContextMenuOption = Omit<Action, "type">;
     export type Axes = "row" | "column";
 
@@ -26,7 +32,7 @@ export namespace Table {
         actions: Record<number | "all", Action[]>;
         // Column headers for the top of the table
         columns: Column[] | null | undefined;
-        contextOpts: Record<number | string | "all", ContextMenuOption[]>;
+        contextOpts: Record<number | "all", ContextMenuOption[]>;
         // The row data for the table. Each row contains a set of variables corresponding to the data for each column in that row
         rows: RowContent[] | null | undefined;
         // The display title for the table
@@ -73,15 +79,32 @@ export namespace Table {
                 return;
             }
             switch (message.command) {
+                // "ondisplaychanged" command: The table's layout was updated by the user from within the webview.
                 case "ondisplaychanged":
                     this.onTableDisplayChanged.fire(message.data);
-                    break;
+                    return;
+                // "ready" command: The table view has attached its message listener and is ready to receive data.
                 case "ready":
                     await this.updateWebview();
-                    break;
+                    return;
+                // "copy" command: Copy the data for the row that was right-clicked.
                 case "copy":
+                case "copy-cell":
                     await vscode.env.clipboard.writeText(JSON.stringify(message.data));
+                    return;
+                default:
                     break;
+            }
+
+            const row: number = message.rowIndex ?? 0;
+            const matchingActionable = [
+                ...(this.data.actions[row] ?? []),
+                ...this.data.actions.all,
+                ...(this.data.contextOpts[row] ?? []),
+                ...this.data.contextOpts.all,
+            ].find((action) => action.command === message.command);
+            if (matchingActionable != null) {
+                await matchingActionable.callback(message.data);
             }
         }
 

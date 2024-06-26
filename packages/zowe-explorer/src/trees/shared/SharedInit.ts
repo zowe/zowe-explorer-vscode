@@ -33,6 +33,7 @@ import { DatasetFSProvider } from "../dataset/DatasetFSProvider";
 import { ExtensionUtils } from "../../utils/ExtensionUtils";
 import type { Definitions } from "../../configuration/Definitions";
 import { randomInt, randomUUID } from "crypto";
+import * as path from "path";
 
 export class SharedInit {
     public static registerRefreshCommand(
@@ -259,6 +260,13 @@ export class SharedInit {
                             { field: "name", filter: true },
                             { field: "value", filter: true },
                         ])
+                        .contextOption("all", {
+                            title: "Show as dialog",
+                            command: "print-dialog",
+                            callback: async (data) => {
+                                await Gui.showMessage(JSON.stringify(data));
+                            },
+                        })
                         .build();
                 })
             );
@@ -305,6 +313,24 @@ export class SharedInit {
                             { field: "perms", filter: true },
                             { field: "owner", filter: true },
                         ])
+                        .rowAction("all", {
+                            title: "Open in editor",
+                            type: "primary",
+                            command: "edit",
+                            callback: async (data) => {
+                                const filename = data.name as string;
+                                const uri = vscode.Uri.from({
+                                    scheme: "zowe-uss",
+                                    path: path.posix.join(uriPath, filename),
+                                });
+
+                                if (!UssFSProvider.instance.exists(uri)) {
+                                    await UssFSProvider.instance.writeFile(uri, new Uint8Array(), { create: true, overwrite: false });
+                                }
+
+                                await vscode.commands.executeCommand("vscode.open", uri);
+                            },
+                        })
                         .build();
                 })
             );

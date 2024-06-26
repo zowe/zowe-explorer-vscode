@@ -38,7 +38,9 @@ export class TableBuilder {
         actions: {
             all: [],
         },
-        contextOpts: {},
+        contextOpts: {
+            all: [],
+        },
         columns: [],
         rows: [],
         title: "",
@@ -74,6 +76,31 @@ export class TableBuilder {
      */
     public columns(newColumns: Table.Column[]): TableBuilder {
         this.data.columns = newColumns;
+        return this;
+    }
+
+    /**
+     * Add context options for the next table.
+     * @param actions the record of indices to {@link Table.Action} arrays to use for the table
+     * @returns The same {@link TableBuilder} instance with the row actions added
+     */
+    public contextOptions(opts: Record<number | "all", Table.ContextMenuOption[]>): TableBuilder {
+        this.data.contextOpts = opts;
+        return this;
+    }
+
+    /**
+     * Add a row action to the next table.
+     * @param index The column index to add an action to
+     * @returns The same {@link TableBuilder} instance with the row action added
+     */
+    public contextOption(index: number | "all", option: Table.ContextMenuOption): TableBuilder {
+        if (this.data.contextOpts[index]) {
+            const opts = this.data.contextOpts[index];
+            this.data.contextOpts[index] = [...opts, option];
+        } else {
+            this.data.contextOpts[index] = [option];
+        }
         return this;
     }
 
@@ -125,6 +152,9 @@ export class TableBuilder {
      */
     public reset(): void {
         this.data.actions = {
+            all: [],
+        };
+        this.data.contextOpts = {
             all: [],
         };
         this.data.columns = [];

@@ -31,7 +31,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
   const [theme, setTheme] = useState<string>(baseTheme ?? "ag-theme-quartz");
 
   const contextMenu = useContextMenu({
-    options: [{ title: "Copy", command: "copy" }],
+    options: [{ title: "Copy", command: "copy", callback: () => {} }, ...(tableData.contextOpts.all ?? [])],
     selectRow: true,
     selectedRows: [],
     clickedRow: undefined as any,
@@ -86,7 +86,13 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
                         {[...(newData.actions[params.rowIndex] || []), ...(newData.actions["all"] || [])].map((action) => (
                           <VSCodeButton
                             appearance={action.type ?? "primary"}
-                            onClick={(_e: any) => vscodeApi.postMessage({ command: action.command, row: newData.rows!.at(params.rowIndex) })}
+                            onClick={(_e: any) =>
+                              vscodeApi.postMessage({
+                                command: action.command,
+                                data: { ...params.data, actions: undefined },
+                                row: newData.rows!.at(params.rowIndex),
+                              })
+                            }
                             style={{ marginRight: "0.25em" }}
                           >
                             {action.title}
