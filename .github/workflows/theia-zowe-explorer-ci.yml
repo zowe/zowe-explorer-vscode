@@ -62,7 +62,7 @@ jobs:
       #     options: --init
 
       - name: Verify Theia accessible
-        run: curl --fail --max-time 5 --retry 12 --retry-delay 5 http://localhost:3000
+        run: curl --fail --max-time 5 --retry 12 --retry-delay 5 --retry-all-errors http://localhost:3000
 
       - name: Verify plugin loaded
         run: docker exec -i theia ls -la /home/theia/.theia/deployedPlugins
