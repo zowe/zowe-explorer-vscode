@@ -313,6 +313,13 @@ export class SharedInit {
                             { field: "perms", filter: true },
                             { field: "owner", filter: true },
                         ])
+                        .contextOption("all", {
+                            title: "Copy path",
+                            command: "copy-path",
+                            callback: async (data: Table.RowContent) => {
+                                await vscode.env.clipboard.writeText(path.posix.join(uriPath, data.name as string));
+                            },
+                        })
                         .rowAction("all", {
                             title: "Open in editor",
                             type: "primary",
