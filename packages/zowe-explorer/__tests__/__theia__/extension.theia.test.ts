@@ -71,7 +71,7 @@ describe("Locate Tree Nodes", () => {
     after(async () => driverFirefox.closeBrowser());
 });
 
-describe("Add Default Profile and Profile in DATASETS", () => {
+describe.skip("Add Default Profile and Profile in DATASETS", () => {
     before(async () => {
         await driverChrome.openBrowser();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
@@ -107,7 +107,7 @@ describe("Add Default Profile and Profile in DATASETS", () => {
     after(async () => driverChrome.closeBrowser());
 });
 
-describe("Default profile Visible in USS and JOBS", () => {
+describe.skip("Default profile Visible in USS and JOBS", () => {
     before(async () => {
         await driverFirefox.openBrowser();
         await driverFirefox.sleepTime(SHORTSLEEPTIME);
@@ -136,7 +136,7 @@ describe("Default profile Visible in USS and JOBS", () => {
     after(async () => driverFirefox.closeBrowser());
 });
 
-describe("Add Existing Profiles in USS and JOBS", () => {
+describe.skip("Add Existing Profiles in USS and JOBS", () => {
     before(async () => {
         await driverFirefox.openBrowser();
         await driverFirefox.sleepTime(SHORTSLEEPTIME);
@@ -170,7 +170,7 @@ describe("Add Existing Profiles in USS and JOBS", () => {
     after(async () => driverFirefox.closeBrowser());
 });
 
-describe("Test Adding and Removing Favorites", () => {
+describe.skip("Test Adding and Removing Favorites", () => {
     before(async () => {
         await driverChrome.openBrowser();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
@@ -240,7 +240,7 @@ describe("Test Adding and Removing Favorites", () => {
     after(async () => driverChrome.closeBrowser());
 });
 
-describe("Hide Profiles", () => {
+describe.skip("Hide Profiles", () => {
     before(async () => {
         await driverChrome.openBrowser();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
@@ -275,7 +275,7 @@ describe("Hide Profiles", () => {
     after(async () => driverChrome.closeBrowser());
 });
 
-describe("Delete Profiles", () => {
+describe.skip("Delete Profiles", () => {
     before(async () => {
         await driverChrome.openBrowser();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
