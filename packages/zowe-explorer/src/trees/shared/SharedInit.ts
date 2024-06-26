@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { FileManagement, FsAbstractUtils, Gui, IZoweTree, IZoweTreeNode, TableBuilder, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { FileManagement, FsAbstractUtils, Gui, IZoweTree, IZoweTreeNode, Table, TableBuilder, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { SharedActions } from "./SharedActions";
 import { SharedHistoryView } from "./SharedHistoryView";
 import { SharedTreeProviders } from "./SharedTreeProviders";
@@ -317,7 +317,7 @@ export class SharedInit {
                             title: "Open in editor",
                             type: "primary",
                             command: "edit",
-                            callback: async (data) => {
+                            callback: async (data: Table.RowContent) => {
                                 const filename = data.name as string;
                                 const uri = vscode.Uri.from({
                                     scheme: "zowe-uss",
