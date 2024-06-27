@@ -39,16 +39,16 @@ jobs:
         run: yarn workspace vscode-extension-for-zowe package
 
       - name: Create extension install directory
-        run: mkdir -p temp/plugins && chmod -R 777 temp
+        run: mkdir -p temp/extensions && chmod -R 777 temp
 
       - name: Copy vsix to theia folder
-        run: cp dist/*.vsix temp/plugins
+        run: cp dist/*.vsix temp/extensions
 
       # Verify vsix
-      - run: ls -la temp/plugins
+      - run: ls -la temp/extensions
 
       - name: Start Theia
-        run: docker run --name theia --init -d -p 3000:3000 --user theia -v "${PWD}/temp/plugins/:/home/theia/plugins" ghcr.io/zowe/zowe-sample-dockerfiles-ze-theia-slim
+        run: docker run --name theia --init -d -p 3000:3000 --user theia -v "${PWD}/temp/:/home/theia/.theia" ghcr.io/zowe/zowe-sample-dockerfiles-ze-theia-slim
       # NOTE(Kelosky): alternatively, we could run docker via something like this; however, we cannot hot reload
       #                hosted VS Code extensions after theia is started (at least at the time this was written).
       # services:
@@ -61,14 +61,11 @@ jobs:
       #     # --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=5s --health-timeout=5s --health-retries 60
       #     options: --init
 
-      - name: Allow some time for the theia server to load
-        run: sleep 30s
+      - name: Verify Theia accessible
+        run: curl --fail --max-time 5 --retry 12 --retry-delay 5 --retry-all-errors http://localhost:3000
 
       - name: Verify plugin loaded
-        run: docker exec -i theia ls -la /home/theia/plugins
-
-      - name: Verify Theia accessible
-        run: curl --fail http://localhost:3000
+        run: docker exec -i theia ls -la /home/theia/.theia/deployedPlugins
 
       - name: Prep integration test files
         run: yarn workspace vscode-extension-for-zowe build:integration

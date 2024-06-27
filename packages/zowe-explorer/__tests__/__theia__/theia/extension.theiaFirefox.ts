@@ -37,7 +37,7 @@ export async function OpenTheiaInFirefox() {
 }
 
 export async function clickOnZoweExplorer() {
-    driverFirefox.wait(until.elementLocated(By.id(TheiaLocator.zoweExplorerxId))).click();
+    driverFirefox.wait(until.elementLocated(By.id(TheiaLocator.zoweExplorerxId)), WAITTIME).click();
 }
 
 export async function clickOnDatasetsTab() {
