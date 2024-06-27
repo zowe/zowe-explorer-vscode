@@ -325,15 +325,15 @@ export class SharedInit {
                         .contextOption("all", {
                             title: "Citrus-specific option",
                             command: "citrus-dialog",
-                            condition: `(data) => {
+                            condition: (data) => {
                                 for (const citrus of ["lemon", "grapefruit", "lime", "tangerine"]) {
-                                    if (data.name && data.name.startsWith(citrus)) {
+                                    if (data.name && (data.name as string).startsWith(citrus)) {
                                         return true;
                                     }
                                 }
 
                                 return false;
-                            }`,
+                            },
                             callback: async (data: Table.RowContent) => {
                                 await vscode.env.clipboard.writeText(path.posix.join(uriPath, data.name as string));
                             },

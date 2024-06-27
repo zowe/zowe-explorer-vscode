@@ -12,7 +12,12 @@
 import type { Table } from "@zowe/zowe-explorer-api";
 import { AgGridReactProps } from "ag-grid-react";
 import { JSXInternal } from "preact/src/jsx";
-import { ContextMenuState } from "./ContextMenu";
+
+export type ContextMenuState = {
+    open: boolean;
+    callback: (event: any) => void;
+    component: JSXInternal.Element | null;
+};
 
 export const wrapFn = (s: string) => `{ return ${s} };`;
 

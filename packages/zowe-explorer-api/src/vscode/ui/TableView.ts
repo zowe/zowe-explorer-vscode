@@ -24,7 +24,9 @@ export namespace Table {
         condition?: string;
         callback: Callback;
     };
+    export type ActionOpts = Omit<Action, "condition"> & { condition?: Conditional };
     export type ContextMenuOption = Omit<Action, "type">;
+    export type ContextMenuOpts = Omit<ContextMenuOption, "condition"> & { condition?: Conditional };
     export type Axes = "row" | "column";
 
     export type RowContent = Record<string | number, string | number | boolean | string[]>;
@@ -141,12 +143,12 @@ export namespace Table {
          *
          * @returns Whether the webview successfully received the new action(s)
          */
-        public addAction(index: number, ...actions: Action[]): Promise<boolean> {
+        public addAction(index: number, ...actions: ActionOpts[]): Promise<boolean> {
             if (this.data.actions[index]) {
                 const existingActions = this.data.actions[index];
-                this.data.actions[index] = [...existingActions, ...actions];
+                this.data.actions[index] = [...existingActions, ...actions.map((action) => ({ ...action, condition: action.condition?.toString() }))];
             } else {
-                this.data.actions[index] = actions;
+                this.data.actions[index] = actions.map((action) => ({ ...action, condition: action.condition?.toString() }));
             }
             return this.updateWebview();
         }
@@ -158,12 +160,12 @@ export namespace Table {
          * @param actions The actions to add to the given row
          * @returns Whether the webview successfully received the new context menu option(s)
          */
-        public addContextOption(id: number | string, ...options: ContextMenuOption[]): Promise<boolean> {
+        public addContextOption(id: number | string, ...options: ContextMenuOpts[]): Promise<boolean> {
             if (this.data.contextOpts[id]) {
                 const existingOpts = this.data.contextOpts[id];
-                this.data.contextOpts[id] = [...existingOpts, ...options];
+                this.data.contextOpts[id] = [...existingOpts, ...options.map((option) => ({ ...option, condition: option.condition?.toString() }))];
             } else {
-                this.data.contextOpts[id] = options;
+                this.data.contextOpts[id] = options.map((option) => ({ ...option, condition: option.condition?.toString() }));
             }
             return this.updateWebview();
         }

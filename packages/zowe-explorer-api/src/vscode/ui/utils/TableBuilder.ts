@@ -94,12 +94,12 @@ export class TableBuilder {
      * @param index The column index to add an action to
      * @returns The same {@link TableBuilder} instance with the row action added
      */
-    public contextOption(index: number | "all", option: Table.ContextMenuOption): TableBuilder {
+    public contextOption(index: number | "all", option: Table.ContextMenuOpts): TableBuilder {
         if (this.data.contextOpts[index]) {
             const opts = this.data.contextOpts[index];
-            this.data.contextOpts[index] = [...opts, option];
+            this.data.contextOpts[index] = [...opts, { ...option, condition: option.condition?.toString() }];
         } else {
-            this.data.contextOpts[index] = [option];
+            this.data.contextOpts[index] = [{ ...option, condition: option.condition?.toString() }];
         }
         return this;
     }
@@ -109,8 +109,12 @@ export class TableBuilder {
      * @param actions the record of indices to {@link Table.Action} arrays to use for the table
      * @returns The same {@link TableBuilder} instance with the row actions added
      */
-    public rowActions(actions: Record<number | "all", Table.Action[]>): TableBuilder {
-        this.data.actions = actions;
+    public rowActions(actions: Record<number | "all", Table.ActionOpts[]>): TableBuilder {
+        //this.data.actions = actions;
+        for (const key of Object.keys(actions)) {
+            const actionList = actions[key] as Table.ActionOpts[];
+            this.data.actions[key] = actionList.map((action) => ({ ...action, condition: action.condition?.toString() }));
+        }
         return this;
     }
 
@@ -119,12 +123,12 @@ export class TableBuilder {
      * @param index The column index to add an action to
      * @returns The same {@link TableBuilder} instance with the row action added
      */
-    public rowAction(index: number | "all", action: Table.Action): TableBuilder {
+    public rowAction(index: number | "all", action: Table.ActionOpts): TableBuilder {
         if (this.data.actions[index]) {
-            const actions = this.data.actions[index];
-            this.data.actions[index] = [...actions, action];
+            const actionList = this.data.actions[index];
+            this.data.actions[index] = [...actionList, { ...action, condition: action.condition?.toString() }];
         } else {
-            this.data.actions[index] = [action];
+            this.data.actions[index] = [{ ...action, condition: action.condition?.toString() }];
         }
         return this;
     }

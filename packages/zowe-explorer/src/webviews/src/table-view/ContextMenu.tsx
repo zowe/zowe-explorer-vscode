@@ -1,17 +1,11 @@
 import type { Table } from "@zowe/zowe-explorer-api";
 import { useCallback, useRef, useState } from "preact/hooks";
 import { CellContextMenuEvent, ColDef } from "ag-grid-community";
-import { JSXInternal } from "preact/src/jsx";
 import { ControlledMenu, MenuItem } from "@szhsin/react-menu";
 import "@szhsin/react-menu/dist/index.css";
 import { wrapFn } from "./types";
 
 type MousePt = { x: number; y: number };
-export type ContextMenuState = {
-  open: boolean;
-  callback: (event: any) => void;
-  component: JSXInternal.Element | null;
-};
 
 export type ContextMenuProps = {
   selectRow: boolean;
