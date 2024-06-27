@@ -4,6 +4,7 @@ import { CellContextMenuEvent, ColDef } from "ag-grid-community";
 import { JSXInternal } from "preact/src/jsx";
 import { ControlledMenu, MenuItem } from "@szhsin/react-menu";
 import "@szhsin/react-menu/dist/index.css";
+import { wrapFn } from "./types";
 
 type MousePt = { x: number; y: number };
 export type ContextMenuState = {
@@ -79,12 +80,23 @@ export type ContextMenuElemProps = {
 };
 
 export const ContextMenu = (clickedRow: any, menuItems: Table.ContextMenuOption[], vscodeApi: any) => {
-  return menuItems?.map((item, _i) => (
-    <MenuItem
-      onClick={(_e: any) => vscodeApi.postMessage({ command: item.command, data: { ...clickedRow, actions: undefined } })}
-      style={{ borderBottom: "var(--vscode-menu-border)" }}
-    >
-      {item.title}
-    </MenuItem>
-  ));
+  return menuItems
+    ?.filter((item) => {
+      if (item.condition == null) {
+        return true;
+      }
+
+      // Wrap function to properly handle named parameters
+      const cond = new Function(wrapFn(item.condition));
+      // Invoke the wrapped function once to get the built function, then invoke it again with the parameters
+      return cond.call(null).call(null, clickedRow);
+    })
+    .map((item, _i) => (
+      <MenuItem
+        onClick={(_e: any) => vscodeApi.postMessage({ command: item.command, data: { ...clickedRow, actions: undefined } })}
+        style={{ borderBottom: "var(--vscode-menu-border)" }}
+      >
+        {item.title}
+      </MenuItem>
+    ));
 };

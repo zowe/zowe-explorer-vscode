@@ -16,10 +16,12 @@ import * as vscode from "vscode";
 
 export namespace Table {
     export type Callback = (data: RowContent) => void | PromiseLike<void>;
+    export type Conditional = (data: RowContent) => boolean;
     export type Action = {
         title: string;
         command: string;
         type?: "primary" | "secondary" | "icon";
+        condition?: string;
         callback: Callback;
     };
     export type ContextMenuOption = Omit<Action, "type">;

@@ -322,6 +322,22 @@ export class SharedInit {
                                 await vscode.env.clipboard.writeText(path.posix.join(uriPath, data.name as string));
                             },
                         })
+                        .contextOption("all", {
+                            title: "Citrus-specific option",
+                            command: "citrus-dialog",
+                            condition: `(data) => {
+                                for (const citrus of ["lemon", "grapefruit", "lime", "tangerine"]) {
+                                    if (data.name && data.name.startsWith(citrus)) {
+                                        return true;
+                                    }
+                                }
+
+                                return false;
+                            }`,
+                            callback: async (data: Table.RowContent) => {
+                                await vscode.env.clipboard.writeText(path.posix.join(uriPath, data.name as string));
+                            },
+                        })
                         .rowAction("all", {
                             title: "Open in editor",
                             type: "primary",

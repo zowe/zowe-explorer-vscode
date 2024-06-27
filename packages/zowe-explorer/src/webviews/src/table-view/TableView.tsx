@@ -7,7 +7,7 @@ import { AgGridReact } from "ag-grid-react";
 import { useEffect, useState } from "preact/hooks";
 import { getVsCodeTheme, isSecureOrigin, useMutableObserver } from "../utils";
 import type { Table } from "@zowe/zowe-explorer-api";
-import { TableViewProps, tableProps } from "./types";
+import { TableViewProps, tableProps, wrapFn } from "./types";
 import { useContextMenu } from "./ContextMenu";
 // Custom styling (font family, VS Code color scheme, etc.)
 import "./style.css";
@@ -83,21 +83,32 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
                     // Render any actions for the given row and actions that apply to all rows
                     newData.actions[params.rowIndex] || newData.actions["all"] ? (
                       <span style={{ display: "flex", alignItems: "center", marginTop: "0.5em", userSelect: "none" }}>
-                        {[...(newData.actions[params.rowIndex] || []), ...(newData.actions["all"] || [])].map((action) => (
-                          <VSCodeButton
-                            appearance={action.type ?? "primary"}
-                            onClick={(_e: any) =>
-                              vscodeApi.postMessage({
-                                command: action.command,
-                                data: { ...params.data, actions: undefined },
-                                row: newData.rows!.at(params.rowIndex),
-                              })
+                        {[...(newData.actions[params.rowIndex] || []), ...(newData.actions["all"] || [])]
+                          .filter((action) => {
+                            if (action.condition == null) {
+                              return true;
                             }
-                            style={{ marginRight: "0.25em" }}
-                          >
-                            {action.title}
-                          </VSCodeButton>
-                        ))}
+
+                            // Wrap function to properly handle named parameters
+                            const cond = new Function(wrapFn(action.condition));
+                            // Invoke the wrapped function once to get the built function, then invoke it again with the parameters
+                            return cond.call(null).call(null, params.data);
+                          })
+                          .map((action) => (
+                            <VSCodeButton
+                              appearance={action.type ?? "primary"}
+                              onClick={(_e: any) =>
+                                vscodeApi.postMessage({
+                                  command: action.command,
+                                  data: { ...params.data, actions: undefined },
+                                  row: newData.rows!.at(params.rowIndex),
+                                })
+                              }
+                              style={{ marginRight: "0.25em" }}
+                            >
+                              {action.title}
+                            </VSCodeButton>
+                          ))}
                       </span>
                     ) : null),
               },
