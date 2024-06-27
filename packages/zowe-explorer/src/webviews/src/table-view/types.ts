@@ -23,7 +23,7 @@ export type TableViewProps = {
 
 // Define props for the AG Grid table here
 export const tableProps = (contextMenu: ContextMenuState, tableData: Table.Data): Partial<AgGridReactProps> => ({
-    domLayout: "autoHeight",
+    // domLayout: "autoHeight",
     enableCellTextSelection: true,
     ensureDomOrder: true,
     rowData: tableData.rows,

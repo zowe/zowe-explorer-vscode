@@ -227,6 +227,7 @@ export class SharedInit {
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.tableView", async () => {
+                    // Build the table instance
                     const table = new TableBuilder(context)
                         .title("Cars for sale")
                         .rows(
@@ -243,11 +244,13 @@ export class SharedInit {
                         )
                         .columns([{ field: "make" }, { field: "model" }, { field: "year" }])
                         .build();
+                    // Add content to the existing table view
                     await table.addContent({ make: "Toyota", model: "Corolla", year: 2007 });
                 })
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.tableView2", () => {
+                    // Context option demo
                     new TableBuilder(context)
                         .title("Random data")
                         .rows(
@@ -272,6 +275,7 @@ export class SharedInit {
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.tableView3", async () => {
+                    // Example use case: Listing USS files
                     const uriPath = await Gui.showInputBox({
                         title: "Enter a URI path to list USS files",
                     });
@@ -294,24 +298,22 @@ export class SharedInit {
                         })
                     );
                     new TableBuilder(context)
-                        .title("Comprehensive table with actions")
+                        .title(uriPath.substring(uriPath.indexOf("/", 1)))
                         .rows(
                             ...files.apiResponse.items.map((item) => ({
                                 name: item.name,
-                                gid: item.gid,
-                                uid: item.uid,
+                                size: item.size,
+                                owner: item.user,
                                 group: item.group,
                                 perms: item.mode,
-                                owner: item.user,
                             }))
                         )
                         .columns([
                             { field: "name", filter: true },
-                            { field: "gid", filter: true },
-                            { field: "uid", filter: true },
+                            { field: "size", filter: true },
+                            { field: "owner", filter: true },
                             { field: "group", filter: true },
                             { field: "perms", filter: true },
-                            { field: "owner", filter: true },
                         ])
                         .contextOption("all", {
                             title: "Copy path",

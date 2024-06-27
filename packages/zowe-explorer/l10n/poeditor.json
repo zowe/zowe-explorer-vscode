@@ -461,6 +461,9 @@
   "openWithEncoding": {
     "Open with Encoding": ""
   },
+  "jobsTableView": {
+    "Show as table": ""
+  },
   "Refresh": "",
   "Delete Selected": "",
   "Select an item before deleting": "",
@@ -531,12 +534,6 @@
   "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.": "",
   "Uploading USS files...": "",
   "Error uploading files": "",
-  "The 'move' function is not implemented for this USS API.": "",
-  "Could not list USS files: Empty path provided in URI": "",
-  "Profile does not exist for this file.": "",
-  "$(sync~spin) Saving USS file...": "",
-  "Renaming {0} failed due to API error: {1}": "",
-  "Deleting {0} failed due to API error: {1}": "",
   "Downloaded: {0}": "",
   "Encoding: {0}": "",
   "Binary": "",
@@ -564,6 +561,12 @@
   "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: {0}.\n                     To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's USS view.\n                      Would you like to do this now? {1}": "",
   "initializeUSSFavorites.error.buttonRemove": "",
   "File does not exist. It may have been deleted.": "",
+  "The 'move' function is not implemented for this USS API.": "",
+  "Could not list USS files: Empty path provided in URI": "",
+  "Profile does not exist for this file.": "",
+  "$(sync~spin) Saving USS file...": "",
+  "Renaming {0} failed due to API error: {1}": "",
+  "Deleting {0} failed due to API error: {1}": "",
   "{0} location": "",
   "Choose a location to create the {0}": "",
   "Name of file or directory": "",

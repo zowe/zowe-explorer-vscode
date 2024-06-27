@@ -1,5 +1,5 @@
 .ag-theme-vsc {
-    min-height: 50vh;
+    height: 50vh;
     max-height: 85vh;
     margin-top: 1em;
     --ag-icon-font-family: "agGridQuartz";
