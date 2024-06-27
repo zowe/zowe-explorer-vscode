@@ -29,6 +29,7 @@ import {
     ZoweVsCodeExtension,
     getFullPath,
     getZoweDir,
+    EventTypes,
 } from "@zowe/zowe-explorer-api";
 import { errorHandling, FilterDescriptor, FilterItem, ProfilesUtils } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
@@ -1237,6 +1238,119 @@ export class Profiles extends ProfilesCache {
         }
     }
 
+    public async basicAuthClearSecureArray(profileName?: string): Promise<void> {
+        const profAttrs = await this.getProfileFromConfig(profileName);
+        const configApi = (await this.getProfileInfo()).getTeamConfig();
+        configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, ["tokenValue"]);
+        configApi.delete(`${profAttrs.profLoc.jsonLoc}.properties.user`);
+        configApi.delete(`${profAttrs.profLoc.jsonLoc}.properties.password`);
+        await configApi.save();
+    }
+
+    public async tokenAuthClearSecureArray(profileName?: string): Promise<void> {
+        const profAttrs = await this.getProfileFromConfig(profileName);
+        const configApi = (await this.getProfileInfo()).getTeamConfig();
+        configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, ["user", "password"]);
+        configApi.delete(`${profAttrs.profLoc.jsonLoc}.properties.tokenType`);
+        configApi.delete(`${profAttrs.profLoc.jsonLoc}.properties.tokenValue`);
+        configApi.delete(`${profAttrs.profLoc.jsonLoc}.properties.tokenExpiration`);
+        await configApi.save();
+    }
+
+    public async handleSwitchAuthentication(node?: IZoweNodeType): Promise<void> {
+        let loginTokenType: string;
+        let serviceProfile: zowe.imperative.IProfileLoaded;
+        if (node) {
+            serviceProfile = node.getProfile();
+        } else {
+            serviceProfile = this.loadNamedProfile(node.label.toString().trim());
+        }
+        const zeInstance = ZoweExplorerApiRegister.getInstance();
+        try {
+            loginTokenType = await zeInstance.getCommonApi(serviceProfile).getTokenTypeName();
+        } catch (error) {
+            ZoweLogger.warn(error);
+            Gui.errorMessage(
+                localize(
+                    "handleSwitchAuthentication.getTokenTypeName.error",
+                    "Cannot switch to Token-based Authentication for profile {0}.",
+                    serviceProfile.name
+                )
+            );
+            return;
+        }
+        switch (true) {
+            case ProfilesUtils.isProfileUsingBasicAuth(serviceProfile): {
+                let loginOk = false;
+                if (loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken")) {
+                    loginOk = await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, loginTokenType, node, zeInstance, this);
+                } else {
+                    loginOk = await this.loginWithRegularProfile(serviceProfile, node);
+                }
+
+                if (loginOk) {
+                    Gui.showMessage(
+                        localize(
+                            "handleSwitchAuthentication.switchFromBasicToTokenAuth.successful",
+                            "Login using token-based authentication service was successful for profile {0}.",
+                            serviceProfile.name
+                        )
+                    );
+                    await this.basicAuthClearSecureArray(serviceProfile.name);
+                    const updBaseProfile: zowe.imperative.IProfile = {
+                        user: undefined,
+                        password: undefined,
+                    };
+                    node.setProfileToChoice({
+                        ...node.getProfile(),
+                        profile: { ...node.getProfile().profile, ...updBaseProfile },
+                    });
+                } else {
+                    Gui.errorMessage(
+                        localize(
+                            "handleSwitchAuthentication.switchFromBasicToTokenAuth.error",
+                            "Unable to switch to Token-based authentication for profile {0}.",
+                            serviceProfile.name
+                        )
+                    );
+                    return;
+                }
+                break;
+            }
+            case await ProfilesUtils.isUsingTokenAuth(serviceProfile.name): {
+                const profile: string | zowe.imperative.IProfileLoaded = node?.getProfile();
+                const creds = await Profiles.getInstance().promptCredentials(profile, true);
+
+                if (creds != null) {
+                    const successMsg = localize(
+                        "handleSwitchAuthentication.switchFromTokenToBasicAuth.successful",
+                        "Login using basic authentication was successful for profile {0}.",
+                        typeof profile === "string" ? profile : profile.name
+                    );
+                    ZoweLogger.info(successMsg);
+                    Gui.showMessage(successMsg);
+                    await this.tokenAuthClearSecureArray(serviceProfile.name);
+                    ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.UPDATE);
+                } else {
+                    Gui.errorMessage(
+                        localize(
+                            "handleSwitchAuthentication.switchFromTokenToBasicAuth.error",
+                            "Unable to switch to Basic authentication for profile {0}.",
+                            serviceProfile.name
+                        )
+                    );
+                    return;
+                }
+                break;
+            }
+            default: {
+                Gui.errorMessage(
+                    localize("handleSwitchAuthentication.noAuth", "Unable to Switch Authentication for profile {0}.", serviceProfile.name)
+                );
+            }
+        }
+    }
+
     public clearDSFilterFromTree(node: IZoweNodeType): void {
         if (!TreeProviders.ds?.mSessionNodes || !TreeProviders.ds?.mSessionNodes.length) {
             return;
@@ -1361,7 +1475,7 @@ export class Profiles extends ProfilesCache {
             .map((arg) => arg.argName);
     }
 
-    private async loginWithRegularProfile(serviceProfile: zowe.imperative.IProfileLoaded, node?: IZoweNodeType): Promise<boolean> {
+    public async loginWithRegularProfile(serviceProfile: zowe.imperative.IProfileLoaded, node?: IZoweNodeType): Promise<boolean> {
         let session: zowe.imperative.Session;
         if (node) {
             session = node.getSession();
