@@ -454,22 +454,6 @@ export class ProfilesUtils {
         }
     }
 
-    public static initializeZoweTempFolder(): void {
-        ZoweLogger.trace("ProfilesUtils.initializeZoweTempFolder called.");
-        try {
-            if (!fs.existsSync(Constants.ZOWETEMPFOLDER)) {
-                fs.mkdirSync(Constants.ZOWETEMPFOLDER, { recursive: true });
-                fs.mkdirSync(Constants.ZOWE_TMP_FOLDER);
-                fs.mkdirSync(Constants.USS_DIR);
-                fs.mkdirSync(Constants.DS_DIR);
-                ZoweLogger.info(vscode.l10n.t("Zowe Temp folder initialized successfully."));
-            }
-        } catch (err) {
-            ZoweLogger.error(err);
-            Gui.errorMessage(err.message);
-        }
-    }
-
     private static v1ProfileOptions(): void {
         const v1ProfileErrorMsg = vscode.l10n.t(
             // eslint-disable-next-line max-len

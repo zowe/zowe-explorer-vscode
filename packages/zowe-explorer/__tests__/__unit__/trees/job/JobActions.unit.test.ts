@@ -40,7 +40,6 @@ import { mocked } from "../../../__mocks__/mockUtils";
 import { JobActions } from "../../../../src/trees/job/JobActions";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
 import { JobSpoolProvider } from "../../../../src/trees/job/JobSpoolProvider";
-import { ExtensionUtils } from "../../../../src/utils/ExtensionUtils";
 import { Definitions } from "../../../../src/configuration/Definitions";
 
 const activeTextEditorDocument = jest.fn();
@@ -648,7 +647,6 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(showMessagespy).toHaveBeenCalledWith("No profiles available");
     });
     it("Getting session name from the path itself", async () => {
-        ExtensionUtils.defineConstants("/user/");
         createGlobalMocks();
         const blockMocks: any = createBlockMocks();
         mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);

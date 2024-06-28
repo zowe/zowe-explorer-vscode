@@ -141,8 +141,6 @@ describe("SettingsConfig Unit Tests", () => {
                 "Zowe-DS-Persistent",
                 "Zowe-USS-Persistent",
                 "Zowe-Jobs-Persistent",
-                "Zowe-Temp-Folder-Location",
-                Constants.configurationDictionary.SETTINGS_TEMP_FOLDER_PATH,
             ]);
             await expect(privateSettingsConfig.standardizeGlobalSettings()).resolves.toEqual(undefined);
         });
@@ -162,7 +160,6 @@ describe("SettingsConfig Unit Tests", () => {
                 "Zowe-DS-Persistent",
                 "Zowe-USS-Persistent",
                 "Zowe-Jobs-Persistent",
-                "Zowe-Temp-Folder-Location",
                 "Zowe-Automatic-Validation",
             ]);
             await expect(privateSettingsConfig.standardizeWorkspaceSettings()).resolves.toEqual(undefined);

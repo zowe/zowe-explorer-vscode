@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as path from "path";
-import { Gui, imperative, IZoweDatasetTreeNode, Validation, Types, FsAbstractUtils } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweDatasetTreeNode, Validation, Types, FsAbstractUtils, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetUtils } from "./DatasetUtils";
 import { DatasetFSProvider } from "./DatasetFSProvider";
@@ -957,7 +957,7 @@ export class DatasetActions {
         const profiles = Profiles.getInstance();
         let sessProfileName;
         if (regExp === null) {
-            if (!doc.uri.fsPath.includes(Constants.ZOWETEMPFOLDER)) {
+            if (doc.uri.scheme !== ZoweScheme.Jobs) {
                 const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES);
                 if (profileNamesList.length > 1) {
                     const quickPickOptions: vscode.QuickPickOptions = {
@@ -976,8 +976,8 @@ export class DatasetActions {
                     Gui.showMessage(vscode.l10n.t("No profiles available"));
                 }
             } else {
-                const filePathArray = doc.uri.fsPath.split(path.sep);
-                sessProfileName = filePathArray[filePathArray.length - 2];
+                const filePathArray = FsAbstractUtils.getInfoForUri(doc.uri);
+                sessProfileName = filePathArray.profileName;
             }
         } else {
             sessProfileName = regExp[1];
