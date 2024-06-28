@@ -100,4 +100,10 @@ export namespace Types {
             appenders: { [key: string]: Appender };
         };
     };
+
+    export type AddSessionOpts = {
+        sessionName?: string;
+        profileType?: string;
+        addToAllTrees?: boolean;
+    };
 }

@@ -63,6 +63,10 @@ async function createGlobalMocks() {
         }),
         configurable: true,
     });
+    Object.defineProperty(vscode.window, "createTreeView", {
+        value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
+        configurable: true,
+    });
 
     const mockMvsApi = await ZoweExplorerApiRegister.getMvsApi(newMocks.profileOne);
     const getMvsApiMock = jest.fn();

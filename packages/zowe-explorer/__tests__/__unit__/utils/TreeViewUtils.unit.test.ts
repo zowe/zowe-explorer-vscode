@@ -28,12 +28,12 @@ describe("TreeViewUtils Unit Tests", () => {
             mockGetConfiguration: jest.fn(),
         };
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
-        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
-        newMocks.testDatasetTree.addFileHistory("[profile1]: TEST.NODE");
         Object.defineProperty(vscode.window, "createTreeView", {
             value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
             configurable: true,
         });
+        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
+        newMocks.testDatasetTree.addFileHistory("[profile1]: TEST.NODE");
         Object.defineProperty(ZoweLocalStorage, "storage", {
             value: createPersistentConfig(),
             configurable: true,
@@ -51,29 +51,29 @@ describe("TreeViewUtils Unit Tests", () => {
         listenerFn({ element });
         expect(testTreeProvider.mOnDidChangeTreeData.fire).toHaveBeenCalledWith(element);
     });
-    it("should remove session from treeView", () => {
+    it("should remove session from treeView", async () => {
         const blockMocks = createBlockMocks();
         const originalLength = blockMocks.testDatasetTree.mSessionNodes.length;
-        TreeViewUtils.removeSession(blockMocks.testDatasetTree, blockMocks.imperativeProfile.name);
+        await TreeViewUtils.removeSession(blockMocks.testDatasetTree, blockMocks.imperativeProfile.name);
         expect(blockMocks.testDatasetTree.mSessionNodes.length).toEqual(originalLength - 1);
     });
-    it("should not find session in treeView", () => {
+    it("should not find session in treeView", async () => {
         const blockMocks = createBlockMocks();
         const originalLength = blockMocks.testDatasetTree.mSessionNodes.length;
-        TreeViewUtils.removeSession(blockMocks.testDatasetTree, "fake");
+        await TreeViewUtils.removeSession(blockMocks.testDatasetTree, "fake");
         expect(blockMocks.testDatasetTree.mSessionNodes.length).toEqual(originalLength);
     });
-    it("should not run treeProvider.removeFileHistory when job is returned for type", () => {
+    it("should not run treeProvider.removeFileHistory when job is returned for type", async () => {
         const blockMocks = createBlockMocks();
         jest.spyOn(blockMocks.testDatasetTree, "getTreeType").mockReturnValue(PersistenceSchemaEnum.Job);
-        TreeViewUtils.removeSession(blockMocks.testDatasetTree, "SESTEST");
+        await TreeViewUtils.removeSession(blockMocks.testDatasetTree, "SESTEST");
         expect(blockMocks.testDatasetTree.removeFileHistory).toHaveBeenCalledTimes(0);
     });
-    it("should run treeProvider.removeFileHistory", () => {
+    it("should run treeProvider.removeFileHistory", async () => {
         const blockMocks = createBlockMocks();
         jest.spyOn(blockMocks.testDatasetTree, "getTreeType").mockReturnValue(PersistenceSchemaEnum.USS);
         jest.spyOn(blockMocks.testDatasetTree, "getFileHistory").mockReturnValue(["[SESTEST]: /u/test/test.txt"]);
-        TreeViewUtils.removeSession(blockMocks.testDatasetTree, "SESTEST");
+        await TreeViewUtils.removeSession(blockMocks.testDatasetTree, "SESTEST");
         expect(blockMocks.testDatasetTree.removeFileHistory).toHaveBeenCalledTimes(1);
     });
 });

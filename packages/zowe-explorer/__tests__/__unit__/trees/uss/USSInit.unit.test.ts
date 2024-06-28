@@ -11,7 +11,6 @@
 
 import * as vscode from "vscode";
 import { USSActions } from "../../../../src/trees/uss/USSActions";
-import { Profiles } from "../../../../src/configuration/Profiles";
 import { IJestIt, ITestContext, processSubscriptions } from "../../../__common__/testUtils";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { USSInit } from "../../../../src/trees/uss/USSInit";
@@ -30,19 +29,10 @@ describe("Test src/uss/extension", () => {
             _: { _: "_" },
         };
         const ussFileProvider: { [key: string]: jest.Mock } = {
-            addFavorite: jest.fn(),
-            removeFavorite: jest.fn(),
             createZoweSession: jest.fn(),
             filterPrompt: jest.fn(),
-            editSession: jest.fn(),
-            deleteSession: jest.fn(),
             rename: jest.fn(),
-            saveSearch: jest.fn(),
-            removeFavProfile: jest.fn(),
-            ssoLogin: jest.fn(),
-            ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
-            onDidCloseTextDocument: jest.fn(),
             getTreeView: jest.fn().mockReturnValue({
                 reveal: jest.fn(),
             }),
@@ -50,14 +40,6 @@ describe("Test src/uss/extension", () => {
             openWithEncoding: jest.fn(),
         };
         const commands: IJestIt[] = [
-            {
-                name: "zowe.uss.addFavorite",
-                mock: [{ spy: jest.spyOn(ussFileProvider, "addFavorite"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.uss.removeFavorite",
-                mock: [{ spy: jest.spyOn(ussFileProvider, "removeFavorite"), arg: [test.value] }],
-            },
             {
                 name: "zowe.uss.addSession",
                 mock: [{ spy: jest.spyOn(ussFileProvider, "createZoweSession"), arg: [ussFileProvider] }],
@@ -89,17 +71,6 @@ describe("Test src/uss/extension", () => {
                 mock: [{ spy: jest.spyOn(ussFileProvider, "filterPrompt"), arg: [test.value] }],
             },
             {
-                name: "zowe.uss.editSession",
-                mock: [{ spy: jest.spyOn(ussFileProvider, "editSession"), arg: [test.value, ussFileProvider] }],
-            },
-            {
-                name: "zowe.uss.removeSession",
-                mock: [
-                    { spy: jest.spyOn(SharedContext, "isUssSession"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(ussFileProvider, "deleteSession"), arg: [test.value, undefined] },
-                ],
-            },
-            {
                 name: "zowe.uss.createFile",
                 mock: [{ spy: jest.spyOn(USSActions, "createUSSNode"), arg: [test.value, ussFileProvider, "file"] }],
             },
@@ -122,7 +93,11 @@ describe("Test src/uss/extension", () => {
             },
             {
                 name: "zowe.uss.uploadDialog",
-                mock: [{ spy: jest.spyOn(USSActions, "uploadDialog"), arg: [test.value, ussFileProvider] }],
+                mock: [{ spy: jest.spyOn(USSActions, "uploadDialog"), arg: [test.value, ussFileProvider, false] }],
+            },
+            {
+                name: "zowe.uss.uploadDialogBinary",
+                mock: [{ spy: jest.spyOn(USSActions, "uploadDialog"), arg: [test.value, ussFileProvider, true] }],
             },
             {
                 name: "zowe.uss.copyPath",
@@ -131,47 +106,6 @@ describe("Test src/uss/extension", () => {
             {
                 name: "zowe.uss.editFile",
                 mock: [{ spy: jest.spyOn(test.value, "openUSS"), arg: [false, false, ussFileProvider] }],
-            },
-            {
-                name: "zowe.uss.saveSearch",
-                mock: [{ spy: jest.spyOn(ussFileProvider, "saveSearch"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.uss.removeSavedSearch",
-                mock: [{ spy: jest.spyOn(ussFileProvider, "removeFavorite"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.uss.removeFavProfile",
-                parm: [{ label: test.value }],
-                mock: [{ spy: jest.spyOn(ussFileProvider, "removeFavProfile"), arg: [test.value, true] }],
-            },
-            {
-                name: "zowe.uss.disableValidation",
-                mock: [
-                    {
-                        spy: jest.spyOn(Profiles, "getInstance"),
-                        arg: [],
-                        ret: { disableValidation: jest.fn() },
-                    },
-                ],
-            },
-            {
-                name: "zowe.uss.enableValidation",
-                mock: [
-                    {
-                        spy: jest.spyOn(Profiles, "getInstance"),
-                        arg: [],
-                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
-                    },
-                ],
-            },
-            {
-                name: "zowe.uss.ssoLogin",
-                mock: [{ spy: jest.spyOn(ussFileProvider, "ssoLogin"), arg: [test.value] }],
-            },
-            {
-                name: "zowe.uss.ssoLogout",
-                mock: [{ spy: jest.spyOn(ussFileProvider, "ssoLogout"), arg: [test.value] }],
             },
             {
                 name: "zowe.uss.pasteUssFile",
@@ -184,10 +118,6 @@ describe("Test src/uss/extension", () => {
             {
                 name: "zowe.uss.editAttributes",
                 mock: [{ spy: jest.spyOn(USSActions, "editAttributes"), arg: [test.context, ussFileProvider, test.value] }],
-            },
-            {
-                name: "zowe.uss.openWithEncoding",
-                mock: [{ spy: jest.spyOn(ussFileProvider, "openWithEncoding"), arg: [test.value, undefined] }],
             },
             {
                 name: "onDidChangeConfiguration",
@@ -208,7 +138,6 @@ describe("Test src/uss/extension", () => {
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
 
             spyCreateUssTree.mockResolvedValue(ussFileProvider as any);
-            jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(ussFileProvider.onDidCloseTextDocument);
             await USSInit.initUSSProvider(test.context);
         });
         beforeEach(() => {
@@ -224,10 +153,6 @@ describe("Test src/uss/extension", () => {
             spyCreateUssTree.mockResolvedValue(null);
             const myProvider = await USSInit.initUSSProvider(test.context);
             expect(myProvider).toBe(null);
-        });
-
-        it("should register onDidCloseTextDocument event listener from USSTree", () => {
-            expect(ussFileProvider.onDidCloseTextDocument).toHaveBeenCalledWith(USSTree.onDidCloseTextDocument);
         });
     });
 });

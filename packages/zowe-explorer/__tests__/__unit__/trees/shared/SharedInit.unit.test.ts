@@ -26,6 +26,9 @@ import { SharedInit } from "../../../../src/trees/shared/SharedInit";
 import { TsoCommandHandler } from "../../../../src/commands/TsoCommandHandler";
 import { MvsCommandHandler } from "../../../../src/commands/MvsCommandHandler";
 import { UnixCommandHandler } from "../../../../src/commands/UnixCommandHandler";
+import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
+import { SharedContext } from "../../../../src/trees/shared/SharedContext";
+import * as certWizard from "../../../../src/utils/CertificateWizard";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
@@ -49,7 +52,20 @@ describe("Test src/shared/extension", () => {
             },
             _: { _: "_" },
         };
-        const profileMocks = { deleteProfile: jest.fn(), refresh: jest.fn() };
+        const profileMocks = { deleteProfile: jest.fn(), disableValidation: jest.fn(), enableValidation: jest.fn(), refresh: jest.fn() };
+        const treeProvider = {
+            addFavorite: jest.fn(),
+            deleteSession: jest.fn(),
+            editSession: jest.fn(),
+            getTreeView: jest.fn().mockReturnValue({ reveal: jest.fn() }),
+            openWithEncoding: jest.fn(),
+            refreshElement: jest.fn(),
+            removeFavorite: jest.fn(),
+            removeFavProfile: jest.fn(),
+            saveSearch: jest.fn(),
+            ssoLogin: jest.fn(),
+            ssoLogout: jest.fn(),
+        };
         const commands: IJestIt[] = [
             {
                 name: "zowe.updateSecureCredentials",
@@ -70,6 +86,25 @@ describe("Test src/shared/extension", () => {
             {
                 name: "zowe.promptCredentials",
                 mock: [{ spy: jest.spyOn(profUtils.ProfilesUtils, "promptCredentials"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.certificateWizard",
+                mock: [
+                    {
+                        spy: jest.spyOn(certWizard, "CertificateWizard").mockReturnValueOnce({
+                            userSubmission: {
+                                promise: Promise.resolve({
+                                    cert: "/a/b/cert.pem",
+                                    certKey: "/a/b/cert.key.pem",
+                                }),
+                                resolve: jest.fn(),
+                                reject: jest.fn(),
+                            },
+                            panel: { dispose: jest.fn() } as any,
+                        } as any),
+                        arg: [test.context, test.value],
+                    },
+                ],
             },
             {
                 name: "onDidChangeConfiguration:1",
@@ -148,20 +183,91 @@ describe("Test src/shared/extension", () => {
                 mock: [],
             },
             {
-                name: "zowe.ds.deleteProfile",
+                name: "zowe.disableValidation",
+                mock: [
+                    { spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks },
+                    { spy: jest.spyOn(profileMocks, "disableValidation"), arg: [test.value] },
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "refreshElement"), arg: [test.value] },
+                ],
+            },
+            {
+                name: "zowe.enableValidation",
+                mock: [
+                    { spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks },
+                    { spy: jest.spyOn(profileMocks, "enableValidation"), arg: [test.value] },
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "refreshElement"), arg: [test.value] },
+                ],
+            },
+            {
+                name: "zowe.ssoLogin",
+                mock: [
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "ssoLogin"), arg: [test.value] },
+                ],
+            },
+            {
+                name: "zowe.ssoLogout",
+                mock: [
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "ssoLogout"), arg: [test.value] },
+                ],
+            },
+            {
+                name: "zowe.deleteProfile",
                 mock: [{ spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks }],
             },
             {
-                name: "zowe.cmd.deleteProfile",
-                mock: [{ spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks }],
+                name: "zowe.editSession",
+                mock: [
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "editSession"), arg: [test.value] },
+                ],
             },
             {
-                name: "zowe.uss.deleteProfile",
-                mock: [{ spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks }],
+                name: "zowe.removeSession",
+                mock: [
+                    { spy: jest.spyOn(SharedContext, "isSession"), arg: [test.value], ret: true },
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "deleteSession"), arg: [test.value, undefined] },
+                ],
             },
             {
-                name: "zowe.jobs.deleteProfile",
-                mock: [{ spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks }],
+                name: "zowe.saveSearch",
+                mock: [
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "saveSearch"), arg: [test.value] },
+                ],
+            },
+            {
+                name: "zowe.addFavorite",
+                mock: [
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "addFavorite"), arg: [test.value] },
+                ],
+            },
+            {
+                name: "zowe.removeFavorite",
+                mock: [
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "removeFavorite"), arg: [test.value] },
+                ],
+            },
+            {
+                name: "zowe.removeFavProfile",
+                parm: [{ label: test.value }],
+                mock: [
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "removeFavProfile"), arg: [test.value, true] },
+                ],
+            },
+            {
+                name: "zowe.openWithEncoding",
+                mock: [
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(treeProvider, "openWithEncoding"), arg: [test.value, undefined] },
+                ],
             },
             {
                 name: "zowe.issueTsoCmd:1",

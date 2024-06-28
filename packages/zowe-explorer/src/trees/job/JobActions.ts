@@ -22,6 +22,7 @@ import { LocalFileManagement } from "../../management/LocalFileManagement";
 import { JobSpoolProvider } from "./JobSpoolProvider";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { AuthUtils } from "../../utils/AuthUtils";
+import { SharedContext } from "../shared/SharedContext";
 
 export class JobActions {
     private static async deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: Types.IZoweJobTreeType): Promise<void> {
@@ -134,7 +135,7 @@ export class JobActions {
         let sessionNode: IZoweJobTreeNode | undefined = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label.toString() === sessionName.trim());
         if (!sessionNode) {
             try {
-                await jobsProvider.addSession(sessionName.trim());
+                await jobsProvider.addSession({ sessionName: sessionName.trim() });
             } catch (error) {
                 await AuthUtils.errorHandling(error);
                 return;
@@ -209,6 +210,15 @@ export class JobActions {
                     const spools = (await JobSpoolProvider.getSpoolFiles(node)).filter((spool: zosjobs.IJobFile) =>
                         JobSpoolProvider.matchSpool(spool, node)
                     );
+                    if (!spools.length) {
+                        await Gui.infoMessage(
+                            vscode.l10n.t({
+                                message: "No spool files found for {0}",
+                                args: [node.label as string],
+                                comment: ["Spool node label"],
+                            })
+                        );
+                    }
                     for (const spool of spools) {
                         await ZoweExplorerApiRegister.getJesApi(nodes[0].getProfile()).downloadSingleSpool({
                             jobFile: spool,
@@ -237,17 +247,6 @@ export class JobActions {
         );
         await JobFSProvider.instance.fetchSpoolAtUri(doc.uri);
         statusMsg.dispose();
-    }
-
-    /**
-     * Refresh a node in the job tree
-     *
-     * @param node The node to refresh
-     * @param jobsProvider The tree to which the refreshed node belongs
-     */
-    public static refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: Types.IZoweJobTreeType): void {
-        ZoweLogger.trace("job.actions.refreshJobsServer called.");
-        jobsProvider.refreshElement(node);
     }
 
     /**
@@ -517,5 +516,12 @@ export class JobActions {
             }),
             Constants.MS_PER_SEC * 4
         );
+    }
+
+    public static async copyName(node: IZoweJobTreeNode): Promise<void> {
+        if (SharedContext.isJob(node) && node.job) {
+            return vscode.env.clipboard.writeText(`${node.job.jobname}(${node.job.jobid})`);
+        }
+        return vscode.env.clipboard.writeText(node.label as string);
     }
 }

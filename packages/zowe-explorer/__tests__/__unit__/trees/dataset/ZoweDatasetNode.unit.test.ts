@@ -60,6 +60,10 @@ function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "createTreeView", {
+        value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
+        configurable: true,
+    });
 
     return newMocks;
 }

@@ -293,7 +293,7 @@ export class DatasetActions {
                 const newTemplate: Types.DataSetAllocTemplate = {
                     [templateName]: dsPropsForAPI,
                 };
-                datasetProvider.addDsTemplate(newTemplate);
+                await datasetProvider.addDsTemplate(newTemplate);
             }
         });
     }
@@ -495,7 +495,10 @@ export class DatasetActions {
         let includedSelection = false;
         if (node) {
             for (const item of selectedNodes) {
-                if (node.getLabel().toString() === item.getLabel().toString()) {
+                if (
+                    node.getLabel().toString() === item.getLabel().toString() &&
+                    node.getParent().getLabel().toString() === item.getParent().getLabel().toString()
+                ) {
                     includedSelection = true;
                 }
             }
@@ -654,7 +657,7 @@ export class DatasetActions {
                 return DatasetUtils.validateMemberName(text) === true ? null : vscode.l10n.t("Enter valid member name");
             },
         };
-        const name = await Gui.showInputBox(options);
+        const name = (await Gui.showInputBox(options))?.toUpperCase();
         ZoweLogger.debug(
             vscode.l10n.t({
                 message: "Creating new data set member {0}",
@@ -675,8 +678,6 @@ export class DatasetActions {
                 }
                 throw err;
             }
-            parent.dirty = true;
-            datasetProvider.refreshElement(parent);
 
             const newNode = new ZoweDatasetNode({
                 label: name,
@@ -685,6 +686,10 @@ export class DatasetActions {
                 profile: parent.getProfile(),
             });
             await vscode.workspace.fs.writeFile(newNode.resourceUri, new Uint8Array());
+
+            parent.children.push(newNode);
+            parent.dirty = true;
+            datasetProvider.refreshElement(parent);
 
             // Refresh corresponding tree parent to reflect addition
             const otherTreeParent = datasetProvider.findEquivalentNode(parent, SharedContext.isFavorite(parent));
@@ -1212,7 +1217,7 @@ export class DatasetActions {
         } else {
             node.getSessionNode().dirty = true;
         }
-        datasetProvider.removeFavorite(node);
+        await datasetProvider.removeFavorite(node);
 
         const isMember = SharedContext.isDsMember(node);
 
@@ -1258,6 +1263,7 @@ export class DatasetActions {
                 return;
             }
 
+            ZoweLogger.info(`Refreshing data set ${label}`);
             const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching data set..."));
             await DatasetFSProvider.instance.fetchDatasetAtUri(node.resourceUri, {
                 editor: vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path),
@@ -1335,7 +1341,7 @@ export class DatasetActions {
             // executing search from saved search in favorites
             pattern = node.label.toString().substring(node.label.toString().indexOf(":") + 2);
             const sessionName = node.label.toString().substring(node.label.toString().indexOf("[") + 1, node.label.toString().indexOf("]"));
-            await datasetProvider.addSession(sessionName.trim());
+            await datasetProvider.addSession({ sessionName: sessionName.trim() });
             node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.label.toString().trim() === sessionName.trim()) as IZoweDatasetTreeNode;
         }
 
@@ -1351,18 +1357,6 @@ export class DatasetActions {
             node.iconPath = icon.path;
         }
         datasetProvider.addSearchHistory(node.pattern);
-    }
-
-    /**
-     * Copy data set info
-     *
-     * @export
-     * @deprecated Please use copyDataSets
-     * @param {IZoweNodeType} node - The node to copy
-     */
-    public static async copyDataSet(node: Types.IZoweNodeType): Promise<void> {
-        ZoweLogger.trace("dataset.actions.copyDataSet called.");
-        return vscode.env.clipboard.writeText(JSON.stringify(DatasetUtils.getNodeLabels(node)));
     }
 
     /**
@@ -1410,7 +1404,7 @@ export class DatasetActions {
      * @export
      * @param {IZoweDatasetTreeNode} node - The node to migrate
      */
-    public static async hMigrateDataSet(node: ZoweDatasetNode): Promise<zosfiles.IZosFilesResponse> {
+    public static async hMigrateDataSet(datasetProvider: Types.IZoweDatasetTreeType, node: ZoweDatasetNode): Promise<zosfiles.IZosFilesResponse> {
         ZoweLogger.trace("dataset.actions.hMigrateDataSet called.");
         await Profiles.getInstance().checkCurrentProfile(node.getProfile());
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
@@ -1424,6 +1418,9 @@ export class DatasetActions {
                         comment: ["Data Set name"],
                     })
                 );
+                node.contextValue = Constants.DS_MIGRATED_FILE_CONTEXT;
+                node.setIcon(IconGenerator.getIconByNode(node).path);
+                datasetProvider.refresh();
                 return response;
             } catch (err) {
                 ZoweLogger.error(err);
@@ -1441,7 +1438,7 @@ export class DatasetActions {
      * @export
      * @param {IZoweDatasetTreeNode} node - The node to recall
      */
-    public static async hRecallDataSet(node: ZoweDatasetNode): Promise<zosfiles.IZosFilesResponse> {
+    public static async hRecallDataSet(datasetProvider: Types.IZoweDatasetTreeType, node: ZoweDatasetNode): Promise<zosfiles.IZosFilesResponse> {
         ZoweLogger.trace("dataset.actions.hRecallDataSet called.");
         await Profiles.getInstance().checkCurrentProfile(node.getProfile());
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
@@ -1455,6 +1452,13 @@ export class DatasetActions {
                         comment: ["Data Set name"],
                     })
                 );
+                if (node.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
+                    node.contextValue = Constants.DS_PDS_CONTEXT;
+                } else {
+                    node.contextValue = (await node.getEncoding())?.kind === "binary" ? Constants.DS_DS_BINARY_CONTEXT : Constants.DS_DS_CONTEXT;
+                }
+                node.setIcon(IconGenerator.getIconByNode(node).path);
+                datasetProvider.refresh();
                 return response;
             } catch (err) {
                 ZoweLogger.error(err);
@@ -1773,6 +1777,14 @@ export class DatasetActions {
                     await AuthUtils.errorHandling(error, DatasetUtils.getNodeLabels(node).dataSetName, vscode.l10n.t("Unable to copy data set."));
                 }
             }
+        }
+    }
+
+    public static async copyName(node: IZoweDatasetTreeNode): Promise<void> {
+        if (SharedContext.isDsMember(node) && node.getParent()) {
+            await vscode.env.clipboard.writeText(`${node.getParent().label as string}(${node.label as string})`);
+        } else if (SharedContext.isDs(node) || SharedContext.isPds(node) || SharedContext.isMigrated(node)) {
+            await vscode.env.clipboard.writeText(node.label as string);
         }
     }
 }

@@ -10,7 +10,7 @@
  */
 
 /**
- * HTML template that is compiled with Handlebars to load a WebView instance at runtime.
+ * HTML template that is compiled with Mustache to load a WebView instance at runtime.
  */
 const HTMLTemplate: string = `
 <!DOCTYPE html>
@@ -25,9 +25,9 @@ const HTMLTemplate: string = `
             style-src vscode-resource: 'unsafe-inline' http: https: data:;"
         />
         <base href="{{ uris.resource.build }}">
-        {{#if uris.resource.css}}
+        {{#uris.resource.css}}
         <link type="text/css" rel="stylesheet" href="{{ uris.resource.css }}" />
-        {{/if}}
+        {{/uris.resource.css}}
     </head>
     <body>
         <noscript>You'll need to enable JavaScript to run this app.</noscript>

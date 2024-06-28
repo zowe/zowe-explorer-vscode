@@ -354,12 +354,6 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      */
     renameUSSNode?(ussFileProvider: Types.IZoweUSSTreeType, filePath: string);
     /**
-     * Refreshes node and reopens it.
-     * @param hasClosedInstance
-     * @deprecated Use reopen instead. Will be removed by version 2.0.
-     */
-    refreshAndReopen?(hasClosedInstance?: boolean);
-    /**
      * Reopens a file if it was closed (e.g. while it was being renamed).
      * @param hasClosedInstance
      */
@@ -370,12 +364,6 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * @param {USSTree} ussFileProvider
      */
     saveSearch?(ussFileProvider: Types.IZoweUSSTreeType);
-    /**
-     * uploads selected uss node(s) to from clipboard to mainframe
-     * @deprecated in favor of `pasteUssTree`
-     */
-    copyUssFile?();
-
     /**
      * Uploads a tree of USS file(s)/folder(s) to mainframe
      */

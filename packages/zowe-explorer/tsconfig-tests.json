@@ -1,9 +1,16 @@
 {
   "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "jest", "mocha"]
+  },
   "exclude": ["node_modules", ".vscode-test"],
   "include": [
+    "__tests__/__decorators__",
+    "__tests__/__e2e__/step_definitions/**/*.ts",
+    "__tests__/__unit__",
+    "__tests__/__integration__/bdd/step_definitions/**/*.ts",
     // Needed for integration tests to work:
-    "__tests__",
+    "__tests__/__integration__/tdd",
     "resources/testProfileData.example.ts",
     "resources/testProfileData.ts"
   ]

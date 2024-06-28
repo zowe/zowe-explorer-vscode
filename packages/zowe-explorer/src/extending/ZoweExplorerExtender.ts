@@ -187,7 +187,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
                         sourceApp: "Zowe Explorer (for VS Code)",
                     });
                     if (addResult.info.length > 0) {
-                        Gui.warningMessage(addResult.info);
+                        ZoweLogger.warn(addResult.info);
                     }
                 }
             } catch (err) {
@@ -241,8 +241,8 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
             await this.getProfilesCache().refresh();
         });
         // profileType is used to load a default extender profile if no other profiles are populating the trees
-        await this.datasetProvider?.addSession(undefined, profileType);
-        await this.ussFileProvider?.addSession(undefined, profileType);
-        await this.jobsProvider?.addSession(undefined, profileType);
+        await this.datasetProvider?.addSession({ profileType });
+        await this.ussFileProvider?.addSession({ profileType });
+        await this.jobsProvider?.addSession({ profileType });
     }
 }

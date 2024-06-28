@@ -15,7 +15,6 @@ import { ProfilesCache } from "../profiles";
 import { Login, Logout } from "@zowe/core-for-zowe-sdk";
 import * as imperative from "@zowe/imperative";
 import { Gui } from "../globals/Gui";
-import { MessageSeverity, IZoweLogger } from "../logger";
 import { PromptCredentialsOptions } from "./doc/PromptCredentials";
 import { Types } from "../Types";
 
@@ -52,57 +51,6 @@ export class ZoweVsCodeExtension {
                 return undefined;
             }
             return zoweExplorerApi.exports as Types.IApiRegisterClient;
-        }
-        return undefined;
-    }
-
-    /**
-     * Show a message within VS Code dialog, and log it to an Imperative logger
-     * @param message The message to display
-     * @param severity The level of severity for the message (see `MessageSeverity`)
-     * @param logger The IZoweLogger object for logging the message
-     *
-     * @deprecated Please use `Gui.showMessage` instead
-     */
-    public static showVsCodeMessage(message: string, severity: MessageSeverity, logger: IZoweLogger): void {
-        void Gui.showMessage(message, { severity: severity, logger: logger });
-    }
-
-    /**
-     * Opens an input box dialog within VS Code, given an options object
-     * @param inputBoxOptions The options for this input box
-     *
-     * @deprecated Use `Gui.showInputBox` instead
-     */
-    public static inputBox(inputBoxOptions: vscode.InputBoxOptions): Promise<string> {
-        return Promise.resolve(Gui.showInputBox(inputBoxOptions));
-    }
-
-    /**
-     * Helper function to standardize the way we ask the user for credentials
-     * @param options Set of options to use when prompting for credentials
-     * @returns Instance of imperative.IProfileLoaded containing information about the updated profile
-     * @deprecated
-     */
-    public static async promptCredentials(options: PromptCredentialsOptions.ComplexOptions): Promise<imperative.IProfileLoaded> {
-        const profilesCache = ZoweVsCodeExtension.profilesCache;
-        const loadProfile = options.sessionName ? await profilesCache.getLoadedProfConfig(options.sessionName.trim()) : options.profile;
-        if (loadProfile == null) {
-            return undefined;
-        }
-        const loadSession = loadProfile.profile as imperative.ISession;
-
-        const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, ...options });
-
-        if (creds && creds.length > 0) {
-            loadProfile.profile.user = loadSession.user = creds[0];
-            loadProfile.profile.password = loadSession.password = creds[1];
-
-            const upd = { profileName: loadProfile?.name, profileType: loadProfile.type };
-            await (await profilesCache.getProfileInfo()).updateProperty({ ...upd, property: "user", value: creds[0], setSecure: options.secure });
-            await (await profilesCache.getProfileInfo()).updateProperty({ ...upd, property: "password", value: creds[1], setSecure: options.secure });
-
-            return loadProfile;
         }
         return undefined;
     }
@@ -192,17 +140,36 @@ export class ZoweVsCodeExtension {
         });
         delete updSession.ISession.user;
         delete updSession.ISession.password;
-        const creds = await ZoweVsCodeExtension.promptUserPass({ session: updSession.ISession, rePrompt: true });
-        if (!creds) {
+        const qpItems: vscode.QuickPickItem[] = [
+            { label: "$(account) User and Password", description: "Log in with basic authentication" },
+            { label: "$(note) Certificate", description: "Log in with PEM format certificate file" },
+        ];
+        const response = await Gui.showQuickPick(qpItems, { placeHolder: "Select an authentication method for obtaining token" });
+        if (response === qpItems[0]) {
+            const creds = await ZoweVsCodeExtension.promptUserPass({ session: updSession.ISession, rePrompt: true });
+            if (!creds) {
+                return false;
+            }
+            updSession.ISession.base64EncodedAuth = imperative.AbstractSession.getBase64Auth(creds[0], creds[1]);
+        } else if (response === qpItems[1]) {
+            try {
+                await ZoweVsCodeExtension.promptCertificate({ profile: serviceProfile, session: updSession.ISession, rePrompt: true });
+            } catch (err) {
+                return false;
+            }
+            delete updSession.ISession.base64EncodedAuth;
+            updSession.ISession.storeCookie = true;
+            updSession.ISession.type = imperative.SessConstants.AUTH_TYPE_CERT_PEM;
+        } else {
             return false;
         }
-        updSession.ISession.base64EncodedAuth = imperative.AbstractSession.getBase64Auth(creds[0], creds[1]);
 
         const loginToken = await (zeRegister?.getCommonApi(serviceProfile).login ?? Login.apimlLogin)(updSession);
         const updBaseProfile: imperative.IProfile = {
             tokenType: updSession.ISession.tokenType ?? tokenType,
             tokenValue: loginToken,
         };
+        updSession.ISession.storeCookie = false;
 
         // A simplified version of the ProfilesCache.shouldRemoveTokenFromProfile `private` method
         const connOk =
@@ -319,7 +286,7 @@ export class ZoweVsCodeExtension {
         if (!newUser || options.rePrompt) {
             newUser = await Gui.showInputBox({
                 placeHolder: "User Name",
-                prompt: "Enter the user name for the connection. Leave blank to not store.",
+                prompt: "Enter the user name for the connection." + (options.rePrompt ? "" : " Leave blank to not store."),
                 ignoreFocusOut: true,
                 value: newUser,
                 ...(options.userInputBoxOptions ?? {}),
@@ -334,7 +301,7 @@ export class ZoweVsCodeExtension {
         if (!newPass || options.rePrompt) {
             newPass = await Gui.showInputBox({
                 placeHolder: "Password",
-                prompt: "Enter the password for the connection. Leave blank to not store.",
+                prompt: "Enter the password for the connection." + (options.rePrompt ? "" : " Leave blank to not store."),
                 password: true,
                 ignoreFocusOut: true,
                 value: newPass,
@@ -347,5 +314,15 @@ export class ZoweVsCodeExtension {
         }
 
         return [newUser.trim(), newPass.trim()];
+    }
+
+    private static async promptCertificate(options: PromptCredentialsOptions.CertificateOptions): Promise<void> {
+        const response: { cert: string; certKey: string } = await vscode.commands.executeCommand("zowe.certificateWizard", {
+            cert: options.profile.profile.certFile,
+            certKey: options.profile.profile.certKeyFile,
+            dialogOpts: { ...(options.openDialogOptions ?? {}), canSelectFiles: true, canSelectFolders: false, canSelectMany: false },
+        });
+        options.session.cert = response.cert;
+        options.session.certKey = response.certKey;
     }
 }

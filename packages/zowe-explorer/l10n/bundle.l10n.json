@@ -111,6 +111,15 @@
       "Zowe temp folder"
     ]
   },
+  "All Files": "All Files",
+  "User dismissed the certificate wizard.": "User dismissed the certificate wizard.",
+  "Certificate Wizard": "Certificate Wizard",
+  "Enter the path to the certificate for authenticating the connection.": "Enter the path to the certificate for authenticating the connection.",
+  "Certificate Files": "Certificate Files",
+  "Select Certificate": "Select Certificate",
+  "Enter the path to the certificate key for authenticating the connection.": "Enter the path to the certificate key for authenticating the connection.",
+  "Certificate Keys": "Certificate Keys",
+  "Select Certificate Key": "Select Certificate Key",
   "Required parameter 'host' must not be blank.": "Required parameter 'host' must not be blank.",
   "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out./Label": {
     "message": "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
@@ -152,7 +161,7 @@
       "Label"
     ]
   },
-  "open() called from invalid node.": "open() called from invalid node.",
+  "openUSS() called from invalid node.": "openUSS() called from invalid node.",
   "$(sync~spin) Downloading USS file...": "$(sync~spin) Downloading USS file...",
   "refreshUSS() called from invalid node.": "refreshUSS() called from invalid node.",
   "not found": "not found",
@@ -234,6 +243,7 @@
   },
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
+  "$(sync~spin) Pulling from Mainframe...": "$(sync~spin) Pulling from Mainframe...",
   "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
   "Could not list USS files: Empty path provided in URI": "Could not list USS files: Empty path provided in URI",
   "Profile does not exist for this file.": "Profile does not exist for this file.",
@@ -266,6 +276,8 @@
   },
   "Name of file or directory": "Name of file or directory",
   "Unable to create node:": "Unable to create node:",
+  "Uploading file to USS tree": "Uploading file to USS tree",
+  "Upload action was cancelled.": "Upload action was cancelled.",
   "Uploading USS file": "Uploading USS file",
   "Delete": "Delete",
   "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}/File names": {
@@ -278,6 +290,12 @@
   "Copying file structure...": "Copying file structure...",
   "The paste operation is not supported for this node.": "The paste operation is not supported for this node.",
   "Pasting files...": "Pasting files...",
+  "copyName was called on USS node {0}, but its fullPath is invalid./USS node label": {
+    "message": "copyName was called on USS node {0}, but its fullPath is invalid.",
+    "comment": [
+      "USS node label"
+    ]
+  },
   "Invalid job owner": "Invalid job owner",
   "Invalid job prefix": "Invalid job prefix",
   "Failed to parse a saved favorite. Attempted to parse: {0}/Plaintext line": {
@@ -434,6 +452,12 @@
     ]
   },
   "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).": "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).",
+  "No spool files found for {0}/Spool node label": {
+    "message": "No spool files found for {0}",
+    "comment": [
+      "Spool node label"
+    ]
+  },
   "$(sync~spin) Polling: {0}.../Document file name": {
     "message": "$(sync~spin) Polling: {0}...",
     "comment": [
@@ -587,6 +611,14 @@
       "Node label"
     ]
   },
+  "Getting data set templates.": "Getting data set templates.",
+  "Resetting data set templates array.": "Resetting data set templates array.",
+  "Updating data set templates.": "Updating data set templates.",
+  "Adding new data set template {0}.": "Adding new data set template {0}.",
+  "Data set template save location": "Data set template save location",
+  "Choose the setting location to save the data set template...": "Choose the setting location to save the data set template...",
+  "Save as User setting": "Save as User setting",
+  "Save as Workspace setting": "Save as Workspace setting",
   "$(sync~spin) Saving data set...": "$(sync~spin) Saving data set...",
   "Deleting {0} failed due to API error: {1}/File pathError message": {
     "message": "Deleting {0} failed due to API error: {1}",
@@ -638,7 +670,6 @@
     ]
   },
   "Uploading to data set": "Uploading to data set",
-  "Upload action was cancelled.": "Upload action was cancelled.",
   "No data sets selected for deletion, cancelling...": "No data sets selected for deletion, cancelling...",
   "Deleting data set(s): {0}/Data Sets to delete": {
     "message": "Deleting data set(s): {0}",

@@ -15,6 +15,7 @@ import { IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { JobSpoolFile } from "./JobSpoolFile";
+import type { ZoweSpoolNode } from "./ZoweJobNode";
 
 export class JobSpoolProvider implements vscode.TextDocumentContentProvider {
     // Track files that have been opened previously through the SpoolProvider
@@ -115,10 +116,8 @@ export class JobSpoolProvider implements vscode.TextDocumentContentProvider {
      * @returns true if the selected node matches the spool file, false otherwise
      */
     public static matchSpool(spool: zosjobs.IJobFile, node: IZoweJobTreeNode): boolean {
-        return (
-            `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}` === node.label.toString() ||
-            `${spool.stepname}:${spool.ddname} - ${spool.procstep}` === node.label.toString()
-        );
+        const nodeSpool = (node as ZoweSpoolNode).spool;
+        return nodeSpool != null && spool.jobid === nodeSpool.jobid && spool.id === nodeSpool.id;
     }
 
     public static initializeSpoolProvider(context: vscode.ExtensionContext): void {

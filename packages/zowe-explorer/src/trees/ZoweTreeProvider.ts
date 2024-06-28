@@ -23,7 +23,6 @@ import { ProfilesUtils } from "../utils/ProfilesUtils";
 import { SharedActions } from "./shared/SharedActions";
 import { IconUtils } from "../icons/IconUtils";
 import { AuthUtils } from "../utils/AuthUtils";
-import { Definitions } from "../configuration/Definitions";
 
 export class ZoweTreeProvider<T extends IZoweTreeNode> {
     // Event Emitters used to notify subscribers that the refresh event has fired
@@ -184,34 +183,33 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         return undefined;
     }
 
-    public async addSession(sessionName?: string, profileType?: string, provider?: IZoweTree<IZoweTreeNode>): Promise<void> {
+    public async addSession(opts: Types.AddSessionOpts = {}): Promise<void> {
         ZoweLogger.trace("ZoweTreeProvider.addSession called.");
-        if (provider) {
-            await this.addSessionForProvider(sessionName, profileType, provider);
-        } else {
-            for (const key of Object.keys(SharedTreeProviders.providers)) {
-                const tree = SharedTreeProviders.providers[key];
-                await this.addSessionForProvider(sessionName, profileType, tree);
+        const treeProviders = opts.addToAllTrees ? Object.values(SharedTreeProviders.providers) : [this];
+        const isUsingAutomaticProfileValidation: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION);
+        for (const treeProvider of treeProviders) {
+            if (opts.sessionName) {
+                await this.loadProfileBySessionName(opts.sessionName, treeProvider, isUsingAutomaticProfileValidation);
+            } else {
+                await this.loadProfileByPersistedProfile(treeProvider, opts.profileType, isUsingAutomaticProfileValidation);
             }
+            treeProvider.refresh();
         }
     }
 
     public deleteSession(node: IZoweTreeNode, hideFromAllTrees?: boolean): void {
         ZoweLogger.trace("ZoweTreeProvider.deleteSession called.");
-        if (hideFromAllTrees) {
-            for (const key of Object.keys(SharedTreeProviders.providers) as Array<keyof Definitions.IZoweProviders>) {
-                const currentProvider = SharedTreeProviders.providers[key];
-                this.deleteSessionForProvider(node, currentProvider);
-            }
-        } else {
-            this.deleteSessionForProvider(
-                node,
-                SharedTreeProviders.providers[SharedContext.getSessionType(node) === "jobs" ? "job" : SharedContext.getSessionType(node)]
+        const treeProviders = hideFromAllTrees ? Object.values(SharedTreeProviders.providers) : [this];
+        for (const treeProvider of treeProviders) {
+            treeProvider.mSessionNodes = treeProvider.mSessionNodes.filter(
+                (mSessionNode: IZoweTreeNode) => mSessionNode.getLabel() !== node.getLabel()
             );
+            treeProvider.removeSession(node.getLabel() as string);
+            treeProvider.refresh();
         }
     }
 
-    public async editSession(node: IZoweTreeNode, zoweFileProvider: IZoweTree<Types.IZoweNodeType>): Promise<void> {
+    public async editSession(node: IZoweTreeNode): Promise<void> {
         ZoweLogger.trace("ZoweTreeProvider.editSession called.");
         const profile = node.getProfile();
         const EditSession = await Profiles.getInstance().editSession(profile);
@@ -221,9 +219,9 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
             if (node.getSession()) {
                 ProfilesUtils.setSession(node, EditSession as imperative.ISession);
             } else {
-                zoweFileProvider.deleteSession(node.getSessionNode());
+                this.deleteSession(node.getSessionNode());
                 this.mHistory.addSession(node.label as string);
-                await zoweFileProvider.addSession(node.getProfileName(), undefined, zoweFileProvider);
+                await this.addSession({ sessionName: node.getProfileName() });
             }
             this.refresh();
             // Remove the edited profile from profilesForValidation
@@ -318,22 +316,6 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         await Profiles.getInstance().createZoweSession(zoweFileProvider);
     }
 
-    private deleteSessionForProvider(node: IZoweTreeNode, provider: IZoweTree<IZoweTreeNode>): void {
-        provider.mSessionNodes = provider.mSessionNodes.filter((mSessionNode: IZoweTreeNode) => mSessionNode.getLabel() !== node.getLabel());
-        provider.removeSession(node.getLabel() as string);
-        provider.refresh();
-    }
-
-    private async addSessionForProvider(sessionName?: string, profileType?: string, treeProvider?: IZoweTree<IZoweTreeNode>): Promise<void> {
-        const isUsingAutomaticProfileValidation: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION);
-        if (sessionName) {
-            await this.loadProfileBySessionName(sessionName, treeProvider, isUsingAutomaticProfileValidation);
-        } else {
-            await this.loadProfileByPersistedProfile(treeProvider, profileType, isUsingAutomaticProfileValidation);
-        }
-        treeProvider.refresh();
-    }
-
     private async loadProfileBySessionName(
         sessionName: string,
         treeProvider: IZoweTree<IZoweTreeNode>,
@@ -358,22 +340,18 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         profileType: string,
         isUsingAutomaticProfileValidation: boolean
     ): Promise<void> {
-        const profiles: imperative.IProfileLoaded[] = await Profiles.getInstance().fetchAllProfiles();
-        if (profiles) {
-            for (const profile of profiles) {
-                if (!treeProvider.mSessionNodes.find((mSessionNode) => mSessionNode.label.toString().trim() === profile.name.trim())) {
-                    for (const session of treeProvider.getSessions()) {
-                        if (session && session.trim() === profile.name) {
-                            await treeProvider.addSingleSession(profile);
-                            for (const node of treeProvider.mSessionNodes) {
-                                if (node.label !== vscode.l10n.t("Favorites")) {
-                                    const name = node.getProfileName();
-                                    if (name === profile.name) {
-                                        SharedActions.resetValidationSettings(node, isUsingAutomaticProfileValidation);
-                                    }
-                                }
-                            }
-                        }
+        const profiles: imperative.IProfileLoaded[] = profileType
+            ? await Profiles.getInstance().fetchAllProfilesByType(profileType)
+            : await Profiles.getInstance().fetchAllProfiles();
+        for (const profile of profiles) {
+            const existingSessionNode = treeProvider.mSessionNodes.find((node) => node.label.toString().trim() === profile.name);
+            const sessionInHistory = treeProvider.getSessions().some((session) => session?.trim() === profile.name);
+            if (!existingSessionNode && sessionInHistory) {
+                await treeProvider.addSingleSession(profile);
+                for (const node of treeProvider.mSessionNodes) {
+                    if (node.label !== vscode.l10n.t("Favorites") && node.getProfileName() === profile.name) {
+                        SharedActions.resetValidationSettings(node, isUsingAutomaticProfileValidation);
+                        break;
                     }
                 }
             }

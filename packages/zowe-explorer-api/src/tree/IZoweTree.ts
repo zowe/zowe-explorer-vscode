@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as imperative from "@zowe/imperative";
-import { IZoweTreeNode } from "./IZoweTreeNode";
+import { IZoweTreeNode, ZosEncoding } from "./IZoweTreeNode";
 import { PersistenceSchemaEnum } from "../profiles/UserSettings";
 import { Types } from "../Types";
 
@@ -52,16 +52,15 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
 
     /**
      * A record of open files from this tree.
+     * @deprecated Unused in v3 since open files are now tracked by the `FileSystemProvider`
      */
     openFiles?: Record<string, IZoweTreeNode>;
 
     /**
      * Adds a session to the container
-     * @param sessionName
-     * @param type e.g. zosmf
-     * @param provider tree provider to add to, undefined will add for all
+     * @param opts Options for adding sessions to tree
      */
-    addSession(sessionName?: string, type?: string, provider?: IZoweTree<IZoweTreeNode>): Promise<void>;
+    addSession(opts?: Types.AddSessionOpts): Promise<void>;
 
     /**
      * Adds a single session to the tree
@@ -73,7 +72,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
      * Edit a session to the container
      * @param node This parameter identifies the node that needs to be called
      */
-    editSession(node: IZoweTreeNode, zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<void>;
+    editSession(node: IZoweTreeNode): Promise<void>;
 
     /**
      * Get sessions from persistent object of provider
@@ -102,29 +101,29 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
      * Log in to authentication service
      * @param node This parameter identifies the node that needs to be called
      */
-    ssoLogin(node: IZoweTreeNode);
+    ssoLogin(node: IZoweTreeNode): Promise<void>;
 
     /**
      * Log out from authentication service
      * @param node This parameter identifies the node that needs to be called
      */
-    ssoLogout(node: IZoweTreeNode);
+    ssoLogout(node: IZoweTreeNode): Promise<void>;
 
     /**
      * Adds a favorite node
      * @param favorite Adds a favorite node
      */
-    addFavorite(favorite: IZoweTreeNode);
+    addFavorite(favorite: IZoweTreeNode): Promise<void>;
     /**
      * Removes a favorite node
      * @param favorite Adds a favorite node
      */
-    removeFavorite(node: IZoweTreeNode);
+    removeFavorite(node: IZoweTreeNode): Promise<void>;
     /**
      * Removes profile node from Favorites section
      * @param profileName
      */
-    removeFavProfile(profileName: string, userSelected: boolean);
+    removeFavProfile(profileName: string, userSelected: boolean): Promise<void>;
     /**
      * Refreshes the tree
      */
@@ -307,7 +306,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
      *
      * @param {any} criteria the member name to add
      */
-    addDsTemplate?(criteria: Types.DataSetAllocTemplate): void;
+    addDsTemplate?(criteria: Types.DataSetAllocTemplate): Promise<void>;
     /**
      * Returns the array of saved templates for data set creation attributes
      *
@@ -319,4 +318,10 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
      * @param {IZoweTreeNode} node the node to poll data for
      */
     pollData?(node: IZoweTreeNode): any;
+    /**
+     * Opens resource for the provided node using encoding specified by user.
+     * @param {IZoweTreeNode} node
+     * @param {ZosEncoding} encoding File encoding, user will be prompted if undefined
+     */
+    openWithEncoding?(node: IZoweTreeNode, encoding?: ZosEncoding): Promise<void>;
 }

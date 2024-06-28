@@ -30,6 +30,7 @@ import { DatasetTree } from "../../src/trees/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../src/trees/dataset/ZoweDatasetNode";
 import { USSTree } from "../../src/trees/uss/USSTree";
 import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
+import { JobTree } from "../../src/trees/job/JobTree";
 
 jest.mock("../../src/utils/LoggerUtils");
 jest.mock("../../src/tools/ZoweLogger");
@@ -50,7 +51,6 @@ function createGlobalMocks() {
         mockCreateTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         mockExecuteCommand: jest.fn(),
         mockRegisterCommand: jest.fn(),
-        mockOnDidCloseTextDocument: jest.fn(),
         mockOnDidSaveTextDocument: jest.fn(),
         mockOnDidChangeSelection: jest.fn(),
         mockOnDidChangeConfiguration: jest.fn(),
@@ -134,7 +134,8 @@ function createGlobalMocks() {
             disableValidationContext: jest.fn(),
             enableValidationContext: jest.fn(),
             validationArraySetup: jest.fn(),
-            fetchAllProfiles: jest.fn(),
+            fetchAllProfiles: jest.fn().mockResolvedValue([]),
+            fetchAllProfilesByType: jest.fn().mockResolvedValue([]),
             getProfileInfo: () => createInstanceOfProfileInfo(),
         },
         mockExtension: null,
@@ -143,12 +144,10 @@ function createGlobalMocks() {
         expectedCommands: [
             "zowe.all.config.init",
             "zowe.ds.addSession",
-            "zowe.ds.addFavorite",
             "zowe.ds.refreshAll",
             "zowe.ds.refreshNode",
             "zowe.ds.refreshDataset",
             "zowe.ds.pattern",
-            "zowe.ds.editSession",
             "zowe.ds.createDataset",
             "zowe.ds.createMember",
             "zowe.ds.deleteDataset",
@@ -157,11 +156,6 @@ function createGlobalMocks() {
             "zowe.ds.deleteMember",
             "zowe.ds.editDataSet",
             "zowe.ds.editMember",
-            "zowe.ds.removeSession",
-            "zowe.ds.removeFavorite",
-            "zowe.ds.saveSearch",
-            "zowe.ds.removeSavedSearch",
-            "zowe.ds.removeFavProfile",
             "zowe.ds.submitJcl",
             "zowe.ds.submitMember",
             "zowe.ds.showAttributes",
@@ -172,41 +166,27 @@ function createGlobalMocks() {
             "zowe.ds.hMigrateDataSet",
             "zowe.ds.hRecallDataSet",
             "zowe.ds.showFileErrorDetails",
-            "zowe.ds.disableValidation",
-            "zowe.ds.enableValidation",
-            "zowe.ds.ssoLogin",
-            "zowe.ds.ssoLogout",
             "zowe.ds.sortBy",
             "zowe.ds.filterBy",
-            "zowe.ds.openWithEncoding",
-            "zowe.uss.addFavorite",
-            "zowe.uss.removeFavorite",
+            "zowe.ds.copyName",
             "zowe.uss.addSession",
             "zowe.uss.refreshAll",
             "zowe.uss.refreshUSS",
             "zowe.uss.refreshUSSInTree",
             "zowe.uss.refreshDirectory",
             "zowe.uss.fullPath",
-            "zowe.uss.editSession",
-            "zowe.uss.removeSession",
             "zowe.uss.createFile",
             "zowe.uss.createFolder",
             "zowe.uss.deleteNode",
             "zowe.uss.renameNode",
             "zowe.uss.uploadDialog",
+            "zowe.uss.uploadDialogBinary",
             "zowe.uss.copyPath",
             "zowe.uss.editFile",
             "zowe.uss.editAttributes",
-            "zowe.uss.saveSearch",
-            "zowe.uss.removeSavedSearch",
-            "zowe.uss.removeFavProfile",
-            "zowe.uss.disableValidation",
-            "zowe.uss.enableValidation",
-            "zowe.uss.ssoLogin",
-            "zowe.uss.ssoLogout",
             "zowe.uss.pasteUssFile",
             "zowe.uss.copyUssFile",
-            "zowe.uss.openWithEncoding",
+            "zowe.uss.copyRelativePath",
             "zowe.jobs.deleteJob",
             "zowe.jobs.runModifyCommand",
             "zowe.jobs.runStopCommand",
@@ -219,27 +199,17 @@ function createGlobalMocks() {
             "zowe.jobs.addJobsSession",
             "zowe.jobs.setOwner",
             "zowe.jobs.setPrefix",
-            "zowe.jobs.removeSession",
             "zowe.jobs.downloadSpool",
             "zowe.jobs.downloadSpoolBinary",
             "zowe.jobs.getJobJcl",
             "zowe.jobs.setJobSpool",
             "zowe.jobs.search",
-            "zowe.jobs.editSession",
-            "zowe.jobs.addFavorite",
-            "zowe.jobs.removeFavorite",
-            "zowe.jobs.saveSearch",
-            "zowe.jobs.removeSearchFavorite",
-            "zowe.jobs.removeFavProfile",
-            "zowe.jobs.disableValidation",
-            "zowe.jobs.enableValidation",
-            "zowe.jobs.ssoLogin",
-            "zowe.jobs.ssoLogout",
             "zowe.jobs.startPolling",
             "zowe.jobs.stopPolling",
             "zowe.jobs.cancelJob",
             "zowe.jobs.sortBy",
             "zowe.jobs.filterJobs",
+            "zowe.jobs.copyName",
             "zowe.updateSecureCredentials",
             "zowe.manualPoll",
             "zowe.editHistory",
@@ -247,12 +217,21 @@ function createGlobalMocks() {
             "zowe.profileManagement",
             "zowe.diff.useLocalContent",
             "zowe.diff.useRemoteContent",
+            "zowe.certificateWizard",
             "zowe.openRecentMember",
             "zowe.searchInAllLoadedItems",
-            "zowe.ds.deleteProfile",
-            "zowe.cmd.deleteProfile",
-            "zowe.uss.deleteProfile",
-            "zowe.jobs.deleteProfile",
+            "zowe.disableValidation",
+            "zowe.enableValidation",
+            "zowe.ssoLogin",
+            "zowe.ssoLogout",
+            "zowe.deleteProfile",
+            "zowe.editSession",
+            "zowe.removeSession",
+            "zowe.saveSearch",
+            "zowe.addFavorite",
+            "zowe.removeFavorite",
+            "zowe.removeFavProfile",
+            "zowe.openWithEncoding",
             "zowe.issueTsoCmd",
             "zowe.issueUnixCmd",
             "zowe.issueMvsCmd",
@@ -376,8 +355,6 @@ function createGlobalMocks() {
         get: globalMocks.mockImperativeProfileInfo,
         configurable: true,
     });
-
-    jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(globalMocks.onDidCloseTextDocument);
 
     // Create a mocked extension context
     const mockExtensionCreator = jest.fn(
@@ -541,10 +518,14 @@ describe("Extension Unit Tests", () => {
                 };
             },
         });
-        await removeSessionTest("zowe.ds.removeSession", Constants.DS_SESSION_CONTEXT, DatasetTree);
+        await removeSessionTest("zowe.removeSession", Constants.DS_SESSION_CONTEXT, DatasetTree);
     });
 
     it("zowe.uss.removeSession", async () => {
-        await removeSessionTest("zowe.uss.removeSession", Constants.USS_SESSION_CONTEXT, USSTree);
+        await removeSessionTest("zowe.removeSession", Constants.USS_SESSION_CONTEXT, USSTree);
+    });
+
+    it("zowe.jobs.removeSession", async () => {
+        await removeSessionTest("zowe.removeSession", Constants.JOBS_SESSION_CONTEXT, JobTree);
     });
 });

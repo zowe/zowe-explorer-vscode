@@ -1122,15 +1122,3 @@ describe("ZosJobsProvider Unit Test - Filter Jobs", () => {
         expect(filterJobsSpy).toHaveBeenCalledWith(node1);
     });
 });
-
-describe("onDidCloseTextDocument", () => {
-    it("sets the entry in openFiles record to null if Spool URI is valid", async () => {
-        const doc = { uri: { scheme: "zosspool", path: "JOB12345.SPOOL1.SYSOUT" } } as vscode.TextDocument;
-        await createGlobalMocks();
-        const tree = new JobTree();
-
-        jest.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(tree);
-        JobTree.onDidCloseTextDocument(doc);
-        expect(tree.openFiles[doc.uri.path]).toBeNull();
-    });
-});

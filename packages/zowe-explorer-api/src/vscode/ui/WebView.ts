@@ -9,7 +9,7 @@
  *
  */
 
-import * as Handlebars from "handlebars";
+import * as Mustache from "mustache";
 import * as fs from "fs";
 import HTMLTemplate from "./utils/HTMLTemplate";
 import { Types } from "../../Types";
@@ -31,7 +31,7 @@ export class WebView {
 
     // The webview HTML content to render after filling the HTML template.
     protected webviewContent: string;
-    protected panel: WebviewPanel;
+    public panel: WebviewPanel;
 
     // Resource identifiers for the on-disk content and vscode-webview resource.
     protected uris: UriPair = {};
@@ -88,12 +88,12 @@ export class WebView {
             css: this.uris.disk.css ? this.panel.webview.asWebviewUri(this.uris.disk.css) : undefined,
         };
 
-        const template = Handlebars.compile(HTMLTemplate);
-        this.webviewContent = template({
+        const builtHtml = Mustache.render(HTMLTemplate, {
             uris: this.uris,
             nonce: this.nonce,
             title: this.title,
         });
+        this.webviewContent = builtHtml;
         if (onDidReceiveMessage) {
             this.panel.webview.onDidReceiveMessage(async (message) => onDidReceiveMessage(message));
         }

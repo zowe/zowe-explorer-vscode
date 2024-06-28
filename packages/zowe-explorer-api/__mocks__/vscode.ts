@@ -309,6 +309,14 @@ export namespace window {
         return undefined;
     }
 
+    export function showQuickPick<T extends QuickPickItem>(
+        items: readonly T[] | Thenable<readonly T[]>,
+        options?: QuickPickOptions & { canPickMany: true },
+        token?: CancellationToken
+    ): Thenable<T[] | undefined> {
+        return undefined;
+    }
+
     /**
      * Options to configure the behavior of the message.
      *
@@ -920,16 +928,6 @@ export namespace workspace {
     export function onWillSaveTextDocument(event) {
         return Disposable;
     }
-
-    /**
-     * ~~The folder that is open in the editor. `undefined` when no folder
-     * has been opened.~~
-     *
-     * @deprecated Use [`workspaceFolders`](#workspace.workspaceFolders) instead.
-     *
-     * @readonly
-     */
-    export let rootPath: string | undefined;
 
     /**
      * A workspace folder is one of potentially many roots opened by the editor. All workspace folders
