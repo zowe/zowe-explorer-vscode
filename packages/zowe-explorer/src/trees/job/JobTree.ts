@@ -1061,13 +1061,6 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         const pollInterval = await this.showPollOptions(node.resourceUri);
 
         if (pollInterval === 0) {
-            Gui.showMessage(
-                vscode.l10n.t({
-                    message: "Polling dismissed for {0}; operation cancelled.",
-                    args: [node.resourceUri.path],
-                    comment: ["Encoded URI path"],
-                })
-            );
             return;
         }
 

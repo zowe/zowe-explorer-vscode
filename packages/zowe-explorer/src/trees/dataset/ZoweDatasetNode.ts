@@ -511,7 +511,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
     public getSessionNode(): IZoweDatasetTreeNode {
         ZoweLogger.trace("ZoweDatasetNode.getSessionNode called.");
-        return this.getParent() ? (this.getParent().getSessionNode() as IZoweDatasetTreeNode) : this;
+        return this.session ? this : (this.getParent()?.getSessionNode() as IZoweDatasetTreeNode) ?? this;
     }
     /**
      * Returns the [etag] for this node

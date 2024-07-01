@@ -71,9 +71,9 @@ export class SharedTreeProviders {
     }
 
     public static getProviderForNode(node: Types.IZoweNodeType): IZoweTree<any> {
-        if (SharedContext.isDsSession(node)) {
+        if (SharedContext.isDatasetNode(node) || SharedContext.isDsSession(node)) {
             return SharedTreeProviders.ds;
-        } else if (SharedContext.isUssSession(node)) {
+        } else if (SharedContext.isUssNode(node) || SharedContext.isUssSession(node)) {
             return SharedTreeProviders.uss;
         } else {
             return SharedTreeProviders.job;

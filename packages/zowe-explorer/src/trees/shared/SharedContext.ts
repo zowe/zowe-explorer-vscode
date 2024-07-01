@@ -10,7 +10,7 @@
  */
 
 import { TreeItem } from "vscode";
-import { imperative, IZoweTreeNode, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
+import { imperative, IZoweDatasetTreeNode, IZoweTreeNode, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../configuration/Constants";
 
 export class SharedContext {
@@ -476,11 +476,18 @@ export class SharedContext {
     }
 
     /**
-     * Helper function which identifies if the node is part of the USS tree view
-     * @param node
-     * @return true if part of the USS tree, false otherwise
+     * Type guard which determines whether the node is part of the USS tree view
+     * @param node The node to check
      */
-    public static isTypeUssTreeNode(node): node is IZoweUSSTreeNode {
-        return (node as IZoweUSSTreeNode).getUSSDocumentFilePath !== undefined;
+    public static isUssNode(node: any): node is IZoweUSSTreeNode {
+        return node.getAttributes !== undefined;
+    }
+
+    /**
+     * Type guard which determines whether the node is part of the Data Sets tree view
+     * @param node The node to check
+     */
+    public static isDatasetNode(node: any): node is IZoweDatasetTreeNode {
+        return node.getStats !== undefined;
     }
 }

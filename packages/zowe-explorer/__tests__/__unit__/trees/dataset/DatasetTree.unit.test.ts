@@ -1670,7 +1670,6 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             label: "TEST.PDS",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: testTree.mSessionNodes[1],
-            session: blockMocks.session,
         });
         testTree.mSessionNodes[1].children = [newNode];
         const updateStatsSpy = jest.spyOn(ZoweDatasetNode.prototype, "updateStats");
@@ -2650,7 +2649,6 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             label: "testPds",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: session,
-            session: createISession(),
         });
         pds.contextValue = Constants.DS_PDS_CONTEXT;
 
@@ -2658,14 +2656,12 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             label: "A",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: pds,
-            session: createISession(),
         });
         jest.spyOn(nodeA, "getStats").mockReturnValue({ user: "someUser", createdDate: new Date(), modifiedDate: new Date() });
         const nodeB = new ZoweDatasetNode({
             label: "B",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: pds,
-            session: createISession(),
         });
         jest.spyOn(nodeB, "getStats").mockReturnValue({
             user: "anotherUser",
@@ -2676,7 +2672,6 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             label: "C",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: pds,
-            session: createISession(),
         });
         jest.spyOn(nodeC, "getStats").mockReturnValue({
             user: "someUser",

@@ -593,7 +593,6 @@
   "Job search cancelled.": "",
   "The polling interval must be greater than or equal to 1000ms.": "",
   "Poll interval (in ms) for: {0}": "",
-  "Polling dismissed for {0}; operation cancelled.": "",
   "$(sync~spin) Polling: {0}...": "",
   "Filter: {0}": "",
   "Set a filter...": "",

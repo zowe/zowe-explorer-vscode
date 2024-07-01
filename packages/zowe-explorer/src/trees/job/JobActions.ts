@@ -19,10 +19,10 @@ import { JobFSProvider } from "./JobFSProvider";
 import { Constants } from "../../configuration/Constants";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { LocalFileManagement } from "../../management/LocalFileManagement";
-import { JobSpoolProvider } from "./JobSpoolProvider";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { SharedContext } from "../shared/SharedContext";
+import { SpoolUtils } from "../../utils/SpoolUtils";
 
 export class JobActions {
     private static async deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: Types.IZoweJobTreeType): Promise<void> {
@@ -207,9 +207,7 @@ export class JobActions {
             });
             if (dirUri !== undefined) {
                 for (const node of nodes) {
-                    const spools = (await JobSpoolProvider.getSpoolFiles(node)).filter((spool: zosjobs.IJobFile) =>
-                        JobSpoolProvider.matchSpool(spool, node)
-                    );
+                    const spools = (await SpoolUtils.getSpoolFiles(node)).filter((spool: zosjobs.IJobFile) => SpoolUtils.matchSpool(spool, node));
                     if (!spools.length) {
                         await Gui.infoMessage(
                             vscode.l10n.t({
