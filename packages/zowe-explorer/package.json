@@ -1509,18 +1509,6 @@
       "type": "object",
       "title": "%configuration.title%",
       "properties": {
-        "zowe.files.temporaryDownloadsFolder.hide": {
-          "type": "boolean",
-          "default": false,
-          "description": "%zowe.files.temporaryDownloadsFolder.hide%",
-          "scope": "window"
-        },
-        "zowe.files.temporaryDownloadsFolder.cleanup": {
-          "type": "boolean",
-          "default": true,
-          "description": "%zowe.files.temporaryDownloadsFolder.cleanup%",
-          "scope": "window"
-        },
         "zowe.ds.default.binary": {
           "default": {
             "dsorg": "PO",
@@ -1626,12 +1614,6 @@
           "type": "string",
           "default": "",
           "description": "%zowe.files.logsFolder.path%",
-          "scope": "window"
-        },
-        "zowe.files.temporaryDownloadsFolder.path": {
-          "type": "string",
-          "default": "",
-          "description": "%zowe.files.temporaryDownloadsFolder.path%",
           "scope": "window"
         },
         "zowe.uss.history": {

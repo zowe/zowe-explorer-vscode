@@ -626,15 +626,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     /**
-     * Returns the local file path for the ZoweUSSNode
-     *
-     */
-    public getUSSDocumentFilePath(): string {
-        ZoweLogger.trace("ZoweUSSNode.getUSSDocumentFilePath called.");
-        return path.join(Constants.USS_DIR || "", this.getSessionNode().getProfileName() || "", this.fullPath);
-    }
-
-    /**
      * Pastes a subtree of files and folders into another location.
      *
      * @param rootPath The start/root path for pasting the file structure

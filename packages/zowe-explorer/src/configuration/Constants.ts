@@ -16,11 +16,6 @@ import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import type { Profiles } from "./Profiles";
 
 export class Constants {
-    public static SETTINGS_TEMP_FOLDER_LOCATION: string;
-    public static ZOWETEMPFOLDER: string;
-    public static ZOWE_TMP_FOLDER: string;
-    public static USS_DIR: string;
-    public static DS_DIR: string;
     public static CONFIG_PATH: string;
     public static readonly COMMAND_COUNT = 99;
     public static readonly MAX_SEARCH_HISTORY = 5;
@@ -66,9 +61,6 @@ export class Constants {
     public static readonly FILTER_SEARCH = "isFilterSearch";
     public static readonly VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
     public static ROOTPATH = path.join(__dirname, "..", "..");
-    public static readonly SETTINGS_TEMP_FOLDER_PATH = "zowe.files.temporaryDownloadsFolder.path";
-    public static readonly SETTINGS_TEMP_FOLDER_CLEANUP = "zowe.files.temporaryDownloadsFolder.cleanup";
-    public static readonly SETTINGS_TEMP_FOLDER_HIDE = "zowe.files.temporaryDownloadsFolder.hide";
     public static readonly SETTINGS_LOGS_FOLDER_PATH = "zowe.files.logsFolder.path";
     public static readonly SETTINGS_DS_DEFAULT_BINARY = "zowe.ds.default.binary";
     public static readonly SETTINGS_DS_DEFAULT_C = "zowe.ds.default.c";
@@ -103,7 +95,6 @@ export class Constants {
         "Zowe-Default-Datasets-PDS": Constants.SETTINGS_DS_DEFAULT_PDS,
         "Zowe-Default-Datasets-Extended": Constants.SETTINGS_DS_DEFAULT_EXTENDED,
         "Zowe-Default-Datasets-PS": Constants.SETTINGS_DS_DEFAULT_PS,
-        "Zowe-Temp-Folder-Location": Constants.SETTINGS_TEMP_FOLDER_PATH,
         "Zowe Commands: History": PersistenceSchemaEnum.Commands,
         "Zowe Commands: Always edit": Constants.SETTINGS_COMMANDS_ALWAYS_EDIT,
         "Zowe-Automatic-Validation": Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION,

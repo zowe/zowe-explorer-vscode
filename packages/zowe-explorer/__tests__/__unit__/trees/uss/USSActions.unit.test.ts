@@ -40,7 +40,6 @@ import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import { IZoweTree } from "../../../../../zowe-explorer-api/src/tree/IZoweTree";
 import { IZoweUSSTreeNode } from "../../../../../zowe-explorer-api/src/tree";
 import { USSAtributeView } from "../../../../src/trees/uss/USSAttributeView";
-import { ExtensionUtils } from "../../../../src/utils/ExtensionUtils";
 import { mocked } from "../../../__mocks__/mockUtils";
 import { USSTree } from "../../../../src/trees/uss/USSTree";
 
@@ -89,7 +88,6 @@ function createGlobalMocks() {
     };
 
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
-    ExtensionUtils.defineConstants("");
     const profilesForValidation = { status: "active", name: "fake" };
 
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
