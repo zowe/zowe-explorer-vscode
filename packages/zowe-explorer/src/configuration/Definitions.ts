@@ -28,6 +28,7 @@ export namespace Definitions {
         fileHistory: string[];
         dsTemplates?: Types.DataSetAllocTemplate[];
         favorites: string[];
+        encodingHistory: string[];
     };
     export type FavoriteData = {
         profileName: string;
@@ -46,6 +47,7 @@ export namespace Definitions {
         sessions: string[];
         searchHistory: string[];
         fileHistory: string[];
+        encodingHistory: string[];
         templates: Types.DataSetAllocTemplate[];
     };
     export type ReplaceDSType = "ps" | "po" | "mem";
