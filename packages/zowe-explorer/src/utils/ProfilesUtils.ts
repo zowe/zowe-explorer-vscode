@@ -140,17 +140,65 @@ export class ProfilesUtils {
     }
 
     /**
+     * Prompt whether to disable credential management setting
+     *
+     * This will disable credential management on all settings
+     * scopes since order presedence can be hard to predict based on the user's setup
+     */
+    public static async promptAndDisableCredentialManagement(): Promise<void> {
+        ZoweLogger.trace("ProfilesUtils.promptAndDisableCredentialManagement called.");
+        const noButton = vscode.l10n.t("No");
+        const yesGloballyButton = vscode.l10n.t("Yes, globally");
+        const yesWorkspaceButton = vscode.l10n.t("Only for this workspace");
+        const response = await Gui.warningMessage(
+            vscode.l10n.t("Zowe Explorer failed to activate since the default credential manager is not supported in your environment."),
+            {
+                items: [noButton, yesGloballyButton, yesWorkspaceButton],
+                vsCodeOpts: {
+                    modal: true,
+                    detail: vscode.l10n.t("Do you wish to disable credential management? (VS Code window reload will be triggered)"),
+                },
+            }
+        );
+        if (response === yesGloballyButton || response === yesWorkspaceButton) {
+            const scope = response === yesGloballyButton ? vscode.ConfigurationTarget.Global : vscode.ConfigurationTarget.Workspace;
+            await SettingsConfig.setDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, scope);
+            await vscode.commands.executeCommand("workbench.action.reloadWindow");
+        } else {
+            throw new imperative.ImperativeError({
+                msg: vscode.l10n.t(
+                    // eslint-disable-next-line max-len
+                    "Failed to load credential manager. This may be related to Zowe Explorer being unable to use the default credential manager in a browser based environment."
+                ),
+            });
+        }
+    }
+
+    /**
      * Use the default credential manager in Zowe Explorer and setup before use
      * @returns Promise<imperative.ProfileInfo> the object of profileInfo using the default credential manager
      */
-    public static setupDefaultCredentialManager(): imperative.ProfileInfo {
-        ZoweLogger.trace("ProfilesUtils.setupDefaultCredentialManager called.");
-        ZoweLogger.info(vscode.l10n.t("No custom credential managers found, using the default instead."));
-        ProfilesUtils.updateCredentialManagerSetting(Constants.ZOWE_CLI_SCM);
-        return new imperative.ProfileInfo("zowe", {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-            credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-        });
+    public static async setupDefaultCredentialManager(): Promise<imperative.ProfileInfo> {
+        try {
+            ZoweLogger.trace("ProfilesUtils.setupDefaultCredentialManager called.");
+            ZoweLogger.info(vscode.l10n.t("No custom credential managers found, using the default instead."));
+            ProfilesUtils.updateCredentialManagerSetting(Constants.ZOWE_CLI_SCM);
+            const defaultCredentialManager = imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring);
+            const profileInfo = new imperative.ProfileInfo("zowe", {
+                credMgrOverride: defaultCredentialManager,
+            });
+            // Trigger initialize() function of credential manager to throw an error early if failed to load
+            await profileInfo.readProfilesFromDisk();
+            return profileInfo;
+        } catch (err) {
+            if (err instanceof imperative.ProfInfoErr) {
+                if (err.errorCode === imperative.ProfInfoErr.LOAD_CRED_MGR_FAILED) {
+                    await ProfilesUtils.promptAndDisableCredentialManagement();
+                    return;
+                }
+            }
+            throw err;
+        }
     }
 
     /**
@@ -242,10 +290,12 @@ export class ProfilesUtils {
 
     public static async getProfileInfo(): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
-        const hasSecureCredentialManagerEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        const hasSecureCredentialManagerEnabled: boolean = SettingsConfig.getDirectValue<boolean>(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
 
         if (hasSecureCredentialManagerEnabled) {
-            const shouldCheckForCustomCredentialManagers = SettingsConfig.getDirectValue(Constants.SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS);
+            const shouldCheckForCustomCredentialManagers = SettingsConfig.getDirectValue<boolean>(
+                Constants.SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS
+            );
             if (shouldCheckForCustomCredentialManagers) {
                 await this.fetchRegisteredPlugins();
             }

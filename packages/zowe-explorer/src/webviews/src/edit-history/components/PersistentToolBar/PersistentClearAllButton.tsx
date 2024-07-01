@@ -30,8 +30,8 @@ export default function PersistentClearAllButton(): JSXInternal.Element {
 
   const renderClearAllButton = () => {
     const clearAllText = nls.t("Clear All");
-
-    return selection[type] === "search" || selection[type] === "fileHistory" ? (
+    const selectionType = ["search", "fileHistory", "encodingHistory"];
+    return selectionType.includes(selection[type]) ? (
       <VSCodeButton title={clearAllText} appearance="secondary" style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
         Clear All
       </VSCodeButton>
