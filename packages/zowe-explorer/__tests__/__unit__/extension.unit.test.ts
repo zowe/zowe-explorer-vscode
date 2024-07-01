@@ -217,6 +217,7 @@ function createGlobalMocks() {
             "zowe.profileManagement",
             "zowe.diff.useLocalContent",
             "zowe.diff.useRemoteContent",
+            "zowe.certificateWizard",
             "zowe.openRecentMember",
             "zowe.searchInAllLoadedItems",
             "zowe.disableValidation",

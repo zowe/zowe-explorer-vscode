@@ -28,6 +28,7 @@ import { MvsCommandHandler } from "../../../../src/commands/MvsCommandHandler";
 import { UnixCommandHandler } from "../../../../src/commands/UnixCommandHandler";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
+import * as certWizard from "../../../../src/utils/CertificateWizard";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
@@ -85,6 +86,25 @@ describe("Test src/shared/extension", () => {
             {
                 name: "zowe.promptCredentials",
                 mock: [{ spy: jest.spyOn(profUtils.ProfilesUtils, "promptCredentials"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.certificateWizard",
+                mock: [
+                    {
+                        spy: jest.spyOn(certWizard, "CertificateWizard").mockReturnValueOnce({
+                            userSubmission: {
+                                promise: Promise.resolve({
+                                    cert: "/a/b/cert.pem",
+                                    certKey: "/a/b/cert.key.pem",
+                                }),
+                                resolve: jest.fn(),
+                                reject: jest.fn(),
+                            },
+                            panel: { dispose: jest.fn() } as any,
+                        } as any),
+                        arg: [test.context, test.value],
+                    },
+                ],
             },
             {
                 name: "onDidChangeConfiguration:1",

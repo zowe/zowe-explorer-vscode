@@ -11,7 +11,7 @@
 
 import { WebView } from "../../../../src/vscode/ui";
 import * as vscode from "vscode";
-import * as Handlebars from "handlebars";
+import * as Mustache from "mustache";
 
 describe("WebView unit tests", () => {
     beforeAll(() => {
@@ -29,7 +29,7 @@ describe("WebView unit tests", () => {
     });
     it("Successfully creates a WebView", () => {
         const createWebviewPanelSpy = jest.spyOn(vscode.window, "createWebviewPanel");
-        const compileSpy = jest.spyOn(Handlebars, "compile");
+        const renderSpy = jest.spyOn(Mustache, "render");
 
         try {
             new WebView("Test Webview Title", "example-folder", { extensionPath: "test/path" } as vscode.ExtensionContext);
@@ -37,12 +37,12 @@ describe("WebView unit tests", () => {
             throw new Error("Failed to create WebView");
         }
         expect(createWebviewPanelSpy).toHaveBeenCalled();
-        expect(compileSpy).toHaveBeenCalled();
+        expect(renderSpy).toHaveBeenCalled();
     });
 
     it("Correctly disposes a WebView", () => {
         const createWebviewPanelSpy = jest.spyOn(vscode.window, "createWebviewPanel");
-        const compileSpy = jest.spyOn(Handlebars, "compile");
+        const renderSpy = jest.spyOn(Mustache, "render");
 
         const testView = new WebView(
             "Test Webview Title",
@@ -51,7 +51,7 @@ describe("WebView unit tests", () => {
             async (_message: any) => {}
         );
         expect(createWebviewPanelSpy).toHaveBeenCalled();
-        expect(compileSpy).toHaveBeenCalled();
+        expect(renderSpy).toHaveBeenCalled();
         (testView as any).dispose();
         expect(testView.panel).toBeUndefined();
     });

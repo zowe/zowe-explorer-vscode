@@ -404,6 +404,9 @@
   "openWithEncoding": {
     "Open with Encoding": ""
   },
+  "zowe.history.deprecationMsg": {
+    "Changes made here will not be reflected in Zowe Explorer, use right-click Edit History option to access information from local storage.": ""
+  },
   "Refresh": "",
   "Delete Selected": "",
   "Select an item before deleting": "",
@@ -455,6 +458,15 @@
   "Update": "",
   "Zowe Explorer now has a VS Code logger with a default log level of INFO.\n                \nIt looks like the Zowe CLI's ZOWE_APP_LOG_LEVEL={0}.\n                \nWould you like Zowe Explorer to update to the the same log level?": "",
   "Zowe Explorer's temp folder is located at {0}": "",
+  "All Files": "",
+  "User dismissed the certificate wizard.": "",
+  "Certificate Wizard": "",
+  "Enter the path to the certificate for authenticating the connection.": "",
+  "Certificate Files": "",
+  "Select Certificate": "",
+  "Enter the path to the certificate key for authenticating the connection.": "",
+  "Certificate Keys": "",
+  "Select Certificate Key": "",
   "Required parameter 'host' must not be blank.": "",
   "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.": "",
   "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.": "",

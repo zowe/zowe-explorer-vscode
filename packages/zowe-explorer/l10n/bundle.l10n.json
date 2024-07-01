@@ -116,6 +116,15 @@
       "Zowe temp folder"
     ]
   },
+  "All Files": "All Files",
+  "User dismissed the certificate wizard.": "User dismissed the certificate wizard.",
+  "Certificate Wizard": "Certificate Wizard",
+  "Enter the path to the certificate for authenticating the connection.": "Enter the path to the certificate for authenticating the connection.",
+  "Certificate Files": "Certificate Files",
+  "Select Certificate": "Select Certificate",
+  "Enter the path to the certificate key for authenticating the connection.": "Enter the path to the certificate key for authenticating the connection.",
+  "Certificate Keys": "Certificate Keys",
+  "Select Certificate Key": "Select Certificate Key",
   "Required parameter 'host' must not be blank.": "Required parameter 'host' must not be blank.",
   "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out./Label": {
     "message": "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
