@@ -488,7 +488,9 @@ describe("Extension Unit Tests", () => {
         expect(spyAwaitAllSaves.mock.invocationCallOrder[0]).toBeLessThan(spyCleanTempDir.mock.invocationCallOrder[0]);
         expect(Constants.ACTIVATED).toBe(false);
     });
-
+    it("Testing that activate correctly executes", () => {
+        expect(allCommands.map((c) => c.cmd)).toEqual(globalMocks.expectedCommands);
+    });
     async function removeSessionTest(command: string, contextValue: string, providerObject: any) {
         const testNode: any = {
             contextValue: contextValue,

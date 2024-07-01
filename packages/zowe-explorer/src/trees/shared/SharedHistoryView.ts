@@ -10,12 +10,13 @@
  */
 
 import * as vscode from "vscode";
-import type { Definitions } from "../../configuration/Definitions";
+import { Definitions } from "../../configuration/Definitions";
 import { WebView, Gui } from "@zowe/zowe-explorer-api";
 import { ExtensionContext } from "vscode";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { JobTree } from "../job/JobTree";
 import { Constants } from "../../configuration/Constants";
+import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
 
 export class SharedHistoryView extends WebView {
     private treeProviders: Definitions.IZoweProviders;
@@ -74,7 +75,12 @@ export class SharedHistoryView extends WebView {
             sessions: treeProvider.getSessions(),
             fileHistory: treeProvider.getFileHistory(),
             favorites: treeProvider.getFavorites(),
+            encodingHistory: type === "uss" || type === "ds" ? this.fetchEncodingHistory() : [],
         };
+    }
+
+    private fetchEncodingHistory(): string[] {
+        return ZoweLocalStorage.getValue<string[]>(Definitions.LocalStorageKey.ENCODING_HISTORY) ?? [];
     }
 
     private showError(message): void {
@@ -123,6 +129,17 @@ export class SharedHistoryView extends WebView {
                     });
                 }
                 break;
+            case "encodingHistory":
+                Object.keys(message.attrs.selectedItems).forEach((selectedItem) => {
+                    if (message.attrs.selectedItems[selectedItem]) {
+                        const encodingHistory = this.fetchEncodingHistory();
+                        ZoweLocalStorage.setValue(
+                            Definitions.LocalStorageKey.ENCODING_HISTORY,
+                            encodingHistory.filter((element) => element !== selectedItem)
+                        );
+                    }
+                });
+                break;
             default:
                 Gui.showMessage(vscode.l10n.t("action is not supported for this property type."));
                 break;
@@ -146,6 +163,9 @@ export class SharedHistoryView extends WebView {
                     if (!(treeProvider instanceof JobTree)) {
                         treeProvider.resetFileHistory();
                     }
+                    break;
+                case "encodingHistory":
+                    ZoweLocalStorage.setValue(Definitions.LocalStorageKey.ENCODING_HISTORY, []);
                     break;
                 default:
                     Gui.showMessage(vscode.l10n.t("action is not supported for this property type."));
