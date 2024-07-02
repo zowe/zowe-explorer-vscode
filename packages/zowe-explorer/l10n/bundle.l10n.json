@@ -389,12 +389,6 @@
       "URI path"
     ]
   },
-  "Polling dismissed for {0}; operation cancelled./Encoded URI path": {
-    "message": "Polling dismissed for {0}; operation cancelled.",
-    "comment": [
-      "Encoded URI path"
-    ]
-  },
   "$(sync~spin) Polling: {0}.../Unique Spool name": {
     "message": "$(sync~spin) Polling: {0}...",
     "comment": [

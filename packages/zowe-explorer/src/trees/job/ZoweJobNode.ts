@@ -24,7 +24,6 @@ import { SharedContext } from "../shared/SharedContext";
 import { SharedUtils } from "../shared/SharedUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
 import type { Definitions } from "../../configuration/Definitions";
-import { JobSpoolProvider } from "./JobSpoolProvider";
 
 export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
     public children: IZoweJobTreeNode[] = [];
@@ -309,7 +308,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
 
     public getSessionNode(): IZoweJobTreeNode {
         ZoweLogger.trace("ZoweJobNode.getSessionNode called.");
-        return this.getParent() ? this.getParent().getSessionNode() : this;
+        return this.session ? this : this.getParent()?.getSessionNode() ?? this;
     }
 
     public set owner(newOwner: string) {
@@ -413,18 +412,17 @@ export class ZoweSpoolNode extends ZoweJobNode {
 
     public constructor(opts: Definitions.IZoweJobTreeOpts & { spool?: zosjobs.IJobFile }) {
         super(opts);
-        this.uniqueName = opts.spool ? FsJobsUtils.buildUniqueSpoolName(opts.spool).replace("/", "") : "<unknown-spool-id>";
-        this.resourceUri = opts.parentNode?.resourceUri.with({
-            path: path.posix.join(opts.parentNode.resourceUri.path, this.uniqueName),
-        });
         this.contextValue = Constants.JOBS_SPOOL_CONTEXT;
+        this.uniqueName = opts.spool ? FsJobsUtils.buildUniqueSpoolName(opts.spool).replace("/", "") : "<unknown-spool-id>";
+        this.resourceUri =
+            opts.spool && opts.parentNode
+                ? opts.parentNode.resourceUri.with({
+                      path: path.posix.join(opts.parentNode.resourceUri.path, this.uniqueName),
+                  })
+                : undefined;
         this.spool = opts.spool;
         const icon = IconGenerator.getIconByNode(this);
 
-        // parent of parent should be the session; tie resourceUri with TreeItem for file decorator
-        if (opts.spool && opts.parentNode && opts.parentNode.getParent()) {
-            this.resourceUri = JobSpoolProvider.encodeJobFile(opts.parentNode.getParent().label as string, opts.spool);
-        }
         if (icon) {
             this.iconPath = icon.path;
         }

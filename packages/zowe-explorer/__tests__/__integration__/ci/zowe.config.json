@@ -4,6 +4,7 @@
     "zosmf1": {
       "type": "zosmf",
       "properties": {
+        "account": "100000000",
         "host": "localhost",
         "rejectUnauthorized": false,
         "user": "fakeuser",
@@ -13,6 +14,7 @@
     "zosmf2": {
       "type": "zosmf",
       "properties": {
+        "account": "100000000",
         "host": "localhost",
         "rejectUnauthorized": false,
         "user": "fakeuser",
@@ -23,6 +25,7 @@
     "zosmf3": {
       "type": "zosmf",
       "properties": {
+        "account": "100000000",
         "host": "localhost",
         "rejectUnauthorized": false,
         "user": "fakeuser",
