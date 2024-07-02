@@ -194,12 +194,6 @@
   "configuration.title": {
     "Zowe Explorer": ""
   },
-  "zowe.files.temporaryDownloadsFolder.hide": {
-    "Hide the Zowe temporary folder from the workspace": ""
-  },
-  "zowe.files.temporaryDownloadsFolder.cleanup": {
-    "Ensure deletion of downloaded file content to clean up local source files during deactivation (that is, closing a window).  Disable this setting to support using multiple windows with z/OS files opened using Zowe Explorer.": ""
-  },
   "zowe.ds.default.binary": {
     "Default values of Binary data set creation": ""
   },
@@ -226,9 +220,6 @@
   },
   "zowe.files.logsFolder.path": {
     "Path to Zowe Explorer logs folder": ""
-  },
-  "zowe.files.temporaryDownloadsFolder.path": {
-    "Path to temporary folder location": ""
   },
   "zowe.uss.history": {
     "Toggle if USS favorite files persist locally": ""
@@ -446,7 +437,6 @@
   "Updating imperative.json Credential Manager to {0}.\n{1}": "",
   "Failed to initialize Zowe folder: {0}": "",
   "Zowe Profiles initialized successfully.": "",
-  "Zowe Temp folder initialized successfully.": "",
   "Create New": "",
   "Convert Existing Profiles": "",
   "Operation cancelled": "",
@@ -457,7 +447,6 @@
   "Zowe Explorer log level: {0}": "",
   "Update": "",
   "Zowe Explorer now has a VS Code logger with a default log level of INFO.\n                \nIt looks like the Zowe CLI's ZOWE_APP_LOG_LEVEL={0}.\n                \nWould you like Zowe Explorer to update to the the same log level?": "",
-  "Zowe Explorer's temp folder is located at {0}": "",
   "All Files": "",
   "User dismissed the certificate wizard.": "",
   "Certificate Wizard": "",
@@ -491,12 +480,6 @@
   "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.": "",
   "Uploading USS files...": "",
   "Error uploading files": "",
-  "The 'move' function is not implemented for this USS API.": "",
-  "Could not list USS files: Empty path provided in URI": "",
-  "Profile does not exist for this file.": "",
-  "$(sync~spin) Saving USS file...": "",
-  "Renaming {0} failed due to API error: {1}": "",
-  "Deleting {0} failed due to API error: {1}": "",
   "Downloaded: {0}": "",
   "Encoding: {0}": "",
   "Binary": "",
@@ -525,6 +508,12 @@
   "initializeUSSFavorites.error.buttonRemove": "",
   "File does not exist. It may have been deleted.": "",
   "$(sync~spin) Pulling from Mainframe...": "",
+  "The 'move' function is not implemented for this USS API.": "",
+  "Could not list USS files: Empty path provided in URI": "",
+  "Profile does not exist for this file.": "",
+  "$(sync~spin) Saving USS file...": "",
+  "Renaming {0} failed due to API error: {1}": "",
+  "Deleting {0} failed due to API error: {1}": "",
   "{0} location": "",
   "Choose a location to create the {0}": "",
   "Name of file or directory": "",
@@ -764,8 +753,6 @@
   "Internal error: Tried to call a non-existing JES API in API register: {0}": "",
   "Internal error: Tried to call a non-existing Command API in API register: {0}": "",
   "Internal error: Tried to call a non-existing Common API in API register: {0}": "",
-  "Error encountered when creating temporary folder!": "",
-  "Unable to delete temporary folder. {0}": "",
   "Reload Window": "",
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "",
   "Token auth error": "",

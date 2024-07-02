@@ -7,6 +7,7 @@
 - Drop support for Theia IDE
 - Moved Data Set Templates, formerly in `zowe.ds.history` that has moved to internal storage. With the request to have data set templates shareable via workspace it will now migrate existing to `zowe.ds.templates` when other history items are moved.
 - Deprecated the `getUSSDocumentFilePath` function on the `IZoweTreeNode` interface as Zowe Explorer no longer uses the local file system for storing USS files. **No replacement is planned**; please access data from tree nodes using their [resource URIs](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#operations-for-extenders) instead.
+- **Zowe Explorer no longer uses a temporary directory for storing Data Sets and USS files. All settings related to the temporary downloads folder have been removed.** In order to access resources stored by Zowe Explorer v3, refer to the [FileSystemProvider documentation](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider) for information on how to build and access resource URIs. Extenders can detect changes to resources using the `onResourceChanged` function in the `ZoweExplorerApiRegister` class.
 
 ## Removal of deprecated APIs from Extensibility API for Zowe Explorer
 

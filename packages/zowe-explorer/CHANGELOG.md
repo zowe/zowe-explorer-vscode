@@ -38,8 +38,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added support for `consoleName` property in z/OSMF profiles when issuing MVS commands [#1667](https://github.com/zowe/vscode-extension-for-zowe/issues/1667)
 - Updated sorting of PDS members to show items without stats at bottom of list [#2660](https://github.com/zowe/vscode-extension-for-zowe/issues/2660)
 - Added PEM certificate support as an authentication method for logging into the API ML. [#2621](https://github.com/zowe/zowe-explorer-vscode/issues/2621)
-- Added support to view the Encoding history for MVS and Dataset in the History View [#2776](https://github.com/zowe/vscode-extension-for-zowe/issues/2776)
-- Added error handling for when the default credential manager is unable to intialize [#2811](https://github.com/zowe/zowe-explorer-vscode/issues/2811)
+- Added support to view the Encoding history for MVS and Dataset in the History View. [#2776](https://github.com/zowe/vscode-extension-for-zowe/issues/2776)
+- Added error handling for when the default credential manager is unable to initialize. [#2811](https://github.com/zowe/zowe-explorer-vscode/issues/2811)
+- **Breaking:** Zowe Explorer no longer uses a temporary directory for storing Data Sets and USS files. All settings related to the temporary downloads folder have been removed. In order to access resources stored by Zowe Explorer v3, refer to the [FileSystemProvider documentation](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider) for information on how to build and access resource URIs. Extenders can detect changes to resources using the `onResourceChanged` function in the `ZoweExplorerApiRegister` class. [#2951](https://github.com/zowe/zowe-explorer-vscode/issues/2951)
 
 ### Bug fixes
 

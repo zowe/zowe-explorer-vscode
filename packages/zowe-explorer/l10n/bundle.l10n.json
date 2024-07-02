@@ -84,7 +84,6 @@
     ]
   },
   "Zowe Profiles initialized successfully.": "Zowe Profiles initialized successfully.",
-  "Zowe Temp folder initialized successfully.": "Zowe Temp folder initialized successfully.",
   "Create New": "Create New",
   "Convert Existing Profiles": "Convert Existing Profiles",
   "Operation cancelled": "Operation cancelled",
@@ -108,12 +107,6 @@
     "message": "Zowe Explorer now has a VS Code logger with a default log level of INFO.\n                \nIt looks like the Zowe CLI's ZOWE_APP_LOG_LEVEL={0}.\n                \nWould you like Zowe Explorer to update to the the same log level?",
     "comment": [
       "CLI setting"
-    ]
-  },
-  "Zowe Explorer's temp folder is located at {0}/Zowe temp folder": {
-    "message": "Zowe Explorer's temp folder is located at {0}",
-    "comment": [
-      "Zowe temp folder"
     ]
   },
   "All Files": "All Files",
@@ -179,24 +172,6 @@
   "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.": "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.",
   "Uploading USS files...": "Uploading USS files...",
   "Error uploading files": "Error uploading files",
-  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
-  "Could not list USS files: Empty path provided in URI": "Could not list USS files: Empty path provided in URI",
-  "Profile does not exist for this file.": "Profile does not exist for this file.",
-  "$(sync~spin) Saving USS file...": "$(sync~spin) Saving USS file...",
-  "Renaming {0} failed due to API error: {1}/File pathError message": {
-    "message": "Renaming {0} failed due to API error: {1}",
-    "comment": [
-      "File path",
-      "Error message"
-    ]
-  },
-  "Deleting {0} failed due to API error: {1}/File nameError message": {
-    "message": "Deleting {0} failed due to API error: {1}",
-    "comment": [
-      "File name",
-      "Error message"
-    ]
-  },
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
     "comment": [
@@ -267,6 +242,24 @@
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "$(sync~spin) Pulling from Mainframe...": "$(sync~spin) Pulling from Mainframe...",
+  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
+  "Could not list USS files: Empty path provided in URI": "Could not list USS files: Empty path provided in URI",
+  "Profile does not exist for this file.": "Profile does not exist for this file.",
+  "$(sync~spin) Saving USS file...": "$(sync~spin) Saving USS file...",
+  "Renaming {0} failed due to API error: {1}/File pathError message": {
+    "message": "Renaming {0} failed due to API error: {1}",
+    "comment": [
+      "File path",
+      "Error message"
+    ]
+  },
+  "Deleting {0} failed due to API error: {1}/File nameError message": {
+    "message": "Deleting {0} failed due to API error: {1}",
+    "comment": [
+      "File name",
+      "Error message"
+    ]
+  },
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -884,13 +877,6 @@
     "message": "Internal error: Tried to call a non-existing Common API in API register: {0}",
     "comment": [
       "Profile type"
-    ]
-  },
-  "Error encountered when creating temporary folder!": "Error encountered when creating temporary folder!",
-  "Unable to delete temporary folder. {0}/Error message": {
-    "message": "Unable to delete temporary folder. {0}",
-    "comment": [
-      "Error message"
     ]
   },
   "Reload Window": "Reload Window",

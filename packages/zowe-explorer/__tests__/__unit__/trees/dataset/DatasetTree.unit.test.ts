@@ -53,14 +53,11 @@ import { IZoweDatasetTreeNode } from "../../../../../zowe-explorer-api/src/tree/
 import { ZoweScheme } from "../../../../../zowe-explorer-api/src/fs/types/abstract";
 import { Sorting } from "../../../../../zowe-explorer-api/src/tree";
 import { IconUtils } from "../../../../src/icons/IconUtils";
-import { ExtensionUtils } from "../../../../src/utils/ExtensionUtils";
 
 jest.mock("fs");
 jest.mock("util");
 
 function createGlobalMocks() {
-    ExtensionUtils.defineConstants("");
-
     const globalMocks = {
         testProfileLoaded: createValidIProfile(),
         mockProfileInstance: null,
@@ -2129,7 +2126,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
     }
 
     it("Tests that rename() renames a node", async () => {
-        ExtensionUtils.defineConstants("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -2154,7 +2150,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
     });
 
     it("Checking function with PS Dataset using Unverified profile", async () => {
-        ExtensionUtils.defineConstants("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -2187,7 +2182,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
     });
 
     it("Checking function with PS Dataset given lowercase name", async () => {
-        ExtensionUtils.defineConstants("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -2208,7 +2202,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
     });
 
     it("Checking function with Favorite PS Dataset", async () => {
-        ExtensionUtils.defineConstants("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -2231,7 +2224,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         expect(renameDataSetSpy).toHaveBeenLastCalledWith(node);
     });
     it("Checking failed attempt to rename PS Dataset", async () => {
-        ExtensionUtils.defineConstants("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const defaultError = new Error("Default error message");
@@ -2259,7 +2251,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         expect(error).toBe(defaultError);
     });
     it("Checking function with PDS Member", async () => {
-        ExtensionUtils.defineConstants("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -2327,7 +2318,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
     });
 
     it("Checking function with PDS Member given in lowercase", async () => {
-        ExtensionUtils.defineConstants("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -2387,7 +2377,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         renameMock.mockRestore();
     });
     it("Checking function with favorite PDS Member", async () => {
-        ExtensionUtils.defineConstants("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -2447,7 +2436,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith(favChild);
     });
     it("Checking failed attempt to rename PDS Member", async () => {
-        ExtensionUtils.defineConstants("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const defaultError = new Error("Default error message");
@@ -2498,7 +2486,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
     });
 
     it("Tests that rename() validates the dataset name", async () => {
-        ExtensionUtils.defineConstants("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);

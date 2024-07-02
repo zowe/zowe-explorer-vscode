@@ -22,7 +22,6 @@ import { createGetConfigMock, createInstanceOfProfileInfo, createIProfile, creat
 import { Constants } from "../../src/configuration/Constants";
 import { Profiles } from "../../src/configuration/Profiles";
 import { SettingsConfig } from "../../src/configuration/SettingsConfig";
-import { TempFolder } from "../../src/configuration/TempFolder";
 import { ZoweExplorerExtender } from "../../src/extending/ZoweExplorerExtender";
 import { ZoweLocalStorage } from "../../src/tools/ZoweLocalStorage";
 import { ZoweSaveQueue } from "../../src/tools/ZoweSaveQueue";
@@ -479,13 +478,9 @@ describe("Extension Unit Tests", () => {
     });
     it("should deactivate the extension", async () => {
         const spyAwaitAllSaves = jest.spyOn(ZoweSaveQueue, "all");
-        const spyCleanTempDir = jest.spyOn(TempFolder, "cleanDir");
-        spyCleanTempDir.mockImplementation(jest.fn());
         await extension.deactivate();
         expect(spyAwaitAllSaves).toHaveBeenCalled();
-        expect(spyCleanTempDir).toHaveBeenCalled();
         // Test that upload operations complete before cleaning temp dir
-        expect(spyAwaitAllSaves.mock.invocationCallOrder[0]).toBeLessThan(spyCleanTempDir.mock.invocationCallOrder[0]);
         expect(Constants.ACTIVATED).toBe(false);
     });
     it("Testing that activate correctly executes", () => {

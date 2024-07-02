@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as zosconsole from "@zowe/zos-console-for-zowe-sdk";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
-import { Gui, IZoweJobTreeNode, Sorting, Validation } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, Sorting, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
 import {
     createISession,
     createIProfile,
@@ -39,7 +39,6 @@ import { ProfileManagement } from "../../../../src/management/ProfileManagement"
 import { mocked } from "../../../__mocks__/mockUtils";
 import { JobActions } from "../../../../src/trees/job/JobActions";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
-import { ExtensionUtils } from "../../../../src/utils/ExtensionUtils";
 import { Definitions } from "../../../../src/configuration/Definitions";
 import { SpoolUtils } from "../../../../src/utils/SpoolUtils";
 
@@ -490,6 +489,41 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         );
         showTextDocumentSpy.mockClear();
     });
+
+    it("Checking submit of ZoweScheme URI as JCL", async () => {
+        createGlobalMocks();
+        const blockMocks: any = createBlockMocks();
+        mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.showQuickPick).mockReturnValueOnce(
+            new Promise((resolve) => {
+                resolve(blockMocks.datasetSessionNode.label);
+            })
+        );
+        const mockFile = vscode.Uri.from({
+            path: "/sestest/u/users/testuser/file.jcl",
+            scheme: ZoweScheme.USS,
+        });
+        blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
+            new ZoweDatasetNode({ label: "node", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: blockMocks.datasetSessionNode }),
+            blockMocks.datasetSessionNode,
+        ]);
+        const showTextDocumentSpy = jest.spyOn(vscode.window, "showTextDocument");
+        activeTextEditorDocument.mockReturnValue({ ...blockMocks.textDocument, uri: mockFile });
+        const submitJclSpy = jest.spyOn(blockMocks.jesApi, "submitJcl");
+        submitJclSpy.mockClear();
+        submitJclSpy.mockResolvedValueOnce(blockMocks.iJob);
+        await DatasetActions.submitJcl(blockMocks.testDatasetTree, mockFile);
+
+        expect(showTextDocumentSpy).toHaveBeenCalled();
+        expect(submitJclSpy).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
+            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
+        );
+        showTextDocumentSpy.mockClear();
+    });
     it("Checking submit of JCL file from VSC explorer tree", async () => {
         createGlobalMocks();
         const blockMocks: any = createBlockMocks();
@@ -646,7 +680,6 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(showMessagespy).toHaveBeenCalledWith("No profiles available");
     });
     it("Getting session name from the path itself", async () => {
-        ExtensionUtils.defineConstants("/user/");
         createGlobalMocks();
         const blockMocks: any = createBlockMocks();
         mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
