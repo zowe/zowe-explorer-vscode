@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "fresh-clone": "pnpm clean && rimraf node_modules",
     "clean": "rimraf dist || true",
-    "package": "echo \"webviews: nothing to package.\"",
+    "package": "node -e \"fs.accessSync(path.join(__dirname, 'dist'))\" && echo \"webviews: nothing to package.\" || pnpm build",
     "test": "echo \"webviews: nothing to test\"",
     "lint": "echo \"webviews: nothing to lint.\"",
     "lint:html": "echo \"webviews: nothing to lint.\"",
