@@ -1265,6 +1265,15 @@ export class Profiles extends ProfilesCache {
         } else {
             serviceProfile = this.loadNamedProfile(node.label.toString().trim());
         }
+        const selection = await Gui.warningMessage(
+            localize(
+                "handleSwitchAuthentication.confirm",
+                "Are you sure you want to change the authentication for profile {0}?",
+                serviceProfile.name
+            ),
+            { items: [{ title: "Yes" }], vsCodeOpts: { modal: true } }
+        );
+        if (selection == null) return;
         const zeInstance = ZoweExplorerApiRegister.getInstance();
         try {
             loginTokenType = await zeInstance.getCommonApi(serviceProfile).getTokenTypeName();
