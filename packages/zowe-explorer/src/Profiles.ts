@@ -1241,7 +1241,8 @@ export class Profiles extends ProfilesCache {
     public async basicAuthClearSecureArray(profileName?: string): Promise<void> {
         const profAttrs = await this.getProfileFromConfig(profileName);
         const configApi = (await this.getProfileInfo()).getTeamConfig();
-        configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, ["tokenValue"]);
+        const secureProps = await this.getSecurePropsForProfile(profileName);
+        configApi.set(`${secureProps.toString()}`, ["tokenValue"]);
         configApi.delete(`${profAttrs.profLoc.jsonLoc}.properties.user`);
         configApi.delete(`${profAttrs.profLoc.jsonLoc}.properties.password`);
         await configApi.save();
@@ -1250,7 +1251,8 @@ export class Profiles extends ProfilesCache {
     public async tokenAuthClearSecureArray(profileName?: string): Promise<void> {
         const profAttrs = await this.getProfileFromConfig(profileName);
         const configApi = (await this.getProfileInfo()).getTeamConfig();
-        configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, ["user", "password"]);
+        const secureProps = await this.getSecurePropsForProfile(profileName);
+        configApi.set(`${secureProps.toString()}`, ["user", "password"]);
         configApi.delete(`${profAttrs.profLoc.jsonLoc}.properties.tokenType`);
         configApi.delete(`${profAttrs.profLoc.jsonLoc}.properties.tokenValue`);
         configApi.delete(`${profAttrs.profLoc.jsonLoc}.properties.tokenExpiration`);
