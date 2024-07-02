@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "fresh-clone": "yarn clean && rimraf node_modules",
     "clean": "gulp clean",
-    "package": "echo \"webviews: nothing to package.\"",
+    "package": "node -e \"process.exit(+fs.existsSync(path.join(__dirname, 'dist')))\" && pnpm build || echo \"webviews: nothing to package.\"",
     "test": "echo \"webviews: nothing to test\"",
     "lint": "echo \"webviews: nothing to lint.\"",
     "lint:html": "echo \"webviews: nothing to lint.\"",
