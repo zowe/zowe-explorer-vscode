@@ -17,15 +17,17 @@ import * as vscode from "vscode";
 export namespace Table {
     export type Callback = (data: RowContent) => void | PromiseLike<void>;
     export type Conditional = (data: RowContent) => boolean;
+    export type ActionKind = "primary" | "secondary" | "icon";
+    export type CallbackDataType = "row" | "column" | "cell";
     export type Action = {
         title: string;
         command: string;
-        type?: "primary" | "secondary" | "icon";
+        type?: ActionKind;
         condition?: string;
         callback: Callback;
     };
     export type ActionOpts = Omit<Action, "condition"> & { condition?: Conditional };
-    export type ContextMenuOption = Omit<Action, "type">;
+    export type ContextMenuOption = Omit<Action, "type"> & { dataType?: CallbackDataType };
     export type ContextMenuOpts = Omit<ContextMenuOption, "condition"> & { condition?: Conditional };
     export type Axes = "row" | "column";
 
