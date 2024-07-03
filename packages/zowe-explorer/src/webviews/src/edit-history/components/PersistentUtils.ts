@@ -16,9 +16,9 @@ import { useContext } from "preact/hooks";
 export const DataPanelContext = createContext<DataPanelContextType | null>(null);
 
 export function useDataPanelContext(): DataPanelContextType {
-  const dataPanelContext = useContext(DataPanelContext);
-  if (!dataPanelContext) {
-    throw new Error("DataPanelContext has to be used within <DataPanelContext.Provider>");
-  }
-  return dataPanelContext;
+    const dataPanelContext = useContext(DataPanelContext);
+    if (!dataPanelContext) {
+        throw new Error("DataPanelContext has to be used within <DataPanelContext.Provider>");
+    }
+    return dataPanelContext;
 }
