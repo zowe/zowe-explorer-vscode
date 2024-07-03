@@ -32,7 +32,74 @@ export namespace Table {
     export type Axes = "row" | "column";
 
     export type RowContent = Record<string | number, string | number | boolean | string[]>;
-    export type Column = { field: string; filter?: boolean };
+    export type ValueFormatter = (data: any) => string;
+    export type SortDirection = "asc" | "desc";
+    export type Column = {
+        field: string;
+        type?: string | string[];
+        cellDataType?: boolean | string;
+        valueFormatter?: string | ValueFormatter;
+        checkboxSelection?: boolean;
+        icons?: { [key: string]: string };
+        suppressNavigable?: boolean;
+        context?: any;
+
+        // Locking and edit variables
+        hide?: boolean;
+        lockVisible?: boolean;
+        lockPosition?: boolean | "left" | "right";
+        suppressMovable?: boolean;
+        editable?: boolean;
+        valueSetter?: any; // TODO: stronger type here
+        singleClickEdit?: boolean;
+
+        filter?: boolean;
+        floatingFilter?: boolean;
+
+        // Headers
+
+        // "field" variable will be used as header name if not provided
+        headerName?: string;
+        headerTooltip?: string;
+        headerClass?: string | string[];
+        weapHeaderText?: boolean;
+        autoHeaderHeight?: boolean;
+        headerCheckboxSelection?: boolean;
+
+        // Pinning
+        pinned?: boolean | "left" | "right" | null;
+        initialPinned?: boolean | "left" | "right";
+        lockPinned?: boolean;
+
+        // Row dragging
+        rowDrag?: boolean;
+        dndSource?: boolean;
+
+        // Sorting
+        sortable?: boolean;
+        sort?: SortDirection;
+        initialSort?: "asc" | "desc";
+        sortIndex?: number | null;
+        initialSortIndex?: number;
+        sortingOrder?: SortDirection[];
+        comparator?: any; // TODO: Stronger type
+        unSortIcon?: boolean;
+
+        // Column/row spanning (TODO: stronger types, add params to fn)
+        colSpan?: any;
+        rowSpan?: any;
+
+        // Sizing
+        width?: number;
+        initialWidth?: number;
+        minWidth?: number;
+        maxWidth?: number;
+        flex?: number;
+        initialFlex?: number;
+        resizable?: boolean;
+        suppressSizeToFit?: boolean;
+        suppressAutoSize?: boolean;
+    };
     export type Data = {
         // Actions to apply to the given row or column index
         actions: Record<number | "all", Action[]>;

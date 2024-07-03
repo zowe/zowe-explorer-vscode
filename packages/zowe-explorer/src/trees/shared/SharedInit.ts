@@ -399,7 +399,7 @@ export class SharedInit {
                             }))
                         )
                         .columns([
-                            { field: "name", filter: true },
+                            { field: "name", filter: true, sort: "asc" },
                             { field: "size", filter: true },
                             { field: "owner", filter: true },
                             { field: "group", filter: true },
