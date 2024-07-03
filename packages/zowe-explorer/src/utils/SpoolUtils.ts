@@ -13,6 +13,7 @@ import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import type { IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../tools/ZoweLogger";
+import { ZoweSpoolNode } from "../trees/job/ZoweJobNode";
 
 export class SpoolUtils {
     /**
@@ -21,7 +22,7 @@ export class SpoolUtils {
      * @returns Array of spool files
      */
     public static async getSpoolFiles(node: IZoweJobTreeNode): Promise<zosjobs.IJobFile[]> {
-        ZoweLogger.trace("SpoolProvider.getSpoolFiles called.");
+        ZoweLogger.trace("SpoolUtils.getSpoolFiles called.");
         if (node.job == null) {
             return [];
         }
@@ -42,9 +43,7 @@ export class SpoolUtils {
      * @returns true if the selected node matches the spool file, false otherwise
      */
     public static matchSpool(spool: zosjobs.IJobFile, node: IZoweJobTreeNode): boolean {
-        return (
-            `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}` === node.label.toString() ||
-            `${spool.stepname}:${spool.ddname} - ${spool.procstep}` === node.label.toString()
-        );
+        const nodeSpool = (node as ZoweSpoolNode).spool;
+        return nodeSpool != null && spool.jobid === nodeSpool.jobid && spool.id === nodeSpool.id;
     }
 }

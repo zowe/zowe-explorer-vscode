@@ -15,6 +15,11 @@
       "Credential manager display name"
     ]
   },
+  "No": "No",
+  "Yes, globally": "Yes, globally",
+  "Only for this workspace": "Only for this workspace",
+  "Zowe Explorer failed to activate since the default credential manager is not supported in your environment.": "Zowe Explorer failed to activate since the default credential manager is not supported in your environment.",
+  "Do you wish to disable credential management? (VS Code window reload will be triggered)": "Do you wish to disable credential management? (VS Code window reload will be triggered)",
   "No custom credential managers found, using the default instead.": "No custom credential managers found, using the default instead.",
   "Custom credential manager {0} found/Credential manager display name": {
     "message": "Custom credential manager {0} found",
@@ -79,7 +84,6 @@
     ]
   },
   "Zowe Profiles initialized successfully.": "Zowe Profiles initialized successfully.",
-  "Zowe Temp folder initialized successfully.": "Zowe Temp folder initialized successfully.",
   "Create New": "Create New",
   "Convert Existing Profiles": "Convert Existing Profiles",
   "Operation cancelled": "Operation cancelled",
@@ -103,12 +107,6 @@
     "message": "Zowe Explorer now has a VS Code logger with a default log level of INFO.\n                \nIt looks like the Zowe CLI's ZOWE_APP_LOG_LEVEL={0}.\n                \nWould you like Zowe Explorer to update to the the same log level?",
     "comment": [
       "CLI setting"
-    ]
-  },
-  "Zowe Explorer's temp folder is located at {0}/Zowe temp folder": {
-    "message": "Zowe Explorer's temp folder is located at {0}",
-    "comment": [
-      "Zowe temp folder"
     ]
   },
   "All Files": "All Files",
@@ -174,24 +172,6 @@
   "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.": "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.",
   "Uploading USS files...": "Uploading USS files...",
   "Error uploading files": "Error uploading files",
-  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
-  "Could not list USS files: Empty path provided in URI": "Could not list USS files: Empty path provided in URI",
-  "Profile does not exist for this file.": "Profile does not exist for this file.",
-  "$(sync~spin) Saving USS file...": "$(sync~spin) Saving USS file...",
-  "Renaming {0} failed due to API error: {1}/File pathError message": {
-    "message": "Renaming {0} failed due to API error: {1}",
-    "comment": [
-      "File path",
-      "Error message"
-    ]
-  },
-  "Deleting {0} failed due to API error: {1}/File nameError message": {
-    "message": "Deleting {0} failed due to API error: {1}",
-    "comment": [
-      "File name",
-      "Error message"
-    ]
-  },
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
     "comment": [
@@ -262,6 +242,24 @@
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "$(sync~spin) Pulling from Mainframe...": "$(sync~spin) Pulling from Mainframe...",
+  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
+  "Could not list USS files: Empty path provided in URI": "Could not list USS files: Empty path provided in URI",
+  "Profile does not exist for this file.": "Profile does not exist for this file.",
+  "$(sync~spin) Saving USS file...": "$(sync~spin) Saving USS file...",
+  "Renaming {0} failed due to API error: {1}/File pathError message": {
+    "message": "Renaming {0} failed due to API error: {1}",
+    "comment": [
+      "File path",
+      "Error message"
+    ]
+  },
+  "Deleting {0} failed due to API error: {1}/File nameError message": {
+    "message": "Deleting {0} failed due to API error: {1}",
+    "comment": [
+      "File name",
+      "Error message"
+    ]
+  },
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -336,7 +334,6 @@
   "Type the new pattern to add to history": "Type the new pattern to add to history",
   "action is not supported for this property type.": "action is not supported for this property type.",
   "Clear all history items for this persistent property?": "Clear all history items for this persistent property?",
-  "No": "No",
   "Enter a filter": "Enter a filter",
   "No items are loaded in the tree.": "No items are loaded in the tree.",
   "You must enter a pattern.": "You must enter a pattern.",
@@ -390,12 +387,6 @@
     "message": "Poll interval (in ms) for: {0}",
     "comment": [
       "URI path"
-    ]
-  },
-  "Polling dismissed for {0}; operation cancelled./Encoded URI path": {
-    "message": "Polling dismissed for {0}; operation cancelled.",
-    "comment": [
-      "Encoded URI path"
     ]
   },
   "$(sync~spin) Polling: {0}.../Unique Spool name": {
@@ -886,13 +877,6 @@
     "message": "Internal error: Tried to call a non-existing Common API in API register: {0}",
     "comment": [
       "Profile type"
-    ]
-  },
-  "Error encountered when creating temporary folder!": "Error encountered when creating temporary folder!",
-  "Unable to delete temporary folder. {0}/Error message": {
-    "message": "Unable to delete temporary folder. {0}",
-    "comment": [
-      "Error message"
     ]
   },
   "Reload Window": "Reload Window",

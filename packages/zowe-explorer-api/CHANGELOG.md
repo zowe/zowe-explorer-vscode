@@ -34,6 +34,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - **Breaking:** Removed the redundant `zoweFileProvider` parameter from `editSession` method on the `IZoweTree` interface. [#2947](https://github.com/zowe/zowe-explorer-vscode/pull/2947)
 - Updated the `ProfilesCache.getProfiles` method to return empty list instead of undefined when there are no profiles. [#2947](https://github.com/zowe/zowe-explorer-vscode/pull/2947)
 - Added PEM certificate support as an authentication method for logging into the API ML. [#2621](https://github.com/zowe/zowe-explorer-vscode/issues/2621)
+- Deprecated the `getUSSDocumentFilePath` function on the `IZoweTreeNode` interface as Zowe Explorer no longer uses the local file system for storing USS files. **No replacement is planned**; please access data from tree nodes using their [resource URIs](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#operations-for-extenders) instead. [#2968](https://github.com/zowe/zowe-explorer-vscode/pull/2968)
 
 ### Bug fixes
 

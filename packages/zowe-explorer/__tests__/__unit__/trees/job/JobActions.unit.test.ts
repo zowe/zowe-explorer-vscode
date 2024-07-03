@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as zosconsole from "@zowe/zos-console-for-zowe-sdk";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
-import { Gui, IZoweJobTreeNode, Sorting, Validation } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, Sorting, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
 import {
     createISession,
     createIProfile,
@@ -39,9 +39,8 @@ import { ProfileManagement } from "../../../../src/management/ProfileManagement"
 import { mocked } from "../../../__mocks__/mockUtils";
 import { JobActions } from "../../../../src/trees/job/JobActions";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
-import { JobSpoolProvider } from "../../../../src/trees/job/JobSpoolProvider";
-import { ExtensionUtils } from "../../../../src/utils/ExtensionUtils";
 import { Definitions } from "../../../../src/configuration/Definitions";
+import { SpoolUtils } from "../../../../src/utils/SpoolUtils";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -115,8 +114,6 @@ function createGlobalMocks() {
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn().mockResolvedValue(newMocks.mockProfileInstance), configurable: true });
     const executeCommand = jest.fn();
     Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand, configurable: true });
-    Object.defineProperty(JobSpoolProvider, "encodeJobFile", { value: jest.fn(), configurable: true });
-    Object.defineProperty(JobSpoolProvider, "toUniqueJobFileUri", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
@@ -342,7 +339,7 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         jobs.push(node, node); // Reuse the same node to test with and without spool files
         mocked(Gui.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
         const downloadFileSpy = jest.spyOn(blockMocks.jesApi, "downloadSingleSpool").mockResolvedValue(undefined);
-        const getSpoolFilesSpy = jest.spyOn(JobSpoolProvider, "getSpoolFiles").mockResolvedValueOnce([spool]).mockResolvedValueOnce([]);
+        const getSpoolFilesSpy = jest.spyOn(SpoolUtils, "getSpoolFiles").mockResolvedValueOnce([spool]).mockResolvedValueOnce([]);
 
         await JobActions.downloadSingleSpool(jobs, true);
         expect(mocked(Gui.showOpenDialog)).toHaveBeenCalled();
@@ -380,7 +377,7 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         jobs.push(node);
         mocked(Gui.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
         blockMocks.jesApi.downloadSingleSpool = undefined;
-        const getSpoolFilesSpy = jest.spyOn(JobSpoolProvider, "getSpoolFiles").mockResolvedValue([spool]);
+        const getSpoolFilesSpy = jest.spyOn(SpoolUtils, "getSpoolFiles").mockResolvedValue([spool]);
 
         await JobActions.downloadSingleSpool(jobs, true);
         expect(getSpoolFilesSpy).not.toHaveBeenCalled();
@@ -478,6 +475,41 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         ]);
         const showTextDocumentSpy = jest.spyOn(vscode.window, "showTextDocument");
         activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
+        const submitJclSpy = jest.spyOn(blockMocks.jesApi, "submitJcl");
+        submitJclSpy.mockClear();
+        submitJclSpy.mockResolvedValueOnce(blockMocks.iJob);
+        await DatasetActions.submitJcl(blockMocks.testDatasetTree, mockFile);
+
+        expect(showTextDocumentSpy).toHaveBeenCalled();
+        expect(submitJclSpy).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
+            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
+        );
+        showTextDocumentSpy.mockClear();
+    });
+
+    it("Checking submit of ZoweScheme URI as JCL", async () => {
+        createGlobalMocks();
+        const blockMocks: any = createBlockMocks();
+        mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.showQuickPick).mockReturnValueOnce(
+            new Promise((resolve) => {
+                resolve(blockMocks.datasetSessionNode.label);
+            })
+        );
+        const mockFile = vscode.Uri.from({
+            path: "/sestest/u/users/testuser/file.jcl",
+            scheme: ZoweScheme.USS,
+        });
+        blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
+            new ZoweDatasetNode({ label: "node", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: blockMocks.datasetSessionNode }),
+            blockMocks.datasetSessionNode,
+        ]);
+        const showTextDocumentSpy = jest.spyOn(vscode.window, "showTextDocument");
+        activeTextEditorDocument.mockReturnValue({ ...blockMocks.textDocument, uri: mockFile });
         const submitJclSpy = jest.spyOn(blockMocks.jesApi, "submitJcl");
         submitJclSpy.mockClear();
         submitJclSpy.mockResolvedValueOnce(blockMocks.iJob);
@@ -648,7 +680,6 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(showMessagespy).toHaveBeenCalledWith("No profiles available");
     });
     it("Getting session name from the path itself", async () => {
-        ExtensionUtils.defineConstants("/user/");
         createGlobalMocks();
         const blockMocks: any = createBlockMocks();
         mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);

@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as path from "path";
-import { Gui, imperative, IZoweDatasetTreeNode, Validation, Types, FsAbstractUtils } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweDatasetTreeNode, Validation, Types, FsAbstractUtils, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetUtils } from "./DatasetUtils";
 import { DatasetFSProvider } from "./DatasetFSProvider";
@@ -952,39 +952,29 @@ export class DatasetActions {
         }
 
         // get session name
-        const sessionregex = /\[(.*)(\])(?!.*\])/;
-        const regExp = sessionregex.exec(doc.fileName);
         const profiles = Profiles.getInstance();
         let sessProfileName;
-        if (regExp === null) {
-            if (!doc.uri.fsPath.includes(Constants.ZOWETEMPFOLDER)) {
-                const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES);
-                if (profileNamesList.length > 1) {
-                    const quickPickOptions: vscode.QuickPickOptions = {
-                        placeHolder: vscode.l10n.t("Select the Profile to use to submit the job"),
-                        ignoreFocusOut: true,
-                        canPickMany: false,
-                    };
-                    sessProfileName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
-                    if (!sessProfileName) {
-                        Gui.infoMessage(DatasetActions.localizedStrings.opCancelled);
-                        return;
-                    }
-                } else if (profileNamesList.length > 0) {
-                    sessProfileName = profileNamesList[0];
-                } else {
-                    Gui.showMessage(vscode.l10n.t("No profiles available"));
+        if (doc.uri.scheme !== ZoweScheme.DS && doc.uri.scheme !== ZoweScheme.USS) {
+            const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES);
+            if (profileNamesList.length > 1) {
+                const quickPickOptions: vscode.QuickPickOptions = {
+                    placeHolder: vscode.l10n.t("Select the Profile to use to submit the job"),
+                    ignoreFocusOut: true,
+                    canPickMany: false,
+                };
+                sessProfileName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
+                if (!sessProfileName) {
+                    Gui.infoMessage(DatasetActions.localizedStrings.opCancelled);
+                    return;
                 }
+            } else if (profileNamesList.length > 0) {
+                sessProfileName = profileNamesList[0];
             } else {
-                const filePathArray = doc.uri.fsPath.split(path.sep);
-                sessProfileName = filePathArray[filePathArray.length - 2];
+                Gui.showMessage(vscode.l10n.t("No profiles available"));
             }
         } else {
-            sessProfileName = regExp[1];
-            if (sessProfileName.includes("[")) {
-                // if submitting from favorites, sesName might be the favorite node, so extract further
-                sessProfileName = sessionregex.exec(sessProfileName)[1];
-            }
+            const filePathArray = FsAbstractUtils.getInfoForUri(doc.uri);
+            sessProfileName = filePathArray.profileName;
         }
 
         // get profile from session name

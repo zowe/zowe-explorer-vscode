@@ -140,13 +140,7 @@ export class SettingsConfig {
         // Standardize global settings when old Zowe settings were found
         if (SettingsConfig.zoweOldConfigurations.length > 0) {
             for (const configuration of SettingsConfig.zoweOldConfigurations) {
-                let globalValue: any = SettingsConfig.configurations.inspect(configuration).globalValue;
-
-                // Adjust fetching of value due to schema change
-                if (configuration === Constants.configurationDictionary.SETTINGS_TEMP_FOLDER_PATH) {
-                    globalValue = globalValue ? globalValue.folderPath : globalValue;
-                }
-
+                const globalValue = SettingsConfig.configurations.inspect(configuration).globalValue;
                 const newSetting = Constants.configurationDictionary[configuration];
 
                 if (globalValue !== undefined && newSetting !== undefined) {
@@ -172,12 +166,7 @@ export class SettingsConfig {
             );
 
             for (const configuration of filteredConfigurations) {
-                let workspaceValue: any = SettingsConfig.configurations.inspect(configuration).workspaceValue;
-
-                if (configuration === Constants.configurationDictionary.SETTINGS_TEMP_FOLDER_PATH) {
-                    workspaceValue = workspaceValue ? workspaceValue.folderPath : workspaceValue;
-                }
-
+                const workspaceValue = SettingsConfig.configurations.inspect(configuration).workspaceValue;
                 const newSetting = Constants.configurationDictionary[configuration];
 
                 if (workspaceValue !== undefined && newSetting !== undefined) {
