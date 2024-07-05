@@ -16,7 +16,6 @@ The Zowe Explorer extension modernizes how developers and system administrators 
 - Enabling you to create, modify, rename, and upload USS files directly to a z/OS mainframe.
 - Providing a more streamlined way to access data sets, uss files, and jobs.
 - Letting you create, edit, and delete Zowe CLI `zosmf` compatible profiles.
-- Letting you use the Secure Credential Store plug-in to store your credentials securely in the settings.
 - Letting you leverage the API Mediation Layer token-based authentication to access z/OSMF.
 
 ## Contents
