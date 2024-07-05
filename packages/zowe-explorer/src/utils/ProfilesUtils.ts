@@ -507,12 +507,12 @@ export class ProfilesUtils {
     private static async v1ProfileOptions(): Promise<void> {
         const v1ProfileErrorMsg = vscode.l10n.t(
             // eslint-disable-next-line max-len
-            "Zowe v1 profiles in use.\nZowe Explorer no longer supports v1 profiles, choose to convert existing profiles to a team configuration or create new."
+            "Zowe V1 profiles in use.\nZowe Explorer no longer supports V1 profiles. Choose to convert existing profiles to a team configuration or create new profiles."
         );
         ZoweLogger.warn(v1ProfileErrorMsg);
-        const createButton = vscode.l10n.t("Create New");
         const convertButton = vscode.l10n.t("Convert Existing Profiles");
-        await Gui.infoMessage(v1ProfileErrorMsg, { items: [createButton, convertButton], vsCodeOpts: { modal: true } }).then(async (selection) => {
+        const createButton = vscode.l10n.t("Create New");
+        await Gui.infoMessage(v1ProfileErrorMsg, { items: [convertButton, createButton], vsCodeOpts: { modal: true } }).then(async (selection) => {
             switch (selection) {
                 case createButton: {
                     ZoweLogger.info("Create new team configuration chosen.");
@@ -564,7 +564,9 @@ export class ProfilesUtils {
     }
 
     private static async convertV1Profs(): Promise<void> {
-        const convertResults: imperative.IConvertV1ProfResult = await imperative.ConvertV1Profiles.convert({ deleteV1Profs: false });
+        const profileInfo = await this.getProfileInfo();
+        const convertResults: imperative.IConvertV1ProfResult = await imperative.ConvertV1Profiles.convert({ deleteV1Profs: false, profileInfo });
+        ZoweLogger.debug(JSON.stringify(convertResults));
         // await Constants.PROFILES_CACHE.convertV1ProfToConfig();
         const successMsg: string[] = [];
         const warningMsg: string[] = [];
@@ -577,9 +579,9 @@ export class ProfilesUtils {
             warningMsg.push(`Failed to convert ${convertResults?.profilesFailed.length} profile(s). See details below\n`);
             for (const { name, type, error } of convertResults.profilesFailed) {
                 if (name != null) {
-                    warningMsg.push(`Failed to load ${String(type)} profile "${String(name)}":\n${String(error)}\n`);
+                    warningMsg.push(`Failed to load ${type} profile "${name}":\n${String(error)}\n`);
                 } else {
-                    warningMsg.push(`Failed to find default ${String(type)} profile:\n${String(error)}\n`);
+                    warningMsg.push(`Failed to find default ${type} profile:\n${String(error)}\n`);
                 }
             }
         }
@@ -605,15 +607,15 @@ export class ProfilesUtils {
         //     }
         // }
         if (convertResults.msgs) {
-            responseMsg += `${String(convertResults.msgs.join(""))}\n`;
+            responseMsg += `${convertResults.msgs.map((msg) => msg.msgText).join("")}\n`;
         }
         if (successMsg?.length > 0) {
-            responseMsg += `Success: ${String(successMsg.join(""))}\n`;
+            responseMsg += `Success: ${successMsg.join("")}\n`;
         }
         if (warningMsg?.length > 0) {
-            responseMsg += `Warning: ${String(warningMsg.join(""))}\n`;
+            responseMsg += `Warning: ${warningMsg.join("")}\n`;
         }
         ZoweLogger.info(responseMsg);
-        Gui.infoMessage(vscode.l10n.t(responseMsg), { vsCodeOpts: { modal: true } });
+        Gui.infoMessage(responseMsg, { vsCodeOpts: { modal: true } });
     }
 }
