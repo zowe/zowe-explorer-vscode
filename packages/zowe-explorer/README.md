@@ -6,25 +6,23 @@
 [![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
 > ## v3 Pre-release is now available in our [Github Releases](https://github.com/zowe/zowe-explorer-vscode/releases) with the removal of v1 profile support. Keep an eye on [changes affecting users and extenders](https://github.com/zowe/zowe-explorer-vscode/wiki/v3-Changes-for-Users-and-Extenders) for the full list of changes
->
-> ## With the removal of the keytar shim from VS Code, we have replaced `node-keytar` with `@zowe/secrets-for-zowe-sdk` in the v2.10.0 release to avoid user interruptions. Extenders, please check out the usage [documentation](https://github.com/zowe/zowe-explorer-vscode/wiki/Secure-Credentials-for-Extenders)
 
 ## Introduction
 
-[Zowe Explorer](https://github.com/zowe/community#zowe-explorer) is a sub-project of Zowe, focusing on modernizing mainframe experience. [Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
+[Zowe Explorer](https://github.com/zowe/community#zowe-explorer) is a sub-project of Zowe, focusing on modernizing the mainframe experience. [Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
 
-The Zowe Explorer extension modernizes the way developers and system administrators interact with z/OS mainframes by:
-
+The Zowe Explorer extension modernizes how developers and system administrators interact with z/OS mainframes by:
 - Enabling you to create, modify, rename, copy, and upload data sets directly to a z/OS mainframe.
 - Enabling you to create, modify, rename, and upload USS files directly to a z/OS mainframe.
 - Providing a more streamlined way to access data sets, uss files, and jobs.
 - Letting you create, edit, and delete Zowe CLI `zosmf` compatible profiles.
+- Letting you use the Secure Credential Store plug-in to store your credentials securely in the settings.
 - Letting you leverage the API Mediation Layer token-based authentication to access z/OSMF.
 
 ## Contents
 
 - [Sample use cases](#sample-use-cases)
-- [Prerequisites tasks](#prerequisite-tasks)
+- [Prerequisite tasks](#prerequisite-tasks)
 - [Getting started](#getting-started)
 - [Usage tips](#usage-tips)
 - [Keyboard shortcuts](#keyboard-shortcuts)
@@ -54,7 +52,6 @@ Review the following use cases and their procedures to understand how to work wi
 ## Prerequisite tasks
 
 - Configure TSO/E address space services, z/OS data set, file REST interface, and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
-- Create a Zowe Explorer profile.
 
 ## Getting started
 
@@ -70,7 +67,7 @@ When environment conditions do not support the Zowe CLI built-in Credential Mana
 
 ### Multifactor authentication support (MFA)
 
-Zowe Explorer supports the use of MFA tokens for authentication. When using zOSMF profiles it is required to connect through the Zowe API Mediation Layer (API ML). Suggested use case for MFA authentication using Zowe Explorer is by logging into the API ML via the right-click login action in Zowe Explorer and when prompted for password enter the MFA token in place of user password, the API will return a JSON token (JWT) that will be used for further authentication.
+Zowe Explorer supports the use of MFA tokens for authentication. To use MFA when using zOSMF profiles, it is required to connect through the Zowe API Mediation Layer (API ML). The suggested use case for MFA authentication using Zowe Explorer is to log into the API ML via the right-click login action in Zowe Explorer and, when prompted for password, enter the MFA token in place of the password. Then the API will return a JSON token (JWT) that will be used for further authentication.
 
 You can find more information regarding MFA support in Zowe's documentation on [integrating with API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-using-integrating-apiml/).
 
@@ -83,7 +80,7 @@ You can find more information regarding MFA support in Zowe's documentation on [
 5. If no workspace is open, a global configuration file is created. If a workspace is open, chose either a global configuration file or a project-level configuration file.
 6. Edit the config file to include the host and other connection information, and save.
 
-Your team configuration file appears either in your .zowe folder if you chose the global configuration file option, or in your workspace directory if you chose the project-level configuration file option. The notification message that shows in VS Code after config file creation includes the path of the created file.
+Your team configuration file appears either in your .zowe folder, if you chose the global configuration file option, or in your workspace directory if you chose the project-level configuration file option. The notification message that is shown in VS Code after creating the config file includes the path of the created file.
 
 ### Create a v1 profile
 
@@ -104,18 +101,18 @@ You can now use all the functionalities of the extension.
 
 ### Using profiles for the first time
 
-The first time profiles are used you will be prompted for user name and password for the profile's connection. The term password is used loosely to represent all supported authentication secrets like passphrases, passtickets, Multifactor Authentication (MFA) tokens, etc.
+The first time profiles are used, you will be prompted for user name and password for the profile's connection. The term password is used loosely to represent all supported authentication secrets like passphrases, passtickets, multi-factor authentication (MFA) tokens, etc.
 
 ### Updating securely stored credentials
 
-Securing credentials for v1 profiles and secure fields in the team configuration file are handled by the Zowe Imperative dependency. To update securely stored user names and passwords in Zowe Explorer, the user can right click the profile and select **Manage Profile**, then **Update Credentials** from the drop down list. This prompts the user for the new credentials and the secure credentials vault is updated.
+To update securely stored user names and passwords in Zowe Explorer, the user can right click the profile and select **Manage Profile**, then **Update Credentials** from the drop down list. This prompts the user for the new credentials and the secure credentials vault is updated.
 
-### Editing team configuration file
+### Editing the team configuration file
 
 1. Navigate to the **Side Bar**.
 2. Hover over **DATA SETS**, **USS**, or **JOBS**.
 3. Click the **+** icon.
-4. If team configuration file is in place, the **Edit Team Configuration File** option displays.
+4. If a team configuration file is in place, the **Edit Team Configuration File** option is displayed.
    ![Edit Team Configuration File](/docs/images/ZE-edit-config.png)
    <br /><br />
 5. If only a global or project level config is in place, it opens to be edited. If both a global and project level config are in place, the user must select which file to edit.
@@ -126,9 +123,9 @@ Securing credentials for v1 profiles and secure fields in the team configuration
 
 **Note:** The following information applies to Zowe CLI V1 profiles (one yaml file for each user profile) and Zowe CLI team profiles (Zowe CLI V2).
 
-Zowe Explorer includes the profile validation feature that helps to ensure that the specified connection to z/OS is successfully established and your profile is ready for use. If a profile is valid, the profile is active and can be used.
+Zowe Explorer includes a profile validation feature that helps to ensure that the specified connection to z/OS is successfully established and your profile is ready for use. If a profile is successfully validated, the profile becomes active and can be used.
 
-By default, this feature is automatically enabled. You can disable the feature by right-clicking on your profile and selecting the **Disable Validation for Profile** option. Alternatively, you can enable or disable the feature for all profiles in the VS Code settings
+By default, this feature is automatically enabled. You can disable profile validation by right-clicking on your profile and selecting the **Disable Validation for Profile** option. Alternatively, you can enable or disable validation for all profiles in the VS Code settings:
 
 1. In VS Code, navigate to **Settings**.
 2. Navigate to Zowe Explorer settings.
@@ -137,7 +134,7 @@ By default, this feature is automatically enabled. You can disable the feature b
 
 ### Use base profile and token with existing profiles
 
-As a Zowe user, you can leverage the base profile functionality to access multiple services through Single Sign-on. Base profiles enable you to authenticate using the Zowe API Mediation Layer (API ML). You can use base profiles with more than one service profile. For more information, see [Base Profiles](https://docs.zowe.org/stable/user-guide/cli-using-using-profiles/#base-profiles).
+As a Zowe user, you can leverage base profile functionality to access multiple services through Single Sign-on. Base profiles enable you to authenticate using the Zowe API Mediation Layer (API ML). You can use base profiles with more than one service profile. For more information, see [Base Profiles](https://docs.zowe.org/stable/user-guide/cli-using-using-profiles-v1/#base-profiles).
 
 **Note:** Before using the base profile functionality with v1 profiles, ensure that you have [Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-installcli.html) v6.0.0 or higher installed.
 
@@ -206,7 +203,7 @@ Your token has been successfully invalidated.
 
 For the comprehensive Zowe Explorer documentation that also includes information about USS and Jobs interactions, see [the Zowe Explorer documentation](https://docs.zowe.org/stable/user-guide/ze-install.html) in Zowe Docs.
 
-## Keyboard Shortcuts
+## Keyboard shortcuts
 
 - Restart Zowe Explorer
 
@@ -228,7 +225,7 @@ You can add new functionalities to Zowe Explorer by creating your own extension.
 
 **Tip:** View an example of a Zowe Explorer extension: [Zowe Explorer FTP extension documentation](https://github.com/zowe/zowe-explorer-ftp-extension#zowe-explorer-ftp-extension).
 
-## Known Issues
+## Known issues
 
 ### Bidirectional languages
 
@@ -243,18 +240,17 @@ As a result, VS Code extensions like Zowe Explorer, Zowe Explorer CICS Extension
 - For the complete Zowe Explorer documentation, see [Zowe Docs](https://docs.zowe.org/stable/user-guide/ze-install.html).
 - Join the **#zowe-explorer** channel on [Slack](https://openmainframeproject.slack.com/) to stay in touch with the Zowe community.
 
-## Sample use cases extended
+## Working with data sets <<< Should we delete this entire section? >>>
 
-### View data sets and use multiple filters
+### Viewing data sets and use multiple filters
 
-1. Navigate to the **Side Bar**.
-2. Open the **DATA SETS** bar.
-3. Hover over the profile that you want to apply the filter to.
-4. Click the **Search** icon.
-5. Enter a pattern you want to create a filter for.
-   The data sets that match your pattern(s) are displayed in the **Side Bar**.
+1. Expand **DATA SETS** in the **Side Bar**, and hover over the profile you want to filter.
+2. Click the **Search** icon.
+3. Use the **picker** field to select or enter the patterns you want to apply as filters.
 
-**Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \* to apply wildcard searching. You cannot enter an \* as the entire pattern.
+    The data sets that match your pattern(s) display in the **Side Bar**.
+
+**Tip:** To provide multiple filters, separate entries with a comma. You can include an asterisk (\*) in a filter to apply wildcard searching. You cannot enter an \* as the entire pattern.
 
 ![View Data Set](/docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
 <br /><br />
@@ -263,13 +259,11 @@ As a result, VS Code extensions like Zowe Explorer, Zowe Explorer CICS Extension
 
 ---
 
-### View data sets with member filters
+### Viewing data sets with member filters
 
-1. Navigate to the **Side Bar**.
-2. Open the **DATA SETS** bar.
-3. Hover over the profile that you want to apply the filter to.
+1. Expand **DATA SETS** in the **Side Bar**, and hover over the profile you want to filter.
 4. Click the **Search** icon.
-5. Enter a search pattern in the `HLQ.ZZZ.SSS(MEMBERNAME)` format to filter for and display the specified member in the tree.
+3. In the **picker** field, enter or select a search pattern in the `HLQ.ZZZ.SSS(MEMBERNAME)` format to filter out and display the specified member in the **Side Bar**.
 
 ![View Data Set With Member Pattern](/docs/images/ZE-member-filter-search.gif?raw=true "View Data Set With Member Pattern")
 
@@ -280,16 +274,16 @@ As a result, VS Code extensions like Zowe Explorer, Zowe Explorer CICS Extension
 
 ---
 
-### Refresh the list of data sets
+### Refreshing the list of data sets
 
-1. Navigate to the **Side Bar**.
-2. Click **Refresh All** button (circular arrow icon) on the right of the **DATA SETS** explorer bar.
+1. Hover over **DATA SETS** in the **Side Bar**.
+2. Click the **Refresh All** button (circular arrow icon) on the right of the **DATA SETS** explorer bar.
 
 [Back to sample list](#sample-use-cases)
 
 ---
 
-### Rename data sets
+### Renaming data sets
 
 1. Navigate to the **Side Bar**.
 2. Open the **DATA SETS** bar.
@@ -322,21 +316,13 @@ As a result, VS Code extensions like Zowe Explorer, Zowe Explorer CICS Extension
 
 ### Edit and upload a data set member
 
-1. Navigate to the **Side Bar**.
-2. Open the **DATA SETS** bar.
-3. Open a profile.
-4. Select the data set member you want to edit.
-
-   **Note:** To view the members of a data set, click the data to expand the tree.
-
-   The data set member is displayed in the text editor window of VS Code.
-
+1. Expand **DATA SETS** in the **Side Bar**, and select a profile to open it.
+2. Open the data set with the member you want to edit.
+3. Click on the member name to display it in an **Editor** tab.
 5. Edit the document.
-6. Navigate back to the data set member in the explorer tree, and press `Ctrl`+`S` or `Command`+`S` (OSx) to upload the member.
+6. Select **Save** from the **File** menu or press `Ctrl`+`S` or `Command`+`S` to save the changes and upload the data set to the mainframe
 
-   Your data set member is uploaded.
-
-**Note:** If someone else has made changes to the data set member while you were editing it, you can merge your conflicts before uploading the member to the mainframe.
+**Note:** If someone else has made changes to the data set member while you were editing, you can merge your changes before uploading the member to the mainframe. See [Preventing merge conflicts](#preventing-merge-conflicts) for more information.
 
 ![Edit](/docs/images/ZE-edit-upload.gif?raw=true "Edit")
 <br /><br />
@@ -345,17 +331,15 @@ As a result, VS Code extensions like Zowe Explorer, Zowe Explorer CICS Extension
 
 ---
 
-### Use the save option to prevent merge conflicts
+### Preventing merge conflicts
 
-1. Navigate to the **Side Bar**.
-2. Open the **DATA SETS** bar.
-3. Open a member of a data set you want to edit.
-4. Edit the selected member.
-5. Press `Ctrl`+`S` or `Command`+`S` (OSx) to save the changes.
+1. Expand **DATA SETS** in the **Side Bar**, and navigate to the member you want to edit.
+2. Edit the document in the **Editor** tab.
+3. Select **Save** from the **File** menu or press `Ctrl`+`S` or `Command`+`S` to save the changes and upload the data set to the mainframe
 
    If the original content in your local version no longer matches the same file in the mainframe, a warning message displays advising the user to compare both versions.
 
-6. If necessary, use the editor tool bar to resolve any merge conflicts.
+4. If necessary, use the editor tool bar to resolve any merge conflicts.
 
 ![Save](/docs/images/ZE-safe-save.gif?raw=true "Save")
 <br /><br />
@@ -452,7 +436,7 @@ As a result, VS Code extensions like Zowe Explorer, Zowe Explorer CICS Extension
 
 5. Confirm the deletion by clicking **Delete** in the drop-down menu.
 
-   ![Delete Data Sets and Members](/docs/images/ZE-delete-ds2.gif?raw=true "Delete Data Sets and Members")
+   ![Delete Data Sets and Members](/docs/images/ZE-delete-ds.gif?raw=true "Delete Data Sets and Members")
    <br /><br />
 
 [Back to sample list](#sample-use-cases)
