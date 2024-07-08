@@ -15,7 +15,6 @@ import * as vscode from "vscode";
 import * as loggerConfig from "../../log4jsconfig.json";
 import * as path from "path";
 import { Gui, imperative, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
-import { padLeft } from "@zowe/core-for-zowe-sdk";
 
 export class ZoweLogger {
     public static zeOutputChannel: vscode.OutputChannel;
@@ -115,9 +114,9 @@ export class ZoweLogger {
 
     private static getTime(): string {
         const dateObj = new Date(Date.now());
-        const hours = padLeft(dateObj?.getHours().toString(), 2, "0");
-        const minutes = padLeft(dateObj?.getMinutes().toString(), 2, "0");
-        const seconds = padLeft(dateObj?.getSeconds().toString(), 2, "0");
+        const hours = dateObj?.getHours().toString().padStart(2, "0");
+        const minutes = dateObj?.getMinutes().toString().padStart(2, "0");
+        const seconds = dateObj?.getSeconds().toString().padStart(2, "0");
         return `${hours}:${minutes}:${seconds}`;
     }
 }

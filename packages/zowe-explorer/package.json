@@ -1811,11 +1811,11 @@
     "webdriverio": "^8.36.1"
   },
   "dependencies": {
-    "@zowe/core-for-zowe-sdk": "8.0.0-next.202405241828",
-    "@zowe/secrets-for-zowe-sdk": "8.0.0-next.202405241828",
-    "@zowe/zos-files-for-zowe-sdk": "8.0.0-next.202405241828",
-    "@zowe/zos-jobs-for-zowe-sdk": "8.0.0-next.202405241828",
-    "@zowe/zosmf-for-zowe-sdk": "8.0.0-next.202405241828",
+    "@zowe/core-for-zowe-sdk": "8.0.0-next.202407051717",
+    "@zowe/secrets-for-zowe-sdk": "8.0.0-next.202407051717",
+    "@zowe/zos-files-for-zowe-sdk": "8.0.0-next.202407051717",
+    "@zowe/zos-jobs-for-zowe-sdk": "8.0.0-next.202407051717",
+    "@zowe/zosmf-for-zowe-sdk": "8.0.0-next.202407051717",
     "@zowe/zowe-explorer-api": "3.0.0-next-SNAPSHOT",
     "dayjs": "^1.11.10",
     "fs-extra": "8.0.1",

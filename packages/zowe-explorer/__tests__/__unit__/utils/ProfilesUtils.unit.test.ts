@@ -316,11 +316,10 @@ describe("ProfilesUtils unit tests", () => {
             await expect(ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
             Object.defineProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", { value: false, configurable: true });
 
-            expect(msgSpy).toHaveBeenCalledWith(
-                // eslint-disable-next-line max-len
-                "Zowe v1 profiles in use.\nZowe Explorer no longer supports v1 profiles, choose to convert existing profiles to a team configuration or create new.",
-                { items: ["Create New", "Convert Existing Profiles"], vsCodeOpts: { modal: true } }
-            );
+            expect(msgSpy).toHaveBeenCalledWith(expect.stringContaining("Zowe V1 profiles in use."), {
+                items: ["Convert Existing Profiles", "Create New"],
+                vsCodeOpts: { modal: true },
+            });
             expect(commandSpy).toHaveBeenCalledWith("zowe.ds.addSession", undefined);
             msgSpy.mockRestore();
             commandSpy.mockRestore();
