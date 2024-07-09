@@ -1240,22 +1240,24 @@ export class Profiles extends ProfilesCache {
 
     public async basicAuthClearSecureArray(profileName?: string): Promise<void> {
         const profAttrs = await this.getProfileFromConfig(profileName);
-        const configApi = (await this.getProfileInfo()).getTeamConfig();
+        const profInfo = await this.getProfileInfo();
+        const configApi = profInfo.getTeamConfig();
         const secureProps = await this.getSecurePropsForProfile(profileName);
         configApi.set(`${secureProps.toString()}`, ["tokenValue"]);
-        configApi.delete(`${profAttrs.profLoc.jsonLoc}.properties.user`);
-        configApi.delete(`${profAttrs.profLoc.jsonLoc}.properties.password`);
+        configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "user")?.argLoc.jsonLoc}`);
+        configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "password")?.argLoc.jsonLoc}`);
         await configApi.save();
     }
 
     public async tokenAuthClearSecureArray(profileName?: string): Promise<void> {
         const profAttrs = await this.getProfileFromConfig(profileName);
-        const configApi = (await this.getProfileInfo()).getTeamConfig();
+        const profInfo = await this.getProfileInfo();
+        const configApi = profInfo.getTeamConfig();
         const secureProps = await this.getSecurePropsForProfile(profileName);
         configApi.set(`${secureProps.toString()}`, ["user", "password"]);
-        configApi.delete(`${profAttrs.profLoc.jsonLoc}.properties.tokenType`);
-        configApi.delete(`${profAttrs.profLoc.jsonLoc}.properties.tokenValue`);
-        configApi.delete(`${profAttrs.profLoc.jsonLoc}.properties.tokenExpiration`);
+        configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc}`);
+        configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenValue")?.argLoc.jsonLoc}`);
+        configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenExpiration")?.argLoc.jsonLoc}`);
         await configApi.save();
     }
 
