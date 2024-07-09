@@ -424,8 +424,6 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         const imperativeProfile = createIProfile();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const textDocument = createTextDocument("HLQ.TEST.AFILE(mem)", datasetSessionNode);
-        (textDocument.languageId as any) = "jcl";
-        (textDocument.uri.fsPath as any) = "/user/temp/textdocument.txt";
         const profileInstance = createInstanceOfProfile(imperativeProfile);
         const jesApi = createJesApi(imperativeProfile);
         const mockCheckCurrentProfile = jest.fn();
@@ -652,7 +650,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(showMessagespy).toBeCalledWith("No profiles available");
     });
     it("Getting session name from the path itself", async () => {
-        globals.defineGlobals("/user/");
+        globals.defineGlobals(__dirname);
         createGlobalMocks();
         const blockMocks: any = createBlockMocks();
         mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
@@ -663,6 +661,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
             blockMocks.datasetSessionNode,
         ]);
         blockMocks.textDocument.fileName = path.join(globals.USS_DIR, "lpar1_zosmf", "file.txt");
+        blockMocks.textDocument.uri = vscode.Uri.file(blockMocks.textDocument.fileName);
         activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
         const submitJclSpy = jest.spyOn(blockMocks.jesApi, "submitJcl");
         submitJclSpy.mockClear();
