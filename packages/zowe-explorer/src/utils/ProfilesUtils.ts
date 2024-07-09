@@ -586,26 +586,6 @@ export class ProfilesUtils {
             }
         }
         let responseMsg = "";
-        // console.log(convertResults.v1ScsPluginName);
-        // if (convertResults.v1ScsPluginName) {
-        //     try {
-        //         imperative.uninstallPlugin(convertResults.v1ScsPluginName);
-        //         const newMsg = new imperative.ConvertMsg(
-        //             imperative.ConvertMsgFmt.REPORT_LINE,
-        //             `Uninstalled plug-in "${convertResults.v1ScsPluginName}"`
-        //         );
-        //         convertResults.msgs.push(newMsg);
-        //     } catch (error) {
-        //         let newMsg = new imperative.ConvertMsg(
-        //             imperative.ConvertMsgFmt.ERROR_LINE,
-        //             `Failed to uninstall plug-in "${convertResults.v1ScsPluginName}"`
-        //         );
-        //         convertResults.msgs.push(newMsg);
-
-        //         newMsg = new imperative.ConvertMsg(imperative.ConvertMsgFmt.ERROR_LINE | imperative.ConvertMsgFmt.INDENT, error.message);
-        //         convertResults.msgs.push(newMsg);
-        //     }
-        // }
         if (convertResults.msgs) {
             responseMsg += `${convertResults.msgs.map((msg) => msg.msgText).join("")}\n`;
         }
