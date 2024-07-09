@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { FileManagement, IZoweTree, IZoweTreeNode, Validation, ZosEncoding, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { FileManagement, IZoweTree, IZoweTreeNode, Validation, ZosEncoding, ZoweScheme, imperative } from "@zowe/zowe-explorer-api";
 import { SharedActions } from "./SharedActions";
 import { SharedHistoryView } from "./SharedHistoryView";
 import { SharedTreeProviders } from "./SharedTreeProviders";
@@ -338,6 +338,37 @@ export class SharedInit {
                 ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
             });
         });
+
+        try {
+            const vaultWatcher = imperative.EventOperator.getWatcher().subscribeUser(imperative.ZoweUserEvents.ON_VAULT_CHANGED, async () => {
+                vscode.window.showInformationMessage("Vault change detected. Refreshing profiles...");
+                ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter.fire(Validation.EventType.UPDATE);
+
+                const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+                await sleep(2000);
+                await ProfilesUtils.readConfigFromDisk();
+                await SharedActions.refreshAll(providers.ds);
+                await SharedActions.refreshAll(providers.uss);
+                await SharedActions.refreshAll(providers.job);
+            });
+            context.subscriptions.push(vscode.Disposable.from({dispose: vaultWatcher.close }));
+        } catch (err) {
+            vscode.window.showErrorMessage("Unable to watch for vault changes. " + JSON.stringify(err));
+        }
+
+        try {
+            const vaultWatcher = imperative.EventOperator.getWatcher().subscribeShared(imperative.ZoweSharedEvents.ON_CREDENTIAL_MANAGER_CHANGED, async () => {
+                vscode.window.showInformationMessage("Credential Manager changed. Refreshing Zowe Explorer...");
+                ZoweExplorerApiRegister.getInstance().onCredMgrUpdateEmitter.fire(Validation.EventType.UPDATE);
+
+                const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+                await sleep(2000);
+                await ProfilesUtils.getProfileInfo();
+            });
+            context.subscriptions.push(vscode.Disposable.from({dispose: vaultWatcher.close }));
+        } catch (err) {
+            vscode.window.showErrorMessage("Unable to watch for credential manager changes. " + JSON.stringify(err));
+        }
     }
 
     public static initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTree<IZoweTreeNode>): void {
