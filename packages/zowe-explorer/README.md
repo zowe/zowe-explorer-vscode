@@ -11,7 +11,7 @@
 
 [Zowe Explorer](https://docs.zowe.org/stable/user-guide/ze-install), part of the [Zowe](https://www.zowe.org/) project, is an open-source Visual Studio Code extension that provides a modern interface for mainframe developers to interact with data sets, USS files, and jobs on z/OS. 
 
-Zowe is a member of the [Open Mainframe Project™](https://www.openmainframeproject.org/) governed by [Linux Foundation™](https://www.linuxfoundation.org/).
+Zowe is a member of the [Open Mainframe Project™](https://www.openmainframeproject.org/) governed by the [Linux Foundation™](https://www.linuxfoundation.org/).
 
 Zowe Explorer gives users the ability to:
 - Create, modify, rename, copy, and upload data sets and USS files directly to a z/OS mainframe.
