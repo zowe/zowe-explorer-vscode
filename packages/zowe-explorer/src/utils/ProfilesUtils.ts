@@ -591,6 +591,12 @@ export class ProfilesUtils {
         }
         if (successMsg?.length > 0) {
             responseMsg += `Success: ${successMsg.join("")}\n`;
+            const document = await vscode.workspace.openTextDocument(
+                path.join(FileManagement.getZoweDir(), (await this.getProfileInfo()).getTeamConfig().configName)
+            );
+            if (document) {
+                await Gui.showTextDocument(document);
+            }
         }
         if (warningMsg?.length > 0) {
             responseMsg += `Warning: ${warningMsg.join("")}\n`;
