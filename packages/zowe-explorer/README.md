@@ -20,7 +20,7 @@ Zowe Explorer gives users the ability to:
 - Create, read, and manage [Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-using-usingcli)-compatible connection configurations.
 - Access z/OSMF through the [Zowe API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-using-integrating-apiml/). 
 
-For more information on working with z/OS data sets, USS files, and jobs with Zowe Explorer, refer to [Using Zowe Explorer](https://docs.zowe.org/stable/user-guide/ze-usage).
+For more information on working with z/OS data sets, USS files, and jobs in Zowe Explorer, refer to [Using Zowe Explorer](https://docs.zowe.org/stable/user-guide/ze-usage).
 
 ## Contents
 
