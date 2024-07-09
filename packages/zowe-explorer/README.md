@@ -1,4 +1,4 @@
-# Zowe Explorer
+# Zowe™ Explorer
 
 [![version](https://img.shields.io/visual-studio-marketplace/v/Zowe.vscode-extension-for-zowe.svg)](https://img.shields.io/visual-studio-marketplace/v/Zowe.vscode-extension-for-zowe.svg)
 [![downloads](https://img.shields.io/visual-studio-marketplace/d/Zowe.vscode-extension-for-zowe.svg)](https://img.shields.io/visual-studio-marketplace/d/Zowe.vscode-extension-for-zowe.svg)
@@ -9,18 +9,21 @@
 
 ## Introduction
 
-[Zowe Explorer](https://github.com/zowe/community#zowe-explorer) is a sub-project of Zowe, focusing on modernizing the mainframe experience. [Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
+[Zowe Explorer](https://docs.zowe.org/stable/user-guide/ze-install), part of the [Zowe](https://www.zowe.org/) project, is an open-source Visual Studio Code extension that provides a modern interface for mainframe developers to interact with data sets, USS files, and jobs on z/OS. 
 
-The Zowe Explorer extension modernizes how developers and system administrators interact with z/OS mainframes by:
-- Enabling you to create, modify, rename, copy, and upload data sets directly to a z/OS mainframe.
-- Enabling you to create, modify, rename, and upload USS files directly to a z/OS mainframe.
-- Providing a more streamlined way to access data sets, uss files, and jobs.
-- Letting you create, edit, and delete Zowe CLI `zosmf` compatible profiles.
-- Letting you leverage the API Mediation Layer token-based authentication to access z/OSMF.
+Zowe is a member of the [Open Mainframe Project™](https://www.openmainframeproject.org/) governed by [Linux Foundation™](https://www.linuxfoundation.org/).
+
+Zowe Explorer gives users the ability to:
+- Create, modify, rename, copy, and upload data sets and USS files directly to a z/OS mainframe.
+- Submit JCL, list jobs, and view spool output.
+- View resources from multiple LPARs in a single VS Code window.
+- Create, read, and manage [Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-using-usingcli)-compatible connection configurations.
+- Access z/OSMF through the [Zowe API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-using-integrating-apiml/). 
+
+For more information on accessing z/OS data sets, USS files, and jobs with Zowe Explorer, refer to [Using Zowe Explorer](https://docs.zowe.org/stable/user-guide/ze-usage).
 
 ## Contents
 
-- [Sample use cases](#sample-use-cases)
 - [Prerequisite tasks](#prerequisite-tasks)
 - [Getting started](#getting-started)
 - [Usage tips](#usage-tips)
@@ -30,23 +33,6 @@ The Zowe Explorer extension modernizes how developers and system administrators 
 - [More information](#more-information)
 
 > Zowe Explorer is compatible only with Theia 1.18.0 or higher. We recommend using a [Theia community release](https://theia-ide.org/releases/) as Zowe Explorer could experience possible unexpected behaviors with the latest Theia releases.
-
-## Sample use cases
-
-Review the following use cases and their procedures to understand how to work with data sets in Zowe Explorer. For the complete list of features including USS and jobs, see [Zowe Explorer Sample Use Cases](https://docs.zowe.org/stable/user-guide/ze-usage/#sample-use-cases).
-
-- [View data sets and use multiple filters](#view-data-sets-and-use-multiple-filters): View multiple data sets simultaneously and apply filters to show specified data sets.
-- [Refresh the data set list](#refresh-the-list-of-data-sets): Refresh the list of pre-filtered data sets.
-- [Rename data sets](#rename-data-sets): Rename specified data sets.
-- [Copy data set members](#copy-data-set-members): Copy specified data set members.
-- [Edit and upload a data set member](#edit-and-upload-a-data-set-member): You can instantly pull data sets and data set members from the mainframe, edit them, and upload back.
-- [Prevent merge conflicts](#use-the-save-option-to-prevent-merge-conflicts): The save option includes a **compare** mechanism letting you resolve potential merge conflicts.
-- [Create data sets and data set members](#create-a-new-data-set-and-add-a-member): Create a new data set and data set members.
-- [Create data sets and specify the parameters](#create-data-sets-and-specify-the-parameters): Create a new data set and specify parameter values.
-- [Delete data sets and data set members](#delete-data-sets-and-data-set-members): Delete one or more data sets and data set members.
-- [View and access multiple profiles simultaneously](#view-and-access-multiple-profiles-simultaneously): Work with data sets from multiple profiles.
-- [Submit a JCL](#submit-a-jcl): You can submit a jcl from a chose data set.
-- [Allocate Like](#allocate-like): Create a copy of a chosen data set with the same parameters.
 
 ## Prerequisite tasks
 
@@ -220,9 +206,9 @@ For the comprehensive Zowe Explorer documentation that also includes information
 
 ## Extending Zowe Explorer
 
-You can add new functionalities to Zowe Explorer by creating your own extension. For more information, see [Extensions for Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode/blob/main/docs/README-Extending.md).
+You can add new functionality to Zowe Explorer by creating your own extension. For more information, see [Extending Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode/wiki/Extending-Zowe-Explorer).
 
-**Tip:** View an example of a Zowe Explorer extension: [Zowe Explorer FTP extension documentation](https://github.com/zowe/zowe-explorer-ftp-extension#zowe-explorer-ftp-extension).
+**Tip:** View an example of a Zowe Explorer extension: [Zowe Explorer FTP extension documentation](https://github.com/zowe/zowe-explorer-vscode/tree/main/packages/zowe-explorer-ftp-extension).
 
 ## Known issues
 
@@ -238,247 +224,3 @@ As a result, VS Code extensions like Zowe Explorer, Zowe Explorer CICS Extension
 
 - For the complete Zowe Explorer documentation, see [Zowe Docs](https://docs.zowe.org/stable/user-guide/ze-install.html).
 - Join the **#zowe-explorer** channel on [Slack](https://openmainframeproject.slack.com/) to stay in touch with the Zowe community.
-
-## Working with data sets <<< Should we delete this entire section? >>>
-
-### Viewing data sets and use multiple filters
-
-1. Expand **DATA SETS** in the **Side Bar**, and hover over the profile you want to filter.
-2. Click the **Search** icon.
-3. Use the **picker** field to select or enter the patterns you want to apply as filters.
-
-    The data sets that match your pattern(s) display in the **Side Bar**.
-
-**Tip:** To provide multiple filters, separate entries with a comma. You can include an asterisk (\*) in a filter to apply wildcard searching. You cannot enter an \* as the entire pattern.
-
-![View Data Set](/docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
-<br /><br />
-
-[Back to sample list](#sample-use-cases)
-
----
-
-### Viewing data sets with member filters
-
-1. Expand **DATA SETS** in the **Side Bar**, and hover over the profile you want to filter.
-4. Click the **Search** icon.
-3. In the **picker** field, enter or select a search pattern in the `HLQ.ZZZ.SSS(MEMBERNAME)` format to filter out and display the specified member in the **Side Bar**.
-
-![View Data Set With Member Pattern](/docs/images/ZE-member-filter-search.gif?raw=true "View Data Set With Member Pattern")
-
-**Note:** You cannot favorite a data set or member that includes a member filter search pattern.
-<br /><br />
-
-[Back to sample list](#sample-use-cases)
-
----
-
-### Refreshing the list of data sets
-
-1. Hover over **DATA SETS** in the **Side Bar**.
-2. Click the **Refresh All** button (circular arrow icon) on the right of the **DATA SETS** explorer bar.
-
-[Back to sample list](#sample-use-cases)
-
----
-
-### Renaming data sets
-
-1. Navigate to the **Side Bar**.
-2. Open the **DATA SETS** bar.
-3. Select a data set you want to rename.
-4. Right-click the data set and select the **Rename Data Set** option.
-5. Enter the new name of the data set.
-
-![Rename Data Set](/docs/images/ZE-rename.gif?raw=true "Rename Data Set")
-<br /><br />
-
-[Back to sample list](#sample-use-cases)
-
----
-
-### Copy data set members
-
-1. Navigate to the **Side Bar**.
-2. Open the **DATA SETS** bar.
-3. Select a data set member you want to copy.
-4. Right-click the member and select the **Copy Member** option.
-5. Right-click a data set that you want to paste the member to and select the **Paste Member** option.
-6. Enter the name of the copied member.
-
-![Copy Data Set](/docs/images/ZE-copy-member.gif?raw=true "Copy Data Set")
-<br /><br />
-
-[Back to sample list](#sample-use-cases)
-
----
-
-### Edit and upload a data set member
-
-1. Expand **DATA SETS** in the **Side Bar**, and select a profile to open it.
-2. Open the data set with the member you want to edit.
-3. Click on the member name to display it in an **Editor** tab.
-5. Edit the document.
-6. Select **Save** from the **File** menu or press `Ctrl`+`S` or `Command`+`S` to save the changes and upload the data set to the mainframe
-
-**Note:** If someone else has made changes to the data set member while you were editing, you can merge your changes before uploading the member to the mainframe. See [Preventing merge conflicts](#preventing-merge-conflicts) for more information.
-
-![Edit](/docs/images/ZE-edit-upload.gif?raw=true "Edit")
-<br /><br />
-
-[Back to sample list](#sample-use-cases)
-
----
-
-### Preventing merge conflicts
-
-1. Expand **DATA SETS** in the **Side Bar**, and navigate to the member you want to edit.
-2. Edit the document in the **Editor** tab.
-3. Select **Save** from the **File** menu or press `Ctrl`+`S` or `Command`+`S` to save the changes and upload the data set to the mainframe
-
-   If the original content in your local version no longer matches the same file in the mainframe, a warning message displays advising the user to compare both versions.
-
-4. If necessary, use the editor tool bar to resolve any merge conflicts.
-
-![Save](/docs/images/ZE-safe-save.gif?raw=true "Save")
-<br /><br />
-
-[Back to sample list](#sample-use-cases)
-
----
-
-### Create a new data set and add a member
-
-1. Navigate to the **Side Bar**.
-2. Open the **DATA SETS** bar.
-3. Right-click on the profile where you want to create a data set and select **Create New Data Set**.
-4. Enter a name for your data set.
-5. From the drop-down menu, select the data set type that you want to create.
-6. Select **+Allocate Data Set** to create the data set.
-7. Right-click your newly-created data set and select **Create New Member**.
-8. Enter a name for your new data set member and press the `Enter` key.
-   The member is created and opened in the workspace.
-
-[Back to sample list](#sample-use-cases)
-
----
-
-### Create data sets and specify the parameters
-
-1. Navigate to the **Side Bar**.
-2. Open the **DATA SETS** bar.
-3. Right-click the profile you want to create a data set with and select **Create New Data Set**.
-4. Enter a name for your data set and press `Enter`.
-5. From the drop-down menu, select the data set type that you want to create and press `Enter`.
-6. Select **Edit Attributes** in the drop-down menu and press the `Enter` key.
-
-   The attributes list for the data set appears. You can edit the following attributes:
-
-   - Allocation Unit
-
-   - Average Block Length
-
-   - Block Size
-
-   - Data Class
-
-   - Device Type
-
-   - Directory Block
-
-   - Data Set Type
-
-   - Management Class
-
-   - Data Set Name
-
-   - Data Set Organization
-
-   - Primary Space
-
-   - Record Format
-
-   - Record Length
-
-   - Secondary Space
-
-   - Size
-
-   - Storage Class
-
-   - Volume Serial
-
-7. Select the attribute you want to edit, provide the value in the **Command Palette**, and press the `Enter` key.
-8. (Optional) Edit the parameters of your data set.
-9. Select the **+ Allocate Data Set** option to create the data set.
-
-   The data set has been created successfully.
-
-   ![Parameters](/docs/images/ZE-set-params.gif?raw=true "Parameters")
-   <br /><br />
-
-[Back to sample list](#sample-use-cases)
-
----
-
-### Delete data sets and data set members
-
-1. Navigate to the **Side Bar**.
-2. Open the **DATA SETS** bar.
-3. Select one or more data sets and/or data set members.
-
-   **Tip:** Hold the `Ctrl`/`Cmd` key while clicking data sets or data set members to select more than one item for deletion.
-
-4. Press the `Delete` key on your keyboard.
-
-   Alternatively, right-click on the item and select the **Delete Data Set** or **Delete Member** option.
-
-5. Confirm the deletion by clicking **Delete** in the drop-down menu.
-
-   ![Delete Data Sets and Members](/docs/images/ZE-delete-ds.gif?raw=true "Delete Data Sets and Members")
-   <br /><br />
-
-[Back to sample list](#sample-use-cases)
-
----
-
-### View and access multiple profiles simultaneously
-
-1. Navigate to the **Side Bar**.
-2. Open the **DATA SETS** bar.
-3. Click the **+** icon on the right of the **DATA SET** bar.
-4. Select a profile from the drop-down menu in the **Command Palette**. This adds the profile to the **Side Bar**, from where you can search for data sets.
-
-![Add Profile](/docs/images/ze-access-multiple-profiles-simultaneously.gif?raw=true "Add Profile")
-
-[Back to sample list](#sample-use-cases)
-
----
-
-### Submit a JCL
-
-1. Navigate to the **Side Bar**.
-2. Open the **DATA SETS** bar.
-3. Select the data set or data set member you want to submit.
-4. Right-click the data set or member and select the **Submit Job** option.
-5. If the extension setting **"Jobs: Confirm Submission"** matches the job that you are trying to submit, you will be presented with a submission confirmation dialog.
-   - Click **Submit** within the dialog to confirm submission, or click **Cancel** to cancel the operation.
-   - Otherwise, the job has been submitted.
-6. Once the job has been submitted, click on the hyperlink within the notification pop-up to view the submission (if desired).
-
-![Submit a JCL](/docs/images/ZE-submit-jcl.gif?raw=true "Submit a JCL")
-
-[Back to sample list](#sample-use-cases)
-
----
-
-### Allocate Like
-
-1. Navigate to the **Side Bar**.
-2. Open the **DATA SETS** bar.
-3. Right-click a data set and select the **Allocate Like (New Data Set with Same Attributes)** option.
-4. Enter a new data set name.
-
-![Allocate Like](/docs/images/ZE-allocate.gif?raw=true "Allocate Like")
-
-[Back to sample list](#sample-use-cases)
