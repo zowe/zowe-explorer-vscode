@@ -933,39 +933,30 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
     }
 
     // get session name
-    const sessionregex = /\[(.*)(\])(?!.*\])/;
-    const regExp = sessionregex.exec(doc.fileName);
     const profiles = Profiles.getInstance();
     let sessProfileName;
-    if (regExp === null) {
-        if (!doc.uri.fsPath.includes(globals.ZOWETEMPFOLDER)) {
-            const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES);
-            if (profileNamesList.length > 1) {
-                const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: localize("submitJcl.qp.placeholder", "Select the Profile to use to submit the job"),
-                    ignoreFocusOut: true,
-                    canPickMany: false,
-                };
-                sessProfileName = await api.Gui.showQuickPick(profileNamesList, quickPickOptions);
-                if (!sessProfileName) {
-                    api.Gui.infoMessage(localizedStrings.opCancelled);
-                    return;
-                }
-            } else if (profileNamesList.length > 0) {
-                sessProfileName = profileNamesList[0];
-            } else {
-                api.Gui.showMessage(localize("submitJcl.noProfile", "No profiles available"));
+    if (!doc.uri.fsPath.includes(globals.ZOWETEMPFOLDER)) {
+        const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES);
+        if (profileNamesList.length > 1) {
+            const quickPickOptions: vscode.QuickPickOptions = {
+                placeHolder: localize("submitJcl.qp.placeholder", "Select the Profile to use to submit the job"),
+                ignoreFocusOut: true,
+                canPickMany: false,
+            };
+            sessProfileName = await api.Gui.showQuickPick(profileNamesList, quickPickOptions);
+            if (!sessProfileName) {
+                api.Gui.infoMessage(localizedStrings.opCancelled);
+                return;
             }
+        } else if (profileNamesList.length > 0) {
+            sessProfileName = profileNamesList[0];
         } else {
-            const filePathArray = doc.uri.fsPath.split(path.sep);
-            sessProfileName = filePathArray[filePathArray.length - 2];
+            api.Gui.showMessage(localize("submitJcl.noProfile", "No profiles available"));
         }
     } else {
-        sessProfileName = regExp[1];
-        if (sessProfileName.includes("[")) {
-            // if submitting from favorites, sesName might be the favorite node, so extract further
-            sessProfileName = sessionregex.exec(sessProfileName)[1];
-        }
+        const start = path.join(globals.ZOWETEMPFOLDER + path.sep).length;
+        const pathSegments = doc.fileName.substring(start).split(path.sep);
+        sessProfileName = pathSegments[1];
     }
 
     // get profile from session name

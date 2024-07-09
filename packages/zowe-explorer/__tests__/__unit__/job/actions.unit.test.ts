@@ -46,6 +46,7 @@ import { ProfileManagement } from "../../../src/utils/ProfileManagement";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { mocked } from "../../../__mocks__/mockUtils";
 import { TreeViewUtils } from "../../../src/utils/TreeViewUtils";
+import * as path from "path";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -656,17 +657,19 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         const blockMocks: any = createBlockMocks();
         mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const loadNamedProfileSpy = jest.spyOn(blockMocks.profileInstance, "loadNamedProfile");
         blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
             new ZoweDatasetNode({ label: "node", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: blockMocks.datasetSessionNode }),
             blockMocks.datasetSessionNode,
         ]);
-        blockMocks.datasetSessionNode.label = "temp";
+        blockMocks.textDocument.fileName = path.join(globals.USS_DIR, "lpar1_zosmf", "file.txt");
         activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
         const submitJclSpy = jest.spyOn(blockMocks.jesApi, "submitJcl");
         submitJclSpy.mockClear();
         submitJclSpy.mockResolvedValueOnce(blockMocks.iJob);
         await dsActions.submitJcl(blockMocks.testDatasetTree, undefined);
 
+        expect(loadNamedProfileSpy).toBeCalledWith("lpar1_zosmf");
         expect(submitJclSpy).toBeCalled();
         expect(mocked(Gui.showMessage)).toBeCalled();
         expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
