@@ -1238,6 +1238,30 @@ export class Profiles extends ProfilesCache {
         }
     }
 
+    public getSwitchAuthenticationQpItems(): vscode.QuickPickItem[] {
+        const qpItemYes: vscode.QuickPickItem = {
+            label: localize("Profiles.getSwitchAuthenticationQpItems.yesLbl", "Yes"),
+            description: localize("ProfileManagement.getSwitchAuthenticationQpItems.yesDesc", "To change the authentication"),
+        };
+        const qpItemNo: vscode.QuickPickItem = {
+            label: localize("Profiles.getSwitchAuthenticationQpItems.noLbl", "No"),
+            description: localize("Profiles.getSwitchAuthenticationQpItems.noDesc", "To continue in current authentication"),
+        };
+        return [qpItemYes, qpItemNo];
+    }
+
+    public async switchAuthenticationQuickPick(): Promise<vscode.QuickPickItem> {
+        const qp = Gui.createQuickPick();
+        const [qpItemYes, qpItemNo] = this.getSwitchAuthenticationQpItems();
+        qp.items = [qpItemYes, qpItemNo];
+        qp.placeholder = localize("Profiles.switchAuthenticationQuickPick.qpConfirmation", "Do you wish to change the Authentication");
+        qp.activeItems = [qpItemYes];
+        qp.show();
+        const selection = await Gui.resolveQuickPick(qp);
+        qp.hide();
+        return selection;
+    }
+
     public async basicAuthClearSecureArray(profileName?: string): Promise<void> {
         const profAttrs = await this.getProfileFromConfig(profileName);
         const profInfo = await this.getProfileInfo();
@@ -1262,6 +1286,13 @@ export class Profiles extends ProfilesCache {
     }
 
     public async handleSwitchAuthentication(node?: IZoweNodeType): Promise<void> {
+        const qpSelection = await this.switchAuthenticationQuickPick();
+        if (qpSelection === undefined) {
+            Gui.infoMessage(localize("profiles.operation.cancelled", "Operation Cancelled"));
+            return;
+        }
+        if (qpSelection.label === localize("Profiles.getSwitchAuthenticationQpItems.noLbl", "No")) return;
+
         let loginTokenType: string;
         let serviceProfile: zowe.imperative.IProfileLoaded;
         if (node) {
@@ -1269,15 +1300,6 @@ export class Profiles extends ProfilesCache {
         } else {
             serviceProfile = this.loadNamedProfile(node.label.toString().trim());
         }
-        const selection = await Gui.warningMessage(
-            localize(
-                "handleSwitchAuthentication.confirm",
-                "Are you sure you want to change the authentication for profile {0}?",
-                serviceProfile.name
-            ),
-            { items: [{ title: "Yes" }], vsCodeOpts: { modal: true } }
-        );
-        if (selection == null) return;
         const zeInstance = ZoweExplorerApiRegister.getInstance();
         try {
             loginTokenType = await zeInstance.getCommonApi(serviceProfile).getTokenTypeName();
