@@ -29,7 +29,6 @@ export namespace Table {
     export type ActionOpts = Omit<Action, "condition"> & { condition?: Conditional };
     export type ContextMenuOption = Omit<Action, "type"> & { dataType?: CallbackDataType };
     export type ContextMenuOpts = Omit<ContextMenuOption, "condition"> & { condition?: Conditional };
-    export type Axes = "row" | "column";
 
     export type RowContent = Record<string | number, string | number | boolean | string[]>;
     export type ValueFormatter = (data: any) => string;
@@ -38,7 +37,7 @@ export namespace Table {
         field: string;
         type?: string | string[];
         cellDataType?: boolean | string;
-        valueFormatter?: string | ValueFormatter;
+        valueFormatter?: string;
         checkboxSelection?: boolean;
         icons?: { [key: string]: string };
         suppressNavigable?: boolean;
@@ -50,7 +49,7 @@ export namespace Table {
         lockPosition?: boolean | "left" | "right";
         suppressMovable?: boolean;
         editable?: boolean;
-        valueSetter?: any; // TODO: stronger type here
+        valueSetter?: string;
         singleClickEdit?: boolean;
 
         filter?: boolean;
@@ -82,12 +81,12 @@ export namespace Table {
         sortIndex?: number | null;
         initialSortIndex?: number;
         sortingOrder?: SortDirection[];
-        comparator?: any; // TODO: Stronger type
+        comparator?: string;
         unSortIcon?: boolean;
 
-        // Column/row spanning (TODO: stronger types, add params to fn)
-        colSpan?: any;
-        rowSpan?: any;
+        // Column/row spanning
+        colSpan?: string;
+        rowSpan?: string;
 
         // Sizing
         width?: number;
@@ -99,6 +98,12 @@ export namespace Table {
         resizable?: boolean;
         suppressSizeToFit?: boolean;
         suppressAutoSize?: boolean;
+    };
+    export type ColumnOpts = Omit<Column, "comparator" | "colSpan" | "rowSpan" | "valueSetter"> & {
+        comparator?: (valueA: any, valueB: any, nodeA: any, nodeB: any, isDescending: boolean) => number;
+        colSpan?: (params: any) => number;
+        rowSpan?: (params: any) => number;
+        valueSetter?: string | ((params: any) => boolean);
     };
     export type Data = {
         // Actions to apply to the given row or column index
@@ -255,8 +260,16 @@ export namespace Table {
          * @param headers The headers to add to the existing header list
          * @returns Whether the webview successfully received the list of headers
          */
-        public async addColumns(...columns: Column[]): Promise<boolean> {
-            this.data.columns.push(...columns);
+        public async addColumns(...columns: ColumnOpts[]): Promise<boolean> {
+            this.data.columns.push(
+                ...columns.map((col) => ({
+                    ...col,
+                    comparator: col.comparator?.toString(),
+                    colSpan: col.colSpan?.toString(),
+                    rowSpan: col.rowSpan?.toString(),
+                    valueSetter: col.valueSetter?.toString(),
+                }))
+            );
             return this.updateWebview();
         }
 
@@ -277,8 +290,14 @@ export namespace Table {
          * @param headers The new headers to use for the table
          * @returns Whether the webview successfully received the new headers
          */
-        public async setColumns(columns: Column[]): Promise<boolean> {
-            this.data.columns = columns;
+        public async setColumns(columns: ColumnOpts[]): Promise<boolean> {
+            this.data.columns = columns.map((col) => ({
+                ...col,
+                comparator: col.comparator?.toString(),
+                colSpan: col.colSpan?.toString(),
+                rowSpan: col.rowSpan?.toString(),
+                valueSetter: col.valueSetter?.toString(),
+            }));
             return this.updateWebview();
         }
 

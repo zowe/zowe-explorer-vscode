@@ -140,7 +140,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
   return (
     <>
       {tableData.title ? <h1>{tableData.title}</h1> : null}
-      <div className={`${theme} ag-theme-vsc`}>
+      <div className={`${theme} ag-theme-vsc ${contextMenu.open ? "ctx-menu-open" : ""}`}>
         {contextMenu.component}
         <AgGridReact {...tableProps(contextMenu, tableData)} />
       </div>

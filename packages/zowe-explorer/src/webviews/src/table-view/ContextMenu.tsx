@@ -26,42 +26,66 @@ export const useContextMenu = (contextMenu: ContextMenuProps) => {
   const [open, setOpen] = useState(false);
   const [anchor, setAnchor] = useState<MousePt>({ x: 0, y: 0 });
 
-  const clickedColDef = useRef<ColDef>(null!);
-  const selectedRows = useRef<any[]>([]);
-  const clickedRow = useRef<any>(null);
+  const gridRefs = useRef<any>({
+    colDef: null,
+    selectedRows: [],
+    clickedRow: null,
+  });
 
-  const openMenu = useCallback((e: PointerEvent | null | undefined) => {
+  /* Opens the context menu and sets the anchor point to mouse coordinates */
+  const openMenu = (e: PointerEvent | null | undefined) => {
     if (!e) {
       return;
     }
 
     setAnchor({ x: e.clientX, y: e.clientY });
     setOpen(true);
-  }, []);
+  };
+
+  /* Removes 'focused-ctx-menu' class name from other grid cells when context menu is closed. */
+  const removeContextMenuClass = () => {
+    const elems = document.querySelectorAll("div[role='gridcell']");
+    elems.forEach((elem) => elem.classList.remove("focused-ctx-menu"));
+  };
 
   const cellMenu = useCallback(
     (event: CellContextMenuEvent) => {
-      const cell = event.api.getFocusedCell();
-      if (contextMenu.selectRow && cell) {
-        event.api.setFocusedCell(cell.rowIndex, cell.column, cell.rowPinned);
+      // Check if a cell is focused. If so, keep the border around the grid cell by adding a "focused cell" class.
+      const focusedCell = event.api.getFocusedCell();
+      if (contextMenu.selectRow && focusedCell) {
+        // Only apply the border to grid cell divs contained in valid cells
+        if (event.event?.target && (event.event?.target as Element).classList.contains("ag-cell-value")) {
+          const lastCell = (event.event?.target as Element).parentElement?.parentElement!;
+          lastCell.classList.add("focused-ctx-menu");
+        }
       }
 
-      clickedColDef.current = event.colDef;
-      selectedRows.current = event.api.getSelectedRows();
-      clickedRow.current = event.data;
+      // Cache the current column, selected rows and clicked row for later use
+      gridRefs.current = {
+        colDef: event.colDef,
+        selectedRows: event.api.getSelectedRows(),
+        clickedRow: event.data,
+      };
 
       openMenu(event.event as PointerEvent);
-      event.event?.stopImmediatePropagation();
     },
-    [contextMenu.selectRow, selectedRows]
+    [contextMenu.selectRow, gridRefs.current.selectedRows]
   );
 
   return {
     open,
     callback: cellMenu,
     component: open ? (
-      <ControlledMenu state={open ? "open" : "closed"} anchorPoint={anchor} direction="right" onClose={() => setOpen(false)}>
-        {ContextMenu(clickedRow.current, contextMenu.options, contextMenu.vscodeApi)}
+      <ControlledMenu
+        state={open ? "open" : "closed"}
+        anchorPoint={anchor}
+        direction="right"
+        onClose={() => {
+          removeContextMenuClass();
+          setOpen(false);
+        }}
+      >
+        {ContextMenu(gridRefs.current.clickedRow, contextMenu.options, contextMenu.vscodeApi)}
       </ControlledMenu>
     ) : null,
   };

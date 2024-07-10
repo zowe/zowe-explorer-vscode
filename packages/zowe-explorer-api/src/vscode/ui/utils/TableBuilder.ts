@@ -74,8 +74,14 @@ export class TableBuilder {
      * @param rows The headers to use for the table
      * @returns The same {@link TableBuilder} instance with the headers added
      */
-    public columns(newColumns: Table.Column[]): TableBuilder {
-        this.data.columns = newColumns;
+    public columns(newColumns: Table.ColumnOpts[]): TableBuilder {
+        this.data.columns = newColumns.map((col) => ({
+            ...col,
+            comparator: col.comparator?.toString(),
+            colSpan: col.colSpan?.toString(),
+            rowSpan: col.rowSpan?.toString(),
+            valueSetter: col.valueSetter?.toString(),
+        }));
         return this;
     }
 

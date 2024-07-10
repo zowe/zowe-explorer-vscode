@@ -16,6 +16,14 @@
     --ag-selected-row-background-color: var(--vscode-notebook-selectedCellBackground);
 }
 
+.ctx-menu-open .ag-body-viewport {
+    overflow: hidden !important;
+}
+
+.focused-ctx-menu {
+    border: 1px solid var(--vscode-menu-foreground) !important;
+}
+
 .ag-theme-vsc.ag-popup {
     position: absolute;
 }

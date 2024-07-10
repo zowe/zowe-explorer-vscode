@@ -34,7 +34,12 @@ export const tableProps = (contextMenu: ContextMenuState, tableData: Table.Data)
     enableCellTextSelection: true,
     ensureDomOrder: true,
     rowData: tableData.rows,
-    columnDefs: tableData.columns,
+    columnDefs: tableData.columns?.map((col) => ({
+        ...col,
+        comparator: col.comparator ? new Function(wrapFn(col.comparator)).call(null) : undefined,
+        colSpan: col.colSpan ? new Function(wrapFn(col.colSpan)).call(null) : undefined,
+        rowSpan: col.rowSpan ? new Function(wrapFn(col.rowSpan)).call(null) : undefined,
+    })),
     pagination: true,
     onCellContextMenu: contextMenu.callback,
 });
