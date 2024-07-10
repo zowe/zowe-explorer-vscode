@@ -1262,12 +1262,16 @@ export class Profiles extends ProfilesCache {
         return selection;
     }
 
-    public async basicAuthClearSecureArray(profileName?: string): Promise<void> {
-        const profAttrs = await this.getProfileFromConfig(profileName);
+    public async basicAuthClearSecureArray(profileName?: string, loginTokenType?: string): Promise<void> {
         const profInfo = await this.getProfileInfo();
         const configApi = profInfo.getTeamConfig();
+        const profAttrs = await this.getProfileFromConfig(profileName);
         const secureProps = await this.getSecurePropsForProfile(profileName);
-        configApi.set(`${secureProps.toString()}`, ["tokenValue"]);
+        if (loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken")) {
+            configApi.set(`${secureProps.toString()}`, []);
+        } else {
+            configApi.set(`${secureProps.toString()}`, ["tokenValue"]);
+        }
         configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "user")?.argLoc.jsonLoc}`);
         configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "password")?.argLoc.jsonLoc}`);
         await configApi.save();
@@ -1331,7 +1335,7 @@ export class Profiles extends ProfilesCache {
                             serviceProfile.name
                         )
                     );
-                    await this.basicAuthClearSecureArray(serviceProfile.name);
+                    await this.basicAuthClearSecureArray(serviceProfile.name, loginTokenType);
                     const updBaseProfile: zowe.imperative.IProfile = {
                         user: undefined,
                         password: undefined,
