@@ -1277,15 +1277,24 @@ export class Profiles extends ProfilesCache {
         await configApi.save();
     }
 
-    public async tokenAuthClearSecureArray(profileName?: string): Promise<void> {
-        const profAttrs = await this.getProfileFromConfig(profileName);
+    public async tokenAuthClearSecureArray(profileName?: string, loginTokenType?: string): Promise<void> {
         const profInfo = await this.getProfileInfo();
         const configApi = profInfo.getTeamConfig();
-        const secureProps = await this.getSecurePropsForProfile(profileName);
-        configApi.set(`${secureProps.toString()}`, ["user", "password"]);
-        configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc}`);
-        configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenValue")?.argLoc.jsonLoc}`);
-        configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenExpiration")?.argLoc.jsonLoc}`);
+        if (loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken")) {
+            const profAttrs = await this.getProfileFromConfig("base");
+            const secureProps = await this.getSecurePropsForProfile("base");
+            configApi.set(`${secureProps.toString()}`, []);
+            configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc}`);
+            configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenValue")?.argLoc.jsonLoc}`);
+            configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenExpiration")?.argLoc.jsonLoc}`);
+        } else {
+            const profAttrs = await this.getProfileFromConfig(profileName);
+            const secureProps = await this.getSecurePropsForProfile(profileName);
+            configApi.set(`${secureProps.toString()}`, ["user", "password"]);
+            configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc}`);
+            configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenValue")?.argLoc.jsonLoc}`);
+            configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenExpiration")?.argLoc.jsonLoc}`);
+        }
         await configApi.save();
     }
 
@@ -1368,7 +1377,7 @@ export class Profiles extends ProfilesCache {
                     );
                     ZoweLogger.info(successMsg);
                     Gui.showMessage(successMsg);
-                    await this.tokenAuthClearSecureArray(serviceProfile.name);
+                    await this.tokenAuthClearSecureArray(serviceProfile.name, loginTokenType);
                     ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.UPDATE);
                 } else {
                     Gui.errorMessage(
