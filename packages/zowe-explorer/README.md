@@ -165,7 +165,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
 3. Click the **magnifying glass** icon.
-4. Enter a search patterm in the `HLQ.ZZZ.SSS(MEMBERNAME)` format to filter out and display the specified member in the tree.
+4. Enter a search pattern in the `HLQ.ZZZ.SSS(MEMBERNAME)` format to filter out and display the specified member in the tree.
 
 ![View Data Set With Member Pattern](/docs/images/ZE-member-filter-search.gif?raw=true "View Data Set With Member Pattern")
 
