@@ -79,7 +79,7 @@ Your team configuration file appears either in your .zowe folder, if you chose t
 4. Select **Create a New Connection to z/OS**. The user name and password fields are optional.
 5. Follow the instructions, and enter all required information to complete the profile creation.
 
-![New Connection](/docs/images/ZE-newProfiles.gif?raw=true "New Connection")
+![New Connection](/docs/images/ZE-newProfiles.gif "New Connection")
 <br /><br />
 
 You can now use all the functionalities of the extension.
@@ -180,7 +180,7 @@ Your token has been successfully invalidated.
 
   For Zowe V2 profiles, the **Delete Profile** option opens the `zowe.config.json` file for the user to delete the profile manually:
 
-  ![Delete a V2 profile](/docs/images/ZE-v2-delete-profile.gif)
+  ![Delete a V2 profile](/docs/images/ZE-v2-delete-profile.gif "Delete a V2 profile")
 
 - **Hide a profile**: You can hide a profile from the profile tree by right-clicking the profile and selecting the **Manage Profile** and then select **Hide Profile** option from the drop down menu. Finally, if the profile is in multiple trees, choose whether the to hide from all trees or just the tree the action was started in. To unhide the profile, click the **+** button and select the profile from the quick pick list.
 
