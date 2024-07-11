@@ -58,7 +58,7 @@ Review the following use cases and their procedures to understand how to work wi
 
 This section includes steps for the tasks you need to complete to get started using Zowe Explorer.
 
-Configure Zowe Explorer, create a [team configuration file](#create-a-team-configuration-file) or a [v1 profile (deprecated)](#create-a-v1-profile) for profile manangement, review the [sample use cases](#sample-use-cases) to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
+Configure Zowe Explorer, create a [team configuration file](#create-a-team-configuration-file) or a [v1 profile (deprecated)](#create-a-v1-profile) for profile management, review the [sample use cases](#sample-use-cases) to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
 
 ### Configuring Zowe Explorer
 
