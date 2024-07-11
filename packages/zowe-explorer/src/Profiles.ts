@@ -1238,30 +1238,6 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public getSwitchAuthenticationQpItems(): vscode.QuickPickItem[] {
-        const qpItemYes: vscode.QuickPickItem = {
-            label: localize("Profiles.getSwitchAuthenticationQpItems.yesLbl", "Yes"),
-            description: localize("ProfileManagement.getSwitchAuthenticationQpItems.yesDesc", "To change the authentication"),
-        };
-        const qpItemNo: vscode.QuickPickItem = {
-            label: localize("Profiles.getSwitchAuthenticationQpItems.noLbl", "No"),
-            description: localize("Profiles.getSwitchAuthenticationQpItems.noDesc", "To continue in current authentication"),
-        };
-        return [qpItemYes, qpItemNo];
-    }
-
-    public async switchAuthenticationQuickPick(): Promise<vscode.QuickPickItem> {
-        const qp = Gui.createQuickPick();
-        const [qpItemYes, qpItemNo] = this.getSwitchAuthenticationQpItems();
-        qp.items = [qpItemYes, qpItemNo];
-        qp.placeholder = localize("Profiles.switchAuthenticationQuickPick.qpConfirmation", "Do you wish to change the Authentication");
-        qp.activeItems = [qpItemYes];
-        qp.show();
-        const selection = await Gui.resolveQuickPick(qp);
-        qp.hide();
-        return selection;
-    }
-
     public async basicAuthClearSecureArray(profileName?: string, loginTokenType?: string): Promise<void> {
         const profInfo = await this.getProfileInfo();
         const configApi = profInfo.getTeamConfig();
@@ -1299,7 +1275,22 @@ export class Profiles extends ProfilesCache {
     }
 
     public async handleSwitchAuthentication(node?: IZoweNodeType): Promise<void> {
-        const qpSelection = await this.switchAuthenticationQuickPick();
+        const qp = Gui.createQuickPick();
+        const qpItemYes: vscode.QuickPickItem = {
+            label: localize("Profiles.switchAuthenticationQuickPick.yesLbl", "Yes"),
+            description: localize("ProfileManagement.switchAuthenticationQuickPick.yesDesc", "To change the authentication"),
+        };
+        const qpItemNo: vscode.QuickPickItem = {
+            label: localize("Profiles.switchAuthenticationQuickPick.noLbl", "No"),
+            description: localize("Profiles.switchAuthenticationQuickPick.noDesc", "To continue in current authentication"),
+        };
+        qp.items = [qpItemYes, qpItemNo];
+        qp.placeholder = localize("Profiles.switchAuthenticationQuickPick.qpConfirmation", "Do you wish to change the Authentication");
+        qp.activeItems = [qpItemYes];
+        qp.show();
+        const qpSelection = await Gui.resolveQuickPick(qp);
+        qp.hide();
+
         if (qpSelection === undefined) {
             Gui.infoMessage(localize("profiles.operation.cancelled", "Operation Cancelled"));
             return;
