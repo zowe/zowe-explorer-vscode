@@ -11,11 +11,11 @@
 
 export const TheiaLocator = {
     theiaUrl: "http://localhost:3000",
-    zoweExplorerxId: "shell-tab-plugin-view-container:zowe",
+    zoweExplorerxId: "shell-tab-plugin-view-container:workbench.view.extension.zowe",
 };
 
 export const DatasetsLocators = {
-    datasetTabId: "plugin-view-container:zowe--plugin-view:zowe.ds.explorer",
+    datasetTabId: "plugin-view-container:workbench.view.extension.zowe--plugin-view:zowe.ds.explorer",
     datasetTabXpath: "//span[@title='Data Sets']",
     datasetsPanelId: "plugin-view:zowe.ds.explorer",
     datasetsAddSessionId: "zowe.ds.addSession-as-tabbar-toolbar-item",
@@ -32,7 +32,7 @@ export const DatasetsLocators = {
 };
 
 export const UssLocators = {
-    ussTabId: "plugin-view-container:zowe--plugin-view:zowe.uss.explorer",
+    ussTabId: "plugin-view-container:workbench.view.extension.zowe--plugin-view:zowe.uss.explorer",
     ussTabXpath: "//span[@title='Unix System Services (USS)']",
     ussPanelId: "plugin-view:zowe.uss.explorer",
     ussAddSessionId: "zowe.uss.addSession-as-tabbar-toolbar-item",
@@ -48,7 +48,7 @@ export const UssLocators = {
 };
 
 export const JobsLocators = {
-    jobTabId: "plugin-view-container:zowe--plugin-view:zowe.jobs.explorer",
+    jobTabId: "plugin-view-container:workbench.view.extension.zowe--plugin-view:zowe.jobs.explorer",
     jobTabXpath: "//span[@title='Jobs']",
     jobsPanelId: "zowe.jobs.explorer",
     jobsAddSessionId: "zowe.jobs.addJobsSession-as-tabbar-toolbar-item",
