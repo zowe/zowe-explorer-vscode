@@ -23,3 +23,4 @@ temp
 coverage/
 dist/
 prebuilds/
+zedc/target/
