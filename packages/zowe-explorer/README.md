@@ -450,7 +450,7 @@ As a result, VS Code extensions like Zowe Explorer, Zowe Explorer CICS Extension
 
 5. Confirm the deletion by clicking **Delete** in the drop-down menu.
 
-   ![Delete Data Sets and Members](/docs/images/ZE-delete-ds2.gif?raw=true "Delete Data Sets and Members")
+   ![Delete Data Sets and Members](/docs/images/ZE-delete-ds.gif?raw=true "Delete Data Sets and Members")
    <br /><br />
 
 [Back to sample list](#sample-use-cases)
