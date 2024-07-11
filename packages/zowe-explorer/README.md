@@ -1,5 +1,6 @@
 # Zowe Explorer
 
+[![version](https://img.shields.io/visual-studio-marketplace/v/Zowe.vscode-extension-for-zowe.svg)](https://img.shields.io/visual-studio-marketplace/v/Zowe.vscode-extension-for-zowe.svg)
 [![downloads](https://img.shields.io/visual-studio-marketplace/d/Zowe.vscode-extension-for-zowe.svg)](https://img.shields.io/visual-studio-marketplace/d/Zowe.vscode-extension-for-zowe.svg)
 [![codecov](https://codecov.io/gh/zowe/zowe-explorer-vscode/branch/v1-lts/graph/badge.svg)](https://codecov.io/gh/zowe/zowe-explorer-vscode)
 [![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
