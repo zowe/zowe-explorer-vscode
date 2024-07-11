@@ -41,7 +41,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Fixed an issue where the `onProfilesUpdate` event did not fire after secure credentials were updated. [#2822](https://github.com/zowe/zowe-explorer-vscode/issues/2822)
 - Fixed an issue where `ProfilesCache` may return missing or incorrect profile values when multiple extensions call it during activation. [#2831](https://github.com/zowe/zowe-explorer-vscode/issues/2831)
 - Removed `handlebars` dependency in favor of `mustache` for technical currency purposes. [#2975](https://github.com/zowe/zowe-explorer-vscode/pull/2975)
-- Update Zowe SDKs to `8.0.0-next.202405241828` for technical currency. [#2918](https://github.com/zowe/zowe-explorer-vscode/issues/2918)
+- Update Zowe SDKs to `8.0.0-next.202407051717` for technical currency. [#2918](https://github.com/zowe/zowe-explorer-vscode/issues/2918)
 
 ## `3.0.0-next.202404242037`
 
