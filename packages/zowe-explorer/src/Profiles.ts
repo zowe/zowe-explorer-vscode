@@ -1242,11 +1242,10 @@ export class Profiles extends ProfilesCache {
         const profInfo = await this.getProfileInfo();
         const configApi = profInfo.getTeamConfig();
         const profAttrs = await this.getProfileFromConfig(profileName);
-        const secureProps = await this.getSecurePropsForProfile(profileName);
         if (loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken")) {
-            configApi.set(`${secureProps.toString()}`, []);
+            configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, []);
         } else {
-            configApi.set(`${secureProps.toString()}`, ["tokenValue"]);
+            configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, ["tokenValue"]);
         }
         configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "user")?.argLoc.jsonLoc}`);
         configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "password")?.argLoc.jsonLoc}`);
@@ -1258,15 +1257,13 @@ export class Profiles extends ProfilesCache {
         const configApi = profInfo.getTeamConfig();
         if (loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken")) {
             const profAttrs = await this.getProfileFromConfig("base");
-            const secureProps = await this.getSecurePropsForProfile("base");
-            configApi.set(`${secureProps.toString()}`, []);
+            configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, []);
             configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc}`);
             configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenValue")?.argLoc.jsonLoc}`);
             configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenExpiration")?.argLoc.jsonLoc}`);
         } else {
             const profAttrs = await this.getProfileFromConfig(profileName);
-            const secureProps = await this.getSecurePropsForProfile(profileName);
-            configApi.set(`${secureProps.toString()}`, ["user", "password"]);
+            configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, ["user", "password"]);
             configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc}`);
             configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenValue")?.argLoc.jsonLoc}`);
             configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenExpiration")?.argLoc.jsonLoc}`);
