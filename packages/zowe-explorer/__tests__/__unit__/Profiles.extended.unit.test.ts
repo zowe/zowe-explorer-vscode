@@ -1965,7 +1965,12 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
                     profName: "sestest",
                     profLoc: {
                         osLoc: ["test"],
+                        jsonLoc: "jsonLoc",
                     },
+                },
+                {
+                    profName: "base",
+                    profLoc: { locType: 0, osLoc: ["location"], jsonLoc: "jsonLoc" },
                 },
             ],
             mergeArgsForProfile: jest.fn().mockReturnValue({
