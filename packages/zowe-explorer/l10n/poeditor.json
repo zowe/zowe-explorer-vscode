@@ -194,12 +194,6 @@
   "configuration.title": {
     "Zowe Explorer": ""
   },
-  "zowe.files.temporaryDownloadsFolder.hide": {
-    "Hide the Zowe temporary folder from the workspace": ""
-  },
-  "zowe.files.temporaryDownloadsFolder.cleanup": {
-    "Ensure deletion of downloaded file content to clean up local source files during deactivation (that is, closing a window).  Disable this setting to support using multiple windows with z/OS files opened using Zowe Explorer.": ""
-  },
   "zowe.ds.default.binary": {
     "Default values of Binary data set creation": ""
   },
@@ -226,9 +220,6 @@
   },
   "zowe.files.logsFolder.path": {
     "Path to Zowe Explorer logs folder": ""
-  },
-  "zowe.files.temporaryDownloadsFolder.path": {
-    "Path to temporary folder location": ""
   },
   "zowe.uss.history": {
     "Toggle if USS favorite files persist locally": ""
@@ -421,6 +412,11 @@
   "Zowe explorer profiles are being set as secured.": "",
   "Custom credential manager failed to activate": "",
   "Custom credential manager {0} found, attempting to activate.": "",
+  "No": "",
+  "Yes, globally": "",
+  "Only for this workspace": "",
+  "Zowe Explorer failed to activate since the default credential manager is not supported in your environment.": "",
+  "Do you wish to disable credential management? (VS Code window reload will be triggered)": "",
   "No custom credential managers found, using the default instead.": "",
   "Custom credential manager {0} found": "",
   "Do you wish to use this credential manager instead?": "",
@@ -444,7 +440,6 @@
   "Updating imperative.json Credential Manager to {0}.\n{1}": "",
   "Failed to initialize Zowe folder: {0}": "",
   "Zowe Profiles initialized successfully.": "",
-  "Zowe Temp folder initialized successfully.": "",
   "Create New": "",
   "Convert Existing Profiles": "",
   "Operation cancelled": "",
@@ -455,7 +450,6 @@
   "Zowe Explorer log level: {0}": "",
   "Update": "",
   "Zowe Explorer now has a VS Code logger with a default log level of INFO.\n                \nIt looks like the Zowe CLI's ZOWE_APP_LOG_LEVEL={0}.\n                \nWould you like Zowe Explorer to update to the the same log level?": "",
-  "Zowe Explorer's temp folder is located at {0}": "",
   "All Files": "",
   "User dismissed the certificate wizard.": "",
   "Certificate Wizard": "",
@@ -557,7 +551,6 @@
   "Type the new pattern to add to history": "",
   "action is not supported for this property type.": "",
   "Clear all history items for this persistent property?": "",
-  "No": "",
   "Enter a filter": "",
   "No items are loaded in the tree.": "",
   "You must enter a pattern.": "",
@@ -592,7 +585,6 @@
   "Job search cancelled.": "",
   "The polling interval must be greater than or equal to 1000ms.": "",
   "Poll interval (in ms) for: {0}": "",
-  "Polling dismissed for {0}; operation cancelled.": "",
   "$(sync~spin) Polling: {0}...": "",
   "Filter: {0}": "",
   "Set a filter...": "",
@@ -764,8 +756,6 @@
   "Internal error: Tried to call a non-existing JES API in API register: {0}": "",
   "Internal error: Tried to call a non-existing Command API in API register: {0}": "",
   "Internal error: Tried to call a non-existing Common API in API register: {0}": "",
-  "Error encountered when creating temporary folder!": "",
-  "Unable to delete temporary folder. {0}": "",
   "Reload Window": "",
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "",
   "Token auth error": "",

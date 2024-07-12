@@ -27,7 +27,6 @@ import { SharedHistoryView } from "./SharedHistoryView";
 import { SharedTreeProviders } from "./SharedTreeProviders";
 import { JobActions } from "../job/JobActions";
 import { UssFSProvider } from "../uss/UssFSProvider";
-import { TempFolder } from "../../configuration/TempFolder";
 import { Constants } from "../../configuration/Constants";
 import { MvsCommandHandler } from "../../commands/MvsCommandHandler";
 import { TsoCommandHandler } from "../../commands/TsoCommandHandler";
@@ -41,7 +40,6 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { LoggerUtils } from "../../utils/LoggerUtils";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
 import { DatasetFSProvider } from "../dataset/DatasetFSProvider";
-import { ExtensionUtils } from "../../utils/ExtensionUtils";
 import type { Definitions } from "../../configuration/Definitions";
 import { SharedUtils } from "./SharedUtils";
 import { SharedContext } from "./SharedContext";
@@ -150,19 +148,11 @@ export class SharedInit {
                 if (e.affectsConfiguration(Constants.SETTINGS_LOGS_FOLDER_PATH)) {
                     await SharedInit.initZoweLogger(context);
                 }
-                // If the temp folder location has been changed, update current temp folder preference
-                if (e.affectsConfiguration(Constants.SETTINGS_TEMP_FOLDER_PATH)) {
-                    const updatedPreferencesTempPath: string = SettingsConfig.getDirectValue(Constants.SETTINGS_TEMP_FOLDER_PATH);
-                    await TempFolder.moveTempFolder(Constants.SETTINGS_TEMP_FOLDER_LOCATION, updatedPreferencesTempPath);
-                }
                 if (e.affectsConfiguration(Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION)) {
                     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
                     await SharedActions.refreshAll(providers.ds);
                     await SharedActions.refreshAll(providers.uss);
                     await SharedActions.refreshAll(providers.job);
-                }
-                if (e.affectsConfiguration(Constants.SETTINGS_TEMP_FOLDER_HIDE)) {
-                    await TempFolder.hideTempFolder(FileManagement.getZoweDir());
                 }
 
                 if (e.affectsConfiguration(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
@@ -548,10 +538,6 @@ export class SharedInit {
         if (Constants.ACTIVATED) {
             return;
         }
-        const tempPath: string = SettingsConfig.getDirectValue(Constants.SETTINGS_TEMP_FOLDER_PATH);
-        ExtensionUtils.defineConstants(tempPath);
-        await TempFolder.hideTempFolder(FileManagement.getZoweDir());
-        ProfilesUtils.initializeZoweTempFolder();
         await SettingsConfig.standardizeSettings();
         ZoweLogger.info(vscode.l10n.t(`Zowe Explorer has activated successfully.`));
         Constants.ACTIVATED = true;

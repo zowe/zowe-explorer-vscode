@@ -12,7 +12,6 @@
 import * as vscode from "vscode";
 import { Constants } from "./configuration/Constants";
 import { Profiles } from "./configuration/Profiles";
-import { TempFolder } from "./configuration/TempFolder";
 import { ZoweExplorerApiRegister } from "./extending/ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./extending/ZoweExplorerExtender";
 import { ZoweLocalStorage } from "./tools/ZoweLocalStorage";
@@ -60,7 +59,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
  */
 export async function deactivate(): Promise<void> {
     await ZoweSaveQueue.all();
-    TempFolder.cleanDir(Constants.ZOWETEMPFOLDER);
     Constants.ACTIVATED = false;
     ZoweLogger.disposeZoweLogger();
 }

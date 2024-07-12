@@ -26,11 +26,13 @@ export class ZowePersistentFilters {
     private static readonly searchHistory: string = "searchHistory";
     private static readonly fileHistory: string = "fileHistory";
     private static readonly sessions: string = "sessions";
+    private static readonly encodingHistory: string = "encodingHistory";
 
     public schema: PersistenceSchemaEnum;
     private mSearchHistory: string[] = [];
     private mFileHistory: string[] = [];
     private mSessions: string[] = [];
+    private mEncodingHistory: string[] = [];
 
     public constructor(
         schema: PersistenceSchemaEnum,
@@ -195,6 +197,16 @@ export class ZowePersistentFilters {
         return this.updateSearchHistory();
     }
 
+    public removeEncodingHistory(name: string): void {
+        const index = this.mEncodingHistory.findIndex((encodingHistoryItem) => {
+            return encodingHistoryItem.includes(name);
+        });
+        if (index >= 0) {
+            this.mEncodingHistory.splice(index, 1);
+        }
+        this.updateEncodingHistory();
+    }
+
     /*********************************************************************************************************************************************/
     /* Reset functions, for resetting the persistent array to empty (in the extension and in settings.json)
     /*********************************************************************************************************************************************/
@@ -215,6 +227,11 @@ export class ZowePersistentFilters {
         ZoweLogger.trace("PersistentFilters.resetFileHistory called.");
         this.mFileHistory = [];
         this.updateFileHistory();
+    }
+
+    public resetEncodingHistory(): void {
+        this.mEncodingHistory = [];
+        this.updateEncodingHistory();
     }
 
     /*********************************************************************************************************************************************/
@@ -257,6 +274,14 @@ export class ZowePersistentFilters {
         }
     }
 
+    private updateEncodingHistory(): void {
+        const settings = { ...ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema) };
+        if (settings.persistence) {
+            settings.encodingHistory = this.mEncodingHistory;
+            ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(this.schema, settings);
+        }
+    }
+
     private initialize(): void {
         ZoweLogger.trace("PersistentFilters.initialize called.");
         const settings = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema);
@@ -264,9 +289,11 @@ export class ZowePersistentFilters {
             this.mSearchHistory = settings[ZowePersistentFilters.searchHistory] ?? [];
             this.mSessions = settings[ZowePersistentFilters.sessions] ?? [];
             this.mFileHistory = settings[ZowePersistentFilters.fileHistory] ?? [];
+            this.mEncodingHistory = settings[ZowePersistentFilters.encodingHistory] ?? [];
         }
-        this.updateFileHistory();
         this.updateSearchHistory();
         this.updateSessions();
+        this.updateFileHistory();
+        this.updateEncodingHistory();
     }
 }
