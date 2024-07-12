@@ -40,6 +40,7 @@ import { promiseStatus, PromiseStatuses } from "promise-status-async";
 import { getDocumentFilePath, initializeFileOpening, updateOpenFiles } from "../shared/utils";
 import { IZoweDatasetTreeOpts } from "../shared/IZoweTreeOpts";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
+import { imperative } from "@zowe/cli";
 
 // Set up localization
 nls.config({
@@ -447,6 +448,17 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public getEtag(): string {
         ZoweLogger.trace("ZoweDatasetNode.getEtag called.");
         return this.etag;
+    }
+
+    /**
+     * Returns the imperative.IProfileLoaded profile for this node
+     *
+     * @returns {imperative.IProfileLoaded}
+     */
+    public getProfile(): imperative.IProfileLoaded {
+        const prof = this.profile ?? this.getParent()?.getProfile();
+
+        return Profiles.getInstance().loadNamedProfile(prof.name); // this returns the profile with newer token
     }
 
     /**
