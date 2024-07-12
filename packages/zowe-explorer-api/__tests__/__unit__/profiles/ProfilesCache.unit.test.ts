@@ -141,6 +141,7 @@ describe("ProfilesCache", () => {
 
     it("getProfileInfo should initialize ProfileInfo API", async () => {
         const existsSync = jest.spyOn(fs, "existsSync").mockImplementation();
+        jest.spyOn(FileManagement, "getZoweDir").mockReturnValue(fakeZoweDir);
         const profInfo = await new ProfilesCache(fakeLogger as unknown as imperative.Logger, __dirname).getProfileInfo();
         expect(readProfilesFromDiskSpy).toHaveBeenCalledTimes(1);
         expect(defaultCredMgrWithKeytarSpy).toHaveBeenCalledTimes(1);
@@ -438,12 +439,8 @@ describe("ProfilesCache", () => {
     });
 
     describe("convertV1ProfToConfig", () => {
-        Object.defineProperty(FileManagement, "getZoweDir", { value: jest.fn().mockReturnValue(fakeZoweDir), configurable: true });
-        Object.defineProperty(ProfilesCache, "addToConfigArray", { value: jest.fn(), configurable: true });
-        Object.defineProperty(fs, "renameSync", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ProfilesCache, "getConfigArray", { value: jest.fn(), configurable: true });
         it("Should convert v1 profiles to config file", async () => {
-            const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+            const profInfo = createProfInfoMock([lpar1Profile]);
             jest.spyOn(imperative.ConvertV1Profiles, "convert").mockImplementationOnce(() => {
                 return {
                     profilesConverted: { zosmf: ["profile1"] },
@@ -451,10 +448,10 @@ describe("ProfilesCache", () => {
                     config: {},
                 } as any;
             });
-            await expect(profCache.convertV1ProfToConfig()).resolves.not.toThrow();
+            await expect(ProfilesCache.convertV1ProfToConfig(profInfo)).resolves.not.toThrow();
         });
         it("Should convert v1 profiles to config file with profilesFailed", async () => {
-            const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+            const profInfo = createProfInfoMock([lpar1Profile]);
             jest.spyOn(imperative.ConvertV1Profiles, "convert").mockImplementationOnce(() => {
                 return {
                     profilesConverted: {},
@@ -462,16 +459,13 @@ describe("ProfilesCache", () => {
                     config: {},
                 } as any;
             });
-            await expect(profCache.convertV1ProfToConfig()).resolves.not.toThrow();
+            await expect(ProfilesCache.convertV1ProfToConfig(profInfo)).resolves.not.toThrow();
         });
         it("Should convert v1 profiles to config even if rename of profiles directory fails", async () => {
-            Object.defineProperty(fs, "renameSync", {
-                value: jest.fn().mockImplementation(() => {
-                    throw new Error("Error renaming file");
-                }),
-                configurable: true,
+            jest.spyOn(fs, "renameSync").mockImplementationOnce(() => {
+                throw new Error("Error renaming file");
             });
-            const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+            const profInfo = createProfInfoMock([lpar1Profile]);
             jest.spyOn(imperative.ConvertV1Profiles, "convert").mockImplementationOnce(() => {
                 return {
                     profilesConverted: {},
@@ -479,14 +473,14 @@ describe("ProfilesCache", () => {
                     config: {},
                 } as any;
             });
-            await expect(profCache.convertV1ProfToConfig()).resolves.not.toThrow();
+            await expect(ProfilesCache.convertV1ProfToConfig(profInfo)).resolves.not.toThrow();
         });
         it("Should reject if error thrown other than renaming profiles directory", async () => {
-            const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+            const profInfo = createProfInfoMock([lpar1Profile]);
             jest.spyOn(imperative.ConvertV1Profiles, "convert").mockImplementationOnce(() => {
                 throw new Error("Error converting config");
             });
-            await expect(profCache.convertV1ProfToConfig()).rejects.toThrow("Error converting config");
+            await expect(ProfilesCache.convertV1ProfToConfig(profInfo)).rejects.toThrow("Error converting config");
         });
     });
 

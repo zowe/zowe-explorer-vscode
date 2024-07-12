@@ -565,32 +565,14 @@ export class ProfilesUtils {
 
     private static async convertV1Profs(): Promise<void> {
         const profileInfo = await this.getProfileInfo();
-        const convertResults: imperative.IConvertV1ProfResult = await imperative.ConvertV1Profiles.convert({ deleteV1Profs: false, profileInfo });
-        ZoweLogger.debug(JSON.stringify(convertResults));
-        // await Constants.PROFILES_CACHE.convertV1ProfToConfig();
-        const successMsg: string[] = [];
-        const warningMsg: string[] = [];
-        if (convertResults.profilesConverted) {
-            for (const [k, v] of Object.entries(convertResults?.profilesConverted)) {
-                successMsg.push(`Converted ${k} profile: ${v.join(", ")}\n`);
+        const convertResult: imperative.IConvertV1ProfResult = await ProfilesCache.convertV1ProfToConfig(profileInfo);
+        ZoweLogger.debug(JSON.stringify(convertResult));
+        if (convertResult.profilesConverted) {
+            const successMsg: string[] = [];
+            for (const [k, v] of Object.entries(convertResult.profilesConverted)) {
+                successMsg.push(`Converted ${k} profile: ${v.join(", ")}`);
             }
-        }
-        if (convertResults?.profilesFailed?.length > 0) {
-            warningMsg.push(`Failed to convert ${convertResults?.profilesFailed.length} profile(s). See details below\n`);
-            for (const { name, type, error } of convertResults.profilesFailed) {
-                if (name != null) {
-                    warningMsg.push(`Failed to load ${type} profile "${name}":\n${String(error)}\n`);
-                } else {
-                    warningMsg.push(`Failed to find default ${type} profile:\n${String(error)}\n`);
-                }
-            }
-        }
-        let responseMsg = "";
-        if (convertResults.msgs) {
-            responseMsg += `${convertResults.msgs.map((msg) => msg.msgText).join("")}\n`;
-        }
-        if (successMsg?.length > 0) {
-            responseMsg += `Success: ${successMsg.join("")}\n`;
+            ZoweLogger.info(successMsg.join("\n"));
             const document = await vscode.workspace.openTextDocument(
                 path.join(FileManagement.getZoweDir(), (await this.getProfileInfo()).getTeamConfig().configName)
             );
@@ -598,10 +580,28 @@ export class ProfilesUtils {
                 await Gui.showTextDocument(document);
             }
         }
-        if (warningMsg?.length > 0) {
-            responseMsg += `Warning: ${warningMsg.join("")}\n`;
+        if (convertResult.profilesFailed?.length > 0) {
+            const warningMsg: string[] = [];
+            warningMsg.push(`Failed to convert ${convertResult.profilesFailed.length} profile(s). See details below`);
+            for (const { name, type, error } of convertResult.profilesFailed) {
+                if (name != null) {
+                    warningMsg.push(`Failed to load ${type} profile "${name}":\n${String(error)}`);
+                } else {
+                    warningMsg.push(`Failed to find default ${type} profile:\n${String(error)}`);
+                }
+            }
+            ZoweLogger.warn(warningMsg.join("\n"));
         }
-        ZoweLogger.info(responseMsg);
-        Gui.infoMessage(responseMsg, { vsCodeOpts: { modal: true } });
+        const responseMsg = convertResult.msgs.reduce((msgs: string[], msg: imperative.ConvertMsg) => {
+            if (msg.msgFormat & imperative.ConvertMsgFmt.PARAGRAPH) {
+                msgs.push("\n");
+            }
+            if (msg.msgFormat & imperative.ConvertMsgFmt.INDENT) {
+                msgs.push("\t");
+            }
+            msgs.push(msg.msgText + "\n");
+            return msgs;
+        }, []);
+        Gui.infoMessage(responseMsg.join(""), { vsCodeOpts: { modal: true } });
     }
 }
