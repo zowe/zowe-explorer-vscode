@@ -8,6 +8,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Removed `handlebars` dependency in favor of `mustache` for technical currency purposes. [#2974](https://github.com/zowe/zowe-explorer-vscode/pull/2974)
 
+## `2.16.3`
+
 ## `2.16.2`
 
 ### Bug fixes

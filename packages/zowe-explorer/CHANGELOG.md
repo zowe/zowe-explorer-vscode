@@ -8,6 +8,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - To add the ability to open a Favorited Job Search under Favorites [#2630](https://github.com/zowe/zowe-explorer-vscode/pull/2930)
 
+## `2.16.3`
+
+### Bug fixes
+
+- Fixed issue where USS files could not be submitted as JCL. [#2991](https://github.com/zowe/zowe-explorer-vscode/issues/2991)
+
 ## `2.16.2`
 
 ### Bug fixes
