@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added the ability to switch between basic authentication and token-based authentication. [#2944](https://github.com/zowe/zowe-explorer-vscode/pull/2944)
+
 ### Bug fixes
 
 - To add the ability to open a Favorited Job Search under Favorites [#2630](https://github.com/zowe/zowe-explorer-vscode/pull/2930)
@@ -39,7 +41,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added a confirmation dialog when the encoding is changed for an unsaved data set or USS file. [#2911](https://github.com/zowe/zowe-explorer-vscode/pull/2911)
 - Added a "Copy Relative Path" context option for USS files and directories in the tree view. [#2908](https://github.com/zowe/zowe-explorer-vscode/pull/2908)
 - Added a "Copy Name" context option for data sets, jobs and spool files in the tree view. [#2908](https://github.com/zowe/zowe-explorer-vscode/pull/2908)
-- Added the ability to switch between basic authentication and token-based authentication. [#2867](https://github.com/zowe/zowe-explorer-vscode/pull/2867)
 
 ### Bug fixes
 
