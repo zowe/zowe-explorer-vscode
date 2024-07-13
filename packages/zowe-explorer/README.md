@@ -6,8 +6,6 @@
 [![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
 > ## v3 Pre-release is now available in our [Github Releases](https://github.com/zowe/zowe-explorer-vscode/releases) with the removal of v1 profile support. Keep an eye on [changes affecting users and extenders](https://github.com/zowe/zowe-explorer-vscode/wiki/v3-Changes-for-Users-and-Extenders) for the full list of changes
->
-> ## With the removal of the keytar shim from VS Code, we have replaced `node-keytar` with `@zowe/secrets-for-zowe-sdk` in the v2.10.0 release to avoid user interruptions. Extenders, please check out the usage [documentation](https://github.com/zowe/zowe-explorer-vscode/wiki/Secure-Credentials-for-Extenders)
 
 ## Introduction
 
@@ -60,7 +58,7 @@ Review the following use cases and their procedures to understand how to work wi
 
 This section includes steps for the tasks you need to complete to get started using Zowe Explorer.
 
-Configure Zowe Explorer, create a [team configuration file](#create-a-team-configuration-file) or a [v1 profile (deprecated)](#create-a-v1-profile) for profile manangement, review the [sample use cases](#sample-use-cases) to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
+Configure Zowe Explorer, create a [team configuration file](#create-a-team-configuration-file) or a [v1 profile (deprecated)](#create-a-v1-profile) for profile management, review the [sample use cases](#sample-use-cases) to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
 
 ### Configuring Zowe Explorer
 
@@ -452,7 +450,7 @@ As a result, VS Code extensions like Zowe Explorer, Zowe Explorer CICS Extension
 
 5. Confirm the deletion by clicking **Delete** in the drop-down menu.
 
-   ![Delete Data Sets and Members](/docs/images/ZE-delete-ds2.gif?raw=true "Delete Data Sets and Members")
+   ![Delete Data Sets and Members](/docs/images/ZE-delete-ds.gif?raw=true "Delete Data Sets and Members")
    <br /><br />
 
 [Back to sample list](#sample-use-cases)
