@@ -229,7 +229,7 @@ export namespace Table {
             });
 
             if (result) {
-                this.onTableDataReceivedEmitter.fire(this.lastUpdated ? addedDiff(this.data, this.lastUpdated) : this.data);
+                this.onTableDataReceivedEmitter.fire(this.lastUpdated ? addedDiff(this.lastUpdated, this.data) : this.data);
                 this.lastUpdated = this.data;
             }
             return result;
