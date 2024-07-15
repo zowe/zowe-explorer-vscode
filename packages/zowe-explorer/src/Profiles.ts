@@ -1511,7 +1511,7 @@ export class Profiles extends ProfilesCache {
             .map((arg) => arg.argName);
     }
 
-    public async loginWithRegularProfile(serviceProfile: zowe.imperative.IProfileLoaded, node?: IZoweNodeType): Promise<boolean> {
+    private async loginWithRegularProfile(serviceProfile: zowe.imperative.IProfileLoaded, node?: IZoweNodeType): Promise<boolean> {
         let session: zowe.imperative.Session;
         if (node) {
             session = node.getSession();

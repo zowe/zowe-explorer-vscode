@@ -1882,7 +1882,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
             getTokenTypeName: () => "jwtToken",
         } as never);
-        jest.spyOn(Profiles.getInstance(), "loginWithRegularProfile").mockResolvedValue(true);
+        jest.spyOn(Profiles.getInstance() as any, "loginWithRegularProfile").mockResolvedValue(true);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
         expect(Gui.showMessage).toBeCalled();
         expect(testNode.profile.profile.tokenType).toBe(modifiedTestNode.profile.profile.tokenType);
@@ -1940,7 +1940,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
             getTokenTypeName: () => "jwtToken",
         } as never);
-        jest.spyOn(Profiles.getInstance(), "loginWithRegularProfile").mockResolvedValue(false);
+        jest.spyOn(Profiles.getInstance() as any, "loginWithRegularProfile").mockResolvedValue(false);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
         expect(Gui.errorMessage).toBeCalled();
         expect(testNode.profile.profile.tokenType).toBe(modifiedTestNode.profile.profile.tokenType);
