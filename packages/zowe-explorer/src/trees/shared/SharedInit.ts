@@ -344,6 +344,10 @@ export class SharedInit {
                 vscode.commands.registerCommand("zowe.tableView2", () => {
                     // Context option demo
                     new TableBuilder(context)
+                        .options({
+                            pagination: true,
+                            paginationPageSizeSelector: [25, 50, 100, 250],
+                        })
                         .title("Random data")
                         .rows(
                             ...Array.from({ length: 1024 }, (val) => ({
@@ -361,7 +365,7 @@ export class SharedInit {
                             callback: {
                                 typ: "row",
                                 fn: async (data) => {
-                                    await Gui.showMessage(JSON.stringify(data));
+                                    await Gui.showMessage(data.cell);
                                 },
                             },
                         })

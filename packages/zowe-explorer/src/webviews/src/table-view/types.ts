@@ -41,7 +41,9 @@ export const tableProps = (contextMenu: ContextMenuState, tableData: Table.ViewO
         rowSpan: col.rowSpan ? new Function(wrapFn(col.rowSpan)).call(null) : undefined,
         valueFormatter: col.valueFormatter ? new Function(wrapFn(col.valueFormatter)).call(null) : undefined,
     })),
-    pagination: true,
+    pagination: tableData.pagination,
+    paginationPageSize: tableData.paginationPageSize,
+    paginationPageSizeSelector: tableData.paginationPageSizeSelector,
     onCellContextMenu: contextMenu.callback,
     onFilterChanged: (event) => {
         const rows: Table.RowData[] = [];

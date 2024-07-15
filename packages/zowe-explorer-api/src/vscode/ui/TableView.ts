@@ -24,41 +24,41 @@ export namespace Table {
     /* Defines the supported callbacks and related types. */
     export type CallbackTypes = "row" | "column" | "cell";
     export type Callback = {
-        // The type of callback
+        /** The type of callback */
         typ: CallbackTypes;
-        // The callback function itself - called from within the webview container.
+        /** The callback function itself - called from within the webview container. */
         fn:
             | ((data: RowData) => void | PromiseLike<void>)
             | ((data: ColData) => void | PromiseLike<void>)
             | ((data: CellData) => void | PromiseLike<void>);
     };
 
-    /* Conditional callback function - whether an action or option should be rendered. */
+    /** Conditional callback function - whether an action or option should be rendered. */
     export type Conditional = (data: RowData | CellData) => boolean;
 
-    /* Defines the supported actions and related types. */
+    // Defines the supported actions and related types.
     export type ActionKind = "primary" | "secondary" | "icon";
     export type Action = {
         title: string;
         command: string;
         type?: ActionKind;
-        // Stringified function will be called from within the webview container
+        /** Stringified function will be called from within the webview container. */
         condition?: string;
         callback: Callback;
     };
     export type ContextMenuOption = Omit<Action, "type"> & { dataType?: CallbackTypes };
 
-    /* Helper types to allow passing function properties to builder/view functions. */
+    // Helper types to allow passing function properties to builder/view functions.
     export type ActionOpts = Omit<Action, "condition"> & { condition?: Conditional };
     export type ContextMenuOpts = Omit<ContextMenuOption, "condition"> & { condition?: Conditional };
 
     // -- Misc types --
-    /* Value formatter callback. Expects the exact display value to be returned. */
+    /** Value formatter callback. Expects the exact display value to be returned. */
     export type ValueFormatter = (data: { value: CellData }) => string;
     export type Positions = "left" | "right";
     export type SortDirections = "asc" | "desc";
 
-    /* The column type definition. All available properties are offered for AG Grid columns. */
+    /** The column type definition. All available properties are offered for AG Grid columns. */
     export type Column = {
         field: string;
         type?: string | string[];
@@ -131,15 +131,26 @@ export namespace Table {
         valueFormatter?: ValueFormatter;
     };
     export type ViewOpts = {
-        // Actions to apply to the given row or column index
+        /** Actions to apply to the given row or column index */
         actions: Record<number | "all", Action[]>;
-        // Column headers for the top of the table
+        /** Column definitions for the top of the table */
         columns: Column[] | null | undefined;
+        /** Context menu options for rows in the table */
         contextOpts: Record<number | "all", ContextMenuOption[]>;
-        // The row data for the table. Each row contains a set of variables corresponding to the data for each column in that row
+        /** The row data for the table. Each row contains a set of variables corresponding to the data for each column in that row. */
         rows: RowData[] | null | undefined;
-        // The display title for the table
+        /** The display title for the table */
         title?: string;
+        /** Whether the table should be split into pages. */
+        pagination?: boolean;
+        /** How many rows to load per page */
+        paginationPageSize?: number;
+        /**
+         * Set to an array of values to show the page size selector with custom list of possible page sizes.
+         * Set to `true` to show the page size selector with the default page sizes `[20, 50, 100]`.
+         * Set to `false` to hide the page size selector.
+         */
+        paginationPageSizeSelector?: number[] | boolean;
     };
 
     /**

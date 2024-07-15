@@ -50,6 +50,16 @@ export class TableBuilder {
     }
 
     /**
+     * Set optional properties for the table view.
+     * @param opts The options for the table
+     * @returns The same {@link TableBuilder} instance with the options added
+     */
+    public options(opts: Omit<Table.ViewOpts, "actions" | "contextOpts" | "columns" | "rows" | "title">): TableBuilder {
+        this.data = { ...this.data, ...opts };
+        return this;
+    }
+
+    /**
      * Set the title for the next table.
      * @param name The name of the table
      * @returns The same {@link TableBuilder} instance with the title added
