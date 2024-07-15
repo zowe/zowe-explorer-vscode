@@ -15,7 +15,7 @@ import "./style.css";
 const vscodeApi = acquireVsCodeApi();
 
 export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewProps) => {
-  const [tableData, setTableData] = useState<Table.Data>(
+  const [tableData, setTableData] = useState<Table.ViewOpts>(
     data ?? {
       actions: {
         all: [],
@@ -81,7 +81,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
       switch (response.command) {
         case "ondatachanged":
           // Update received from a VS Code extender; update table state
-          const newData: Table.Data = response.data;
+          const newData: Table.ViewOpts = response.data;
           if (Object.keys(newData.actions).length > 1 || newData.actions.all?.length > 0) {
             // Add an extra column to the end of each row if row actions are present
             const rows = newData.rows?.map((row: Table.RowData) => {
@@ -160,7 +160,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
       {tableData.title ? <h1>{tableData.title}</h1> : null}
       <div className={`${theme} ag-theme-vsc ${contextMenu.open ? "ctx-menu-open" : ""}`}>
         {contextMenu.component}
-        <AgGridReact {...tableProps(contextMenu, tableData)} />
+        <AgGridReact {...tableProps(contextMenu, tableData, vscodeApi)} />
       </div>
     </>
   );

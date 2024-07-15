@@ -292,6 +292,9 @@ importers:
       '@zowe/zosmf-for-zowe-sdk':
         specifier: 8.0.0-next.202404032038
         version: 8.0.0-next.202404032038(@zowe/core-for-zowe-sdk@8.0.0-next.202404032038)(@zowe/imperative@8.0.0-next.202404032038)
+      deep-object-diff:
+        specifier: ^1.1.9
+        version: 1.1.9
       mustache:
         specifier: ^4.2.0
         version: 4.2.0
@@ -5114,6 +5117,10 @@ packages:
   /deep-is@0.1.4:
     resolution: {integrity: sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==}
     dev: true
+
+  /deep-object-diff@1.1.9:
+    resolution: {integrity: sha512-Rn+RuwkmkDwCi2/oXOFS9Gsr5lJZu/yTGpK7wAaAIE75CC+LCGEZHpY6VQJa/RoJcrmaA/docWJZvYohlNkWPA==}
+    dev: false
 
   /deepmerge-json@1.5.0:
     resolution: {integrity: sha512-jZRrDmBKjmGcqMFEUJ14FjMJwm05Qaked+1vxaALRtF0UAl7lPU8OLWXFxvoeg3jbQM249VPFVn8g2znaQkEtA==}

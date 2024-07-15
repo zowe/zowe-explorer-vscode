@@ -10,9 +10,9 @@
  */
 
 import { UriPair, WebView } from "./WebView";
-import { Event, EventEmitter, ExtensionContext } from "vscode";
+import { Event, EventEmitter, ExtensionContext, env } from "vscode";
 import { randomUUID } from "crypto";
-import * as vscode from "vscode";
+import { addedDiff } from "deep-object-diff";
 
 export namespace Table {
     /* The types of supported content for the table and how they are represented in callback functions. */
@@ -130,7 +130,7 @@ export namespace Table {
         rowSpan?: (params: any) => number;
         valueFormatter?: ValueFormatter;
     };
-    export type Data = {
+    export type ViewOpts = {
         // Actions to apply to the given row or column index
         actions: Record<number | "all", Action[]>;
         // Column headers for the top of the table
@@ -152,9 +152,12 @@ export namespace Table {
      * use the `TableBuilder` class to prepare table data and build an instance.
      */
     export class View extends WebView {
-        private data: Data;
-        private onTableDataReceived: Event<RowData | RowData[]>;
-        private onTableDisplayChanged: EventEmitter<RowData | RowData[]>;
+        private lastUpdated: ViewOpts;
+        private data: ViewOpts;
+        private onTableDataReceivedEmitter: EventEmitter<Partial<ViewOpts>> = new EventEmitter();
+        private onTableDisplayChangedEmitter: EventEmitter<RowData | RowData[]> = new EventEmitter();
+        public onTableDisplayChanged: Event<RowData | RowData[]> = this.onTableDisplayChangedEmitter.event;
+        public onTableDataReceived: Event<Partial<ViewOpts>> = this.onTableDataReceivedEmitter.event;
 
         public getUris(): UriPair {
             return this.uris;
@@ -164,7 +167,7 @@ export namespace Table {
             return this.htmlContent;
         }
 
-        public constructor(context: ExtensionContext, data?: Data) {
+        public constructor(context: ExtensionContext, data?: ViewOpts) {
             super(data.title ?? "Table view", "table-view", context, (message) => this.onMessageReceived(message), true);
             if (data) {
                 this.data = data;
@@ -184,7 +187,7 @@ export namespace Table {
             switch (message.command) {
                 // "ondisplaychanged" command: The table's layout was updated by the user from within the webview.
                 case "ondisplaychanged":
-                    this.onTableDisplayChanged.fire(message.data);
+                    this.onTableDisplayChangedEmitter.fire(message.data);
                     return;
                 // "ready" command: The table view has attached its message listener and is ready to receive data.
                 case "ready":
@@ -192,10 +195,10 @@ export namespace Table {
                     return;
                 // "copy" command: Copy the data for the row that was right-clicked.
                 case "copy":
-                    await vscode.env.clipboard.writeText(JSON.stringify(message.data.row));
+                    await env.clipboard.writeText(JSON.stringify(message.data.row));
                     return;
                 case "copy-cell":
-                    await vscode.env.clipboard.writeText(message.data.cell);
+                    await env.clipboard.writeText(message.data.cell);
                     return;
                 default:
                     break;
@@ -220,10 +223,16 @@ export namespace Table {
          * @returns Whether the webview received the update that was sent
          */
         private async updateWebview(): Promise<boolean> {
-            return this.panel.webview.postMessage({
+            const result = await this.panel.webview.postMessage({
                 command: "ondatachanged",
                 data: this.data,
             });
+
+            if (result) {
+                this.onTableDataReceivedEmitter.fire(this.lastUpdated ? addedDiff(this.data, this.lastUpdated) : this.data);
+                this.lastUpdated = this.data;
+            }
+            return result;
         }
 
         /**
@@ -341,7 +350,7 @@ export namespace Table {
     }
 
     export class Instance extends View {
-        public constructor(context: ExtensionContext, data: Table.Data) {
+        public constructor(context: ExtensionContext, data: Table.ViewOpts) {
             super(context, data);
         }
 

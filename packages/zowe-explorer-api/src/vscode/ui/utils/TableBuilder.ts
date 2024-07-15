@@ -34,7 +34,7 @@ import { TableMediator } from "./TableMediator";
  */
 export class TableBuilder {
     private context: ExtensionContext;
-    private data: Table.Data = {
+    private data: Table.ViewOpts = {
         actions: {
             all: [],
         },

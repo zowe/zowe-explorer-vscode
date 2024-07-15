@@ -25,11 +25,11 @@ type AgGridThemes = "ag-theme-quartz" | "ag-theme-balham" | "ag-theme-material" 
 export type TableViewProps = {
     actionsCellRenderer?: (params: any) => JSXInternal.Element;
     baseTheme?: AgGridThemes | string;
-    data?: Table.Data;
+    data?: Table.ViewOpts;
 };
 
 // Define props for the AG Grid table here
-export const tableProps = (contextMenu: ContextMenuState, tableData: Table.Data): Partial<AgGridReactProps> => ({
+export const tableProps = (contextMenu: ContextMenuState, tableData: Table.ViewOpts, vscodeApi: any): Partial<AgGridReactProps> => ({
     // domLayout: "autoHeight",
     enableCellTextSelection: true,
     ensureDomOrder: true,
@@ -43,4 +43,14 @@ export const tableProps = (contextMenu: ContextMenuState, tableData: Table.Data)
     })),
     pagination: true,
     onCellContextMenu: contextMenu.callback,
+    onFilterChanged: (event) => {
+        const rows: Table.RowData[] = [];
+        event.api.forEachNodeAfterFilterAndSort((row, _i) => rows.push(row.data));
+        vscodeApi.postMessage({ command: "ondisplaychanged", data: rows });
+    },
+    onSortChanged: (event) => {
+        const rows: Table.RowData[] = [];
+        event.api.forEachNodeAfterFilterAndSort((row, _i) => rows.push(row.data));
+        vscodeApi.postMessage({ command: "ondisplaychanged", data: rows });
+    },
 });

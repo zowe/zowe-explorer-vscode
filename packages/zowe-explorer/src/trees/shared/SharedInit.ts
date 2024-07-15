@@ -366,6 +366,7 @@ export class SharedInit {
                             },
                         })
                         .build();
+                    // Example of catching filter/sort changes: table.onTableDisplayChanged((data) => console.log(data));
                 })
             );
             context.subscriptions.push(
@@ -405,7 +406,7 @@ export class SharedInit {
                         )
                         .columns([
                             { field: "name", filter: true, sort: "asc" },
-                            { field: "size", filter: true, valueFormatter: (value: any) => `${value} bytes` },
+                            { field: "size", filter: true, valueFormatter: (data: { value: Table.CellData }) => `${data.value.toString()} bytes` },
                             { field: "owner", filter: true },
                             { field: "group", filter: true },
                             { field: "perms", filter: true },

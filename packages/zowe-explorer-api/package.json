@@ -31,6 +31,7 @@
     "@zowe/zos-tso-for-zowe-sdk": "8.0.0-next.202404032038",
     "@zowe/zos-uss-for-zowe-sdk": "8.0.0-next.202404032038",
     "@zowe/zosmf-for-zowe-sdk": "8.0.0-next.202404032038",
+    "deep-object-diff": "^1.1.9",
     "mustache": "^4.2.0",
     "preact": "^10.16.0",
     "semver": "^7.6.0"
