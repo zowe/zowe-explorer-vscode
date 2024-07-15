@@ -1247,8 +1247,8 @@ export class Profiles extends ProfilesCache {
         } else {
             configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, ["tokenValue"]);
         }
-        configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "user")?.argLoc.jsonLoc}`);
-        configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "password")?.argLoc.jsonLoc}`);
+        configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "user")?.argLoc.jsonLoc);
+        configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "password")?.argLoc.jsonLoc);
         await configApi.save();
     }
 
@@ -1258,15 +1258,15 @@ export class Profiles extends ProfilesCache {
         if (loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken")) {
             const profAttrs = await this.getProfileFromConfig("base");
             configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, []);
-            configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc}`);
-            configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenValue")?.argLoc.jsonLoc}`);
-            configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenExpiration")?.argLoc.jsonLoc}`);
+            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc);
+            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenValue")?.argLoc.jsonLoc);
+            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenExpiration")?.argLoc.jsonLoc);
         } else {
             const profAttrs = await this.getProfileFromConfig(profileName);
             configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, ["user", "password"]);
-            configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc}`);
-            configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenValue")?.argLoc.jsonLoc}`);
-            configApi.delete(`${profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenExpiration")?.argLoc.jsonLoc}`);
+            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc);
+            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenValue")?.argLoc.jsonLoc);
+            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenExpiration")?.argLoc.jsonLoc);
         }
         await configApi.save();
     }
