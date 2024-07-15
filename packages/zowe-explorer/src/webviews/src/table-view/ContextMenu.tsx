@@ -9,8 +9,8 @@ type MousePt = { x: number; y: number };
 
 export type ContextMenuProps = {
   selectRow: boolean;
-  selectedRows: Table.RowContent[] | null | undefined;
-  clickedRow: Table.RowContent;
+  selectedRows: Table.RowData[] | null | undefined;
+  clickedRow: Table.RowData;
   options: Table.ContextMenuOption[];
   colDef: ColDef;
   vscodeApi: any;
@@ -30,6 +30,7 @@ export const useContextMenu = (contextMenu: ContextMenuProps) => {
     colDef: null,
     selectedRows: [],
     clickedRow: null,
+    field: undefined,
   });
 
   /* Opens the context menu and sets the anchor point to mouse coordinates */
@@ -65,6 +66,7 @@ export const useContextMenu = (contextMenu: ContextMenuProps) => {
         colDef: event.colDef,
         selectedRows: event.api.getSelectedRows(),
         clickedRow: event.data,
+        field: event.colDef.field,
       };
 
       openMenu(event.event as PointerEvent);
@@ -85,7 +87,7 @@ export const useContextMenu = (contextMenu: ContextMenuProps) => {
           setOpen(false);
         }}
       >
-        {ContextMenu(gridRefs.current.clickedRow, contextMenu.options, contextMenu.vscodeApi)}
+        {ContextMenu(gridRefs.current, contextMenu.options, contextMenu.vscodeApi)}
       </ControlledMenu>
     ) : null,
   };
@@ -97,7 +99,7 @@ export type ContextMenuElemProps = {
   vscodeApi: any;
 };
 
-export const ContextMenu = (clickedRow: any, menuItems: Table.ContextMenuOption[], vscodeApi: any) => {
+export const ContextMenu = (gridRefs: any, menuItems: Table.ContextMenuOption[], vscodeApi: any) => {
   return menuItems
     ?.filter((item) => {
       if (item.condition == null) {
@@ -107,11 +109,22 @@ export const ContextMenu = (clickedRow: any, menuItems: Table.ContextMenuOption[
       // Wrap function to properly handle named parameters
       const cond = new Function(wrapFn(item.condition));
       // Invoke the wrapped function once to get the built function, then invoke it again with the parameters
-      return cond.call(null).call(null, clickedRow);
+      return cond.call(null).call(null, gridRefs.clickedRow);
     })
     .map((item, _i) => (
       <MenuItem
-        onClick={(_e: any) => vscodeApi.postMessage({ command: item.command, data: { ...clickedRow, actions: undefined } })}
+        onClick={(_e: any) => {
+          vscodeApi.postMessage({
+            command: item.command,
+            data: {
+              row: { ...gridRefs.clickedRow, actions: undefined },
+              field: gridRefs.field,
+              cell: gridRefs.colDef.valueFormatter
+                ? gridRefs.colDef.valueFormatter({ value: gridRefs.clickedRow[gridRefs.field] })
+                : gridRefs.clickedRow[gridRefs.field],
+            },
+          });
+        }}
         style={{ borderBottom: "var(--vscode-menu-border)" }}
       >
         {item.title}

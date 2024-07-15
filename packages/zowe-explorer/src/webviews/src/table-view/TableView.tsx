@@ -31,7 +31,25 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
   const [theme, setTheme] = useState<string>(baseTheme ?? "ag-theme-quartz");
 
   const contextMenu = useContextMenu({
-    options: [{ title: "Copy", command: "copy", callback: () => {} }, ...(tableData.contextOpts.all ?? [])],
+    options: [
+      {
+        title: "Copy cell",
+        command: "copy-cell",
+        callback: {
+          typ: "cell",
+          fn: () => {},
+        },
+      },
+      {
+        title: "Copy row",
+        command: "copy",
+        callback: {
+          typ: "row",
+          fn: () => {},
+        },
+      },
+      ...(tableData.contextOpts.all ?? []),
+    ],
     selectRow: true,
     selectedRows: [],
     clickedRow: undefined as any,
@@ -66,7 +84,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
           const newData: Table.Data = response.data;
           if (Object.keys(newData.actions).length > 1 || newData.actions.all?.length > 0) {
             // Add an extra column to the end of each row if row actions are present
-            const rows = newData.rows?.map((row: Table.RowContent) => {
+            const rows = newData.rows?.map((row: Table.RowData) => {
               return { ...row, actions: "" };
             });
             const columns = [

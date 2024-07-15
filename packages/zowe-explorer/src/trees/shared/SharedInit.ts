@@ -315,14 +315,26 @@ export class SharedInit {
                                 make: "Ford",
                                 model: "Model T",
                                 year: 1908,
+                                price: 4000,
                             },
                             {
                                 make: "Tesla",
                                 model: "Model Y",
                                 year: 2022,
+                                price: 40000,
                             }
                         )
-                        .columns([{ field: "make" }, { field: "model" }, { field: "year" }])
+                        .columns([
+                            { field: "make" },
+                            { field: "model" },
+                            { field: "year" },
+                            {
+                                field: "price",
+                                valueFormatter: (data: { value: Table.CellData }): string => {
+                                    return data.value ? `$${data.value.toString()}` : "No price available";
+                                },
+                            },
+                        ])
                         .build();
                     // Add content to the existing table view
                     await table.addContent({ make: "Toyota", model: "Corolla", year: 2007 });
@@ -346,8 +358,11 @@ export class SharedInit {
                         .contextOption("all", {
                             title: "Show as dialog",
                             command: "print-dialog",
-                            callback: async (data) => {
-                                await Gui.showMessage(JSON.stringify(data));
+                            callback: {
+                                typ: "row",
+                                fn: async (data) => {
+                                    await Gui.showMessage(JSON.stringify(data));
+                                },
                             },
                         })
                         .build();
@@ -390,7 +405,7 @@ export class SharedInit {
                         )
                         .columns([
                             { field: "name", filter: true, sort: "asc" },
-                            { field: "size", filter: true },
+                            { field: "size", filter: true, valueFormatter: (value: any) => `${value} bytes` },
                             { field: "owner", filter: true },
                             { field: "group", filter: true },
                             { field: "perms", filter: true },
@@ -398,14 +413,17 @@ export class SharedInit {
                         .contextOption("all", {
                             title: "Copy path",
                             command: "copy-path",
-                            callback: async (data: Table.RowContent) => {
-                                await vscode.env.clipboard.writeText(path.posix.join(uriPath, data.name as string));
+                            callback: {
+                                fn: async (data: Table.RowData) => {
+                                    await vscode.env.clipboard.writeText(path.posix.join(uriPath, data.name as string));
+                                },
+                                typ: "row",
                             },
                         })
                         .contextOption("all", {
                             title: "Citrus-specific option",
                             command: "citrus-dialog",
-                            condition: (data) => {
+                            condition: (data: any) => {
                                 for (const citrus of ["lemon", "grapefruit", "lime", "tangerine"]) {
                                     if (data.name && (data.name as string).startsWith(citrus)) {
                                         return true;
@@ -414,26 +432,32 @@ export class SharedInit {
 
                                 return false;
                             },
-                            callback: async (data: Table.RowContent) => {
-                                await vscode.env.clipboard.writeText(path.posix.join(uriPath, data.name as string));
+                            callback: {
+                                fn: async (data: Table.RowData) => {
+                                    await vscode.env.clipboard.writeText(path.posix.join(uriPath, data.name as string));
+                                },
+                                typ: "row",
                             },
                         })
                         .rowAction("all", {
                             title: "Open in editor",
                             type: "primary",
                             command: "edit",
-                            callback: async (data: Table.RowContent) => {
-                                const filename = data.name as string;
-                                const uri = vscode.Uri.from({
-                                    scheme: "zowe-uss",
-                                    path: path.posix.join(uriPath, filename),
-                                });
+                            callback: {
+                                fn: async (data: Table.RowData) => {
+                                    const filename = data.name as string;
+                                    const uri = vscode.Uri.from({
+                                        scheme: "zowe-uss",
+                                        path: path.posix.join(uriPath, filename),
+                                    });
 
-                                if (!UssFSProvider.instance.exists(uri)) {
-                                    await UssFSProvider.instance.writeFile(uri, new Uint8Array(), { create: true, overwrite: false });
-                                }
+                                    if (!UssFSProvider.instance.exists(uri)) {
+                                        await UssFSProvider.instance.writeFile(uri, new Uint8Array(), { create: true, overwrite: false });
+                                    }
 
-                                await vscode.commands.executeCommand("vscode.open", uri);
+                                    await vscode.commands.executeCommand("vscode.open", uri);
+                                },
+                                typ: "row",
                             },
                         })
                         .build();

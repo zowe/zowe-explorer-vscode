@@ -64,7 +64,7 @@ export class TableBuilder {
      * @param rows The rows of content to use for the table
      * @returns The same {@link TableBuilder} instance with the rows added
      */
-    public rows(...rows: Table.RowContent[]): TableBuilder {
+    public rows(...rows: Table.RowData[]): TableBuilder {
         this.data.rows = rows;
         return this;
     }
@@ -80,7 +80,7 @@ export class TableBuilder {
             comparator: col.comparator?.toString(),
             colSpan: col.colSpan?.toString(),
             rowSpan: col.rowSpan?.toString(),
-            valueSetter: col.valueSetter?.toString(),
+            valueFormatter: col.valueFormatter?.toString(),
         }));
         return this;
     }

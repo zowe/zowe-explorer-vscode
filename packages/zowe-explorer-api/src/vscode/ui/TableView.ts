@@ -15,24 +15,50 @@ import { randomUUID } from "crypto";
 import * as vscode from "vscode";
 
 export namespace Table {
-    export type Callback = (data: RowContent) => void | PromiseLike<void>;
-    export type Conditional = (data: RowContent) => boolean;
+    /* The types of supported content for the table and how they are represented in callback functions. */
+    export type ContentTypes = string | number | boolean | string[];
+    export type RowData = Record<string | number, ContentTypes>;
+    export type ColData = RowData;
+    export type CellData = ContentTypes;
+
+    /* Defines the supported callbacks and related types. */
+    export type CallbackTypes = "row" | "column" | "cell";
+    export type Callback = {
+        // The type of callback
+        typ: CallbackTypes;
+        // The callback function itself - called from within the webview container.
+        fn:
+            | ((data: RowData) => void | PromiseLike<void>)
+            | ((data: ColData) => void | PromiseLike<void>)
+            | ((data: CellData) => void | PromiseLike<void>);
+    };
+
+    /* Conditional callback function - whether an action or option should be rendered. */
+    export type Conditional = (data: RowData | CellData) => boolean;
+
+    /* Defines the supported actions and related types. */
     export type ActionKind = "primary" | "secondary" | "icon";
-    export type CallbackDataType = "row" | "column" | "cell";
     export type Action = {
         title: string;
         command: string;
         type?: ActionKind;
+        // Stringified function will be called from within the webview container
         condition?: string;
         callback: Callback;
     };
+    export type ContextMenuOption = Omit<Action, "type"> & { dataType?: CallbackTypes };
+
+    /* Helper types to allow passing function properties to builder/view functions. */
     export type ActionOpts = Omit<Action, "condition"> & { condition?: Conditional };
-    export type ContextMenuOption = Omit<Action, "type"> & { dataType?: CallbackDataType };
     export type ContextMenuOpts = Omit<ContextMenuOption, "condition"> & { condition?: Conditional };
 
-    export type RowContent = Record<string | number, string | number | boolean | string[]>;
-    export type ValueFormatter = (data: any) => string;
-    export type SortDirection = "asc" | "desc";
+    // -- Misc types --
+    /* Value formatter callback. Expects the exact display value to be returned. */
+    export type ValueFormatter = (data: { value: CellData }) => string;
+    export type Positions = "left" | "right";
+    export type SortDirections = "asc" | "desc";
+
+    /* The column type definition. All available properties are offered for AG Grid columns. */
     export type Column = {
         field: string;
         type?: string | string[];
@@ -46,10 +72,9 @@ export namespace Table {
         // Locking and edit variables
         hide?: boolean;
         lockVisible?: boolean;
-        lockPosition?: boolean | "left" | "right";
+        lockPosition?: boolean | Positions;
         suppressMovable?: boolean;
         editable?: boolean;
-        valueSetter?: string;
         singleClickEdit?: boolean;
 
         filter?: boolean;
@@ -66,8 +91,8 @@ export namespace Table {
         headerCheckboxSelection?: boolean;
 
         // Pinning
-        pinned?: boolean | "left" | "right" | null;
-        initialPinned?: boolean | "left" | "right";
+        pinned?: boolean | Positions | null;
+        initialPinned?: boolean | Positions;
         lockPinned?: boolean;
 
         // Row dragging
@@ -76,11 +101,11 @@ export namespace Table {
 
         // Sorting
         sortable?: boolean;
-        sort?: SortDirection;
-        initialSort?: "asc" | "desc";
+        sort?: SortDirections;
+        initialSort?: SortDirections;
         sortIndex?: number | null;
         initialSortIndex?: number;
-        sortingOrder?: SortDirection[];
+        sortingOrder?: SortDirections[];
         comparator?: string;
         unSortIcon?: boolean;
 
@@ -99,11 +124,11 @@ export namespace Table {
         suppressSizeToFit?: boolean;
         suppressAutoSize?: boolean;
     };
-    export type ColumnOpts = Omit<Column, "comparator" | "colSpan" | "rowSpan" | "valueSetter"> & {
+    export type ColumnOpts = Omit<Column, "comparator" | "colSpan" | "rowSpan" | "valueFormatter"> & {
         comparator?: (valueA: any, valueB: any, nodeA: any, nodeB: any, isDescending: boolean) => number;
         colSpan?: (params: any) => number;
         rowSpan?: (params: any) => number;
-        valueSetter?: string | ((params: any) => boolean);
+        valueFormatter?: ValueFormatter;
     };
     export type Data = {
         // Actions to apply to the given row or column index
@@ -112,7 +137,7 @@ export namespace Table {
         columns: Column[] | null | undefined;
         contextOpts: Record<number | "all", ContextMenuOption[]>;
         // The row data for the table. Each row contains a set of variables corresponding to the data for each column in that row
-        rows: RowContent[] | null | undefined;
+        rows: RowData[] | null | undefined;
         // The display title for the table
         title?: string;
     };
@@ -128,8 +153,8 @@ export namespace Table {
      */
     export class View extends WebView {
         private data: Data;
-        private onTableDataReceived: Event<RowContent | RowContent[]>;
-        private onTableDisplayChanged: EventEmitter<RowContent | RowContent[]>;
+        private onTableDataReceived: Event<RowData | RowData[]>;
+        private onTableDisplayChanged: EventEmitter<RowData | RowData[]>;
 
         public getUris(): UriPair {
             return this.uris;
@@ -167,8 +192,10 @@ export namespace Table {
                     return;
                 // "copy" command: Copy the data for the row that was right-clicked.
                 case "copy":
+                    await vscode.env.clipboard.writeText(JSON.stringify(message.data.row));
+                    return;
                 case "copy-cell":
-                    await vscode.env.clipboard.writeText(JSON.stringify(message.data));
+                    await vscode.env.clipboard.writeText(message.data.cell);
                     return;
                 default:
                     break;
@@ -182,7 +209,7 @@ export namespace Table {
                 ...this.data.contextOpts.all,
             ].find((action) => action.command === message.command);
             if (matchingActionable != null) {
-                await matchingActionable.callback(message.data);
+                await matchingActionable.callback.fn(message.data);
             }
         }
 
@@ -249,7 +276,7 @@ export namespace Table {
          * @param rows The rows of data to add to the table
          * @returns Whether the webview successfully received the new content
          */
-        public async addContent(...rows: RowContent[]): Promise<boolean> {
+        public async addContent(...rows: RowData[]): Promise<boolean> {
             this.data.rows.push(...rows);
             return this.updateWebview();
         }
@@ -267,7 +294,7 @@ export namespace Table {
                     comparator: col.comparator?.toString(),
                     colSpan: col.colSpan?.toString(),
                     rowSpan: col.rowSpan?.toString(),
-                    valueSetter: col.valueSetter?.toString(),
+                    valueFormatter: col.valueFormatter?.toString(),
                 }))
             );
             return this.updateWebview();
@@ -279,7 +306,7 @@ export namespace Table {
          * @param rows The rows of data to apply to the table
          * @returns Whether the webview successfully received the new content
          */
-        public async setContent(rows: RowContent[]): Promise<boolean> {
+        public async setContent(rows: RowData[]): Promise<boolean> {
             this.data.rows = rows;
             return this.updateWebview();
         }
@@ -296,7 +323,7 @@ export namespace Table {
                 comparator: col.comparator?.toString(),
                 colSpan: col.colSpan?.toString(),
                 rowSpan: col.rowSpan?.toString(),
-                valueSetter: col.valueSetter?.toString(),
+                valueFormatter: col.valueFormatter?.toString(),
             }));
             return this.updateWebview();
         }

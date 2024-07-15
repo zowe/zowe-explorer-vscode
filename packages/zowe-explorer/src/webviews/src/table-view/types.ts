@@ -39,6 +39,7 @@ export const tableProps = (contextMenu: ContextMenuState, tableData: Table.Data)
         comparator: col.comparator ? new Function(wrapFn(col.comparator)).call(null) : undefined,
         colSpan: col.colSpan ? new Function(wrapFn(col.colSpan)).call(null) : undefined,
         rowSpan: col.rowSpan ? new Function(wrapFn(col.rowSpan)).call(null) : undefined,
+        valueFormatter: col.valueFormatter ? new Function(wrapFn(col.valueFormatter)).call(null) : undefined,
     })),
     pagination: true,
     onCellContextMenu: contextMenu.callback,
