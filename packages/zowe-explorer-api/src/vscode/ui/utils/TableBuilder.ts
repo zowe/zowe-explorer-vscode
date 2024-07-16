@@ -54,7 +54,7 @@ export class TableBuilder {
      * @param opts The options for the table
      * @returns The same {@link TableBuilder} instance with the options added
      */
-    public options(opts: Omit<Table.ViewOpts, "actions" | "contextOpts" | "columns" | "rows" | "title">): TableBuilder {
+    public options(opts: Table.GridProperties): TableBuilder {
         this.data = { ...this.data, ...opts };
         return this;
     }

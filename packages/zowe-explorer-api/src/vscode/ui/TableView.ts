@@ -130,6 +130,100 @@ export namespace Table {
         rowSpan?: (params: any) => number;
         valueFormatter?: ValueFormatter;
     };
+
+    export interface SizeColumnsToFitGridStrategy {
+        type: "fitGridWidth";
+        // Default minimum width for every column (does not override the column minimum width).
+        defaultMinWidth?: number;
+        // Default maximum width for every column (does not override the column maximum width).
+        defaultMaxWidth?: number;
+        // Provide to limit specific column widths when sizing.
+        columnLimits?: SizeColumnsToFitGridColumnLimits[];
+    }
+
+    export interface SizeColumnsToFitGridColumnLimits {
+        colId: string;
+        // Minimum width for this column (does not override the column minimum width)
+        minWidth?: number;
+        // Maximum width for this column (does not override the column maximum width)
+        maxWidth?: number;
+    }
+
+    export interface SizeColumnsToFitProvidedWidthStrategy {
+        type: "fitProvidedWidth";
+        width: number;
+    }
+
+    export interface SizeColumnsToContentStrategy {
+        type: "fitCellContents";
+        // If true, the header won't be included when calculating the column widths.
+        skipHeader?: boolean;
+        // If not provided will auto-size all columns. Otherwise will size the specified columns.
+        colIds?: string[];
+    }
+
+    // AG Grid: Optional properties
+    export type GridProperties = {
+        /** Allow reordering and pinning columns by dragging columns from the Columns Tool Panel to the grid */
+        allowDragFromColumnsToolPanel?: boolean;
+        /** Number of pixels to add a column width after the auto-sizing calculation */
+        autoSizePadding?: number;
+        /** Auto-size the columns when the grid is loaded. Can size to fit the grid width, fit a provided width or fit the cell contents. Read once during initialization. */
+        autoSizeStrategy?: SizeColumnsToFitGridStrategy | SizeColumnsToFitProvidedWidthStrategy | SizeColumnsToFitGridStrategy;
+        /** Set to 'shift' to have shift-resize as the default resize operation */
+        colResizeDefault?: "shift";
+        /** Changes the display type of the column menu. 'new' displays the main list of menu items; 'legacy' displays a tabbed menu */
+        columnMenu?: "legacy" | "new";
+        /** Set this to `true` to enable debugging information from the grid */
+        debug?: boolean;
+        /** The height in pixels for the rows containing floating filters. */
+        floatingFiltersHeight?: number;
+        /** The height in pixels for the rows containing header column groups. */
+        groupHeaderHeight?: number;
+        /** The height in pixels for the row contianing the column label header. Default provided by the AG Grid theme. */
+        headerHeight?: number;
+        /** Show/hide the "Loading" overlay */
+        loading?: boolean;
+        /** Map of key:value pairs for localizing grid text. Read once during initialization. */
+        localeText?: { [key: string]: string };
+        /** Keeps the order of columns maintained after new Column Definitions are updated. */
+        maintainColumnOrder?: boolean;
+        /** Whether the table should be split into pages. */
+        pagination?: boolean;
+        /**
+         * Set to `true` so that the number of rows to load per page is automatically adjusted by the grid.
+         * If `false`, `paginationPageSize` is used.
+         */
+        paginationAutoPageSize?: boolean;
+        /** How many rows to load per page */
+        paginationPageSize?: number;
+        /**
+         * Set to an array of values to show the page size selector with custom list of possible page sizes.
+         * Set to `true` to show the page size selector with the default page sizes `[20, 50, 100]`.
+         * Set to `false` to hide the page size selector.
+         */
+        paginationPageSizeSelector?: number[] | boolean;
+        /** If defined, rows are filtered using this text as a Quick Filter. */
+        quickFilterText?: string;
+        /** Set to `true` to skip the `headerName` when `autoSize` is called by default. Read once during initialization. */
+        skipHeaderOnAutoSize?: boolean;
+        /** Suppresses auto-sizing columns for columns - when enabled, double-clicking a column's header's edge will not auto-size. Read once during initialization. */
+        suppressAutoSize?: boolean;
+        suppressColumnMoveAnimation?: boolean;
+        /** If `true`, when you dreag a column out of the grid, the column is not hidden */
+        suppressDragLeaveHidesColumns?: boolean;
+        /** If `true`, then dots in field names are not treated as deep references, allowing you to use dots in your field name if preferred. */
+        suppressFieldDotNotation?: boolean;
+        /**
+         * When `true`, the column menu button will always be shown.
+         * When `false`, the column menu button will only show when the mouse is over the column header.
+         * If `columnMenu = 'legacy'`, this will default to `false` instead of `true`.
+         */
+        suppressMenuHide?: boolean;
+        /** Set to `true` to suppress column moving (fixed position for columns) */
+        suppressMovableColumns?: boolean;
+    };
+
     export type ViewOpts = {
         /** Actions to apply to the given row or column index */
         actions: Record<number | "all", Action[]>;
@@ -141,17 +235,7 @@ export namespace Table {
         rows: RowData[] | null | undefined;
         /** The display title for the table */
         title?: string;
-        /** Whether the table should be split into pages. */
-        pagination?: boolean;
-        /** How many rows to load per page */
-        paginationPageSize?: number;
-        /**
-         * Set to an array of values to show the page size selector with custom list of possible page sizes.
-         * Set to `true` to show the page size selector with the default page sizes `[20, 50, 100]`.
-         * Set to `false` to hide the page size selector.
-         */
-        paginationPageSizeSelector?: number[] | boolean;
-    };
+    } & GridProperties;
 
     /**
      * A class that acts as a controller between the extension and the table view. Based off of the {@link WebView} class.
@@ -345,6 +429,17 @@ export namespace Table {
                 rowSpan: col.rowSpan?.toString(),
                 valueFormatter: col.valueFormatter?.toString(),
             }));
+            return this.updateWebview();
+        }
+
+        /**
+         * Sets the options for the table.
+         *
+         * @param opts The optional grid properties for the table
+         * @returns Whether the webview successfully received the new options
+         */
+        public setOptions(opts: GridProperties): Promise<boolean> {
+            this.data = { ...this.data, ...opts };
             return this.updateWebview();
         }
 
