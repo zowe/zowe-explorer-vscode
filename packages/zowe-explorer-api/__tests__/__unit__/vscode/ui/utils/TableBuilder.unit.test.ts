@@ -97,3 +97,50 @@ describe("TableBuilder::addColumns", () => {
         expect(JSON.parse(JSON.stringify((builder as any).data.columns))).toStrictEqual(JSON.parse(JSON.stringify(newCols)));
     });
 });
+
+describe("TableBuilder::convertColumnOpts", () => {
+    it("converts an array of ColumnOpts to an array of Column", () => {
+        const globalMocks = createGlobalMocks();
+        let builder = new TableBuilder(globalMocks.context as any);
+        const newCols: Table.ColumnOpts[] = [
+            { field: "cat", valueFormatter: (data: { value: Table.ContentTypes }) => `val: ${data.value.toString()}` },
+            { field: "doge", filter: true },
+            { field: "parrot", sort: "asc" },
+        ];
+        expect((builder as any).convertColumnOpts(newCols)).toStrictEqual(
+            newCols.map((col) => ({
+                ...col,
+                comparator: col.comparator?.toString(),
+                colSpan: col.colSpan?.toString(),
+                rowSpan: col.rowSpan?.toString(),
+                valueFormatter: col.valueFormatter?.toString(),
+            }))
+        );
+    });
+});
+
+describe("TableBuilder::reset", () => {
+    it("resets all table data on the builder instance", () => {
+        const globalMocks = createGlobalMocks();
+        const newRows = [
+            { a: 1, b: 2, c: 3, d: false },
+            { a: 3, b: 2, c: 1, d: true },
+        ];
+        const builder = new TableBuilder(globalMocks.context as any)
+            .rows(...newRows)
+            .title("A table")
+            .options({ pagination: false });
+        builder.reset();
+        expect((builder as any).data).toStrictEqual({
+            actions: {
+                all: [],
+            },
+            contextOpts: {
+                all: [],
+            },
+            columns: [],
+            rows: [],
+            title: "",
+        });
+    });
+});
