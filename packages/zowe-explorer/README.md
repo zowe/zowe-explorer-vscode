@@ -6,8 +6,6 @@
 [![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
 > ## v3 Pre-release is now available in our [Github Releases](https://github.com/zowe/zowe-explorer-vscode/releases) with the removal of v1 profile support. Keep an eye on [changes affecting users and extenders](https://github.com/zowe/zowe-explorer-vscode/wiki/v3-Changes-for-Users-and-Extenders) for the full list of changes
->
-> ## With the removal of the keytar shim from VS Code, we have replaced `node-keytar` with `@zowe/secrets-for-zowe-sdk` in the v2.10.0 release to avoid user interruptions. Extenders, please check out the usage [documentation](https://github.com/zowe/zowe-explorer-vscode/wiki/Secure-Credentials-for-Extenders)
 
 ## Introduction
 
@@ -389,7 +387,7 @@ As a result, VS Code extensions like Zowe Explorer, Zowe Explorer CICS Extension
 
 1. Confirm the deletion by clicking **Delete** in the drop-down menu.
 
-   ![Delete Data Sets and Members](/docs/images/ZE-delete-ds2.gif?raw=true "Delete Data Sets and Members")
+   ![Delete Data Sets and Members](/docs/images/ZE-delete-ds.gif?raw=true "Delete Data Sets and Members")
    <br /><br />
 
 [Back to sample list](#sample-use-cases)
