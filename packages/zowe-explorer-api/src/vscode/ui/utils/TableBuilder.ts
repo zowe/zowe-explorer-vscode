@@ -80,18 +80,42 @@ export class TableBuilder {
     }
 
     /**
-     * Set the headers for the next table.
-     * @param rows The headers to use for the table
-     * @returns The same {@link TableBuilder} instance with the headers added
+     * Adds rows to the table. Does not replace existing rows.
+     * @param rows The rows of content to add to the table
+     * @returns The same {@link TableBuilder} instance with the new rows added
      */
-    public columns(newColumns: Table.ColumnOpts[]): TableBuilder {
-        this.data.columns = newColumns.map((col) => ({
+    public addRows(rows: Table.RowData[]): TableBuilder {
+        this.data.rows = [...this.data.rows, ...rows];
+        return this;
+    }
+
+    /**
+     * Set the columns for the next table.
+     * @param columns The columns to use for the table
+     * @returns The same {@link TableBuilder} instance with the columns added
+     */
+    public columns(...columns: Table.ColumnOpts[]): TableBuilder {
+        this.data.columns = this.convertColumnOpts(columns);
+        return this;
+    }
+
+    private convertColumnOpts(columns: Table.ColumnOpts[]): Table.Column[] {
+        return columns.map((col) => ({
             ...col,
             comparator: col.comparator?.toString(),
             colSpan: col.colSpan?.toString(),
             rowSpan: col.rowSpan?.toString(),
             valueFormatter: col.valueFormatter?.toString(),
         }));
+    }
+
+    /**
+     * Adds columns to the table. Does not replace existing columns.
+     * @param columns The column definitions to add to the table
+     * @returns The same {@link TableBuilder} instance with the new column definitions added
+     */
+    public addColumns(columns: Table.ColumnOpts[]): TableBuilder {
+        this.data.columns = [...this.data.columns, ...this.convertColumnOpts(columns)];
         return this;
     }
 
