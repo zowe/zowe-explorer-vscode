@@ -27,6 +27,7 @@ import {
     ZosEncoding,
     IZoweTree,
     ValidProfileEnum,
+    imperative,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
@@ -40,7 +41,6 @@ import { promiseStatus, PromiseStatuses } from "promise-status-async";
 import { getDocumentFilePath, initializeFileOpening, updateOpenFiles } from "../shared/utils";
 import { IZoweDatasetTreeOpts } from "../shared/IZoweTreeOpts";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
-import { imperative } from "@zowe/cli";
 
 // Set up localization
 nls.config({
@@ -455,11 +455,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      *
      * @returns {imperative.IProfileLoaded}
      */
-    public getProfile(): imperative.IProfileLoaded {
-        const prof = this.profile ?? this.getParent()?.getProfile();
-
-        return Profiles.getInstance().loadNamedProfile(prof.name); // this returns the profile with newer token
-    }
+    // public getProfile(): imperative.IProfileLoaded {
+    //     ZoweLogger.trace("ZoweDatasetNode.getProfile called.");
+    //     const prof = this.profile ?? this.getParent()?.getProfile();
+    //     return prof.name ? Profiles.getInstance().loadNamedProfile(prof.name) : undefined; // this returns the profile with newer token
+    // }
 
     /**
      * Set the [etag] for this node
