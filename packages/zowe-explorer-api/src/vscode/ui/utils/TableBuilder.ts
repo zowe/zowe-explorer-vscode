@@ -195,14 +195,16 @@ export class TableBuilder {
      * Resets all data configured in the builder from previously-created table views.
      */
     public reset(): void {
-        this.data.actions = {
-            all: [],
+        this.data = {
+            actions: {
+                all: [],
+            },
+            contextOpts: {
+                all: [],
+            },
+            columns: [],
+            rows: [],
+            title: "",
         };
-        this.data.contextOpts = {
-            all: [],
-        };
-        this.data.columns = [];
-        this.data.rows = [];
-        this.data.title = "";
     }
 }
