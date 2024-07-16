@@ -254,6 +254,8 @@ export namespace Table {
         public onTableDisplayChanged: Event<RowData | RowData[]> = this.onTableDisplayChangedEmitter.event;
         public onTableDataReceived: Event<Partial<ViewOpts>> = this.onTableDataReceivedEmitter.event;
 
+        private uuid: string;
+
         public getUris(): UriPair {
             return this.uris;
         }
@@ -336,8 +338,10 @@ export namespace Table {
          * @returns The unique ID for this table view
          */
         public getId(): string {
-            const uuid = randomUUID();
-            return `${this.data.title}-${uuid.substring(0, uuid.indexOf("-"))}##${this.context.extension.id}`;
+            if (this.uuid == null) {
+                this.uuid = randomUUID();
+            }
+            return `${this.data.title}-${this.uuid.substring(0, this.uuid.indexOf("-"))}##${this.context.extension.id}`;
         }
 
         /**
