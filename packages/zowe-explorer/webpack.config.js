@@ -85,6 +85,16 @@ const config = {
                 ],
             },
             {
+                test: /\.js$/,
+                include: /agent-base|https?-proxy-agent/,
+                use: {
+                    loader: "babel-loader",
+                    options: {
+                        presets: ["@babel/preset-env"],
+                    },
+                },
+            },
+            {
                 test: /\.mjs$/,
                 include: /markdown-it/,
                 type: "javascript/auto",
