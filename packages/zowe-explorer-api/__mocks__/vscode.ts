@@ -266,6 +266,181 @@ export interface TabGroups {
     close(tabGroup: TabGroup | readonly TabGroup[], preserveFocus?: boolean): Thenable<boolean>;
 }
 
+/**
+ * Content settings for a webview panel.
+ */
+export interface WebviewPanelOptions {
+    /**
+     * Controls if the find widget is enabled in the panel.
+     *
+     * Defaults to `false`.
+     */
+    readonly enableFindWidget?: boolean;
+
+    /**
+     * Controls if the webview panel's content (iframe) is kept around even when the panel
+     * is no longer visible.
+     *
+     * Normally the webview panel's html context is created when the panel becomes visible
+     * and destroyed when it is hidden. Extensions that have complex state
+     * or UI can set the `retainContextWhenHidden` to make the editor keep the webview
+     * context around, even when the webview moves to a background tab. When a webview using
+     * `retainContextWhenHidden` becomes hidden, its scripts and other dynamic content are suspended.
+     * When the panel becomes visible again, the context is automatically restored
+     * in the exact same state it was in originally. You cannot send messages to a
+     * hidden webview, even with `retainContextWhenHidden` enabled.
+     *
+     * `retainContextWhenHidden` has a high memory overhead and should only be used if
+     * your panel's context cannot be quickly saved and restored.
+     */
+    readonly retainContextWhenHidden?: boolean;
+}
+
+/**
+ * A panel that contains a webview.
+ */
+interface WebviewPanel {
+    /**
+     * Identifies the type of the webview panel, such as `'markdown.preview'`.
+     */
+    readonly viewType: string;
+
+    /**
+     * Title of the panel shown in UI.
+     */
+    title: string;
+
+    /**
+     * Icon for the panel shown in UI.
+     */
+    iconPath?:
+        | Uri
+        | {
+              /**
+               * The icon path for the light theme.
+               */
+              readonly light: Uri;
+              /**
+               * The icon path for the dark theme.
+               */
+              readonly dark: Uri;
+          };
+
+    /**
+     * {@linkcode Webview} belonging to the panel.
+     */
+    readonly webview: any;
+
+    /**
+     * Content settings for the webview panel.
+     */
+    readonly options: WebviewPanelOptions;
+
+    /**
+     * Editor position of the panel. This property is only set if the webview is in
+     * one of the editor view columns.
+     */
+    readonly viewColumn: ViewColumn | undefined;
+
+    /**
+     * Whether the panel is active (focused by the user).
+     */
+    readonly active: boolean;
+
+    /**
+     * Whether the panel is visible.
+     */
+    readonly visible: boolean;
+
+    /**
+     * Fired when the panel's view state changes.
+     */
+    readonly onDidChangeViewState: Event<any>;
+
+    /**
+     * Fired when the panel is disposed.
+     *
+     * This may be because the user closed the panel or because `.dispose()` was
+     * called on it.
+     *
+     * Trying to use the panel after it has been disposed throws an exception.
+     */
+    readonly onDidDispose: Event<void>;
+
+    /**
+     * Show the webview panel in a given column.
+     *
+     * A webview panel may only show in a single column at a time. If it is already showing, this
+     * method moves it to a new column.
+     *
+     * @param viewColumn View column to show the panel in. Shows in the current `viewColumn` if undefined.
+     * @param preserveFocus When `true`, the webview will not take focus.
+     */
+    reveal(viewColumn?: ViewColumn, preserveFocus?: boolean): void;
+
+    /**
+     * Dispose of the webview panel.
+     *
+     * This closes the panel if it showing and disposes of the resources owned by the webview.
+     * Webview panels are also disposed when the user closes the webview panel. Both cases
+     * fire the `onDispose` event.
+     */
+    dispose(): any;
+}
+
+/**
+ * Content settings for a webview.
+ */
+export interface WebviewOptions {
+    /**
+     * Controls whether scripts are enabled in the webview content or not.
+     *
+     * Defaults to false (scripts-disabled).
+     */
+    readonly enableScripts?: boolean;
+
+    /**
+     * Controls whether forms are enabled in the webview content or not.
+     *
+     * Defaults to true if {@link WebviewOptions.enableScripts scripts are enabled}. Otherwise defaults to false.
+     * Explicitly setting this property to either true or false overrides the default.
+     */
+    readonly enableForms?: boolean;
+
+    /**
+     * Controls whether command uris are enabled in webview content or not.
+     *
+     * Defaults to `false` (command uris are disabled).
+     *
+     * If you pass in an array, only the commands in the array are allowed.
+     */
+    readonly enableCommandUris?: boolean | readonly string[];
+
+    /**
+     * Root paths from which the webview can load local (filesystem) resources using uris from `asWebviewUri`
+     *
+     * Default to the root folders of the current workspace plus the extension's install directory.
+     *
+     * Pass in an empty array to disallow access to any local resources.
+     */
+    readonly localResourceRoots?: readonly Uri[];
+
+    /**
+     * Mappings of localhost ports used inside the webview.
+     *
+     * Port mapping allow webviews to transparently define how localhost ports are resolved. This can be used
+     * to allow using a static localhost port inside the webview that is resolved to random port that a service is
+     * running on.
+     *
+     * If a webview accesses localhost content, we recommend that you specify port mappings even if
+     * the `webviewPort` and `extensionHostPort` ports are the same.
+     *
+     * *Note* that port mappings only work for `http` or `https` urls. Websocket urls (e.g. `ws://localhost:3000`)
+     * cannot be mapped to another port.
+     */
+    readonly portMapping?: readonly any[];
+}
+
 export namespace window {
     /**
      * Represents the grid widget within the main editor area
@@ -307,6 +482,15 @@ export namespace window {
 
     export function createQuickPick<T extends QuickPickItem>(): QuickPick<T> {
         return undefined;
+    }
+
+    export function createWebviewPanel(
+        viewType: string,
+        title: string,
+        showOptions: ViewColumn | { preserveFocus: boolean; viewColumn: ViewColumn },
+        options?: WebviewPanelOptions & WebviewOptions
+    ): WebviewPanel {
+        return undefined as any;
     }
 
     export function showQuickPick<T extends QuickPickItem>(
