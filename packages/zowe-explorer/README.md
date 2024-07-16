@@ -1,8 +1,8 @@
 # Zowe Explorer
 
-[![version](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)
-[![downloads](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)
-[![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/master/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
+[![version](https://img.shields.io/visual-studio-marketplace/v/Zowe.vscode-extension-for-zowe.svg)](https://img.shields.io/visual-studio-marketplace/v/Zowe.vscode-extension-for-zowe.svg)
+[![downloads](https://img.shields.io/visual-studio-marketplace/d/Zowe.vscode-extension-for-zowe.svg)](https://img.shields.io/visual-studio-marketplace/d/Zowe.vscode-extension-for-zowe.svg)
+[![codecov](https://codecov.io/gh/zowe/zowe-explorer-vscode/branch/v1-lts/graph/badge.svg)](https://codecov.io/gh/zowe/zowe-explorer-vscode)
 [![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
 [Zowe Explorer](https://github.com/zowe/community#zowe-explorer) is a sub-project of Zowe, focusing on modernizing mainframe experience. [Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
@@ -165,7 +165,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
 3. Click the **magnifying glass** icon.
-4. Enter a search patterm in the `HLQ.ZZZ.SSS(MEMBERNAME)` format to filter out and display the specified member in the tree.
+4. Enter a search pattern in the `HLQ.ZZZ.SSS(MEMBERNAME)` format to filter out and display the specified member in the tree.
 
 ![View Data Set With Member Pattern](/docs/images/ZE-member-filter-search.gif?raw=true "View Data Set With Member Pattern")
 
@@ -312,7 +312,7 @@ Your data set member is uploaded.
 
 5. Confirm the deletion by clicking **Delete** in the drop-down menu.
 
-   ![Delete Data Sets and Members](/docs/images/ZE-delete-ds2.gif?raw=true "Delete Data Sets and Members")
+   ![Delete Data Sets and Members](/docs/images/ZE-delete-ds.gif?raw=true "Delete Data Sets and Members")
    <br /><br />
 
 ### View and access multiple profiles simultaneously
