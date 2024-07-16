@@ -47,7 +47,7 @@ import { Table } from "../TableView";
 
 export class TableMediator {
     private static instance: TableMediator;
-    #tables: Map<string, Table.View>;
+    private tables: Map<string, Table.View> = new Map();
 
     private constructor() {}
 
@@ -70,7 +70,7 @@ export class TableMediator {
      * @param table The {@link Table.View} instance to add to the mediator
      */
     public addTable(table: Table.View): void {
-        this.#tables.set(table.getId(), table);
+        this.tables.set(table.getId(), table);
     }
 
     /**
@@ -83,21 +83,20 @@ export class TableMediator {
      * * `undefined` if the instance was deleted or does not exist
      */
     public getTable(id: string): Table.View | undefined {
-        return this.#tables.get(id);
+        return this.tables.get(id);
     }
 
     /**
      * Removes a table from the mediator.
-     * Note that the
      *
      * @param id The unique ID of the table to delete
      * @returns `true` if the table was deleted; `false` otherwise
      */
-    public removeTable(id: string): boolean {
-        if (this.#tables.has(id)) {
+    public removeTable(instance: Table.Instance): boolean {
+        if (Array.from(this.tables.values()).find((table) => table.getId() === instance.getId()) == null) {
             return false;
         }
 
-        return this.#tables.delete(id);
+        return this.tables.delete(instance.getId());
     }
 }
