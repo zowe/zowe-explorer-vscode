@@ -83,7 +83,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         this.treeView.onDidCollapseElement(TreeViewUtils.refreshIconOnCollapse([SharedContext.isUssDirectory, SharedContext.isUssSession], this));
     }
 
-    public handleDrag(source: IZoweUSSTreeNode[], dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): void {
+    public handleDrag(source: IZoweUSSTreeNode[], dataTransfer: vscode.DataTransfer, _token: vscode.CancellationToken): void {
         const items = [];
         for (const srcItem of source) {
             this.draggedNodes[srcItem.resourceUri.path] = srcItem;
@@ -168,7 +168,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     public async handleDrop(
         targetNode: IZoweUSSTreeNode | undefined,
         dataTransfer: vscode.DataTransfer,
-        token: vscode.CancellationToken
+        _token: vscode.CancellationToken
     ): Promise<void> {
         const droppedItems = dataTransfer.get("application/vnd.code.tree.zowe.uss.explorer");
         if (!droppedItems) {
@@ -428,7 +428,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     /**
      * Renames a node from the favorites list
      * @deprecated No longer used as more info is now needed during the rename operation.
-     
+
      * @param node
      */
     public async renameFavorite(node: IZoweUSSTreeNode, newNamePath: string): Promise<void> {

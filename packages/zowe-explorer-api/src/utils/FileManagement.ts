@@ -12,7 +12,7 @@
 import { realpathSync } from "fs";
 import { platform } from "os";
 import { Constants } from "../globals";
-import { ProfileInfo } from "@zowe/imperative";
+import { ConfigUtils } from "@zowe/imperative";
 
 export class FileManagement {
     public static permStringToOctal(perms: string): number {
@@ -34,7 +34,7 @@ export class FileManagement {
     }
 
     public static getZoweDir(): string {
-        return ProfileInfo.getZoweDir();
+        return ConfigUtils.getZoweDir();
     }
 
     public static getFullPath(anyPath: string): string {

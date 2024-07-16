@@ -13,7 +13,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as util from "util";
 import * as vscode from "vscode";
-import { Gui, imperative, ProfilesCache, Validation, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { createAltTypeIProfile, createInstanceOfProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
 import { Constants } from "../../../src/configuration/Constants";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
@@ -23,7 +23,6 @@ import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtende
 import { FilterItem } from "../../../src/management/FilterManagement";
 import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
-import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
 
 jest.mock("../../../src/tools/ZoweLogger");
 jest.mock("fs");

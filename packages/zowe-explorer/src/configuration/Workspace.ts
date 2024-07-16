@@ -57,7 +57,8 @@ export class Workspace {
      * Checks if file is opened using iteration through tabs
      * This kind of method is caused by incompleteness of VSCode API, which allows to check only buffered status of files
      * There's an issue on GitHub for such feature: https://github.com/Microsoft/vscode/issues/15178 let's track it
-     * Idea of the approach was borrowed from the another extension: https://github.com/eamodio/vscode-restore-editors/blob/master/src/documentManager.ts
+     * Idea of the approach was borrowed from the another extension:
+     *      https://github.com/eamodio/vscode-restore-editors/blob/master/src/documentManager.ts
      * Also notice that timer delay as well as iteration through opened tabs can cause side-effects on slow machines
      */
     public static async checkTextFileIsOpened(path: string): Promise<boolean> {

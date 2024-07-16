@@ -23,60 +23,60 @@ class MockUssApi1 implements MainframeInteraction.IUss {
     public getProfileTypeName(): string {
         return "api1typename";
     }
-    public fileList(ussFilePath: string): Promise<zosfiles.IZosFilesResponse> {
+    public fileList(_ussFilePath: string): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public copy(outputPath: string, options?: Omit<object, "request">): Promise<Buffer> {
+    public copy(_outputPath: string, _options?: Omit<object, "request">): Promise<Buffer> {
         throw new Error("Method not implemented.");
     }
-    public isFileTagBinOrAscii(ussFilePath: string): Promise<boolean> {
+    public isFileTagBinOrAscii(_ussFilePath: string): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
-    public getContents(ussFilePath: string, options: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse> {
+    public getContents(_ussFilePath: string, _options: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
     public putContents(
-        inputFilePath: string,
-        ussFilePath: string,
-        binary?: boolean,
-        localEncoding?: string,
-        etag?: string,
-        returnEtag?: boolean
+        _inputFilePath: string,
+        _ussFilePath: string,
+        _binary?: boolean,
+        _localEncoding?: string,
+        _etag?: string,
+        _returnEtag?: boolean
     ): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public putContent(inputFilePath: string, ussFilePath: string, options: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
+    public putContent(_inputFilePath: string, _ussFilePath: string, _options: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
     public uploadDirectory(
-        inputDirectoryPath: string,
-        ussDirectoryPath: string,
-        options: zosfiles.IUploadOptions
+        _inputDirectoryPath: string,
+        _ussDirectoryPath: string,
+        _options: zosfiles.IUploadOptions
     ): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public create(ussPath: string, type: string, mode?: string): Promise<zosfiles.IZosFilesResponse> {
+    public create(_ussPath: string, _type: string, _mode?: string): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public delete(ussPath: string, recursive?: boolean): Promise<zosfiles.IZosFilesResponse> {
+    public delete(_ussPath: string, _recursive?: boolean): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public rename(currentUssPath: string, newUssPath: string): Promise<zosfiles.IZosFilesResponse> {
+    public rename(_currentUssPath: string, _newUssPath: string): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
+    public getSession(_profile?: imperative.IProfileLoaded): imperative.Session {
         throw new Error("Method not implemented.");
     }
-    public getStatus?(profile?: imperative.IProfileLoaded): Promise<string> {
+    public getStatus?(_profile?: imperative.IProfileLoaded): Promise<string> {
         throw new Error("Method not implemented.");
     }
     public getTokenTypeName?(): string {
         throw new Error("Method not implemented.");
     }
-    public login?(session: imperative.Session): Promise<string> {
+    public login?(_session: imperative.Session): Promise<string> {
         throw new Error("Method not implemented.");
     }
-    public logout?(session: imperative.Session): Promise<string> {
+    public logout?(_session: imperative.Session): Promise<string> {
         throw new Error("Method not implemented.");
     }
 }
@@ -86,65 +86,65 @@ class MockUssApi2 implements MainframeInteraction.IUss {
     public getProfileTypeName(): string {
         return "api2typename";
     }
-    public fileList(ussFilePath: string): Promise<zosfiles.IZosFilesResponse> {
+    public fileList(_ussFilePath: string): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public copy(outputPath: string, options?: Omit<object, "request">): Promise<Buffer> {
+    public copy(_outputPath: string, _options?: Omit<object, "request">): Promise<Buffer> {
         throw new Error("Method not implemented.");
     }
-    public isFileTagBinOrAscii(ussFilePath: string): Promise<boolean> {
+    public isFileTagBinOrAscii(_ussFilePath: string): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
-    public getContents(ussFilePath: string, options: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse> {
+    public getContents(_ussFilePath: string, _options: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
     public putContents(
-        inputFilePath: string,
-        ussFilePath: string,
-        binary?: boolean,
-        localEncoding?: string,
-        etag?: string,
-        returnEtag?: boolean
+        _inputFilePath: string,
+        _ussFilePath: string,
+        _binary?: boolean,
+        _localEncoding?: string,
+        _etag?: string,
+        _returnEtag?: boolean
     ): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public putContent(inputFilePath: string, ussFilePath: string, options: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
+    public putContent(_inputFilePath: string, _ussFilePath: string, _options: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
     public uploadDirectory(
-        inputDirectoryPath: string,
-        ussDirectoryPath: string,
-        options: zosfiles.IUploadOptions
+        _inputDirectoryPath: string,
+        _ussDirectoryPath: string,
+        _options: zosfiles.IUploadOptions
     ): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public create(ussPath: string, type: string, mode?: string): Promise<zosfiles.IZosFilesResponse> {
+    public create(_ussPath: string, _type: string, _mode?: string): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public delete(ussPath: string, recursive?: boolean): Promise<zosfiles.IZosFilesResponse> {
+    public delete(_ussPath: string, _recursive?: boolean): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public rename(currentUssPath: string, newUssPath: string): Promise<zosfiles.IZosFilesResponse> {
+    public rename(_currentUssPath: string, _newUssPath: string): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
+    public getSession(_profile?: imperative.IProfileLoaded): imperative.Session {
         throw new Error("Method not implemented.");
     }
-    public getStatus?(profile?: imperative.IProfileLoaded): Promise<string> {
+    public getStatus?(_profile?: imperative.IProfileLoaded): Promise<string> {
         throw new Error("Method not implemented.");
     }
     public getTokenTypeName?(): string {
         throw new Error("Method not implemented.");
     }
-    public login?(session: imperative.Session): Promise<string> {
+    public login?(_session: imperative.Session): Promise<string> {
         throw new Error("Method not implemented.");
     }
-    public logout?(session: imperative.Session): Promise<string> {
+    public logout?(_session: imperative.Session): Promise<string> {
         throw new Error("Method not implemented.");
     }
 }
 
-async function createGlobalMocks() {
+function createGlobalMocks() {
     const newMocks = {
         registry: ZoweExplorerApiRegister.getInstance(),
         testProfile: createValidIProfile(),
@@ -173,8 +173,8 @@ afterEach(() => {
 });
 
 describe("ZoweExplorerApiRegister unit testing", () => {
-    it("registers an API only once per profile type", async () => {
-        const globalMocks = await createGlobalMocks();
+    it("registers an API only once per profile type", () => {
+        const globalMocks = createGlobalMocks();
         const defaultProfile = globalMocks.profiles.getDefaultProfile();
 
         const defaultUssApi = globalMocks.registry.getUssApi(defaultProfile);
@@ -194,9 +194,9 @@ describe("ZoweExplorerApiRegister unit testing", () => {
     });
 
     it("registers multiple API instances in parallel", async () => {
-        const globalMocks = await createGlobalMocks();
-        const mockRefresh = jest.fn(async (): Promise<void> => {
-            return;
+        const globalMocks = createGlobalMocks();
+        const mockRefresh = jest.fn((): Promise<void> => {
+            return new Promise((resolve) => resolve());
         });
         const profilesForValidation = { status: "active", name: "fake" };
         Object.defineProperty(ZoweExplorerExtender.prototype, "getProfilesCache", {
@@ -222,8 +222,8 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         expect(mockRefresh.mock.calls.length).toBe(2);
     });
 
-    it("throws errors when registering invalid APIs", async () => {
-        const globalMocks = await createGlobalMocks();
+    it("throws errors when registering invalid APIs", () => {
+        const globalMocks = createGlobalMocks();
         const api1 = new MockUssApi1();
         const mockGetProfileTypeName = jest.fn(() => undefined);
         api1.getProfileTypeName = mockGetProfileTypeName;
@@ -253,8 +253,8 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         }).toThrow();
     });
 
-    it("throws errors when invalid APIs requested", async () => {
-        const globalMocks = await createGlobalMocks();
+    it("throws errors when invalid APIs requested", () => {
+        const globalMocks = createGlobalMocks();
         const invalidProfile = {
             type: "invalid_profile_type",
         } as imperative.IProfileLoaded;
@@ -281,8 +281,8 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         expect(explorerExtenderApiSpy).toHaveBeenCalled();
     });
 
-    it("provides access to the common api for a profile registered to any api regsitry", async () => {
-        const globalMocks = await createGlobalMocks();
+    it("provides access to the common api for a profile registered to any api regsitry", () => {
+        const globalMocks = createGlobalMocks();
         const defaultProfile = globalMocks.profiles.getDefaultProfile();
         const ussApi = ZoweExplorerApiRegister.getUssApi(defaultProfile);
         const profileUnused: imperative.IProfileLoaded = {

@@ -1446,7 +1446,7 @@ describe("ZoweUSSNode Unit Tests - Function node.setAttributes", () => {
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.getBaseName", () => {
-    it("returns the base name for a USS node based on its URI", async () => {
+    it("returns the base name for a USS node based on its URI", () => {
         const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.resourceUri = vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/someProfile/a/b/c/testFile" });
         expect(node.getBaseName()).toBe("testFile");

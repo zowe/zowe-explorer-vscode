@@ -9,17 +9,13 @@
  *
  */
 
-import * as path from "path";
-import * as fs from "fs";
 import * as imperative from "@zowe/imperative";
 import type { IRegisterClient } from "../extend/IRegisterClient";
 import { FileManagement } from "../utils";
 import { Validation } from "./Validation";
-import { ZeApiConvertResponse } from "../globals";
 import { ZosmfProfile } from "@zowe/zosmf-for-zowe-sdk";
 import { ZosTsoProfile } from "@zowe/zos-tso-for-zowe-sdk";
 import { ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
-import { ProfileConstants } from "@zowe/core-for-zowe-sdk";
 
 export class ProfilesCache {
     public profilesForValidation: Validation.IValidationProfile[] = [];

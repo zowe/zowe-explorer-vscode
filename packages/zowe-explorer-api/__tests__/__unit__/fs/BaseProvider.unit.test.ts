@@ -454,7 +454,7 @@ describe("_createFile", () => {
         }
     });
 
-    it("throws an error if a folder already exists with the same URI", async () => {
+    it("throws an error if a folder already exists with the same URI", () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
         prov.root.metadata = {
