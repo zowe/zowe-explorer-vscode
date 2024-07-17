@@ -56,7 +56,6 @@ export namespace Table {
     /** Value formatter callback. Expects the exact display value to be returned. */
     export type ValueFormatter = (data: { value: CellData }) => string;
     export type Positions = "left" | "right";
-    export type SortDirections = "asc" | "desc";
 
     /** The column type definition. All available properties are offered for AG Grid columns. */
     export type Column = {
@@ -101,11 +100,11 @@ export namespace Table {
 
         // Sorting
         sortable?: boolean;
-        sort?: SortDirections;
-        initialSort?: SortDirections;
+        sort?: "asc" | "desc";
+        initialSort?: "asc" | "desc";
         sortIndex?: number | null;
         initialSortIndex?: number;
-        sortingOrder?: SortDirections[];
+        sortingOrder?: ("asc" | "desc")[];
         comparator?: string;
         unSortIcon?: boolean;
 
@@ -168,7 +167,10 @@ export namespace Table {
         allowDragFromColumnsToolPanel?: boolean;
         /** Number of pixels to add a column width after the auto-sizing calculation */
         autoSizePadding?: number;
-        /** Auto-size the columns when the grid is loaded. Can size to fit the grid width, fit a provided width or fit the cell contents. Read once during initialization. */
+        /**
+         * Auto-size the columns when the grid is loaded. Can size to fit the grid width, fit a provided width or fit the cell contents.
+         * Read once during initialization.
+         */
         autoSizeStrategy?: SizeColumnsToFitGridStrategy | SizeColumnsToFitProvidedWidthStrategy | SizeColumnsToFitGridStrategy;
         /** Set to 'shift' to have shift-resize as the default resize operation */
         colResizeDefault?: "shift";
@@ -207,7 +209,10 @@ export namespace Table {
         quickFilterText?: string;
         /** Set to `true` to skip the `headerName` when `autoSize` is called by default. Read once during initialization. */
         skipHeaderOnAutoSize?: boolean;
-        /** Suppresses auto-sizing columns for columns - when enabled, double-clicking a column's header's edge will not auto-size. Read once during initialization. */
+        /**
+         * Suppresses auto-sizing columns for columns - when enabled, double-clicking a column's header's edge will not auto-size.
+         * Read once during initialization.
+         */
         suppressAutoSize?: boolean;
         suppressColumnMoveAnimation?: boolean;
         /** If `true`, when you dreag a column out of the grid, the column is not hidden */
@@ -248,7 +253,17 @@ export namespace Table {
      */
     export class View extends WebView {
         private lastUpdated: ViewOpts;
-        private data: ViewOpts;
+        private data: ViewOpts = {
+            actions: {
+                all: [],
+            },
+            contextOpts: {
+                all: [],
+            },
+            rows: [],
+            columns: [],
+            title: "",
+        };
         private onTableDataReceivedEmitter: EventEmitter<Partial<ViewOpts>> = new EventEmitter();
         private onTableDisplayChangedEmitter: EventEmitter<RowData | RowData[]> = new EventEmitter();
         public onTableDisplayChanged: Event<RowData | RowData[]> = this.onTableDisplayChangedEmitter.event;

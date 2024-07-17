@@ -124,17 +124,19 @@ export class TableBuilder {
      * @param actions the record of indices to {@link Table.Action} arrays to use for the table
      * @returns The same {@link TableBuilder} instance with the row actions added
      */
-    public contextOptions(opts: Record<number | "all", Table.ContextMenuOption[]>): TableBuilder {
-        this.data.contextOpts = opts;
+    public contextOptions(opts: Record<number | "all", Table.ContextMenuOpts[]>): TableBuilder {
+        for (const key of Object.keys(opts)) {
+            this.addContextOption(key as number | "all", opts[key]);
+        }
         return this;
     }
 
     /**
-     * Add a row action to the next table.
-     * @param index The column index to add an action to
-     * @returns The same {@link TableBuilder} instance with the row action added
+     * Add a context menu option to the table.
+     * @param index The row index to add an option to (or "all" for all rows)
+     * @returns The same {@link TableBuilder} instance with the context menu option added
      */
-    public contextOption(index: number | "all", option: Table.ContextMenuOpts): TableBuilder {
+    public addContextOption(index: number | "all", option: Table.ContextMenuOpts): TableBuilder {
         if (this.data.contextOpts[index]) {
             const opts = this.data.contextOpts[index];
             this.data.contextOpts[index] = [...opts, { ...option, condition: option.condition?.toString() }];
@@ -152,8 +154,7 @@ export class TableBuilder {
     public rowActions(actions: Record<number | "all", Table.ActionOpts[]>): TableBuilder {
         //this.data.actions = actions;
         for (const key of Object.keys(actions)) {
-            const actionList = actions[key] as Table.ActionOpts[];
-            this.data.actions[key] = actionList.map((action) => ({ ...action, condition: action.condition?.toString() }));
+            this.addRowAction(key as number | "all", actions[key]);
         }
         return this;
     }
@@ -163,7 +164,7 @@ export class TableBuilder {
      * @param index The column index to add an action to
      * @returns The same {@link TableBuilder} instance with the row action added
      */
-    public rowAction(index: number | "all", action: Table.ActionOpts): TableBuilder {
+    public addRowAction(index: number | "all", action: Table.ActionOpts): TableBuilder {
         if (this.data.actions[index]) {
             const actionList = this.data.actions[index];
             this.data.actions[index] = [...actionList, { ...action, condition: action.condition?.toString() }];
