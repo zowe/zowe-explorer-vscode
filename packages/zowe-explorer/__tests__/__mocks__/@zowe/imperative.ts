@@ -269,7 +269,9 @@ export class ProfileInfo {
     ): any {
         return;
     }
+}
 
+export class ConfigUtils {
     public static getZoweDir(): string {
         const defaultHome = path.join(os.homedir(), ".zowe");
         if (ImperativeConfig.instance.loadedConfig?.defaultHome !== defaultHome) {
@@ -282,7 +284,6 @@ export class ProfileInfo {
         return ImperativeConfig.instance.cliHome;
     }
 }
-
 export class ImperativeError extends Error {
     private msg: string;
     constructor(public mDetails: IImperativeError) {

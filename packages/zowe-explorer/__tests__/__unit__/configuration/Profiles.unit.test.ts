@@ -427,7 +427,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
     }
     it("Tests that createZoweSchema presents correct message when escaping selection of config location prompt", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         const spy = jest.spyOn(Gui, "showQuickPick");
         spy.mockResolvedValueOnce(undefined);
@@ -438,7 +438,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
     });
     it("Tests that createZoweSchema will open correct config file when cancelling creation in location with existing config file", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         const spyQuickPick = jest.spyOn(Gui, "showQuickPick");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory");
@@ -460,7 +460,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
     });
     it("Test that createZoweSchema will open config on error if error deals with parsing file", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         const spyQuickPick = jest.spyOn(Gui, "showQuickPick");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory");
@@ -478,7 +478,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
     });
     it("Test that createZoweSchema will auto create global if VSC not in project and config doesn't exist", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         Object.defineProperty(vscode.workspace, "workspaceFolders", {
             get: () => undefined,
             configurable: true,
@@ -518,7 +518,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
 
     it("Tests that createZoweSchema will return the config file path", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         Object.defineProperty(vscode.workspace, "workspaceFolders", {
             value: undefined,
