@@ -1,3 +1,14 @@
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
+ */
+
 import { TableBuilder, TableMediator } from "../../../../../src/";
 import * as vscode from "vscode";
 
@@ -5,22 +16,25 @@ import * as vscode from "vscode";
 
 // Global mocks for building a table view and using it within test cases.
 function createGlobalMocks() {
-    // Mock `vscode.window.createWebviewPanel` to return a usable panel object
-    const createWebviewPanelMock = jest.spyOn(vscode.window, "createWebviewPanel").mockReturnValueOnce({
+    const mockPanel = {
         onDidDispose: (_fn) => {},
         webview: { asWebviewUri: (uri) => uri.toString(), onDidReceiveMessage: (_fn) => {} },
-    } as any);
+    };
+    // Mock `vscode.window.createWebviewPanel` to return a usable panel object
+    const createWebviewPanelMock = jest.spyOn(vscode.window, "createWebviewPanel").mockReturnValueOnce(mockPanel as any);
 
-    // Example table for use with the mediator
-    const table = new TableBuilder({
+    const extensionContext = {
         extensionPath: "/a/b/c/zowe-explorer",
         extension: { id: "Zowe.vscode-extension-for-zowe" },
-    } as any)
-        .title("SomeTable")
-        .build();
+    };
+
+    // Example table for use with the mediator
+    const table = new TableBuilder(extensionContext as any).title("SomeTable").build();
 
     return {
         createWebviewPanelMock,
+        extensionContext,
+        mockPanel,
         table,
     };
 }
@@ -58,5 +72,13 @@ describe("TableMediator::removeTable", () => {
         expect(TableMediator.getInstance().removeTable(globalMocks.table)).toBe(true);
         expect((TableMediator.getInstance() as any).tables.get(globalMocks.table.getId())).toBe(undefined);
         expect(TableMediator.getInstance().getTable(tableId)).toBe(undefined);
+    });
+
+    it("returns false if the table instance does not exist in the map", () => {
+        const globalMocks = createGlobalMocks();
+        globalMocks.createWebviewPanelMock.mockReturnValueOnce(globalMocks.mockPanel as any);
+        const table2 = new TableBuilder(globalMocks.extensionContext as any).build();
+        TableMediator.getInstance().addTable(globalMocks.table);
+        expect(TableMediator.getInstance().removeTable(table2)).toBe(false);
     });
 });
