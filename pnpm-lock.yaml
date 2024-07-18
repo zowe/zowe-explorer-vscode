@@ -349,11 +349,11 @@ importers:
         specifier: ^1.2.2
         version: 1.4.0(react@18.3.1)
       ag-grid-community:
-        specifier: ^31.3.2
-        version: 31.3.2
+        specifier: ^32.0.2
+        version: 32.0.2
       ag-grid-react:
-        specifier: ^31.3.2
-        version: 31.3.2(react-dom@18.3.1)(react@18.3.1)
+        specifier: ^32.0.2
+        version: 32.0.2(react-dom@18.3.1)(react@18.3.1)
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -3542,17 +3542,23 @@ packages:
     hasBin: true
     dev: true
 
-  /ag-grid-community@31.3.2:
-    resolution: {integrity: sha512-GxqFRD0OcjaVRE1gwLgoP0oERNPH8Lk8wKJ1txulsxysEQ5dZWHhiIoXXSiHjvOCVMkK/F5qzY6HNrn6VeDMTQ==}
+  /ag-charts-types@10.0.2:
+    resolution: {integrity: sha512-Nxo5slHOXlaeg0gRIsVnovAosQzzlYfWJtdDy0Aq/VvpJru/PJ+5i2c9aCyEhgRxhBjImsoegwkgRj7gNOWV6Q==}
     dev: false
 
-  /ag-grid-react@31.3.2(react-dom@18.3.1)(react@18.3.1):
-    resolution: {integrity: sha512-SFHN05bsXp901rIT00Fa6iQLCtyavoJiKaXEDUtAU5LMu+GTkjs/FPQBQ8754omgdDFr4NsS3Ri6QbqBne3rug==}
+  /ag-grid-community@32.0.2:
+    resolution: {integrity: sha512-vLJJUjnsG9hNK41GNuW2EHu1W264kxA/poOpcX4kmyrjU5Uzvelsbj3HdKAO9POV28iqyRdKGYfAWdn8QzA7KA==}
+    dependencies:
+      ag-charts-types: 10.0.2
+    dev: false
+
+  /ag-grid-react@32.0.2(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-IWYsoyJ/Z763rWbE5/9SaT1n5xwIKrm/QzOG14l7i8z5J6JdJwfV0aQFATmEE8Xws2H48vlLcLdW1cv4hwV3eg==}
     peerDependencies:
       react: ^16.3.0 || ^17.0.0 || ^18.0.0
       react-dom: ^16.3.0 || ^17.0.0 || ^18.0.0
     dependencies:
-      ag-grid-community: 31.3.2
+      ag-grid-community: 32.0.2
       prop-types: 15.8.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -8871,11 +8877,13 @@ packages:
 
   /loglevel-plugin-prefix@0.8.4:
     resolution: {integrity: sha512-WpG9CcFAOjz/FtNht+QJeGpvVl/cdR6P0z6OcXSkr8wFJOsV2GRj2j10JLfjuA4aYkcKCNIEqRGCyTife9R8/g==}
+    requiresBuild: true
     dev: true
 
   /loglevel@1.9.1:
     resolution: {integrity: sha512-hP3I3kCrDIMuRwAwHltphhDM1r8i55H33GgqjXbrisuJhF4kRhW1dNuxsRklp4bXl8DSdLaNLuiL4A/LWRfxvg==}
     engines: {node: '>= 0.6.0'}
+    requiresBuild: true
     dev: true
 
   /loose-envify@1.4.0:

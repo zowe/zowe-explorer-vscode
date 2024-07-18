@@ -22,8 +22,8 @@
     "@szhsin/react-menu": "^4.1.0",
     "@types/vscode-webview": "^1.57.1",
     "@vscode/webview-ui-toolkit": "^1.2.2",
-    "ag-grid-community": "^31.3.2",
-    "ag-grid-react": "^31.3.2",
+    "ag-grid-community": "^32.0.2",
+    "ag-grid-react": "^32.0.2",
     "lodash": "^4.17.21",
     "preact": "^10.16.0",
     "preact-render-to-string": "^6.5.4"
