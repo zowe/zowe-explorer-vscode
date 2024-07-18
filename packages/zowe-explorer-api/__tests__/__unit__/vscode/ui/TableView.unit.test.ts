@@ -1,12 +1,14 @@
 import { join } from "path";
-import { Table } from "../../../../src";
+import { Table, TableBuilder, WebView } from "../../../../src";
 import { env, EventEmitter, Uri, window } from "vscode";
 import * as crypto from "crypto";
+import { diff } from "deep-object-diff";
 
 function createGlobalMocks() {
     const mockPanel = {
-        onDidDispose: (_fn) => {},
-        webview: { asWebviewUri: (uri) => uri.toString(), onDidReceiveMessage: (_fn) => {}, postMessage: (_message, _origin, _transfer) => {} },
+        dispose: jest.fn(),
+        onDidDispose: jest.fn(),
+        webview: { asWebviewUri: (uri) => uri.toString(), onDidReceiveMessage: jest.fn(), postMessage: jest.fn() },
     };
     // Mock `vscode.window.createWebviewPanel` to return a usable panel object
     const createWebviewPanelMock = jest.spyOn(window, "createWebviewPanel").mockReturnValueOnce(mockPanel as any);
@@ -19,6 +21,7 @@ function createGlobalMocks() {
                 id: "Zowe.vscode-extension-for-zowe",
             },
         },
+        updateWebviewMock: jest.spyOn((Table.View as any).prototype, "updateWebview"),
     };
 }
 
@@ -76,6 +79,20 @@ describe("Table.View", () => {
             });
             expect(emitterFireMock).toHaveBeenCalledWith({ title: "Table" });
             postMessageMock.mockRestore();
+            emitterFireMock.mockClear();
+
+            // case 2: Post message was successful; updateWebview was previously called
+            // result: Uses lastUpdated cache, returns true and fires the event
+            postMessageMock.mockResolvedValueOnce(true);
+            const mockNewRow = { a: 3, b: 2, c: 1 };
+            (view as any).data.rows = [mockNewRow];
+            await expect((view as any).updateWebview()).resolves.toBe(true);
+            expect(postMessageMock).toHaveBeenCalledWith({
+                command: "ondatachanged",
+                data: { title: "Table", rows: [mockNewRow] },
+            });
+            expect(emitterFireMock).toHaveBeenCalledWith(diff((view as any).lastUpdated, (view as any).data));
+            postMessageMock.mockRestore();
         });
     });
 
@@ -90,31 +107,27 @@ describe("Table.View", () => {
     });
 
     describe("setTitle", () => {
-        const updateWebviewMock = jest.spyOn((Table.View as any).prototype, "updateWebview");
-
         it("returns false if it was unable to send the new title", async () => {
             const globalMocks = createGlobalMocks();
             const view = new Table.View(globalMocks.context as any, { title: "Stable Table of Cables" } as any);
-            updateWebviewMock.mockResolvedValueOnce(false);
+            globalMocks.updateWebviewMock.mockResolvedValueOnce(false);
             await expect(view.setTitle("Unstable Table of Cables")).resolves.toBe(false);
         });
 
         it("returns true if it successfully sent the new title", async () => {
             const globalMocks = createGlobalMocks();
             const view = new Table.View(globalMocks.context as any, { title: "Stable Table of Cables" } as any);
-            updateWebviewMock.mockResolvedValueOnce(true);
+            globalMocks.updateWebviewMock.mockResolvedValueOnce(true);
             await expect(view.setTitle("Unstable Table of Cables")).resolves.toBe(true);
             expect((view as any).data.title).toBe("Unstable Table of Cables");
         });
     });
 
     describe("setOptions", () => {
-        const updateWebviewMock = jest.spyOn((Table.View as any).prototype, "updateWebview");
-
         it("returns false if it was unable to send the new options", async () => {
             const globalMocks = createGlobalMocks();
             const view = new Table.View(globalMocks.context as any, { title: "Table" } as any);
-            updateWebviewMock.mockResolvedValueOnce(false);
+            globalMocks.updateWebviewMock.mockResolvedValueOnce(false);
             await expect(
                 view.setOptions({
                     debug: true,
@@ -126,7 +139,7 @@ describe("Table.View", () => {
         it("returns true if it successfully sent the new options", async () => {
             const globalMocks = createGlobalMocks();
             const view = new Table.View(globalMocks.context as any, { title: "Stable Table of Cables" } as any);
-            updateWebviewMock.mockResolvedValueOnce(true);
+            globalMocks.updateWebviewMock.mockResolvedValueOnce(true);
             await expect(
                 view.setOptions({
                     debug: true,
@@ -139,19 +152,17 @@ describe("Table.View", () => {
     });
 
     describe("setColumns", () => {
-        const updateWebviewMock = jest.spyOn((Table.View as any).prototype, "updateWebview");
-
         it("returns false if it was unable to send the new columns", async () => {
             const globalMocks = createGlobalMocks();
             const view = new Table.View(globalMocks.context as any, { title: "Table" } as any);
-            updateWebviewMock.mockResolvedValueOnce(false);
+            globalMocks.updateWebviewMock.mockResolvedValueOnce(false);
             await expect(view.setColumns([{ field: "apple" }, { field: "banana" }, { field: "orange" }])).resolves.toBe(false);
         });
 
         it("returns true if it successfully sent the new options", async () => {
             const globalMocks = createGlobalMocks();
             const view = new Table.View(globalMocks.context as any, { title: "Stable Table of Cables" } as any);
-            updateWebviewMock.mockResolvedValueOnce(true);
+            globalMocks.updateWebviewMock.mockResolvedValueOnce(true);
             const cols = [
                 { field: "apple", valueFormatter: (data: { value: Table.CellData }) => `${data.value.toString()} apples` },
                 { field: "banana", comparator: (valueA, valueB, nodeA, nodeB, isDescending) => -1, colSpan: (params) => 2 },
@@ -171,6 +182,19 @@ describe("Table.View", () => {
     });
 
     describe("onMessageReceived", () => {
+        it("does nothing if no command is provided", async () => {
+            const globalMocks = createGlobalMocks();
+            const view = new Table.View(globalMocks.context as any, { title: "Table w/ changing display" } as any);
+            const onTableDisplayChangedFireMock = jest.spyOn((view as any).onTableDisplayChangedEmitter, "fire");
+            globalMocks.updateWebviewMock.mockClear();
+            const tableData = { rows: [{ a: 1, b: 1, c: 1 }] };
+            await view.onMessageReceived({
+                data: tableData,
+            });
+            expect(onTableDisplayChangedFireMock).not.toHaveBeenCalledWith(tableData);
+            expect(globalMocks.updateWebviewMock).not.toHaveBeenCalled();
+        });
+
         it("fires the onTableDisplayChanged event when handling the 'ondisplaychanged' command", async () => {
             const globalMocks = createGlobalMocks();
             const view = new Table.View(globalMocks.context as any, { title: "Table w/ changing display" } as any);
@@ -186,12 +210,12 @@ describe("Table.View", () => {
         it("calls updateWebview when handling the 'ready' command", async () => {
             const globalMocks = createGlobalMocks();
             const view = new Table.View(globalMocks.context as any, { title: "Table w/ changing display" } as any);
-            const updateWebviewMock = jest.spyOn(view as any, "updateWebview").mockImplementation();
+            globalMocks.updateWebviewMock.mockImplementation();
             await view.onMessageReceived({
                 command: "ready",
             });
-            expect(updateWebviewMock).toHaveBeenCalled();
-            updateWebviewMock.mockRestore();
+            expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
+            globalMocks.updateWebviewMock.mockRestore();
         });
 
         it("calls vscode.env.clipboard.writeText when handling the 'copy' command", async () => {
@@ -234,7 +258,6 @@ describe("Table.View", () => {
                 },
             };
             const view = new Table.View(globalMocks.context as any, data);
-            const updateWebviewMock = jest.spyOn(view as any, "updateWebview");
             const writeTextMock = jest.spyOn(env.clipboard, "writeText");
             const mockWebviewMsg = {
                 command: "nonexistent-action",
@@ -242,12 +265,13 @@ describe("Table.View", () => {
             };
             await view.onMessageReceived(mockWebviewMsg);
             expect(writeTextMock).not.toHaveBeenCalled();
-            expect(updateWebviewMock).not.toHaveBeenCalled();
+            expect(globalMocks.updateWebviewMock).not.toHaveBeenCalled();
         });
 
         it("runs the callback for an action that exists", async () => {
             const globalMocks = createGlobalMocks();
-            const callbackMock = jest.fn();
+            const allCallbackMock = jest.fn();
+            const zeroCallbackMock = jest.fn();
             const data = {
                 title: "Some table",
                 rows: [{ a: 1, b: 1, c: 1 }],
@@ -263,7 +287,19 @@ describe("Table.View", () => {
                             callback: {
                                 typ: "cell",
                                 fn: (_cell: Table.CellData) => {
-                                    callbackMock();
+                                    allCallbackMock();
+                                },
+                            },
+                        } as Table.Action,
+                    ],
+                    0: [
+                        {
+                            title: "Zero action",
+                            command: "zero-action",
+                            callback: {
+                                typ: "cell",
+                                fn: (_cell: Table.CellData) => {
+                                    zeroCallbackMock();
                                 },
                             },
                         } as Table.Action,
@@ -271,18 +307,182 @@ describe("Table.View", () => {
                 },
             };
             const view = new Table.View(globalMocks.context as any, data);
-            const updateWebviewMock = jest.spyOn(view as any, "updateWebview");
             const writeTextMock = jest.spyOn(env.clipboard, "writeText");
+            // case 1: An action that exists for all rows
             const mockWebviewMsg = {
                 command: "some-action",
                 data: { cell: data.rows[0].a, row: data.rows[0] },
+                rowIndex: 0,
             };
             await view.onMessageReceived(mockWebviewMsg);
             expect(writeTextMock).not.toHaveBeenCalled();
-            expect(updateWebviewMock).not.toHaveBeenCalled();
-            expect(callbackMock).toHaveBeenCalled();
+            expect(globalMocks.updateWebviewMock).not.toHaveBeenCalled();
+            expect(allCallbackMock).toHaveBeenCalled();
+            // case 2: An action that exists for all rows
+            const mockNextWebviewMsg = {
+                command: "zero-action",
+                data: { cell: data.rows[0].a, row: data.rows[0] },
+                rowIndex: 0,
+            };
+            await view.onMessageReceived(mockNextWebviewMsg);
+            expect(writeTextMock).not.toHaveBeenCalled();
+            expect(globalMocks.updateWebviewMock).not.toHaveBeenCalled();
+            expect(zeroCallbackMock).toHaveBeenCalled();
+        });
+    });
+
+    describe("setContent", () => {
+        it("sets the rows on the internal data structure and calls updateWebview", async () => {
+            const globalMocks = createGlobalMocks();
+            const mockRow = { red: 255, green: 0, blue: 255 };
+            const data = { title: "Table w/ content", rows: [] };
+            const view = new Table.View(globalMocks.context as any, data as any);
+            globalMocks.updateWebviewMock.mockImplementation();
+            await view.setContent([mockRow]);
+            expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
+            expect((view as any).data.rows[0]).toStrictEqual(mockRow);
+            globalMocks.updateWebviewMock.mockRestore();
+        });
+    });
+
+    describe("addColumns", () => {
+        it("sets the columns on the internal data structure and calls updateWebview", async () => {
+            const globalMocks = createGlobalMocks();
+            const mockCols = [
+                { field: "name", sort: "desc", colSpan: (params) => 2, rowSpan: (params) => 2 },
+                {
+                    field: "address",
+                    sort: "asc",
+                    comparator: (valueA, valueB, nodeA, nodeB, isDescending) => 1,
+                    valueFormatter: (data: { value }) => `Located at ${data.value.toString()}`,
+                },
+            ] as Table.ColumnOpts[];
+            const data = { title: "Table w/ cols", columns: [], rows: [] };
+            const view = new Table.View(globalMocks.context as any, data as any);
+            globalMocks.updateWebviewMock.mockImplementation();
+            await view.addColumns(...mockCols);
+            expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
+            expect((view as any).data.columns).toStrictEqual(
+                mockCols.map((col) => ({
+                    ...col,
+                    colSpan: col.colSpan?.toString(),
+                    comparator: col.comparator?.toString(),
+                    rowSpan: col.rowSpan?.toString(),
+                    valueFormatter: col.valueFormatter?.toString(),
+                }))
+            );
+            globalMocks.updateWebviewMock.mockRestore();
+        });
+    });
+
+    describe("addContent", () => {
+        it("adds the rows to the internal data structure and calls updateWebview", async () => {
+            const globalMocks = createGlobalMocks();
+            const mockRow = { blue: true, yellow: false, violet: true };
+            const data = { title: "Table w/ no initial rows", rows: [] };
+            const view = new Table.View(globalMocks.context as any, data as any);
+            globalMocks.updateWebviewMock.mockImplementation();
+            await view.addContent(mockRow);
+            expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
+            expect((view as any).data.rows[0]).toStrictEqual(mockRow);
+            globalMocks.updateWebviewMock.mockRestore();
+        });
+    });
+
+    describe("addContextOption", () => {
+        it("adds the context option to the internal data structure and calls updateWebview", async () => {
+            const globalMocks = createGlobalMocks();
+            const data = { title: "Table w/ no initial rows", contextOpts: { all: [] }, rows: [] };
+            const view = new Table.View(globalMocks.context as any, data as any);
+            globalMocks.updateWebviewMock.mockImplementation();
+
+            // case 1: Adding a context menu option to all rows
+            const contextOpt = {
+                title: "Add to cart",
+                command: "add-to-cart",
+                callback: {
+                    typ: "row",
+                    fn: (_data) => {},
+                },
+                condition: (_data) => true,
+            } as Table.ContextMenuOpts;
+            await view.addContextOption("all", contextOpt);
+            expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
+            expect((view as any).data.contextOpts["all"]).toStrictEqual([{ ...contextOpt, condition: contextOpt.condition?.toString() }]);
+
+            // case 2: Adding a context menu option to one row
+            const singleRowContextOpt = {
+                title: "Save for later",
+                command: "save-for-later",
+                callback: {
+                    typ: "row",
+                    fn: (_data) => {},
+                },
+                condition: (_data) => true,
+            } as Table.ContextMenuOpts;
+            await view.addContextOption(1, singleRowContextOpt);
+            expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
+            expect((view as any).data.contextOpts[1]).toStrictEqual([
+                { ...singleRowContextOpt, condition: singleRowContextOpt.condition?.toString() },
+            ]);
+            globalMocks.updateWebviewMock.mockRestore();
+        });
+    });
+
+    describe("addAction", () => {
+        it("adds the action to the internal data structure and calls updateWebview", async () => {
+            const globalMocks = createGlobalMocks();
+            const data = { title: "Table w/ no initial rows", actions: { all: [] }, rows: [] };
+            const view = new Table.View(globalMocks.context as any, data as any);
+            globalMocks.updateWebviewMock.mockImplementation();
+
+            // case 1: Adding an action to all rows
+            const action = {
+                title: "Add to wishlist",
+                command: "add-to-wishlist",
+                callback: {
+                    typ: "row",
+                    fn: (_data) => {},
+                },
+                condition: (_data) => true,
+            } as Table.ContextMenuOpts;
+            await view.addAction("all", action);
+            expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
+            expect((view as any).data.actions["all"]).toStrictEqual([{ ...action, condition: action.condition?.toString() }]);
+
+            // case 2: Adding an action to one row
+            const singleRowAction = {
+                title: "Learn more",
+                command: "learn-more",
+                callback: {
+                    typ: "row",
+                    fn: (_data) => {},
+                },
+                condition: (_data) => true,
+            } as Table.ContextMenuOpts;
+            await view.addAction(2, singleRowAction);
+            expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
+            expect((view as any).data.actions[2]).toStrictEqual([{ ...singleRowAction, condition: singleRowAction.condition?.toString() }]);
+            globalMocks.updateWebviewMock.mockRestore();
         });
     });
 });
 
 // Table.Instance unit tests
+describe("Table.Instance", () => {
+    describe("dispose", () => {
+        it("disposes of the table view using the function in the base class", () => {
+            const globalMocks = createGlobalMocks();
+            const builder = new TableBuilder(globalMocks.context as any)
+                .addRows([
+                    { a: 1, b: 2, c: 3, d: false, e: 5 },
+                    { a: 3, b: 2, c: 1, d: true, e: 6 },
+                ])
+                .addColumns([{ field: "a" }, { field: "b" }, { field: "c" }, { field: "d" }, { field: "e" }]);
+            const instance = builder.build();
+            const disposeMock = jest.spyOn((WebView as any).prototype, "dispose");
+            instance.dispose();
+            expect(disposeMock).toHaveBeenCalled();
+        });
+    });
+});
