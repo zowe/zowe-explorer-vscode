@@ -12,7 +12,7 @@
 import { UriPair, WebView } from "./WebView";
 import { Event, EventEmitter, ExtensionContext, env } from "vscode";
 import { randomUUID } from "crypto";
-import { addedDiff } from "deep-object-diff";
+import { diff } from "deep-object-diff";
 
 export namespace Table {
     /* The types of supported content for the table and how they are represented in callback functions. */
@@ -341,7 +341,7 @@ export namespace Table {
             });
 
             if (result) {
-                this.onTableDataReceivedEmitter.fire(this.lastUpdated ? addedDiff(this.lastUpdated, this.data) : this.data);
+                this.onTableDataReceivedEmitter.fire(this.lastUpdated ? diff(this.lastUpdated, this.data) : this.data);
                 this.lastUpdated = this.data;
             }
             return result;
@@ -367,7 +367,7 @@ export namespace Table {
          *
          * @returns Whether the webview successfully received the new action(s)
          */
-        public addAction(index: number, ...actions: ActionOpts[]): Promise<boolean> {
+        public addAction(index: number | "all", ...actions: ActionOpts[]): Promise<boolean> {
             if (this.data.actions[index]) {
                 const existingActions = this.data.actions[index];
                 this.data.actions[index] = [...existingActions, ...actions.map((action) => ({ ...action, condition: action.condition?.toString() }))];
@@ -384,7 +384,7 @@ export namespace Table {
          * @param actions The actions to add to the given row
          * @returns Whether the webview successfully received the new context menu option(s)
          */
-        public addContextOption(id: number | string, ...options: ContextMenuOpts[]): Promise<boolean> {
+        public addContextOption(id: number | "all", ...options: ContextMenuOpts[]): Promise<boolean> {
             if (this.data.contextOpts[id]) {
                 const existingOpts = this.data.contextOpts[id];
                 this.data.contextOpts[id] = [...existingOpts, ...options.map((option) => ({ ...option, condition: option.condition?.toString() }))];
