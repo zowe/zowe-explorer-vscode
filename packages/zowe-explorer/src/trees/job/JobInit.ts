@@ -146,27 +146,6 @@ export class JobInit {
         );
         context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.copyName", async (job: IZoweJobTreeNode) => JobActions.copyName(job)));
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.jobs.tableView", (jobSession: IZoweJobTreeNode) => {
-                const children = jobSession.children;
-                if (children) {
-                    const jobObjects = children.map((c) => c.job);
-                    new TableBuilder(context)
-                        .title("Jobs view")
-                        .rows(
-                            ...jobObjects.map((job) => ({
-                                jobid: job.jobid,
-                                jobname: job.jobname,
-                                owner: job.owner,
-                                status: job.status,
-                                class: job.class,
-                                retcode: job.retcode,
-                            }))
-                        )
-                        .build();
-                }
-            })
-        );
-        context.subscriptions.push(
             vscode.workspace.onDidOpenTextDocument((doc) => {
                 if (doc.uri.scheme !== ZoweScheme.Jobs) {
                     return;
