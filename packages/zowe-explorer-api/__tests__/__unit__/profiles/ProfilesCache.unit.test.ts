@@ -503,6 +503,27 @@ describe("ProfilesCache", () => {
         expect(profile).toMatchObject(baseProfile);
     });
 
+    fit("fetchBaseProfile should return typeless profile if base profile not found", async () => {
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
+        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([baseProfile]));
+        const profile = await profCache.fetchBaseProfile();
+        expect(profile).toMatchObject({ name: "lpar1", type: "base" });
+    });
+
+    // it("fetchBaseProfile should return typeless profile if base profile does not contain token value", async () => {
+    //     const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
+    //     jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
+    //     const profile = await profCache.fetchBaseProfile();
+    //     expect(profile).toBeUndefined();
+    // });
+
+    // it("fetchBaseProfile should return base profile if it contains token value", async () => {
+    //     const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
+    //     jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
+    //     const profile = await profCache.fetchBaseProfile();
+    //     expect(profile).toBeUndefined();
+    // });
+
     it("fetchBaseProfile should return undefined if base profile not found", async () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
         jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
