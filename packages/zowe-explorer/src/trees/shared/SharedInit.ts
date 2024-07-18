@@ -10,18 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import {
-    FileManagement,
-    FsAbstractUtils,
-    Gui,
-    IZoweTree,
-    IZoweTreeNode,
-    Table,
-    TableBuilder,
-    Validation,
-    ZosEncoding,
-    ZoweScheme,
-} from "@zowe/zowe-explorer-api";
+import { FileManagement, IZoweTree, IZoweTreeNode, Validation, ZosEncoding, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { SharedActions } from "./SharedActions";
 import { SharedHistoryView } from "./SharedHistoryView";
 import { SharedTreeProviders } from "./SharedTreeProviders";
@@ -45,8 +34,6 @@ import { SharedUtils } from "./SharedUtils";
 import { SharedContext } from "./SharedContext";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { CertificateWizard } from "../../utils/CertificateWizard";
-import { randomInt, randomUUID } from "crypto";
-import * as path from "path";
 
 export class SharedInit {
     public static registerRefreshCommand(
