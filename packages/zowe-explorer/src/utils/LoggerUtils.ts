@@ -18,12 +18,14 @@ import { SettingsConfig } from "../configuration/SettingsConfig";
 import { ZoweLogger } from "../tools/ZoweLogger";
 
 export class LoggerUtils {
+    private static outputChannel: vscode.OutputChannel;
+
     public static async initVscLogger(context: vscode.ExtensionContext, logFileLocation: string): Promise<vscode.OutputChannel> {
-        const outputChannel = Gui.createOutputChannel(vscode.l10n.t("Zowe Explorer"));
-        this.writeVscLoggerInfo(outputChannel, logFileLocation, context);
+        LoggerUtils.outputChannel ??= Gui.createOutputChannel(vscode.l10n.t("Zowe Explorer"));
+        this.writeVscLoggerInfo(LoggerUtils.outputChannel, logFileLocation, context);
         ZoweLogger.info(vscode.l10n.t("Initialized logger for Zowe Explorer"));
         await this.compareCliLogSetting();
-        return outputChannel;
+        return LoggerUtils.outputChannel;
     }
 
     private static writeVscLoggerInfo(outputChannel: vscode.OutputChannel, logFileLocation: string, context: vscode.ExtensionContext): void {
