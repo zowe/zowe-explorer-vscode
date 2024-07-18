@@ -121,9 +121,7 @@ describe("Test src/shared/extension", () => {
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: true },
                     { spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks },
-                    { spy: jest.spyOn(SharedActions, "refreshAll"), arg: ["ds"] },
-                    { spy: jest.spyOn(SharedActions, "refreshAll"), arg: ["uss"] },
-                    { spy: jest.spyOn(SharedActions, "refreshAll"), arg: ["job"] },
+                    { spy: jest.spyOn(SharedActions, "refreshAll"), arg: [] },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
                 ],
             },
@@ -359,7 +357,6 @@ describe("Test src/shared/extension", () => {
     describe("watchConfigProfile", () => {
         let context: any;
         const spyReadFile = jest.fn().mockReturnValue("test");
-        const spyExecuteCommand = jest.fn();
         const watcher: any = {
             onDidCreate: jest.fn().mockImplementation((fun) => fun()),
             onDidDelete: jest.fn().mockImplementation((fun) => fun()),
@@ -370,7 +367,6 @@ describe("Test src/shared/extension", () => {
             jest.clearAllMocks();
             Object.defineProperty(vscode.workspace, "createFileSystemWatcher", { value: () => watcher, configurable: true });
             Object.defineProperty(vscode.workspace, "workspaceFolders", { value: [{ uri: { fsPath: "fsPath" } }], configurable: true });
-            Object.defineProperty(vscode.commands, "executeCommand", { value: spyExecuteCommand, configurable: true });
             Object.defineProperty(vscode.workspace, "fs", { value: { readFile: spyReadFile }, configurable: true });
             Object.defineProperty(Constants, "SAVED_PROFILE_CONTENTS", { value: "test", configurable: true });
         });
@@ -379,18 +375,18 @@ describe("Test src/shared/extension", () => {
             jest.restoreAllMocks();
         });
 
-        it("should be able to trigger all listeners", async () => {
+        it("should be able to trigger all listeners", () => {
             const spyRefreshAll = jest.spyOn(SharedActions, "refreshAll").mockImplementation(jest.fn());
             jest.spyOn(ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter, "fire").mockImplementation();
-            await SharedInit.watchConfigProfile(context, { ds: "ds", uss: "uss", job: "job" } as any);
-            expect(spyExecuteCommand).toHaveBeenCalledWith("zowe.extRefresh");
+            SharedInit.watchConfigProfile(context);
             expect(context.subscriptions).toContain(watcher);
             expect(spyReadFile).toHaveBeenCalledWith("uri");
-            expect(spyRefreshAll).not.toHaveBeenCalled();
+            expect(spyRefreshAll).toHaveBeenCalledTimes(4);
 
             spyReadFile.mockReturnValue("other");
-            await SharedInit.watchConfigProfile(context, { ds: "ds", uss: "uss", job: "job" } as any);
-            expect(spyRefreshAll).toHaveBeenCalled();
+            spyRefreshAll.mockClear();
+            SharedInit.watchConfigProfile(context);
+            expect(spyRefreshAll).toHaveBeenCalledTimes(4);
         });
     });
 
