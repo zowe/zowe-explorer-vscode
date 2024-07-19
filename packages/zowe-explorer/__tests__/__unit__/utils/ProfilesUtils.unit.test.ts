@@ -344,13 +344,18 @@ describe("ProfilesUtils unit tests", () => {
         it("should prompt user if v1 profiles detected and Convert Existing Profiles chosen", async () => {
             const mocks = createBlockMocks();
             const mockReadProfilesFromDisk = jest.fn();
-            const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockReturnValueOnce({
+            const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
-                getTeamConfig: jest.fn().mockReturnValue([]),
+                getTeamConfig: jest.fn().mockReturnValue({ configName: "zowe.config.json" }),
                 getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
             } as never);
             const infoMsgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Convert Existing Profiles" as any);
-            jest.spyOn(ProfilesCache, "convertV1ProfToConfig").mockResolvedValueOnce({ msgs: [] });
+            jest.spyOn(ProfilesCache, "convertV1ProfToConfig").mockResolvedValueOnce({
+                msgs: [],
+                profilesConverted: { zosmf: ["myzosmf"] },
+                profilesFailed: [{ name: "zosmf2", type: "zosmf", error: "failed" as any }],
+            } as any);
+            Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
 
             Object.defineProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", { value: true, configurable: true });
             await expect(ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
