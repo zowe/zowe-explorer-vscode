@@ -351,11 +351,20 @@ describe("ProfilesUtils unit tests", () => {
             } as never);
             const infoMsgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Convert Existing Profiles" as any);
             jest.spyOn(ProfilesCache, "convertV1ProfToConfig").mockResolvedValueOnce({
-                msgs: [],
+                msgs: [{ msgFormat: 4, msgText: "message text for testing." }],
                 profilesConverted: { zosmf: ["myzosmf"] },
                 profilesFailed: [{ name: "zosmf2", type: "zosmf", error: "failed" as any }],
             } as any);
             Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
+            Object.defineProperty(imperative, "ConvertMsgFmt", {
+                value: jest.fn().mockReturnValue({
+                    REPORT_LINE: 1,
+                    ERROR_LINE: 2,
+                    PARAGRAPH: 4,
+                    INDENT: 8,
+                }),
+                configurable: true,
+            });
 
             Object.defineProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", { value: true, configurable: true });
             await expect(ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
