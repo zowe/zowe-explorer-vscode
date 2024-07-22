@@ -39,7 +39,7 @@ import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import { IZoweTree } from "../../../../../zowe-explorer-api/src/tree/IZoweTree";
 import { IZoweUSSTreeNode } from "../../../../../zowe-explorer-api/src/tree";
-import { USSAtributeView } from "../../../../src/trees/uss/USSAttributeView";
+import { USSAttributeView } from "../../../../src/trees/uss/USSAttributeView";
 import { mocked } from "../../../__mocks__/mockUtils";
 import { USSTree } from "../../../../src/trees/uss/USSTree";
 
@@ -842,7 +842,7 @@ describe("USS Action Unit Tests - function editAttributes", () => {
             {} as IZoweTree<IZoweUSSTreeNode>,
             { label: "some/node", getProfile: jest.fn() } as unknown as IZoweUSSTreeNode
         );
-        expect(view).toBeInstanceOf(USSAtributeView);
+        expect(view).toBeInstanceOf(USSAttributeView);
     });
 });
 
