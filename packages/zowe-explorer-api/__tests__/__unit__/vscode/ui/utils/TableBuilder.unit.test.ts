@@ -52,6 +52,23 @@ describe("TableBuilder", () => {
             });
             expect((builder as any).data.options).toHaveProperty("pagination");
         });
+
+        it("keeps the existing options on the table data if called multiple times", () => {
+            const globalMocks = createGlobalMocks();
+            let builder = new TableBuilder(globalMocks.context as any);
+            expect((builder as any).data?.options).toBe(undefined);
+            builder = builder.options({
+                suppressAutoSize: true,
+            });
+            expect((builder as any).data.options).toHaveProperty("suppressAutoSize");
+            builder = builder.options({
+                paginationPageSize: 50,
+            });
+            expect((builder as any).data.options).toStrictEqual({
+                suppressAutoSize: true,
+                paginationPageSize: 50,
+            });
+        });
     });
 
     describe("title", () => {
@@ -282,6 +299,26 @@ describe("TableBuilder", () => {
             const builderAction = builder.rowActions(rowActions);
             expect(rowActionSpy).toHaveBeenCalledTimes(2);
             expect(builderAction).toBeInstanceOf(TableBuilder);
+        });
+    });
+
+    describe("build", () => {
+        it("builds the table view and constructs column definitions if needed", () => {
+            const globalMocks = createGlobalMocks();
+            const newRows = [
+                { a: 1, b: 2, c: 3, d: false, e: 5 },
+                { a: 3, b: 2, c: 1, d: true, e: 6 },
+            ];
+            const builder = new TableBuilder(globalMocks.context as any).addRows(newRows);
+            const instance = builder.build();
+            expect((instance as any).data.columns).toStrictEqual([{ field: "a" }, { field: "b" }, { field: "c" }, { field: "d" }, { field: "e" }]);
+        });
+
+        it("builds the table view", () => {
+            const globalMocks = createGlobalMocks();
+            const builder = new TableBuilder(globalMocks.context as any);
+            const instance = builder.build();
+            expect((instance as any).data.columns).toHaveLength(0);
         });
     });
 

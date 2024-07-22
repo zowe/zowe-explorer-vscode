@@ -159,6 +159,8 @@ describe("Table.View", () => {
             const globalMocks = createGlobalMocks();
             const view = new Table.View(globalMocks.context as any, { title: "Stable Table of Cables" } as any);
             globalMocks.updateWebviewMock.mockResolvedValueOnce(true);
+
+            // case 1: No options were previously defined
             await expect(
                 view.setOptions({
                     debug: true,
@@ -167,6 +169,19 @@ describe("Table.View", () => {
             ).resolves.toBe(true);
             expect((view as any).data.options.debug).toBe(true);
             expect((view as any).data.options.pagination).toBe(false);
+
+            globalMocks.updateWebviewMock.mockResolvedValueOnce(true);
+            // case 2: Options were previously specified
+            await expect(
+                view.setOptions({
+                    paginationPageSize: 0,
+                })
+            ).resolves.toBe(true);
+            expect((view as any).data.options).toStrictEqual({
+                debug: true,
+                pagination: false,
+                paginationPageSize: 0,
+            });
         });
     });
 

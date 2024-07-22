@@ -233,11 +233,11 @@ export namespace Table {
         /** Actions to apply to the given row or column index */
         actions: Record<number | "all", Action[]>;
         /** Column definitions for the top of the table */
-        columns: Column[] | null | undefined;
+        columns: Column[];
         /** Context menu options for rows in the table */
         contextOpts: Record<number | "all", ContextMenuOption[]>;
         /** The row data for the table. Each row contains a set of variables corresponding to the data for each column in that row. */
-        rows: RowData[] | null | undefined;
+        rows: RowData[];
         /** The display title for the table */
         title?: string;
         /** AG Grid-specific properties */

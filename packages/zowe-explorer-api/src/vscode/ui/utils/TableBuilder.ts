@@ -181,6 +181,11 @@ export class TableBuilder {
      * @returns A new {@link Table.Instance} with the given data/options
      */
     public build(): Table.Instance {
+        // Construct column definitions if rows were provided, but no columns are specified at time of build
+        if (this.data.columns.length === 0 && this.data.rows.length > 0) {
+            this.data.columns = Object.keys(this.data.rows[0]).map((k) => ({ field: k }));
+        }
+
         return new Table.Instance(this.context, this.data);
     }
 
@@ -189,7 +194,7 @@ export class TableBuilder {
      * @returns A new, **shared** {@link Table.Instance} with the given data/options
      */
     public buildAndShare(): Table.Instance {
-        const table = new Table.Instance(this.context, this.data);
+        const table = this.build();
         TableMediator.getInstance().addTable(table);
         return table;
     }
