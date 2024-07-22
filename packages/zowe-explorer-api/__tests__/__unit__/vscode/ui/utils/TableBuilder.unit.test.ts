@@ -166,9 +166,10 @@ describe("TableBuilder", () => {
     });
 
     describe("addContextOption", () => {
-        it("adds the given context option and returns the same instance", () => {
+        it("adds the given context option with conditional and returns the same instance", () => {
             const globalMocks = createGlobalMocks();
             const builder = new TableBuilder(globalMocks.context as any);
+            (builder as any).data.contextOpts = { all: [] };
             const ctxOpt = {
                 title: "Delete",
                 command: "delete",
@@ -179,17 +180,46 @@ describe("TableBuilder", () => {
                 condition: (_data) => true,
             } as Table.ContextMenuOpts;
 
-            // case 0: adding context option to "all" rows
+            // case 0: adding context option w/ conditional to "all" rows, index previously existed
             const builderCtxOpts = builder.addContextOption("all", ctxOpt);
             expect(builderCtxOpts).toBeInstanceOf(TableBuilder);
             expect((builderCtxOpts as any).data.contextOpts).toStrictEqual({
                 all: [{ ...ctxOpt, condition: ctxOpt.condition?.toString() }],
             });
-            // case 1: adding context option to a specific row, no previous options existed
+
+            // case 1: adding context option w/ conditional to a specific row, index did not already exist
             const finalBuilder = builderCtxOpts.addContextOption(0, ctxOpt);
             expect((finalBuilder as any).data.contextOpts).toStrictEqual({
                 0: [{ ...ctxOpt, condition: ctxOpt.condition?.toString() }],
                 all: [{ ...ctxOpt, condition: ctxOpt.condition?.toString() }],
+            });
+        });
+
+        it("adds the given context option without conditional and returns the same instance", () => {
+            const globalMocks = createGlobalMocks();
+            const builder = new TableBuilder(globalMocks.context as any);
+            (builder as any).data.contextOpts = { all: [] };
+            const ctxOptNoCond = {
+                title: "Add",
+                command: "add",
+                callback: {
+                    typ: "row",
+                    fn: (_row: Table.RowData) => {},
+                },
+            } as Table.ContextMenuOpts;
+
+            // case 0: adding context option w/ condition to "all" rows, index previously existed
+            const builderCtxOpts = builder.addContextOption("all", ctxOptNoCond);
+            expect(builderCtxOpts).toBeInstanceOf(TableBuilder);
+            expect((builderCtxOpts as any).data.contextOpts).toStrictEqual({
+                all: [{ ...ctxOptNoCond, condition: ctxOptNoCond.condition?.toString() }],
+            });
+
+            // case 1: adding context option w/ condition to a specific row, index did not already exist
+            const finalBuilder = builderCtxOpts.addContextOption(0, ctxOptNoCond);
+            expect((finalBuilder as any).data.contextOpts).toStrictEqual({
+                0: [{ ...ctxOptNoCond, condition: ctxOptNoCond.condition?.toString() }],
+                all: [{ ...ctxOptNoCond, condition: ctxOptNoCond.condition?.toString() }],
             });
         });
     });

@@ -125,8 +125,10 @@ export class TableBuilder {
      * @returns The same {@link TableBuilder} instance with the row actions added
      */
     public contextOptions(opts: Record<number | "all", Table.ContextMenuOpts[]>): TableBuilder {
-        for (const key of Object.keys(opts)) {
-            this.addContextOption(key as number | "all", opts[key]);
+        for (const [key, optsForKey] of Object.entries(opts)) {
+            for (const opt of optsForKey) {
+                this.addContextOption(key as number | "all", opt);
+            }
         }
         return this;
     }
