@@ -18,11 +18,16 @@ import { join as joinPath } from "path";
 import { randomUUID } from "crypto";
 
 export type WebViewOpts = {
-    retainContext: boolean;
+    /** Callback function that is called when the extension has received a message from the webview. */
+    onDidReceiveMessage?: (message: object) => void | Promise<void>;
+    /** Retains context of the webview even after it is hidden. */
+    retainContext?: boolean;
 };
 
 export type UriPair = {
+    /** The paths for the webview on-disk. */
     disk?: Types.WebviewUris;
+    /** The paths for the webview resources, before transformation by the `asWebviewUri` function. */
     resource?: Types.WebviewUris;
 };
 
@@ -51,13 +56,7 @@ export class WebView {
      * @param context The VSCode extension context
      * @param onDidReceiveMessage Event callback: called when messages are received from the webview
      */
-    public constructor(
-        title: string,
-        webviewName: string,
-        context: ExtensionContext,
-        onDidReceiveMessage?: (message: object) => void | Promise<void>,
-        retainContext?: boolean
-    ) {
+    public constructor(title: string, webviewName: string, context: ExtensionContext, opts?: WebViewOpts) {
         this.context = context;
         this.disposables = [];
 
@@ -78,7 +77,7 @@ export class WebView {
         this.panel = window.createWebviewPanel("ZEAPIWebview", this.title, ViewColumn.Beside, {
             enableScripts: true,
             localResourceRoots: [this.uris.disk.build],
-            retainContextWhenHidden: retainContext ?? false,
+            retainContextWhenHidden: opts?.retainContext ?? false,
         });
 
         // Associate URI resources with webview
@@ -94,8 +93,8 @@ export class WebView {
             title: this.title,
         });
         this.webviewContent = builtHtml;
-        if (onDidReceiveMessage) {
-            this.panel.webview.onDidReceiveMessage(async (message) => onDidReceiveMessage(message));
+        if (opts?.onDidReceiveMessage) {
+            this.panel.webview.onDidReceiveMessage(async (message) => opts.onDidReceiveMessage(message));
         }
         this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
         this.panel.webview.html = this.webviewContent;
