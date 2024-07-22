@@ -242,6 +242,13 @@ export namespace Table {
         title?: string;
     } & GridProperties;
 
+    export type EditEvent = {
+        rowIndex: number;
+        field: string;
+        value: ContentTypes;
+        oldValue?: ContentTypes;
+    };
+
     /**
      * A class that acts as a controller between the extension and the table view. Based off of the {@link WebView} class.
      *
@@ -266,8 +273,10 @@ export namespace Table {
         };
         private onTableDataReceivedEmitter: EventEmitter<Partial<ViewOpts>> = new EventEmitter();
         private onTableDisplayChangedEmitter: EventEmitter<RowData | RowData[]> = new EventEmitter();
+        private onTableDataEditedEmitter: EventEmitter<EditEvent> = new EventEmitter();
         public onTableDisplayChanged: Event<RowData | RowData[]> = this.onTableDisplayChangedEmitter.event;
         public onTableDataReceived: Event<Partial<ViewOpts>> = this.onTableDataReceivedEmitter.event;
+        public onTableDataEdited: Event<EditEvent> = this.onTableDataEditedEmitter.event;
 
         private uuid: string;
 
@@ -300,6 +309,11 @@ export namespace Table {
                 return;
             }
             switch (message.command) {
+                // "ontableedited" command: The table's contents were updated by the user from within the webview.
+                // Fires for editable columns only.
+                case "ontableedited":
+                    this.onTableDataEditedEmitter.fire(message.data);
+                    return;
                 // "ondisplaychanged" command: The table's layout was updated by the user from within the webview.
                 case "ondisplaychanged":
                     this.onTableDisplayChangedEmitter.fire(message.data);

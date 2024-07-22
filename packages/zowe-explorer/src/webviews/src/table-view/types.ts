@@ -45,6 +45,19 @@ export const tableProps = (contextMenu: ContextMenuState, tableData: Table.ViewO
     paginationPageSize: tableData.paginationPageSize,
     paginationPageSizeSelector: tableData.paginationPageSizeSelector,
     onCellContextMenu: contextMenu.callback,
+    onCellValueChanged: tableData.columns?.some((col) => col.editable)
+        ? (event) => {
+              vscodeApi.postMessage({
+                  command: "ontableedit",
+                  data: {
+                      rowIndex: event.rowIndex,
+                      field: event.colDef.field,
+                      value: event.value,
+                      oldValue: event.oldValue,
+                  },
+              });
+          }
+        : undefined,
     onFilterChanged: (event) => {
         const rows: Table.RowData[] = [];
         event.api.forEachNodeAfterFilterAndSort((row, _i) => rows.push(row.data));

@@ -226,6 +226,25 @@ describe("Table.View", () => {
             expect(onTableDisplayChangedFireMock).toHaveBeenCalledWith(tableData);
         });
 
+        it("fires the onTableDataEdited event when handling the 'ontableedited' command", async () => {
+            const globalMocks = createGlobalMocks();
+            const view = new Table.View(globalMocks.context as any, { title: "Table w/ editable columns" } as any);
+            await view.setColumns([{ field: "a", editable: true }, { field: "b" }, { field: "c" }]);
+            const onTableDataEditedFireMock = jest.spyOn((view as any).onTableDataEditedEmitter, "fire");
+            const tableData = { rows: [{ a: 1, b: 1, c: 1 }] };
+            const editData = {
+                value: 2,
+                oldValue: tableData.rows[0].a,
+                field: "a",
+                rowIndex: 1,
+            };
+            await view.onMessageReceived({
+                command: "ontableedited",
+                data: editData,
+            });
+            expect(onTableDataEditedFireMock).toHaveBeenCalledWith(editData);
+        });
+
         it("calls updateWebview when handling the 'ready' command", async () => {
             const globalMocks = createGlobalMocks();
             const view = new Table.View(globalMocks.context as any, { title: "Table w/ changing display" } as any);
