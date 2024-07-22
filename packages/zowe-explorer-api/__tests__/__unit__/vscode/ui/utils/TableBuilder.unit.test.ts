@@ -46,11 +46,11 @@ describe("TableBuilder", () => {
         it("adds the given options to the table data, returning the same instance", () => {
             const globalMocks = createGlobalMocks();
             let builder = new TableBuilder(globalMocks.context as any);
-            expect((builder as any).data).not.toHaveProperty("pagination");
+            expect((builder as any).data?.options).toBe(undefined);
             builder = builder.options({
                 pagination: false,
             });
-            expect((builder as any).data).toHaveProperty("pagination");
+            expect((builder as any).data.options).toHaveProperty("pagination");
         });
     });
 

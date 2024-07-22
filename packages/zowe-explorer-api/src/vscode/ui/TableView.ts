@@ -171,7 +171,7 @@ export namespace Table {
          * Auto-size the columns when the grid is loaded. Can size to fit the grid width, fit a provided width or fit the cell contents.
          * Read once during initialization.
          */
-        autoSizeStrategy?: SizeColumnsToFitGridStrategy | SizeColumnsToFitProvidedWidthStrategy | SizeColumnsToFitGridStrategy;
+        autoSizeStrategy?: SizeColumnsToFitGridStrategy | SizeColumnsToFitProvidedWidthStrategy | SizeColumnsToContentStrategy;
         /** Set to 'shift' to have shift-resize as the default resize operation */
         colResizeDefault?: "shift";
         /** Changes the display type of the column menu. 'new' displays the main list of menu items; 'legacy' displays a tabbed menu */
@@ -240,7 +240,9 @@ export namespace Table {
         rows: RowData[] | null | undefined;
         /** The display title for the table */
         title?: string;
-    } & GridProperties;
+        /** AG Grid-specific properties */
+        options?: GridProperties;
+    };
 
     export type EditEvent = {
         rowIndex: number;
@@ -475,7 +477,7 @@ export namespace Table {
          * @returns Whether the webview successfully received the new options
          */
         public setOptions(opts: GridProperties): Promise<boolean> {
-            this.data = { ...this.data, ...opts };
+            this.data = { ...this.data, options: this.data.options ? { ...this.data.options, ...opts } : opts };
             return this.updateWebview();
         }
 

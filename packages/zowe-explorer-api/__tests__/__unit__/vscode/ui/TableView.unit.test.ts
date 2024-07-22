@@ -165,8 +165,8 @@ describe("Table.View", () => {
                     pagination: false,
                 })
             ).resolves.toBe(true);
-            expect((view as any).data.debug).toBe(true);
-            expect((view as any).data.pagination).toBe(false);
+            expect((view as any).data.options.debug).toBe(true);
+            expect((view as any).data.options.pagination).toBe(false);
         });
     });
 

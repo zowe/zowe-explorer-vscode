@@ -55,7 +55,7 @@ export class TableBuilder {
      * @returns The same {@link TableBuilder} instance with the options added
      */
     public options(opts: Table.GridProperties): TableBuilder {
-        this.data = { ...this.data, ...opts };
+        this.data = { ...this.data, options: this.data.options ? { ...this.data.options, ...opts } : opts };
         return this;
     }
 

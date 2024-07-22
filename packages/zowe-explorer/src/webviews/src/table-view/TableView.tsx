@@ -15,19 +15,7 @@ import "./style.css";
 const vscodeApi = acquireVsCodeApi();
 
 export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewProps) => {
-  const [tableData, setTableData] = useState<Table.ViewOpts>(
-    data ?? {
-      actions: {
-        all: [],
-      },
-      contextOpts: {
-        all: [],
-      },
-      columns: null,
-      rows: null,
-      title: "",
-    }
-  );
+  const [tableData, setTableData] = useState<Table.ViewOpts | undefined>(data);
   const [theme, setTheme] = useState<string>(baseTheme ?? "ag-theme-quartz");
 
   const contextMenu = useContextMenu({
@@ -48,7 +36,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
           fn: () => {},
         },
       },
-      ...(tableData.contextOpts.all ?? []),
+      ...(tableData?.contextOpts?.all ?? []),
     ],
     selectRow: true,
     selectedRows: [],
@@ -94,6 +82,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
                 cellStyle: { border: "none", outline: "none" },
                 field: "actions",
                 sortable: false,
+                suppressSizeToFit: true,
                 // Support a custom cell renderer for row actions
                 cellRenderer:
                   actionsCellRenderer ??
@@ -157,10 +146,10 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
 
   return (
     <>
-      {tableData.title ? <h1>{tableData.title}</h1> : null}
+      {tableData?.title ? <h1>{tableData.title}</h1> : null}
       <div className={`${theme} ag-theme-vsc ${contextMenu.open ? "ctx-menu-open" : ""}`}>
         {contextMenu.component}
-        <AgGridReact {...tableProps(contextMenu, tableData, vscodeApi)} />
+        {tableData ? <AgGridReact {...tableProps(contextMenu, tableData, vscodeApi)} /> : null}
       </div>
     </>
   );

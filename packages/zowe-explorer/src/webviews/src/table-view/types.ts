@@ -41,9 +41,6 @@ export const tableProps = (contextMenu: ContextMenuState, tableData: Table.ViewO
         rowSpan: col.rowSpan ? new Function(wrapFn(col.rowSpan)).call(null) : undefined,
         valueFormatter: col.valueFormatter ? new Function(wrapFn(col.valueFormatter)).call(null) : undefined,
     })),
-    pagination: tableData.pagination,
-    paginationPageSize: tableData.paginationPageSize,
-    paginationPageSizeSelector: tableData.paginationPageSizeSelector,
     onCellContextMenu: contextMenu.callback,
     onCellValueChanged: tableData.columns?.some((col) => col.editable)
         ? (event) => {
@@ -68,4 +65,5 @@ export const tableProps = (contextMenu: ContextMenuState, tableData: Table.ViewO
         event.api.forEachNodeAfterFilterAndSort((row, _i) => rows.push(row.data));
         vscodeApi.postMessage({ command: "ondisplaychanged", data: rows });
     },
+    ...(tableData.options ?? {}),
 });
