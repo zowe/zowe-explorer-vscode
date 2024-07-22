@@ -41,9 +41,9 @@ export default defineConfig({
             typescript: true,
         }),
     ],
-
     root: path.resolve(__dirname, "src"),
     build: {
+        chunkSizeWarningLimit: 1000,
         cssCodeSplit: false,
         emptyOutDir: true,
         outDir: path.resolve(__dirname, "dist"),
@@ -53,6 +53,9 @@ export default defineConfig({
                 entryFileNames: `[name]/[name].js`,
                 chunkFileNames: `[name]/[name].js`,
                 assetFileNames: `[name]/[name].[ext]`,
+                manualChunks: {
+                    "ag-grid-react": ["ag-grid-react"],
+                },
             },
         },
     },
