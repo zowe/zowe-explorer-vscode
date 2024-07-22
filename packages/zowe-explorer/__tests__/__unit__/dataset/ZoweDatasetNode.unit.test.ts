@@ -29,6 +29,7 @@ import * as sharedUtils from "../../../src/shared/utils";
 import { Profiles } from "../../../src/Profiles";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
+import { imperative } from "@zowe/cli";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -124,6 +125,13 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        const profileOne: imperative.IProfileLoaded = {
+            name: "profile",
+            profile: {},
+            type: "zosmf",
+            message: "",
+            failNotFound: false,
+        };
 
         mocked(blockMocks.mvsApi.getContents).mockResolvedValueOnce({
             success: true,
@@ -140,12 +148,18 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
                 };
             }),
         });
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+                };
+            }),
+        });
         const node = new ZoweDatasetNode({
             label: "node",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: blockMocks.datasetSessionNode,
         });
-
         await node.openDs(false, true, blockMocks.testDatasetTree);
 
         expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
