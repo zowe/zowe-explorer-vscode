@@ -6,7 +6,19 @@ extends:
 env:
   node: true
   es6: true
-ignorePatterns: ["**/scripts", "**/__mocks__", "**/lib", "wdio.conf.ts", "**/features/", "samples/__integration__/", "**/src/webviews"]
+ignorePatterns:
+  [
+    "**/scripts",
+    "**/__mocks__",
+    "**/lib",
+    "webpack.config.js",
+    "**/*wdio.conf.ts",
+    "**/features/",
+    "samples/__integration__/",
+    "**/out",
+    "**/results",
+    "**/src/webviews",
+  ]
 overrides:
   - files: "**/__tests__/**"
     rules:
