@@ -72,7 +72,7 @@ export class ProfilesUtils {
      * Update the current credential manager override
      * @param setting the credential manager to use in imperative.json
      */
-    public static updateCredentialManagerSetting(credentialManager?: string): void {
+    public static updateCredentialManagerSetting(credentialManager?: string | false): void {
         ZoweLogger.trace("ProfilesUtils.updateCredentialManagerSetting called.");
         const settingEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
         if (settingEnabled && credentialManager) {
@@ -85,9 +85,7 @@ export class ProfilesUtils {
             this.PROFILE_SECURITY = Constants.ZOWE_CLI_SCM;
             ZoweLogger.info(vscode.l10n.t(`Zowe explorer profiles are being set as secured.`));
         }
-        if (this.PROFILE_SECURITY) {
-            imperative.CredentialManagerOverride.recordCredMgrInConfig(this.PROFILE_SECURITY);
-        }
+        imperative.CredentialManagerOverride.recordCredMgrInConfig(this.PROFILE_SECURITY);
     }
 
     /**
@@ -133,7 +131,7 @@ export class ProfilesUtils {
             return new imperative.ProfileInfo("zowe", {
                 credMgrOverride: {
                     Manager: credentialManager,
-                    service: credentialManagerMap.credMgrDisplayName,
+                    service: credentialManagerMap.credMgrDisplayName.toString(),
                 },
             });
         }
