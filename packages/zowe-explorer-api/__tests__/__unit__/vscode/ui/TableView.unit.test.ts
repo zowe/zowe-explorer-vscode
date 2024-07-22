@@ -38,6 +38,14 @@ function createGlobalMocks() {
 
 // Table.View unit tests
 describe("Table.View", () => {
+    describe("constructor", () => {
+        it("handles a missing title in the data object", () => {
+            const globalMocks = createGlobalMocks();
+            const view = new Table.View(globalMocks.context as any, {} as any);
+            expect((view as any).title).toBe("Table view");
+        });
+    });
+
     describe("getUris", () => {
         it("returns the URIs from the WebView base class", () => {
             const globalMocks = createGlobalMocks();
@@ -303,7 +311,7 @@ describe("Table.View", () => {
                             },
                         } as Table.Action,
                     ],
-                    0: [
+                    1: [
                         {
                             title: "Zero action",
                             command: "zero-action",
@@ -323,17 +331,17 @@ describe("Table.View", () => {
             const mockWebviewMsg = {
                 command: "some-action",
                 data: { cell: data.rows[0].a, row: data.rows[0] },
-                rowIndex: 0,
+                rowIndex: 1,
             };
             await view.onMessageReceived(mockWebviewMsg);
             expect(writeTextMock).not.toHaveBeenCalled();
             expect(globalMocks.updateWebviewMock).not.toHaveBeenCalled();
             expect(allCallbackMock).toHaveBeenCalled();
-            // case 2: An action that exists for all rows
+            // case 2: An action that exists for one row
             const mockNextWebviewMsg = {
                 command: "zero-action",
                 data: { cell: data.rows[0].a, row: data.rows[0] },
-                rowIndex: 0,
+                rowIndex: 1,
             };
             await view.onMessageReceived(mockNextWebviewMsg);
             expect(writeTextMock).not.toHaveBeenCalled();
@@ -401,13 +409,13 @@ describe("Table.View", () => {
     });
 
     describe("addContextOption", () => {
-        it("adds the context option to the internal data structure and calls updateWebview", async () => {
+        it("adds the context option with conditional to the internal data structure and calls updateWebview", async () => {
             const globalMocks = createGlobalMocks();
             const data = { title: "Table w/ no initial rows", contextOpts: { all: [] }, rows: [] };
             const view = new Table.View(globalMocks.context as any, data as any);
             globalMocks.updateWebviewMock.mockImplementation();
 
-            // case 1: Adding a context menu option to all rows
+            // case 1: Adding a context menu option with conditional to all rows
             const contextOpt = {
                 title: "Add to cart",
                 command: "add-to-cart",
@@ -421,7 +429,7 @@ describe("Table.View", () => {
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
             expect((view as any).data.contextOpts["all"]).toStrictEqual([{ ...contextOpt, condition: contextOpt.condition?.toString() }]);
 
-            // case 2: Adding a context menu option to one row
+            // case 2: Adding a context menu option with conditional to one row
             const singleRowContextOpt = {
                 title: "Save for later",
                 command: "save-for-later",
@@ -438,10 +446,46 @@ describe("Table.View", () => {
             ]);
             globalMocks.updateWebviewMock.mockRestore();
         });
+
+        it("adds the context option without conditional to the internal data structure and calls updateWebview", async () => {
+            const globalMocks = createGlobalMocks();
+            const data = { title: "Table w/ no initial rows", contextOpts: { all: [] }, rows: [] };
+            const view = new Table.View(globalMocks.context as any, data as any);
+            globalMocks.updateWebviewMock.mockImplementation();
+
+            // case 1: Adding a context menu option without conditional to all rows
+            const contextOpt = {
+                title: "Remove from cart",
+                command: "rm-from-cart",
+                callback: {
+                    typ: "row",
+                    fn: (_data) => {},
+                },
+            } as Table.ContextMenuOpts;
+            await view.addContextOption("all", contextOpt);
+            expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
+            expect((view as any).data.contextOpts["all"]).toStrictEqual([{ ...contextOpt, condition: contextOpt.condition?.toString() }]);
+
+            // case 2: Adding a context menu option without conditional to one row
+            const singleRowContextOpt = {
+                title: "Add to wishlist",
+                command: "add-to-wishlist",
+                callback: {
+                    typ: "row",
+                    fn: (_data) => {},
+                },
+            } as Table.ContextMenuOpts;
+            await view.addContextOption(1, singleRowContextOpt);
+            expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
+            expect((view as any).data.contextOpts[1]).toStrictEqual([
+                { ...singleRowContextOpt, condition: singleRowContextOpt.condition?.toString() },
+            ]);
+            globalMocks.updateWebviewMock.mockRestore();
+        });
     });
 
     describe("addAction", () => {
-        it("adds the action to the internal data structure and calls updateWebview", async () => {
+        it("adds the action with conditional to the internal data structure and calls updateWebview", async () => {
             const globalMocks = createGlobalMocks();
             const data = { title: "Table w/ no initial rows", actions: { all: [] }, rows: [] };
             const view = new Table.View(globalMocks.context as any, data as any);
@@ -470,6 +514,40 @@ describe("Table.View", () => {
                     fn: (_data) => {},
                 },
                 condition: (_data) => true,
+            } as Table.ContextMenuOpts;
+            await view.addAction(2, singleRowAction);
+            expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
+            expect((view as any).data.actions[2]).toStrictEqual([{ ...singleRowAction, condition: singleRowAction.condition?.toString() }]);
+            globalMocks.updateWebviewMock.mockRestore();
+        });
+
+        it("adds the action without conditional to the internal data structure and calls updateWebview", async () => {
+            const globalMocks = createGlobalMocks();
+            const data = { title: "Table w/ no initial rows", actions: { all: [] }, rows: [] };
+            const view = new Table.View(globalMocks.context as any, data as any);
+            globalMocks.updateWebviewMock.mockImplementation();
+
+            // case 1: Adding an action without conditional to all rows
+            const action = {
+                title: "Remove from wishlist",
+                command: "rm-from-wishlist",
+                callback: {
+                    typ: "row",
+                    fn: (_data) => {},
+                },
+            } as Table.ContextMenuOpts;
+            await view.addAction("all", action);
+            expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
+            expect((view as any).data.actions["all"]).toStrictEqual([{ ...action, condition: action.condition?.toString() }]);
+
+            // case 2: Adding an action without conditional to one row
+            const singleRowAction = {
+                title: "Learn less",
+                command: "learn-less",
+                callback: {
+                    typ: "row",
+                    fn: (_data) => {},
+                },
             } as Table.ContextMenuOpts;
             await view.addAction(2, singleRowAction);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
