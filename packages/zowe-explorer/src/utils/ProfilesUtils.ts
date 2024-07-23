@@ -512,24 +512,23 @@ export class ProfilesUtils {
         ZoweLogger.warn(v1ProfileErrorMsg);
         const convertButton = vscode.l10n.t("Convert Existing Profiles");
         const createButton = vscode.l10n.t("Create New");
-        await Gui.infoMessage(v1ProfileErrorMsg, { items: [convertButton, createButton], vsCodeOpts: { modal: true } }).then(async (selection) => {
-            switch (selection) {
-                case createButton: {
-                    ZoweLogger.info("Create new team configuration chosen.");
-                    vscode.commands.executeCommand("zowe.ds.addSession", SharedTreeProviders.ds);
-                    break;
-                }
-                case convertButton: {
-                    ZoweLogger.info("Convert v1 profiles to team configuration chosen.");
-                    await this.convertV1Profs();
-                    break;
-                }
-                default: {
-                    Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
-                    break;
-                }
+        const selection = await Gui.infoMessage(v1ProfileErrorMsg, { items: [convertButton, createButton], vsCodeOpts: { modal: true } });
+        switch (selection) {
+            case createButton: {
+                ZoweLogger.info("Create new team configuration chosen.");
+                vscode.commands.executeCommand("zowe.ds.addSession", SharedTreeProviders.ds);
+                break;
             }
-        });
+            case convertButton: {
+                ZoweLogger.info("Convert v1 profiles to team configuration chosen.");
+                await this.convertV1Profs();
+                break;
+            }
+            default: {
+                Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
+                break;
+            }
+        }
     }
 
     /**
