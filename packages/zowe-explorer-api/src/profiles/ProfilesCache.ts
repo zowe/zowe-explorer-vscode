@@ -9,17 +9,13 @@
  *
  */
 
-import * as path from "path";
-import * as fs from "fs";
 import * as imperative from "@zowe/imperative";
 import type { IRegisterClient } from "../extend/IRegisterClient";
 import { FileManagement } from "../utils";
 import { Validation } from "./Validation";
-import { ZeApiConvertResponse } from "../globals";
 import { ZosmfProfile } from "@zowe/zosmf-for-zowe-sdk";
 import { ZosTsoProfile } from "@zowe/zos-tso-for-zowe-sdk";
 import { ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
-import { ProfileConstants } from "@zowe/core-for-zowe-sdk";
 
 export class ProfilesCache {
     public profilesForValidation: Validation.IValidationProfile[] = [];
@@ -354,48 +350,12 @@ export class ProfilesCache {
         };
     }
 
-    public async convertV1ProfToConfig(): Promise<ZeApiConvertResponse> {
-        const successMsg: string[] = [];
-        const warningMsg: string[] = [];
-        const zoweDir = FileManagement.getZoweDir();
-        const profilesPath = path.join(zoweDir, "profiles");
-        const oldProfilesPath = `${profilesPath.replace(/[\\/]$/, "")}-old`;
-        const convertResult = await imperative.ConfigBuilder.convert(profilesPath);
-        for (const [k, v] of Object.entries(convertResult.profilesConverted)) {
-            successMsg.push(`Converted ${k} profile: ${v.join(", ")}\n`);
-        }
-        if (convertResult.profilesFailed.length > 0) {
-            warningMsg.push(`Failed to convert ${convertResult.profilesFailed.length} profile(s). See details below\n`);
-            for (const { name, type, error } of convertResult.profilesFailed) {
-                if (name != null) {
-                    warningMsg.push(`Failed to load ${type} profile "${name}":\n${String(error)}\n`);
-                } else {
-                    warningMsg.push(`Failed to find default ${type} profile:\n${String(error)}\n`);
-                }
-            }
-        }
-        const teamConfig = await imperative.Config.load("zowe", {
-            homeDir: zoweDir,
-            projectDir: false,
-        });
-        teamConfig.api.layers.activate(false, true);
-        teamConfig.api.layers.merge(convertResult.config);
-        const knownCliConfig: imperative.ICommandProfileTypeConfiguration[] = this.getCoreProfileTypes();
-        knownCliConfig.push(ProfileConstants.BaseProfile);
-        this.addToConfigArray(knownCliConfig);
-        teamConfig.setSchema(imperative.ConfigSchema.buildSchema(this.getConfigArray()));
-        await teamConfig.save();
-        try {
-            fs.renameSync(profilesPath, oldProfilesPath);
-        } catch (error) {
-            warningMsg.push(`Failed to rename profiles directory to ${oldProfilesPath}:\n    ${String(error)}`);
-        }
-        successMsg.push(`Your new profiles have been saved to ${teamConfig.layerActive().path}.\n`);
-        return {
-            success: String(successMsg.join("")),
-            warnings: String(warningMsg.join("")),
-            convertResult,
-        };
+    public static async convertV1ProfToConfig(
+        profileInfo: imperative.ProfileInfo,
+        deleteV1Profs: boolean = false
+    ): Promise<imperative.IConvertV1ProfResult> {
+        const convertResult = await imperative.ConvertV1Profiles.convert({ deleteV1Profs, profileInfo });
+        return convertResult;
     }
 
     protected getCoreProfileTypes(): imperative.IProfileTypeConfiguration[] {

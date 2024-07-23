@@ -347,8 +347,8 @@ export class ProfilesUtils {
             );
             ZoweLogger.debug(`Summary of team configuration files considered for Zowe Explorer: ${JSON.stringify(layerSummary)}`);
         } else {
-            if (mProfileInfo.getAllProfiles()?.length > 0) {
-                this.v1ProfileOptions();
+            if (imperative.ProfileInfo.onlyV1ProfilesExist) {
+                await this.v1ProfileOptions();
             }
         }
     }
@@ -504,41 +504,31 @@ export class ProfilesUtils {
         }
     }
 
-    private static v1ProfileOptions(): void {
+    private static async v1ProfileOptions(): Promise<void> {
         const v1ProfileErrorMsg = vscode.l10n.t(
             // eslint-disable-next-line max-len
-            "Zowe v1 profiles in use.\nZowe Explorer no longer supports v1 profiles, choose to convert existing profiles to a team configuration or create new."
+            "Zowe V1 profiles in use.\nZowe Explorer no longer supports V1 profiles. Choose to convert existing profiles to a team configuration or create new profiles."
         );
         ZoweLogger.warn(v1ProfileErrorMsg);
-        const createButton = vscode.l10n.t("Create New");
         const convertButton = vscode.l10n.t("Convert Existing Profiles");
-        Gui.infoMessage(v1ProfileErrorMsg, { items: [createButton, convertButton], vsCodeOpts: { modal: true } }).then(async (selection) => {
-            switch (selection) {
-                case createButton: {
-                    ZoweLogger.info("Create new team configuration chosen.");
-                    vscode.commands.executeCommand("zowe.ds.addSession", SharedTreeProviders.ds);
-                    break;
-                }
-                case convertButton: {
-                    ZoweLogger.info("Convert v1 profiles to team configuration chosen.");
-                    const convertResults = await Constants.PROFILES_CACHE.convertV1ProfToConfig();
-                    let responseMsg = "";
-                    if (convertResults.success) {
-                        responseMsg += `Success: ${convertResults.success}\n`;
-                    }
-                    if (convertResults.warnings) {
-                        responseMsg += `Warning: ${convertResults.warnings}\n`;
-                    }
-                    ZoweLogger.info(responseMsg);
-                    Gui.infoMessage(vscode.l10n.t(responseMsg), { vsCodeOpts: { modal: true } });
-                    break;
-                }
-                default: {
-                    Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
-                    break;
-                }
+        const createButton = vscode.l10n.t("Create New");
+        const selection = await Gui.infoMessage(v1ProfileErrorMsg, { items: [convertButton, createButton], vsCodeOpts: { modal: true } });
+        switch (selection) {
+            case createButton: {
+                ZoweLogger.info("Create new team configuration chosen.");
+                vscode.commands.executeCommand("zowe.ds.addSession", SharedTreeProviders.ds);
+                break;
             }
-        });
+            case convertButton: {
+                ZoweLogger.info("Convert v1 profiles to team configuration chosen.");
+                await this.convertV1Profs();
+                break;
+            }
+            default: {
+                Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
+                break;
+            }
+        }
     }
 
     /**
@@ -570,5 +560,47 @@ export class ProfilesUtils {
             return node.getProfile();
         }
         throw new Error(vscode.l10n.t("Tree Item is not a Zowe Explorer item."));
+    }
+
+    private static async convertV1Profs(): Promise<void> {
+        const profileInfo = await this.getProfileInfo();
+        const convertResult: imperative.IConvertV1ProfResult = await ProfilesCache.convertV1ProfToConfig(profileInfo);
+        ZoweLogger.debug(JSON.stringify(convertResult));
+        if (convertResult.profilesConverted) {
+            const successMsg: string[] = [];
+            for (const [k, v] of Object.entries(convertResult.profilesConverted)) {
+                successMsg.push(`Converted ${k} profile: ${v.join(", ")}`);
+            }
+            ZoweLogger.info(successMsg.join("\n"));
+            const document = await vscode.workspace.openTextDocument(
+                path.join(FileManagement.getZoweDir(), (await this.getProfileInfo()).getTeamConfig().configName)
+            );
+            if (document) {
+                await Gui.showTextDocument(document);
+            }
+        }
+        if (convertResult.profilesFailed?.length > 0) {
+            const warningMsg: string[] = [];
+            warningMsg.push(`Failed to convert ${convertResult.profilesFailed.length} profile(s). See details below`);
+            for (const { name, type, error } of convertResult.profilesFailed) {
+                if (name != null) {
+                    warningMsg.push(`Failed to load ${type} profile "${name}":\n${String(error)}`);
+                } else {
+                    warningMsg.push(`Failed to find default ${type} profile:\n${String(error)}`);
+                }
+            }
+            ZoweLogger.warn(warningMsg.join("\n"));
+        }
+        const responseMsg = convertResult.msgs.reduce((msgs: string[], msg: imperative.ConvertMsg) => {
+            if (msg.msgFormat & imperative.ConvertMsgFmt.PARAGRAPH) {
+                msgs.push("\n");
+            }
+            if (msg.msgFormat & imperative.ConvertMsgFmt.INDENT) {
+                msgs.push("\t");
+            }
+            msgs.push(msg.msgText + "\n");
+            return msgs;
+        }, []);
+        Gui.infoMessage(responseMsg.join(""), { vsCodeOpts: { modal: true } });
     }
 }
