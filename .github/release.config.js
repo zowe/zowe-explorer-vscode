@@ -1,20 +1,15 @@
 module.exports = {
     branches: [
         {
-            name: "main",
-            channel: "latest",
-            level: "minor",
-        },
-        {
-            name: "maintenance",
-            channel: "latest",
-            level: "minor", // Use maintenance branch for releases until v3
-        },
-        {
             name: "v1-lts",
             channel: "zowe-v1-lts",
             level: "patch",
         },
+        {
+            name: "release/2.*",
+            channel: "latest",
+            level: "minor"
+        }
         // {
         //     name: "next",
         //     prerelease: true,
