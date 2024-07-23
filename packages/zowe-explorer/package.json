@@ -1761,7 +1761,7 @@
     "compile": "tsc -b",
     "markdown": "markdownlint CHANGELOG.md README.md",
     "lint:pretty": "prettier --write . && prettier --check .",
-    "lint": "pnpm lint:src && pnpm lint:tests && pnpm lint:pretty && pnpm markdown",
+    "lint": "concurrently -n \"_eslint_,prettier,markdown\" \"pnpm lint:src; pnpm lint:tests\" \"pnpm lint:pretty\" \"pnpm markdown\"",
     "lint:html": "eslint . --format html > results/eslint.html",
     "lint:src": "eslint --format stylish \"src/**/*.ts\"",
     "lint:tests": "eslint --format stylish \"__tests__/**/*.ts\"",
