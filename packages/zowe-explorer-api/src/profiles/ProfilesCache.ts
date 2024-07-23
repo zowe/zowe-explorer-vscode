@@ -320,8 +320,12 @@ export class ProfilesCache {
     }
 
     // This will retrieve the base profile from imperative
-    public async fetchBaseProfile(): Promise<imperative.IProfileLoaded | undefined> {
+    public async fetchBaseProfile(profileName?: string): Promise<imperative.IProfileLoaded | undefined> {
         const mProfileInfo = await this.getProfileInfo();
+        if (profileName?.includes(".")) {
+            const parentProfile = profileName.slice(0, profileName.lastIndexOf("."));
+            return this.getProfileLoaded(parentProfile, "base", mProfileInfo.getTeamConfig().api.profiles.get(parentProfile));
+        }
         const baseProfileAttrs = mProfileInfo.getDefaultProfile("base");
         if (baseProfileAttrs == null) {
             return undefined;

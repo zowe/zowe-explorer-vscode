@@ -120,12 +120,12 @@ export class ZoweVsCodeExtension {
         zeProfiles?: ProfilesCache // Profiles extends ProfilesCache
     ): Promise<boolean> {
         const cache: ProfilesCache = zeProfiles ?? ZoweVsCodeExtension.profilesCache;
-        const baseProfile = await cache.fetchBaseProfile();
-        if (baseProfile == null) {
-            return false;
-        }
         if (typeof serviceProfile === "string") {
             serviceProfile = await ZoweVsCodeExtension.getServiceProfileForAuthPurposes(cache, serviceProfile);
+        }
+        const baseProfile = await cache.fetchBaseProfile(serviceProfile.name);
+        if (baseProfile == null) {
+            return false;
         }
         const tokenType =
             serviceProfile.profile.tokenType ?? baseProfile.profile.tokenType ?? loginTokenType ?? imperative.SessConstants.TOKEN_TYPE_APIML;
@@ -144,7 +144,10 @@ export class ZoweVsCodeExtension {
             { label: "$(account) User and Password", description: "Log in with basic authentication" },
             { label: "$(note) Certificate", description: "Log in with PEM format certificate file" },
         ];
-        const response = await Gui.showQuickPick(qpItems, { placeHolder: "Select an authentication method for obtaining token" });
+        const response = await Gui.showQuickPick(qpItems, {
+            placeHolder: "Select an authentication method for obtaining token",
+            title: `[${baseProfile.name}] Log in to authentication service`,
+        });
         if (response === qpItems[0]) {
             const creds = await ZoweVsCodeExtension.promptUserPass({ session: updSession.ISession, rePrompt: true });
             if (!creds) {
@@ -182,7 +185,7 @@ export class ZoweVsCodeExtension {
         // If the connection details do not match, then we MUST forcefully store the token in the service profile
         let profileToUpdate: imperative.IProfileLoaded;
         if (connOk) {
-            profileToUpdate = baseProfile;
+            profileToUpdate = serviceProfile.name.startsWith(baseProfile.name + ".") ? { ...baseProfile, type: null } : baseProfile;
         } else {
             profileToUpdate = serviceProfile;
         }
@@ -214,11 +217,11 @@ export class ZoweVsCodeExtension {
         zeProfiles?: ProfilesCache // Profiles extends ProfilesCache
     ): Promise<void> {
         const cache: ProfilesCache = zeProfiles ?? ZoweVsCodeExtension.profilesCache;
-        const baseProfile = await cache.fetchBaseProfile();
+        if (typeof serviceProfile === "string") {
+            serviceProfile = await ZoweVsCodeExtension.getServiceProfileForAuthPurposes(cache, serviceProfile);
+        }
+        const baseProfile = await cache.fetchBaseProfile(serviceProfile.name);
         if (baseProfile) {
-            if (typeof serviceProfile === "string") {
-                serviceProfile = await ZoweVsCodeExtension.getServiceProfileForAuthPurposes(cache, serviceProfile);
-            }
             const tokenType =
                 serviceProfile.profile.tokenType ??
                 baseProfile.profile.tokenType ??
@@ -234,7 +237,10 @@ export class ZoweVsCodeExtension {
             });
             await (zeRegister?.getCommonApi(serviceProfile).logout ?? Logout.apimlLogout)(updSession);
 
-            const connOk = serviceProfile.profile.host === baseProfile.profile.host && serviceProfile.profile.port === baseProfile.profile.port;
+            const connOk =
+                serviceProfile.profile.host === baseProfile.profile.host &&
+                serviceProfile.profile.port === baseProfile.profile.port &&
+                !serviceProfile.name.startsWith(baseProfile.name + ".");
             if (connOk) {
                 await cache.updateBaseProfileFileLogout(baseProfile);
             } else {
