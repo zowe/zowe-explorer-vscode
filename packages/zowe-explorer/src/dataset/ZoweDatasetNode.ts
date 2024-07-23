@@ -190,7 +190,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                         parentNode: this,
-                        profile: this.getProfileInstance(),
+                        profile: this.getProfile(),
                     });
                     elementChildren[temp.label.toString()] = temp;
                     // Creates a ZoweDatasetNode for a dataset with imperative errors
@@ -200,7 +200,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
                         contextOverride: globals.DS_FILE_ERROR_CONTEXT,
-                        profile: this.getProfileInstance(),
+                        profile: this.getProfile(),
                     });
                     temp.command = { command: "zowe.placeholderCommand", title: "" };
                     temp.errorDetails = item.error; // Save imperative error to avoid extra z/OS requests
@@ -212,7 +212,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
                         contextOverride: globals.DS_MIGRATED_FILE_CONTEXT,
-                        profile: this.getProfileInstance(),
+                        profile: this.getProfile(),
                     });
                     elementChildren[temp.label.toString()] = temp;
                     // Creates a ZoweDatasetNode for a VSAM file
@@ -231,7 +231,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                             collapsibleState: vscode.TreeItemCollapsibleState.None,
                             parentNode: this,
                             contextOverride: globals.VSAM_CONTEXT,
-                            profile: this.getProfileInstance(),
+                            profile: this.getProfile(),
                         });
                     }
                 } else if (contextually.isSessionNotFav(this)) {
@@ -242,7 +242,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
                         encoding: cachedEncoding,
-                        profile: this.getProfileInstance(),
+                        profile: this.getProfile(),
                     });
                     temp.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [temp] };
                     elementChildren[temp.label.toString()] = temp;
@@ -254,7 +254,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
                         encoding: cachedEncoding,
-                        profile: this.getProfileInstance(),
+                        profile: this.getProfile(),
                     });
                     temp.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [temp] };
 
@@ -275,7 +275,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
                     parentNode: this,
                     contextOverride: globals.DS_FILE_ERROR_MEMBER_CONTEXT,
-                    profile: this.getProfileInstance(),
+                    profile: this.getProfile(),
                 });
                 temp.command = { command: "zowe.placeholderCommand", title: "" };
                 temp.errorDetails = new zowe.imperative.ImperativeError({
@@ -455,9 +455,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      *
      * @returns {imperative.IProfileLoaded}
      */
-    public getProfileInstance(): imperative.IProfileLoaded {
-        ZoweLogger.trace("ZoweDatasetNode.getProfileInstance called.");
-        const prof = this.getProfile();
+    public getProfile(): imperative.IProfileLoaded {
+        ZoweLogger.trace("ZoweDatasetNode.getProfile called.");
+        const prof = this.profile ?? this.getParent()?.getProfile();
         return prof.name ? Profiles.getInstance().loadNamedProfile(prof.name) : undefined; // this returns the profile with newer token
     }
 
@@ -565,7 +565,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 let responsePromise = this.ongoingActions ? this.ongoingActions[NodeAction.Download] : null;
                 // If there is no ongoing action and the local copy does not exist, fetch contents
                 if (forceDownload || (responsePromise == null && !fs.existsSync(documentFilePath))) {
-                    const prof = this.getProfileInstance();
+                    const prof = this.getProfile();
                     ZoweLogger.info(localize("openDs.openDataSet", "Opening {0}", label));
                     if (this.ongoingActions) {
                         this.ongoingActions[NodeAction.Download] = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
