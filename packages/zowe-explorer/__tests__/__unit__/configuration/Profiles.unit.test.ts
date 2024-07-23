@@ -50,7 +50,7 @@ jest.mock("fs");
 jest.mock("fs-extra");
 jest.mock("../../../src/tools/ZoweLogger");
 
-function createGlobalMocks() {
+function createGlobalMocks(): { [key: string]: any } {
     const newMocks = {
         log: imperative.Logger.getAppLogger(),
         mockShowInputBox: jest.fn(),

@@ -34,7 +34,7 @@ describe("ProfilesUtils unit tests", () => {
         jest.clearAllMocks();
     });
 
-    function createBlockMocks() {
+    function createBlockMocks(): { [key: string]: any } {
         const newMocks = {
             mockExistsSync: jest.fn().mockReturnValue(true),
             mockReadFileSync: jest.fn(),

@@ -976,7 +976,7 @@ describe("USSTree Unit Tests - Function rename", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         const ussFavNode = blockMocks.ussFavNode;
-        globalMocks.testUSSNode.fullPath = globalMocks.testUSSNode.fullPath + "/usstest";
+        globalMocks.testUSSNode.fullPath = (globalMocks.testUSSNode.fullPath as string) + "/usstest";
         globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
         const renameNode = jest.spyOn(globalMocks.testUSSNode, "rename");
         renameNode.mockResolvedValue(false);
@@ -997,7 +997,7 @@ describe("USSTree Unit Tests - Function rename", () => {
         const globalMocks = await createGlobalMocks();
         createBlockMocks(globalMocks);
         globalMocks.testTree.mFavorites = [];
-        globalMocks.testUSSNode.fullPath = globalMocks.testUSSNode.fullPath + "/usstest";
+        globalMocks.testUSSNode.fullPath = (globalMocks.testUSSNode.fullPath as string) + "/usstest";
         globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
         const renameNode = jest.spyOn(globalMocks.testUSSNode, "rename");
         renameNode.mockResolvedValue(false);

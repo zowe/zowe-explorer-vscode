@@ -15,7 +15,7 @@ import * as vscode from "vscode";
 import { Constants } from "../../../src/globals";
 jest.mock("vscode");
 
-function createGlobalMocks() {
+function createGlobalMocks(): { [key: string]: jest.Mock } {
     const mocks = {
         showInfoMessage: jest.fn(),
         showErrorMessage: jest.fn(),

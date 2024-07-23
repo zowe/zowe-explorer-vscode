@@ -65,8 +65,7 @@ export class DataSetTemplates {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    private static promptForSaveLocation() {
+    private static promptForSaveLocation(): Thenable<any | undefined> {
         const qpOptions: vscode.QuickPickOptions = {
             title: vscode.l10n.t("Data set template save location"),
             placeHolder: vscode.l10n.t("Choose the setting location to save the data set template..."),
