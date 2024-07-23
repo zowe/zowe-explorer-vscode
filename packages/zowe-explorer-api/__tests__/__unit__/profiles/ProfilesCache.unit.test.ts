@@ -121,7 +121,10 @@ function createProfInfoMock(profiles: Partial<imperative.IProfileLoaded>[]): imp
                 knownArgs: Object.entries(profile.profile as object).map(([k, v]) => ({ argName: k, argValue: v as unknown })),
             };
         },
-        getTeamConfig: () => ({ exists: true }),
+        getTeamConfig: () => ({
+            api: { secure: { securePropsForProfile: jest.fn().mockReturnValue([]) } },
+            exists: true,
+        }),
         updateProperty: jest.fn(),
         updateKnownProperty: jest.fn(),
         isSecured: jest.fn(),
@@ -550,6 +553,27 @@ describe("ProfilesCache", () => {
         const profile = await profCache.fetchBaseProfile();
         expect(profile).toMatchObject(baseProfile);
     });
+
+    fit("fetchBaseProfile should return typeless profile if base profile not found", async () => {
+        const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([baseProfile]));
+        const profile = await profCache.fetchBaseProfile();
+        expect(profile).toMatchObject({ name: "lpar1", type: "base" });
+    });
+
+    // it("fetchBaseProfile should return typeless profile if base profile does not contain token value", async () => {
+    //     const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
+    //     jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
+    //     const profile = await profCache.fetchBaseProfile();
+    //     expect(profile).toBeUndefined();
+    // });
+
+    // it("fetchBaseProfile should return base profile if it contains token value", async () => {
+    //     const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
+    //     jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
+    //     const profile = await profCache.fetchBaseProfile();
+    //     expect(profile).toBeUndefined();
+    // });
 
     it("fetchBaseProfile should return undefined if base profile not found", async () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);

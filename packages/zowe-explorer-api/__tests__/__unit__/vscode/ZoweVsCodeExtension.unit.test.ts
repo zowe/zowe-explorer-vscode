@@ -121,7 +121,7 @@ describe("ZoweVsCodeExtension", () => {
             allProfiles,
             allExternalTypes: [],
             fetchBaseProfile: jest.fn(),
-            loadNamedProfile: jest.fn().mockReturnValue({ profile: testProfile }),
+            loadNamedProfile: jest.fn().mockReturnValue(serviceProfile),
             updateBaseProfileFileLogin: jest.fn(),
             updateBaseProfileFileLogout: jest.fn(),
             getLoadedProfConfig: jest.fn().mockReturnValue({ profile: {} }),
@@ -175,7 +175,7 @@ describe("ZoweVsCodeExtension", () => {
             it("should logout using the base profile given a simple profile name", async () => {
                 testCache.fetchBaseProfile.mockResolvedValue(baseProfile);
                 const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
-                testSpy.mockResolvedValue({ profile: { ...testProfile, ...updProfile } });
+                testSpy.mockResolvedValue({ ...serviceProfile, profile: { ...testProfile, ...updProfile } });
                 const logoutSpy = jest.spyOn(Logout, "apimlLogout").mockImplementation(jest.fn());
 
                 const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
