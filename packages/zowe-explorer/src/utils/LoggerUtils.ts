@@ -83,7 +83,7 @@ export class ZoweLogger {
     }
 
     private static async initVscLogger(logFileLocation: string): Promise<void> {
-        this.zeOutputChannel = Gui.createOutputChannel(localize("zoweExplorer.outputchannel.title", "Zowe Explorer"));
+        this.zeOutputChannel ??= Gui.createOutputChannel(localize("zoweExplorer.outputchannel.title", "Zowe Explorer"));
         this.writeVscLoggerInfo(logFileLocation);
         this.info(localize("initialize.log.info", "Initialized logger for Zowe Explorer"));
         await this.compareCliLogSetting();
