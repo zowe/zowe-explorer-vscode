@@ -414,7 +414,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         };
         newMocks.testDatasetSessionNode = createDatasetSessionNode(newMocks.session, globalMocks.mockProfileInstance);
         newMocks.testDatasetTree = createDatasetTree(newMocks.testDatasetSessionNode, newMocks.treeView);
-        Object.defineProperty(imperative.ProfileInfo, "getZoweDir", {
+        Object.defineProperty(imperative.ConfigUtils, "getZoweDir", {
             value: jest.fn().mockReturnValue("file://globalPath/.zowe"),
             configurable: true,
         });
@@ -422,6 +422,8 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
             get: () => [{ uri: "file://projectPath/zowe.config.user.json", name: "zowe.config.user.json", index: 0 }],
             configurable: true,
         });
+        // Removes any loaded config
+        imperative.ImperativeConfig.instance.loadedConfig = undefined as any;
 
         return newMocks;
     }
@@ -457,6 +459,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         spyLayers.mockClear();
         spyInfoMessage.mockClear();
         spyOpenFile.mockClear();
+
     });
     it("Test that createZoweSchema will open config on error if error deals with parsing file", async () => {
         const globalMocks = await createGlobalMocks();

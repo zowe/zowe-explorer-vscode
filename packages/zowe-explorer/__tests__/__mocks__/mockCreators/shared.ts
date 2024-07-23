@@ -528,6 +528,7 @@ export function createConfigLoad() {
         api: {
             layers: {
                 merge: jest.fn(),
+                activate: jest.fn(),
             },
         },
         layers: [
