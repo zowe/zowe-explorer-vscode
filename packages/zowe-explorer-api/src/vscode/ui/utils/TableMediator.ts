@@ -9,7 +9,7 @@
  *
  */
 
-import { Table } from "../TableView";
+import type { Table } from "../TableView";
 
 /**
  * Mediator class for managing and accessing shared tables in Zowe Explorer.
@@ -42,7 +42,7 @@ import { Table } from "../TableView";
  * Tables can only be removed by the extender that has contributed them using {@link TableMediator.deleteTable}.
  * This establishes a read-only relationship between the mediator and extenders that have not contributed the table they are trying to access.
  *
- * **Note** that this does not prevent an extender with access to the ID from disposing the table once they've received access to the instance.
+ * **Note** that this does not prevent an extender with access to the ID from disposing the table, once they've received access to the instance.
  */
 
 export class TableMediator {

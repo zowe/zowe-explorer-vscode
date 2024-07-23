@@ -13,6 +13,7 @@ import { UriPair, WebView } from "./WebView";
 import { Event, EventEmitter, ExtensionContext, env } from "vscode";
 import { randomUUID } from "crypto";
 import { diff } from "deep-object-diff";
+import { TableMediator } from "./utils/TableMediator";
 
 export namespace Table {
     /* The types of supported content for the table and how they are represented in callback functions. */
@@ -500,8 +501,10 @@ export namespace Table {
 
         /**
          * Closes the table view and marks it as disposed.
+         * Removes the table instance from the mediator if it exists. 
          */
         public dispose(): void {
+            TableMediator.getInstance().removeTable(this);
             super.dispose();
         }
     }
