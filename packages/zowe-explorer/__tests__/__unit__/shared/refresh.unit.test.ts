@@ -17,6 +17,7 @@ import {
     createInstanceOfProfile,
     createIProfile,
     createISessionWithoutCredentials,
+    createTreeProviders,
     createTreeView,
 } from "../../../__mocks__/mockCreators/shared";
 import { createFavoriteUSSNode, createUSSNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
@@ -27,6 +28,8 @@ import * as globals from "../../../src/globals";
 import * as sessUtils from "../../../src/utils/SessionUtils";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { TreeProviders } from "../../../src/shared/TreeProviders";
+import { TreeViewUtils } from "../../../src/utils/TreeViewUtils";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -156,5 +159,22 @@ describe("Refresh Unit Tests - Function refreshAll", () => {
         expect(spy).toHaveBeenCalledTimes(1);
         await expect(refreshActions.refreshAll(blockMocks.testDatasetTree)).resolves.not.toThrow();
         spy.mockClear();
+    });
+    it("should refresh all tree providers and update session nodes", async () => {
+        await createGlobalMocks();
+        jest.spyOn(TreeProviders, "providers", "get").mockReturnValue(createTreeProviders());
+        const removedProfNames = new Set<string>();
+        const addedProfTypes = new Set<string>();
+        const removeSessionSpy = jest
+            .spyOn(sessUtils, "removeSession")
+            .mockImplementation(async (treeProvider, profileName) => removedProfNames.add(profileName) as any);
+        const addDefaultSessionSpy = jest
+            .spyOn(TreeViewUtils, "addDefaultSession")
+            .mockImplementation(async (treeProvider, profileType) => addedProfTypes.add(profileType) as any);
+        await refreshActions.refreshAll();
+        expect(removeSessionSpy).toHaveBeenCalledTimes(6);
+        expect([...removedProfNames]).toEqual(["zosmf2", "zosmf"]);
+        expect(addDefaultSessionSpy).toHaveBeenCalledTimes(3);
+        expect([...addedProfTypes]).toEqual(["zosmf"]);
     });
 });
