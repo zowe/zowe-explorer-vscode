@@ -318,7 +318,7 @@ describe("ZoweVsCodeExtension", () => {
             let sessionCopy;
             const loginSpy = jest.spyOn(Login, "apimlLogin").mockImplementation((session: imperative.Session) => {
                 sessionCopy = Object.assign(Object.create(Object.getPrototypeOf(session)), session);
-                return new Promise((resolve) => resolve("tokenValue"));
+                return Promise.resolve("tokenValue");
             });
 
             // case 1: User selects "user/password" for login quick pick

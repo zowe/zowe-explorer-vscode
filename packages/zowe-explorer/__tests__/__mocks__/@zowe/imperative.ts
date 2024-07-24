@@ -431,10 +431,10 @@ export class ConvertV1Profiles {
 }
 
 export class ZoweUserEvents {
-    public static ON_VAULT_CHANGED = "onVaultChanged";
+    public static readonly ON_VAULT_CHANGED = "onVaultChanged";
 }
 export class ZoweSharedEvents {
-    public static ON_CREDENTIAL_MANAGER_CHANGED = "onCredentialManagerChanged";
+    public static readonly ON_CREDENTIAL_MANAGER_CHANGED = "onCredentialManagerChanged";
 }
 
 export class EventOperator {
