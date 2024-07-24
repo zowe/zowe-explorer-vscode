@@ -421,7 +421,7 @@ export class JobActions {
 
         const failedJobs: { job: zosjobs.IJob; error: string }[] = [];
         // Build list of common sessions from node selection
-        const sessionNodes = [];
+        const sessionNodes = new Set<IZoweJobTreeNode>();
         for (const jobNode of nodes) {
             if (!jobNode.job) {
                 continue;
@@ -444,11 +444,8 @@ export class JobActions {
                 const cancelled = await jesApis[sesLabel].cancelJob(jobNode.job);
                 if (!cancelled) {
                     failedJobs.push({ job: jobNode.job, error: vscode.l10n.t("The job was not cancelled.") });
-                } else if (!sessionNodes.includes(sesNode)) {
-                    setImmediate(() => {
-                        jobsProvider.refreshElement(sesNode);
-                    });
-                    sessionNodes.push(sesNode);
+                } else {
+                    sessionNodes.add(sesNode);
                 }
             } catch (err) {
                 if (err instanceof Error) {
@@ -471,6 +468,9 @@ export class JobActions {
             );
         } else {
             await Gui.showMessage(vscode.l10n.t("Cancelled selected jobs successfully."));
+        }
+        for (const session of sessionNodes) {
+            jobsProvider.refreshElement(session);
         }
     }
     public static async sortJobs(session: IZoweJobTreeNode, jobsProvider: JobTree): Promise<void> {
