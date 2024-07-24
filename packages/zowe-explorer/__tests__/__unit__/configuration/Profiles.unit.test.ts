@@ -459,7 +459,6 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         spyLayers.mockClear();
         spyInfoMessage.mockClear();
         spyOpenFile.mockClear();
-
     });
     it("Test that createZoweSchema will open config on error if error deals with parsing file", async () => {
         const globalMocks = await createGlobalMocks();

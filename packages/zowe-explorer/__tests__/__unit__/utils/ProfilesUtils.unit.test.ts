@@ -342,7 +342,6 @@ describe("ProfilesUtils unit tests", () => {
             profInfoSpy.mockRestore();
         });
         it("should prompt user if v1 profiles detected and Convert Existing Profiles chosen", async () => {
-            const mocks = createBlockMocks();
             const mockReadProfilesFromDisk = jest.fn();
             const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
