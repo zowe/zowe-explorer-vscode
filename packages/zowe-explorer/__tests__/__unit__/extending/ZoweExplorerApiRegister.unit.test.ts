@@ -81,68 +81,7 @@ class MockUssApi1 implements MainframeInteraction.IUss {
     }
 }
 
-class MockUssApi2 implements MainframeInteraction.IUss {
-    public profile?: imperative.IProfileLoaded;
-    public getProfileTypeName(): string {
-        return "api2typename";
-    }
-    public fileList(_ussFilePath: string): Promise<zosfiles.IZosFilesResponse> {
-        throw new Error("Method not implemented.");
-    }
-    public copy(_outputPath: string, _options?: Omit<object, "request">): Promise<Buffer> {
-        throw new Error("Method not implemented.");
-    }
-    public isFileTagBinOrAscii(_ussFilePath: string): Promise<boolean> {
-        throw new Error("Method not implemented.");
-    }
-    public getContents(_ussFilePath: string, _options: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse> {
-        throw new Error("Method not implemented.");
-    }
-    public putContents(
-        _inputFilePath: string,
-        _ussFilePath: string,
-        _binary?: boolean,
-        _localEncoding?: string,
-        _etag?: string,
-        _returnEtag?: boolean
-    ): Promise<zosfiles.IZosFilesResponse> {
-        throw new Error("Method not implemented.");
-    }
-    public putContent(_inputFilePath: string, _ussFilePath: string, _options: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
-        throw new Error("Method not implemented.");
-    }
-    public uploadDirectory(
-        _inputDirectoryPath: string,
-        _ussDirectoryPath: string,
-        _options: zosfiles.IUploadOptions
-    ): Promise<zosfiles.IZosFilesResponse> {
-        throw new Error("Method not implemented.");
-    }
-    public create(_ussPath: string, _type: string, _mode?: string): Promise<zosfiles.IZosFilesResponse> {
-        throw new Error("Method not implemented.");
-    }
-    public delete(_ussPath: string, _recursive?: boolean): Promise<zosfiles.IZosFilesResponse> {
-        throw new Error("Method not implemented.");
-    }
-    public rename(_currentUssPath: string, _newUssPath: string): Promise<zosfiles.IZosFilesResponse> {
-        throw new Error("Method not implemented.");
-    }
-    public getSession(_profile?: imperative.IProfileLoaded): imperative.Session {
-        throw new Error("Method not implemented.");
-    }
-    public getStatus?(_profile?: imperative.IProfileLoaded): Promise<string> {
-        throw new Error("Method not implemented.");
-    }
-    public getTokenTypeName?(): string {
-        throw new Error("Method not implemented.");
-    }
-    public login?(_session: imperative.Session): Promise<string> {
-        throw new Error("Method not implemented.");
-    }
-    public logout?(_session: imperative.Session): Promise<string> {
-        throw new Error("Method not implemented.");
-    }
-}
+class MockUssApi2 extends MockUssApi1 {}
 
 function createGlobalMocks() {
     const newMocks = {
