@@ -510,24 +510,23 @@ export class ProfilesUtils {
         ZoweLogger.warn(v1ProfileErrorMsg);
         const convertButton = vscode.l10n.t("Convert Existing Profiles");
         const createButton = vscode.l10n.t("Create New");
-        await Gui.infoMessage(v1ProfileErrorMsg, { items: [convertButton, createButton], vsCodeOpts: { modal: true } }).then(async (selection) => {
-            switch (selection) {
-                case createButton: {
-                    ZoweLogger.info("Create new team configuration chosen.");
-                    vscode.commands.executeCommand("zowe.ds.addSession", SharedTreeProviders.ds);
-                    break;
-                }
-                case convertButton: {
-                    ZoweLogger.info("Convert v1 profiles to team configuration chosen.");
-                    await this.convertV1Profs();
-                    break;
-                }
-                default: {
-                    Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
-                    break;
-                }
+        const selection = await Gui.infoMessage(v1ProfileErrorMsg, { items: [convertButton, createButton], vsCodeOpts: { modal: true } });
+        switch (selection) {
+            case createButton: {
+                ZoweLogger.info("Create new team configuration chosen.");
+                vscode.commands.executeCommand("zowe.ds.addSession", SharedTreeProviders.ds);
+                break;
             }
-        });
+            case convertButton: {
+                ZoweLogger.info("Convert v1 profiles to team configuration chosen.");
+                await this.convertV1Profs();
+                break;
+            }
+            default: {
+                Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
+                break;
+            }
+        }
     }
 
     /**
@@ -563,57 +562,43 @@ export class ProfilesUtils {
 
     private static async convertV1Profs(): Promise<void> {
         const profileInfo = await this.getProfileInfo();
-        const convertResults: imperative.IConvertV1ProfResult = await imperative.ConvertV1Profiles.convert({ deleteV1Profs: false, profileInfo });
-        ZoweLogger.debug(JSON.stringify(convertResults));
-        // await Constants.PROFILES_CACHE.convertV1ProfToConfig();
-        const successMsg: string[] = [];
-        const warningMsg: string[] = [];
-        if (convertResults.profilesConverted) {
-            for (const [k, v] of Object.entries(convertResults?.profilesConverted)) {
-                successMsg.push(`Converted ${k} profile: ${v.join(", ")}\n`);
+        const convertResult: imperative.IConvertV1ProfResult = await ProfilesCache.convertV1ProfToConfig(profileInfo);
+        ZoweLogger.debug(JSON.stringify(convertResult));
+        if (convertResult.profilesConverted) {
+            const successMsg: string[] = [];
+            for (const [k, v] of Object.entries(convertResult.profilesConverted)) {
+                successMsg.push(`Converted ${k} profile: ${v.join(", ")}`);
+            }
+            ZoweLogger.info(successMsg.join("\n"));
+            const document = await vscode.workspace.openTextDocument(
+                path.join(FileManagement.getZoweDir(), (await this.getProfileInfo()).getTeamConfig().configName)
+            );
+            if (document) {
+                await Gui.showTextDocument(document);
             }
         }
-        if (convertResults?.profilesFailed?.length > 0) {
-            warningMsg.push(`Failed to convert ${convertResults?.profilesFailed.length} profile(s). See details below\n`);
-            for (const { name, type, error } of convertResults.profilesFailed) {
+        if (convertResult.profilesFailed?.length > 0) {
+            const warningMsg: string[] = [];
+            warningMsg.push(`Failed to convert ${convertResult.profilesFailed.length} profile(s). See details below`);
+            for (const { name, type, error } of convertResult.profilesFailed) {
                 if (name != null) {
-                    warningMsg.push(`Failed to load ${type} profile "${name}":\n${String(error)}\n`);
+                    warningMsg.push(`Failed to load ${type} profile "${name}":\n${String(error)}`);
                 } else {
-                    warningMsg.push(`Failed to find default ${type} profile:\n${String(error)}\n`);
+                    warningMsg.push(`Failed to find default ${type} profile:\n${String(error)}`);
                 }
             }
+            ZoweLogger.warn(warningMsg.join("\n"));
         }
-        let responseMsg = "";
-        // console.log(convertResults.v1ScsPluginName);
-        // if (convertResults.v1ScsPluginName) {
-        //     try {
-        //         imperative.uninstallPlugin(convertResults.v1ScsPluginName);
-        //         const newMsg = new imperative.ConvertMsg(
-        //             imperative.ConvertMsgFmt.REPORT_LINE,
-        //             `Uninstalled plug-in "${convertResults.v1ScsPluginName}"`
-        //         );
-        //         convertResults.msgs.push(newMsg);
-        //     } catch (error) {
-        //         let newMsg = new imperative.ConvertMsg(
-        //             imperative.ConvertMsgFmt.ERROR_LINE,
-        //             `Failed to uninstall plug-in "${convertResults.v1ScsPluginName}"`
-        //         );
-        //         convertResults.msgs.push(newMsg);
-
-        //         newMsg = new imperative.ConvertMsg(imperative.ConvertMsgFmt.ERROR_LINE | imperative.ConvertMsgFmt.INDENT, error.message);
-        //         convertResults.msgs.push(newMsg);
-        //     }
-        // }
-        if (convertResults.msgs) {
-            responseMsg += `${convertResults.msgs.map((msg) => msg.msgText).join("")}\n`;
-        }
-        if (successMsg?.length > 0) {
-            responseMsg += `Success: ${successMsg.join("")}\n`;
-        }
-        if (warningMsg?.length > 0) {
-            responseMsg += `Warning: ${warningMsg.join("")}\n`;
-        }
-        ZoweLogger.info(responseMsg);
-        Gui.infoMessage(responseMsg, { vsCodeOpts: { modal: true } });
+        const responseMsg = convertResult.msgs.reduce((msgs: string[], msg: imperative.ConvertMsg) => {
+            if (msg.msgFormat & imperative.ConvertMsgFmt.PARAGRAPH) {
+                msgs.push("\n");
+            }
+            if (msg.msgFormat & imperative.ConvertMsgFmt.INDENT) {
+                msgs.push("\t");
+            }
+            msgs.push(msg.msgText + "\n");
+            return msgs;
+        }, []);
+        Gui.infoMessage(responseMsg.join(""), { vsCodeOpts: { modal: true } });
     }
 }

@@ -350,25 +350,11 @@ export class ProfilesCache {
         };
     }
 
-    public async convertV1ProfToConfig(deleteV1Profs: boolean = false): Promise<imperative.IConvertV1ProfResult> {
-        const convertResult = await imperative.ConvertV1Profiles.convert({ deleteV1Profs });
-        // const teamConfig = await imperative.Config.load("zowe", {
-        //     homeDir: zoweDir,
-        //     projectDir: false,
-        // });
-        // console.log(convertResult.profilesConverted);
-        // teamConfig.api.layers.activate(false, true);
-        // teamConfig.api.layers.merge(convertResult.profilesConverted as any);
-        // const knownCliConfig: imperative.ICommandProfileTypeConfiguration[] = this.getCoreProfileTypes();
-        // knownCliConfig.push(ProfileConstants.BaseProfile);
-        // this.addToConfigArray(knownCliConfig);
-        // teamConfig.setSchema(imperative.ConfigSchema.buildSchema(this.getConfigArray()));
-        // await teamConfig.save();
-        // try {
-        //     fs.renameSync(profilesPath, oldProfilesPath);
-        // } catch (error) {
-        //     warningMsg.push(`Failed to rename profiles directory to ${oldProfilesPath}:\n    ${String(error)}`);
-        // }
+    public static async convertV1ProfToConfig(
+        profileInfo: imperative.ProfileInfo,
+        deleteV1Profs: boolean = false
+    ): Promise<imperative.IConvertV1ProfResult> {
+        const convertResult = await imperative.ConvertV1Profiles.convert({ deleteV1Profs, profileInfo });
         return convertResult;
     }
 
