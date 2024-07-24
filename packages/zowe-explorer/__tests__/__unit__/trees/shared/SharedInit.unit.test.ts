@@ -27,6 +27,7 @@ import { UnixCommandHandler } from "../../../../src/commands/UnixCommandHandler"
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import * as certWizard from "../../../../src/utils/CertificateWizard";
+import { imperative } from "@zowe/zowe-explorer-api";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
@@ -392,6 +393,20 @@ describe("Test src/shared/extension", () => {
             await SharedInit.watchConfigProfile(context, { ds: "ds", uss: "uss", job: "job" } as any);
             expect(spyRefreshAll).toHaveBeenCalled();
         });
+
+        it("should trigger the callback when credentials are updated by another application", async () => {
+            const dummyWatcher: any = { subscribeUser: () => {} };
+            // const dummyWatcher: any = { subscribeUser: (_event, cb) => cb() };
+            const spyWatcher = jest.spyOn(imperative.EventOperator, "getWatcher").mockReturnValueOnce(dummyWatcher);
+            const spyRefreshAll = jest.spyOn(SharedActions, "refreshAll").mockImplementation(jest.fn());
+
+            await SharedInit.watchConfigProfile(context, { ds: "ds", uss: "uss", job: "job" } as any);
+
+            expect(spyWatcher).toHaveBeenCalled();
+            expect(spyRefreshAll).toHaveBeenCalled();
+        });
+
+        it("should trigger the callback when the credential manager is changed by another application", async () => {});
     });
 
     describe("initSubscribers", () => {

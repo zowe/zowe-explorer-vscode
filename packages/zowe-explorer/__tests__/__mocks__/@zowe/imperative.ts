@@ -429,3 +429,19 @@ export class ConvertV1Profiles {
         };
     }
 }
+
+export class ZoweUserEvents {
+    public static ON_VAULT_CHANGED = "onVaultChanged";
+}
+export class ZoweSharedEvents {
+    public static ON_CREDENTIAL_MANAGER_CHANGED = "onCredentialManagerChanged";
+}
+
+export class EventOperator {
+    public static getWatcher() {
+        return {
+            subscribeUser: () => {},
+            subscribeShared: () => {},
+        };
+    }
+}

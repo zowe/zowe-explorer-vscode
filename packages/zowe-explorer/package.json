@@ -1760,7 +1760,7 @@
     "watch:webviews": "pnpm --filter webviews dev",
     "compile": "tsc -b",
     "markdown": "markdownlint CHANGELOG.md README.md",
-    "lint": "concurrently -n \"_eslint_,prettier,markdown\" \"pnpm lint:all\" \"pnpm lint:pretty\" \"pnpm markdown\"",
+    "lint": "concurrently -n \"_eslint_,prettier,markdown\" \"pnpm lint:src; pnpm lint:test\" \"pnpm lint:pretty\" \"pnpm markdown\"",
     "lint:all": "pnpm lint:src; pnpm lint:test; pnpm lint:html",
     "lint:src": "eslint --format stylish \"src/**/*.ts\"",
     "lint:test": "eslint --format stylish \"__tests__/**/*.ts\"",

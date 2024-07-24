@@ -248,7 +248,30 @@ describe("ZoweExplorerApiRegister unit testing", () => {
             configurable: true,
         });
         expect(ZoweExplorerApiRegister.getInstance().onProfilesUpdate).toEqual({});
-        ZoweExplorerApiRegister.getInstance()["onProfilesUpdateCallback"] = undefined;
+    });
+
+    it("provides access to the onVaultUpdate callback defined by the extender if available", () => {
+        Object.defineProperty(ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter, "event", {
+            value: {},
+            configurable: true,
+        });
+        expect(ZoweExplorerApiRegister.getInstance().onVaultUpdate).toEqual({});
+    });
+
+    it("provides access to the onCredMgrUpdate callback defined by the extender if available", () => {
+        Object.defineProperty(ZoweExplorerApiRegister.getInstance().onCredMgrUpdateEmitter, "event", {
+            value: {},
+            configurable: true,
+        });
+        expect(ZoweExplorerApiRegister.getInstance().onCredMgrUpdate).toEqual({});
+    });
+
+    it("provides access to the callback defined by the extender if available", () => {
+        Object.defineProperty(ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter, "event", {
+            value: {},
+            configurable: true,
+        });
+        expect(ZoweExplorerApiRegister.getInstance().onProfilesUpdate).toEqual({});
     });
 
     it("provides access to the appropriate event for onResourceChanged", () => {
