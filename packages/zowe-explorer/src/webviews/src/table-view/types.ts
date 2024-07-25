@@ -29,7 +29,12 @@ export type TableViewProps = {
 };
 
 // Define props for the AG Grid table here
-export const tableProps = (contextMenu: ContextMenuState, tableData: Table.ViewOpts, vscodeApi: any): Partial<AgGridReactProps> => ({
+export const tableProps = (
+    contextMenu: ContextMenuState,
+    setSelectionCount: React.Dispatch<number>,
+    tableData: Table.ViewOpts,
+    vscodeApi: any
+): Partial<AgGridReactProps> => ({
     domLayout: "autoHeight",
     enableCellTextSelection: true,
     ensureDomOrder: true,
@@ -59,6 +64,9 @@ export const tableProps = (contextMenu: ContextMenuState, tableData: Table.ViewO
         const rows: Table.RowData[] = [];
         event.api.forEachNodeAfterFilterAndSort((row, _i) => rows.push(row.data));
         vscodeApi.postMessage({ command: "ondisplaychanged", data: rows });
+    },
+    onSelectionChanged: (event) => {
+        setSelectionCount(event.api.getSelectedRows().length);
     },
     onSortChanged: (event) => {
         const rows: Table.RowData[] = [];

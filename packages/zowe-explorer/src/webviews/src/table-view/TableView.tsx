@@ -4,19 +4,22 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import { AgGridReact } from "ag-grid-react";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { getVsCodeTheme, isSecureOrigin, useMutableObserver } from "../utils";
 import type { Table } from "@zowe/zowe-explorer-api";
 import { TableViewProps, tableProps, wrapFn } from "./types";
 import { useContextMenu } from "./ContextMenu";
 // Custom styling (font family, VS Code color scheme, etc.)
 import "./style.css";
+import { ActionsBar } from "./ActionsBar";
 
 const vscodeApi = acquireVsCodeApi();
 
 export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewProps) => {
   const [tableData, setTableData] = useState<Table.ViewOpts | undefined>(data);
   const [theme, setTheme] = useState<string>(baseTheme ?? "ag-theme-quartz");
+  const [selectionCount, setSelectionCount] = useState<number>(0);
+  const gridRef = useRef<any | undefined>();
 
   const contextMenu = useContextMenu({
     options: [
@@ -32,7 +35,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
         title: "Copy row",
         command: "copy",
         callback: {
-          typ: "row",
+          typ: "single-row",
           fn: () => {},
         },
       },
@@ -90,7 +93,15 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
                   ((params: any) =>
                     // Render any actions for the given row and actions that apply to all rows
                     newData.actions[params.rowIndex] || newData.actions["all"] ? (
-                      <span style={{ display: "flex", alignItems: "center", marginTop: "0.5em", userSelect: "none", width: "fit-content" }}>
+                      <span
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          marginTop: "0.5em",
+                          userSelect: "none",
+                          width: "fit-content",
+                        }}
+                      >
                         {[...(newData.actions[params.rowIndex] || []), ...(newData.actions["all"] || [])]
                           .filter((action) => {
                             if (action.condition == null) {
@@ -113,7 +124,9 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
                                     row: { ...params.data, actions: undefined },
                                     field: params.colDef.field,
                                     cell: params.colDef.valueFormatter
-                                      ? params.colDef.valueFormatter({ value: params.data[params.colDef.field] })
+                                      ? params.colDef.valueFormatter({
+                                          value: params.data[params.colDef.field],
+                                        })
                                       : params.data[params.colDef.field],
                                   },
                                 })
@@ -156,7 +169,8 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
       {tableData?.title ? <h1>{tableData.title}</h1> : null}
       <div className={`${theme} ag-theme-vsc ${contextMenu.open ? "ctx-menu-open" : ""}`}>
         {contextMenu.component}
-        {tableData ? <AgGridReact {...tableProps(contextMenu, tableData, vscodeApi)} /> : null}
+        <ActionsBar actions={tableData?.actions.all ?? []} gridRef={gridRef} itemCount={selectionCount} vscodeApi={vscodeApi} />
+        {tableData ? <AgGridReact {...tableProps(contextMenu, setSelectionCount, tableData, vscodeApi)} ref={gridRef} /> : null}
       </div>
     </>
   );
