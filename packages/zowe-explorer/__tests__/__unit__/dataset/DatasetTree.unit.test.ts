@@ -62,7 +62,6 @@ jest.mock("util");
 
 function createGlobalMocks() {
     globals.defineGlobals("");
-    const imperativeProfile = createIProfile();
 
     const globalMocks = {
         isTheia: jest.fn(),
@@ -72,7 +71,6 @@ function createGlobalMocks() {
         mockProfileInfo: createInstanceOfProfileInfo(),
         mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
         mockTreeProviders: createTreeProviders(),
-        imperativeProfile: imperativeProfile,
     };
 
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
@@ -623,7 +621,6 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: blockMocks.datasetFavoriteNode,
             contextOverride: globals.FAV_PROFILE_CONTEXT,
-            profile: blockMocks.imperativeProfile,
         });
         const testTree = new DatasetTree();
         testTree.mFavorites.push(favProfileNode);
@@ -675,7 +672,6 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: blockMocks.datasetFavoriteNode,
             contextOverride: globals.FAV_PROFILE_CONTEXT,
-            profile: blockMocks.imperativeProfile,
         });
         const testTree = new DatasetTree();
         testTree.mFavorites.push(favProfileNode);
@@ -1339,7 +1335,6 @@ describe("Dataset Tree Unit Tests - Function removeFavProfile", () => {
             label: "Dataset",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: testTree.mSessionNodes[1],
-            profile: imperativeProfile,
         });
         await testTree.addFavorite(node);
         const profileNodeInFavs: IZoweDatasetTreeNode = testTree.mFavorites[0];
@@ -1968,17 +1963,6 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
     it("Checking common run of function", async () => {
         createGlobalMocks();
         const blockMocks = await createBlockMocks();
-        const profile = blockMocks.imperativeProfile;
-
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn().mockReturnValue(profile),
-                    editSession: jest.fn().mockReturnValue(profile),
-                    checkCurrentProfile: jest.fn().mockReturnValue(profile),
-                };
-            }),
-        });
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
@@ -1987,12 +1971,11 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
             label: "EditSession",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: testTree.mSessionNodes[1],
-            profile: profile,
         });
 
         await testTree.editSession(node, testTree);
 
-        expect(node.getProfile().profile).toBe(profile);
+        expect(node.getProfile().profile).toBe("testProfile");
     });
 });
 describe("Dataset Tree Unit Tests - Function getAllLoadedItems", () => {
@@ -2979,7 +2962,6 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
 });
 describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
     createGlobalMocks();
-    const blockMocks = createGlobalMocks();
     mocked(vscode.window.createTreeView).mockReturnValueOnce(createTreeView());
     const tree = new DatasetTree();
     const nodesForSuite = (): Record<string, IZoweDatasetTreeNode> => {
@@ -2987,14 +2969,12 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             label: "testSession",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             session: createISession(),
-            profile: blockMocks.imperativeProfile,
         });
         session.contextValue = globals.DS_SESSION_CONTEXT;
         const pds = new ZoweDatasetNode({
             label: "testPds",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: session,
-            profile: blockMocks.imperativeProfile,
         });
         pds.contextValue = globals.DS_PDS_CONTEXT;
 
@@ -3002,21 +2982,18 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             label: "A",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: pds,
-            profile: blockMocks.imperativeProfile,
         });
         nodeA.stats = { user: "someUser", createdDate: new Date(), modifiedDate: new Date() };
         const nodeB = new ZoweDatasetNode({
             label: "B",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: pds,
-            profile: blockMocks.imperativeProfile,
         });
         nodeB.stats = { user: "anotherUser", createdDate: new Date("2021-01-01T12:00:00"), modifiedDate: new Date("2022-01-01T12:00:00") };
         const nodeC = new ZoweDatasetNode({
             label: "C",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: pds,
-            profile: blockMocks.imperativeProfile,
         });
         nodeC.stats = { user: "someUser", createdDate: new Date("2022-02-01T12:00:00"), modifiedDate: new Date("2022-03-15T16:30:00") };
         pds.children = [nodeA, nodeB, nodeC];
