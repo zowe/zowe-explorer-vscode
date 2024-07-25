@@ -13,7 +13,7 @@ import * as Mustache from "mustache";
 import * as fs from "fs";
 import HTMLTemplate from "./utils/HTMLTemplate";
 import { Types } from "../../Types";
-import { Disposable, ExtensionContext, Uri, ViewColumn, WebviewPanel, window } from "vscode";
+import { Disposable, ExtensionContext, Uri, ViewColumn, WebviewPanel, WebviewView, window } from "vscode";
 import { join as joinPath } from "path";
 import { randomUUID } from "crypto";
 
@@ -22,6 +22,8 @@ export type WebViewOpts = {
     onDidReceiveMessage?: (message: object) => void | Promise<void>;
     /** Retains context of the webview even after it is hidden. */
     retainContext?: boolean;
+    /** Whether the webview should be prepared for a WebviewViewProvider. */
+    isView?: boolean;
 };
 
 export type UriPair = {
@@ -37,6 +39,7 @@ export class WebView {
     // The webview HTML content to render after filling the HTML template.
     protected webviewContent: string;
     public panel: WebviewPanel;
+    public view: WebviewView;
 
     // Resource identifiers for the on-disk content and vscode-webview resource.
     protected uris: UriPair = {};
@@ -46,6 +49,8 @@ export class WebView {
     protected title: string;
 
     protected context: ExtensionContext;
+
+    private webviewOpts: WebViewOpts;
 
     /**
      * Constructs a webview for use with bundled assets.
@@ -64,6 +69,8 @@ export class WebView {
         this.nonce = randomUUID();
         this.title = title;
 
+        this.webviewOpts = opts;
+
         const cssPath = joinPath(context.extensionPath, "src", "webviews", "dist", "style", "style.css");
         const cssExists = fs.existsSync(cssPath);
 
@@ -74,17 +81,45 @@ export class WebView {
             css: cssExists ? Uri.file(cssPath) : undefined,
         };
 
-        this.panel = window.createWebviewPanel("ZEAPIWebview", this.title, ViewColumn.Beside, {
+        if (!(opts?.isView ?? false)) {
+            this.panel = window.createWebviewPanel("ZEAPIWebview", this.title, ViewColumn.Beside, {
+                enableScripts: true,
+                localResourceRoots: [this.uris.disk.build],
+                retainContextWhenHidden: opts?.retainContext ?? false,
+            });
+
+            // Associate URI resources with webview
+            this.uris.resource = {
+                build: this.panel.webview.asWebviewUri(this.uris.disk.build),
+                script: this.panel.webview.asWebviewUri(this.uris.disk.script),
+                css: this.uris.disk.css ? this.panel.webview.asWebviewUri(this.uris.disk.css) : undefined,
+            };
+
+            const builtHtml = Mustache.render(HTMLTemplate, {
+                uris: this.uris,
+                nonce: this.nonce,
+                title: this.title,
+            });
+            this.webviewContent = builtHtml;
+            if (opts?.onDidReceiveMessage) {
+                this.panel.webview.onDidReceiveMessage(async (message) => opts.onDidReceiveMessage(message));
+            }
+            this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
+            this.panel.webview.html = this.webviewContent;
+        }
+    }
+
+    public resolveForView(webviewView: WebviewView): void {
+        webviewView.webview.options = {
             enableScripts: true,
             localResourceRoots: [this.uris.disk.build],
-            retainContextWhenHidden: opts?.retainContext ?? false,
-        });
+        };
 
         // Associate URI resources with webview
         this.uris.resource = {
-            build: this.panel.webview.asWebviewUri(this.uris.disk.build),
-            script: this.panel.webview.asWebviewUri(this.uris.disk.script),
-            css: this.uris.disk.css ? this.panel.webview.asWebviewUri(this.uris.disk.css) : undefined,
+            build: webviewView.webview.asWebviewUri(this.uris.disk.build),
+            script: webviewView.webview.asWebviewUri(this.uris.disk.script),
+            css: this.uris.disk.css ? webviewView.webview.asWebviewUri(this.uris.disk.css) : undefined,
         };
 
         const builtHtml = Mustache.render(HTMLTemplate, {
@@ -93,18 +128,21 @@ export class WebView {
             title: this.title,
         });
         this.webviewContent = builtHtml;
-        if (opts?.onDidReceiveMessage) {
-            this.panel.webview.onDidReceiveMessage(async (message) => opts.onDidReceiveMessage(message));
+        if (this.webviewOpts?.onDidReceiveMessage) {
+            webviewView.webview.onDidReceiveMessage(async (message) => this.webviewOpts.onDidReceiveMessage(message));
         }
-        this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
-        this.panel.webview.html = this.webviewContent;
+        webviewView.onDidDispose(() => this.dispose(), null, this.disposables);
+        webviewView.webview.html = this.webviewContent;
+        this.view = webviewView;
     }
 
     /**
      * Disposes of the webview instance
      */
     protected dispose(): void {
-        this.panel.dispose();
+        if (this.panel) {
+            this.panel.dispose();
+        }
 
         for (const disp of this.disposables) {
             disp.dispose();

@@ -16,10 +16,28 @@ export class TableViewProvider implements WebviewViewProvider {
     private view: WebviewView;
     private tableView: Table.View;
 
-    public setTableView(tableView: Table.View): void {
+    private static instance: TableViewProvider;
+
+    private constructor() {}
+
+    public static getInstance(): TableViewProvider {
+        if (!this.instance) {
+            this.instance = new TableViewProvider();
+        }
+
+        return this.instance;
+    }
+
+    public setTableView(tableView: Table.View | null): void {
         this.tableView = tableView;
-        if (this.view && this.view.webview.html !== this.tableView.getHtml()) {
-            this.view.webview.html = this.tableView.getHtml();
+
+        if (tableView == null) {
+            this.view.webview.html = "";
+            return;
+        }
+
+        if (this.view) {
+            this.tableView.resolveForView(this.view);
         }
     }
 
@@ -34,12 +52,8 @@ export class TableViewProvider implements WebviewViewProvider {
     ): void | Thenable<void> {
         this.view = webviewView;
 
-        this.view.webview.options = {
-            enableScripts: true,
-            localResourceRoots: [this.tableView.getUris().disk.build],
-        };
-
-        this.view.webview.html = this.tableView.getHtml();
-        this.view.webview.onDidReceiveMessage((data) => this.tableView.onMessageReceived(data));
+        if (this.tableView != null) {
+            this.tableView.resolveForView(this.view);
+        }
     }
 }

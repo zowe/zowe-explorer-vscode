@@ -45,8 +45,15 @@ export class TableBuilder {
         rows: [],
         title: "",
     };
+    private forWebviewView = false;
+
     public constructor(context: ExtensionContext) {
         this.context = context;
+    }
+
+    public isView(): TableBuilder {
+        this.forWebviewView = true;
+        return this;
     }
 
     /**
@@ -186,7 +193,7 @@ export class TableBuilder {
             this.data.columns = Object.keys(this.data.rows[0]).map((k) => ({ field: k }));
         }
 
-        return new Table.Instance(this.context, this.data);
+        return new Table.Instance(this.context, this.forWebviewView, this.data);
     }
 
     /**

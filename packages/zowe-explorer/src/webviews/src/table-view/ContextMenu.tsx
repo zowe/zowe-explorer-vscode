@@ -31,6 +31,7 @@ export const useContextMenu = (contextMenu: ContextMenuProps) => {
     selectedRows: [],
     clickedRow: null,
     field: undefined,
+    rowIndex: null,
   });
 
   /* Opens the context menu and sets the anchor point to mouse coordinates */
@@ -67,6 +68,7 @@ export const useContextMenu = (contextMenu: ContextMenuProps) => {
         selectedRows: event.api.getSelectedRows(),
         clickedRow: event.data,
         field: event.colDef.field,
+        rowIndex: event.rowIndex,
       };
 
       openMenu(event.event as PointerEvent);
@@ -117,6 +119,7 @@ export const ContextMenu = (gridRefs: any, menuItems: Table.ContextMenuOption[],
           vscodeApi.postMessage({
             command: item.command,
             data: {
+              rowIndex: gridRefs.rowIndex,
               row: { ...gridRefs.clickedRow, actions: undefined },
               field: gridRefs.field,
               cell: gridRefs.colDef.valueFormatter
