@@ -454,9 +454,15 @@ export class JobActions {
             }
         }
 
+        for (const session of sessionNodes) {
+            session.dirty = true;
+            await session.getChildren();
+            jobsProvider.refreshElement(session);
+        }
+
         if (failedJobs.length > 0) {
             // Display any errors from the API
-            await Gui.warningMessage(
+            Gui.warningMessage(
                 vscode.l10n.t({
                     message: "One or more jobs failed to cancel: {0}",
                     args: [failedJobs.reduce((prev, j) => prev.concat(`\n${j.job.jobname}(${j.job.jobid}): ${j.error}`), "\n")],
@@ -467,10 +473,7 @@ export class JobActions {
                 }
             );
         } else {
-            await Gui.showMessage(vscode.l10n.t("Cancelled selected jobs successfully."));
-        }
-        for (const session of sessionNodes) {
-            jobsProvider.refreshElement(session);
+            Gui.showMessage(vscode.l10n.t("Cancelled selected jobs successfully."));
         }
     }
     public static async sortJobs(session: IZoweJobTreeNode, jobsProvider: JobTree): Promise<void> {
