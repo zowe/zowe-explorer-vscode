@@ -8,7 +8,18 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+## `2.17.0`
+
+### New features and enhancements
+
 - To add the ability to open a Favorited Job Search under Favorites [#2630](https://github.com/zowe/zowe-explorer-vscode/pull/2930)
+- Added the ability to switch between basic authentication and token-based authentication. [#2944](https://github.com/zowe/zowe-explorer-vscode/pull/2944)
+
+## `2.16.3`
+
+### Bug fixes
+
+- Fixed issue where USS files could not be submitted as JCL. [#2991](https://github.com/zowe/zowe-explorer-vscode/issues/2991)
 
 ## `2.16.2`
 

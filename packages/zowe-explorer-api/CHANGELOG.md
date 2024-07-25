@@ -8,7 +8,17 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+## `2.17.0`
+
+### New features and enhancements
+
+- Updated the `@zowe/cli` dependency to 7.27.0 to support proxy environment variables [#3003](https://github.com/zowe/zowe-explorer-vscode/issues/3003)
+
+### Bug fixes
+
 - Removed `handlebars` dependency in favor of `mustache` for technical currency purposes. [#2974](https://github.com/zowe/zowe-explorer-vscode/pull/2974)
+
+## `2.16.3`
 
 ## `2.16.2`
 

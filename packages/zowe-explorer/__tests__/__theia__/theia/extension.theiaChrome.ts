@@ -42,7 +42,7 @@ export async function OpenTheiaInChrome() {
 }
 
 export async function clickOnZoweExplorer() {
-    await driverChrome.wait(until.elementLocated(By.id(TheiaLocator.zoweExplorerxId))).click();
+    await driverChrome.wait(until.elementLocated(By.id(TheiaLocator.zoweExplorerxId)), WAITTIME).click();
 }
 
 export async function clickOnFavoriteTabInDatasets() {
