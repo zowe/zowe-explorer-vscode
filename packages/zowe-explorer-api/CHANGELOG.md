@@ -36,6 +36,9 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added PEM certificate support as an authentication method for logging into the API ML. [#2621](https://github.com/zowe/zowe-explorer-vscode/issues/2621)
 - Deprecated the `getUSSDocumentFilePath` function on the `IZoweTreeNode` interface as Zowe Explorer no longer uses the local file system for storing USS files. **No replacement is planned**; please access data from tree nodes using their [resource URIs](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#operations-for-extenders) instead. [#2968](https://github.com/zowe/zowe-explorer-vscode/pull/2968)
 - **Next Breaking:** Changed `ProfilesCache.convertV1ProfToConfig` method to be a static method that requires `ProfileInfo` instance as a parameter.
+- Added the `onVaultUpdate` VSCode events to notify extenders when credentials are updated on the OS vault by other applications. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
+- Added the `onCredMgrsUpdate` VSCode events to notify extenders when the local PC's credential manager has been updated by other applications. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
+- Added return types to most interfaces. [#2952](https://github.com/zowe/zowe-explorer-vscode/issues/2952)
 
 ### Bug fixes
 
@@ -43,6 +46,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Fixed an issue where `ProfilesCache` may return missing or incorrect profile values when multiple extensions call it during activation. [#2831](https://github.com/zowe/zowe-explorer-vscode/issues/2831)
 - Removed `handlebars` dependency in favor of `mustache` for technical currency purposes. [#2975](https://github.com/zowe/zowe-explorer-vscode/pull/2975)
 - Update Zowe SDKs to `8.0.0-next.202407051717` for technical currency. [#2918](https://github.com/zowe/zowe-explorer-vscode/issues/2918)
+- Fixed an issue where the loaded configuration could be overridden when requesting for the Zowe home directory. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
+- Update Zowe SDKs to `8.0.0-next.202407232256` for technical currency. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
 
 ## `3.0.0-next.202404242037`
 

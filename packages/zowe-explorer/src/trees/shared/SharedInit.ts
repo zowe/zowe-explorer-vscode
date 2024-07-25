@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { FileManagement, IZoweTree, IZoweTreeNode, Validation, ZosEncoding, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { FileManagement, Gui, IZoweTree, IZoweTreeNode, Validation, ZosEncoding, ZoweScheme, imperative } from "@zowe/zowe-explorer-api";
 import { SharedActions } from "./SharedActions";
 import { SharedHistoryView } from "./SharedHistoryView";
 import { SharedTreeProviders } from "./SharedTreeProviders";
@@ -338,6 +338,39 @@ export class SharedInit {
                 ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
             });
         });
+
+        try {
+            const zoweWatcher = imperative.EventOperator.getWatcher().subscribeUser(imperative.ZoweUserEvents.ON_VAULT_CHANGED, async () => {
+                Gui.infoMessage("Vault change detected. Refreshing profiles...");
+                ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter.fire(Validation.EventType.UPDATE);
+
+                await ProfilesUtils.readConfigFromDisk();
+                await SharedActions.refreshAll(providers.ds);
+                await SharedActions.refreshAll(providers.uss);
+                await SharedActions.refreshAll(providers.job);
+            });
+            context.subscriptions.push(new vscode.Disposable(zoweWatcher.close.bind(zoweWatcher)));
+        } catch (err) {
+            Gui.errorMessage("Unable to watch for vault changes. " + JSON.stringify(err));
+        }
+
+        try {
+            const zoweWatcher = imperative.EventOperator.getWatcher().subscribeShared(
+                imperative.ZoweSharedEvents.ON_CREDENTIAL_MANAGER_CHANGED,
+                async () => {
+                    Gui.infoMessage("Credential Manager changed. Refreshing Zowe Explorer...");
+                    ZoweExplorerApiRegister.getInstance().onCredMgrUpdateEmitter.fire(Validation.EventType.UPDATE);
+
+                    await ProfilesUtils.getProfileInfo();
+                    await SharedActions.refreshAll(providers.ds);
+                    await SharedActions.refreshAll(providers.uss);
+                    await SharedActions.refreshAll(providers.job);
+                }
+            );
+            context.subscriptions.push(new vscode.Disposable(zoweWatcher.close.bind(zoweWatcher)));
+        } catch (err) {
+            Gui.errorMessage("Unable to watch for credential manager changes. " + JSON.stringify(err));
+        }
     }
 
     public static initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTree<IZoweTreeNode>): void {

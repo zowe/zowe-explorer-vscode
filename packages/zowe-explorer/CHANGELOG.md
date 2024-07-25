@@ -41,6 +41,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added support to view the Encoding history for MVS and Dataset in the History View. [#2776](https://github.com/zowe/vscode-extension-for-zowe/issues/2776)
 - Added error handling for when the default credential manager is unable to initialize. [#2811](https://github.com/zowe/zowe-explorer-vscode/issues/2811)
 - **Breaking:** Zowe Explorer no longer uses a temporary directory for storing Data Sets and USS files. All settings related to the temporary downloads folder have been removed. In order to access resources stored by Zowe Explorer v3, refer to the [FileSystemProvider documentation](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider) for information on how to build and access resource URIs. Extenders can detect changes to resources using the `onResourceChanged` function in the `ZoweExplorerApiRegister` class. [#2951](https://github.com/zowe/zowe-explorer-vscode/issues/2951)
+- Implemented the `onVaultUpdate` VSCode events to notify extenders when credentials are updated on the OS vault by other applications. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
+- Implemented the `onCredMgrsUpdate` VSCode events to notify extenders when the local PC's credential manager has been updated by other applications. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
 
 ### Bug fixes
 
@@ -61,6 +63,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue where multiple extensions that contribute profiles to a tree view using the Zowe Explorer API may fail to load. [#2888](https://github.com/zowe/zowe-explorer-vscode/issues/2888)
 - Fixed regression where `getProviderForNode` returned the wrong tree provider after performing an action on a Zowe tree node, causing some commands to fail silently. [#2967](https://github.com/zowe/zowe-explorer-vscode/issues/2967)
 - Update Zowe SDKs to `8.0.0-next.202407051717` for technical currency. [#2918](https://github.com/zowe/zowe-explorer-vscode/issues/2918)
+- Update Zowe SDKs to `8.0.0-next.202407232256` for technical currency. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
 
 ## `3.0.0-next.202404242037`
 

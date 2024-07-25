@@ -85,12 +85,12 @@ describe("FtpUssApi", () => {
 
     it("should throw error for getContents if connection to FTP client fails.", async () => {
         jest.spyOn(UssApi, "ftpClient").mockReturnValueOnce(null);
-        expect(UssApi.getContents("/some/example/path", {})).rejects.toThrow();
+        await expect(UssApi.getContents("/some/example/path", {})).rejects.toThrow();
     });
 
     it("should throw error for putContent if connection to FTP client fails.", async () => {
         jest.spyOn(UssApi, "ftpClient").mockReturnValueOnce(null);
-        expect(UssApi.putContent("/some/example/input/path", "/some/uss/path")).rejects.toThrow();
+        await expect(UssApi.putContent("/some/example/input/path", "/some/uss/path")).rejects.toThrow();
     });
 
     it("should upload uss files.", async () => {
@@ -212,7 +212,7 @@ describe("FtpUssApi", () => {
 
     it("should throw error when list files failed", async () => {
         jest.spyOn(UssUtils, "listFiles").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("List files failed.");
             })
         );
@@ -257,7 +257,7 @@ describe("FtpUssApi", () => {
 
     it("should throw error when upload directory failed", async () => {
         jest.spyOn(UssUtils, "uploadFile").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Upload file failed.");
             })
         );
@@ -273,7 +273,7 @@ describe("FtpUssApi", () => {
 
     it("should throw error when create file failed", async () => {
         jest.spyOn(UssUtils, "uploadFile").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Upload file failed.");
             })
         );
@@ -284,7 +284,7 @@ describe("FtpUssApi", () => {
 
     it("should throw error when delete file failed", async () => {
         jest.spyOn(UssUtils, "deleteFile").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Delete file failed.");
             })
         );
@@ -295,7 +295,7 @@ describe("FtpUssApi", () => {
 
     it("should throw error when rename file failed", async () => {
         jest.spyOn(UssUtils, "renameFile").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Rename file failed.");
             })
         );

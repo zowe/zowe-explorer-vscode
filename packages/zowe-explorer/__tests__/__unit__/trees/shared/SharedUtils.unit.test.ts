@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import { createIProfile, createISession, createInstanceOfProfile } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
-import { imperative, ProfilesCache, Gui, ZosEncoding, BaseProvider, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { imperative, ProfilesCache, Gui, ZosEncoding, BaseProvider } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../../../src/configuration/Constants";
 import { FilterItem } from "../../../../src/management/FilterManagement";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
@@ -110,7 +110,7 @@ describe("syncSessionNode shared util function", () => {
         expect(sessionNode.getSession()).toEqual(expectedSession);
         expect(sessionNode.getProfile()).toEqual(createIProfile());
     });
-    it("should do nothing, if there is no profile from provided node in the file system", async () => {
+    it("should do nothing, if there is no profile from provided node in the file system", () => {
         const profiles = createInstanceOfProfile(serviceProfile);
         profiles.loadNamedProfile = jest.fn(() =>
             jest.fn(() => {
@@ -134,17 +134,17 @@ describe("syncSessionNode shared util function", () => {
 });
 
 describe("Positive testing", () => {
-    it("should pass for ZoweDatasetTreeNode with ZoweDatasetNode node type", async () => {
+    it("should pass for ZoweDatasetTreeNode with ZoweDatasetNode node type", () => {
         const dsNode = new ZoweDatasetNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = SharedUtils.isZoweDatasetTreeNode(dsNode);
         expect(value).toBeTruthy();
     });
-    it("should pass for ZoweUSSTreeNode with ZoweUSSNode node type", async () => {
+    it("should pass for ZoweUSSTreeNode with ZoweUSSNode node type", () => {
         const ussNode = new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = SharedUtils.isZoweUSSTreeNode(ussNode);
         expect(value).toBeTruthy();
     });
-    it("should pass for ZoweJobTreeNode with ZoweJobNode node type", async () => {
+    it("should pass for ZoweJobTreeNode with ZoweJobNode node type", () => {
         const jobNode = new ZoweJobNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = SharedUtils.isZoweJobTreeNode(jobNode);
         expect(value).toBeTruthy();
@@ -152,12 +152,12 @@ describe("Positive testing", () => {
 });
 
 describe("Negative testing for ZoweDatasetTreeNode", () => {
-    it("should fail with ZoweUSSNode node type", async () => {
+    it("should fail with ZoweUSSNode node type", () => {
         const ussNode = new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = SharedUtils.isZoweDatasetTreeNode(ussNode);
         expect(value).toBeFalsy();
     });
-    it("should fail with ZoweJobNode node type", async () => {
+    it("should fail with ZoweJobNode node type", () => {
         const jobNode = new ZoweJobNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = SharedUtils.isZoweDatasetTreeNode(jobNode);
         expect(value).toBeFalsy();
@@ -165,12 +165,12 @@ describe("Negative testing for ZoweDatasetTreeNode", () => {
 });
 
 describe("Negative testing for ZoweUSSTreeNode", () => {
-    it("should fail with ZoweDatasetNode node type", async () => {
+    it("should fail with ZoweDatasetNode node type", () => {
         const dsNode = new ZoweDatasetNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = SharedUtils.isZoweUSSTreeNode(dsNode);
         expect(value).toBeFalsy();
     });
-    it("should fail with ZoweJobNode node type", async () => {
+    it("should fail with ZoweJobNode node type", () => {
         const jobNode = new ZoweJobNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = SharedUtils.isZoweUSSTreeNode(jobNode);
         expect(value).toBeFalsy();
@@ -178,12 +178,12 @@ describe("Negative testing for ZoweUSSTreeNode", () => {
 });
 
 describe("Negative testing for ZoweJobTreeNode", () => {
-    it("should fail with ZoweDatasetNode node type", async () => {
+    it("should fail with ZoweDatasetNode node type", () => {
         const dsNode = new ZoweDatasetNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = SharedUtils.isZoweJobTreeNode(dsNode);
         expect(value).toBeFalsy();
     });
-    it("should fail with ZoweUSSNode node type", async () => {
+    it("should fail with ZoweUSSNode node type", () => {
         const ussNode = new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = SharedUtils.isZoweJobTreeNode(ussNode);
         expect(value).toBeFalsy();
@@ -214,7 +214,7 @@ describe("Shared Utils Unit Tests - Function filterTreeByString", () => {
 });
 
 describe("Shared Utils Unit Tests - Function getSelectedNodeList", () => {
-    it("Testing that getSelectedNodeList returns the correct array when single node is selected", async () => {
+    it("Testing that getSelectedNodeList returns the correct array when single node is selected", () => {
         const selectedNodes = [];
         const aNode = createTestNode();
         selectedNodes.push(aNode);
@@ -223,7 +223,7 @@ describe("Shared Utils Unit Tests - Function getSelectedNodeList", () => {
         expect(nodeList).toEqual(selectedNodes);
     });
 
-    it("Testing that getSelectedNodeList returns the correct array when single node is selected via quickKeys", async () => {
+    it("Testing that getSelectedNodeList returns the correct array when single node is selected via quickKeys", () => {
         const selectedNodes = undefined;
         const aNode = createTestNode();
         const nodeList = SharedUtils.getSelectedNodeList(aNode, selectedNodes);
@@ -231,7 +231,7 @@ describe("Shared Utils Unit Tests - Function getSelectedNodeList", () => {
         expect(nodeList[0]).toEqual(aNode);
     });
 
-    it("Testing that getSelectedNodeList returns the correct array when multiple node is selected", async () => {
+    it("Testing that getSelectedNodeList returns the correct array when multiple node is selected", () => {
         const selectedNodes = [];
         const aNode = createTestNode();
         selectedNodes.push(aNode);

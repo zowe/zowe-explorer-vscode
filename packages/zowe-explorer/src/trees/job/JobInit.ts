@@ -77,9 +77,11 @@ export class JobInit {
             })
         );
 
-        const downloadSingleSpoolHandler = (binary: boolean) => async (node, nodeList) => {
-            const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
-            await JobActions.downloadSingleSpool(selectedNodes, binary);
+        const downloadSingleSpoolHandler = (binary: boolean): ((node: IZoweTreeNode, nodeList: IZoweTreeNode[]) => Promise<void>) => {
+            return async (node: IZoweTreeNode, nodeList: IZoweTreeNode[]): Promise<void> => {
+                const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
+                await JobActions.downloadSingleSpool(selectedNodes, binary);
+            };
         };
         context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.downloadSingleSpool", downloadSingleSpoolHandler(false)));
         context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.downloadSingleSpoolBinary", downloadSingleSpoolHandler(true)));
@@ -88,9 +90,11 @@ export class JobInit {
         context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.setOwner", (job) => JobActions.setOwner(job, jobsProvider)));
         context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.setPrefix", (job) => JobActions.setPrefix(job, jobsProvider)));
 
-        const downloadSpoolHandler = (binary: boolean) => async (node, nodeList) => {
-            const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
-            await JobActions.downloadSpool(selectedNodes, binary);
+        const downloadSpoolHandler = (binary: boolean): ((node: IZoweTreeNode, nodeList: IZoweTreeNode[]) => Promise<void>) => {
+            return async (node: IZoweTreeNode, nodeList: IZoweTreeNode[]) => {
+                const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
+                await JobActions.downloadSpool(selectedNodes, binary);
+            };
         };
         context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.downloadSpool", downloadSpoolHandler(false)));
         context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.downloadSpoolBinary", downloadSpoolHandler(true)));
@@ -110,9 +114,8 @@ export class JobInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.jobs.search", async (node): Promise<void> => jobsProvider.filterPrompt(node))
         );
-        const spoolFileTogglePoll =
-            (startPolling: boolean) =>
-            async (node: IZoweTreeNode, nodeList: IZoweTreeNode[]): Promise<void> => {
+        const spoolFileTogglePoll = (startPolling: boolean): ((node: IZoweTreeNode, nodeList: IZoweTreeNode[]) => Promise<void>) => {
+            return async (node: IZoweTreeNode, nodeList: IZoweTreeNode[]): Promise<void> => {
                 const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
                 const isMultipleSelection = selectedNodes.length > 1;
                 for (const n of selectedNodes) {
@@ -125,6 +128,7 @@ export class JobInit {
                     }
                 }
             };
+        };
         context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.startPolling", spoolFileTogglePoll(true)));
         context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.stopPolling", spoolFileTogglePoll(false)));
         context.subscriptions.push(

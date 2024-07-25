@@ -21,7 +21,7 @@ export declare enum TaskStage {
 
 describe("Zosmf API tests", () => {
     it("should test that copy data set uses default options", async () => {
-        const dataSet = jest.fn(async (session, toDataSet, options) => {
+        const dataSet = jest.fn((_session, _toDataSet, options) => {
             expect(options).toMatchSnapshot();
             return { api: "", commandResponse: "", success: true };
         });
@@ -34,7 +34,7 @@ describe("Zosmf API tests", () => {
     });
 
     it("should test that copy data set uses enq", async () => {
-        const dataSet = jest.fn(async (session, toDataSet, options) => {
+        const dataSet = jest.fn((_session, _toDataSet, options) => {
             expect(options).toMatchSnapshot();
             return { api: "", commandResponse: "", success: true };
         });
@@ -51,7 +51,7 @@ describe("Zosmf API tests", () => {
     });
 
     it("should test that copy data set uses enq only", async () => {
-        const dataSet = jest.fn(async (session, toDataSet, options) => {
+        const dataSet = jest.fn((_session, _toDataSet, options) => {
             expect(options).toMatchSnapshot();
             return { api: "", commandResponse: "", success: true };
         });
@@ -67,7 +67,7 @@ describe("Zosmf API tests", () => {
 
     it("should test putContent method passes all options to Zowe api method", async () => {
         const fileToUssFile = jest.fn(
-            async (session: imperative.AbstractSession, inputFile: string, ussname: string, options?: zosfiles.IUploadOptions) => {
+            (_session: imperative.AbstractSession, _inputFile: string, _ussname: string, options?: zosfiles.IUploadOptions) => {
                 expect(options).toMatchSnapshot();
                 return { api: "", commandResponse: "", success: true };
             }

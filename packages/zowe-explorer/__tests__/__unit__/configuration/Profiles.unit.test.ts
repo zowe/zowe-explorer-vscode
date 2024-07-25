@@ -50,7 +50,7 @@ jest.mock("fs");
 jest.mock("fs-extra");
 jest.mock("../../../src/tools/ZoweLogger");
 
-function createGlobalMocks() {
+function createGlobalMocks(): { [key: string]: any } {
     const newMocks = {
         log: imperative.Logger.getAppLogger(),
         mockShowInputBox: jest.fn(),
@@ -234,6 +234,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
     it("should create instance when there is no workspace", async () => {
         mockWorkspaceFolders.mockClear().mockReturnValue(undefined);
 
+        /* eslint-disable-next-line @typescript-eslint/no-var-requires */
         const { Profiles: testProfiles } = require("../../../src/configuration/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
@@ -244,6 +245,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
     it("should create instance when there is empty workspace", async () => {
         mockWorkspaceFolders.mockClear().mockReturnValue([undefined]);
 
+        /* eslint-disable-next-line @typescript-eslint/no-var-requires */
         const { Profiles: testProfiles } = require("../../../src/configuration/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
@@ -258,6 +260,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
             },
         ]);
 
+        /* eslint-disable-next-line @typescript-eslint/no-var-requires */
         const { Profiles: testProfiles } = require("../../../src/configuration/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
@@ -412,7 +415,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         };
         newMocks.testDatasetSessionNode = createDatasetSessionNode(newMocks.session, globalMocks.mockProfileInstance);
         newMocks.testDatasetTree = createDatasetTree(newMocks.testDatasetSessionNode, newMocks.treeView);
-        Object.defineProperty(imperative.ProfileInfo, "getZoweDir", {
+        Object.defineProperty(imperative.ConfigUtils, "getZoweDir", {
             value: jest.fn().mockReturnValue("file://globalPath/.zowe"),
             configurable: true,
         });
@@ -420,6 +423,8 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
             get: () => [{ uri: "file://projectPath/zowe.config.user.json", name: "zowe.config.user.json", index: 0 }],
             configurable: true,
         });
+        // Removes any loaded config
+        imperative.ImperativeConfig.instance.loadedConfig = undefined as any;
 
         return newMocks;
     }
