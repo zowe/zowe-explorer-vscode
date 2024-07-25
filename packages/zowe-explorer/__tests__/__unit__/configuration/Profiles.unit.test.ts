@@ -402,7 +402,6 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
 });
 
 describe("Profiles Unit Tests - Function createZoweSchema", () => {
-    const mockWorkspaceFolders = jest.fn();
     function createBlockMocks(globalMocks) {
         const newMocks = {
             session: createISessionWithoutCredentials(),
@@ -582,6 +581,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
     });
 
     it("Test that createZoweSchema will create local configuration", async () => {
+        const mockWorkspaceFolders = jest.fn();
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         Object.defineProperty(vscode.workspace, "workspaceFolders", {
