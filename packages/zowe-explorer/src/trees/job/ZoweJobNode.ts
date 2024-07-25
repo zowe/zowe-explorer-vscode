@@ -245,7 +245,6 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                         label: nodeTitle,
                         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                         parentNode: this,
-                        session: this.session,
                         profile: this.getProfile(),
                         job,
                     });
