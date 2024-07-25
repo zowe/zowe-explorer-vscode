@@ -8,6 +8,12 @@
   "viewsContainers.activitybar": {
     "Zowe Explorer": ""
   },
+  "viewsContainers.panel.tableView": {
+    "Zowe": ""
+  },
+  "zowe.resources.name": {
+    "Zowe Resources": ""
+  },
   "zowe.placeholderCommand": {
     "Placeholder": ""
   },
@@ -395,11 +401,11 @@
   "openWithEncoding": {
     "Open with Encoding": ""
   },
-  "zowe.history.deprecationMsg": {
-    "Changes made here will not be reflected in Zowe Explorer, use right-click Edit History option to access information from local storage.": ""
-  },
   "jobsTableView": {
     "Show as table": ""
+  },
+  "zowe.history.deprecationMsg": {
+    "Changes made here will not be reflected in Zowe Explorer, use right-click Edit History option to access information from local storage.": ""
   },
   "Refresh": "",
   "Delete Selected": "",

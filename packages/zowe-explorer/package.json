@@ -45,6 +45,13 @@
           "title": "%viewsContainers.activitybar%",
           "icon": "resources/zowe.svg"
         }
+      ],
+      "panel": [
+        {
+          "id": "zowe-panel",
+          "icon": "resources/zowe.svg",
+          "title": "%viewsContainers.panel.tableView%"
+        }
       ]
     },
     "views": {
@@ -60,6 +67,13 @@
         {
           "id": "zowe.jobs.explorer",
           "name": "%zowe.jobs.explorer%"
+        }
+      ],
+      "zowe-panel": [
+        {
+          "type": "webview",
+          "id": "zowe-resources",
+          "name": "%zowe.resources.name%"
         }
       ]
     },
@@ -165,7 +179,7 @@
         }
       },
       {
-        "command": "zowe.jobs.tableView",
+        "command": "zowe.jobs.tabularView",
         "title": "%jobsTableView%",
         "category": "Zowe Explorer"
       },
@@ -654,21 +668,6 @@
         "command": "zowe.placeholderCommand",
         "title": "%zowe.placeholderCommand%",
         "enablement": "false"
-      },
-      {
-        "command": "zowe.tableView",
-        "title": "Show table view (basic)",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.tableView2",
-        "title": "Show table view (several entries)",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.tableView3",
-        "title": "Show table view (all features)",
-        "category": "Zowe Explorer"
       }
     ],
     "menus": {
@@ -1263,7 +1262,7 @@
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
-          "command": "zowe.jobs.tableView",
+          "command": "zowe.jobs.tabularView",
           "group": "100_zowe_tableview"
         },
         {
