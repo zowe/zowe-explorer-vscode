@@ -458,7 +458,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public getProfile(): imperative.IProfileLoaded {
         ZoweLogger.trace("ZoweDatasetNode.getProfile called.");
         const prof = this.profile ?? this.getParent()?.getProfile();
-        return prof.name ? Profiles.getInstance().loadNamedProfile(prof.name) : undefined; // this returns the profile with newer token
+        return prof?.name ? Profiles.getInstance().loadNamedProfile(prof.name) : undefined; // this returns the profile with newer token
     }
 
     /**
