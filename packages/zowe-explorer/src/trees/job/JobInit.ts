@@ -184,9 +184,10 @@ export class JobInit {
                                 { field: "id", headerName: "ID", filter: true },
                                 { field: "retcode", headerName: "Return Code", filter: true },
                                 { field: "status", filter: true },
+                                { field: "actions", hide: true },
                             ]
                         )
-                        .addRowAction("all", {
+                        .addContextOption("all", {
                             title: "Get JCL",
                             command: "get-jcl",
                             callback: {
@@ -199,9 +200,8 @@ export class JobInit {
                                 typ: "single-row",
                             },
                         })
-                        .addRowAction("all", {
+                        .addContextOption("all", {
                             title: "Reveal in tree",
-                            type: "primary",
                             command: "edit",
                             callback: {
                                 fn: async (view: Table.View, data: Table.RowInfo) => {
@@ -213,8 +213,8 @@ export class JobInit {
                                 typ: "single-row",
                             },
                         })
-                        .addContextOption("all", {
-                            title: "Cancel job",
+                        .addRowAction("all", {
+                            title: "Cancel",
                             command: "cancel-job",
                             callback: {
                                 fn: async (view: Table.View, data: Record<number, Table.RowData>) => {
@@ -225,7 +225,7 @@ export class JobInit {
                                         await JobActions.cancelJobs(SharedTreeProviders.job, childrenToCancel);
                                         const profNode = childrenToCancel[0].getSessionNode() as ZoweJobNode;
                                         await view.setContent(
-                                            profNode.children.map((item) => ({
+                                            (await profNode.getChildren()).map((item) => ({
                                                 name: item.job.jobname,
                                                 class: item.job.class,
                                                 owner: item.job.owner,
@@ -240,8 +240,8 @@ export class JobInit {
                             },
                             condition: (data: Table.RowData) => data["status"] === "ACTIVE",
                         })
-                        .addContextOption("all", {
-                            title: "Delete job",
+                        .addRowAction("all", {
+                            title: "Delete",
                             command: "delete-job",
                             callback: {
                                 fn: async (view: Table.View, data: Record<number, Table.RowData>) => {

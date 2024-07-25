@@ -17,31 +17,42 @@ export const ActionsBar = ({
   return (
     <div
       style={{
-        height: "2.25em",
+        height: "2.5em",
         display: "flex",
         alignItems: "center",
-        borderRadius: "3px",
+        borderRadius: "var(--ag-wrapper-border-radius)",
+        border: "1px solid var(--vscode-editorWidget-border)",
         justifyContent: "space-between",
-        backgroundColor: "var(--vscode-notificationsInfoIcon-foreground)",
-        color: "var(--vscode-foreground)",
+        backgroundColor: "var(--vscode-keybindingTable-headerBackground)",
+        color: "var(--vscode-foreground) !important",
+        padding: "0 0.25em",
+        marginBottom: "3px",
       }}
     >
-      <h6>
-        {itemCount === 0 ? "No" : itemCount} item{itemCount < 1 ? "" : "s"} selected
-      </h6>
-      <span>
+      <h5 style={{ marginLeft: "0.25em" }}>
+        {itemCount === 0 ? "No" : itemCount} item{itemCount === 1 ? "" : "s"} selected
+      </h5>
+      <span style={{ marginBottom: "0.25em" }}>
         {actions
           .filter((action) => (itemCount > 1 ? action.callback.typ === "multi-row" : action.callback.typ.endsWith("row")))
           .map((action) => (
             <VSCodeButton
               type={action.type}
-              style={{ maxHeight: "0.5em", fontWeight: "bold" }}
+              style={{ height: "1.5em", fontWeight: "bold", marginRight: "0.25em" }}
               onClick={(_event: any) => {
                 const selectedRows = (gridRef.current.api as GridApi).getSelectedNodes();
+                if (selectedRows.length === 0) {
+                  return;
+                }
+
                 vscodeApi.postMessage({
                   command: action.command,
                   data: {
-                    rows: selectedRows.map((row) => ({ [row.rowIndex!]: row.data })),
+                    row: action.callback.typ === "single-row" ? selectedRows[0].data : undefined,
+                    rows:
+                      action.callback.typ === "multi-row"
+                        ? selectedRows.reduce((all, row) => ({ ...all, [row.rowIndex!]: row.data }), {})
+                        : undefined,
                   },
                 });
               }}
