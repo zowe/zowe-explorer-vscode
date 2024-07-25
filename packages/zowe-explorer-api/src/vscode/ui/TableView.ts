@@ -310,7 +310,7 @@ export namespace Table {
         }
 
         public constructor(context: ExtensionContext, isView?: boolean, data?: ViewOpts) {
-            super(data.title ?? "Table view", "table-view", context, {
+            super(data?.title ?? "Table view", "table-view", context, {
                 onDidReceiveMessage: (message) => this.onMessageReceived(message),
                 isView,
             });
