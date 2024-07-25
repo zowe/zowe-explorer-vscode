@@ -57,6 +57,10 @@ describe("ZoweCommandProvide Unit Tests - function checkCurrentProfile", () => {
                 error: jest.fn(),
             },
         });
+        Object.defineProperty(Profiles.getInstance(), "allProfiles", {
+            value: [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }],
+            configurable: true,
+        });
         jest.spyOn(ZoweCommandProvider.prototype, "refresh").mockImplementation();
         jest.spyOn(contextually, "isSessionNotFav").mockReturnValue(true);
     });
