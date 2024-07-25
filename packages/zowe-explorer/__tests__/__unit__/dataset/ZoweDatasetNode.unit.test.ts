@@ -29,7 +29,6 @@ import * as sharedUtils from "../../../src/shared/utils";
 import { Profiles } from "../../../src/Profiles";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
-import { imperative } from "@zowe/cli";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");

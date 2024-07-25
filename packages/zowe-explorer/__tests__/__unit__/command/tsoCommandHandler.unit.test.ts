@@ -22,7 +22,6 @@ import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import * as globals from "../../../src/globals";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ProfileManagement } from "../../../src/utils/ProfileManagement";
-import { Profiles } from "../../../src/Profiles";
 
 describe("TsoCommandHandler unit testing", () => {
     const showErrorMessage = jest.fn();
