@@ -349,7 +349,7 @@ export class SharedInit {
                 await SharedActions.refreshAll(providers.uss);
                 await SharedActions.refreshAll(providers.job);
             });
-            context.subscriptions.push(vscode.Disposable.from({ dispose: zoweWatcher.close.bind(zoweWatcher) }));
+            context.subscriptions.push(new vscode.Disposable(zoweWatcher.close.bind(zoweWatcher)));
         } catch (err) {
             Gui.errorMessage("Unable to watch for vault changes. " + JSON.stringify(err));
         }

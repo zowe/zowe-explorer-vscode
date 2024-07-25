@@ -440,8 +440,8 @@ export class ZoweSharedEvents {
 export class EventOperator {
     public static getWatcher() {
         return {
-            subscribeUser: () => {},
-            subscribeShared: () => {},
+            subscribeUser: () => ({ close: () => {} }),
+            subscribeShared: () => ({ close: () => {} }),
         };
     }
 }
