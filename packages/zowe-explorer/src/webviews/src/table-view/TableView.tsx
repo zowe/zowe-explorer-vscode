@@ -81,6 +81,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
                 // Prevent cells from being selectable
                 cellStyle: { border: "none", outline: "none" },
                 field: "actions",
+                minWidth: 360,
                 sortable: false,
                 suppressSizeToFit: true,
                 // Support a custom cell renderer for row actions
@@ -89,7 +90,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
                   ((params: any) =>
                     // Render any actions for the given row and actions that apply to all rows
                     newData.actions[params.rowIndex] || newData.actions["all"] ? (
-                      <span style={{ display: "flex", alignItems: "center", marginTop: "0.5em", userSelect: "none" }}>
+                      <span style={{ display: "flex", alignItems: "center", marginTop: "0.5em", userSelect: "none", width: "fit-content" }}>
                         {[...(newData.actions[params.rowIndex] || []), ...(newData.actions["all"] || [])]
                           .filter((action) => {
                             if (action.condition == null) {
@@ -107,11 +108,17 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
                               onClick={(_e: any) =>
                                 vscodeApi.postMessage({
                                   command: action.command,
-                                  data: { ...params.data, actions: undefined },
-                                  row: newData.rows!.at(params.rowIndex),
+                                  data: {
+                                    rowIndex: params.node.rowIndex,
+                                    row: { ...params.data, actions: undefined },
+                                    field: params.colDef.field,
+                                    cell: params.colDef.valueFormatter
+                                      ? params.colDef.valueFormatter({ value: params.data[params.colDef.field] })
+                                      : params.data[params.colDef.field],
+                                  },
                                 })
                               }
-                              style={{ marginRight: "0.25em" }}
+                              style={{ marginRight: "0.25em", width: "fit-content" }}
                             >
                               {action.title}
                             </VSCodeButton>
@@ -122,7 +129,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
             ];
             setTableData({ ...newData, rows, columns });
           } else {
-            setTableData(response.data);
+            setTableData(newData);
           }
           break;
         default:

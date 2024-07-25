@@ -22,17 +22,33 @@ export namespace Table {
     export type ColData = RowData;
     export type CellData = ContentTypes;
 
+    export type RowInfo = {
+        index: number;
+        row: RowData;
+    };
+
     /* Defines the supported callbacks and related types. */
     export type CallbackTypes = "row" | "column" | "cell";
-    export type Callback = {
+    export type RowCallback = {
         /** The type of callback */
-        typ: CallbackTypes;
+        typ: "row";
         /** The callback function itself - called from within the webview container. */
-        fn:
-            | ((data: RowData) => void | PromiseLike<void>)
-            | ((data: ColData) => void | PromiseLike<void>)
-            | ((data: CellData) => void | PromiseLike<void>);
+        fn: (view: Table.View, row: RowInfo) => void | PromiseLike<void>;
     };
+    export type CellCallback = {
+        /** The type of callback */
+        typ: "cell";
+        /** The callback function itself - called from within the webview container. */
+        fn: (view: Table.View, cell: CellData) => void | PromiseLike<void>;
+    };
+    export type ColumnCallback = {
+        /** The type of callback */
+        typ: "column";
+        /** The callback function itself - called from within the webview container. */
+        fn: (view: Table.View, col: ColData) => void | PromiseLike<void>;
+    };
+
+    export type Callback = RowCallback | CellCallback | ColumnCallback;
 
     /** Conditional callback function - whether an action or option should be rendered. */
     export type Conditional = (data: RowData | CellData) => boolean;
@@ -208,6 +224,8 @@ export namespace Table {
         paginationPageSizeSelector?: number[] | boolean;
         /** If defined, rows are filtered using this text as a Quick Filter. */
         quickFilterText?: string;
+        /** Enable selection of rows in table */
+        rowSelection?: "single" | "multiple";
         /** Set to `true` to skip the `headerName` when `autoSize` is called by default. Read once during initialization. */
         skipHeaderOnAutoSize?: boolean;
         /**
@@ -291,10 +309,10 @@ export namespace Table {
             return this.htmlContent;
         }
 
-        public constructor(context: ExtensionContext, data?: ViewOpts) {
+        public constructor(context: ExtensionContext, isView?: boolean, data?: ViewOpts) {
             super(data.title ?? "Table view", "table-view", context, {
                 onDidReceiveMessage: (message) => this.onMessageReceived(message),
-                retainContext: true,
+                isView,
             });
             if (data) {
                 this.data = data;
@@ -344,7 +362,17 @@ export namespace Table {
                 ...this.data.contextOpts.all,
             ].find((action) => action.command === message.command);
             if (matchingActionable != null) {
-                await matchingActionable.callback.fn(message.data);
+                switch (matchingActionable.callback.typ) {
+                    case "row":
+                        await matchingActionable.callback.fn(this, { index: message.data.rowIndex, row: message.data.row } as RowInfo);
+                        break;
+                    case "cell":
+                        await matchingActionable.callback.fn(this, message.data.cell);
+                        break;
+                    case "column":
+                        // TODO
+                        break;
+                }
             }
         }
 
@@ -355,7 +383,7 @@ export namespace Table {
          * @returns Whether the webview received the update that was sent
          */
         private async updateWebview(): Promise<boolean> {
-            const result = await this.panel.webview.postMessage({
+            const result = await (this.panel ?? this.view).webview.postMessage({
                 command: "ondatachanged",
                 data: this.data,
             });
@@ -421,6 +449,21 @@ export namespace Table {
          */
         public async addContent(...rows: RowData[]): Promise<boolean> {
             this.data.rows.push(...rows);
+            return this.updateWebview();
+        }
+
+        /**
+         * Update an existing row in the table view.
+         * @param index The AG GRID row index to update within the table
+         * @param row The new row content
+         * @returns Whether the webview successfully updated the new row
+         */
+        public async updateRow(index: number, row: RowData | null): Promise<boolean> {
+            if (row == null) {
+                this.data.rows.splice(index, 1);
+            } else {
+                this.data.rows[index] = row;
+            }
             return this.updateWebview();
         }
 
@@ -495,13 +538,13 @@ export namespace Table {
     }
 
     export class Instance extends View {
-        public constructor(context: ExtensionContext, data: Table.ViewOpts) {
-            super(context, data);
+        public constructor(context: ExtensionContext, isView: boolean, data: Table.ViewOpts) {
+            super(context, isView, data);
         }
 
         /**
          * Closes the table view and marks it as disposed.
-         * Removes the table instance from the mediator if it exists. 
+         * Removes the table instance from the mediator if it exists.
          */
         public dispose(): void {
             TableMediator.getInstance().removeTable(this);
