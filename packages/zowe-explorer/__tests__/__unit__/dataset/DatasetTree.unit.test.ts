@@ -1953,6 +1953,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
                         status: "active",
                         name: "testProfile",
                     }),
+                    loadNamedProfile: jest.fn().mockReturnValue(newMocks.imperativeProfile),
                 };
             }),
         });
