@@ -310,7 +310,7 @@ describe("Table.View", () => {
                     all: [],
                 },
             };
-            const view = new Table.View(globalMocks.context as any, data);
+            const view = new Table.View(globalMocks.context as any, false, data);
             const writeTextMock = jest.spyOn(env.clipboard, "writeText");
             const mockWebviewMsg = {
                 command: "nonexistent-action",
@@ -454,7 +454,7 @@ describe("Table.View", () => {
                 title: "Add to cart",
                 command: "add-to-cart",
                 callback: {
-                    typ: "row",
+                    typ: "single-row",
                     fn: (_data) => {},
                 },
                 condition: (_data) => true,
@@ -468,7 +468,7 @@ describe("Table.View", () => {
                 title: "Save for later",
                 command: "save-for-later",
                 callback: {
-                    typ: "row",
+                    typ: "single-row",
                     fn: (_data) => {},
                 },
                 condition: (_data) => true,
@@ -492,7 +492,7 @@ describe("Table.View", () => {
                 title: "Remove from cart",
                 command: "rm-from-cart",
                 callback: {
-                    typ: "row",
+                    typ: "single-row",
                     fn: (_data) => {},
                 },
             } as Table.ContextMenuOpts;
@@ -505,7 +505,7 @@ describe("Table.View", () => {
                 title: "Add to wishlist",
                 command: "add-to-wishlist",
                 callback: {
-                    typ: "row",
+                    typ: "single-row",
                     fn: (_data) => {},
                 },
             } as Table.ContextMenuOpts;
@@ -530,7 +530,7 @@ describe("Table.View", () => {
                 title: "Add to wishlist",
                 command: "add-to-wishlist",
                 callback: {
-                    typ: "row",
+                    typ: "single-row",
                     fn: (_data) => {},
                 },
                 condition: (_data) => true,
@@ -544,7 +544,7 @@ describe("Table.View", () => {
                 title: "Learn more",
                 command: "learn-more",
                 callback: {
-                    typ: "row",
+                    typ: "single-row",
                     fn: (_data) => {},
                 },
                 condition: (_data) => true,
@@ -566,7 +566,7 @@ describe("Table.View", () => {
                 title: "Remove from wishlist",
                 command: "rm-from-wishlist",
                 callback: {
-                    typ: "row",
+                    typ: "single-row",
                     fn: (_data) => {},
                 },
             } as Table.ContextMenuOpts;
@@ -579,7 +579,7 @@ describe("Table.View", () => {
                 title: "Learn less",
                 command: "learn-less",
                 callback: {
-                    typ: "row",
+                    typ: "single-row",
                     fn: (_data) => {},
                 },
             } as Table.ContextMenuOpts;

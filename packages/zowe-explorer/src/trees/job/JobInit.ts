@@ -196,7 +196,7 @@ export class JobInit {
                                         await JobActions.downloadJcl(child as ZoweJobNode);
                                     }
                                 },
-                                typ: "row",
+                                typ: "single-row",
                             },
                         })
                         .addRowAction("all", {
@@ -210,28 +210,33 @@ export class JobInit {
                                         await jobsProvider.getTreeView().reveal(child, { expand: true });
                                     }
                                 },
-                                typ: "row",
+                                typ: "single-row",
                             },
                         })
                         .addContextOption("all", {
                             title: "Cancel job",
                             command: "cancel-job",
                             callback: {
-                                fn: async (view: Table.View, data: Table.RowInfo) => {
-                                    const child = children.find((c) => data.row.id === c.job?.jobid);
-                                    if (child) {
-                                        await JobActions.cancelJobs(SharedTreeProviders.job, [child]);
-                                        await view.updateRow(data.index, {
-                                            name: child.job.jobname,
-                                            class: child.job.class,
-                                            owner: child.job.owner,
-                                            id: child.job.jobid,
-                                            retcode: child.job.retcode,
-                                            status: child.job.status,
-                                        });
+                                fn: async (view: Table.View, data: Record<number, Table.RowData>) => {
+                                    const childrenToCancel = Object.values(data)
+                                        .map((row) => children.find((c) => row.id === c.job?.jobid))
+                                        .filter((child) => child);
+                                    if (childrenToCancel.length > 0) {
+                                        await JobActions.cancelJobs(SharedTreeProviders.job, childrenToCancel);
+                                        const profNode = childrenToCancel[0].getSessionNode() as ZoweJobNode;
+                                        await view.setContent(
+                                            profNode.children.map((item) => ({
+                                                name: item.job.jobname,
+                                                class: item.job.class,
+                                                owner: item.job.owner,
+                                                id: item.job.jobid,
+                                                retcode: item.job.retcode,
+                                                status: item.job.status,
+                                            }))
+                                        );
                                     }
                                 },
-                                typ: "row",
+                                typ: "multi-row",
                             },
                             condition: (data: Table.RowData) => data["status"] === "ACTIVE",
                         })
@@ -239,14 +244,20 @@ export class JobInit {
                             title: "Delete job",
                             command: "delete-job",
                             callback: {
-                                fn: async (view: Table.View, data: Table.RowInfo) => {
-                                    const child = children.find((c) => data.row.id === c.job?.jobid);
-                                    if (child) {
-                                        await JobActions.deleteCommand(jobsProvider, child);
-                                        await view.updateRow(data.index, null);
+                                fn: async (view: Table.View, data: Record<number, Table.RowData>) => {
+                                    const childrenToDelete = Object.values(data)
+                                        .map((row) => children.find((c) => row.id === c.job?.jobid))
+                                        .filter((child) => child);
+                                    if (childrenToDelete.length > 0) {
+                                        await JobActions.deleteCommand(jobsProvider, undefined, childrenToDelete);
+                                        const newData = view.getContent();
+                                        for (const index of Object.keys(data).map(Number)) {
+                                            newData.splice(index, 1);
+                                        }
+                                        await view.setContent(newData);
                                     }
                                 },
-                                typ: "row",
+                                typ: "multi-row",
                             },
                         })
                         .build()

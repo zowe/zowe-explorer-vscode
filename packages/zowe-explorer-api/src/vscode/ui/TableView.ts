@@ -23,17 +23,23 @@ export namespace Table {
     export type CellData = ContentTypes;
 
     export type RowInfo = {
-        index: number;
+        index?: number;
         row: RowData;
     };
 
     /* Defines the supported callbacks and related types. */
-    export type CallbackTypes = "row" | "column" | "cell";
-    export type RowCallback = {
+    export type CallbackTypes = "single-row" | "multi-row" | "column" | "cell";
+    export type SingleRowCallback = {
         /** The type of callback */
-        typ: "row";
+        typ: "single-row";
         /** The callback function itself - called from within the webview container. */
         fn: (view: Table.View, row: RowInfo) => void | PromiseLike<void>;
+    };
+    export type MultiRowCallback = {
+        /** The type of callback */
+        typ: "multi-row";
+        /** The callback function itself - called from within the webview container. */
+        fn: (view: Table.View, rows: Record<number, RowData>) => void | PromiseLike<void>;
     };
     export type CellCallback = {
         /** The type of callback */
@@ -48,7 +54,7 @@ export namespace Table {
         fn: (view: Table.View, col: ColData) => void | PromiseLike<void>;
     };
 
-    export type Callback = RowCallback | CellCallback | ColumnCallback;
+    export type Callback = SingleRowCallback | MultiRowCallback | CellCallback | ColumnCallback;
 
     /** Conditional callback function - whether an action or option should be rendered. */
     export type Conditional = (data: RowData | CellData) => boolean;
@@ -363,8 +369,11 @@ export namespace Table {
             ].find((action) => action.command === message.command);
             if (matchingActionable != null) {
                 switch (matchingActionable.callback.typ) {
-                    case "row":
-                        await matchingActionable.callback.fn(this, { index: message.data.rowIndex, row: message.data.row } as RowInfo);
+                    case "single-row":
+                        await matchingActionable.callback.fn(this, { index: message.data.rowIndex, row: message.data.row });
+                        break;
+                    case "multi-row":
+                        await matchingActionable.callback.fn(this, message.data.rows);
                         break;
                     case "cell":
                         await matchingActionable.callback.fn(this, message.data.cell);
@@ -440,6 +449,15 @@ export namespace Table {
                 this.data.contextOpts[id] = options.map((option) => ({ ...option, condition: option.condition?.toString() }));
             }
             return this.updateWebview();
+        }
+
+        /**
+         * Get rows of content from the table view.
+         * @param rows The rows of data in the table
+         * @returns Whether the webview successfully received the new content
+         */
+        public getContent(): RowData[] {
+            return this.data.rows;
         }
 
         /**
