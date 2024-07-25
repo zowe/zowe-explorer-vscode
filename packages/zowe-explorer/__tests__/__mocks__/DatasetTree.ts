@@ -83,11 +83,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweDatasetNode> {
     }
 
     @MockMethod()
-    public async deleteSession(_node?: ZoweDatasetNode): Promise<void> {
-        return new Promise<void>((resolve) => {
-            return resolve();
-        });
-    }
+    public deleteSession(_node?: ZoweDatasetNode): void {}
 
     @MockMethod()
     public async removeFavorite(_node: ZoweDatasetNode) {

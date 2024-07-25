@@ -138,9 +138,10 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      *
      * @param {IZoweJobTreeNode} node
      */
-    public saveSearch(node: IZoweJobTreeNode): void {
+    public async saveSearch(node: IZoweJobTreeNode): Promise<void> {
         ZoweLogger.trace("ZosJobsProvider.saveSearch called.");
         node.contextValue = SharedContext.asFavorite(node);
+        return Promise.resolve();
     }
     public saveFile(_document: vscode.TextDocument): void {
         throw new Error("Method not implemented.");
@@ -511,7 +512,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 job: node.job,
             });
             favJob.command = { command: "zowe.jobs.search", title: "", arguments: [favJob] };
-            this.saveSearch(favJob);
+            await this.saveSearch(favJob);
         } else {
             // Favorite a job
             favJob = new ZoweJobNode({

@@ -589,13 +589,12 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      *
      * @param {IZoweUSSTreeNode} node
      */
-    public async saveSearch(node: IZoweUSSTreeNode): Promise<IZoweUSSTreeNode> {
+    public async saveSearch(node: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("USSTree.saveSearch called.");
         const fullPathLabel = node.fullPath;
         node.label = node.tooltip = fullPathLabel;
         node.contextValue = Constants.USS_SESSION_CONTEXT + Constants.FAV_SUFFIX;
         await this.checkCurrentProfile(node);
-        return node;
     }
 
     /**
