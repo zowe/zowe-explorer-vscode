@@ -81,6 +81,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
             const columns = [
               ...(newData.columns ?? []),
               {
+                ...(newData.columns.find((col) => col.field === "actions") ?? {}),
                 // Prevent cells from being selectable
                 cellStyle: { border: "none", outline: "none" },
                 field: "actions",
