@@ -410,7 +410,7 @@ describe("Test src/shared/extension", () => {
             const spyGuiError = jest.spyOn(Gui, "errorMessage");
 
             // Spy callback behavior
-            const spyGuiInfo = jest.spyOn(Gui, "infoMessage");
+            const spyTranslatedLog = jest.spyOn(vscode.l10n, "t");
             const spyGetProfileInfo = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockImplementationOnce(jest.fn());
             const spyReadConfigFromDisk = jest.spyOn(profUtils.ProfilesUtils, "readConfigFromDisk").mockImplementationOnce(jest.fn());
             const spyRefreshAll = jest.spyOn(SharedActions, "refreshAll").mockImplementation(jest.fn());
@@ -424,14 +424,14 @@ describe("Test src/shared/extension", () => {
             jest.clearAllMocks();
             // Trigger Vault changes
             await onVaultUpdatedCallback();
-            expect(spyGuiInfo.mock.calls[0][0]).toContain("Vault");
+            expect(spyTranslatedLog.mock.calls[0][0]).toContain("vault");
             expect(spyReadConfigFromDisk).toHaveBeenCalled();
             expect(spyRefreshAll).toHaveBeenCalled();
 
             jest.clearAllMocks();
             // Trigger Vault changes
             await onCredentialManagerUpdatedCallback();
-            expect(spyGuiInfo.mock.calls[0][0]).toContain("Credential Manager");
+            expect(spyTranslatedLog.mock.calls[0][0]).toContain("credential management");
             expect(spyGetProfileInfo).toHaveBeenCalled();
             expect(spyRefreshAll).toHaveBeenCalled();
         });

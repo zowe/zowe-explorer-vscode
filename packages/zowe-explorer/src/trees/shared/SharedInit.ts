@@ -341,13 +341,12 @@ export class SharedInit {
 
         try {
             const zoweWatcher = imperative.EventOperator.getWatcher().subscribeUser(imperative.ZoweUserEvents.ON_VAULT_CHANGED, async () => {
-                Gui.infoMessage("Vault change detected. Refreshing profiles...");
-                ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter.fire(Validation.EventType.UPDATE);
-
+                ZoweLogger.info(vscode.l10n.t("Changes in the credential vault detected, refreshing Zowe Explorer."));
                 await ProfilesUtils.readConfigFromDisk();
                 await SharedActions.refreshAll(providers.ds);
                 await SharedActions.refreshAll(providers.uss);
                 await SharedActions.refreshAll(providers.job);
+                ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter.fire(Validation.EventType.UPDATE);
             });
             context.subscriptions.push(new vscode.Disposable(zoweWatcher.close.bind(zoweWatcher)));
         } catch (err) {
@@ -358,13 +357,12 @@ export class SharedInit {
             const zoweWatcher = imperative.EventOperator.getWatcher().subscribeShared(
                 imperative.ZoweSharedEvents.ON_CREDENTIAL_MANAGER_CHANGED,
                 async () => {
-                    Gui.infoMessage("Credential Manager changed. Refreshing Zowe Explorer...");
-                    ZoweExplorerApiRegister.getInstance().onCredMgrUpdateEmitter.fire(Validation.EventType.UPDATE);
-
+                    ZoweLogger.info(vscode.l10n.t("Changes in credential management detected, refreshing Zowe Explorer."));
                     await ProfilesUtils.getProfileInfo();
                     await SharedActions.refreshAll(providers.ds);
                     await SharedActions.refreshAll(providers.uss);
                     await SharedActions.refreshAll(providers.job);
+                    ZoweExplorerApiRegister.getInstance().onCredMgrUpdateEmitter.fire(Validation.EventType.UPDATE);
                 }
             );
             context.subscriptions.push(new vscode.Disposable(zoweWatcher.close.bind(zoweWatcher)));
