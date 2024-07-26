@@ -38,7 +38,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - **Next Breaking:** Changed `ProfilesCache.convertV1ProfToConfig` method to be a static method that requires `ProfileInfo` instance as a parameter.
 - Added the `onVaultUpdate` VSCode event to notify extenders when credentials are updated on the OS vault by other applications. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
 - Added the `onCredMgrsUpdate` VSCode event to notify extenders when the local PC's credential manager has been updated by other applications. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
-- Added return types to most interfaces. [#2952](https://github.com/zowe/zowe-explorer-vscode/issues/2952)
+- Updated most function signatures for exported programmatic interfaces. Changes make developing with the Zowe Explorer API more efficient for extenders by showing which properties they can expect when calling our APIs. [#2952](https://github.com/zowe/zowe-explorer-vscode/issues/2952)
 
 ### Bug fixes
 
