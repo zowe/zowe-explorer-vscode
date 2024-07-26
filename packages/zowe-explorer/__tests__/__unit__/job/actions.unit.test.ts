@@ -919,7 +919,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                     vsCodeOpts: { modal: true },
                 });
             }
-            expect(mocked(Profiles.getInstance)).toHaveBeenCalledTimes(2 * (o + 1));
+            expect(mocked(Profiles.getInstance)).toHaveBeenCalledTimes(o * 4 + 6);
         }
 
         // Test for "Cancel" or closing the dialog
