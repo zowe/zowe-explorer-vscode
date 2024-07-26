@@ -368,7 +368,7 @@ export class ConfigBuilder {
                     },
                     secure: [],
                 },
-                base: {
+                global_base: {
                     type: "base",
                     properties: {
                         host: "sample.com",
@@ -379,7 +379,7 @@ export class ConfigBuilder {
             },
             defaults: {
                 zosmf: "zosmf",
-                base: "base",
+                base: "global_base",
             },
             autoStore: true,
         };
