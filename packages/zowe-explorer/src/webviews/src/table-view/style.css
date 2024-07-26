@@ -23,10 +23,6 @@
     border: 1px solid var(--vscode-menu-foreground) !important;
 }
 
-.ag-theme-vsc.ag-popup {
-    position: absolute;
-}
-
 .szh-menu {
     background-color: var(--vscode-menu-background);
     border: 1px solid var(--vscode-menu-border);
