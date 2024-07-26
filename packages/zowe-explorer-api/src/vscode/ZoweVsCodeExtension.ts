@@ -339,7 +339,6 @@ export class ZoweVsCodeExtension {
                 value: newUser,
                 ...(options.userInputBoxOptions ?? {}),
             });
-            options.session.user = newUser;
         }
         if (!newUser || (options.rePrompt && newUser === "")) {
             return undefined;
@@ -355,13 +354,14 @@ export class ZoweVsCodeExtension {
                 value: newPass,
                 ...(options.passwordInputBoxOptions ?? {}),
             });
-            options.session.password = newPass;
         }
         if (!newPass || (options.rePrompt && newPass === "")) {
             return undefined;
         }
 
-        return [newUser.trim(), newPass.trim()];
+        options.session.user = newUser.trim();
+        options.session.password = newPass.trim();
+        return [options.session.user, options.session.password];
     }
 
     private static async promptCertificate(options: IPromptCertificateOptions): Promise<void> {
