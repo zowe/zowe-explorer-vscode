@@ -30,15 +30,17 @@
  * // Fails with message
  * // Expected mock function to have been called two times, but it was called one time
  */
-export function MockMethod(): (target: any, key: string, descriptor: PropertyDescriptor) => PropertyDescriptor {
-    return (target: any, key: string, descriptor: PropertyDescriptor) => {
+export function MockMethod(): (target: any, key: string, descriptor: PropertyDescriptor) => PropertyDescriptor | undefined {
+    return (target: any, key: string, descriptor: PropertyDescriptor | undefined) => {
         if (descriptor === undefined) {
             descriptor = Object.getOwnPropertyDescriptor(target, key);
         }
-        const originalMethod = descriptor.value;
-        descriptor.value = jest.fn((...args) => {
-            originalMethod.apply(this, args);
-        });
+        if (descriptor != null) {
+            const originalMethod = descriptor.value;
+            descriptor.value = jest.fn((...args) => {
+                originalMethod.apply(this, args);
+            });
+        }
         return descriptor;
     };
 }
