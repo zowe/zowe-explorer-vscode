@@ -231,7 +231,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         }
     }
 
-    public async checkCurrentProfile(node: IZoweTreeNode): Promise<void> {
+    public async checkCurrentProfile(node: IZoweTreeNode): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("ZoweTreeProvider.checkCurrentProfile called.");
         const profile = node.getProfile();
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
@@ -281,6 +281,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
             }
         }
         this.refresh();
+        return profileStatus;
     }
 
     public async ssoLogin(node: IZoweTreeNode): Promise<void> {
