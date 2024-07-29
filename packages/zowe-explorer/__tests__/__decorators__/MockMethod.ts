@@ -32,9 +32,8 @@
  */
 export function MockMethod(): (target: any, key: string, descriptor: PropertyDescriptor) => PropertyDescriptor | undefined {
     return (target: any, key: string, descriptor: PropertyDescriptor | undefined) => {
-        if (descriptor === undefined) {
-            descriptor = Object.getOwnPropertyDescriptor(target, key);
-        }
+        descriptor ??= Object.getOwnPropertyDescriptor(target, key);
+
         if (descriptor != null) {
             const originalMethod = descriptor.value;
             descriptor.value = jest.fn((...args) => {

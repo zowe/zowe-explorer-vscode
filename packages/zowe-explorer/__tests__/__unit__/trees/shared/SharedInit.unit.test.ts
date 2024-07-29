@@ -444,7 +444,7 @@ describe("Test src/shared/extension", () => {
             const spyRefreshAll = jest.spyOn(SharedActions, "refreshAll").mockImplementation(jest.fn());
 
             // Setup watchers
-            await SharedInit.watchConfigProfile(context, { ds: "ds", uss: "uss", job: "job" } as any);
+            await SharedInit.watchConfigProfile(context);
 
             expect(spyWatcher).toHaveBeenCalled();
             expect(spyGuiError).not.toHaveBeenCalled();
@@ -471,7 +471,7 @@ describe("Test src/shared/extension", () => {
             });
             const spyGuiError = jest.spyOn(Gui, "errorMessage");
 
-            await SharedInit.watchConfigProfile(context, { ds: "ds", uss: "uss", job: "job" } as any);
+            await SharedInit.watchConfigProfile(context);
 
             expect(spyWatcher).toHaveBeenCalled();
             expect(spyGuiError.mock.calls[0][0]).toContain("vault changes");

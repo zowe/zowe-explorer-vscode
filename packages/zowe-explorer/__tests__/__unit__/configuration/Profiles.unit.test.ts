@@ -1061,7 +1061,7 @@ describe("Profiles Unit Tests - function enableValidationContext", () => {
 describe("Profiles Unit Tests - function ssoLogin", () => {
     let testNode;
     let globalMocks;
-    beforeEach(async () => {
+    beforeEach(() => {
         globalMocks = createGlobalMocks();
         testNode = new (ZoweTreeNode as any)(
             "fake",
@@ -1127,7 +1127,7 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
 describe("Profiles Unit Tests - function ssoLogout", () => {
     let testNode;
     let globalMocks;
-    beforeEach(async () => {
+    beforeEach(() => {
         globalMocks = createGlobalMocks();
         testNode = new (ZoweTreeNode as any)(
             "fake",
@@ -1208,7 +1208,7 @@ describe("Profiles Unit Tests - function updateBaseProfileFileLogout", () => {
 });
 
 describe("Profiles Unit Tests - function createNonSecureProfile", () => {
-    it("should create an unsecured profile by removing secure arrays and setting autoStore to false", async () => {
+    it("should create an unsecured profile by removing secure arrays and setting autoStore to false", () => {
         const globalMocks = createGlobalMocks();
         const changingConfig = globalMocks.testTeamConfigProfile;
         const privateProfile = Profiles.getInstance() as any;
@@ -1222,7 +1222,7 @@ describe("Profiles Unit Tests - function createNonSecureProfile", () => {
 });
 
 describe("Profiles Unit Tests - function validationArraySetup", () => {
-    it("should setup the validation array", async () => {
+    it("should setup the validation array", () => {
         const globalMocks = createGlobalMocks();
         Object.defineProperty(Profiles.getInstance(), "profilesValidationSetting", {
             value: [
@@ -1303,7 +1303,7 @@ describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
         jest.restoreAllMocks();
     });
 
-    it("should fail to clear filter if no session nodes are available", async () => {
+    it("should fail to clear filter if no session nodes are available", () => {
         const globalMocks = createGlobalMocks();
         const testNode = new (ZoweTreeNode as any)(
             "fake",
@@ -1330,7 +1330,7 @@ describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
         expect(refreshElementSpy).toHaveBeenCalledTimes(0);
     });
 
-    it("should fail to clear filters if the session node is not listed in the tree", async () => {
+    it("should fail to clear filters if the session node is not listed in the tree", () => {
         const globalMocks = createGlobalMocks();
         const testNode = new (ZoweTreeNode as any)(
             "fake",
@@ -1367,7 +1367,7 @@ describe("Profiles Unit Tests - function disableValidation", () => {
         jest.resetAllMocks();
     });
 
-    it("should disable validation for the profile on all trees", async () => {
+    it("should disable validation for the profile on all trees", () => {
         const globalMocks = createGlobalMocks();
         jest.spyOn(SharedTreeProviders, "getSessionForAllTrees").mockReturnValue([globalMocks.testNode]);
         expect(globalMocks.testNode.contextValue).toEqual(Constants.DS_SESSION_CONTEXT);
@@ -1375,7 +1375,7 @@ describe("Profiles Unit Tests - function disableValidation", () => {
         expect(globalMocks.testNode.contextValue).toEqual(Constants.DS_SESSION_CONTEXT + Constants.VALIDATE_SUFFIX);
     });
 
-    it("should disable validation for the profile on the current tree", async () => {
+    it("should disable validation for the profile on the current tree", () => {
         const globalMocks = createGlobalMocks();
         jest.spyOn(SharedTreeProviders, "getSessionForAllTrees").mockReturnValue([globalMocks.testNode]);
         const disableValidationContextSpy = jest.spyOn(Profiles.getInstance(), "disableValidationContext");
@@ -1393,7 +1393,7 @@ describe("Profiles Unit Tests - function enableValidation", () => {
         jest.resetAllMocks();
     });
 
-    it("should enable validation for the profile on all trees", async () => {
+    it("should enable validation for the profile on all trees", () => {
         const globalMocks = createGlobalMocks();
         jest.spyOn(SharedTreeProviders, "getSessionForAllTrees").mockReturnValue([
             createMockNode("test2", Constants.DS_SESSION_CONTEXT),
@@ -1404,7 +1404,7 @@ describe("Profiles Unit Tests - function enableValidation", () => {
         expect(globalMocks.testNode.contextValue).toEqual(Constants.DS_SESSION_CONTEXT + Constants.VALIDATE_SUFFIX);
     });
 
-    it("should enable validation for the profile on the current tree", async () => {
+    it("should enable validation for the profile on the current tree", () => {
         const globalMocks = createGlobalMocks();
         const enableValidationContextSpy = jest.spyOn(Profiles.getInstance(), "enableValidationContext");
         jest.spyOn(SharedTreeProviders, "getSessionForAllTrees").mockReturnValue([globalMocks.testNode]);

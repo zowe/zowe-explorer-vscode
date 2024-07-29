@@ -558,10 +558,10 @@ describe("Shared Actions Unit Tests - Function refreshAll", () => {
         const addedProfTypes = new Set<string>();
         const removeSessionSpy = jest
             .spyOn(TreeViewUtils, "removeSession")
-            .mockImplementation(async (treeProvider, profileName) => removedProfNames.add(profileName));
+            .mockImplementation((treeProvider, profileName) => removedProfNames.add(profileName) as any);
         const addDefaultSessionSpy = jest
             .spyOn(TreeViewUtils, "addDefaultSession")
-            .mockImplementation(async (treeProvider, profileType) => addedProfTypes.add(profileType));
+            .mockImplementation((treeProvider, profileType) => addedProfTypes.add(profileType) as any);
         await SharedActions.refreshAll();
         expect(removeSessionSpy).toHaveBeenCalledTimes(6);
         expect([...removedProfNames]).toEqual(["zosmf", "zosmf2"]);

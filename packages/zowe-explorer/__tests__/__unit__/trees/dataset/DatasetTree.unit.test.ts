@@ -968,10 +968,10 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
 
         await testTree.addFavorite(node);
 
-        expect(testTree.mFavorites[0].label).toBe(`${blockMocks.datasetSessionNode.label?.toString()}`);
-        expect(testTree.mFavorites[0].contextValue).toBe(`${Constants.FAV_PROFILE_CONTEXT}`);
-        expect(testTree.mFavorites[0].children[0].label).toBe(`${node.label?.toString()}`);
-        expect(testTree.mFavorites[0].children[0].contextValue).toBe(`${Constants.DS_DS_CONTEXT}${Constants.FAV_SUFFIX}`);
+        expect(testTree.mFavorites[0].label).toBe(blockMocks.datasetSessionNode.label?.toString());
+        expect(testTree.mFavorites[0].contextValue).toBe(Constants.FAV_PROFILE_CONTEXT);
+        expect(testTree.mFavorites[0].children[0].label).toBe(node.label?.toString());
+        expect(testTree.mFavorites[0].children[0].contextValue).toBe(Constants.DS_DS_CONTEXT + Constants.FAV_SUFFIX);
     });
     it("Checking adding of PDS Dataset node", async () => {
         createGlobalMocks();
@@ -989,10 +989,10 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
 
         await testTree.addFavorite(node);
 
-        expect(testTree.mFavorites[0].label).toBe(`${blockMocks.datasetSessionNode.label?.toString()}`);
-        expect(testTree.mFavorites[0].contextValue).toBe(`${Constants.FAV_PROFILE_CONTEXT}`);
-        expect(testTree.mFavorites[0].children[0].label).toBe(`${node.label?.toString()}`);
-        expect(testTree.mFavorites[0].children[0].contextValue).toBe(`${Constants.DS_PDS_CONTEXT}${Constants.FAV_SUFFIX}`);
+        expect(testTree.mFavorites[0].label).toBe(blockMocks.datasetSessionNode.label?.toString());
+        expect(testTree.mFavorites[0].contextValue).toBe(Constants.FAV_PROFILE_CONTEXT);
+        expect(testTree.mFavorites[0].children[0].label).toBe(node.label?.toString());
+        expect(testTree.mFavorites[0].children[0].contextValue).toBe(Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX);
     });
     it("Checking adding of PDS Member node", async () => {
         createGlobalMocks();
@@ -1012,10 +1012,10 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
 
         await testTree.addFavorite(child);
 
-        expect(testTree.mFavorites[0].label).toBe(`${blockMocks.datasetSessionNode.label?.toString()}`);
-        expect(testTree.mFavorites[0].contextValue).toBe(`${Constants.FAV_PROFILE_CONTEXT}`);
-        expect(testTree.mFavorites[0].children[0].label).toBe(`${parent.label?.toString()}`);
-        expect(testTree.mFavorites[0].children[0].contextValue).toBe(`${Constants.DS_PDS_CONTEXT}${Constants.FAV_SUFFIX}`);
+        expect(testTree.mFavorites[0].label).toBe(blockMocks.datasetSessionNode.label?.toString());
+        expect(testTree.mFavorites[0].contextValue).toBe(Constants.FAV_PROFILE_CONTEXT);
+        expect(testTree.mFavorites[0].children[0].label).toBe(parent.label?.toString());
+        expect(testTree.mFavorites[0].children[0].contextValue).toBe(Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX);
     });
     it("Checking adding of Session node", async () => {
         createGlobalMocks();
@@ -1029,10 +1029,10 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
 
         await testTree.addFavorite(testTree.mSessionNodes[1]);
 
-        expect(testTree.mFavorites[0].label).toBe(`${blockMocks.datasetSessionNode.label?.toString()}`);
-        expect(testTree.mFavorites[0].contextValue).toBe(`${Constants.FAV_PROFILE_CONTEXT}`);
-        expect(testTree.mFavorites[0].children[0].label).toBe(`${testTree.mSessionNodes[1].pattern}`);
-        expect(testTree.mFavorites[0].children[0].contextValue).toBe(`${Constants.DS_SESSION_CONTEXT}${Constants.FAV_SUFFIX}`);
+        expect(testTree.mFavorites[0].label).toBe(blockMocks.datasetSessionNode.label?.toString());
+        expect(testTree.mFavorites[0].contextValue).toBe(Constants.FAV_PROFILE_CONTEXT);
+        expect(testTree.mFavorites[0].children[0].label).toBe(testTree.mSessionNodes[1].pattern);
+        expect(testTree.mFavorites[0].children[0].contextValue).toBe(Constants.DS_SESSION_CONTEXT + Constants.FAV_SUFFIX);
     });
     it("Checking attempt to add a duplicate node", async () => {
         createGlobalMocks();
@@ -1050,7 +1050,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         await testTree.addFavorite(node);
         await testTree.addFavorite(node);
 
-        expect(testTree.mFavorites[0].children.map((entry) => entry.label)).toEqual([`${node.label?.toString()}`]);
+        expect(testTree.mFavorites[0].children.map((entry) => entry.label)).toEqual([node.label?.toString()]);
     });
     it("Checking attempt to add a member of favorite PDS", async () => {
         createGlobalMocks();
@@ -1111,14 +1111,14 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
         await testTree.addFavorite(node1);
         await testTree.addFavorite(node2);
         const profileNodeInFavs = testTree.mFavorites[0];
-        expect(profileNodeInFavs.children[0].label).toBe(`${node1.label?.toString()}`);
-        expect(profileNodeInFavs.children[1].label).toBe(`${node2.label?.toString()}`);
+        expect(profileNodeInFavs.children[0].label).toBe(node1.label?.toString());
+        expect(profileNodeInFavs.children[1].label).toBe(node2.label?.toString());
 
         // Actual test
         await testTree.removeFavorite(profileNodeInFavs.children[0]);
         expect(removeFavProfileSpy).not.toHaveBeenCalled();
         expect(profileNodeInFavs.children.length).toBe(1);
-        expect(profileNodeInFavs.children[0].label).toBe(`${node2.label?.toString()}`);
+        expect(profileNodeInFavs.children[0].label).toBe(node2.label?.toString());
     });
     it("Checking removeFavorite when starting with only one favorite for the profile", async () => {
         createGlobalMocks();
@@ -1139,7 +1139,7 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
         // First we need to have the item and be sure that it's properly added to have legit removal operation
         await testTree.addFavorite(node);
         const profileNodeInFavs = testTree.mFavorites[0];
-        expect(profileNodeInFavs.children[0].label).toBe(`${node.label?.toString()}`);
+        expect(profileNodeInFavs.children[0].label).toBe(node.label?.toString());
         await testTree.removeFavorite(profileNodeInFavs.children[0]);
         expect(removeFavProfileSpy).toHaveBeenCalledWith(profileNodeInFavs.label, false);
         expect(testTree.mFavorites.length).toBe(0);
@@ -1862,7 +1862,7 @@ describe("Dataset Tree Unit Tests - Function findFavoritedNode", () => {
             contextOverride: Constants.FAV_PROFILE_CONTEXT,
         });
         const favoriteNode = new ZoweDatasetNode({
-            label: `${node.label?.toString()}`,
+            label: node.label?.toString(),
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: favProfileNode,
         });

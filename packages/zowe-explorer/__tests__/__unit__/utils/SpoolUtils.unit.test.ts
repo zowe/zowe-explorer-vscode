@@ -101,7 +101,6 @@ describe("SpoolProvider Unit Tests", () => {
             bindJesApi(jesApi);
 
             const spoolOk: zosjobs.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1, procstep: "proc" };
-            // const { id, ddname, stepname, ...withoutIdDdStep } = spoolOk;
             const withoutIdDdStep: Partial<zosjobs.IJobFile> = JSON.parse(JSON.stringify(spoolOk));
             delete withoutIdDdStep.id;
             delete withoutIdDdStep.ddname;
