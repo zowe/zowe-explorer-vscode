@@ -12,6 +12,12 @@
     "provenance": true
   },
   "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "@zowe:bundler": "./src/index.ts",
+      "default": "./lib/index.js"
+    }
+  },
   "files": [
     "lib"
   ],

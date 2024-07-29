@@ -122,9 +122,7 @@ describe("Test src/shared/extension", () => {
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: true },
                     { spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks },
-                    { spy: jest.spyOn(SharedActions, "refreshAll"), arg: ["ds"] },
-                    { spy: jest.spyOn(SharedActions, "refreshAll"), arg: ["uss"] },
-                    { spy: jest.spyOn(SharedActions, "refreshAll"), arg: ["job"] },
+                    { spy: jest.spyOn(SharedActions, "refreshAll"), arg: [] },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
                 ],
             },
@@ -359,39 +357,69 @@ describe("Test src/shared/extension", () => {
 
     describe("watchConfigProfile", () => {
         let context: any;
+        let watcherPromise: any;
         const spyReadFile = jest.fn().mockReturnValue("test");
-        const spyExecuteCommand = jest.fn();
+        const mockEmitter = jest.fn();
         const watcher: any = {
-            onDidCreate: jest.fn().mockImplementation((fun) => fun()),
-            onDidDelete: jest.fn().mockImplementation((fun) => fun()),
-            onDidChange: jest.fn().mockImplementation((fun) => fun("uri")),
+            onDidCreate: jest.fn(),
+            onDidDelete: jest.fn(),
+            onDidChange: jest.fn(),
         };
         beforeEach(() => {
             context = { subscriptions: [] };
             jest.clearAllMocks();
-            Object.defineProperty(vscode.workspace, "createFileSystemWatcher", { value: () => watcher, configurable: true });
             Object.defineProperty(vscode.workspace, "workspaceFolders", { value: [{ uri: { fsPath: "fsPath" } }], configurable: true });
-            Object.defineProperty(vscode.commands, "executeCommand", { value: spyExecuteCommand, configurable: true });
             Object.defineProperty(vscode.workspace, "fs", { value: { readFile: spyReadFile }, configurable: true });
             Object.defineProperty(Constants, "SAVED_PROFILE_CONTENTS", { value: "test", configurable: true });
+            jest.spyOn(vscode.workspace, "createFileSystemWatcher").mockReturnValue(watcher);
+            jest.spyOn(ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter, "fire").mockImplementation(mockEmitter);
         });
 
         afterAll(() => {
             jest.restoreAllMocks();
         });
 
-        it("should be able to trigger all listeners", async () => {
-            const spyRefreshAll = jest.spyOn(SharedActions, "refreshAll").mockImplementation(jest.fn());
-            jest.spyOn(ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter, "fire").mockImplementation();
-            await SharedInit.watchConfigProfile(context, { ds: "ds", uss: "uss", job: "job" } as any);
-            expect(spyExecuteCommand).toHaveBeenCalledWith("zowe.extRefresh");
+        it("should be able to trigger onDidCreate listener", async () => {
+            const spyRefreshAll = jest.spyOn(SharedActions, "refreshAll").mockImplementation();
+            watcher.onDidCreate.mockImplementationOnce((fun) => (watcherPromise = fun()));
+            SharedInit.watchConfigProfile(context);
+            await watcherPromise;
+            expect(context.subscriptions).toContain(watcher);
+            expect(spyRefreshAll).toHaveBeenCalledTimes(1);
+            expect(mockEmitter).toHaveBeenCalledTimes(1);
+        });
+
+        it("should be able to trigger onDidDelete listener", async () => {
+            const spyRefreshAll = jest.spyOn(SharedActions, "refreshAll").mockImplementation();
+            watcher.onDidDelete.mockImplementationOnce((fun) => (watcherPromise = fun()));
+            SharedInit.watchConfigProfile(context);
+            await watcherPromise;
+            expect(context.subscriptions).toContain(watcher);
+            expect(spyRefreshAll).toHaveBeenCalledTimes(1);
+            expect(mockEmitter).toHaveBeenCalledTimes(1);
+        });
+
+        it("should be able to trigger onDidChange listener", async () => {
+            const spyRefreshAll = jest.spyOn(SharedActions, "refreshAll").mockImplementation();
+            watcher.onDidChange.mockImplementationOnce((fun) => (watcherPromise = fun("uri")));
+            SharedInit.watchConfigProfile(context);
+            await watcherPromise;
             expect(context.subscriptions).toContain(watcher);
             expect(spyReadFile).toHaveBeenCalledWith("uri");
             expect(spyRefreshAll).not.toHaveBeenCalled();
+            expect(mockEmitter).not.toHaveBeenCalled();
+        });
 
-            spyReadFile.mockReturnValue("other");
-            await SharedInit.watchConfigProfile(context, { ds: "ds", uss: "uss", job: "job" } as any);
-            expect(spyRefreshAll).toHaveBeenCalled();
+        it("should be able to trigger onDidChange listener with changes", async () => {
+            const spyRefreshAll = jest.spyOn(SharedActions, "refreshAll").mockImplementation();
+            spyReadFile.mockReturnValueOnce("other");
+            watcher.onDidChange.mockImplementationOnce((fun) => (watcherPromise = fun("uri")));
+            SharedInit.watchConfigProfile(context);
+            await watcherPromise;
+            expect(context.subscriptions).toContain(watcher);
+            expect(spyReadFile).toHaveBeenCalledWith("uri");
+            expect(spyRefreshAll).toHaveBeenCalledTimes(1);
+            expect(mockEmitter).toHaveBeenCalledTimes(1);
         });
 
         it("should trigger callbacks when credentials or credManager are updated by another application", async () => {
