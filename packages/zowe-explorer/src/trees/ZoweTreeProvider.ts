@@ -23,6 +23,7 @@ import { ProfilesUtils } from "../utils/ProfilesUtils";
 import { SharedActions } from "./shared/SharedActions";
 import { IconUtils } from "../icons/IconUtils";
 import { AuthUtils } from "../utils/AuthUtils";
+import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 export class ZoweTreeProvider<T extends IZoweTreeNode> {
     // Event Emitters used to notify subscribers that the refresh event has fired
@@ -356,12 +357,6 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
                 }
             }
         }
-        if (treeProvider.mSessionNodes.length === 1) {
-            try {
-                await treeProvider.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
-            } catch (error) {
-                ZoweLogger.warn(error);
-            }
-        }
+        await TreeViewUtils.addDefaultSession(treeProvider, profileType);
     }
 }
