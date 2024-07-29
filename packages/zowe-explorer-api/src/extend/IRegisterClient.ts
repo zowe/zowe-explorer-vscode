@@ -118,7 +118,7 @@ export interface IRegisterClient {
     /**
      * Define events that fire whenever the credential manager is updated.
      */
-    onCredMgrsUpdate?: vscode.Event<Validation.EventType>;
+    onCredMgrUpdate?: vscode.Event<Validation.EventType>;
 
     /**
      * Lookup of any registered API (Uss, Mvs, Jes, or Command).

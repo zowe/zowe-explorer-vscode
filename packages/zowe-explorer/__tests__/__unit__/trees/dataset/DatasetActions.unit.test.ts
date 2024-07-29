@@ -240,7 +240,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             session: blockMocks.session,
         });
         const nonFavoriteLabel = parent.label;
-        parent.label = `${parent.label?.toString()}`;
+        parent.label = parent.label?.toString();
         parent.contextValue = Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX;
 
         const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("testMember");

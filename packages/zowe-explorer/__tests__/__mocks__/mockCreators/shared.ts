@@ -23,7 +23,7 @@ import { Definitions } from "../../../src/configuration/Definitions";
 
 const MOCK_PROFILES = [];
 
-export function createPersistentConfig(): any {
+export function createPersistentConfig(): Partial<Definitions.ZowePersistentFilter> & Partial<vscode.Memento> {
     return {
         persistence: true,
         get: (): Partial<Definitions.ZowePersistentFilter> => {
@@ -34,7 +34,7 @@ export function createPersistentConfig(): any {
         },
         update: jest.fn(() => {
             return {};
-        }),
+        }) as any,
     };
 }
 

@@ -279,7 +279,7 @@ describe("fetchEncodingForUri", () => {
         const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
         const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation((entry) => {
             entry.encoding = { kind: "text" };
-            return new Promise((resolve) => resolve());
+            return Promise.resolve();
         });
         await UssFSProvider.instance.fetchEncodingForUri(testUris.file);
 
