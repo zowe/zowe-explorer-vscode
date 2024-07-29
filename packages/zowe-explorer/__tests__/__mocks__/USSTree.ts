@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweTreeNode, Validation } from "@zowe/zowe-explorer-api";
 import { ZoweUSSNode } from "../../src/trees/uss/ZoweUSSNode";
 import { MockMethod } from "../__decorators__/MockMethod";
 import { createTreeView } from "./mockCreators/shared";
@@ -98,7 +98,9 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    public async checkCurrentProfile(_node: IZoweUSSTreeNode): Promise<void> {}
+    public checkCurrentProfile(_node: IZoweUSSTreeNode): Validation.IValidationProfile | Promise<Validation.IValidationProfile> {
+        return { status: "inactive", name: "mock" };
+    }
 
     /**
      * @param {string} name - The name to remove from the file history array

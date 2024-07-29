@@ -14,6 +14,7 @@ import * as imperative from "@zowe/imperative";
 import { IZoweTreeNode, ZosEncoding } from "./IZoweTreeNode";
 import { PersistenceSchemaEnum } from "../profiles/UserSettings";
 import { Types } from "../Types";
+import { Validation } from "../profiles/Validation";
 
 /**
  * The base interface for Zowe tree browsers that implement the
@@ -94,10 +95,10 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
     createZoweSchema(zoweFileProvider: IZoweTree<IZoweTreeNode>): void | Promise<void>;
 
     /**
-     * Adds a favorite node
-     * @param favorite Adds a favorite node
+     * Validates the profile for the given node
+     * @param node Node to validate/check its current profile
      */
-    checkCurrentProfile(node: IZoweTreeNode): void | Promise<void>;
+    checkCurrentProfile(node: IZoweTreeNode): Validation.IValidationProfile | Promise<Validation.IValidationProfile>;
 
     /**
      * Log in to authentication service
