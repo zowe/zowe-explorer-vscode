@@ -40,7 +40,7 @@ describe("ZoweCommandProvider Unit Tests", () => {
 });
 
 describe("ZoweCommandProvide Unit Tests - function checkCurrentProfile", () => {
-    const testNode = new ZoweDatasetNode({
+    const testNode: any = new ZoweDatasetNode({
         label: "test",
         collapsibleState: vscode.TreeItemCollapsibleState.None,
         session: globalMocks.testSession,

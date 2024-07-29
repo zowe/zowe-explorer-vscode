@@ -19,7 +19,6 @@ import { Constants } from "../configuration/Constants";
 import { IconGenerator } from "../icons/IconGenerator";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { SharedTreeProviders } from "./shared/SharedTreeProviders";
-import { ProfilesUtils } from "../utils/ProfilesUtils";
 import { SharedActions } from "./shared/SharedActions";
 import { IconUtils } from "../icons/IconUtils";
 import { AuthUtils } from "../utils/AuthUtils";
@@ -213,22 +212,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
     public async editSession(node: IZoweTreeNode): Promise<void> {
         ZoweLogger.trace("ZoweTreeProvider.editSession called.");
         const profile = node.getProfile();
-        const EditSession = await Profiles.getInstance().editSession(profile);
-        if (EditSession) {
-            node.getProfile().profile = EditSession as imperative.IProfile;
-            ProfilesUtils.setProfile(node, EditSession as imperative.IProfile);
-            if (node.getSession()) {
-                ProfilesUtils.setSession(node, EditSession as imperative.ISession);
-            } else {
-                this.deleteSession(node.getSessionNode());
-                this.mHistory.addSession(node.label as string);
-                await this.addSession({ sessionName: node.getProfileName() });
-            }
-            this.refresh();
-            // Remove the edited profile from profilesForValidation
-            // Revalidate updated profile and update the validation icon
-            await this.checkCurrentProfile(node);
-        }
+        await Profiles.getInstance().editSession(profile);
     }
 
     public async checkCurrentProfile(node: IZoweTreeNode): Promise<Validation.IValidationProfile> {

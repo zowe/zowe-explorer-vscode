@@ -99,7 +99,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      */
     @MockMethod()
     public checkCurrentProfile(_node: IZoweUSSTreeNode): Validation.IValidationProfile | Promise<Validation.IValidationProfile> {
-        return { status: "inactive", name: "mock" };
+        return { status: "unverified", name: "mock" };
     }
 
     /**
@@ -146,9 +146,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      */
     @MockMethod()
     public getChildren(_element?: ZoweUSSNode): Promise<ZoweUSSNode[]> {
-        return new Promise<ZoweUSSNode[]>((resolve) => {
-            return resolve([]);
-        });
+        return Promise.resolve([]);
     }
 
     /**
@@ -174,10 +172,8 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
     }
 
     @MockMethod()
-    public async addSession(_sessionName?: string): Promise<void> {
-        return new Promise<void>((resolve) => {
-            return resolve();
-        });
+    public addSession(_sessionName?: string): void | Promise<void> {
+        return Promise.resolve();
     }
 
     @MockMethod()

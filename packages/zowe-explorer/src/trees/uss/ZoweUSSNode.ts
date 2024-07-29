@@ -376,7 +376,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * Helper method to change the UI node names in one go
      * @param newFullPath string
      */
-    public async rename(newFullPath: string): Promise<boolean> {
+    public async rename(newFullPath: string): Promise<zosfiles.IZosFilesResponse> {
         ZoweLogger.trace("ZoweUSSNode.rename called.");
 
         const oldUri = vscode.Uri.from({
@@ -407,7 +407,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
         const providers = SharedTreeProviders.providers;
         providers.uss.refresh();
-        return true;
+        return {
+            success: true,
+            commandResponse: null,
+        };
     }
 
     /**
