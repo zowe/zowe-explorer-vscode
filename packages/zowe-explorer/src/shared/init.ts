@@ -115,7 +115,7 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             // If the log folder location has been changed, update current log folder preference
-            if (e.affectsConfiguration(globals.SETTINGS_LOGS_FOLDER_PATH)) {
+            if (e.affectsConfiguration(globals.SETTINGS_LOGS_FOLDER_PATH) || e.affectsConfiguration(globals.LOGGER_SETTINGS)) {
                 await ZoweLogger.initializeZoweLogger(context);
             }
             // If the temp folder location has been changed, update current temp folder preference
@@ -125,19 +125,13 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
             }
             if (e.affectsConfiguration(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION)) {
                 await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
-                await refreshActions.refreshAll(providers.ds);
-                await refreshActions.refreshAll(providers.uss);
-                await refreshActions.refreshAll(providers.job);
+                await refreshActions.refreshAll();
             }
             if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_HIDE)) {
                 await hideTempFolder(getZoweDir());
             }
-
             if (e.affectsConfiguration(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
                 await vscode.commands.executeCommand("zowe.updateSecureCredentials");
-            }
-            if (e.affectsConfiguration(globals.LOGGER_SETTINGS)) {
-                await vscode.commands.executeCommand("zowe.extRefresh");
             }
         })
     );
@@ -232,7 +226,7 @@ export function registerCredentialManager(context: vscode.ExtensionContext): voi
     );
 }
 
-export function watchConfigProfile(context: vscode.ExtensionContext, providers: IZoweProviders): void {
+export function watchConfigProfile(context: vscode.ExtensionContext): void {
     ZoweLogger.trace("shared.init.watchConfigProfile called.");
     const watchers: vscode.FileSystemWatcher[] = [];
     watchers.push(vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(getZoweDir(), "{zowe.config,zowe.config.user}.json")));
@@ -250,12 +244,12 @@ export function watchConfigProfile(context: vscode.ExtensionContext, providers: 
     watchers.forEach((watcher) => {
         watcher.onDidCreate(async () => {
             ZoweLogger.info(localize("watchConfigProfile.create", "Team config file created, refreshing Zowe Explorer."));
-            await vscode.commands.executeCommand("zowe.extRefresh");
+            await refreshActions.refreshAll();
             ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.CREATE);
         });
         watcher.onDidDelete(async () => {
             ZoweLogger.info(localize("watchConfigProfile.delete", "Team config file deleted, refreshing Zowe Explorer."));
-            await vscode.commands.executeCommand("zowe.extRefresh");
+            await refreshActions.refreshAll();
             ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.DELETE);
         });
         watcher.onDidChange(async (uri: vscode.Uri) => {
@@ -265,13 +259,8 @@ export function watchConfigProfile(context: vscode.ExtensionContext, providers: 
                 return;
             }
             globals.setSavedProfileContents(newProfileContents);
-            await refreshActions.refreshAll(providers.ds);
-            await refreshActions.refreshAll(providers.uss);
-            await refreshActions.refreshAll(providers.job);
+            await refreshActions.refreshAll();
             ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.UPDATE);
-            if (globals.ISTHEIA) {
-                await vscode.commands.executeCommand("zowe.extRefresh");
-            }
         });
     });
 }
