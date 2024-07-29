@@ -125,13 +125,13 @@ export class ProfilesUtils {
         const customCredentialManagerExtension =
             credentialManagerMap.credMgrZEName && vscode.extensions.getExtension(credentialManagerMap.credMgrZEName);
         const credentialManager = await ProfilesUtils.activateCredentialManagerOverride(customCredentialManagerExtension);
-        if (credentialManager) {
+        if (credentialManager && credentialManagerMap.credMgrDisplayName) {
             Object.setPrototypeOf(credentialManager.prototype, imperative.AbstractCredentialManager.prototype);
             ProfilesUtils.updateCredentialManagerSetting(credentialManagerMap.credMgrDisplayName);
             return new imperative.ProfileInfo("zowe", {
                 credMgrOverride: {
                     Manager: credentialManager,
-                    service: credentialManagerMap.credMgrDisplayName.toString(),
+                    service: credentialManagerMap.credMgrDisplayName,
                 },
             });
         }
