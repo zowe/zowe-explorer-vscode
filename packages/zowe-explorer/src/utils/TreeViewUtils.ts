@@ -15,6 +15,7 @@ import { IconGenerator } from "../icons/IconGenerator";
 import type { ZoweTreeProvider } from "../trees/ZoweTreeProvider";
 import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
 import { ZoweLogger } from "../tools/ZoweLogger";
+import { Profiles } from "../configuration/Profiles";
 
 export class TreeViewUtils {
     /**
@@ -95,5 +96,15 @@ export class TreeViewUtils {
         setting.sessions = sess;
         setting.favorites = fave;
         ZoweLocalStorage.setValue(treeType, setting);
+    }
+
+    public static async addDefaultSession(treeProvider: IZoweTree<IZoweTreeNode>, profileType: string): Promise<void> {
+        if (treeProvider.mSessionNodes.length === 1) {
+            try {
+                await treeProvider.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+            } catch (error) {
+                ZoweLogger.warn(error);
+            }
+        }
     }
 }

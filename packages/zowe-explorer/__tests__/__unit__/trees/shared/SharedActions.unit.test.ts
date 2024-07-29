@@ -16,6 +16,7 @@ import {
     createISessionWithoutCredentials,
     createQuickPickContent,
     createQuickPickItem,
+    createTreeProviders,
     createTreeView,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
@@ -34,6 +35,8 @@ import { FilterDescriptor, FilterItem } from "../../../../src/management/FilterM
 import { SharedActions } from "../../../../src/trees/shared/SharedActions";
 import { IconUtils } from "../../../../src/icons/IconUtils";
 import { IconGenerator } from "../../../../src/icons/IconGenerator";
+import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
+import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -540,5 +543,29 @@ describe("Shared Actions Unit Tests - Function resetValidationSettings", () => {
         });
         const response = await SharedActions.resetValidationSettings(testNode, true);
         expect(response.contextValue).toContain(`${Constants.VALIDATE_SUFFIX}true`);
+    });
+});
+
+describe("Shared Actions Unit Tests - Function refreshAll", () => {
+    afterAll(() => {
+        jest.restoreAllMocks();
+    });
+
+    it("should refresh all tree providers and update session nodes", async () => {
+        createGlobalMocks();
+        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(createTreeProviders());
+        const removedProfNames = new Set<string>();
+        const addedProfTypes = new Set<string>();
+        const removeSessionSpy = jest
+            .spyOn(TreeViewUtils, "removeSession")
+            .mockImplementation(async (treeProvider, profileName) => removedProfNames.add(profileName));
+        const addDefaultSessionSpy = jest
+            .spyOn(TreeViewUtils, "addDefaultSession")
+            .mockImplementation(async (treeProvider, profileType) => addedProfTypes.add(profileType));
+        await SharedActions.refreshAll();
+        expect(removeSessionSpy).toHaveBeenCalledTimes(6);
+        expect([...removedProfNames]).toEqual(["zosmf", "zosmf2"]);
+        expect(addDefaultSessionSpy).toHaveBeenCalledTimes(3);
+        expect([...addedProfTypes]).toEqual(["zosmf"]);
     });
 });
