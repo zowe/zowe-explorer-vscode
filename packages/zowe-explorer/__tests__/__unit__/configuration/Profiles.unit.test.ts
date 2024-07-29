@@ -994,8 +994,8 @@ describe("Profiles Unit Tests - function enableValidationContext", () => {
 describe("Profiles Unit Tests - function ssoLogin", () => {
     let testNode;
     let globalMocks;
-    beforeEach(async () => {
-        globalMocks = await createGlobalMocks();
+    beforeEach(() => {
+        globalMocks = createGlobalMocks();
         testNode = new (ZoweTreeNode as any)(
             "fake",
             vscode.TreeItemCollapsibleState.None,
@@ -1060,8 +1060,8 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
 describe("Profiles Unit Tests - function ssoLogout", () => {
     let testNode;
     let globalMocks;
-    beforeEach(async () => {
-        globalMocks = await createGlobalMocks();
+    beforeEach(() => {
+        globalMocks = createGlobalMocks();
         testNode = new (ZoweTreeNode as any)(
             "fake",
             vscode.TreeItemCollapsibleState.None,
@@ -1069,7 +1069,7 @@ describe("Profiles Unit Tests - function ssoLogout", () => {
             globalMocks.testSession,
             globalMocks.testProfile
         );
-
+        testNode.profile.profile.password = undefined;
         testNode.profile.profile.user = "fake";
         Object.defineProperty(Profiles.getInstance(), "allProfiles", {
             value: [
