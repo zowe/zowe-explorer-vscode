@@ -39,46 +39,48 @@ function createGlobalMocks() {
     };
 }
 
-describe("TableMediator::getInstance", () => {
-    it("returns an instance of TableMediator", () => {
-        expect(TableMediator.getInstance()).toBeInstanceOf(TableMediator);
-    });
-});
-
-describe("TableMediator::addTable", () => {
-    it("adds the given table object to its internal map", () => {
-        const globalMocks = createGlobalMocks();
-        TableMediator.getInstance().addTable(globalMocks.table);
-        expect((TableMediator.getInstance() as any).tables.get(globalMocks.table.getId())).toBe(globalMocks.table);
-        (TableMediator.getInstance() as any).tables = new Map();
-    });
-});
-
-describe("TableMediator::getTable", () => {
-    it("retrieves the table by ID using its internal map", () => {
-        const globalMocks = createGlobalMocks();
-        const tableId = globalMocks.table.getId();
-        TableMediator.getInstance().addTable(globalMocks.table);
-        expect(TableMediator.getInstance().getTable(tableId)).toBe(globalMocks.table);
-        (TableMediator.getInstance() as any).tables = new Map();
-    });
-});
-
-describe("TableMediator::removeTable", () => {
-    it("removes a table view from its internal map", () => {
-        const globalMocks = createGlobalMocks();
-        const tableId = globalMocks.table.getId();
-        TableMediator.getInstance().addTable(globalMocks.table);
-        expect(TableMediator.getInstance().removeTable(globalMocks.table)).toBe(true);
-        expect((TableMediator.getInstance() as any).tables.get(globalMocks.table.getId())).toBe(undefined);
-        expect(TableMediator.getInstance().getTable(tableId)).toBe(undefined);
+describe("TableMediator", () => {
+    describe("getInstance", () => {
+        it("returns an instance of TableMediator", () => {
+            expect(TableMediator.getInstance()).toBeInstanceOf(TableMediator);
+        });
     });
 
-    it("returns false if the table instance does not exist in the map", () => {
-        const globalMocks = createGlobalMocks();
-        globalMocks.createWebviewPanelMock.mockReturnValueOnce(globalMocks.mockPanel as any);
-        const table2 = new TableBuilder(globalMocks.extensionContext as any).build();
-        TableMediator.getInstance().addTable(globalMocks.table);
-        expect(TableMediator.getInstance().removeTable(table2)).toBe(false);
+    describe("addTable", () => {
+        it("adds the given table object to its internal map", () => {
+            const globalMocks = createGlobalMocks();
+            TableMediator.getInstance().addTable(globalMocks.table);
+            expect((TableMediator.getInstance() as any).tables.get(globalMocks.table.getId())).toBe(globalMocks.table);
+            (TableMediator.getInstance() as any).tables = new Map();
+        });
+    });
+
+    describe("getTable", () => {
+        it("retrieves the table by ID using its internal map", () => {
+            const globalMocks = createGlobalMocks();
+            const tableId = globalMocks.table.getId();
+            TableMediator.getInstance().addTable(globalMocks.table);
+            expect(TableMediator.getInstance().getTable(tableId)).toBe(globalMocks.table);
+            (TableMediator.getInstance() as any).tables = new Map();
+        });
+    });
+
+    describe("removeTable", () => {
+        it("removes a table view from its internal map", () => {
+            const globalMocks = createGlobalMocks();
+            const tableId = globalMocks.table.getId();
+            TableMediator.getInstance().addTable(globalMocks.table);
+            expect(TableMediator.getInstance().removeTable(globalMocks.table)).toBe(true);
+            expect((TableMediator.getInstance() as any).tables.get(globalMocks.table.getId())).toBe(undefined);
+            expect(TableMediator.getInstance().getTable(tableId)).toBe(undefined);
+        });
+
+        it("returns false if the table instance does not exist in the map", () => {
+            const globalMocks = createGlobalMocks();
+            globalMocks.createWebviewPanelMock.mockReturnValueOnce(globalMocks.mockPanel as any);
+            const table2 = new TableBuilder(globalMocks.extensionContext as any).build();
+            TableMediator.getInstance().addTable(globalMocks.table);
+            expect(TableMediator.getInstance().removeTable(table2)).toBe(false);
+        });
     });
 });
