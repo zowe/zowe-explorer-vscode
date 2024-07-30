@@ -13,7 +13,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as util from "util";
 import * as vscode from "vscode";
-import { Gui, imperative, ProfilesCache, Validation, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { createAltTypeIProfile, createInstanceOfProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
 import { Constants } from "../../../src/configuration/Constants";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
@@ -23,7 +23,6 @@ import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtende
 import { FilterItem } from "../../../src/management/FilterManagement";
 import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
-import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
 
 jest.mock("../../../src/tools/ZoweLogger");
 jest.mock("fs");
@@ -45,9 +44,8 @@ describe("ProfilesUtils unit tests", () => {
             mockGetDirectValue: jest.fn(),
             mockFileRead: { overrides: { CredentialManager: "@zowe/cli" } },
             zoweDir: path.normalize("__tests__/.zowe/settings/imperative.json"),
-            profInstance: null,
+            profInstance: createInstanceOfProfile(createValidIProfile()),
         };
-        newMocks.profInstance = createInstanceOfProfile(createValidIProfile());
         Object.defineProperty(Constants, "PROFILES_CACHE", {
             value: newMocks.profInstance,
             configurable: true,
@@ -316,11 +314,10 @@ describe("ProfilesUtils unit tests", () => {
             await expect(ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
             Object.defineProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", { value: false, configurable: true });
 
-            expect(msgSpy).toHaveBeenCalledWith(
-                // eslint-disable-next-line max-len
-                "Zowe v1 profiles in use.\nZowe Explorer no longer supports v1 profiles, choose to convert existing profiles to a team configuration or create new.",
-                { items: ["Create New", "Convert Existing Profiles"], vsCodeOpts: { modal: true } }
-            );
+            expect(msgSpy).toHaveBeenCalledWith(expect.stringContaining("Zowe V1 profiles in use."), {
+                items: ["Convert Existing Profiles", "Create New"],
+                vsCodeOpts: { modal: true },
+            });
             expect(commandSpy).toHaveBeenCalledWith("zowe.ds.addSession", undefined);
             msgSpy.mockRestore();
             commandSpy.mockRestore();
@@ -347,18 +344,34 @@ describe("ProfilesUtils unit tests", () => {
         it("should prompt user if v1 profiles detected and Convert Existing Profiles chosen", async () => {
             const mocks = createBlockMocks();
             const mockReadProfilesFromDisk = jest.fn();
-            const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockReturnValueOnce({
+            const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
-                getTeamConfig: jest.fn().mockReturnValue([]),
+                getTeamConfig: jest.fn().mockReturnValue({ configName: "zowe.config.json" }),
                 getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
             } as never);
             const infoMsgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Convert Existing Profiles" as any);
-            Object.defineProperty(mocks.profInstance, "convertV1ProfToConfig", {
-                value: jest.fn().mockResolvedValue(() => {
-                    return { success: "success string.", warnings: "", convertResult: {} };
+            Object.defineProperty(imperative, "ConvertMsgFmt", {
+                value: jest.fn().mockReturnValue({
+                    REPORT_LINE: 1,
+                    ERROR_LINE: 2,
+                    PARAGRAPH: 4,
+                    INDENT: 8,
                 }),
                 configurable: true,
             });
+            jest.spyOn(ProfilesCache, "convertV1ProfToConfig").mockResolvedValueOnce({
+                msgs: [
+                    { msgFormat: imperative.ConvertMsgFmt.PARAGRAPH, msgText: "message text for testing." },
+                    { msgFormat: imperative.ConvertMsgFmt.INDENT, msgText: "message text for testing." },
+                ],
+                profilesConverted: { zosmf: ["myzosmf"] },
+                profilesFailed: [
+                    { name: "zosmf2", type: "zosmf", error: "failed" as any },
+                    { name: null, type: "zosmf", error: "failed" as any },
+                ],
+            } as any);
+            Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn().mockReturnValue({}), configurable: true });
+            Object.defineProperty(Gui, "showTextDocument", { value: jest.fn(), configurable: true });
 
             Object.defineProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", { value: true, configurable: true });
             await expect(ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();

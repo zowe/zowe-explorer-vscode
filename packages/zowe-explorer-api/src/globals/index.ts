@@ -12,4 +12,3 @@
 export * from "./Constants";
 export * from "./Gui";
 export * from "./GuiOptions";
-export * from "./Interfaces";

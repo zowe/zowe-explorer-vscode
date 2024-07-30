@@ -1770,7 +1770,7 @@
     ]
   },
   "scripts": {
-    "build": "pnpm clean:bundle && pnpm license && webpack --mode development && pnpm madge",
+    "build": "pnpm copy-secrets && pnpm clean:bundle && pnpm license && webpack --mode development && pnpm madge",
     "test": "pnpm test:unit",
     "test:e2e": "cd __tests__/__e2e__/ && wdio run ./wdio.conf.ts",
     "test:integration": "cd __tests__/__integration__/bdd && wdio run ./wdio.conf.ts",
@@ -1796,7 +1796,8 @@
     "pretty": "prettier --write .",
     "createTestProfileData": "tsx ./scripts/createTestProfileData.ts",
     "createDemoNodes": "tsx ./scripts/createDemoNodes.ts",
-    "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src && node ./scripts/generatePoeditorJson.js"
+    "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src && node ./scripts/generatePoeditorJson.js",
+    "copy-secrets": "tsx ./scripts/getSecretsPrebuilds.ts"
   },
   "engines": {
     "vscode": "^1.79.0"
@@ -1820,7 +1821,6 @@
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
-    "copy-webpack-plugin": "^12.0.2",
     "eslint-plugin-zowe-explorer": "3.0.0-next-SNAPSHOT",
     "expect": "^24.8.0",
     "expect-webdriverio": "^4.13.0",
@@ -1835,12 +1835,12 @@
     "webdriverio": "^8.36.1"
   },
   "dependencies": {
-    "@zowe/core-for-zowe-sdk": "8.0.0-next.202404032038",
-    "@zowe/secrets-for-zowe-sdk": "8.0.0-next.202404032038",
-    "@zowe/zos-files-for-zowe-sdk": "8.0.0-next.202404032038",
-    "@zowe/zos-jobs-for-zowe-sdk": "8.0.0-next.202404032038",
-    "@zowe/zosmf-for-zowe-sdk": "8.0.0-next.202404032038",
-    "@zowe/zowe-explorer-api": "workspace:3.0.0-next-SNAPSHOT",
+    "@zowe/core-for-zowe-sdk": "8.0.0-next.202407051717",
+    "@zowe/secrets-for-zowe-sdk": "8.0.0-next.202407051717",
+    "@zowe/zos-files-for-zowe-sdk": "8.0.0-next.202407051717",
+    "@zowe/zos-jobs-for-zowe-sdk": "8.0.0-next.202407051717",
+    "@zowe/zosmf-for-zowe-sdk": "8.0.0-next.202407051717",
+    "@zowe/zowe-explorer-api": "3.0.0-next-SNAPSHOT",
     "dayjs": "^1.11.10",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",

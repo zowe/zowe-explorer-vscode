@@ -22,6 +22,7 @@ import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { FilterItem, FilterDescriptor } from "../../management/FilterManagement";
 import { IconUtils } from "../../icons/IconUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
+import { SharedTreeProviders } from "./SharedTreeProviders";
 
 export class SharedActions {
     /**
@@ -231,8 +232,14 @@ export class SharedActions {
      *
      * @param {IZoweTree} treeProvider
      */
-    public static async refreshAll(treeProvider: IZoweTree<IZoweTreeNode>): Promise<void> {
+    public static async refreshAll(treeProvider?: IZoweTree<IZoweTreeNode>): Promise<void> {
         ZoweLogger.trace("refresh.refreshAll called.");
+        if (treeProvider == null) {
+            for (const provider of Object.values(SharedTreeProviders.providers)) {
+                await this.refreshAll(provider);
+            }
+            return;
+        }
         await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
         for (const sessNode of treeProvider.mSessionNodes) {
             const profiles = await Profiles.getInstance().fetchAllProfiles();
@@ -246,6 +253,9 @@ export class SharedActions {
             } else {
                 await TreeViewUtils.removeSession(treeProvider, sessNode.label.toString().trim());
             }
+        }
+        for (const profType of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
+            await TreeViewUtils.addDefaultSession(treeProvider, profType);
         }
         treeProvider.refresh();
     }

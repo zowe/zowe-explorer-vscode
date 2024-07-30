@@ -51,7 +51,6 @@
     "rimraf": "^3.0.2",
     "terser-webpack-plugin": "^5.3.10",
     "ts-jest": "^29.0.3",
-    "tsconfig-paths-webpack-plugin": "^4.1.0",
     "tsx": "^4.9.3",
     "typescript": "^5.3.3",
     "webpack": "^5.89.0",
@@ -74,6 +73,6 @@
     "test:parallel": "pnpm -r --parallel --color test",
     "package": "pnpm -r --sequential package",
     "preinstall": "npx only-allow pnpm",
-    "update-sdks": "pnpm -r update \"@zowe/*@next\" \"!@zowe/zowe-explorer-api\""
+    "update-sdks": "pnpm -r update \"@zowe/*@next\" \"!@zowe/zowe-explorer-api\" \"!@zowe/zos-ftp-for-zowe-cli\""
   }
 }
