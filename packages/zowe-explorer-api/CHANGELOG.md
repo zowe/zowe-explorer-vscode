@@ -36,6 +36,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added PEM certificate support as an authentication method for logging into the API ML. [#2621](https://github.com/zowe/zowe-explorer-vscode/issues/2621)
 - Deprecated the `getUSSDocumentFilePath` function on the `IZoweTreeNode` interface as Zowe Explorer no longer uses the local file system for storing USS files. **No replacement is planned**; please access data from tree nodes using their [resource URIs](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#operations-for-extenders) instead. [#2968](https://github.com/zowe/zowe-explorer-vscode/pull/2968)
 - **Next Breaking:** Changed `ProfilesCache.convertV1ProfToConfig` method to be a static method that requires `ProfileInfo` instance as a parameter.
+- Added support for logging in to multiple API ML instances per team config file. [#2264](https://github.com/zowe/zowe-explorer-vscode/issues/2264)
 
 ### Bug fixes
 

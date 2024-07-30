@@ -183,11 +183,9 @@ export class ZoweVsCodeExtension {
             // If base profile already has a token type stored, then we check whether or not the connection details are the same
             (serviceProfile.profile.host === baseProfile.profile.host && serviceProfile.profile.port === baseProfile.profile.port);
         // If the connection details do not match, then we MUST forcefully store the token in the service profile
-        let profileToUpdate: imperative.IProfileLoaded;
+        let profileToUpdate = serviceProfile;
         if (connOk) {
             profileToUpdate = serviceProfile.name.startsWith(baseProfile.name + ".") ? { ...baseProfile, type: null } : baseProfile;
-        } else {
-            profileToUpdate = serviceProfile;
         }
 
         await cache.updateBaseProfileFileLogin(profileToUpdate, updBaseProfile, !connOk);
@@ -241,11 +239,7 @@ export class ZoweVsCodeExtension {
                 serviceProfile.profile.host === baseProfile.profile.host &&
                 serviceProfile.profile.port === baseProfile.profile.port &&
                 !serviceProfile.name.startsWith(baseProfile.name + ".");
-            if (connOk) {
-                await cache.updateBaseProfileFileLogout(baseProfile);
-            } else {
-                await cache.updateBaseProfileFileLogout(serviceProfile);
-            }
+            await cache.updateBaseProfileFileLogout(connOk ? baseProfile : serviceProfile);
         }
     }
 
