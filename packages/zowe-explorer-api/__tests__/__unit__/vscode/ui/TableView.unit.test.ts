@@ -325,6 +325,7 @@ describe("Table.View", () => {
             const globalMocks = createGlobalMocks();
             const allCallbackMock = jest.fn();
             const zeroCallbackMock = jest.fn();
+            const multiCallbackMock = jest.fn();
             const data = {
                 title: "Some table",
                 rows: [{ a: 1, b: 1, c: 1 }],
@@ -344,14 +345,24 @@ describe("Table.View", () => {
                                 },
                             },
                         } as Table.Action,
+                        {
+                            title: "Multi action",
+                            command: "multi-action",
+                            callback: {
+                                typ: "multi-row",
+                                fn: (_view: Table.View, row: Record<number, Table.RowData>) => {
+                                    multiCallbackMock();
+                                },
+                            },
+                        } as Table.Action,
                     ],
                     1: [
                         {
                             title: "Zero action",
                             command: "zero-action",
                             callback: {
-                                typ: "cell",
-                                fn: (_view: Table.View, _cell: Table.CellData) => {
+                                typ: "single-row",
+                                fn: (_view: Table.View, row: Table.RowInfo) => {
                                     zeroCallbackMock();
                                 },
                             },
@@ -361,7 +372,8 @@ describe("Table.View", () => {
             };
             const view = new Table.View(globalMocks.context as any, false, data);
             const writeTextMock = jest.spyOn(env.clipboard, "writeText");
-            // case 1: An action that exists for all rows
+
+            // case 1: A cell action that exists for all rows
             const mockWebviewMsg = {
                 command: "some-action",
                 data: { cell: data.rows[0].a, row: data.rows[0] },
@@ -371,7 +383,8 @@ describe("Table.View", () => {
             expect(writeTextMock).not.toHaveBeenCalled();
             expect(globalMocks.updateWebviewMock).not.toHaveBeenCalled();
             expect(allCallbackMock).toHaveBeenCalled();
-            // case 2: An action that exists for one row
+
+            // case 2: A single-row action that exists for one row
             const mockNextWebviewMsg = {
                 command: "zero-action",
                 data: { cell: data.rows[0].a, row: data.rows[0] },
@@ -381,6 +394,17 @@ describe("Table.View", () => {
             expect(writeTextMock).not.toHaveBeenCalled();
             expect(globalMocks.updateWebviewMock).not.toHaveBeenCalled();
             expect(zeroCallbackMock).toHaveBeenCalled();
+
+            // case 2: A multi-row action that exists for all rows
+            const mockFinalWebviewMsg = {
+                command: "multi-action",
+                data: { cell: data.rows[0].a, rows: data.rows },
+                rowIndex: 2,
+            };
+            await view.onMessageReceived(mockFinalWebviewMsg);
+            expect(writeTextMock).not.toHaveBeenCalled();
+            expect(globalMocks.updateWebviewMock).not.toHaveBeenCalled();
+            expect(multiCallbackMock).toHaveBeenCalled();
         });
     });
 
@@ -586,6 +610,35 @@ describe("Table.View", () => {
             await view.addAction(2, singleRowAction);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
             expect((view as any).data.actions[2]).toStrictEqual([{ ...singleRowAction, condition: singleRowAction.condition?.toString() }]);
+            globalMocks.updateWebviewMock.mockRestore();
+        });
+    });
+
+    describe("getContent", () => {
+        it("returns the content provided to the table view", () => {
+            const globalMocks = createGlobalMocks();
+            const view = new Table.View(globalMocks.context as any, false, { rows: [{ d: true, e: false, f: true }], title: "Table" } as any);
+            expect(view.getContent()).toStrictEqual([{ d: true, e: false, f: true }]);
+        });
+    });
+
+    describe("updateRow", () => {
+        it("updates the rows on the internal data structure and calls updateWebview", async () => {
+            const globalMocks = createGlobalMocks();
+            const mockRow = { a: 2, b: 2, c: 2 };
+
+            // case 1: Update the contents of a single row with new contents
+            const data = { title: "Table w/ content", rows: [{ a: 1, b: 2, c: 3 }] };
+            const view = new Table.View(globalMocks.context as any, data as any);
+            globalMocks.updateWebviewMock.mockImplementation();
+            await view.updateRow(0, mockRow);
+            expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
+            globalMocks.updateWebviewMock.mockClear();
+
+            // case 2: Remove a row from the table
+            await view.updateRow(0, null);
+            expect((view as any).data.rows.length).toBe(0);
+            expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
             globalMocks.updateWebviewMock.mockRestore();
         });
     });

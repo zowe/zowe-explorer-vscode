@@ -54,7 +54,7 @@ export namespace Table {
         fn: (view: Table.View, col: ColData) => void | PromiseLike<void>;
     };
 
-    export type Callback = SingleRowCallback | MultiRowCallback | CellCallback | ColumnCallback;
+    export type Callback = SingleRowCallback | MultiRowCallback | CellCallback;
 
     /** Conditional callback function - whether an action or option should be rendered. */
     export type Conditional = (data: RowData | CellData) => boolean;
@@ -378,8 +378,8 @@ export namespace Table {
                     case "cell":
                         await matchingActionable.callback.fn(this, message.data.cell);
                         break;
-                    case "column":
-                        // TODO
+                    // TODO: Support column callbacks? (if there's enough interest)
+                    default:
                         break;
                 }
             }
