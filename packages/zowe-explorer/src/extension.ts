@@ -48,6 +48,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         async () => SharedInit.setupRemoteWorkspaceFolders()
     );
     SharedInit.registerCommonCommands(context, providers);
+    SharedInit.registerZosConsoleView(context);
     SharedInit.registerRefreshCommand(context, activate, deactivate);
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
 
