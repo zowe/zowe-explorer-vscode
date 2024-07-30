@@ -277,6 +277,14 @@ describe("Unit Tests (Jest)", () => {
             profile: profileOne,
             contextOverride: globals.INFORMATION_CONTEXT,
         });
+
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+                };
+            }),
+        });
         rootNode.contextValue = globals.DS_SESSION_CONTEXT;
         rootNode.dirty = false;
         await expect(await rootNode.getChildren()).toEqual([infoChild]);
@@ -299,6 +307,14 @@ describe("Unit Tests (Jest)", () => {
             parentNode: rootNode,
             profile: profileOne,
             contextOverride: globals.INFORMATION_CONTEXT,
+        });
+
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+                };
+            }),
         });
         rootNode.contextValue = globals.DS_SESSION_CONTEXT;
         await expect(await rootNode.getChildren()).toEqual([infoChild]);

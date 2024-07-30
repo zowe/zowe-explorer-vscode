@@ -724,6 +724,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const profile = blockMocks.imperativeProfile;
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -732,6 +733,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                         status: "unverified",
                     }),
                     validProfile: ValidProfileEnum.UNVERIFIED,
+                    loadNamedProfile: jest.fn().mockReturnValue(profile),
                 };
             }),
         });
@@ -910,7 +912,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                     vsCodeOpts: { modal: true },
                 });
             }
-            expect(mocked(Profiles.getInstance)).toHaveBeenCalledTimes(2 * (o + 1));
+            expect(mocked(Profiles.getInstance)).toHaveBeenCalledTimes(o * 4 + 6);
         }
 
         // Test for "Cancel" or closing the dialog

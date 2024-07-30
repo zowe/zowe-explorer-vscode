@@ -21,6 +21,8 @@ import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { Gui } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
+import { Profiles } from "../../../src/Profiles";
+import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 
 jest.mock("fs");
 jest.mock("fs", () => ({
@@ -66,6 +68,17 @@ describe("TempFolder Unit Tests", () => {
         Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
         Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
         jest.spyOn(ProfileUtils, "errorHandling").mockImplementationOnce(jest.fn());
+
+        const profile = createIProfile();
+
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(profile),
+                };
+            }),
+        });
+
         return newMocks;
     }
 

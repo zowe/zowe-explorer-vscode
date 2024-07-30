@@ -124,6 +124,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        const profile = blockMocks.imperativeProfile;
 
         mocked(blockMocks.mvsApi.getContents).mockResolvedValueOnce({
             success: true,
@@ -137,6 +138,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
             value: jest.fn(() => {
                 return {
                     validProfile: ValidProfileEnum.UNVERIFIED,
+                    loadNamedProfile: jest.fn().mockReturnValue(profile),
                 };
             }),
         });
@@ -145,7 +147,6 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: blockMocks.datasetSessionNode,
         });
-
         await node.openDs(false, true, blockMocks.testDatasetTree);
 
         expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
@@ -365,6 +366,14 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 });
 
 describe("ZoweDatasetNode Unit Tests - Function node.setEncoding()", () => {
+    function createBlockMocks() {
+        const imperativeProfile = createIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        return {
+            imperativeProfile,
+            profileInstance,
+        };
+    }
     it("sets encoding to binary", () => {
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setEncoding({ kind: "binary" });
@@ -387,10 +396,12 @@ describe("ZoweDatasetNode Unit Tests - Function node.setEncoding()", () => {
     });
 
     it("sets encoding for favorite node", () => {
+        const blockMocks = createBlockMocks();
         const parentNode = new ZoweDatasetNode({
             label: "favoriteTest",
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
             contextOverride: globals.FAV_PROFILE_CONTEXT,
+            profile: blockMocks.imperativeProfile,
         });
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode });
         node.setEncoding({ kind: "text" });
