@@ -33,6 +33,7 @@ import { DatasetTree } from "../dataset/DatasetTree";
 import { USSTree } from "../uss/USSTree";
 import { ZosJobsProvider } from "../job/ZosJobsProvider";
 import { CertificateWizard } from "../utils/CertificateWizard";
+import { ZosConsoleViewProvider } from "../zosconsole/ZosConsolePanel";
 
 // Set up localization
 nls.config({
@@ -263,6 +264,11 @@ export function watchConfigProfile(context: vscode.ExtensionContext): void {
             ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.UPDATE);
         });
     });
+}
+
+export function registerZosConsoleView(context: vscode.ExtensionContext): void {
+    const provider = new ZosConsoleViewProvider(context.extensionUri);
+    context.subscriptions.push(vscode.window.registerWebviewViewProvider(ZosConsoleViewProvider.viewType, provider));
 }
 
 export function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTree<IZoweTreeNode>): void {

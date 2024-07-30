@@ -44,8 +44,8 @@
       ],
       "panel": [
         {
-          "id": "zosconsole",
-          "title": "z/OS Console",
+          "id": "zowezosconsole",
+          "title": "Zowe Explorer z/OS Console",
           "icon": ""
         }
       ]
@@ -65,7 +65,7 @@
           "name": "%zowe.jobs.explorer%"
         }
       ],
-      "zosconsole": [
+      "zowezosconsole": [
         {
           "id": "zosconsole",
           "name": "z/OS Console",

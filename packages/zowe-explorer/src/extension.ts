@@ -19,7 +19,7 @@ import { ProfilesUtils } from "./utils/ProfilesUtils";
 import { initializeSpoolProvider } from "./SpoolProvider";
 import { cleanTempDir, hideTempFolder, findRecoveredFiles } from "./utils/TempFolder";
 import { SettingsConfig } from "./utils/SettingsConfig";
-import { registerCommonCommands, registerCredentialManager, registerRefreshCommand, watchConfigProfile } from "./shared/init";
+import { registerCommonCommands, registerCredentialManager, registerRefreshCommand, registerZosConsoleView, watchConfigProfile } from "./shared/init";
 import { ZoweLogger } from "./utils/LoggerUtils";
 import { ZoweSaveQueue } from "./abstract/ZoweSaveQueue";
 import { PollDecorator } from "./utils/DecorationProviders";
@@ -28,7 +28,6 @@ import { initDatasetProvider } from "./dataset/init";
 import { initUSSProvider } from "./uss/init";
 import { initJobsProvider } from "./job/init";
 import { ZoweLocalStorage } from "./utils/ZoweLocalStorage";
-import { ZosConsoleViewProvider } from "./zosconsole/ZosConsolePanel";
 
 /**
  * The function that runs when the extension is loaded
@@ -61,13 +60,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     const providers = await TreeProviders.initializeProviders(context, { ds: initDatasetProvider, uss: initUSSProvider, job: initJobsProvider });
 
     registerCommonCommands(context, providers);
+    registerZosConsoleView(context);
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
     await SettingsConfig.standardizeSettings();
     watchConfigProfile(context);
     globals.setActivated(true);
     findRecoveredFiles();
-    const provider = new ZosConsoleViewProvider(context.extensionUri);
-    context.subscriptions.push(vscode.window.registerWebviewViewProvider(ZosConsoleViewProvider.viewType, provider));
     return ZoweExplorerApiRegister.getInstance();
 }
 /**
