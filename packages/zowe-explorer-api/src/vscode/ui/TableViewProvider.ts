@@ -14,7 +14,7 @@ import { Table } from "./TableView";
 
 export class TableViewProvider implements WebviewViewProvider {
     private view: WebviewView;
-    private tableView: Table.View;
+    private tableView: Table.Instance = null;
 
     private static instance: TableViewProvider;
 
@@ -28,7 +28,10 @@ export class TableViewProvider implements WebviewViewProvider {
         return this.instance;
     }
 
-    public setTableView(tableView: Table.View | null): void {
+    public setTableView(tableView: Table.Instance | null): void {
+        if (this.tableView != null) {
+            this.tableView.dispose();
+        }
         this.tableView = tableView;
 
         if (tableView == null) {
