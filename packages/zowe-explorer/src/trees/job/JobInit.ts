@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweJobTreeNode, IZoweTreeNode, ZoweScheme, imperative, Gui, TableBuilder, Table, TableViewProvider } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, IZoweTreeNode, ZoweScheme, imperative, Gui } from "@zowe/zowe-explorer-api";
 import { JobTree } from "./JobTree";
 import { JobActions } from "./JobActions";
 import { ZoweJobNode } from "./ZoweJobNode";
@@ -21,7 +21,7 @@ import { SharedInit } from "../shared/SharedInit";
 import { SharedUtils } from "../shared/SharedUtils";
 import { JobFSProvider } from "./JobFSProvider";
 import { PollProvider } from "./JobPollProvider";
-import { SharedTreeProviders } from "../shared/SharedTreeProviders";
+
 export class JobInit {
     /**
      * Creates the Job tree that contains nodes of sessions, jobs and spool items
@@ -145,125 +145,6 @@ export class JobInit {
             )
         );
         context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.copyName", async (job: IZoweJobTreeNode) => JobActions.copyName(job)));
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.jobs.tabularView", async (node, nodeList) => {
-                const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
-                if (selectedNodes.length !== 1) {
-                    return;
-                }
-
-                const profileNode = selectedNodes[0];
-                const children = await profileNode.getChildren();
-
-                TableViewProvider.getInstance().setTableView(
-                    new TableBuilder(context)
-                        .options({
-                            autoSizeStrategy: { type: "fitCellContents", colIds: ["name", "class", "owner", "id", "retcode", "status"] },
-                            rowSelection: "multiple",
-                        })
-                        .isView()
-                        .title(`Jobs view: ${profileNode.owner} | ${profileNode.prefix} | ${profileNode.status}`)
-                        .rows(
-                            ...children.map((item) => ({
-                                name: item.job.jobname,
-                                class: item.job.class,
-                                owner: item.job.owner,
-                                id: item.job.jobid,
-                                retcode: item.job.retcode,
-                                status: item.job.status,
-                            }))
-                        )
-                        .columns(
-                            ...[
-                                { field: "name", checkboxSelection: true, filter: true, sort: "asc" } as Table.ColumnOpts,
-                                {
-                                    field: "class",
-                                    filter: true,
-                                },
-                                { field: "owner", filter: true },
-                                { field: "id", headerName: "ID", filter: true },
-                                { field: "retcode", headerName: "Return Code", filter: true },
-                                { field: "status", filter: true },
-                                { field: "actions", hide: true },
-                            ]
-                        )
-                        .addContextOption("all", {
-                            title: "Get JCL",
-                            command: "get-jcl",
-                            callback: {
-                                fn: async (view: Table.View, data: Table.RowInfo) => {
-                                    const child = children.find((c) => data.row.id === c.job?.jobid);
-                                    if (child != null) {
-                                        await JobActions.downloadJcl(child as ZoweJobNode);
-                                    }
-                                },
-                                typ: "single-row",
-                            },
-                        })
-                        .addContextOption("all", {
-                            title: "Reveal in tree",
-                            command: "edit",
-                            callback: {
-                                fn: async (view: Table.View, data: Table.RowInfo) => {
-                                    const child = children.find((c) => data.row.id === c.job?.jobid);
-                                    if (child) {
-                                        await jobsProvider.getTreeView().reveal(child, { expand: true });
-                                    }
-                                },
-                                typ: "single-row",
-                            },
-                        })
-                        .addRowAction("all", {
-                            title: "Cancel",
-                            command: "cancel-job",
-                            callback: {
-                                fn: async (view: Table.View, data: Record<number, Table.RowData>) => {
-                                    const childrenToCancel = Object.values(data)
-                                        .map((row) => children.find((c) => row.id === c.job?.jobid))
-                                        .filter((child) => child);
-                                    if (childrenToCancel.length > 0) {
-                                        await JobActions.cancelJobs(SharedTreeProviders.job, childrenToCancel);
-                                        const profNode = childrenToCancel[0].getSessionNode() as ZoweJobNode;
-                                        await view.setContent(
-                                            (await profNode.getChildren()).map((item) => ({
-                                                name: item.job.jobname,
-                                                class: item.job.class,
-                                                owner: item.job.owner,
-                                                id: item.job.jobid,
-                                                retcode: item.job.retcode,
-                                                status: item.job.status,
-                                            }))
-                                        );
-                                    }
-                                },
-                                typ: "multi-row",
-                            },
-                            condition: (data: Table.RowData) => data["status"] === "ACTIVE",
-                        })
-                        .addRowAction("all", {
-                            title: "Delete",
-                            command: "delete-job",
-                            callback: {
-                                fn: async (view: Table.View, data: Record<number, Table.RowData>) => {
-                                    const childrenToDelete = Object.values(data)
-                                        .map((row) => children.find((c) => row.id === c.job?.jobid))
-                                        .filter((child) => child);
-                                    if (childrenToDelete.length > 0) {
-                                        await JobActions.deleteCommand(jobsProvider, undefined, childrenToDelete);
-                                        const newData = view.getContent();
-                                        for (const index of Object.keys(data).map(Number)) {
-                                            newData.splice(index, 1);
-                                        }
-                                        await view.setContent(newData);
-                                    }
-                                },
-                                typ: "multi-row",
-                            },
-                        })
-                        .build()
-                );
-            })
-        );
         context.subscriptions.push(
             vscode.workspace.onDidOpenTextDocument((doc) => {
                 if (doc.uri.scheme !== ZoweScheme.Jobs) {
