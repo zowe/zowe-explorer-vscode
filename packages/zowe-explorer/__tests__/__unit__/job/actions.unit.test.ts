@@ -875,13 +875,6 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
 
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        // Object.defineProperty(Profiles, "getInstance", {
-        //     value: jest.fn(() => {
-        //         return {
-        //             loadNamedProfile: jest.fn().mockReturnValue(blockMocks.profileInstance),
-        //         };
-        //     }),
-        // });
         const dataset = new ZoweDatasetNode({
             label: "TESTUSER.DATASET",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
