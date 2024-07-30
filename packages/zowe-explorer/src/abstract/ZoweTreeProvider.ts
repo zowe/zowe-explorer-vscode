@@ -25,6 +25,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeProviders } from "../shared/TreeProviders";
 import { IZoweProviders } from "../shared/init";
 import { resetValidationSettings } from "../shared/actions";
+import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 // Set up localization
 nls.config({
@@ -376,12 +377,6 @@ export class ZoweTreeProvider {
                 }
             }
         }
-        if (treeProvider.mSessionNodes.length === 1) {
-            try {
-                await treeProvider.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
-            } catch (error) {
-                ZoweLogger.warn(error);
-            }
-        }
+        await TreeViewUtils.addDefaultSession(treeProvider, profileType);
     }
 }

@@ -17,6 +17,8 @@ import { returnIconState } from "./actions";
 import * as contextually from "../shared/context";
 import { removeSession } from "../utils/SessionUtils";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { TreeProviders } from "./TreeProviders";
+import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 /**
  * View (DATA SETS, JOBS, USS) refresh button
@@ -24,8 +26,14 @@ import { ZoweLogger } from "../utils/LoggerUtils";
  *
  * @param {IZoweTree} treeProvider
  */
-export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>): Promise<void> {
+export async function refreshAll(treeProvider?: IZoweTree<IZoweTreeNode>): Promise<void> {
     ZoweLogger.trace("refresh.refreshAll called.");
+    if (treeProvider == null) {
+        for (const provider of Object.values(TreeProviders.providers)) {
+            await this.refreshAll(provider);
+        }
+        return;
+    }
     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
     for (const sessNode of treeProvider.mSessionNodes) {
         const profiles = await Profiles.getInstance().fetchAllProfiles();
@@ -39,6 +47,9 @@ export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>): Promis
         } else {
             await removeSession(treeProvider, sessNode.label.toString().trim());
         }
+    }
+    for (const profType of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
+        await TreeViewUtils.addDefaultSession(treeProvider, profType);
     }
     treeProvider.refresh();
 }

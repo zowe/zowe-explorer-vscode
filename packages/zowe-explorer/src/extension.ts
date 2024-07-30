@@ -62,7 +62,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     registerCommonCommands(context, providers);
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
     await SettingsConfig.standardizeSettings();
-    await watchConfigProfile(context, providers);
+    watchConfigProfile(context);
     globals.setActivated(true);
     findRecoveredFiles();
     return ZoweExplorerApiRegister.getInstance();

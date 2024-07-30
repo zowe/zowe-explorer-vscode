@@ -14,6 +14,7 @@ import { ZoweLogger } from "./LoggerUtils";
 import { TreeViewExpansionEvent } from "vscode";
 import { getIconByNode } from "../generators/icons";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
+import { Profiles } from "../Profiles";
 
 export class TreeViewUtils {
     /**
@@ -52,5 +53,15 @@ export class TreeViewUtils {
                 treeProvider.mOnDidChangeTreeData.fire(e.element);
             }
         };
+    }
+
+    public static async addDefaultSession(treeProvider: IZoweTree<IZoweTreeNode>, profileType: string): Promise<void> {
+        if (treeProvider.mSessionNodes.length === 1) {
+            try {
+                await treeProvider.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+            } catch (error) {
+                ZoweLogger.warn(error);
+            }
+        }
     }
 }
