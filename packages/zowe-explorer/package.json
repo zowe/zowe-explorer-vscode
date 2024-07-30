@@ -179,11 +179,6 @@
         }
       },
       {
-        "command": "zowe.jobs.tabularView",
-        "title": "%jobsTableView%",
-        "category": "Zowe Explorer"
-      },
-      {
         "command": "zowe.uss.copyPath",
         "title": "%uss.copyPath%",
         "category": "Zowe Explorer"
@@ -1262,13 +1257,8 @@
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
-          "command": "zowe.jobs.tabularView",
-          "group": "100_zowe_tableview"
-        },
-        {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
           "command": "zowe.editHistory",
-          "group": "101_zowe_editHistory"
+          "group": "100_zowe_editHistory"
         },
         {
           "when": "viewItem =~ /^(textFile|member.*|ds.*)/ && !listMultiSelection",
