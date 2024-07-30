@@ -13,7 +13,7 @@ import { CancellationToken, WebviewView, WebviewViewProvider, WebviewViewResolve
 import { Table } from "./TableView";
 
 export class TableViewProvider implements WebviewViewProvider {
-    private view: WebviewView;
+    private view?: WebviewView;
     private tableView: Table.Instance = null;
 
     private static instance: TableViewProvider;
@@ -35,7 +35,9 @@ export class TableViewProvider implements WebviewViewProvider {
         this.tableView = tableView;
 
         if (tableView == null) {
-            this.view.webview.html = "";
+            if (this.view != null) {
+                this.view.webview.html = "";
+            }
             return;
         }
 
