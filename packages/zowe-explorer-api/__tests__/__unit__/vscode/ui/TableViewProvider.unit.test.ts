@@ -10,7 +10,7 @@
  */
 
 import { EventEmitter, ExtensionContext, WebviewView } from "vscode";
-import { TableBuilder, TableViewProvider } from "../../../../lib";
+import { TableBuilder, TableViewProvider } from "../../../../src/vscode/ui";
 
 describe("TableViewProvider", () => {
     const fakeExtContext = {
