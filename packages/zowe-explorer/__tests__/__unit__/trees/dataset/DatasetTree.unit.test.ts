@@ -1753,7 +1753,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
 
         await testTree.editSession(node);
 
-        expect(node.getProfile().profile).toBe("testProfile");
+        expect(node.getProfile().profile).toEqual(blockMocks.imperativeProfile.profile);
     });
 });
 describe("Dataset Tree Unit Tests - Function getAllLoadedItems", () => {

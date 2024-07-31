@@ -59,18 +59,16 @@ describe("ZoweCommandProvide Unit Tests - function checkCurrentProfile", () => {
         jest.spyOn(SharedContext, "isSessionNotFav").mockReturnValue(true);
     });
     it("should check current profile and perform the case when status is 'active'", async () => {
-        jest.spyOn(Profiles.getInstance(), "checkCurrentProfile").mockResolvedValue({
-            name: "test",
-            status: "active",
-        });
-        await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(undefined);
+        const profileStatus = { name: "test", status: "active" };
+
+        jest.spyOn(Profiles.getInstance(), "checkCurrentProfile").mockResolvedValue(profileStatus);
+        await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(profileStatus);
     });
     it("should check current profile and perform the case when status is 'unverified'", async () => {
-        jest.spyOn(Profiles.getInstance(), "checkCurrentProfile").mockResolvedValue({
-            name: "test",
-            status: "unverified",
-        });
-        await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(undefined);
+        const profileStatus = { name: "test", status: "unverified" };
+
+        jest.spyOn(Profiles.getInstance(), "checkCurrentProfile").mockResolvedValue(profileStatus);
+        await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(profileStatus);
     });
     it("should check current profile and perform the case when status is 'inactive'", async () => {
         Object.defineProperty(ZoweCommandProvider, "mOnDidChangeTreeData", {
@@ -79,12 +77,10 @@ describe("ZoweCommandProvide Unit Tests - function checkCurrentProfile", () => {
             },
             configurable: true,
         });
-        jest.spyOn(Profiles.getInstance(), "checkCurrentProfile").mockResolvedValue({
-            name: "test",
-            status: "inactive",
-        });
+        const profileStatus = { name: "test", status: "inactive" };
+        jest.spyOn(Profiles.getInstance(), "checkCurrentProfile").mockResolvedValue(profileStatus);
         const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
-        await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(undefined);
+        await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(profileStatus);
         expect(errorHandlingSpy).toHaveBeenCalledWith(
             "Profile Name " +
                 globalMocks.testProfile.name +
