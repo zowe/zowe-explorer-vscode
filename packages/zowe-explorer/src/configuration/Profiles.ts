@@ -40,7 +40,7 @@ import { AuthUtils } from "../utils/AuthUtils";
 export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: imperative.Logger): Promise<Profiles> {
-        Profiles.loader = new Profiles(log, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
+        Profiles.loader = new Profiles(log, vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file")?.uri.fsPath);
         Constants.PROFILES_CACHE = Profiles.loader;
         await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
         await Profiles.getInstance().getProfileInfo();
@@ -428,14 +428,15 @@ export class Profiles extends ProfilesCache {
             let user = false;
             let global = true;
             let rootPath = FileManagement.getZoweDir();
-            if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
+            const workspaceDir = vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file");
+            if (vscode.workspace.workspaceFolders && workspaceDir != null) {
                 const choice = await this.getConfigLocationPrompt("create");
                 if (choice === undefined) {
                     Gui.showMessage(this.profilesOpCancelled);
                     return;
                 }
                 if (choice === "project") {
-                    rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+                    rootPath = workspaceDir.uri.fsPath;
                     global = false;
                 }
             }
@@ -452,7 +453,7 @@ export class Profiles extends ProfilesCache {
                 homeDir: FileManagement.getZoweDir(),
                 projectDir: FileManagement.getFullPath(rootPath),
             });
-            if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
+            if (vscode.workspace.workspaceFolders && workspaceDir != null) {
                 config.api.layers.activate(user, global, rootPath);
             }
 
@@ -980,7 +981,7 @@ export class Profiles extends ProfilesCache {
         const existingLayers: imperative.IConfigLayer[] = [];
         const config = await imperative.Config.load("zowe", {
             homeDir: FileManagement.getZoweDir(),
-            projectDir: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+            projectDir: vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file")?.uri.fsPath,
         });
         const layers = config.layers;
         layers.forEach((layer) => {

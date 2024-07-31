@@ -91,7 +91,7 @@ export class SettingsConfig {
         const localStorageIsMigrated = ZoweLocalStorage.getValue<boolean>(Definitions.LocalStorageKey.SETTINGS_LOCAL_STORAGE_MIGRATED);
         const globalIsMigrated = ZoweLocalStorage.getValue<boolean>(Definitions.LocalStorageKey.SETTINGS_OLD_SETTINGS_MIGRATED);
         const workspaceIsMigrated = SettingsConfig.configurations.inspect(Definitions.LocalStorageKey.SETTINGS_OLD_SETTINGS_MIGRATED).workspaceValue;
-        const workspaceIsOpen = vscode.workspace.workspaceFolders !== undefined;
+        const workspaceIsOpen = vscode.workspace.workspaceFolders != null && vscode.workspace.workspaceFolders.some((f) => f.uri.scheme === "file");
         const zoweSettingsExist = SettingsConfig.zoweOldConfigurations.length > 0;
 
         if (!localStorageIsMigrated) {

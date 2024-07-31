@@ -320,8 +320,9 @@ export class ProfilesUtils {
         ZoweLogger.trace("ProfilesUtils.readConfigFromDisk called.");
         let rootPath: string;
         const mProfileInfo = await ProfilesUtils.getProfileInfo();
-        if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
-            rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+        const workspacePath = vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file")?.uri.fsPath;
+        if (workspacePath) {
+            rootPath = workspacePath;
             await mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: FileManagement.getFullPath(rootPath) });
         } else {
             await mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: undefined });

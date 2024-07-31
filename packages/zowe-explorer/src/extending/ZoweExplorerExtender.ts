@@ -60,7 +60,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
                 const isRootConfigError = errorDetails.match(/(?:[\\]{1,2}|\/)(\.zowe)(?:[\\]{1,2}|\/)/) != null;
                 // If the v2 config error does not apply to the global Zowe config, check for a project-level config.
                 if (vscode.workspace.workspaceFolders != null && !isRootConfigError) {
-                    configPath = this.getConfigLocation(vscode.workspace.workspaceFolders[0].uri.fsPath);
+                    configPath = this.getConfigLocation(vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file")?.uri.fsPath);
                 } else {
                     configPath = this.getConfigLocation(FileManagement.getZoweDir());
                 }
@@ -144,8 +144,8 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
         // will be created with the appropriate meta data. If not called the user will
         // see errors when creating a profile of any type.
         const zoweDir = FileManagement.getZoweDir();
-        const workspaceDir = vscode.workspace.workspaceFolders?.[0];
-        const projectDir = workspaceDir ? FileManagement.getFullPath(workspaceDir.uri.fsPath) : undefined;
+        const workspaceDir = vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file")?.uri;
+        const projectDir = workspaceDir ? FileManagement.getFullPath(workspaceDir.fsPath) : undefined;
 
         /**
          * This should create initialize the loadedConfig if it is not already

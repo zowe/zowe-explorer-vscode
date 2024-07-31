@@ -298,12 +298,9 @@ export class SharedInit {
             vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(FileManagement.getZoweDir(), "{zowe.config,zowe.config.user}.json"))
         );
 
-        if (vscode.workspace.workspaceFolders?.[0] != null) {
-            watchers.push(
-                vscode.workspace.createFileSystemWatcher(
-                    new vscode.RelativePattern(vscode.workspace.workspaceFolders[0].uri.fsPath, "{zowe.config,zowe.config.user}.json")
-                )
-            );
+        const workspacePath = vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file")?.uri.fsPath;
+        if (workspacePath) {
+            watchers.push(vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(workspacePath, "{zowe.config,zowe.config.user}.json")));
         }
 
         context.subscriptions.push(...watchers);

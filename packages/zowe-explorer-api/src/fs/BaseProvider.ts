@@ -397,10 +397,11 @@ export class BaseProvider {
 
     protected _lookupAsDirectory(uri: vscode.Uri, silent: boolean): DirEntry {
         const entry = this._lookup(uri, silent);
-        if (FsAbstractUtils.isDirectoryEntry(entry)) {
-            return entry;
+        if (!FsAbstractUtils.isDirectoryEntry(entry)) {
+            throw vscode.FileSystemError.FileNotADirectory(uri);
         }
-        throw vscode.FileSystemError.FileNotADirectory(uri);
+
+        return entry;
     }
 
     protected _createFile(uri: vscode.Uri, options?: { overwrite: boolean }): FileEntry {
