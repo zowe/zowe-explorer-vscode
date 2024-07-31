@@ -125,6 +125,7 @@ export class ZoweVsCodeExtension {
         }
         const baseProfile = await cache.fetchBaseProfile(serviceProfile.name);
         if (baseProfile == null) {
+            Gui.errorMessage(`Login failed: No base profile found to store SSO token for profile "${serviceProfile.name}"`);
             return false;
         }
         const tokenType =
@@ -213,7 +214,7 @@ export class ZoweVsCodeExtension {
         serviceProfile: string | imperative.IProfileLoaded,
         zeRegister?: Types.IApiRegisterClient, // ZoweExplorerApiRegister
         zeProfiles?: ProfilesCache // Profiles extends ProfilesCache
-    ): Promise<void> {
+    ): Promise<boolean> {
         const cache: ProfilesCache = zeProfiles ?? ZoweVsCodeExtension.profilesCache;
         if (typeof serviceProfile === "string") {
             serviceProfile = await ZoweVsCodeExtension.getServiceProfileForAuthPurposes(cache, serviceProfile);
@@ -240,6 +241,10 @@ export class ZoweVsCodeExtension {
                 serviceProfile.profile.port === baseProfile.profile.port &&
                 !serviceProfile.name.startsWith(baseProfile.name + ".");
             await cache.updateBaseProfileFileLogout(connOk ? baseProfile : serviceProfile);
+            return true;
+        } else {
+            Gui.errorMessage(`Logout failed: No base profile found to store SSO token for profile "${serviceProfile.name}"`);
+            return false;
         }
     }
 

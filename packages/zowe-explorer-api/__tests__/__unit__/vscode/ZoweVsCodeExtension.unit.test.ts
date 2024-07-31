@@ -139,16 +139,20 @@ describe("ZoweVsCodeExtension", () => {
         });
 
         it("should not login if the base profile cannot be fetched", async () => {
+            const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
             testCache.fetchBaseProfile.mockResolvedValue(null);
             await ZoweVsCodeExtension.loginWithBaseProfile("service");
             expect(testCache.fetchBaseProfile).toHaveBeenCalledTimes(1);
             expect(testCache.updateBaseProfileFileLogin).not.toHaveBeenCalled();
+            expect(errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Login failed: No base profile found"));
         });
         it("should not logout if the base profile cannot be fetched", async () => {
+            const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
             testCache.fetchBaseProfile.mockResolvedValue(null);
             await ZoweVsCodeExtension.logoutWithBaseProfile("service");
             expect(testCache.fetchBaseProfile).toHaveBeenCalledTimes(1);
             expect(testCache.updateBaseProfileFileLogin).not.toHaveBeenCalled();
+            expect(errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Logout failed: No base profile found"));
         });
 
         describe("user and password chosen", () => {
