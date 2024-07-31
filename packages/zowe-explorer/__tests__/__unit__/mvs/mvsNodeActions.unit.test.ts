@@ -18,6 +18,7 @@ import { createIProfile, createISession, createTreeView } from "../../../__mocks
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { Profiles } from "../../../src/Profiles";
 
 async function createGlobalMocks() {
     const newMocks = {
@@ -90,6 +91,13 @@ describe("mvsNodeActions", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         const testTree = createDatasetTree(blockMocks.sessNode, globalMocks.treeView);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(globalMocks.profileOne),
+                };
+            }),
+        });
         const node = new ZoweDatasetNode({
             label: "node",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -109,6 +117,13 @@ describe("mvsNodeActions", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         const testTree = createDatasetTree(blockMocks.sessNode, globalMocks.treeView);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(globalMocks.profileOne),
+                };
+            }),
+        });
         const node = new ZoweDatasetNode({
             label: "node",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -215,6 +230,13 @@ describe("mvsNodeActions", () => {
             commandResponse: "",
             apiResponse: {},
         });
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(globalMocks.profileOne),
+                };
+            }),
+        });
         const errHandlerSpy = jest.spyOn(profUtils, "errorHandling").mockImplementation();
         await dsActions.uploadDialog(node, testTree);
 
@@ -229,6 +251,14 @@ describe("mvsNodeActions", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: blockMocks.sessNode,
             profile: globalMocks.profileOne,
+        });
+
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(globalMocks.profileOne),
+                };
+            }),
         });
         testTree.getTreeView.mockReturnValueOnce(createTreeView());
         const fileUri = { fsPath: "/tmp/foo" };

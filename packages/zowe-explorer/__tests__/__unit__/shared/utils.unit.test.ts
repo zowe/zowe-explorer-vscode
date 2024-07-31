@@ -772,6 +772,13 @@ describe("Shared utils unit tests - function compareFileContent", () => {
         const codepage = 285;
         imperativeProfile.profile.encoding = codepage;
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(imperativeProfile),
+                };
+            }),
+        });
         await sharedUtils.compareFileContent(
             {
                 fileName: "whatever",
@@ -1003,6 +1010,13 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             session: blockMocks.session,
             profile: blockMocks.profile,
         });
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(blockMocks.profile),
+                };
+            }),
+        });
         node.setEncoding(textEncoding);
         delete node.encoding; // Reset encoding property so that cache is used
         await sharedUtils.promptForEncoding(node);
@@ -1023,6 +1037,13 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             profile: blockMocks.profile,
             parentNode,
             contextOverride: globals.DS_MEMBER_CONTEXT,
+        });
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(blockMocks.profile),
+                };
+            }),
         });
         node.setEncoding(otherEncoding);
         delete node.encoding; // Reset encoding property so that cache is used

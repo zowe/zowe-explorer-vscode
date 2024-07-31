@@ -556,6 +556,7 @@ describe("mvsCommandActions unit testing", () => {
                     getBaseProfile: jest.fn(),
                     checkCurrentProfile: jest.fn(),
                     zosmfProfile: mockLoadNamedProfile,
+                    loadNamedProfile: jest.fn().mockReturnValue(profileOne),
                 };
             }),
         });

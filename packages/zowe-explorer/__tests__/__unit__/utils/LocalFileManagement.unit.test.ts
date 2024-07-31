@@ -17,6 +17,8 @@ import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
+import { Profiles } from "../../../src/Profiles";
+import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 
 describe("LocalFileManagement Unit Tests", () => {
     function createBlockMocks() {
@@ -37,6 +39,16 @@ describe("LocalFileManagement Unit Tests", () => {
         });
         const mockGlobalState = { get: newMocks.storageGet, update: newMocks.storageUpdate, keys: () => [] } as vscode.Memento;
         ZoweLocalStorage.initializeZoweLocalStorage(mockGlobalState);
+
+        const profile = createIProfile();
+
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(profile),
+                };
+            }),
+        });
 
         return newMocks;
     }
@@ -111,6 +123,7 @@ describe("LocalFileManagement Unit Tests", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             profile: { name: "lpar1_zosmf" } as any,
         });
+
         dsNode.setEncoding({ kind: "text" });
         dsNode.setEtag("fakeEtag");
         jest.spyOn(dsNode, "getDsDocumentFilePath").mockReturnValue("file:///abc.txt");

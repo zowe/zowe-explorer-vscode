@@ -781,6 +781,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const profile = blockMocks.imperativeProfile;
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -789,6 +790,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
                         status: "unverified",
                     }),
                     validProfile: ValidProfileEnum.UNVERIFIED,
+                    loadNamedProfile: jest.fn().mockReturnValue(profile),
                 };
             }),
         });
@@ -1251,6 +1253,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
             parentNode: blockMocks.datasetFavoritesNode,
             contextOverride: globals.FAV_PROFILE_CONTEXT,
             session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
         });
         const node = new ZoweDatasetNode({
             label: "HLQ.TEST.AFILE",
@@ -1302,6 +1305,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
             parentNode: blockMocks.datasetFavoritesNode,
             contextOverride: globals.FAV_PROFILE_CONTEXT,
             session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
         });
         const favoriteNode = new ZoweDatasetNode({
             label: "HLQ.TEST.AFILE",
@@ -1532,10 +1536,12 @@ describe("Dataset Actions Unit Tests - Function showAttributes", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const profile = blockMocks.imperativeProfile;
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     validProfile: ValidProfileEnum.UNVERIFIED,
+                    loadNamedProfile: jest.fn().mockReturnValue(profile),
                 };
             }),
         });
@@ -2277,6 +2283,7 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const profile = blockMocks.imperativeProfile;
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -2285,6 +2292,7 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
                         status: "unverified",
                     }),
                     validProfile: ValidProfileEnum.UNVERIFIED,
+                    loadNamedProfile: jest.fn().mockReturnValue(profile),
                 };
             }),
         });
@@ -2563,6 +2571,7 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        const profile = blockMocks.imperativeProfile;
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -2572,6 +2581,7 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
                         status: "unverified",
                     }),
                     validProfile: ValidProfileEnum.UNVERIFIED,
+                    loadNamedProfile: jest.fn().mockReturnValue(profile),
                 };
             }),
         });
@@ -2659,6 +2669,7 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        const profile = blockMocks.imperativeProfile;
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -2668,6 +2679,7 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
                         status: "unverified",
                     }),
                     validProfile: ValidProfileEnum.UNVERIFIED,
+                    loadNamedProfile: jest.fn().mockReturnValue(profile),
                 };
             }),
         });
@@ -2736,6 +2748,7 @@ describe("Dataset Actions Unit Tests - Function showFileErrorDetails", () => {
             parentNode: blockMocks.datasetSessionNode,
             contextOverride: globals.DS_FILE_ERROR_CONTEXT,
         });
+        const profile = blockMocks.imperativeProfile;
 
         const spyRecall = jest.spyOn(blockMocks.mvsApi, "hRecallDataSet");
         const spyLogError = mocked(ZoweLogger.error);
@@ -2771,6 +2784,7 @@ describe("Dataset Actions Unit Tests - Function showFileErrorDetails", () => {
                 return {
                     checkCurrentProfile: jest.fn(),
                     validProfile: ValidProfileEnum.INVALID,
+                    loadNamedProfile: jest.fn().mockReturnValue(profile),
                 };
             }),
         });
@@ -2920,6 +2934,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             label: "HLQ.TEST.TO.NODE",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             session: blockMocks.sessionWithoutCredentials,
+            profile: blockMocks.datasetSessionNode.getProfile(),
         });
         node.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         const getChildrenSpy = jest.spyOn(node, "getChildren");

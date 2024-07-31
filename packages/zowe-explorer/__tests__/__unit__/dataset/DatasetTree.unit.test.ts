@@ -744,6 +744,8 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
         const favPdsNode = new ZoweDatasetNode({
             label: "favoritePds",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
             contextOverride: globals.PDS_FAV_CONTEXT,
         });
         const testTree = new DatasetTree();
@@ -1953,6 +1955,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
                         status: "active",
                         name: "testProfile",
                     }),
+                    loadNamedProfile: jest.fn().mockReturnValue(newMocks.imperativeProfile),
                 };
             }),
         });
@@ -2170,17 +2173,20 @@ describe("Dataset Tree Unit Tests - Function findFavoritedNode", () => {
             label: "node",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: blockMocks.datasetSessionNode,
+            profile: blockMocks.imperativeProfile,
         });
         const favProfileNode = new ZoweDatasetNode({
             label: blockMocks.imperativeProfile.name,
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: blockMocks.datasetFavoritesNode,
             contextOverride: globals.FAV_PROFILE_CONTEXT,
+            profile: blockMocks.imperativeProfile,
         });
         const favoriteNode = new ZoweDatasetNode({
             label: `${node.label}`,
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: favProfileNode,
+            profile: blockMocks.imperativeProfile,
         });
         favoriteNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
         favProfileNode.children.push(favoriteNode);
@@ -2454,6 +2460,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        const profile = blockMocks.imperativeProfile;
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -2464,6 +2471,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
                     }),
                     validProfile: ValidProfileEnum.UNVERIFIED,
                     getBaseProfile: jest.fn(),
+                    loadNamedProfile: jest.fn().mockReturnValue(profile),
                 };
             }),
         });
@@ -2581,12 +2589,14 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: testTree.mSessionNodes[1],
             session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
         });
         const child = new ZoweDatasetNode({
             label: "mem1",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: parent,
             session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
         });
         child.contextValue = globals.DS_MEMBER_CONTEXT;
         // Simulate corresponding nodes in favorites
@@ -2596,18 +2606,21 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             parentNode: blockMocks.datasetFavoritesNode,
             session: blockMocks.session,
             contextOverride: globals.FAV_PROFILE_CONTEXT,
+            profile: blockMocks.imperativeProfile,
         });
         const favParent = new ZoweDatasetNode({
             label: "HLQ.TEST.RENAME.NODE",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: favProfileNode,
             session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
         });
         const favChild = new ZoweDatasetNode({
             label: "mem1",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: favParent,
             session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
         });
         favParent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
         favChild.contextValue = globals.DS_MEMBER_CONTEXT;
@@ -2649,12 +2662,14 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: testTree.mSessionNodes[1],
             session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
         });
         const child = new ZoweDatasetNode({
             label: "mem1",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: parent,
             session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
         });
         child.contextValue = globals.DS_MEMBER_CONTEXT;
         // Simulate corresponding nodes in favorites
@@ -2664,18 +2679,21 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             parentNode: blockMocks.datasetFavoritesNode,
             session: blockMocks.session,
             contextOverride: globals.FAV_PROFILE_CONTEXT,
+            profile: blockMocks.imperativeProfile,
         });
         const favParent = new ZoweDatasetNode({
             label: "HLQ.TEST.RENAME.NODE",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: favProfileNode,
             session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
         });
         const favChild = new ZoweDatasetNode({
             label: "mem1",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: favParent,
             session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
         });
         favParent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
         favChild.contextValue = globals.DS_MEMBER_CONTEXT;
@@ -2708,12 +2726,14 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             parentNode: testTree.mSessionNodes[1],
             session: blockMocks.session,
             contextOverride: globals.PDS_FAV_CONTEXT,
+            profile: blockMocks.imperativeProfile,
         });
         const child = new ZoweDatasetNode({
             label: "mem1",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: parent,
             session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
         });
         child.contextValue = globals.DS_MEMBER_CONTEXT;
         // Simulate corresponding nodes in favorites
@@ -2723,6 +2743,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             parentNode: blockMocks.datasetFavoritesNode,
             session: blockMocks.session,
             contextOverride: globals.FAV_PROFILE_CONTEXT,
+            profile: blockMocks.imperativeProfile,
         });
         const favParent = new ZoweDatasetNode({
             label: "HLQ.TEST.RENAME.NODE",

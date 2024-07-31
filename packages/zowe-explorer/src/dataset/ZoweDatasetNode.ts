@@ -27,6 +27,7 @@ import {
     ZosEncoding,
     IZoweTree,
     ValidProfileEnum,
+    imperative,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
@@ -447,6 +448,17 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public getEtag(): string {
         ZoweLogger.trace("ZoweDatasetNode.getEtag called.");
         return this.etag;
+    }
+
+    /**
+     * Returns the imperative.IProfileLoaded profile for this node
+     *
+     * @returns {imperative.IProfileLoaded}
+     */
+    public getProfile(): imperative.IProfileLoaded {
+        ZoweLogger.trace("ZoweDatasetNode.getProfile called.");
+        const prof = this.profile ?? this.getParent()?.getProfile();
+        return prof?.name ? Profiles.getInstance().loadNamedProfile(prof.name) : undefined; // this returns the profile with newer token
     }
 
     /**
