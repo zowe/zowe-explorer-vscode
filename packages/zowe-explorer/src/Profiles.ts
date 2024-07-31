@@ -1271,7 +1271,7 @@ export class Profiles extends ProfilesCache {
         await configApi.save();
     }
 
-    public async handleSwitchAuthentication(node?: IZoweNodeType): Promise<void> {
+    public async handleSwitchAuthentication(node: IZoweNodeType): Promise<void> {
         const qp = Gui.createQuickPick();
         const qpItemYes: vscode.QuickPickItem = {
             label: localize("Profiles.switchAuthenticationQuickPick.yesLbl", "Yes"),
@@ -1292,15 +1292,12 @@ export class Profiles extends ProfilesCache {
             Gui.infoMessage(localize("profiles.operation.cancelled", "Operation Cancelled"));
             return;
         }
-        if (qpSelection.label === localize("Profiles.getSwitchAuthenticationQpItems.noLbl", "No")) return;
+        if (qpSelection.label === localize("Profiles.getSwitchAuthenticationQpItems.noLbl", "No")) {
+            return;
+        }
 
         let loginTokenType: string;
-        let serviceProfile: zowe.imperative.IProfileLoaded;
-        if (node) {
-            serviceProfile = node.getProfile();
-        } else {
-            serviceProfile = this.loadNamedProfile(node.label.toString().trim());
-        }
+        const serviceProfile = node.getProfile() ?? this.loadNamedProfile(node.label.toString().trim());
         const zeInstance = ZoweExplorerApiRegister.getInstance();
         try {
             loginTokenType = await zeInstance.getCommonApi(serviceProfile).getTokenTypeName();
@@ -1354,7 +1351,7 @@ export class Profiles extends ProfilesCache {
                 break;
             }
             case await ProfilesUtils.isUsingTokenAuth(serviceProfile.name): {
-                const profile: string | zowe.imperative.IProfileLoaded = node?.getProfile();
+                const profile: string | zowe.imperative.IProfileLoaded = node.getProfile();
                 const creds = await Profiles.getInstance().promptCredentials(profile, true);
 
                 if (creds != null) {
