@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { ZoweDatasetNode } from "../../src/trees/dataset";
+import { ZoweDatasetNode } from "../../src/trees/dataset/ZoweDatasetNode";
 import { MockMethod } from "../__decorators__/MockMethod";
 
 /**
@@ -36,7 +36,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweDatasetNode> {
      */
     @MockMethod()
     public getTreeItem(_element: ZoweDatasetNode): vscode.TreeItem {
-        return null;
+        return null as any;
     }
 
     /**
@@ -49,7 +49,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweDatasetNode> {
     @MockMethod()
     public getChildren(_element?: ZoweDatasetNode): Promise<ZoweDatasetNode[]> {
         return new Promise<ZoweDatasetNode[]>((resolve) => {
-            return resolve(null);
+            return resolve([]);
         });
     }
 
@@ -60,7 +60,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweDatasetNode> {
      */
     @MockMethod()
     public refresh(): void {
-        return null;
+        return;
     }
 
     /**

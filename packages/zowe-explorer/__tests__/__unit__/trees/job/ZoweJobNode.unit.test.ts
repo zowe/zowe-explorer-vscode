@@ -188,7 +188,7 @@ async function createGlobalMocks() {
     globalMocks.testIJobComplete.jobid = "JOB1235";
     globalMocks.testIJobComplete.retcode = "0";
     globalMocks.getConfiguration.mockReturnValueOnce({
-        get: (setting: string) => ["[test]: /u/aDir{directory}", "[test]: /u/myFile.txt{textFile}"],
+        get: (_setting: string) => ["[test]: /u/aDir{directory}", "[test]: /u/myFile.txt{textFile}"],
         update: jest.fn(() => {
             return {};
         }),
@@ -612,7 +612,7 @@ describe("ZoweJobNode unit tests - Function flipState", () => {
 });
 
 describe("ZoweJobNode unit tests - Function addFavorite", () => {
-    async function createBlockMocks(globalMocks) {
+    function createBlockMocks(globalMocks) {
         const newMocks = {
             testJobNode: new ZoweJobNode({
                 label: "MYHLQ(JOB1283) - Input",
@@ -629,7 +629,7 @@ describe("ZoweJobNode unit tests - Function addFavorite", () => {
 
     it("Tests that addFavorite successfully favorites a job", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         globalMocks.testJobsProvider.mFavorites = [];
         blockMocks.testJobNode.contextValue = Constants.JOBS_JOB_CONTEXT;
 
@@ -646,7 +646,7 @@ describe("ZoweJobNode unit tests - Function addFavorite", () => {
     });
     it("Tests that addFavorite successfully favorites a search", async () => {
         const globalMocks = await createGlobalMocks();
-        await createBlockMocks(globalMocks);
+        createBlockMocks(globalMocks);
         globalMocks.testJobsProvider.mFavorites = [];
         globalMocks.testJobsProvider.mSessionNodes[1].owner = "myHLQ";
         globalMocks.testJobsProvider.mSessionNodes[1].prefix = "*";
@@ -662,7 +662,7 @@ describe("ZoweJobNode unit tests - Function addFavorite", () => {
 });
 
 describe("ZoweJobNode unit tests - Function removeFavorite", () => {
-    async function createBlockMocks(globalMocks) {
+    function createBlockMocks(globalMocks) {
         const newMocks = {
             testJobNode1: new ZoweJobNode({
                 label: "MYHLQ(JOB1283) - Input",
@@ -687,7 +687,7 @@ describe("ZoweJobNode unit tests - Function removeFavorite", () => {
 
     it("Tests removeFavorite when starting with more than one favorite for the profile", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         const removeFavProfileSpy = jest.spyOn(globalMocks.testJobsProvider, "removeFavProfile");
 
         globalMocks.testJobsProvider.mFavorites = [];
@@ -708,7 +708,7 @@ describe("ZoweJobNode unit tests - Function removeFavorite", () => {
     });
     it("Tests removeFavorite when starting with only one favorite for the profile", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         const removeFavProfileSpy = jest.spyOn(globalMocks.testJobsProvider, "removeFavProfile");
 
         globalMocks.testJobsProvider.mFavorites = [];
@@ -727,7 +727,7 @@ describe("ZoweJobNode unit tests - Function removeFavorite", () => {
 });
 
 describe("ZoweJobNode unit tests - Function saveSearch", () => {
-    async function createBlockMocks(globalMocks) {
+    function createBlockMocks(globalMocks) {
         const testSession = globalMocks.testJobsProvider.mSessionNodes[1].getSession();
         const newMocks = {
             testSession,
@@ -749,7 +749,7 @@ describe("ZoweJobNode unit tests - Function saveSearch", () => {
 
     it("Tests that saveSearch is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         const favJob = blockMocks.testJobNode;
         favJob.owner = "myHLQ";
         favJob.prefix = "*";

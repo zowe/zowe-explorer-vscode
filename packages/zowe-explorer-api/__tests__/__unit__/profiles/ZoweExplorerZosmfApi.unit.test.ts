@@ -61,15 +61,11 @@ async function expectUnixCommandApiWithSshSession<T>(
 ): Promise<void> {
     spy.mockClear().mockResolvedValue(undefined);
     spy.mockImplementation((sshobject: zosuss.SshSession, command: string, cwd: string, callback: (data: string) => void) => {
-        let r = "";
         callback("test");
-        r += "test";
     });
     const spywhenpathnotspecified = jest.spyOn(zosuss.Shell, "executeSsh");
     spywhenpathnotspecified.mockImplementation((sshobject: zosuss.SshSession, command: string, callback: (data: string) => void) => {
-        let r = "";
         callback("test");
-        r += "test";
     });
     await apiInstance[name as string](sshobj, ...args, true, () => {});
     await apiInstance[name as string](sshobj, ...args, false, () => {});

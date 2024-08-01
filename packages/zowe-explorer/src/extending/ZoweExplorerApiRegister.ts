@@ -98,6 +98,8 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
 
     // Event emitter extenders can subscribe to
     public onProfilesUpdateEmitter = new vscode.EventEmitter<Validation.EventType>();
+    public onVaultUpdateEmitter = new vscode.EventEmitter<Validation.EventType>();
+    public onCredMgrUpdateEmitter = new vscode.EventEmitter<Validation.EventType>();
 
     /**
      * Private constructor that creates the singleton instance of ZoweExplorerApiRegister.
@@ -348,6 +350,22 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
      */
     public get onProfilesUpdate(): vscode.Event<Validation.EventType> {
         return this.onProfilesUpdateEmitter.event;
+    }
+
+    /**
+     * Event for extenders to subscribe to that will fire upon credential changes.
+     * @returns event that can be attached that will be called upon credential changes.
+     */
+    public get onVaultUpdate(): vscode.Event<Validation.EventType> {
+        return this.onVaultUpdateEmitter.event;
+    }
+
+    /**
+     * Event for extenders to subscribe to that will fire upon credential manager changes.
+     * @returns event that can be attached that will be called upon credential manager changes.
+     */
+    public get onCredMgrUpdate(): vscode.Event<Validation.EventType> {
+        return this.onCredMgrUpdateEmitter.event;
     }
 
     /**

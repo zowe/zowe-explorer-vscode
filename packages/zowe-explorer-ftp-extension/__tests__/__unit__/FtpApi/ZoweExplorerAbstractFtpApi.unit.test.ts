@@ -72,7 +72,7 @@ describe("AbstractFtpApi", () => {
     it("should show a fatal message when trying to call getStatus with invalid credentials.", async () => {
         Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
         jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Failed: missing credentials");
             })
         );
@@ -95,7 +95,7 @@ describe("AbstractFtpApi", () => {
     it("should show a different fatal message when trying to call getStatus and an exception occurs.", async () => {
         Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
         jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(
-            jest.fn((prof) => {
+            jest.fn((_prof) => {
                 throw new Error("Something happened");
             })
         );
@@ -142,7 +142,7 @@ describe("AbstractFtpApi", () => {
         Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
         const instance = new Dummy(profile);
         jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(
-            jest.fn(((prof) => Promise.resolve({ test: "Test successful object" })) as any)
+            jest.fn(((_prof) => Promise.resolve({ test: "Test successful object" })) as any)
         );
 
         const status = await instance.getStatus(profile, "zftp");
@@ -152,7 +152,7 @@ describe("AbstractFtpApi", () => {
     it("should return inactive from sessionStatus when getStatus is called w/ correct profile", async () => {
         Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
         const instance = new Dummy(profile);
-        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(jest.fn(((prof) => Promise.resolve(false)) as any));
+        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(jest.fn(((_prof) => Promise.resolve(false)) as any));
 
         const status = await instance.getStatus(profile, "zftp");
         expect(status).toStrictEqual("inactive");
