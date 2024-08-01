@@ -25,6 +25,8 @@ import {
     Gui,
     ZosEncoding,
     ZoweScheme,
+    UriFsInfo,
+    FileEntry,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { DatasetUtils } from "./DatasetUtils";
@@ -96,84 +98,164 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         return this._lookup(uri, false);
     }
 
+    private async fetchEntriesForProfile(uri: vscode.Uri, uriInfo: UriFsInfo, pattern: string): Promise<FilterEntry> {
+        const profileEntry = this._lookupAsDirectory(uri, false) as FilterEntry;
+
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(uriInfo.profile);
+        const datasetResponses: IZosFilesResponse[] = [];
+        const dsPatterns = [
+            ...new Set(
+                pattern
+                    .toUpperCase()
+                    .split(",")
+                    .map((p: string) => p.trim())
+            ),
+        ];
+
+        if (mvsApi.dataSetsMatchingPattern) {
+            datasetResponses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
+        } else {
+            for (const dsp of dsPatterns) {
+                datasetResponses.push(await mvsApi.dataSet(dsp));
+            }
+        }
+
+        for (const resp of datasetResponses) {
+            for (const ds of resp.apiResponse?.items ?? resp.apiResponse ?? []) {
+                let tempEntry = profileEntry.entries.get(ds.dsname);
+                if (tempEntry == null) {
+                    if (ds.dsorg === "PO" || ds.dsorg === "PO-E") {
+                        // Entry is a PDS
+                        tempEntry = new PdsEntry(ds.dsname);
+                    } else if (ds.dsorg === "VS") {
+                        // TODO: Add VSAM and ZFS support in Zowe Explorer
+                        continue;
+                    } else if (ds.migr?.toUpperCase() === "YES") {
+                        // migrated
+                        tempEntry = new DsEntry(ds.dsname);
+                    } else {
+                        // PS
+                        tempEntry = new DsEntry(ds.dsname);
+                    }
+                    tempEntry.metadata = new DsEntryMetadata({
+                        ...profileEntry.metadata,
+                        path: path.posix.join(profileEntry.metadata.path, ds.dsname),
+                    });
+                    profileEntry.entries.set(ds.dsname, tempEntry);
+                }
+            }
+        }
+
+        return profileEntry;
+    }
+
+    private async fetchEntriesForDataset(entry: PdsEntry, uri: vscode.Uri, uriInfo: UriFsInfo): Promise<void> {
+        const members = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(path.posix.basename(uri.path));
+
+        for (const ds of members.apiResponse?.items || []) {
+            let tempEntry = entry.entries.get(ds.member);
+            if (tempEntry == null) {
+                tempEntry = new MemberEntry(ds.member);
+                tempEntry.metadata = new DsEntryMetadata({ ...entry.metadata, path: path.posix.join(entry.metadata.path, ds.member) });
+                entry.entries.set(ds.member, tempEntry);
+            }
+        }
+    }
+
+    private async fetchDataset(uri: vscode.Uri, uriInfo: UriFsInfo): Promise<PdsEntry | DsEntry> {
+        let entry: PdsEntry | DsEntry;
+        try {
+            entry = this._lookupAsDirectory(uri, false) as PdsEntry;
+        } catch (err) {
+            if (!(err instanceof vscode.FileSystemError)) {
+                throw err;
+            }
+
+            if (err.code !== "FileNotFound") {
+                throw err;
+            }
+        }
+
+        const entryExists = entry != null;
+        let entryIsDir = false;
+        if (!entryExists) {
+            const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.posix.basename(uri.path), { attributes: true });
+            if (resp.success) {
+                const dsorg: string = resp.apiResponse?.items[0].dsorg;
+                entryIsDir = dsorg.startsWith("PO");
+            } else {
+                throw vscode.FileSystemError.FileNotFound(uri);
+            }
+        }
+
+        if (entryIsDir) {
+            if (!entryExists) {
+                this.createDirectory(uri);
+                entry = this._lookupAsDirectory(uri, false) as PdsEntry;
+            }
+            await this.fetchEntriesForDataset(entry as PdsEntry, uri, uriInfo);
+        } else {
+            if (!entryExists) {
+                await this.writeFile(uri, new Uint8Array(), { create: true, overwrite: false });
+                entry = this._lookupAsFile(uri) as DsEntry;
+            }
+        }
+
+        return entry;
+    }
+
+    public async remoteLookupForResource(uri: vscode.Uri): Promise<DirEntry | DsEntry> {
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
+        const profileUri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: uriInfo.profileName });
+
+        // Ensure that an entry exists for the given profile
+        if (!this.exists(profileUri)) {
+            this.createDirectory(profileUri);
+        }
+
+        if (uriInfo.isRoot) {
+            // profile entry; check if "pattern" filter is in query.
+
+            const urlQuery = new URLSearchParams(uri.query);
+            if (!urlQuery.has("pattern")) {
+                return this._lookupAsDirectory(profileUri, false);
+            }
+
+            return this.fetchEntriesForProfile(uri, uriInfo, urlQuery.get("pattern"));
+        } else {
+            // data set or one of its members
+            return this.fetchDataset(uri, uriInfo);
+        }
+    }
+
     /**
      * Reads a directory located at the given URI.
      * @param uri A valid URI within the provider
      * @returns An array of tuples containing each entry name and type
      */
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        const dsEntry = this._lookupAsDirectory(uri, false);
-        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-
-        const results: [string, vscode.FileType][] = [];
-
-        if (FsAbstractUtils.isFilterEntry(dsEntry)) {
-            const mvsApi = ZoweExplorerApiRegister.getMvsApi(uriInfo.profile);
-            const datasetResponses: IZosFilesResponse[] = [];
-            const dsPatterns = [
-                ...new Set(
-                    dsEntry.filter["pattern"]
-                        .toUpperCase()
-                        .split(",")
-                        .map((p: string) => p.trim())
-                ),
-            ];
-
-            if (mvsApi.dataSetsMatchingPattern) {
-                datasetResponses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
-            } else {
-                for (const dsp of dsPatterns) {
-                    datasetResponses.push(await mvsApi.dataSet(dsp));
-                }
+        let dsEntry: DirEntry | DsEntry = null;
+        try {
+            dsEntry = this._lookupAsDirectory(uri, false);
+        } catch (err) {
+            // Errors unrelated to the filesystem cannot be handled here
+            if (!(err instanceof vscode.FileSystemError)) {
+                throw err;
             }
 
-            for (const resp of datasetResponses) {
-                for (const ds of resp.apiResponse?.items ?? resp.apiResponse ?? []) {
-                    let tempEntry = dsEntry.entries.get(ds.dsname);
-                    if (tempEntry == null) {
-                        if (ds.dsorg === "PO" || ds.dsorg === "PO-E") {
-                            // Entry is a PDS
-                            tempEntry = new PdsEntry(ds.dsname);
-                        } else if (ds.dsorg === "VS") {
-                            // TODO: Add VSAM and ZFS support in Zowe Explorer
-                            continue;
-                        } else if (ds.migr?.toUpperCase() === "YES") {
-                            // migrated
-                            tempEntry = new DsEntry(ds.dsname);
-                        } else {
-                            // PS
-                            tempEntry = new DsEntry(ds.dsname);
-                        }
-                        tempEntry.metadata = new DsEntryMetadata({ ...dsEntry.metadata, path: path.posix.join(dsEntry.metadata.path, ds.dsname) });
-                        dsEntry.entries.set(ds.dsname, tempEntry);
-                    }
-                    results.push([tempEntry.name, tempEntry instanceof DsEntry ? vscode.FileType.File : vscode.FileType.Directory]);
-                }
-            }
-        } else if (FsAbstractUtils.isDirectoryEntry(dsEntry)) {
-            const members = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(dsEntry.name);
-
-            for (const ds of members.apiResponse?.items || []) {
-                let tempEntry = dsEntry.entries.get(ds.member);
-                if (tempEntry == null) {
-                    tempEntry = new MemberEntry(ds.member);
-                    tempEntry.metadata = new DsEntryMetadata({ ...dsEntry.metadata, path: path.posix.join(dsEntry.metadata.path, ds.member) });
-                    dsEntry.entries.set(ds.member, tempEntry);
-                }
-                results.push([tempEntry.name, vscode.FileType.File]);
+            if (err.code === "FileNotFound") {
+                // if the entry doesn't exist in the local file system, first check to see if it exists on the remote before throwing an error.
+                dsEntry = await this.remoteLookupForResource(uri);
             }
         }
 
-        return results;
-    }
-
-    public updateFilterForUri(uri: vscode.Uri, pattern: string): void {
-        const filterEntry = this._lookup(uri, false);
-        if (!FsAbstractUtils.isFilterEntry(filterEntry)) {
-            return;
+        if (dsEntry == null || FsDatasetsUtils.isDsEntry(dsEntry)) {
+            throw vscode.FileSystemError.FileNotFound(uri);
         }
 
-        filterEntry.filter["pattern"] = pattern;
+        // Check the remote file system to see if anything has changed since the last time the directory was read.
+        await this.remoteLookupForResource(uri);
+        return Array.from(dsEntry.entries.entries()).map((value: [string, DirEntry | FileEntry]) => [value[0], value[1].type]);
     }
 
     /**
