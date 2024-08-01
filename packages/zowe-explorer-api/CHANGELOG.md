@@ -50,7 +50,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
     - Modified `getFileHistory()` to return `string[]`
     - Modified `createFilterString?(newFilter: string, node: IZoweTreeNode);` to return `string`
     - Allowed the following methods to be implemented synchronously: (non-breaking)
-      Also, developers should not expect a value to be returned from the methods below (breaking)
       - `addSession`
       - `addSingleSession`
       - `editSession`
@@ -62,29 +61,31 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
       - `removeFavorite`
       - `removeFavProfile`
       - `onDidChangeConfiguration`
-      - `flipState` *synchronous - no Promise returned*
+      - `flipState` *synchronous - no `Promise` returned*
       - `rename`
       - `open`
       - `copy`
       - `paste`
       - `delete`
-      - `setItem` *synchronous - no Promise returned*
+      - `setItem` *synchronous - no `Promise` returned*
       - `saveSearch`
       - `saveFile`
       - `refreshPS`
       - `uploadDialog`
       - `filterPrompt`
-      - `addSearchHistory` *synchronous - no Promise returned*
-      - `deleteSession` *synchronous - no Promise returned*
+      - `addSearchHistory` *synchronous - no `Promise` returned*
+      - `deleteSession` *synchronous - no `Promise` returned*
       - `updateFavorites`
       - `renameFavorite`
-      - `addFileHistory` *synchronous - no Promise returned*
-      - `removeFileHistory` *synchronous - no Promise returned*
+      - `addFileHistory` *synchronous - no `Promise` returned*
+      - `removeFileHistory` *synchronous - no `Promise` returned*
       - `renameNode`
       - `openItemFromPath`
       - `addDsTemplate`
       - `pollData`
       - `openWithEncoding`
+
+    **Note**: Developers should not expect a value to be returned from the methods above (breaking)
   - Updated `IZoweTreeNode.ts`, see changes below:
     - Modified `rename?(newNamePath: string);` to return `Promise<IZosFilesResponse>`
     - Developers should not be expecting output from the following methods:
