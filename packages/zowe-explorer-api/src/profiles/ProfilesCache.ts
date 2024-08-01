@@ -469,7 +469,14 @@ export class ProfilesCache {
 
     // used by Zowe Explorer for v1 profiles
     protected async deleteProfileOnDisk(profileInfo: zowe.imperative.IProfileLoaded): Promise<void> {
-        await this.getCliProfileManager(profileInfo.type).delete({ name: profileInfo.name });
+        const profInfoApi = await this.getProfileInfo();
+        if (profInfoApi.usingTeamConfig) {
+            const configApi = profInfoApi.getTeamConfig();
+            configApi.delete(configApi.api.profiles.getProfilePathFromName(profileInfo.name));
+            await configApi.save();
+        } else {
+            await this.getCliProfileManager(profileInfo.type).delete({ name: profileInfo.name });
+        }
     }
 
     // used by Zowe Explorer for v1 profiles

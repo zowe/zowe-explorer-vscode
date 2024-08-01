@@ -989,14 +989,6 @@ export class Profiles extends ProfilesCache {
         }
 
         const deleteLabel = deletedProfile.name;
-
-        if ((await this.getProfileInfo()).usingTeamConfig) {
-            const currentProfile = await this.getProfileFromConfig(deleteLabel);
-            const filePath = currentProfile.profLoc.osLoc[0];
-            await this.openConfigFile(filePath);
-            return;
-        }
-
         const deleteSuccess = await this.deletePrompt(deletedProfile);
         if (!deleteSuccess) {
             Gui.showMessage(this.profilesOpCancelled);
