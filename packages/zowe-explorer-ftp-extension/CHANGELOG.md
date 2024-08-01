@@ -13,8 +13,6 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 - Update Zowe SDKs to `8.0.0-next.202405241828` for technical currency. [#2918](https://github.com/zowe/zowe-explorer-vscode/issues/2918)
 - Renamed extension to `IBM z/OS FTP for Zowe Explorer`. [#2990](https://github.com/zowe/zowe-explorer-vscode/issues/2990)
 
-## `2.17.0`
-
 ## `3.0.0-next.202404242037`
 
 ### New features and enhancements
@@ -86,7 +84,9 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 - Fixed ECONNRESET error when trying to upload or create an empty data set member. [#2350](https://github.com/zowe/vscode-extension-for-zowe/issues/2350)
 - Update Zowe SDKs to `8.0.0-next.202407051717` for technical currency. [#2918](https://github.com/zowe/zowe-explorer-vscode/issues/2918)
 
-## 2.16.0
+## `2.17.0`
+
+## `2.16.0`
 
 ### Bug fixes
 
