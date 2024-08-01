@@ -12,7 +12,6 @@
 import * as vscode from "vscode";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import * as path from "path";
 import { Gui, imperative, IZoweUSSTreeNode, ProfilesCache, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { Profiles } from "../../../../src/configuration/Profiles";
@@ -196,7 +195,7 @@ function createGlobalMocks() {
     globalMocks.getFilters.mockReturnValue(["/u/aDir{directory}", "/u/myFile.txt{textFile}"]);
     globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.getConfiguration.mockReturnValue({
-        get: (setting: string) => ["[test]: /u/aDir{directory}", "[test]: /u/myFile.txt{textFile}"],
+        get: (_setting: string) => ["[test]: /u/aDir{directory}", "[test]: /u/myFile.txt{textFile}"],
         update: jest.fn(() => {
             return {};
         }),
@@ -622,7 +621,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
 
     it("Tests that filter() exits when user cancels out of input field", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        await createBlockMocks(globalMocks);
 
         globalMocks.showInputBox.mockReturnValueOnce(undefined);
 
@@ -656,7 +655,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
 
     it("Tests that filter() works correctly for favorited search nodes with credentials", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        await createBlockMocks(globalMocks);
 
         const sessionWithCred = createISession();
         globalMocks.createSessCfgFromArgs.mockReturnValue(sessionWithCred);
@@ -674,7 +673,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
 
     it("Tests that filter() works correctly for favorited search nodes without credentials", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        await createBlockMocks(globalMocks);
 
         const sessionNoCred = createISessionWithoutCredentials();
         globalMocks.createSessCfgFromArgs.mockReturnValue(sessionNoCred);
@@ -722,12 +721,10 @@ describe("USSTree Unit Tests - Function getAllLoadedItems", () => {
         globalMocks.testTree.mSessionNodes[1].children = [folder];
         folder.children.push(file);
 
-        const treeGetChildren = jest
-            .spyOn(globalMocks.testTree, "getChildren")
-            .mockImplementationOnce(() => Promise.resolve([globalMocks.testTree.mSessionNodes[1]]));
-        const sessionGetChildren = jest
-            .spyOn(globalMocks.testTree.mSessionNodes[1], "getChildren")
-            .mockImplementationOnce(() => Promise.resolve(globalMocks.testTree.mSessionNodes[1].children));
+        jest.spyOn(globalMocks.testTree, "getChildren").mockImplementationOnce(() => Promise.resolve([globalMocks.testTree.mSessionNodes[1]]));
+        jest.spyOn(globalMocks.testTree.mSessionNodes[1], "getChildren").mockImplementationOnce(() =>
+            Promise.resolve(globalMocks.testTree.mSessionNodes[1].children)
+        );
 
         const loadedItems = await globalMocks.testTree.getAllLoadedItems();
         expect(loadedItems).toStrictEqual([file, folder]);
@@ -893,7 +890,7 @@ describe("USSTree Unit Tests - Function saveSearch", () => {
 
     it("Testing that saveSearch() works properly on the same session, different path", async () => {
         const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        await createBlockMocks(globalMocks);
         const testNode = globalMocks.testTree.mSessionNodes[1];
         testNode.fullPath = "/a1234";
 
@@ -979,7 +976,7 @@ describe("USSTree Unit Tests - Function rename", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         const ussFavNode = blockMocks.ussFavNode;
-        globalMocks.testUSSNode.fullPath = globalMocks.testUSSNode.fullPath + "/usstest";
+        globalMocks.testUSSNode.fullPath = (globalMocks.testUSSNode.fullPath as string) + "/usstest";
         globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
         const renameNode = jest.spyOn(globalMocks.testUSSNode, "rename");
         renameNode.mockResolvedValue(false);
@@ -1000,7 +997,7 @@ describe("USSTree Unit Tests - Function rename", () => {
         const globalMocks = await createGlobalMocks();
         createBlockMocks(globalMocks);
         globalMocks.testTree.mFavorites = [];
-        globalMocks.testUSSNode.fullPath = globalMocks.testUSSNode.fullPath + "/usstest";
+        globalMocks.testUSSNode.fullPath = (globalMocks.testUSSNode.fullPath as string) + "/usstest";
         globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
         const renameNode = jest.spyOn(globalMocks.testUSSNode, "rename");
         renameNode.mockResolvedValue(false);

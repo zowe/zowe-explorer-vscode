@@ -27,6 +27,7 @@ import { UnixCommandHandler } from "../../../../src/commands/UnixCommandHandler"
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import * as certWizard from "../../../../src/utils/CertificateWizard";
+import { Gui, imperative } from "@zowe/zowe-explorer-api";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
@@ -419,6 +420,64 @@ describe("Test src/shared/extension", () => {
             expect(spyReadFile).toHaveBeenCalledWith("uri");
             expect(spyRefreshAll).toHaveBeenCalledTimes(1);
             expect(mockEmitter).toHaveBeenCalledTimes(1);
+        });
+
+        it("should trigger callbacks when credentials or credManager are updated by another application", async () => {
+            let onVaultUpdatedCallback, onCredentialManagerUpdatedCallback;
+            const dummyWatcher: any = {
+                subscribeUser: (_event, cb) => {
+                    onVaultUpdatedCallback = cb;
+                    return { close: () => {} } as any;
+                },
+                subscribeShared: (_event, cb) => {
+                    onCredentialManagerUpdatedCallback = cb;
+                    return { close: () => {} } as any;
+                },
+            };
+            const spyWatcher = jest.spyOn(imperative.EventOperator, "getWatcher").mockReturnValue(dummyWatcher);
+            const spyGuiError = jest.spyOn(Gui, "errorMessage");
+
+            // Spy callback behavior
+            const spyTranslatedLog = jest.spyOn(vscode.l10n, "t");
+            const spyGetProfileInfo = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockImplementationOnce(jest.fn());
+            const spyReadConfigFromDisk = jest.spyOn(profUtils.ProfilesUtils, "readConfigFromDisk").mockImplementationOnce(jest.fn());
+            const spyRefreshAll = jest.spyOn(SharedActions, "refreshAll").mockImplementation(jest.fn());
+
+            // Setup watchers
+            await SharedInit.watchConfigProfile(context);
+
+            expect(spyWatcher).toHaveBeenCalled();
+            expect(spyGuiError).not.toHaveBeenCalled();
+
+            jest.clearAllMocks();
+            // Trigger Vault changes
+            await onVaultUpdatedCallback();
+            expect(spyTranslatedLog.mock.calls[0][0]).toContain("vault");
+            expect(spyReadConfigFromDisk).toHaveBeenCalled();
+            expect(spyRefreshAll).toHaveBeenCalled();
+
+            jest.clearAllMocks();
+            // Trigger Vault changes
+            await onCredentialManagerUpdatedCallback();
+            expect(spyTranslatedLog.mock.calls[0][0]).toContain("credential management");
+            expect(spyGetProfileInfo).toHaveBeenCalled();
+            expect(spyRefreshAll).toHaveBeenCalled();
+        });
+
+        it("should handle errors when watching for vault or credMgr changes", async () => {
+            const testError = "__TEST_ERROR__";
+            const spyWatcher = jest.spyOn(imperative.EventOperator, "getWatcher").mockImplementation(() => {
+                throw testError;
+            });
+            const spyGuiError = jest.spyOn(Gui, "errorMessage");
+
+            await SharedInit.watchConfigProfile(context);
+
+            expect(spyWatcher).toHaveBeenCalled();
+            expect(spyGuiError.mock.calls[0][0]).toContain("vault changes");
+            expect(spyGuiError.mock.calls[0][0]).toContain(testError);
+            expect(spyGuiError.mock.calls[1][0]).toContain("credential manager changes");
+            expect(spyGuiError.mock.calls[1][0]).toContain(testError);
         });
     });
 

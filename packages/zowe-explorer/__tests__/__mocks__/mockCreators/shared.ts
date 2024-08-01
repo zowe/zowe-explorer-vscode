@@ -19,13 +19,14 @@ import { FilterDescriptor } from "../../../src/management/FilterManagement";
 import { ZoweTreeProvider } from "../../../src/providers/ZoweTreeProvider";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { ZoweUSSNode } from "../../../src/trees/uss/ZoweUSSNode";
+import { Definitions } from "../../../src/configuration/Definitions";
 
 const MOCK_PROFILES = [];
 
-export function createPersistentConfig() {
+export function createPersistentConfig(): Partial<Definitions.ZowePersistentFilter> & Partial<vscode.Memento> {
     return {
         persistence: true,
-        get: () => {
+        get: (): Partial<Definitions.ZowePersistentFilter> => {
             return {
                 sessions: ["sestest", "profile1", "profile2"],
                 favorites: ["[sestest]: TEST.PDS", "[profile1]: /u/myuser.txt{textFile}", "[profile2]: /u/myuser"],
@@ -33,11 +34,11 @@ export function createPersistentConfig() {
         },
         update: jest.fn(() => {
             return {};
-        }),
+        }) as any,
     };
 }
 
-export function createUnsecureTeamConfigMock() {
+export function createUnsecureTeamConfigMock(): imperative.IConfig {
     return {
         $schema: "./zowe.schema.json",
         profiles: {
@@ -79,7 +80,7 @@ export function createUnsecureTeamConfigMock() {
     };
 }
 
-export function createTeamConfigMock() {
+export function createTeamConfigMock(): imperative.IConfig {
     return {
         $schema: "./zowe.schema.json",
         profiles: {
@@ -125,7 +126,7 @@ export function createTeamConfigMock() {
     };
 }
 
-export function createISession() {
+export function createISession(): imperative.Session {
     return new imperative.Session({
         user: "fake",
         password: "fake",
@@ -136,7 +137,7 @@ export function createISession() {
     });
 }
 
-export function createISessionWithoutCredentials() {
+export function createISessionWithoutCredentials(): imperative.Session {
     return new imperative.Session({
         user: "",
         password: "",
@@ -527,6 +528,7 @@ export function createConfigLoad() {
         api: {
             layers: {
                 merge: jest.fn(),
+                activate: jest.fn(),
             },
         },
         layers: [

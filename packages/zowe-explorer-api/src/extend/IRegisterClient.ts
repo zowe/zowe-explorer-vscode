@@ -21,18 +21,18 @@ import * as vscode from "vscode";
  * the object returned by this extensions activate() method as shown below.
  *
  * @example
- * // see if Zowe Explorer is installed and retrieve the API Registry\
- * const explorerApi = extensions.getExtension('zowe.vscode-extension-for-zowe');\
- * if (explorerApi && explorerApi.exports) {\
- *   // Cast the returned object to the IApiRegisterClient interface\
- *   const importedApi: IApiRegisterClient = explorerApi.exports;\
- *   // create an instance of my API and register it with Zowe Explorer\
- *   importedApi.registerUssApi(new MyZoweExplorerAppUssApi());\
- *   window.showInformationMessage(\
- *     'Zowe Explorer was augmented for MyApp support. Please, refresh your explorer views.');\
- *   } else {\
- *   window.showInformationMessage(\
- *     'Zowe VS Extension was not found: either not installe or older version.');\
+ * // see if Zowe Explorer is installed and retrieve the API Registry
+ * const explorerApi = extensions.getExtension('zowe.vscode-extension-for-zowe');
+ * if (explorerApi && explorerApi.exports) {
+ *   // Cast the returned object to the IApiRegisterClient interface
+ *   const importedApi: IApiRegisterClient = explorerApi.exports;
+ *   // create an instance of my API and register it with Zowe Explorer
+ *   importedApi.registerUssApi(new MyZoweExplorerAppUssApi());
+ *   window.showInformationMessage(
+ *     'Zowe Explorer was augmented for MyApp support. Please, refresh your explorer views.');
+ *   } else {
+ *   window.showInformationMessage(
+ *     'Zowe VS Extension was not found: either not installed or older version.');
  * }
  *
  * @export
@@ -109,6 +109,16 @@ export interface IRegisterClient {
      * Define events that fire whenever an existing team config profile is updated.
      */
     onProfilesUpdate?: vscode.Event<Validation.EventType>;
+
+    /**
+     * Define events that fire whenever credentials are updated on the client.
+     */
+    onVaultUpdate?: vscode.Event<Validation.EventType>;
+
+    /**
+     * Define events that fire whenever the credential manager is updated.
+     */
+    onCredMgrUpdate?: vscode.Event<Validation.EventType>;
 
     /**
      * Lookup of any registered API (Uss, Mvs, Jes, or Command).
