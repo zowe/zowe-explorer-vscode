@@ -1,9 +1,9 @@
-# Zowe Explorer Extension for FTP
+# IBM z/OS FTP for Zowe Explorer
 
 [![version](https://img.shields.io/visual-studio-marketplace/v/Zowe.zowe-explorer-ftp-extension.svg)](https://img.shields.io/visual-studio-marketplace/v/Zowe.zowe-explorer-ftp-extension.svg)
 [![downloads](https://img.shields.io/visual-studio-marketplace/d/Zowe.zowe-explorer-ftp-extension.svg)](https://img.shields.io/visual-studio-marketplace/d/Zowe.zowe-explorer-ftp-extension.svg)
 
-Zowe Explorer's FTP extension adds the FTP protocol to the [Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode) VS Code extension, allowing you to use [z/OS FTP Plug-in for Zowe CLI](https://github.com/zowe/zowe-cli-ftp-plugin) profiles to connect and interact with z/OS USS.
+The IBM z/OS FTP for Zowe Explorer adds the FTP protocol to the [Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode) VS Code extension, allowing you to use [z/OS FTP Plug-in for Zowe CLI](https://github.com/zowe/zowe-cli-ftp-plugin) profiles to connect and interact with z/OS USS.
 
 This VS Code extension also serves as a [source code example](https://github.com/zowe/zowe-explorer-vscode/tree/main/packages/zowe-explorer-ftp-extension) demonstrating how to use the [Zowe Explorer Extensibility API](https://github.com/zowe/zowe-explorer-vscode/tree/main/packages/zowe-explorer-api) to create VS Code extensions that extend the Zowe Explorer VS Code extensions with new capabilities.
 

@@ -1,6 +1,6 @@
-# Zowe Explorer Extension for FTP development guide
+# IBM z/OS FTP for Zowe Explorer development guide
 
-Zowe Explorer Extension for FTP is an example for using the Zowe Explorer extensibility API to add an alternative implementation for interacting with z/OS. The default Zowe Explorer implementation uses the default Zowe CLI APIs for using z/OSMF REST APIs. This implementation replaces these with z/OS FTP for interacting with USS.
+IBM z/OS FTP for Zowe Explorer is an example for using the Zowe Explorer extensibility API to add an alternative implementation for interacting with z/OS. The default Zowe Explorer implementation uses the default Zowe CLI APIs for using z/OSMF REST APIs. This implementation replaces these with z/OS FTP for interacting with USS.
 
 Although currently limited to USS, the plan is to complete the implementation to supporting MVS and JES as well.
 
