@@ -42,7 +42,7 @@ General conformance criteria for all extensions that add new capabilities to Zow
    <th style="background-color:#555555">v1</th>
    <th style="background-color:#AAAAAA">x</th>
    <th style="background-color:#AAAAAA"></th>
-   <th>Zowe Explorer Extension for FTP</th>
+   <th>IBM z/OS FTP for Zowe Explorer</th>
    <td><b>Naming:</b> If the extension uses the word "Zowe" in its name, it abides by The Linux Foundation <a href="https://www.linuxfoundation.org/trademark-usage/">Trademark Usage Guidelines</a> and <a href="https://www.openmainframeproject.org/branding-guidelines">Branding Guidelines</a> to ensure the word Zowe is used in a way intended by the Zowe community.</td>
  </tr>
 
