@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { imperative, IZosFilesResponse } from "@zowe/cli";
+import { imperative, IZosFilesResponse, IUploadOptions } from "@zowe/cli";
 import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
@@ -24,7 +24,6 @@ import * as contextually from "../shared/context";
 import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { refreshAll } from "../shared/refresh";
-import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { autoDetectEncoding, fileExistsCaseSensitiveSync } from "./utils";
 import { UssFileTree, UssFileType } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
