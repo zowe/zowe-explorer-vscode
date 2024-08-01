@@ -14,7 +14,6 @@ import * as path from "path";
 import * as crypto from "crypto";
 import * as tmp from "tmp";
 import * as zowe from "@zowe/cli";
-import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 
 import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 import { CoreUtils, UssUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
@@ -160,7 +159,11 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         }
     }
 
-    public async uploadDirectory(inputDirectoryPath: string, ussDirectoryPath: string, _options: IUploadOptions): Promise<zowe.IZosFilesResponse> {
+    public async uploadDirectory(
+        inputDirectoryPath: string,
+        ussDirectoryPath: string,
+        _options: zowe.IUploadOptions
+    ): Promise<zowe.IZosFilesResponse> {
         let result = this.getDefaultResponse();
         try {
             // Check if inputDirectory is directory
