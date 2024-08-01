@@ -239,8 +239,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             parentNode: blockMocks.datasetSessionNode,
             session: blockMocks.session,
         });
-        const nonFavoriteLabel = parent.label;
-        parent.label = parent.label?.toString();
+        const nonFavoriteLabel = parent.label?.toString();
         parent.contextValue = Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX;
 
         const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("testMember");
@@ -262,7 +261,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         expect(mocked(zosfiles.Upload.bufferToDataSet)).toHaveBeenCalledWith(
             blockMocks.zosmfSession,
             Buffer.from(""),
-            (nonFavoriteLabel as string) + "(TESTMEMBER)",
+            nonFavoriteLabel + "(TESTMEMBER)",
             {
                 responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
             }
