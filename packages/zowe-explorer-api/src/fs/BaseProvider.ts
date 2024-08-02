@@ -368,7 +368,7 @@ export class BaseProvider {
      */
 
     protected _lookup(uri: vscode.Uri, silent: boolean = false): IFileSystemEntry | undefined {
-        if (uri.path === "/") {
+        if (uri.path === "/" || uri.path === ".") {
             return this.root;
         }
 
@@ -397,11 +397,11 @@ export class BaseProvider {
 
     protected _lookupAsDirectory(uri: vscode.Uri, silent: boolean): DirEntry {
         const entry = this._lookup(uri, silent);
-        if (!FsAbstractUtils.isDirectoryEntry(entry)) {
+        if (entry != null && !FsAbstractUtils.isDirectoryEntry(entry) && !silent) {
             throw vscode.FileSystemError.FileNotADirectory(uri);
         }
 
-        return entry;
+        return entry as DirEntry;
     }
 
     protected _createFile(uri: vscode.Uri, options?: { overwrite: boolean }): FileEntry {
@@ -431,10 +431,11 @@ export class BaseProvider {
 
     protected _lookupAsFile(uri: vscode.Uri, opts?: { silent?: boolean }): FileEntry {
         const entry = this._lookup(uri, opts?.silent ?? false);
-        if (FsAbstractUtils.isFileEntry(entry)) {
-            return entry;
+        if (entry != null && !FsAbstractUtils.isFileEntry(entry) && !opts?.silent) {
+            throw vscode.FileSystemError.FileIsADirectory(uri);
         }
-        throw vscode.FileSystemError.FileIsADirectory(uri);
+
+        return entry;
     }
 
     protected _lookupParentDirectory(uri: vscode.Uri, silent?: boolean): DirEntry {
