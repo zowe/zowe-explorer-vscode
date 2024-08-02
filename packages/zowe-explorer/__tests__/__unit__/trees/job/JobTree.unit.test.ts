@@ -241,7 +241,7 @@ async function createGlobalMocks() {
     globalMocks.mockProfileInstance.editSession = jest.fn(() => globalMocks.testProfile);
     globalMocks.mockGetConfiguration.mockReturnValue({
         persistence: true,
-        get: (setting: string) => [],
+        get: (_setting: string) => [],
         update: jest.fn(() => {
             return {};
         }),
@@ -664,7 +664,7 @@ describe("ZosJobsProvider unit tests - Function removeFavProfile", () => {
 });
 
 describe("ZosJobsProvider unit tests - Function delete", () => {
-    const createTestJob = async (globalMocks) => {
+    const createTestJob = (globalMocks) => {
         globalMocks.testJobsProvider.mFavorites = [];
         const testJobNode = new ZoweJobNode({
             label: "IEFBR14(JOB1234) - CC 0000",
@@ -679,7 +679,7 @@ describe("ZosJobsProvider unit tests - Function delete", () => {
 
     it("Removes a job node from session parent and refreshes job provider", async () => {
         const globalMocks = await createGlobalMocks();
-        const testJob = await createTestJob(globalMocks);
+        const testJob = createTestJob(globalMocks);
 
         const deleteSpy = jest.spyOn(globalMocks.testJobsProvider, "delete");
         const removeFavoriteSpy = jest.spyOn(globalMocks.testJobsProvider, "removeFavorite");
@@ -987,7 +987,7 @@ describe("ZosJobsProvider unit tests - function pollData", () => {
 });
 
 describe("Jobs utils unit tests - Function jobStringValidator", () => {
-    it("should return null with correct input", async () => {
+    it("should return null with correct input", () => {
         const validOpts: [string, "owner" | "prefix"][] = [
             ["job*", "prefix"],
             ["owner*", "owner"],
@@ -995,7 +995,7 @@ describe("Jobs utils unit tests - Function jobStringValidator", () => {
 
         validOpts.forEach((validOpt) => expect(SharedUtils.jobStringValidator(validOpt[0], validOpt[1])).toBeNull());
     });
-    it("should return invalid string with invalid input", async () => {
+    it("should return invalid string with invalid input", () => {
         const invalidOpts: [string, "owner" | "prefix"][] = [
             ["invalidowner", "owner"],
             ["job1234567*", "prefix"],

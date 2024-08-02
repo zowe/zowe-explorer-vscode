@@ -13,7 +13,6 @@ import * as vscode from "vscode";
 import { IJestIt, ITestContext, processSubscriptions } from "../../../__common__/testUtils";
 import { ZoweScheme } from "@zowe/zowe-explorer-api";
 import { SharedActions } from "../../../../src/trees/shared/SharedActions";
-import { DatasetTree } from "../../../../src/trees/dataset/DatasetTree";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
 import { DatasetInit } from "../../../../src/trees/dataset/DatasetInit";

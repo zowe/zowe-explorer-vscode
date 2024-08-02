@@ -121,8 +121,10 @@ export class USSInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.renameNode", async (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.rename(node))
         );
-        const uploadDialogHandler = (binary: boolean) => async (node) => {
-            await USSActions.uploadDialog(node, ussFileProvider, binary);
+        const uploadDialogHandler = (binary: boolean): ((node: IZoweUSSTreeNode) => Promise<void>) => {
+            return async (node: IZoweUSSTreeNode): Promise<void> => {
+                await USSActions.uploadDialog(node, ussFileProvider, binary);
+            };
         };
         context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.uploadDialog", uploadDialogHandler(false)));
         context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.uploadDialogBinary", uploadDialogHandler(true)));

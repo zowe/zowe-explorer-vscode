@@ -49,7 +49,7 @@ export class TreeViewUtils {
     public static refreshIconOnCollapse<T extends IZoweTreeNode>(
         qualifiers: ((node: IZoweTreeNode) => boolean)[],
         treeProvider: ZoweTreeProvider<T>
-    ) {
+    ): (e: TreeViewExpansionEvent<T>) => any {
         return (e: TreeViewExpansionEvent<T>): any => {
             const newIcon = IconGenerator.getIconByNode(e.element);
             if (qualifiers.some((q) => q(e.element)) && newIcon) {

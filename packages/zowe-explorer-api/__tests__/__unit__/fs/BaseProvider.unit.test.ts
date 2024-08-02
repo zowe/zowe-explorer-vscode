@@ -14,7 +14,7 @@ import { BaseProvider, ConflictViewSelection, DirEntry, FileEntry, ZoweScheme } 
 import { Gui } from "../../../src/globals";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 
-function getGlobalMocks() {
+function getGlobalMocks(): { [key: string]: any } {
     return {
         testFileUri: vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/file.txt" }),
         testFolderUri: vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/folder" }),
@@ -42,7 +42,7 @@ function getGlobalMocks() {
 const globalMocks = getGlobalMocks();
 
 describe("diffOverwrite", () => {
-    function getBlockMocks() {
+    function getBlockMocks(): { [key: string]: jest.SpyInstance<any> } {
         return {
             lookupAsFileMock: jest.spyOn((BaseProvider as any).prototype, "_lookupAsFile"),
             writeFileMock: jest.spyOn(vscode.workspace.fs, "writeFile").mockImplementation(),
@@ -88,7 +88,7 @@ describe("diffOverwrite", () => {
 });
 
 describe("diffUseRemote", () => {
-    function getBlockMocks(prov) {
+    function getBlockMocks(prov): { [key: string]: jest.SpyInstance<any> } {
         return {
             lookupAsFileMock: jest.spyOn(prov, "_lookupAsFile"),
             writeFileMock: jest.spyOn(vscode.workspace.fs, "writeFile").mockImplementation(),
@@ -161,7 +161,7 @@ describe("diffUseRemote", () => {
 });
 
 describe("exists", () => {
-    function getBlockMocks() {
+    function getBlockMocks(): { [key: string]: jest.SpyInstance<any> } {
         return {
             lookupMock: jest.spyOn((BaseProvider as any).prototype, "_lookup"),
         };
@@ -454,7 +454,7 @@ describe("_createFile", () => {
         }
     });
 
-    it("throws an error if a folder already exists with the same URI", async () => {
+    it("throws an error if a folder already exists with the same URI", () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
         prov.root.metadata = {

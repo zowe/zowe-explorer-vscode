@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import { Constants } from "../../../src/configuration/Constants";
 import { Workspace } from "../../../src/configuration/Workspace";
 
-function createGlobalMocks() {
+function createGlobalMocks(): { [key: string]: jest.Mock } {
     const activeTextEditor = jest.fn();
     const executeCommand = jest.fn();
 
@@ -29,7 +29,7 @@ function createGlobalMocks() {
 /**
  * Function which imitates looping through an array
  */
-const generateCycledMock = (mock: any[]) => {
+const generateCycledMock = (mock: any[]): (() => number) => {
     let currentIndex = 0;
 
     return () => {

@@ -276,7 +276,7 @@ export class ZoweVsCodeExtension {
         const saveButton = "Save Credentials";
         const message = [
             `Save entered credentials in plain text for future use with profile ${profile.name}?`,
-            "Saving credentials will update the local information file.",
+            "Saving credentials will update the local configuration file.",
         ].join("\n");
         await Gui.showMessage(message, { items: [saveButton], vsCodeOpts: { modal: true } }).then((selection) => {
             if (selection) {

@@ -20,7 +20,7 @@ class QuickPick {
         this.selector = ".quick-input-widget";
     }
 
-    private async findElement() {
+    private async findElement(): Promise<void> {
         this.elem = await $(this.selector);
     }
 

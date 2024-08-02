@@ -286,7 +286,8 @@ export namespace ZoweExplorerZosmf {
                     };
                 }
             } else {
-                // If we decide to match 1:1 the Zowe.Copy.dataSet implementation, we will need to break the interface definition in the ZoweExplorerApi
+                // If we decide to match 1:1 the Zowe.Copy.dataSet implementation,
+                // we will need to break the interface definition in the ZoweExplorerApi
                 newOptions = { "from-dataset": { dsn: fromDataSetName, member: fromMemberName } };
             }
             return zosfiles.Copy.dataSet(this.getSession(), { dsn: toDataSetName, member: toMemberName }, newOptions);

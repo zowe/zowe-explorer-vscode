@@ -28,7 +28,7 @@ export interface IJestIt {
     title?: string;
 }
 
-function spyOnSubscription(sub: IJestIt) {
+function spyOnSubscription(sub: IJestIt): void {
     sub.mock.forEach((mock) => {
         if (mock.ret) {
             mock.spy.mockClear().mockReturnValue(mock.ret);
@@ -38,8 +38,8 @@ function spyOnSubscription(sub: IJestIt) {
     });
 }
 
-export function processSubscriptions(subscriptions: IJestIt[], test: ITestContext) {
-    const getName = (str: string) => {
+export function processSubscriptions(subscriptions: IJestIt[], test: ITestContext): void {
+    const getName = (str: string): string => {
         return str.indexOf(":") >= 0 ? str.substring(0, str.indexOf(":")) : str;
     };
     subscriptions.forEach((sub) => {

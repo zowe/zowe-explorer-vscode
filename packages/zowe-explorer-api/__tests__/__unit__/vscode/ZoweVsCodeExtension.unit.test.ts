@@ -365,9 +365,9 @@ describe("ZoweVsCodeExtension", () => {
             const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
             jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
             let sessionCopy;
-            const loginSpy = jest.spyOn(Login, "apimlLogin").mockImplementation(async (session: imperative.Session) => {
+            const loginSpy = jest.spyOn(Login, "apimlLogin").mockImplementation((session: imperative.Session) => {
                 sessionCopy = Object.assign(Object.create(Object.getPrototypeOf(session)), session);
-                return "tokenValue";
+                return Promise.resolve("tokenValue");
             });
 
             // case 1: User selects "user/password" for login quick pick
