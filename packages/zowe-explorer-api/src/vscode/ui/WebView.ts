@@ -9,7 +9,7 @@
  *
  */
 
-import mustache from "mustache";
+import Mustache = require("mustache");
 import HTMLTemplate from "./utils/HTMLTemplate";
 import { Types } from "../../Types";
 import { Disposable, ExtensionContext, Uri, ViewColumn, WebviewPanel, window } from "vscode";
@@ -74,7 +74,7 @@ export class WebView {
             script: this.panel.webview.asWebviewUri(this.uris.disk.script),
         };
 
-        const builtHtml = mustache.render(HTMLTemplate, {
+        const builtHtml = Mustache.render(HTMLTemplate, {
             uris: this.uris,
             nonce: this.nonce,
             title: this.title,
