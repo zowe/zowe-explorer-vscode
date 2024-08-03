@@ -15,8 +15,6 @@ import * as tmp from "tmp";
 import * as zowe from "@zowe/cli";
 import * as path from "path";
 
-import { CreateDataSetTypeEnum, IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
-
 import { Gui, MessageSeverity, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 import { DataSetUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
@@ -111,7 +109,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         }
     }
 
-    public async putContents(inputFilePath: string, dataSetName: string, options: IUploadOptions): Promise<zowe.IZosFilesResponse> {
+    public async putContents(inputFilePath: string, dataSetName: string, options: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
         const file = path.basename(inputFilePath).replace(/[^a-z0-9]+/gi, "");
         const member = file.substr(0, MAX_MEMBER_NAME_LEN);
         let targetDataset: string;
@@ -200,7 +198,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
     }
 
     public async createDataSet(
-        dataSetType: CreateDataSetTypeEnum,
+        dataSetType: zowe.CreateDataSetTypeEnum,
         dataSetName: string,
         options?: Partial<zowe.ICreateDataSetOptions>
     ): Promise<zowe.IZosFilesResponse> {
@@ -252,7 +250,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         }
     }
 
-    public async createDataSetMember(dataSetName: string, options?: IUploadOptions): Promise<zowe.IZosFilesResponse> {
+    public async createDataSetMember(dataSetName: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
         const profile = this.checkedProfile();
         const transferOptions = {
             transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
