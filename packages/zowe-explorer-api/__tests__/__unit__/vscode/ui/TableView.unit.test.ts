@@ -198,7 +198,7 @@ describe("Table.View", () => {
             const view = new Table.View(globalMocks.context as any, { title: "Stable Table of Cables" } as any);
             globalMocks.updateWebviewMock.mockResolvedValueOnce(true);
             const cols = [
-                { field: "apple", valueFormatter: (data: { value: Table.CellData }) => `${data.value.toString()} apples` },
+                { field: "apple", valueFormatter: (data: { value: Table.ContentTypes }) => `${data.value.toString()} apples` },
                 { field: "banana", comparator: (valueA, valueB, nodeA, nodeB, isDescending) => -1, colSpan: (params) => 2 },
                 { field: "orange", rowSpan: (params) => 2 },
             ];
@@ -340,7 +340,7 @@ describe("Table.View", () => {
                             command: "some-action",
                             callback: {
                                 typ: "cell",
-                                fn: (_view: Table.View, _cell: Table.CellData) => {
+                                fn: (_view: Table.View, _cell: Table.ContentTypes) => {
                                     allCallbackMock();
                                 },
                             },

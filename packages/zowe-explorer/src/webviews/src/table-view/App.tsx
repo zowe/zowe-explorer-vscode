@@ -12,9 +12,5 @@
 import { TableView } from "./TableView";
 
 export function App() {
-  return (
-    <>
-      <TableView />
-    </>
-  );
+  return <TableView />;
 }

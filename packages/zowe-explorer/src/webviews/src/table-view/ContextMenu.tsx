@@ -113,8 +113,9 @@ export const ContextMenu = (gridRefs: any, menuItems: Table.ContextMenuOption[],
       // Invoke the wrapped function once to get the built function, then invoke it again with the parameters
       return cond.call(null).call(null, gridRefs.clickedRow);
     })
-    .map((item, _i) => (
+    .map((item, i) => (
       <MenuItem
+        key={`${item.command}-ctx-menu-${i}`}
         onClick={(_e: any) => {
           vscodeApi.postMessage({
             command: item.command,

@@ -20,7 +20,6 @@ export namespace Table {
     export type ContentTypes = string | number | boolean | string[];
     export type RowData = Record<string | number, ContentTypes>;
     export type ColData = RowData;
-    export type CellData = ContentTypes;
 
     export type RowInfo = {
         index?: number;
@@ -45,7 +44,7 @@ export namespace Table {
         /** The type of callback */
         typ: "cell";
         /** The callback function itself - called from within the webview container. */
-        fn: (view: Table.View, cell: CellData) => void | PromiseLike<void>;
+        fn: (view: Table.View, cell: ContentTypes) => void | PromiseLike<void>;
     };
     export type ColumnCallback = {
         /** The type of callback */
@@ -57,7 +56,7 @@ export namespace Table {
     export type Callback = SingleRowCallback | MultiRowCallback | CellCallback;
 
     /** Conditional callback function - whether an action or option should be rendered. */
-    export type Conditional = (data: RowData | CellData) => boolean;
+    export type Conditional = (data: RowData | ContentTypes) => boolean;
 
     // Defines the supported actions and related types.
     export type ActionKind = "primary" | "secondary" | "icon";
@@ -77,7 +76,7 @@ export namespace Table {
 
     // -- Misc types --
     /** Value formatter callback. Expects the exact display value to be returned. */
-    export type ValueFormatter = (data: { value: CellData }) => string;
+    export type ValueFormatter = (data: { value: ContentTypes }) => string;
     export type Positions = "left" | "right";
 
     /** The column type definition. All available properties are offered for AG Grid columns. */

@@ -51,7 +51,7 @@ export class TableBuilder {
         this.context = context;
     }
 
-    public isView(): TableBuilder {
+    public isView(): this {
         this.forWebviewView = true;
         return this;
     }
@@ -61,7 +61,7 @@ export class TableBuilder {
      * @param opts The options for the table
      * @returns The same {@link TableBuilder} instance with the options added
      */
-    public options(opts: Table.GridProperties): TableBuilder {
+    public options(opts: Table.GridProperties): this {
         this.data = { ...this.data, options: this.data.options ? { ...this.data.options, ...opts } : opts };
         return this;
     }
@@ -71,7 +71,7 @@ export class TableBuilder {
      * @param name The name of the table
      * @returns The same {@link TableBuilder} instance with the title added
      */
-    public title(name: string): TableBuilder {
+    public title(name: string): this {
         this.data.title = name;
         return this;
     }
@@ -81,7 +81,7 @@ export class TableBuilder {
      * @param rows The rows of content to use for the table
      * @returns The same {@link TableBuilder} instance with the rows added
      */
-    public rows(...rows: Table.RowData[]): TableBuilder {
+    public rows(...rows: Table.RowData[]): this {
         this.data.rows = rows;
         return this;
     }
@@ -91,7 +91,7 @@ export class TableBuilder {
      * @param rows The rows of content to add to the table
      * @returns The same {@link TableBuilder} instance with the new rows added
      */
-    public addRows(rows: Table.RowData[]): TableBuilder {
+    public addRows(rows: Table.RowData[]): this {
         this.data.rows = [...this.data.rows, ...rows];
         return this;
     }
@@ -101,7 +101,7 @@ export class TableBuilder {
      * @param columns The columns to use for the table
      * @returns The same {@link TableBuilder} instance with the columns added
      */
-    public columns(...columns: Table.ColumnOpts[]): TableBuilder {
+    public columns(...columns: Table.ColumnOpts[]): this {
         this.data.columns = this.convertColumnOpts(columns);
         return this;
     }
@@ -121,7 +121,7 @@ export class TableBuilder {
      * @param columns The column definitions to add to the table
      * @returns The same {@link TableBuilder} instance with the new column definitions added
      */
-    public addColumns(columns: Table.ColumnOpts[]): TableBuilder {
+    public addColumns(columns: Table.ColumnOpts[]): this {
         this.data.columns = [...this.data.columns, ...this.convertColumnOpts(columns)];
         return this;
     }
@@ -131,7 +131,7 @@ export class TableBuilder {
      * @param actions the record of indices to {@link Table.Action} arrays to use for the table
      * @returns The same {@link TableBuilder} instance with the row actions added
      */
-    public contextOptions(opts: Record<number | "all", Table.ContextMenuOpts[]>): TableBuilder {
+    public contextOptions(opts: Record<number | "all", Table.ContextMenuOpts[]>): this {
         for (const [key, optsForKey] of Object.entries(opts)) {
             for (const opt of optsForKey) {
                 this.addContextOption(key as number | "all", opt);
@@ -145,7 +145,7 @@ export class TableBuilder {
      * @param index The row index to add an option to (or "all" for all rows)
      * @returns The same {@link TableBuilder} instance with the context menu option added
      */
-    public addContextOption(index: number | "all", option: Table.ContextMenuOpts): TableBuilder {
+    public addContextOption(index: number | "all", option: Table.ContextMenuOpts): this {
         if (this.data.contextOpts[index]) {
             const opts = this.data.contextOpts[index];
             this.data.contextOpts[index] = [...opts, { ...option, condition: option.condition?.toString() }];
@@ -160,8 +160,7 @@ export class TableBuilder {
      * @param actions the record of indices to {@link Table.Action} arrays to use for the table
      * @returns The same {@link TableBuilder} instance with the row actions added
      */
-    public rowActions(actions: Record<number | "all", Table.ActionOpts[]>): TableBuilder {
-        //this.data.actions = actions;
+    public rowActions(actions: Record<number | "all", Table.ActionOpts[]>): this {
         for (const key of Object.keys(actions)) {
             this.addRowAction(key as number | "all", actions[key]);
         }
@@ -173,7 +172,7 @@ export class TableBuilder {
      * @param index The column index to add an action to
      * @returns The same {@link TableBuilder} instance with the row action added
      */
-    public addRowAction(index: number | "all", action: Table.ActionOpts): TableBuilder {
+    public addRowAction(index: number | "all", action: Table.ActionOpts): this {
         if (this.data.actions[index]) {
             const actionList = this.data.actions[index];
             this.data.actions[index] = [...actionList, { ...action, condition: action.condition?.toString() }];

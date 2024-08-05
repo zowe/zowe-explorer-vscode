@@ -24,7 +24,7 @@ export const wrapFn = (s: string) => `{ return ${s} };`;
 type AgGridThemes = "ag-theme-quartz" | "ag-theme-balham" | "ag-theme-material" | "ag-theme-alpine";
 export type TableViewProps = {
     actionsCellRenderer?: (params: any) => JSXInternal.Element;
-    baseTheme?: AgGridThemes | string;
+    baseTheme?: AgGridThemes;
     data?: Table.ViewOpts;
 };
 

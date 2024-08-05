@@ -10,7 +10,7 @@ export const ActionsBar = ({
   vscodeApi,
 }: {
   actions: Table.Action[];
-  gridRef: Ref<any | undefined>;
+  gridRef: Ref<any>;
   itemCount: number;
   vscodeApi: any;
 }) => {
@@ -35,8 +35,9 @@ export const ActionsBar = ({
       <span style={{ marginBottom: "0.25em" }}>
         {actions
           .filter((action) => (itemCount > 1 ? action.callback.typ === "multi-row" : action.callback.typ.endsWith("row")))
-          .map((action) => (
+          .map((action, i) => (
             <VSCodeButton
+              key={`${action.command}-action-bar-${i}`}
               type={action.type}
               style={{ height: "1.5em", fontWeight: "bold", marginRight: "0.25em" }}
               onClick={(_event: any) => {

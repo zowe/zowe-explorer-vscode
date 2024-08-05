@@ -168,7 +168,7 @@ describe("TableBuilder", () => {
                         command: "add-to-queue",
                         callback: {
                             typ: "cell",
-                            fn: (_cell: Table.CellData) => {},
+                            fn: (_cell: Table.ContentTypes) => {},
                         },
                         condition: (_data) => true,
                     },
@@ -250,7 +250,7 @@ describe("TableBuilder", () => {
                 command: "move",
                 callback: {
                     typ: "cell",
-                    fn: (_cell: Table.CellData) => {},
+                    fn: (_cell: Table.ContentTypes) => {},
                 },
                 condition: (_data) => true,
             } as Table.ActionOpts;
@@ -278,7 +278,7 @@ describe("TableBuilder", () => {
                         command: "move",
                         callback: {
                             typ: "cell",
-                            fn: (_cell: Table.CellData) => {},
+                            fn: (_cell: Table.ContentTypes) => {},
                         },
                         condition: (_data) => true,
                     },
@@ -289,7 +289,7 @@ describe("TableBuilder", () => {
                         command: "recall",
                         callback: {
                             typ: "cell",
-                            fn: (_cell: Table.CellData) => {},
+                            fn: (_cell: Table.ContentTypes) => {},
                         },
                         condition: (_data) => true,
                     },

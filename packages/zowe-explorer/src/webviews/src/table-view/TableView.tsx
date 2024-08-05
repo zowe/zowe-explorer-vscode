@@ -19,7 +19,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
   const [tableData, setTableData] = useState<Table.ViewOpts | undefined>(data);
   const [theme, setTheme] = useState<string>(baseTheme ?? "ag-theme-quartz");
   const [selectionCount, setSelectionCount] = useState<number>(0);
-  const gridRef = useRef<any | undefined>();
+  const gridRef = useRef<any>();
 
   const contextMenu = useContextMenu({
     options: [
@@ -114,8 +114,9 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
                             // Invoke the wrapped function once to get the built function, then invoke it again with the parameters
                             return cond.call(null).call(null, params.data);
                           })
-                          .map((action) => (
+                          .map((action, i) => (
                             <VSCodeButton
+                              key={`${action.command}-row-${params.rowIndex ?? 0}-action-${i}`}
                               appearance={action.type ?? "primary"}
                               onClick={(_e: any) =>
                                 vscodeApi.postMessage({
