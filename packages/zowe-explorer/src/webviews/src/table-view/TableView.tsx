@@ -69,86 +69,82 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
       }
 
       const response = event.data;
-      switch (response.command) {
-        case "ondatachanged":
-          // Update received from a VS Code extender; update table state
-          const newData: Table.ViewOpts = response.data;
-          if (Object.keys(newData.actions).length > 1 || newData.actions.all?.length > 0) {
-            // Add an extra column to the end of each row if row actions are present
-            const rows = newData.rows?.map((row: Table.RowData) => {
-              return { ...row, actions: "" };
-            });
-            const columns = [
-              ...(newData.columns ?? []),
-              {
-                ...(newData.columns.find((col) => col.field === "actions") ?? {}),
-                // Prevent cells from being selectable
-                cellStyle: { border: "none", outline: "none" },
-                field: "actions",
-                minWidth: 360,
-                sortable: false,
-                suppressSizeToFit: true,
-                // Support a custom cell renderer for row actions
-                cellRenderer:
-                  actionsCellRenderer ??
-                  ((params: any) =>
-                    // Render any actions for the given row and actions that apply to all rows
-                    newData.actions[params.rowIndex] || newData.actions["all"] ? (
-                      <span
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          marginTop: "0.5em",
-                          userSelect: "none",
-                          width: "fit-content",
-                        }}
-                      >
-                        {[...(newData.actions[params.rowIndex] || []), ...(newData.actions["all"] || [])]
-                          .filter((action) => {
-                            if (action.condition == null) {
-                              return true;
-                            }
+      if (response.command === "ondatachanged") {
+        // Update received from a VS Code extender; update table state
+        const newData: Table.ViewOpts = response.data;
+        if (Object.keys(newData.actions).length > 1 || newData.actions.all?.length > 0) {
+          // Add an extra column to the end of each row if row actions are present
+          const rows = newData.rows?.map((row: Table.RowData) => {
+            return { ...row, actions: "" };
+          });
+          const columns = [
+            ...(newData.columns ?? []),
+            {
+              ...(newData.columns.find((col) => col.field === "actions") ?? {}),
+              // Prevent cells from being selectable
+              cellStyle: { border: "none", outline: "none" },
+              field: "actions",
+              minWidth: 360,
+              sortable: false,
+              suppressSizeToFit: true,
+              // Support a custom cell renderer for row actions
+              cellRenderer:
+                actionsCellRenderer ??
+                ((params: any) =>
+                  // Render any actions for the given row and actions that apply to all rows
+                  newData.actions[params.rowIndex] || newData.actions["all"] ? (
+                    <span
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        marginTop: "0.5em",
+                        userSelect: "none",
+                        width: "fit-content",
+                      }}
+                    >
+                      {[...(newData.actions[params.rowIndex] || []), ...(newData.actions["all"] || [])]
+                        .filter((action) => {
+                          if (action.condition == null) {
+                            return true;
+                          }
 
-                            // Wrap function to properly handle named parameters
-                            const cond = new Function(wrapFn(action.condition));
-                            // Invoke the wrapped function once to get the built function, then invoke it again with the parameters
-                            return cond.call(null).call(null, params.data);
-                          })
-                          .map((action, i) => (
-                            <VSCodeButton
-                              key={`${action.command}-row-${params.rowIndex ?? 0}-action-${i}`}
-                              appearance={action.type ?? "primary"}
-                              onClick={(_e: any) =>
-                                vscodeApi.postMessage({
-                                  command: action.command,
-                                  data: {
-                                    rowIndex: params.node.rowIndex,
-                                    row: { ...params.data, actions: undefined },
-                                    field: params.colDef.field,
-                                    cell: params.colDef.valueFormatter
-                                      ? params.colDef.valueFormatter({
-                                          value: params.data[params.colDef.field],
-                                        })
-                                      : params.data[params.colDef.field],
-                                  },
-                                })
-                              }
-                              style={{ marginRight: "0.25em", width: "fit-content" }}
-                            >
-                              {action.title}
-                            </VSCodeButton>
-                          ))}
-                      </span>
-                    ) : null),
-              },
-            ];
-            setTableData({ ...newData, rows, columns });
-          } else {
-            setTableData(newData);
-          }
-          break;
-        default:
-          break;
+                          // Wrap function to properly handle named parameters
+                          const cond = new Function(wrapFn(action.condition));
+                          // Invoke the wrapped function once to get the built function, then invoke it again with the parameters
+                          return cond()(null, params.data);
+                        })
+                        .map((action, i) => (
+                          <VSCodeButton
+                            key={`${action.command}-row-${params.rowIndex ?? 0}-action-${i}`}
+                            appearance={action.type ?? "primary"}
+                            onClick={(_e: any) =>
+                              vscodeApi.postMessage({
+                                command: action.command,
+                                data: {
+                                  rowIndex: params.node.rowIndex,
+                                  row: { ...params.data, actions: undefined },
+                                  field: params.colDef.field,
+                                  cell: params.colDef.valueFormatter
+                                    ? params.colDef.valueFormatter({
+                                        value: params.data[params.colDef.field],
+                                      })
+                                    : params.data[params.colDef.field],
+                                },
+                              })
+                            }
+                            style={{ marginRight: "0.25em", width: "fit-content" }}
+                          >
+                            {action.title}
+                          </VSCodeButton>
+                        ))}
+                    </span>
+                  ) : null),
+            },
+          ];
+          setTableData({ ...newData, rows, columns });
+        } else {
+          setTableData(newData);
+        }
       }
     });
 
