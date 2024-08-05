@@ -181,8 +181,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         if (!entryExists) {
             const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.posix.basename(uri.path), { attributes: true });
             if (resp.success) {
-                const dsorg: string = resp.apiResponse?.items[0].dsorg;
-                entryIsDir = dsorg.startsWith("PO");
+                const dsorg: string = resp.apiResponse?.items?.[0]?.dsorg;
+                entryIsDir = dsorg?.startsWith("PO") ?? false;
             } else {
                 throw vscode.FileSystemError.FileNotFound(uri);
             }

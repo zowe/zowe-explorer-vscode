@@ -146,7 +146,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         for (const item of fileList.apiResponse.items) {
             const itemName = item.name as string;
 
-            const isDirectory = item.mode.startsWith("d");
+            const isDirectory = item.mode?.startsWith("d") ?? false;
             const newEntryType = isDirectory ? vscode.FileType.Directory : vscode.FileType.File;
             // skip over existing entries if they are the same type
             const existingEntry = entry.entries.get(itemName);
@@ -155,7 +155,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             }
 
             // create new entries for any files/folders that aren't in the provider
-            const UssType = item.mode.startsWith("d") ? UssDirectory : UssFile;
+            const UssType = item.mode?.startsWith("d") ? UssDirectory : UssFile;
             const newEntry = new UssType(itemName);
             newEntry.metadata = { ...entry.metadata, path: path.posix.join(entry.metadata.path, itemName) };
             entry.entries.set(itemName, newEntry);
