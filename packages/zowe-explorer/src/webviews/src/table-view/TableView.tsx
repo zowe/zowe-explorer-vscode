@@ -2,16 +2,16 @@
 import "ag-grid-community/styles/ag-grid.css";
 // AG Grid Quartz Theme (used as base theme)
 import "ag-grid-community/styles/ag-theme-quartz.css";
-import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import { AgGridReact } from "ag-grid-react";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { getVsCodeTheme, isSecureOrigin, useMutableObserver } from "../utils";
 import type { Table } from "@zowe/zowe-explorer-api";
-import { TableViewProps, tableProps, wrapFn } from "./types";
+import { TableViewProps, tableProps } from "./types";
 import { useContextMenu } from "./ContextMenu";
 // Custom styling (font family, VS Code color scheme, etc.)
 import "./style.css";
 import { ActionsBar } from "./ActionsBar";
+import { actionsColumn } from "./actionsColumn";
 
 const vscodeApi = acquireVsCodeApi();
 
@@ -77,70 +77,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
           const rows = newData.rows?.map((row: Table.RowData) => {
             return { ...row, actions: "" };
           });
-          const columns = [
-            ...(newData.columns ?? []),
-            {
-              ...(newData.columns.find((col) => col.field === "actions") ?? {}),
-              // Prevent cells from being selectable
-              cellStyle: { border: "none", outline: "none" },
-              field: "actions",
-              minWidth: 360,
-              sortable: false,
-              suppressSizeToFit: true,
-              // Support a custom cell renderer for row actions
-              cellRenderer:
-                actionsCellRenderer ??
-                ((params: any) =>
-                  // Render any actions for the given row and actions that apply to all rows
-                  newData.actions[params.rowIndex] || newData.actions["all"] ? (
-                    <span
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        marginTop: "0.5em",
-                        userSelect: "none",
-                        width: "fit-content",
-                      }}
-                    >
-                      {[...(newData.actions[params.rowIndex] || []), ...(newData.actions["all"] || [])]
-                        .filter((action) => {
-                          if (action.condition == null) {
-                            return true;
-                          }
-
-                          // Wrap function to properly handle named parameters
-                          const cond = new Function(wrapFn(action.condition));
-                          // Invoke the wrapped function once to get the built function, then invoke it again with the parameters
-                          return cond()(null, params.data);
-                        })
-                        .map((action, i) => (
-                          <VSCodeButton
-                            key={`${action.command}-row-${params.rowIndex ?? 0}-action-${i}`}
-                            appearance={action.type ?? "primary"}
-                            onClick={(_e: any) =>
-                              vscodeApi.postMessage({
-                                command: action.command,
-                                data: {
-                                  rowIndex: params.node.rowIndex,
-                                  row: { ...params.data, actions: undefined },
-                                  field: params.colDef.field,
-                                  cell: params.colDef.valueFormatter
-                                    ? params.colDef.valueFormatter({
-                                        value: params.data[params.colDef.field],
-                                      })
-                                    : params.data[params.colDef.field],
-                                },
-                              })
-                            }
-                            style={{ marginRight: "0.25em", width: "fit-content" }}
-                          >
-                            {action.title}
-                          </VSCodeButton>
-                        ))}
-                    </span>
-                  ) : null),
-            },
-          ];
+          const columns = [...(newData.columns ?? []), actionsColumn(newData, actionsCellRenderer, vscodeApi)];
           setTableData({ ...newData, rows, columns });
         } else {
           setTableData(newData);
