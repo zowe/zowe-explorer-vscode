@@ -269,7 +269,9 @@ export class ProfileInfo {
     ): any {
         return;
     }
+}
 
+export class ConfigUtils {
     public static getZoweDir(): string {
         const defaultHome = path.join(os.homedir(), ".zowe");
         if (ImperativeConfig.instance.loadedConfig?.defaultHome !== defaultHome) {
@@ -282,7 +284,6 @@ export class ProfileInfo {
         return ImperativeConfig.instance.cliHome;
     }
 }
-
 export class ImperativeError extends Error {
     private msg: string;
     constructor(public mDetails: IImperativeError) {
@@ -367,7 +368,7 @@ export class ConfigBuilder {
                     },
                     secure: [],
                 },
-                base: {
+                global_base: {
                     type: "base",
                     properties: {
                         host: "sample.com",
@@ -378,7 +379,7 @@ export class ConfigBuilder {
             },
             defaults: {
                 zosmf: "zosmf",
-                base: "base",
+                base: "global_base",
             },
             autoStore: true,
         };
@@ -425,6 +426,22 @@ export class ConvertV1Profiles {
             profilesConverted: [],
             profilesFailed: [],
             v1ScsPluginName: undefined,
+        };
+    }
+}
+
+export class ZoweUserEvents {
+    public static readonly ON_VAULT_CHANGED = "onVaultChanged";
+}
+export class ZoweSharedEvents {
+    public static readonly ON_CREDENTIAL_MANAGER_CHANGED = "onCredentialManagerChanged";
+}
+
+export class EventOperator {
+    public static getWatcher() {
+        return {
+            subscribeUser: () => ({ close: () => {} }),
+            subscribeShared: () => ({ close: () => {} }),
         };
     }
 }

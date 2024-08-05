@@ -27,7 +27,7 @@ module.exports = {
             {
                 displayNames: {
                     "zowe-explorer": "Zowe Explorer",
-                    "zowe-explorer-ftp-extension": "Zowe Explorer Extension for FTP",
+                    "zowe-explorer-ftp-extension": "IBM z/OS FTP for Zowe Explorer",
                     "zowe-explorer-api": "Zowe Explorer APIs",
                 },
                 headerLine: "## TBD Release",

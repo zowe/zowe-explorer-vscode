@@ -20,7 +20,7 @@ import { LoggerUtils } from "../../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 
-function createGlobalMocks() {
+function createGlobalMocks(): { [key: string]: any } {
     const newMocks = {
         mockMessage: "fake message",
         outputChannel: shared.createOutputChannel(),

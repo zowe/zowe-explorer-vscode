@@ -175,7 +175,7 @@ function createGlobalMocks() {
 }
 
 describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
-    async function createBlockMocks(globalMocks) {
+    function createBlockMocks(globalMocks) {
         const newMocks = {
             testUSSTree: null,
             ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
@@ -195,7 +195,7 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
 
     it("Tests that only the child node is refreshed when createUSSNode() is called on a child node", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         globalMocks.mockShowInputBox.mockReturnValue("USSFolder");
         jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValueOnce([]);
@@ -209,7 +209,7 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
 
     it("Tests if createUSSNode is executed successfully with Unverified profile", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -232,7 +232,7 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
 
     it("Tests that createUSSNode does not execute if node name was not entered", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         globalMocks.mockShowInputBox.mockReturnValueOnce("");
 
@@ -243,7 +243,7 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
 
     it("Tests that createUSSNode is executed successfully", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         const testProfile = createIProfile();
         const ussApi = ZoweExplorerApiRegister.getUssApi(testProfile);
@@ -265,7 +265,7 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
 
     it("Tests that createUSSNode refreshes the equivalent node (favorite/non-favorite)", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         const testProfile = createIProfile();
         const ussApi = ZoweExplorerApiRegister.getUssApi(testProfile);
@@ -290,9 +290,9 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
 
     it("Tests that createUSSNode fails if an error is thrown", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
-        const getUssApiSpy = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockImplementationOnce(() => {
+        jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockImplementationOnce(() => {
             throw Error("Test error");
         });
         globalMocks.mockShowInputBox.mockReturnValueOnce("USSFolder");
@@ -309,7 +309,7 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
 
     it("Tests that only the child node is refreshed when createUSSNode() is called on a child node", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         globalMocks.mockShowInputBox.mockReturnValueOnce("USSFolder");
         jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValueOnce([]);
@@ -323,7 +323,7 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
 
     it("Tests that the error is handled if createUSSNode is unsuccessful", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         globalMocks.mockShowInputBox.mockReturnValueOnce("USSFolder");
         const isTopLevel = false;
         const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling");
@@ -341,7 +341,7 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
 });
 
 describe("USS Action Unit Tests - Function refreshUSSInTree", () => {
-    async function createBlockMocks(globalMocks) {
+    function createBlockMocks(globalMocks) {
         const newMocks = {
             testUSSTree: null,
             ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
@@ -356,7 +356,7 @@ describe("USS Action Unit Tests - Function refreshUSSInTree", () => {
     }
     it("should make the call to refresh the specified node within the USS tree", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         await USSActions.refreshUSSInTree(blockMocks.ussNode, blockMocks.testUSSTree);
 
@@ -365,25 +365,11 @@ describe("USS Action Unit Tests - Function refreshUSSInTree", () => {
 });
 
 describe("USS Action Unit Tests - Function deleteFromDisk", () => {
-    async function createBlockMocks(globalMocks) {
-        const newMocks = {
-            testUSSTree: null,
-            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
-        };
-        newMocks.testUSSTree = createUSSTree(
-            [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-            [newMocks.ussNode],
-            createTreeView()
-        );
-
-        return newMocks;
-    }
-
     it("should call unlink if file exists", () => {
-        (fs.existsSync as any) = jest.fn<ReturnType<typeof fs.existsSync>, Parameters<typeof fs.existsSync>>((filePath: string) => {
+        (fs.existsSync as any) = jest.fn<ReturnType<typeof fs.existsSync>, Parameters<typeof fs.existsSync>>((_filePath: string) => {
             return true;
         });
-        (fs.unlinkSync as any) = jest.fn<ReturnType<typeof fs.unlinkSync>, Parameters<typeof fs.unlinkSync>>((filePath: string) => {
+        (fs.unlinkSync as any) = jest.fn<ReturnType<typeof fs.unlinkSync>, Parameters<typeof fs.unlinkSync>>((_filePath: string) => {
             // do nothing
         });
 
@@ -394,10 +380,10 @@ describe("USS Action Unit Tests - Function deleteFromDisk", () => {
     });
 
     it("should call not unlink if file doesn't exist", () => {
-        (fs.existsSync as any) = jest.fn<ReturnType<typeof fs.existsSync>, Parameters<typeof fs.existsSync>>((filePath: string) => {
+        (fs.existsSync as any) = jest.fn<ReturnType<typeof fs.existsSync>, Parameters<typeof fs.existsSync>>((_filePath: string) => {
             return false;
         });
-        (fs.unlinkSync as any) = jest.fn<ReturnType<typeof fs.unlinkSync>, Parameters<typeof fs.unlinkSync>>((filePath: string) => {
+        (fs.unlinkSync as any) = jest.fn<ReturnType<typeof fs.unlinkSync>, Parameters<typeof fs.unlinkSync>>((_filePath: string) => {
             // do nothing
         });
 
@@ -418,7 +404,7 @@ describe("USS Action Unit Tests - Function deleteFromDisk", () => {
 });
 
 describe("USS Action Unit Tests - Function copyPath", () => {
-    async function createBlockMocks(globalMocks) {
+    function createBlockMocks(globalMocks) {
         const newMocks = {
             ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
         };
@@ -428,7 +414,7 @@ describe("USS Action Unit Tests - Function copyPath", () => {
 
     it("should copy the node's full path to the system clipboard", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         await USSActions.copyPath(blockMocks.ussNode);
         expect(globalMocks.writeText).toHaveBeenCalledWith(blockMocks.ussNode.fullPath);
@@ -436,11 +422,11 @@ describe("USS Action Unit Tests - Function copyPath", () => {
 });
 
 describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
-    async function createBlockMocks(globalMocks) {
+    function createBlockMocks(globalMocks) {
         Object.defineProperty(vscode.window, "withProgress", {
             value: jest.fn().mockImplementation((progLocation, callback) => {
                 const progress = {
-                    report: (message) => {
+                    report: (_message) => {
                         return;
                     },
                 };
@@ -480,7 +466,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
 
     it("Tests that uploadDialog() works for non-binary file", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         globalMocks.openTextDocument.mockResolvedValue(blockMocks.testDoc);
         const fileUri = { fsPath: "/tmp/foo.txt" };
@@ -494,7 +480,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
 
     it("Tests that uploadDialog() works for binary file", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         globalMocks.openTextDocument.mockResolvedValue(blockMocks.testDoc);
         const fileUri = { fsPath: "/tmp/foo.zip" };
@@ -507,7 +493,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
 
     it("shouldn't call upload dialog and not upload file if selection is empty", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         globalMocks.showOpenDialog.mockReturnValue(undefined);
         await USSActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree, true);
         expect(globalMocks.showOpenDialog).toHaveBeenCalled();
@@ -516,7 +502,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
 
     it("Tests that uploadDialog() throws an error successfully", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         globalMocks.openTextDocument.mockResolvedValue(blockMocks.testDoc);
         globalMocks.mockShowInputBox.mockReturnValueOnce("new name");
@@ -537,7 +523,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
 });
 
 describe("USS Action Unit Tests - function uploadFile", () => {
-    async function createBlockMocks(globalMocks) {
+    function createBlockMocks(globalMocks) {
         const newMocks = {
             node: null,
             testUSSTree: null,
@@ -570,10 +556,10 @@ describe("USS Action Unit Tests - function uploadFile", () => {
 
     it("Tests upload file works with new API method", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         const putContent = jest.fn();
         ZoweExplorerApiRegister.getUssApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>(
-            (profile: imperative.IProfileLoaded) => {
+            (_profile: imperative.IProfileLoaded) => {
                 return {
                     putContent,
                 };
@@ -586,7 +572,7 @@ describe("USS Action Unit Tests - function uploadFile", () => {
 });
 
 describe("USS Action Unit Tests - copy file / directory", () => {
-    async function createBlockMocks(globalMocks) {
+    function createBlockMocks(globalMocks) {
         const newMocks = {
             testUSSTree: null as unknown as USSTree,
             ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
@@ -636,7 +622,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
 
     it("Copy file(s), Directory(s) paths into clipboard", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         const getEncodingForFileMock = jest.spyOn(ZoweUSSNode.prototype, "getEncoding").mockReturnValue(undefined as any);
         const fileStructure = JSON.stringify(await USSActions.ussFileStructure(blockMocks.ussNodes));
         await USSActions.copyUssFilesToClipboard(blockMocks.ussNodes);
@@ -645,7 +631,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         getEncodingForFileMock.mockRestore();
     });
 
-    it("Has the proper responses for toSameSession in UssFileUtils", async () => {
+    it("Has the proper responses for toSameSession in UssFileUtils", () => {
         // Test toSameSession where one of the files has a diff LPAR
         let isSameSession = USSFileStructure.UssFileUtils.toSameSession(
             {
@@ -677,7 +663,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
 
     it("paste calls relevant function in FileSystemProvider", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         const rootTree: USSFileStructure.UssFileTree = {
             children: [],
             baseName: blockMocks.ussNodes[1].getLabel() as string,
@@ -694,7 +680,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
 
     it("paste throws an error if required APIs are not available", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         const rootTree: USSFileStructure.UssFileTree = {
             children: [],
             baseName: blockMocks.ussNodes[1].getLabel() as string,
@@ -727,7 +713,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
     it("tests refreshChildNodesDirectory executed successfully with empty directory", async () => {
         jest.clearAllMocks();
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         await USSActions.refreshChildNodesDirectory(blockMocks.ussNodes[1]);
         expect(blockMocks.ussNodes[1].getChildren).toHaveBeenCalledTimes(1);
         expect(blockMocks.ussNodes[1].refreshUSS).toHaveBeenCalledTimes(0);
@@ -736,13 +722,13 @@ describe("USS Action Unit Tests - copy file / directory", () => {
     it("tests refreshChildNodesDirectory executed successfully with file", async () => {
         jest.clearAllMocks();
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         await USSActions.refreshChildNodesDirectory(blockMocks.ussNodes[0]);
         expect(blockMocks.ussNodes[0].refreshUSS).toHaveBeenCalledTimes(1);
     });
     it("tests refreshChildNodesDirectory executed successfully on a node with a child", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         const node = new ZoweUSSNode({
             label: "parent",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -757,26 +743,26 @@ describe("USS Action Unit Tests - copy file / directory", () => {
 
     it("tests copyUssFiles executed successfully via context menu with selected nodes", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         await USSActions.copyUssFiles(blockMocks.ussNode, null, blockMocks.testUSSTree);
         expect(SharedUtils.getSelectedNodeList(blockMocks.ussNode, null)).toEqual([blockMocks.ussNode]);
     });
     it("tests copyUssFiles executed successfully via quick keys with selected nodes", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         await USSActions.copyUssFiles(null, null, blockMocks.testUSSTree);
         expect(SharedUtils.getSelectedNodeList(blockMocks.ussNode, null)).toEqual([blockMocks.ussNode]);
     });
 
     it("tests pasteUss executed successfully with selected nodes", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         await USSActions.pasteUss(blockMocks.testUSSTree, blockMocks.ussNodes[0]);
         expect(SharedUtils.getSelectedNodeList(blockMocks.ussNode, null)).toEqual([blockMocks.ussNode]);
     });
     it("tests pasteUss executed successfully with one node", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         const parent = blockMocks.testUSSTree.getTreeView();
         parent.selection = blockMocks.ussNodes[0];
         jest.spyOn(USSActions, "copyUssFilesToClipboard").mockResolvedValueOnce();
@@ -785,7 +771,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
     });
     it("tests pasteUss returns early if APIs are not supported", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         const testNode = blockMocks.ussNodes[0];
         testNode.copyUssFile = testNode.pasteUssTree = null;
         const infoMessageSpy = jest.spyOn(Gui, "infoMessage");

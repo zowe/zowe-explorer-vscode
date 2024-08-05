@@ -17,14 +17,6 @@ import { FileManagement, Types } from "../../../src";
 
 jest.mock("fs");
 
-const fakeSchema: { properties: object } = {
-    properties: {
-        host: { type: "string" },
-        port: { type: "number" },
-        user: { type: "string", secure: true },
-        password: { type: "string", secure: true },
-    },
-};
 const lpar1Profile: Required<Pick<imperative.IProfileLoaded, "name" | "type" | "profile">> = {
     name: "lpar1",
     type: "zosmf",
@@ -157,7 +149,7 @@ describe("ProfilesCache", () => {
         existsSync.mockRestore();
     });
 
-    it("requireKeyring returns keyring module from Secrets SDK", async () => {
+    it("requireKeyring returns keyring module from Secrets SDK", () => {
         const keyring = ProfilesCache.requireKeyring();
         expect(keyring).toBeDefined();
         expect(Object.keys(keyring).length).toBe(5);
@@ -260,7 +252,7 @@ describe("ProfilesCache", () => {
 
         it("should refresh profile data for multiple profile types", async () => {
             const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as unknown as imperative.Logger);
-            const getProfInfoSpy = jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, zftpProfile]));
+            jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, zftpProfile]));
             await profCache.refresh(fakeApiRegister as unknown as Types.IApiRegisterClient);
             expect(profCache.allProfiles.length).toEqual(2);
             expect(profCache.allProfiles[0]).toMatchObject(lpar1Profile);

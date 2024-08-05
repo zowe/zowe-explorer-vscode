@@ -23,8 +23,6 @@ import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-const MAX_MEMBER_NAME_LEN = 8;
-
 export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IMvs {
     public async dataSet(filter: string, _options?: zosfiles.IListOptions): Promise<zosfiles.IZosFilesResponse> {
         const result = this.getDefaultResponse();

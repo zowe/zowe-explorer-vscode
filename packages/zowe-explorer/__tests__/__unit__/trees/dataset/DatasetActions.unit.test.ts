@@ -239,8 +239,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             parentNode: blockMocks.datasetSessionNode,
             session: blockMocks.session,
         });
-        const nonFavoriteLabel = parent.label;
-        parent.label = `${parent.label}`;
+        const nonFavoriteLabel = parent.label?.toString();
         parent.contextValue = Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX;
 
         const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("testMember");
@@ -262,7 +261,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         expect(mocked(zosfiles.Upload.bufferToDataSet)).toHaveBeenCalledWith(
             blockMocks.zosmfSession,
             Buffer.from(""),
-            (nonFavoriteLabel as string) + "(TESTMEMBER)",
+            nonFavoriteLabel + "(TESTMEMBER)",
             {
                 responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
             }
@@ -308,7 +307,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         expect(mocked(vscode.commands.executeCommand)).not.toHaveBeenCalled();
     });
     it("Checking failed attempt to refresh PS dataset (not found exception)", async () => {
-        const globalMocks = createGlobalMocks();
+        createGlobalMocks();
         const blockMocks = createBlockMocksShared();
         const node = new ZoweDatasetNode({
             label: "HLQ.TEST.AFILE7",
@@ -335,7 +334,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         blockMocks.fetchDsAtUri.mockRejectedValueOnce(Error("not found"));
 
         await DatasetActions.refreshPS(child);
-        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(`Unable to find file ${parent.label}(${child.label})`);
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(`Unable to find file ${parent.label?.toString()}(${child.label?.toString()})`);
     });
     it("Checking favorite empty PDS refresh", async () => {
         createGlobalMocks();
@@ -441,7 +440,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
             const progress = {
-                report: (message) => {
+                report: (_message) => {
                     return;
                 },
             };
@@ -476,7 +475,9 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}`);
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
+            `The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel().toString()}`
+        );
     });
 
     it("Should delete one member", async () => {
@@ -492,7 +493,8 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
-            `The following 1 item(s) were deleted: ${blockMocks.testMemberNode.getParent().getLabel()}(${blockMocks.testMemberNode.getLabel()})`
+            `The following 1 item(s) were deleted: ` +
+                `${blockMocks.testMemberNode.getParent().getLabel().toString()}(${blockMocks.testMemberNode.getLabel().toString()})`
         );
     });
 
@@ -507,7 +509,9 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testVsamNode.getLabel()}`);
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
+            `The following 1 item(s) were deleted: ${blockMocks.testVsamNode.getLabel().toString()}`
+        );
     });
 
     it("Should delete one migrated dataset", async () => {
@@ -521,7 +525,9 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testMigrNode.getLabel()}`);
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
+            `The following 1 item(s) were deleted: ${blockMocks.testMigrNode.getLabel().toString()}`
+        );
     });
 
     it("Should delete two datasets", async () => {
@@ -536,7 +542,8 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
-            `The following 2 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}, ${blockMocks.testVsamNode.getLabel()}`
+            `The following 2 item(s) were deleted: ` +
+                `${blockMocks.testDatasetNode.getLabel().toString()}, ${blockMocks.testVsamNode.getLabel().toString()}`
         );
     });
 
@@ -551,7 +558,9 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}`);
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
+            `The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel().toString()}`
+        );
     });
 
     it("Should delete a favorited data set", async () => {
@@ -567,7 +576,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith(
             `Are you sure you want to delete the following 1 item(s)?\nThis will permanently remove these data sets and/or members from your ` +
-                `system.\n\n ${blockMocks.testFavoritedNode.getLabel()}`,
+                `system.\n\n ${blockMocks.testFavoritedNode.getLabel().toString()}`,
             { items: ["Delete"], vsCodeOpts: { modal: true } }
         );
     });
@@ -585,7 +594,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith(
             `Are you sure you want to delete the following 1 item(s)?\nThis will permanently remove these data sets and/or members from your ` +
-                `system.\n\n ${blockMocks.testFavoritedNode.getLabel()}(${blockMocks.testFavMemberNode.getLabel()})`,
+                `system.\n\n ${blockMocks.testFavoritedNode.getLabel().toString()}(${blockMocks.testFavMemberNode.getLabel().toString()})`,
             { items: ["Delete"], vsCodeOpts: { modal: true } }
         );
     });
@@ -616,7 +625,8 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
-            `The following 2 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}, ${blockMocks.testFavoritedNode.getLabel()}`
+            `The following 2 item(s) were deleted: ` +
+                `${blockMocks.testDatasetNode.getLabel().toString()}, ${blockMocks.testFavoritedNode.getLabel().toString()}`
         );
     });
 
@@ -642,7 +652,8 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree, blockMocks.testMemberNode);
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
-            `The following 1 item(s) were deleted: ${blockMocks.testMemberNode.getParent().getLabel()}(${blockMocks.testMemberNode.getLabel()})`
+            `The following 1 item(s) were deleted: ` +
+                `${blockMocks.testMemberNode.getParent().getLabel().toString()}(${blockMocks.testMemberNode.getLabel().toString()})`
         );
     });
 });
@@ -746,7 +757,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         jest.spyOn(DatasetFSProvider.instance, "delete").mockRejectedValueOnce(Error("not found"));
         await expect(DatasetActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toThrow("not found");
-        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Unable to find file " + node.label);
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Unable to find file " + node.label?.toString());
     });
     it("Checking common PS dataset failed deletion attempt", async () => {
         createGlobalMocks();
@@ -2967,7 +2978,7 @@ describe("Dataset Actions Unit Tests - Function confirmJobSubmission", () => {
 });
 
 describe("Dataset Actions Unit Tests - Function getDsTypePropertiesFromWorkspaceConfig", () => {
-    it("Should use use local JCL doc name for confirmJobSubmission", async () => {
+    it("Should use use local JCL doc name for confirmJobSubmission", () => {
         createGlobalMocks();
         const options = createWorkspaceConfiguration();
         // const opt = DatasetActions.getDsTypePropertiesFromWorkspaceConfig(options);
