@@ -34,20 +34,11 @@ import { TableMediator } from "./TableMediator";
  */
 export class TableBuilder {
     private context: ExtensionContext;
-    private data: Table.ViewOpts = {
-        actions: {
-            all: [],
-        },
-        contextOpts: {
-            all: [],
-        },
-        columns: [],
-        rows: [],
-        title: "",
-    };
+    private data: Table.ViewOpts;
     private forWebviewView = false;
 
     public constructor(context: ExtensionContext) {
+        this.reset();
         this.context = context;
     }
 
