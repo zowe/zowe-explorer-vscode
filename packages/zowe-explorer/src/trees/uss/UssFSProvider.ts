@@ -60,14 +60,28 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param uri A URI that must exist as an entry in the provider
      * @returns A structure containing file type, time, size and other metrics
      */
-    public stat(uri: vscode.Uri): vscode.FileStat {
+    public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         if (uri.query) {
             const queryParams = new URLSearchParams(uri.query);
             if (queryParams.has("conflict")) {
                 return { ...this._lookup(uri, false), permissions: vscode.FilePermission.Readonly };
             }
         }
-        return this._lookup(uri, false);
+
+        const entry = this._lookup(uri, false);
+        const fileResp = await this.listFiles(entry.metadata.profile, uri, true);
+        if (fileResp.success) {
+            // Regardless of the resource type, it will be the first item in a successful response.
+            // When listing a folder, the folder's stats will be represented as the "." entry.
+            return {
+                ...entry,
+                // If there isn't a valid mtime on the API response, we cannot determine whether the resource has been updated.
+                // Use the last-known modification time to prevent superfluous updates.
+                mtime: (fileResp.apiResponse?.items ?? [])?.[0]?.mtime ?? entry.mtime,
+            };
+        }
+
+        return entry;
     }
 
     /**
@@ -92,7 +106,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return true;
     }
 
-    public async listFiles(profile: imperative.IProfileLoaded, uri: vscode.Uri): Promise<IZosFilesResponse> {
+    public async listFiles(profile: imperative.IProfileLoaded, uri: vscode.Uri, keepRelative?: boolean): Promise<IZosFilesResponse> {
         const queryParams = new URLSearchParams(uri.query);
         const ussPath = queryParams.has("searchPath") ? queryParams.get("searchPath") : uri.path.substring(uri.path.indexOf("/", 1));
         if (ussPath.length === 0) {
@@ -110,7 +124,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             ...response,
             apiResponse: {
                 ...response.apiResponse,
-                items: (response.apiResponse.items ?? []).filter((it) => !(/^\.{1,3}$/.test(it.name as string))),
+                items: (response.apiResponse.items ?? []).filter(keepRelative ? Boolean : (it): boolean => !/^\.{1,3}$/.test(it.name as string)),
             },
         };
     }

@@ -254,7 +254,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
     it("should create instance when there is non-empty workspace", async () => {
         mockWorkspaceFolders.mockClear().mockReturnValue([
             {
-                uri: { fsPath: "fakePath" },
+                uri: { fsPath: "fakePath", scheme: "file" },
             },
         ]);
 

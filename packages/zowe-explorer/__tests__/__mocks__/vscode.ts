@@ -1188,6 +1188,19 @@ export namespace workspace {
         return new Disposable();
     }
 
+    export interface WorkspaceFoldersChangeEvent {
+        /**
+         * Added workspace folders.
+         */
+        readonly added: readonly WorkspaceFolder[];
+
+        /**
+         * Removed workspace folders.
+         */
+        readonly removed: readonly WorkspaceFolder[];
+    }
+    export const onDidChangeWorkspaceFolders: Event<WorkspaceFoldersChangeEvent> = jest.fn();
+
     export function onDidCloseTextDocument<T>(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) {}
     export function onDidOpenTextDocument<T>(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) {}
     export function onDidSaveTextDocument<T>(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) {}

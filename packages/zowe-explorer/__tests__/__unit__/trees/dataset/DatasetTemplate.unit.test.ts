@@ -91,6 +91,7 @@ describe("DataSetTemplates Class Unit Tests", () => {
                     {
                         uri: {
                             fsPath: "test",
+                            scheme: "file",
                         },
                     },
                 ],

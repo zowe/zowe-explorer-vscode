@@ -38,9 +38,9 @@ const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<
 function createGlobalMocks() {
     const newMocks = {
         imperativeProfile: createIProfile(),
-        profileInstance: null,
-        getContentsSpy: null,
-        mvsApi: null,
+        profileInstance: null as any as Profiles,
+        getContentsSpy: null as any as jest.SpyInstance,
+        mvsApi: null as any as ReturnType<typeof createMvsApi>,
         openTextDocument: jest.fn(),
     };
 
@@ -335,49 +335,49 @@ describe("ZoweDatasetNode Unit Tests - Function node.setIcon()", () => {
 
 describe("ZoweDatasetNode Unit Tests - Function node.setEtag", () => {
     it("sets the e-tag for a member/PS", () => {
-        const dsEntry = new DsEntry("TEST.DS");
-        const statMock = jest.spyOn(DatasetFSProvider.instance, "stat").mockReturnValueOnce(dsEntry);
+        const dsEntry = new DsEntry("TEST.DS", false);
+        const lookupMock = jest.spyOn(DatasetFSProvider.instance, "_lookup").mockReturnValueOnce(dsEntry);
 
         const node = new ZoweDatasetNode({ label: "etagTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setEtag("123ETAG");
-        expect(statMock).toHaveBeenCalled();
+        expect(lookupMock).toHaveBeenCalled();
         expect(dsEntry.etag).toBe("123ETAG");
-        statMock.mockRestore();
+        lookupMock.mockRestore();
     });
 
     it("returns early when trying to set the e-tag for a PDS", () => {
         const pdsEntry = new PdsEntry("TEST.PDS");
-        const statMock = jest.spyOn(DatasetFSProvider.instance, "stat").mockReturnValueOnce(pdsEntry);
+        const lookupMock = jest.spyOn(DatasetFSProvider.instance, "_lookup").mockReturnValueOnce(pdsEntry);
 
         const node = new ZoweDatasetNode({ label: "pds", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
         node.setEtag("123ETAG");
-        expect(statMock).toHaveBeenCalled();
+        expect(lookupMock).toHaveBeenCalled();
         expect(pdsEntry).not.toHaveProperty("etag");
-        statMock.mockRestore();
+        lookupMock.mockRestore();
     });
 });
 
 describe("ZoweDatasetNode Unit Tests - Function node.setStats", () => {
     it("sets the stats for a data set or PDS member", () => {
-        const dsEntry = new DsEntry("TEST.DS");
-        dsEntry.stats = { user: "aUser" };
-        const statMock = jest.spyOn(DatasetFSProvider.instance, "stat").mockReturnValueOnce(dsEntry);
+        const dsEntry = new DsEntry("TEST.DS", false);
+        dsEntry.stats = { user: "aUser", createdDate: new Date(), modifiedDate: new Date() };
+        const lookupMock = jest.spyOn(DatasetFSProvider.instance, "_lookup").mockReturnValueOnce(dsEntry);
 
         const node = new ZoweDatasetNode({ label: "statsTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setStats({ user: "bUser" });
-        expect(statMock).toHaveBeenCalled();
+        expect(lookupMock).toHaveBeenCalled();
         expect(dsEntry.stats).toStrictEqual({ user: "bUser" });
-        statMock.mockRestore();
+        lookupMock.mockRestore();
     });
 
     it("returns early when trying to set the stats for a PDS", () => {
         const pdsEntry = new PdsEntry("TEST.PDS");
-        const statMock = jest.spyOn(DatasetFSProvider.instance, "stat").mockClear().mockReturnValueOnce(pdsEntry);
+        const lookupMock = jest.spyOn(DatasetFSProvider.instance, "_lookup").mockClear().mockReturnValueOnce(pdsEntry);
 
         const node = new ZoweDatasetNode({ label: "pds", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
         node.setStats({ user: "bUser" });
-        expect(statMock).toHaveBeenCalled();
+        expect(lookupMock).toHaveBeenCalled();
         expect(pdsEntry).not.toHaveProperty("stats");
-        statMock.mockRestore();
+        lookupMock.mockRestore();
     });
 });

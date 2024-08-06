@@ -104,40 +104,30 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             return entry;
         }
 
-        if (!FsDatasetsUtils.isPdsEntry(entry) && (entry as DsEntry).isMember) {
+        // Locate the resource using the profile in the given URI.
+        let resp;
+        const isPdsMember = !FsDatasetsUtils.isPdsEntry(entry) && (entry as DsEntry).isMember;
+        if (isPdsMember) {
             // PDS member
             const pds = this._lookupParentDirectory(uri);
-            const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(pds.name, { attributes: true });
-            if (resp.success) {
-                const pdsMember = (resp.apiResponse?.items ?? []).find((i) => i.member === entry.name);
-                if (pdsMember != null && "m4date" in pdsMember) {
-                    entry.wasAccessed = false;
-                    const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = pdsMember;
-                    const statInfo = {
-                        type: entry.type,
-                        ctime: 0,
-                        mtime: dayjs(`${m4date} ${mtime}:${msec}`).unix(),
-                        size: entry.size,
-                    };
-                    return statInfo;
-                }
-            }
+            resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(pds.name, { attributes: true });
         } else {
             // PDS or Data Set
-            const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.posix.basename(uri.path), { attributes: true });
-            if (resp.success) {
-                const pds = (resp.apiResponse?.items ?? [])?.[0];
-                if (pds != null && "m4date" in pds) {
+            resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.posix.basename(uri.path), { attributes: true });
+        }
+
+        // Attempt to parse a successful API response and update the data set's cached stats.
+        if (resp.success) {
+            const items = resp.apiResponse?.items ?? [];
+            const ds = isPdsMember ? items.find((it) => it.member === entry.name) : items?.[0];
+            if (ds != null && "m4date" in ds) {
+                const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = ds;
+                const newTime = dayjs(`${m4date} ${mtime}:${msec}`).unix();
+                if (entry.mtime != newTime) {
+                    // if the modification time has changed, invalidate the previous contents to signal to `readFile` that data needs to be fetched
                     entry.wasAccessed = false;
-                    const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = pds;
-                    const statInfo = {
-                        type: entry.type,
-                        ctime: 0,
-                        mtime: dayjs(`${m4date} ${mtime}:${msec}`).unix(),
-                        size: entry.size,
-                    };
-                    return statInfo;
                 }
+                return { ...entry, mtime: newTime };
             }
         }
 
