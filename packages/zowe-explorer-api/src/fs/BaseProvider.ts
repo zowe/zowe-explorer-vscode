@@ -367,7 +367,7 @@ export class BaseProvider {
      * VScode utility functions for entries in the provider:
      */
 
-    protected _lookup(uri: vscode.Uri, silent: boolean = false): IFileSystemEntry | undefined {
+    public _lookup(uri: vscode.Uri, silent: boolean = false): IFileSystemEntry | undefined {
         if (uri.path === "/" || uri.path === ".") {
             return this.root;
         }

@@ -167,8 +167,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public setEtag(etag: string): void {
-        const dsEntry = DatasetFSProvider.instance.stat(this.resourceUri) as DsEntry | PdsEntry;
-        if (FsDatasetsUtils.isPdsEntry(dsEntry)) {
+        const dsEntry = DatasetFSProvider.instance._lookup(this.resourceUri, true) as DsEntry | PdsEntry;
+        if (dsEntry == null || FsDatasetsUtils.isPdsEntry(dsEntry)) {
             return;
         }
 
@@ -176,8 +176,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public setStats(stats: Partial<Types.DatasetStats>): void {
-        const dsEntry = DatasetFSProvider.instance.stat(this.resourceUri) as DsEntry | PdsEntry;
-        if (FsDatasetsUtils.isPdsEntry(dsEntry)) {
+        const dsEntry = DatasetFSProvider.instance._lookup(this.resourceUri, true) as DsEntry | PdsEntry;
+        if (dsEntry == null || FsDatasetsUtils.isPdsEntry(dsEntry)) {
             return;
         }
 
@@ -185,8 +185,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public getStats(): Types.DatasetStats {
-        const dsEntry = DatasetFSProvider.instance.stat(this.resourceUri) as DsEntry | PdsEntry;
-        if (FsDatasetsUtils.isPdsEntry(dsEntry)) {
+        const dsEntry = DatasetFSProvider.instance._lookup(this.resourceUri, true) as DsEntry | PdsEntry;
+        if (dsEntry == null || FsDatasetsUtils.isPdsEntry(dsEntry)) {
             return;
         }
 
@@ -520,8 +520,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      */
     public getEtag(): string {
         ZoweLogger.trace("ZoweDatasetNode.getEtag called.");
-        const fileEntry = DatasetFSProvider.instance.stat(this.resourceUri) as DsEntry;
-        return fileEntry.etag;
+        const fileEntry = DatasetFSProvider.instance._lookup(this.resourceUri, true) as DsEntry;
+        return fileEntry?.etag;
     }
 
     private async getDatasets(): Promise<zosfiles.IZosFilesResponse[]> {

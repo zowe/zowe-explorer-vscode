@@ -20,17 +20,15 @@ interface DsEntryProps {
 export class DsEntry extends FileEntry implements DsEntryProps {
     public metadata: DsEntryMetadata;
 
-    public constructor(name: string) {
+    public constructor(name: string, public isMember: boolean) {
         super(name);
     }
 
     public stats: Types.DatasetStats;
 }
 
-export class MemberEntry extends DsEntry {}
-
 export class PdsEntry extends DirEntry implements DsEntryProps {
-    public entries: Map<string, MemberEntry>;
+    public entries: Map<string, DsEntry>;
 
     public constructor(name: string) {
         super(name);
