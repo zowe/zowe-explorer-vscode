@@ -15,7 +15,7 @@ export function getVsCodeTheme(): string | null {
     return document.body.getAttribute("data-vscode-theme-kind");
 }
 
-export const useMutableObserver = (target: Node, callback: MutationCallback, options: MutationObserverInit | undefined = undefined): void => {
+export const useMutableObserver = (target: Node, callback: MutationCallback, options: MutationObserverInit | undefined): void => {
     useEffect(() => {
         const mutationObserver = new MutationObserver((mutations, observer) => callback(mutations, observer));
         mutationObserver.observe(target, options);

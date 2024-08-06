@@ -460,6 +460,10 @@ export class JobActions {
             jobsProvider.refreshElement(session);
         }
 
+        // `await`ing the following Gui methods causes unwanted side effects for other features (such as the jobs table view):
+        //   * code execution stops before function returns (unexpected, undefined behavior)
+        //   * before, we used `setImmediate` to delay updates to the jobs tree (to avoid desync), but removing the `await`s resolves the desync.
+        //   * we do not expect the user to respond to these toasts, so we do not need to wait for their promises to be resolved.
         if (failedJobs.length > 0) {
             // Display any errors from the API
             Gui.warningMessage(
