@@ -23,7 +23,6 @@ import { SharedInit } from "./trees/shared/SharedInit";
 import { SharedTreeProviders } from "./trees/shared/SharedTreeProviders";
 import { USSInit } from "./trees/uss/USSInit";
 import { ProfilesUtils } from "./utils/ProfilesUtils";
-import { TableViewProvider } from "@zowe/zowe-explorer-api";
 
 /**
  * The function that runs when the extension is loaded
@@ -44,8 +43,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         uss: () => USSInit.initUSSProvider(context),
         job: () => JobInit.initJobsProvider(context),
     });
-
-    context.subscriptions.push(vscode.window.registerWebviewViewProvider("zowe-resources", TableViewProvider.getInstance()));
     SharedInit.registerCommonCommands(context, providers);
     SharedInit.registerRefreshCommand(context, activate, deactivate);
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
