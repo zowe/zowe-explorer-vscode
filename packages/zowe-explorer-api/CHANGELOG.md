@@ -39,11 +39,13 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added the `onVaultUpdate` VSCode event to notify extenders when credentials are updated on the OS vault by other applications. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
 - Added the `onCredMgrsUpdate` VSCode event to notify extenders when the local PC's credential manager has been updated by other applications. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
 - **LTS Breaking:** Updated most function signatures for exported programmatic interfaces. Changes make developing with the Zowe Explorer API more efficient for extenders by showing which properties they can expect when calling our APIs. [#2952](https://github.com/zowe/zowe-explorer-vscode/issues/2952)
+
   - Updated `IApiExplorerExtender.ts`, see changes below:
     - Allowed `reloadProfiles` and `initForZowe` to be synchronous methods (non-breaking)
   - Updated `MainframeInteraction.ts`, see changes below:
     - Modified `getStatus` to add `string` type to the optional parameter `profileType`
   - Updated `IZoweTree.ts`, see changes below:
+
     - Modified `checkCurrentProfile(node: IZoweTreeNode);` to return `Validation.IValidationProfile | Promise<Validation.IValidationProfile>`
     - Modified `getSearchHistory()` to return `string[]`
     - Modified `getAllLoadedItems()` to return `IZoweTreeNode[] | Promise<IZoweTreeNode[]>`
@@ -61,24 +63,24 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
       - `removeFavorite`
       - `removeFavProfile`
       - `onDidChangeConfiguration`
-      - `flipState` *synchronous - no `Promise` returned*
+      - `flipState` _synchronous - no `Promise` returned_
       - `rename`
       - `open`
       - `copy`
       - `paste`
       - `delete`
-      - `setItem` *synchronous - no `Promise` returned*
+      - `setItem` _synchronous - no `Promise` returned_
       - `saveSearch`
       - `saveFile`
       - `refreshPS`
       - `uploadDialog`
       - `filterPrompt`
-      - `addSearchHistory` *synchronous - no `Promise` returned*
-      - `deleteSession` *synchronous - no `Promise` returned*
+      - `addSearchHistory` _synchronous - no `Promise` returned_
+      - `deleteSession` _synchronous - no `Promise` returned_
       - `updateFavorites`
       - `renameFavorite`
-      - `addFileHistory` *synchronous - no `Promise` returned*
-      - `removeFileHistory` *synchronous - no `Promise` returned*
+      - `addFileHistory` _synchronous - no `Promise` returned_
+      - `removeFileHistory` _synchronous - no `Promise` returned_
       - `renameNode`
       - `openItemFromPath`
       - `addDsTemplate`
@@ -86,6 +88,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
       - `openWithEncoding`
 
     **Note**: Developers should not expect a value to be returned from the methods above (breaking)
+
   - Updated `IZoweTreeNode.ts`, see changes below:
     - Modified `rename?(newNamePath: string);` to return `Promise<IZosFilesResponse>`
     - Developers should not be expecting output from the following methods:

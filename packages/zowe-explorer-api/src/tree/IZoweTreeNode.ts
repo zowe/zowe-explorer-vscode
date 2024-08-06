@@ -254,7 +254,12 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
     shortLabel?: string;
 
     /**
-     * Encoding indicator.
+     * @deprecated Please use `setEncoding` and `getEncoding` instead.
+     *
+     * Remote encoding of the USS file
+     *
+     * * `null` = user selected z/OS default codepage
+     * * `undefined` = user did not specify
      */
     encoding?: string;
 
