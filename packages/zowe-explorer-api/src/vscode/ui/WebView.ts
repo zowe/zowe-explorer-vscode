@@ -140,9 +140,7 @@ export class WebView {
      * Disposes of the webview instance
      */
     protected dispose(): void {
-        if (this.panel) {
-            this.panel.dispose();
-        }
+        this.panel?.dispose();
 
         for (const disp of this.disposables) {
             disp.dispose();
