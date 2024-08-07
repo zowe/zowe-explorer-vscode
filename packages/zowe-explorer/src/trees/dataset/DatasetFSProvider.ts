@@ -90,15 +90,17 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      */
     public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         ZoweLogger.trace(`[DatasetFSProvider] stat called with ${uri.toString()}`);
+        let isFetching = false;
         if (uri.query) {
             const queryParams = new URLSearchParams(uri.query);
             if (queryParams.has("conflict")) {
                 return { ...this.lookup(uri, false), permissions: vscode.FilePermission.Readonly };
             }
+            isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
         }
 
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-        const entry = this.lookup(uri, false);
+        const entry = isFetching ? await this.remoteLookupForResource(uri) : this.lookup(uri, false);
         // Return the entry for profiles as there is no remote info to fetch
         if (uriInfo.isRoot) {
             return entry;
@@ -131,7 +133,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
         }
 
-        return this.lookup(uri, false);
+        return entry;
     }
 
     private async fetchEntriesForProfile(uri: vscode.Uri, uriInfo: UriFsInfo, pattern: string): Promise<FilterEntry> {

@@ -63,14 +63,16 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         ZoweLogger.trace(`[UssFSProvider] stat called with ${uri.toString()}`);
+        let isFetching = false;
         if (uri.query) {
             const queryParams = new URLSearchParams(uri.query);
             if (queryParams.has("conflict")) {
                 return { ...this.lookup(uri, false), permissions: vscode.FilePermission.Readonly };
             }
+            isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
         }
 
-        const entry = this.lookup(uri, false);
+        const entry = isFetching ? await this.remoteLookupForResource(uri) : this.lookup(uri, false);
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         // Do not perform remote lookup for profile URIs
         if (uriInfo.isRoot) {
