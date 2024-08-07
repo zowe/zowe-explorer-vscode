@@ -184,19 +184,6 @@ export class DatasetInit {
         );
         context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(DatasetFSProvider.onDidOpenTextDocument));
 
-        // Perform remote lookup for workspace folders that fit the `zowe-ds` scheme.
-        for (const folder of (vscode.workspace.workspaceFolders ?? []).filter((f) => f.uri.scheme === ZoweScheme.DS)) {
-            await DatasetFSProvider.instance.remoteLookupForResource(folder.uri);
-        }
-        context.subscriptions.push(
-            // Perform remote lookup on workspace folders that were added
-            vscode.workspace.onDidChangeWorkspaceFolders(async (e) => {
-                for (const folder of e.added.filter((f) => f.uri.scheme === ZoweScheme.DS)) {
-                    await DatasetFSProvider.instance.remoteLookupForResource(folder.uri);
-                }
-            })
-        );
-
         SharedInit.initSubscribers(context, datasetProvider);
         return datasetProvider;
     }

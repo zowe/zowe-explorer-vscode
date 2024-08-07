@@ -360,12 +360,23 @@ export class SharedInit {
         ZoweLogger.trace("shared.init.initSubscribers called.");
         const theTreeView = theProvider.getTreeView();
         context.subscriptions.push(theTreeView);
+        context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async (e) => SharedInit.setupRemoteWorkspaceFolders(e)));
         theTreeView.onDidCollapseElement(async (e) => {
             await theProvider.flipState(e.element, false);
         });
         theTreeView.onDidExpandElement(async (e) => {
             await theProvider.flipState(e.element, true);
         });
+    }
+
+    public static async setupRemoteWorkspaceFolders(e?: vscode.WorkspaceFoldersChangeEvent): Promise<void> {
+        // Perform remote lookup for workspace folders that fit the `zowe-ds` or `zowe-uss` schemes.
+        const newWorkspaces = (e?.added ?? vscode.workspace.workspaceFolders ?? []).filter(
+            (f) => f.uri.scheme === ZoweScheme.DS || f.uri.scheme === ZoweScheme.USS
+        );
+        for (const folder of newWorkspaces) {
+            await (folder.uri.scheme === ZoweScheme.DS ? DatasetFSProvider.instance : UssFSProvider.instance).remoteLookupForResource(folder.uri);
+        }
     }
 
     /**

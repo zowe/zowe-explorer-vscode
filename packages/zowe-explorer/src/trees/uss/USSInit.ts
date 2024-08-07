@@ -171,12 +171,6 @@ export class USSInit {
                 UssFSProvider.instance.cacheOpenedUri(doc.uri);
             })
         );
-
-        // Perform remote lookup for workspace folders that fit the `zowe-ds` scheme.
-        for (const folder of (vscode.workspace.workspaceFolders ?? []).filter((f) => f.uri.scheme === ZoweScheme.USS)) {
-            await UssFSProvider.instance.remoteLookupForResource(folder.uri);
-        }
-
         SharedInit.initSubscribers(context, ussFileProvider);
         return ussFileProvider;
     }
