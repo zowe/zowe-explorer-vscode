@@ -487,7 +487,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         Object.defineProperty(vscode.workspace, "workspaceFolders", {
-            get: () => undefined,
+            get: () => [],
             configurable: true,
         });
 
@@ -528,7 +528,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         const blockMocks = createBlockMocks(globalMocks);
 
         Object.defineProperty(vscode.workspace, "workspaceFolders", {
-            value: undefined,
+            value: [],
             configurable: true,
         });
         jest.spyOn(globalMocks.mockProfileInstance, "checkExistingConfig").mockReturnValue("zowe");
@@ -587,7 +587,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         Object.defineProperty(vscode.workspace, "workspaceFolders", {
             get: mockWorkspaceFolders.mockReturnValue([
                 {
-                    uri: { fsPath: "fakePath" },
+                    uri: { fsPath: "fakePath", scheme: "file" },
                 },
             ]),
             configurable: true,
