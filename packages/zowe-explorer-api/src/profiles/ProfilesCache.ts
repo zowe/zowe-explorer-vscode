@@ -319,11 +319,13 @@ export class ProfilesCache {
     public async fetchBaseProfile(profileName?: string): Promise<imperative.IProfileLoaded | undefined> {
         const mProfileInfo = await this.getProfileInfo();
         const baseProfileAttrs = mProfileInfo.getDefaultProfile("base");
-        const isUsingTokenAuth = (profName: string): boolean =>
-            mProfileInfo.getTeamConfig().api.secure.securePropsForProfile(profName).includes("tokenValue");
-        if ((baseProfileAttrs == null || !isUsingTokenAuth(baseProfileAttrs.profName)) && profileName?.includes(".")) {
+        const configApi = mProfileInfo.getTeamConfig().api;
+        if (
+            profileName?.includes(".") &&
+            (baseProfileAttrs == null || !configApi.secure.securePropsForProfile(baseProfileAttrs.profName).includes("tokenValue"))
+        ) {
             const parentProfile = profileName.slice(0, profileName.lastIndexOf("."));
-            return this.getProfileLoaded(parentProfile, "base", mProfileInfo.getTeamConfig().api.profiles.get(parentProfile));
+            return this.getProfileLoaded(parentProfile, "base", configApi.profiles.get(parentProfile));
         } else if (baseProfileAttrs == null) {
             return undefined;
         }
