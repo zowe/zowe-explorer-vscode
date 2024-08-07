@@ -16,7 +16,6 @@ import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
-import { Profiles } from "../../../../src/configuration/Profiles";
 
 const testProfile = createIProfile();
 const testEntries = {

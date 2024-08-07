@@ -230,11 +230,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 entry = this._lookupAsDirectory(uri, false) as PdsEntry;
             }
             await this.fetchEntriesForDataset(entry as PdsEntry, uri, uriInfo);
-        } else {
-            if (!entryExists) {
-                await this.writeFile(uri, new Uint8Array(), { create: true, overwrite: false });
-                entry = this._lookupAsFile(uri) as DsEntry;
-            }
+        } else if (!entryExists) {
+            await this.writeFile(uri, new Uint8Array(), { create: true, overwrite: false });
+            entry = this._lookupAsFile(uri) as DsEntry;
         }
 
         return entry;
