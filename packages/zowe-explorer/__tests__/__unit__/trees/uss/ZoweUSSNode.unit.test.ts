@@ -1384,24 +1384,24 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
 describe("ZoweUSSNode Unit Tests - Function node.setEtag", () => {
     it("sets the e-tag for a file", () => {
         const fileEntry = new UssFile("testFile");
-        const statMock = jest.spyOn(UssFSProvider.instance, "stat").mockReturnValueOnce(fileEntry);
+        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(fileEntry);
 
         const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setEtag("123ETAG");
-        expect(statMock).toHaveBeenCalled();
+        expect(lookupMock).toHaveBeenCalled();
         expect(fileEntry.etag).toBe("123ETAG");
-        statMock.mockRestore();
+        lookupMock.mockRestore();
     });
 
     it("returns early when trying to set the e-tag for a directory", () => {
         const dirEntry = new UssDirectory("testDir");
-        const statMock = jest.spyOn(UssFSProvider.instance, "stat").mockReturnValueOnce(dirEntry);
+        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(dirEntry);
 
         const node = new ZoweUSSNode({ label: "testDir", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
         node.setEtag("123ETAG");
-        expect(statMock).toHaveBeenCalled();
+        expect(lookupMock).toHaveBeenCalled();
         expect(dirEntry).not.toHaveProperty("etag");
-        statMock.mockRestore();
+        lookupMock.mockRestore();
     });
 });
 
@@ -1410,11 +1410,11 @@ describe("ZoweUSSNode Unit Tests - Function node.getAttributes", () => {
     it("gets the attributes for a file", () => {
         const fileEntry = new UssFile("testFile");
         fileEntry.attributes = attrs;
-        const statMock = jest.spyOn(UssFSProvider.instance, "stat").mockReturnValueOnce(fileEntry);
+        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(fileEntry);
 
         const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
         expect(node.getAttributes()).toStrictEqual(attrs);
-        statMock.mockRestore();
+        lookupMock.mockRestore();
     });
 });
 
@@ -1423,25 +1423,25 @@ describe("ZoweUSSNode Unit Tests - Function node.setAttributes", () => {
     it("sets the attributes for a file", () => {
         const fileEntry = new UssFile("testFile");
         fileEntry.attributes = { ...attrs };
-        const statMock = jest.spyOn(UssFSProvider.instance, "stat").mockReturnValueOnce(fileEntry);
+        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(fileEntry);
 
         const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setAttributes({ perms: "r-xr-xr-x" });
-        expect(statMock).toHaveBeenCalled();
+        expect(lookupMock).toHaveBeenCalled();
         expect(fileEntry.attributes).toStrictEqual({ ...attrs, perms: "r-xr-xr-x" });
-        statMock.mockRestore();
+        lookupMock.mockRestore();
     });
 
     it("sets the attributes for a directory", () => {
         const dirEntry = new UssDirectory("testFolder");
-        const statMock = jest.spyOn(UssFSProvider.instance, "stat").mockClear().mockReturnValueOnce(dirEntry);
+        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockClear().mockReturnValueOnce(dirEntry);
         dirEntry.attributes = { ...attrs };
 
         const node = new ZoweUSSNode({ label: "testFolder", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
         node.setAttributes({ perms: "r-xr-xr-x" });
-        expect(statMock).toHaveBeenCalled();
+        expect(lookupMock).toHaveBeenCalled();
         expect(dirEntry.attributes).toStrictEqual({ ...attrs, perms: "r-xr-xr-x" });
-        statMock.mockRestore();
+        lookupMock.mockRestore();
     });
 });
 

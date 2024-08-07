@@ -97,7 +97,7 @@ describe("DataSetTemplates Class Unit Tests", () => {
                 ],
             };
             Object.defineProperty(vscode.workspace, "workspaceFolders", {
-                value: [newMocks.mockWsFolder],
+                value: newMocks.mockWsFolder,
                 configurable: true,
             });
 

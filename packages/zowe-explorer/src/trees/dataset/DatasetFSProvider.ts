@@ -93,12 +93,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         if (uri.query) {
             const queryParams = new URLSearchParams(uri.query);
             if (queryParams.has("conflict")) {
-                return { ...this._lookup(uri, false), permissions: vscode.FilePermission.Readonly };
+                return { ...this.lookup(uri, false), permissions: vscode.FilePermission.Readonly };
             }
         }
 
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-        const entry = this._lookup(uri, false);
+        const entry = this.lookup(uri, false);
         // Return the entry for profiles as there is no remote info to fetch
         if (uriInfo.isRoot) {
             return entry;
@@ -131,7 +131,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
         }
 
-        return this._lookup(uri, false);
+        return this.lookup(uri, false);
     }
 
     private async fetchEntriesForProfile(uri: vscode.Uri, uriInfo: UriFsInfo, pattern: string): Promise<FilterEntry> {
@@ -243,7 +243,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     public async remoteLookupForResource(uri: vscode.Uri): Promise<DirEntry | DsEntry> {
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const profileUri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: uriInfo.profileName });
-
         // Ensure that an entry exists for the given profile
         if (!this.exists(profileUri)) {
             this.createDirectory(profileUri);
@@ -290,7 +289,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
 
         // Check the remote file system to see if anything has changed since the last time the directory was read.
-        await this.remoteLookupForResource(uri);
+        dsEntry = (await this.remoteLookupForResource(uri)) as DirEntry;
         return Array.from(dsEntry.entries.entries()).map((value: [string, DirEntry | FileEntry]) => [value[0], value[1].type]);
     }
 
@@ -298,7 +297,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * Creates a directory entry in the provider at the given URI.
      * @param uri The URI that represents a new directory path
      */
-    public createDirectory(uri: vscode.Uri, filter?: string): void {
+    public createDirectory(uri: vscode.Uri): void {
         const basename = path.posix.basename(uri.path);
         const parent = this._lookupParentDirectory(uri, false);
         if (parent.entries.has(basename)) {
@@ -319,7 +318,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             parent.entries.set(entry.name, entry);
         } else {
             const entry = new FilterEntry(basename);
-            entry.filter["pattern"] = filter;
             entry.metadata = profInfo;
             parent.entries.set(entry.name, entry);
         }
@@ -531,7 +529,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     }
 
     public async delete(uri: vscode.Uri, _options: { readonly recursive: boolean }): Promise<void> {
-        const entry = this._lookup(uri, false);
+        const entry = this.lookup(uri, false);
         const parent = this._lookupParentDirectory(uri);
         let fullName: string = "";
         if (FsDatasetsUtils.isPdsEntry(parent)) {
@@ -562,12 +560,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     }
 
     public async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { readonly overwrite: boolean }): Promise<void> {
-        const newUriEntry = this._lookup(newUri, true);
+        const newUriEntry = this.lookup(newUri, true);
         if (!options.overwrite && newUriEntry) {
             throw vscode.FileSystemError.FileExists(`Rename failed: ${path.posix.basename(newUri.path)} already exists`);
         }
 
-        const entry = this._lookup(oldUri, false) as PdsEntry | DsEntry;
+        const entry = this.lookup(oldUri, false) as PdsEntry | DsEntry;
         const parentDir = this._lookupParentDirectory(oldUri);
 
         const oldName = entry.name;

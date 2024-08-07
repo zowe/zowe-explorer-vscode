@@ -205,7 +205,7 @@ afterEach(() => {
 });
 
 describe("Profiles Unit Test - Function createInstance", () => {
-    const mockWorkspaceFolders = jest.fn();
+    const mockWorkspaceFolders = jest.fn().mockReturnValue([]);
 
     beforeAll(() => {
         // We need to create a persistent "vscode" mock that will apply for the
@@ -232,7 +232,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
     });
 
     it("should create instance when there is no workspace", async () => {
-        mockWorkspaceFolders.mockClear().mockReturnValue(undefined);
+        mockWorkspaceFolders.mockClear().mockReturnValue([]);
 
         const { Profiles: testProfiles } = require("../../../src/configuration/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
@@ -242,7 +242,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
     });
 
     it("should create instance when there is empty workspace", async () => {
-        mockWorkspaceFolders.mockClear().mockReturnValue([undefined]);
+        mockWorkspaceFolders.mockClear().mockReturnValue([]);
 
         const { Profiles: testProfiles } = require("../../../src/configuration/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
@@ -416,7 +416,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
             configurable: true,
         });
         Object.defineProperty(vscode.workspace, "workspaceFolders", {
-            get: () => [{ uri: "file://projectPath/zowe.config.user.json", name: "zowe.config.user.json", index: 0 }],
+            get: () => [{ uri: { fsPath: "projectPath/zowe.config.user.json", scheme: "file" }, name: "zowe.config.user.json", index: 0 }],
             configurable: true,
         });
 

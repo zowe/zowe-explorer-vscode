@@ -132,7 +132,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     public setEtag(etag: string): void {
-        const ussEntry = UssFSProvider.instance._lookup(this.resourceUri, true) as UssFile | UssDirectory;
+        const ussEntry = UssFSProvider.instance.lookup(this.resourceUri, true) as UssFile | UssDirectory;
         if (ussEntry == null || FsAbstractUtils.isDirectoryEntry(ussEntry)) {
             return;
         }
@@ -141,7 +141,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     public getAttributes(): Types.FileAttributes {
-        const ussEntry = UssFSProvider.instance._lookup(this.resourceUri, true) as UssFile | UssDirectory;
+        const ussEntry = UssFSProvider.instance.lookup(this.resourceUri, true) as UssFile | UssDirectory;
         if (ussEntry == null) {
             return undefined;
         }
@@ -149,7 +149,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     public setAttributes(attributes: Partial<Types.FileAttributes>): void {
-        const ussEntry = UssFSProvider.instance._lookup(this.resourceUri, true) as UssFile | UssDirectory;
+        const ussEntry = UssFSProvider.instance.lookup(this.resourceUri, true) as UssFile | UssDirectory;
         if (ussEntry == null) {
             return;
         }

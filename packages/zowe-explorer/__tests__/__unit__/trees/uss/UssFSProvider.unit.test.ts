@@ -10,7 +10,7 @@
  */
 
 import { Disposable, FilePermission, FileType, TextEditor, Uri } from "vscode";
-import { BaseProvider, DirEntry, FileEntry, Gui, UssFile, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { BaseProvider, DirEntry, FileEntry, Gui, UssDirectory, UssFile, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
@@ -39,9 +39,10 @@ const testEntries = {
         data: new Uint8Array([1, 2, 3]),
         etag: "A123SEEMINGLY456RANDOM789ETAG",
         metadata: {
-            profile: { name: "sestest" } as any,
+            profile: testProfile,
             path: "/aFile.txt",
         },
+        mtime: 0,
         type: FileType.File,
         wasAccessed: true,
     } as FileEntry,
@@ -49,7 +50,7 @@ const testEntries = {
         name: "aFolder",
         entries: new Map(),
         metadata: {
-            profile: { name: "sestest" } as any,
+            profile: testProfile,
             path: "/aFolder",
         },
         type: FileType.Directory,
@@ -59,7 +60,7 @@ const testEntries = {
         name: "sestest",
         entries: new Map(),
         metadata: {
-            profile: { name: "sestest" } as any,
+            profile: testProfile,
             path: "/",
         },
         size: 0,
@@ -69,16 +70,28 @@ const testEntries = {
 };
 
 describe("stat", () => {
-    const lookupMock = jest.spyOn((UssFSProvider as any).prototype, "_lookup");
+    const lookupMock = jest.spyOn((UssFSProvider as any).prototype, "lookup");
 
-    it("returns a file entry", () => {
+    it("returns a file entry", async () => {
         lookupMock.mockReturnValueOnce(testEntries.file);
-        expect(UssFSProvider.instance.stat(testUris.file)).toStrictEqual(testEntries.file);
+        const listFilesMock = jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [{ name: testEntries.file.name }],
+            },
+            commandResponse: "",
+        });
+        await expect(UssFSProvider.instance.stat(testUris.file)).resolves.toStrictEqual(testEntries.file);
         expect(lookupMock).toHaveBeenCalledWith(testUris.file, false);
+        expect(listFilesMock).toHaveBeenCalled();
+        listFilesMock.mockRestore();
     });
-    it("returns a file as 'read-only' when query has conflict parameter", () => {
+    it("returns a file as 'read-only' when query has conflict parameter", async () => {
         lookupMock.mockReturnValueOnce(testEntries.file);
-        expect(UssFSProvider.instance.stat(testUris.conflictFile)).toStrictEqual({ ...testEntries.file, permissions: FilePermission.Readonly });
+        await expect(UssFSProvider.instance.stat(testUris.conflictFile)).resolves.toStrictEqual({
+            ...testEntries.file,
+            permissions: FilePermission.Readonly,
+        });
         expect(lookupMock).toHaveBeenCalledWith(testUris.conflictFile, false);
     });
 });
@@ -173,15 +186,11 @@ describe("listFiles", () => {
 describe("readDirectory", () => {
     it("returns the correct list of entries inside a folder", async () => {
         const lookupAsDirMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsDirectory").mockReturnValueOnce(testEntries.folder);
-        const listFilesMock = jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
-            success: true,
-            commandResponse: "",
-            apiResponse: {
-                items: [
-                    { name: "test.txt", mode: "-rwxrwxrwx" },
-                    { name: "innerFolder", mode: "drwxrwxrwx" },
-                ],
-            },
+        const remoteLookupForResourceMock = jest.spyOn(UssFSProvider.instance, "remoteLookupForResource").mockImplementation(async () => {
+            testEntries.folder.entries.set("test.txt", new FileEntry("test.txt"));
+            testEntries.folder.entries.set("innerFolder", new DirEntry("innerFolder"));
+
+            return testEntries.folder as UssDirectory;
         });
 
         expect(await UssFSProvider.instance.readDirectory(testUris.folder)).toStrictEqual([
@@ -189,7 +198,7 @@ describe("readDirectory", () => {
             ["innerFolder", FileType.Directory],
         ]);
         lookupAsDirMock.mockRestore();
-        listFilesMock.mockRestore();
+        remoteLookupForResourceMock.mockRestore();
     });
 });
 
@@ -214,9 +223,9 @@ describe("fetchFileAtUri", () => {
 
         expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.file);
         expect(autoDetectEncodingMock).toHaveBeenCalledWith(fileEntry);
-        expect(fileEntry.data.toString()).toBe(exampleData);
+        expect(fileEntry.data?.toString()).toBe(exampleData);
         expect(fileEntry.etag).toBe("123abc");
-        expect(fileEntry.data.byteLength).toBe(exampleData.length);
+        expect(fileEntry.data?.byteLength).toBe(exampleData.length);
         autoDetectEncodingMock.mockRestore();
     });
     it("assigns conflictData if the 'isConflict' option is specified", async () => {
@@ -265,9 +274,9 @@ describe("fetchFileAtUri", () => {
 
         expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.file);
         expect(autoDetectEncodingMock).toHaveBeenCalledWith(fileEntry);
-        expect(fileEntry.data.toString()).toBe(exampleData);
+        expect(fileEntry.data?.toString()).toBe(exampleData);
         expect(fileEntry.etag).toBe("123abc");
-        expect(fileEntry.data.byteLength).toBe(exampleData.length);
+        expect(fileEntry.data?.byteLength).toBe(exampleData.length);
         expect(_updateResourceInEditorMock).toHaveBeenCalledWith(testUris.file);
         autoDetectEncodingMock.mockRestore();
     });
@@ -543,7 +552,7 @@ describe("writeFile", () => {
 
         expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.file);
         const fileEntry = folder.entries.get("aFile.txt")!;
-        expect(fileEntry.data.length).toBe(0);
+        expect(fileEntry.data?.length).toBe(0);
         ussApiMock.mockRestore();
     });
 
@@ -565,7 +574,7 @@ describe("writeFile", () => {
 
         expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.file);
         const fileEntry = folder.entries.get("aFile.txt")!;
-        expect(fileEntry.data.length).toBe(0);
+        expect(fileEntry.data?.length).toBe(0);
         expect(fileEntry.inDiffView).toBe(true);
         expect(ussApiMock).not.toHaveBeenCalled();
     });
@@ -613,7 +622,7 @@ describe("makeEmptyFileWithEncoding", () => {
 
 describe("rename", () => {
     it("throws an error if entry exists and 'overwrite' is false", async () => {
-        const lookupMock = jest.spyOn(UssFSProvider.instance as any, "_lookup").mockReturnValueOnce({ ...testEntries.file });
+        const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValueOnce({ ...testEntries.file });
         await expect(
             UssFSProvider.instance.rename(testUris.file, testUris.file.with({ path: "/sestest/aFile2.txt" }), { overwrite: false })
         ).rejects.toThrow("file exists");
@@ -626,7 +635,7 @@ describe("rename", () => {
             rename: jest.fn(),
         };
         const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
-        const lookupMock = jest.spyOn(UssFSProvider.instance as any, "_lookup").mockReturnValueOnce({ ...testEntries.file });
+        const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValueOnce({ ...testEntries.file });
         const fileEntry = { ...testEntries.file, metadata: { ...testEntries.file.metadata } };
         const sessionEntry = {
             ...testEntries.session,
@@ -648,7 +657,7 @@ describe("rename", () => {
             rename: jest.fn(),
         };
         const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
-        const lookupMock = jest.spyOn(UssFSProvider.instance as any, "_lookup").mockReturnValueOnce({ ...testEntries.folder });
+        const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValueOnce({ ...testEntries.folder });
         const updChildPathsMock = jest.spyOn(UssFSProvider.instance as any, "_updateChildPaths").mockResolvedValueOnce(undefined);
         const folderEntry = { ...testEntries.folder, metadata: { ...testEntries.folder.metadata } };
         const sessionEntry = {
@@ -674,7 +683,7 @@ describe("rename", () => {
         };
         const errMsgSpy = jest.spyOn(Gui, "errorMessage");
         const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
-        const lookupMock = jest.spyOn(UssFSProvider.instance as any, "_lookup").mockReturnValueOnce({ ...testEntries.folder });
+        const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValueOnce({ ...testEntries.folder });
         const folderEntry = { ...testEntries.folder, metadata: { ...testEntries.folder.metadata } };
         const sessionEntry = {
             ...testEntries.session,
@@ -946,7 +955,7 @@ describe("copyTree", () => {
                 uploadFromBuffer: jest.fn(),
             };
             jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
-            jest.spyOn((UssFSProvider as any).instance, "_lookup").mockReturnValueOnce(testEntries.file);
+            jest.spyOn((UssFSProvider as any).instance, "lookup").mockReturnValueOnce(testEntries.file);
             jest.spyOn((UssFSProvider as any).instance, "readFile").mockResolvedValueOnce(testEntries.file.data);
             await (UssFSProvider.instance as any).copyTree(
                 testUris.file,
@@ -955,7 +964,7 @@ describe("copyTree", () => {
                 }),
                 { tree: { type: USSFileStructure.UssFileType.File } }
             );
-            expect(mockUssApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(testEntries.file.data), "/aFile.txt");
+            expect(mockUssApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(testEntries.file.data ?? []), "/aFile.txt");
             getInfoFromUri.mockRestore();
         });
         it("file: without naming collisions", async () => {
@@ -982,7 +991,7 @@ describe("copyTree", () => {
                 uploadFromBuffer: jest.fn(),
             };
             jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
-            jest.spyOn((UssFSProvider as any).instance, "_lookup").mockReturnValueOnce(testEntries.file);
+            jest.spyOn((UssFSProvider as any).instance, "lookup").mockReturnValueOnce(testEntries.file);
             jest.spyOn((UssFSProvider as any).instance, "readFile").mockResolvedValueOnce(testEntries.file.data);
             await (UssFSProvider.instance as any).copyTree(
                 testUris.file,
@@ -991,7 +1000,7 @@ describe("copyTree", () => {
                 }),
                 { tree: { type: USSFileStructure.UssFileType.File } }
             );
-            expect(mockUssApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(testEntries.file.data), "/aFile (1).txt");
+            expect(mockUssApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(testEntries.file.data ?? []), "/aFile (1).txt");
             getInfoFromUri.mockRestore();
         });
         it("folder", async () => {

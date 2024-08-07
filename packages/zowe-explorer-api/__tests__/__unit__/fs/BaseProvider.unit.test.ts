@@ -163,7 +163,7 @@ describe("diffUseRemote", () => {
 describe("exists", () => {
     function getBlockMocks() {
         return {
-            lookupMock: jest.spyOn((BaseProvider as any).prototype, "_lookup"),
+            lookupMock: jest.spyOn((BaseProvider as any).prototype, "lookup"),
         };
     }
 
@@ -192,7 +192,7 @@ describe("getEncodingForFile", () => {
     it("gets the encoding for a file entry", () => {
         const prov = new (BaseProvider as any)();
         const fileEntry = { ...globalMocks.fileFsEntry, encoding: { kind: "text" } };
-        const _lookupAsFileMock = jest.spyOn(prov, "_lookup").mockReturnValueOnce(fileEntry);
+        const _lookupAsFileMock = jest.spyOn(prov, "lookup").mockReturnValueOnce(fileEntry);
         expect(prov.getEncodingForFile(globalMocks.testFileUri)).toStrictEqual({ kind: "text" });
         _lookupAsFileMock.mockRestore();
     });
@@ -233,7 +233,7 @@ describe("cacheOpenedUri", () => {
 describe("invalidateFileAtUri", () => {
     it("returns true if it was able to invalidate the URI", () => {
         const fileEntry = { ...globalMocks.fileFsEntry };
-        jest.spyOn((BaseProvider as any).prototype, "_lookup").mockReturnValueOnce(fileEntry);
+        jest.spyOn((BaseProvider as any).prototype, "lookup").mockReturnValueOnce(fileEntry);
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
         prov.root.entries.set("file.txt", fileEntry);
@@ -256,7 +256,7 @@ describe("invalidateFileAtUri", () => {
 describe("invalidateDirAtUri", () => {
     it("returns true if it was able to invalidate the URI", () => {
         const folderEntry = { ...globalMocks.folderFsEntry };
-        jest.spyOn((BaseProvider as any).prototype, "_lookup").mockReturnValueOnce(folderEntry);
+        jest.spyOn((BaseProvider as any).prototype, "lookup").mockReturnValueOnce(folderEntry);
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
         prov.root.entries.set("folder", folderEntry);
@@ -281,7 +281,7 @@ describe("setEncodingForFile", () => {
     it("sets the encoding for a file entry", () => {
         const prov = new (BaseProvider as any)();
         const fileEntry = { ...globalMocks.fileFsEntry, encoding: undefined };
-        const _lookupAsFileMock = jest.spyOn(prov, "_lookup").mockReturnValueOnce(fileEntry);
+        const _lookupAsFileMock = jest.spyOn(prov, "lookup").mockReturnValueOnce(fileEntry);
         prov.setEncodingForFile(globalMocks.testFileUri, { kind: "text" });
         expect(fileEntry.encoding).toStrictEqual({ kind: "text" });
         _lookupAsFileMock.mockRestore();
@@ -314,12 +314,12 @@ describe("_updateResourceInEditor", () => {
     });
 });
 
-describe("_lookup", () => {
+describe("lookup", () => {
     it("returns a valid file entry if it exists in the file system", () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
         prov.root.entries.set("file.txt", { ...globalMocks.fileFsEntry });
-        const entry = prov._lookup(globalMocks.testFileUri);
+        const entry = prov.lookup(globalMocks.testFileUri);
         expect(entry).toStrictEqual(globalMocks.fileFsEntry);
     });
 
@@ -327,7 +327,7 @@ describe("_lookup", () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
         prov.root.entries.set("folder", { ...globalMocks.folderFsEntry });
-        const entry = prov._lookup(globalMocks.testFolderUri);
+        const entry = prov.lookup(globalMocks.testFolderUri);
         expect(entry).toStrictEqual(globalMocks.folderFsEntry);
     });
 });

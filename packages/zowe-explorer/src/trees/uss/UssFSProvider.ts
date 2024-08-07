@@ -29,6 +29,7 @@ import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { USSFileStructure } from "./USSFileStructure";
 import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
+import { ZoweLogger } from "../../tools/ZoweLogger";
 
 export class UssFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     // Event objects for provider
@@ -61,23 +62,36 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns A structure containing file type, time, size and other metrics
      */
     public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
+        ZoweLogger.trace(`[UssFSProvider] stat called with ${uri.toString()}`);
         if (uri.query) {
             const queryParams = new URLSearchParams(uri.query);
             if (queryParams.has("conflict")) {
-                return { ...this._lookup(uri, false), permissions: vscode.FilePermission.Readonly };
+                return { ...this.lookup(uri, false), permissions: vscode.FilePermission.Readonly };
             }
         }
 
-        const entry = this._lookup(uri, false);
+        const entry = this.lookup(uri, false);
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
+        // Do not perform remote lookup for profile URIs
+        if (uriInfo.isRoot) {
+            return entry;
+        }
+
         const fileResp = await this.listFiles(entry.metadata.profile, uri, true);
         if (fileResp.success) {
             // Regardless of the resource type, it will be the first item in a successful response.
             // When listing a folder, the folder's stats will be represented as the "." entry.
+            const newTime = (fileResp.apiResponse?.items ?? [])?.[0]?.mtime ?? entry.mtime;
+
+            if (entry.mtime != newTime) {
+                // if the modification time has changed, invalidate the previous contents to signal to `readFile` that data needs to be fetched
+                entry.wasAccessed = false;
+            }
             return {
                 ...entry,
                 // If there isn't a valid mtime on the API response, we cannot determine whether the resource has been updated.
                 // Use the last-known modification time to prevent superfluous updates.
-                mtime: (fileResp.apiResponse?.items ?? [])?.[0]?.mtime ?? entry.mtime,
+                mtime: newTime,
             };
         }
 
@@ -231,6 +245,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param editor (optional) An editor instance to reload if the URI is already open
      */
     public async fetchFileAtUri(uri: vscode.Uri, options?: { editor?: vscode.TextEditor | null; isConflict?: boolean }): Promise<void> {
+        ZoweLogger.trace(`[UssFSProvider] fetchFileAtUri called with ${uri.toString()}`);
         const file = this._lookupAsFile(uri);
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const bufBuilder = new BufferBuilder();
@@ -455,14 +470,14 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * - `overwrite` - Overwrites the file if the new URI already exists
      */
     public async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean }): Promise<void> {
-        const newUriEntry = this._lookup(newUri, true);
+        const newUriEntry = this.lookup(newUri, true);
         if (!options.overwrite && newUriEntry) {
             throw vscode.FileSystemError.FileExists(
                 `Rename failed: ${path.posix.basename(newUri.path)} already exists in ${path.posix.join(newUriEntry.metadata.path, "..")}`
             );
         }
 
-        const entry = this._lookup(oldUri, false) as UssDirectory | UssFile;
+        const entry = this.lookup(oldUri, false) as UssDirectory | UssFile;
         const parentDir = this._lookupParentDirectory(oldUri);
 
         const newName = path.posix.basename(newUri.path);
@@ -603,7 +618,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 }
             }
         } else {
-            const fileEntry = this._lookup(source, true);
+            const fileEntry = this.lookup(source, true);
             if (fileEntry == null) {
                 return;
             }

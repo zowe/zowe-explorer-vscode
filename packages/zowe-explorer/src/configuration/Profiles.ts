@@ -429,7 +429,7 @@ export class Profiles extends ProfilesCache {
             let global = true;
             let rootPath = FileManagement.getZoweDir();
             const workspaceDir = vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file");
-            if (vscode.workspace.workspaceFolders && workspaceDir != null) {
+            if (workspaceDir != null) {
                 const choice = await this.getConfigLocationPrompt("create");
                 if (choice === undefined) {
                     Gui.showMessage(this.profilesOpCancelled);
@@ -453,7 +453,7 @@ export class Profiles extends ProfilesCache {
                 homeDir: FileManagement.getZoweDir(),
                 projectDir: FileManagement.getFullPath(rootPath),
             });
-            if (vscode.workspace.workspaceFolders && workspaceDir != null) {
+            if (workspaceDir != null) {
                 config.api.layers.activate(user, global, rootPath);
             }
 

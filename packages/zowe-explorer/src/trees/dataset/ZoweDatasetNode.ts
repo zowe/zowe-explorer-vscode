@@ -103,7 +103,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     scheme: ZoweScheme.DS,
                     path: `/${sessionLabel}/`,
                 });
-                DatasetFSProvider.instance.createDirectory(this.resourceUri, this.pattern);
+                DatasetFSProvider.instance.createDirectory(this.resourceUri);
             } else if (
                 this.contextValue === Constants.DS_DS_CONTEXT ||
                 this.contextValue === Constants.DS_PDS_CONTEXT ||
@@ -161,13 +161,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public getEncodingInMap(uriPath: string): ZosEncoding {
         return DatasetFSProvider.instance.encodingMap[uriPath];
     }
-
     public updateEncodingInMap(uriPath: string, encoding: ZosEncoding): void {
         DatasetFSProvider.instance.encodingMap[uriPath] = encoding;
     }
 
     public setEtag(etag: string): void {
-        const dsEntry = DatasetFSProvider.instance._lookup(this.resourceUri, true) as DsEntry | PdsEntry;
+        const dsEntry = DatasetFSProvider.instance.lookup(this.resourceUri, true) as DsEntry | PdsEntry;
         if (dsEntry == null || FsDatasetsUtils.isPdsEntry(dsEntry)) {
             return;
         }
@@ -176,7 +175,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public setStats(stats: Partial<Types.DatasetStats>): void {
-        const dsEntry = DatasetFSProvider.instance._lookup(this.resourceUri, true) as DsEntry | PdsEntry;
+        const dsEntry = DatasetFSProvider.instance.lookup(this.resourceUri, true) as DsEntry | PdsEntry;
         if (dsEntry == null || FsDatasetsUtils.isPdsEntry(dsEntry)) {
             return;
         }
@@ -185,7 +184,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public getStats(): Types.DatasetStats {
-        const dsEntry = DatasetFSProvider.instance._lookup(this.resourceUri, true) as DsEntry | PdsEntry;
+        const dsEntry = DatasetFSProvider.instance.lookup(this.resourceUri, true) as DsEntry | PdsEntry;
         if (dsEntry == null || FsDatasetsUtils.isPdsEntry(dsEntry)) {
             return;
         }
@@ -520,7 +519,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      */
     public getEtag(): string {
         ZoweLogger.trace("ZoweDatasetNode.getEtag called.");
-        const fileEntry = DatasetFSProvider.instance._lookup(this.resourceUri, true) as DsEntry;
+        const fileEntry = DatasetFSProvider.instance.lookup(this.resourceUri, true) as DsEntry;
         return fileEntry?.etag;
     }
 

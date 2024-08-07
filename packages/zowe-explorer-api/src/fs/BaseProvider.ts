@@ -91,7 +91,7 @@ export class BaseProvider {
     }
 
     public exists(uri: vscode.Uri): boolean {
-        const entry = this._lookup(uri, true);
+        const entry = this.lookup(uri, true);
         return entry != null;
     }
 
@@ -129,7 +129,7 @@ export class BaseProvider {
      * @param uri the URI whose data should be invalidated
      */
     public invalidateFileAtUri(uri: vscode.Uri): boolean {
-        const entry = this._lookup(uri, true);
+        const entry = this.lookup(uri, true);
         if (!FsAbstractUtils.isFileEntry(entry)) {
             return false;
         }
@@ -146,7 +146,7 @@ export class BaseProvider {
      * @param uri the URI whose data should be invalidated
      */
     public invalidateDirAtUri(uri: vscode.Uri): boolean {
-        const entry = this._lookup(uri, true);
+        const entry = this.lookup(uri, true);
         if (!FsAbstractUtils.isDirectoryEntry(entry)) {
             return false;
         }
@@ -162,7 +162,7 @@ export class BaseProvider {
      * @returns The encoding for the file
      */
     public getEncodingForFile(uri: vscode.Uri): ZosEncoding {
-        const entry = this._lookup(uri, false) as FileEntry | DirEntry;
+        const entry = this.lookup(uri, false) as FileEntry | DirEntry;
         if (FsAbstractUtils.isDirectoryEntry(entry)) {
             return undefined;
         }
@@ -185,7 +185,7 @@ export class BaseProvider {
      * @param uri The URI that is open in an editor tab
      */
     protected async _updateResourceInEditor(uri: vscode.Uri): Promise<void> {
-        const entry = this._lookup(uri, true);
+        const entry = this.lookup(uri, true);
         if (!FsAbstractUtils.isFileEntry(entry)) {
             return;
         }
@@ -239,7 +239,7 @@ export class BaseProvider {
      * @param newUssPath The new path for this entry in USS
      */
     protected async _relocateEntry(oldUri: vscode.Uri, newUri: vscode.Uri, newUssPath: string): Promise<void> {
-        const entry = this._lookup(oldUri, true);
+        const entry = this.lookup(oldUri, true);
         if (!entry) {
             return;
         }
@@ -285,7 +285,7 @@ export class BaseProvider {
         }
 
         // get the entry data before deleting the URI
-        const entryToDelete = this._lookup(uri, false);
+        const entryToDelete = this.lookup(uri, false);
 
         return {
             entryToDelete,
@@ -367,7 +367,22 @@ export class BaseProvider {
      * VScode utility functions for entries in the provider:
      */
 
-    public _lookup(uri: vscode.Uri, silent: boolean = false): IFileSystemEntry | undefined {
+    /**
+     * @deprecated Use `lookup` instead.
+     * @param uri The resource URI to lookup within the provider.
+     * @param silent `true` to return falsy values if the resource doesn't exist; `false` to throw errors
+     * @returns The entry within the provider, or `undefined` if it doesn't exist
+     */
+    protected _lookup(uri: vscode.Uri, silent: boolean = false): IFileSystemEntry | undefined {
+        return this.lookup(uri, silent);
+    }
+
+    /**
+     * @param uri The resource URI to lookup within the provider.
+     * @param silent `true` to return falsy values if the resource doesn't exist; `false` to throw errors
+     * @returns The entry within the provider, or `undefined` if it doesn't exist
+     */
+    public lookup(uri: vscode.Uri, silent: boolean = false): IFileSystemEntry | undefined {
         if (uri.path === "/" || uri.path === ".") {
             return this.root;
         }
@@ -396,7 +411,7 @@ export class BaseProvider {
     }
 
     protected _lookupAsDirectory(uri: vscode.Uri, silent: boolean): DirEntry {
-        const entry = this._lookup(uri, silent);
+        const entry = this.lookup(uri, silent);
         if (entry != null && !FsAbstractUtils.isDirectoryEntry(entry) && !silent) {
             throw vscode.FileSystemError.FileNotADirectory(uri);
         }
@@ -430,7 +445,7 @@ export class BaseProvider {
     }
 
     protected _lookupAsFile(uri: vscode.Uri, opts?: { silent?: boolean }): FileEntry {
-        const entry = this._lookup(uri, opts?.silent ?? false);
+        const entry = this.lookup(uri, opts?.silent ?? false);
         if (entry != null && !FsAbstractUtils.isFileEntry(entry) && !opts?.silent) {
             throw vscode.FileSystemError.FileIsADirectory(uri);
         }

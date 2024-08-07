@@ -63,7 +63,7 @@ describe("watch", () => {
 describe("stat", () => {
     it("returns a spool entry as read-only", () => {
         const fakeSpool = new SpoolEntry(testEntries.spool.name);
-        const lookupMock = jest.spyOn(JobFSProvider.instance as any, "_lookup").mockReturnValueOnce(fakeSpool);
+        const lookupMock = jest.spyOn(JobFSProvider.instance as any, "lookup").mockReturnValueOnce(fakeSpool);
         expect(JobFSProvider.instance.stat(testUris.spool)).toStrictEqual({
             ...fakeSpool,
             permissions: FilePermission.Readonly,
@@ -72,7 +72,7 @@ describe("stat", () => {
     });
 
     it("returns a job entry", () => {
-        const lookupMock = jest.spyOn(JobFSProvider.instance as any, "_lookup").mockReturnValueOnce(testEntries.job);
+        const lookupMock = jest.spyOn(JobFSProvider.instance as any, "lookup").mockReturnValueOnce(testEntries.job);
         expect(JobFSProvider.instance.stat(testUris.spool)).toStrictEqual({
             ...testEntries.job,
         });
@@ -299,7 +299,7 @@ describe("delete", () => {
         const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockUssApi as any);
         const fakeJob = new JobEntry(testEntries.job.name);
         fakeJob.job = testEntries.job.job;
-        const lookupMock = jest.spyOn(JobFSProvider.instance as any, "_lookup").mockReturnValueOnce(fakeJob);
+        const lookupMock = jest.spyOn(JobFSProvider.instance as any, "lookup").mockReturnValueOnce(fakeJob);
         const lookupParentDirMock = jest
             .spyOn(JobFSProvider.instance as any, "_lookupParentDirectory")
             .mockReturnValueOnce({ ...testEntries.session });
@@ -321,7 +321,7 @@ describe("delete", () => {
         fakeSpool.spool = testEntries.spool.spool;
         const fakeJob = new JobEntry(testEntries.job.name);
         fakeJob.job = testEntries.job.job;
-        const lookupMock = jest.spyOn(JobFSProvider.instance as any, "_lookup").mockReturnValueOnce(fakeSpool);
+        const lookupMock = jest.spyOn(JobFSProvider.instance as any, "lookup").mockReturnValueOnce(fakeSpool);
         const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(fakeJob);
         await JobFSProvider.instance.delete(testUris.spool, { recursive: true, deleteRemote: true });
         expect(mockUssApi.deleteJob).not.toHaveBeenCalled();
