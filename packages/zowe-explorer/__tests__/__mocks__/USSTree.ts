@@ -11,10 +11,10 @@
 
 import * as vscode from "vscode";
 import { IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweTreeNode } from "@zowe/zowe-explorer-api";
-import { ZoweUSSNode } from "../../src/trees/uss";
+import { ZoweUSSNode } from "../../src/trees/uss/ZoweUSSNode";
 import { MockMethod } from "../__decorators__/MockMethod";
 import { createTreeView } from "./mockCreators/shared";
-import { ZoweTreeProvider } from "../../src/providers";
+import { ZoweTreeProvider } from "../../src/trees/ZoweTreeProvider";
 
 /**
  * A tree that contains nodes of files and folders
@@ -59,7 +59,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      */
     @MockMethod()
     public getAllLoadedItems(): IZoweUSSTreeNode[] {
-        return null;
+        return [];
     }
 
     /**
@@ -120,7 +120,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      */
     @MockMethod()
     public getFileHistory(): string[] {
-        return null;
+        return [];
     }
 
     /**
@@ -132,7 +132,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      */
     @MockMethod()
     public getTreeItem(_element: ZoweUSSNode): vscode.TreeItem {
-        return null;
+        return null as any;
     }
 
     /**
@@ -145,7 +145,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
     @MockMethod()
     public getChildren(_element?: ZoweUSSNode): Promise<ZoweUSSNode[]> {
         return new Promise<ZoweUSSNode[]>((resolve) => {
-            return resolve(null);
+            return resolve([]);
         });
     }
 
@@ -156,7 +156,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      */
     @MockMethod()
     public refresh(): void {
-        return null;
+        return;
     }
 
     /**

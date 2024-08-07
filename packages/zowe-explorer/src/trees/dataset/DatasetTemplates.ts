@@ -67,8 +67,7 @@ export class DataSetTemplates {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    private static promptForSaveLocation() {
+    private static promptForSaveLocation<T extends string>(): Thenable<T | undefined> {
         const qpOptions: vscode.QuickPickOptions = {
             title: vscode.l10n.t("Data set template save location"),
             placeHolder: vscode.l10n.t("Choose the setting location to save the data set template..."),
@@ -78,7 +77,7 @@ export class DataSetTemplates {
         const qpItems = [];
         qpItems.push(new FilterItem({ text: vscode.l10n.t("Save as User setting"), show: true }));
         qpItems.push(new FilterItem({ text: vscode.l10n.t("Save as Workspace setting"), show: true }));
-        return Gui.showQuickPick(qpItems, qpOptions);
+        return Gui.showQuickPick<T>(qpItems, qpOptions);
     }
 
     private static getTemplatesPerLocation(target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global): Types.DataSetAllocTemplate[] {

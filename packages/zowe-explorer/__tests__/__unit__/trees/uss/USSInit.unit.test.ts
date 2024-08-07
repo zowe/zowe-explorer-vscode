@@ -16,7 +16,6 @@ import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { USSInit } from "../../../../src/trees/uss/USSInit";
 import { SharedActions } from "../../../../src/trees/shared/SharedActions";
 import { SharedInit } from "../../../../src/trees/shared/SharedInit";
-import { USSTree } from "../../../../src/trees/uss/USSTree";
 
 describe("Test src/uss/extension", () => {
     describe("initUSSProvider", () => {

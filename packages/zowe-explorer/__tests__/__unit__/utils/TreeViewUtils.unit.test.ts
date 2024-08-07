@@ -18,7 +18,7 @@ import { TreeViewUtils } from "../../../src/utils/TreeViewUtils";
 import { Constants } from "../../../src/configuration/Constants";
 
 describe("TreeViewUtils Unit Tests", () => {
-    function createBlockMocks() {
+    function createBlockMocks(): { [key: string]: any } {
         const newMocks = {
             session: createISession(),
             imperativeProfile: createIProfile(),

@@ -474,7 +474,7 @@ export class Profiles extends ProfilesCache {
                 profiles: [...this.getCoreProfileTypes(), ProfileConstants.BaseProfile],
                 baseProfile: ProfileConstants.BaseProfile,
             };
-            const newConfig: imperative.IConfig = await imperative.ConfigBuilder.build(impConfig, opts);
+            const newConfig: imperative.IConfig = await imperative.ConfigBuilder.build(impConfig, global, opts);
 
             // Create non secure profile if VS Code setting is false
             this.createNonSecureProfile(newConfig);

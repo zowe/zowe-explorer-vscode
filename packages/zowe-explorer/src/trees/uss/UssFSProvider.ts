@@ -515,7 +515,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * Deletes a file or folder at the given URI.
      * @param uri The URI that points to the file/folder to delete
      */
-    public async delete(uri: vscode.Uri, options: { recursive: boolean }): Promise<void> {
+    public async delete(uri: vscode.Uri, _options: { recursive: boolean }): Promise<void> {
         const { entryToDelete, parent, parentUri } = this._getDeleteInfo(uri);
 
         try {

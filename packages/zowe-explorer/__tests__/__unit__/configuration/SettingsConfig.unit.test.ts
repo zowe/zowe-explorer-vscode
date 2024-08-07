@@ -14,7 +14,6 @@ import { Gui } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
-import { Constants } from "../../../src/configuration/Constants";
 
 describe("SettingsConfig Unit Tests", () => {
     beforeEach(() => {

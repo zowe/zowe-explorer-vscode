@@ -9,7 +9,7 @@
  *
  */
 
-import * as Mustache from "mustache";
+import Mustache = require("mustache");
 import HTMLTemplate from "./utils/HTMLTemplate";
 import { Types } from "../../Types";
 import { Disposable, ExtensionContext, Uri, ViewColumn, WebviewPanel, window } from "vscode";

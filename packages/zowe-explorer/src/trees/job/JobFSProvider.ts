@@ -47,7 +47,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         return JobFSProvider._instance;
     }
 
-    public watch(uri: vscode.Uri, options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
+    public watch(_uri: vscode.Uri, _options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
         // ignore, fires for all changes...
         return new vscode.Disposable(() => {});
     }
