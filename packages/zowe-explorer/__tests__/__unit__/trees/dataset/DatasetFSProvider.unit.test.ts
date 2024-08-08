@@ -16,6 +16,7 @@ import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
+const dayjs = require("dayjs");
 
 const testProfile = createIProfile();
 const testEntries = {
@@ -147,6 +148,12 @@ describe("readDirectory", () => {
             mvsApiMock.mockRestore();
             getInfoForUriMock.mockRestore();
         });
+    });
+
+    it("throws an error if lookup returns a non-filesystem error", async () => {
+        const _lookupAsDirectoryMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockRejectedValueOnce(new Error());
+        await expect(DatasetFSProvider.instance.readDirectory).rejects.toThrow();
+        _lookupAsDirectoryMock.mockRestore();
     });
 
     describe("PDS entry", () => {
@@ -540,6 +547,51 @@ describe("stat", () => {
         expect(res.permissions).toBe(FilePermission.Readonly);
         expect(lookupMock).toHaveBeenCalledWith(conflictUri, false);
         lookupMock.mockRestore();
+    });
+    it("calls lookup for a profile URI", async () => {
+        const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(testEntries.session);
+        const res = await DatasetFSProvider.instance.stat(testUris.session);
+        expect(lookupMock).toHaveBeenCalledWith(testUris.session, false);
+        expect(res).toBe(testEntries.session);
+        lookupMock.mockRestore();
+    });
+    it("attempts to fetch the resource if fetch=true is provided", async () => {
+        const remoteLookupForResourceMock = jest.spyOn(DatasetFSProvider.instance as any, "remoteLookupForResource").mockReturnValue(testEntries.ps);
+        const getInfoForUriMock = jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+            isRoot: false,
+            slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+            profileName: "sestest",
+            profile: testEntries.ps.metadata.profile,
+        });
+        const uriWithFetchQuery = testUris.ps.with({ query: "fetch=true" });
+        await DatasetFSProvider.instance.stat(uriWithFetchQuery);
+        expect(remoteLookupForResourceMock).toHaveBeenCalledWith(uriWithFetchQuery);
+        remoteLookupForResourceMock.mockRestore();
+        getInfoForUriMock.mockRestore();
+    });
+    it("calls allMembers for a PDS member and invalidates its data if mtime is newer", async () => {
+        const fakePdsMember = Object.assign(Object.create(Object.getPrototypeOf(testEntries.pdsMember)), testEntries.pdsMember);
+        const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(fakePdsMember);
+        const lookupParentDirMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory").mockReturnValue(testEntries.pds);
+        const allMembersMock = jest.fn().mockResolvedValue({
+            success: true,
+            apiResponse: {
+                items: [{ member: "MEMBER1", m4date: "2024-08-08", mtime: "12", msec: "30" }],
+            },
+            commandResponse: "",
+        });
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+            allMembers: allMembersMock,
+        } as any);
+        const res = await DatasetFSProvider.instance.stat(testUris.pdsMember);
+        expect(lookupMock).toHaveBeenCalledWith(testUris.pdsMember, false);
+        expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.pdsMember);
+        expect(allMembersMock).toHaveBeenCalledWith("USER.DATA.PDS", { attributes: true });
+        expect(res).toStrictEqual({ ...fakePdsMember, mtime: dayjs("2024-08-08 12:30").unix() });
+        expect(fakePdsMember.wasAccessed).toBe(false);
+        lookupMock.mockRestore();
+        lookupParentDirMock.mockRestore();
+        mvsApiMock.mockRestore();
     });
 });
 
