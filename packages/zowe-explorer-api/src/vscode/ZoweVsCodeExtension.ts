@@ -26,7 +26,8 @@ export class ZoweVsCodeExtension {
      * @internal
      */
     public static get profilesCache(): ProfilesCache {
-        return new ProfilesCache(imperative.Logger.getAppLogger(), vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
+        const workspacePath = vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file")?.uri.fsPath;
+        return new ProfilesCache(imperative.Logger.getAppLogger(), workspacePath);
     }
 
     /**

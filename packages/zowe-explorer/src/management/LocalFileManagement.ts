@@ -19,7 +19,7 @@ export class LocalFileManagement {
     public static fileSelectedToCompare: boolean = false;
 
     public static getDefaultUri(): vscode.Uri {
-        return vscode.workspace.workspaceFolders?.[0]?.uri ?? vscode.Uri.file(os.homedir());
+        return vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file")?.uri ?? vscode.Uri.file(os.homedir());
     }
 
     public static setCompareSelection(val: boolean): void {

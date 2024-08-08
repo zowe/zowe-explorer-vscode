@@ -168,7 +168,7 @@ describe("SettingsConfig Unit Tests", () => {
     describe("function standardizeSettings", () => {
         beforeEach(() => {
             Object.defineProperty(vscode.workspace, "workspaceFolders", {
-                value: ["test"],
+                value: [{ uri: { fsPath: "test", scheme: "file" } }],
                 configurable: true,
             });
             jest.spyOn(SettingsConfig as any, "zoweOldConfigurations", "get").mockReturnValue(["zowe.settings.test"]);

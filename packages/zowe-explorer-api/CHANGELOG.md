@@ -39,6 +39,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added the `onVaultUpdate` VSCode event to notify extenders when credentials are updated on the OS vault by other applications. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
 - Added the `onCredMgrsUpdate` VSCode event to notify extenders when the local PC's credential manager has been updated by other applications. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
 - **Breaking:** Updated most function signatures for exported programmatic interfaces. Changes make developing with the Zowe Explorer API more efficient for extenders by showing which properties they can expect when calling our APIs. [#2952](https://github.com/zowe/zowe-explorer-vscode/issues/2952)
+- Renamed the `_lookup` function to `lookup` in the `BaseProvider` class and updated its access to public, allowing extenders to look up resources outside of the provider implementations. The `_lookup` function is still accessible, but now deprecated in favor of the public `lookup` function. [#3040](https://github.com/zowe/zowe-explorer-vscode/pull/3040)
 
 ### Bug fixes
 

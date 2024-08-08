@@ -32,7 +32,7 @@ export class MockedProperty {
     #val: any;
     #valType: MockedValueType;
     #objRef: any;
-    #originalDescriptor?: PropertyDescriptor;
+    #originalDescriptor: PropertyDescriptor | undefined;
 
     private initValueType() {
         if (typeof this.#val === "function" || jest.isMockFunction(this.#val)) {
@@ -49,15 +49,19 @@ export class MockedProperty {
             throw new Error("Null or undefined object passed to MockedProperty");
         }
         this.#objRef = object;
-        this.#originalDescriptor = descriptor ?? Object.getOwnPropertyDescriptor(object, key);
+        this.#originalDescriptor = Object.getOwnPropertyDescriptor(object, key);
 
         if (!value) {
             this.#val = jest.fn();
             this.#valType = MockedValueType.Function;
-            Object.defineProperty(object, key, {
-                value: this.#val,
-                configurable: true,
-            });
+            Object.defineProperty(
+                object,
+                key,
+                descriptor ?? {
+                    value: this.#val,
+                    configurable: true,
+                }
+            );
             return;
         }
 

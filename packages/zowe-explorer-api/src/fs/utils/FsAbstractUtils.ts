@@ -30,7 +30,7 @@ export class FsAbstractUtils {
         const startPathPos = isRoot ? uri.path.length : slashAfterProfilePos;
 
         // Load profile that matches the parsed name
-        const profileName = uri.path.substring(1, startPathPos);
+        const profileName = uri.path.startsWith("/") ? uri.path.substring(1, startPathPos) : uri.path.substring(0, startPathPos);
         const profile = profilesCache?.loadNamedProfile ? profilesCache.loadNamedProfile(profileName) : null;
 
         return {

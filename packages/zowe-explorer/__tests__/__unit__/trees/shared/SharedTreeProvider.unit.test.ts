@@ -13,43 +13,69 @@ import { createTreeView } from "../../../__mocks__/mockCreators/shared";
 import { Constants } from "../../../../src/configuration/Constants";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 
-describe("TreeProvider Unit Tests - Function getters", () => {
+describe("TreeProvider Unit Tests - getters", () => {
     it("should retrieve the ds provider", async () => {
         const mockTree = createTreeView("ds");
-        await SharedTreeProviders.initializeProviders({
-            ds: jest.fn(() => mockTree) as any,
-            uss: jest.fn(),
-            job: jest.fn(),
-        });
+        await SharedTreeProviders.initializeProviders(
+            {
+                ds: jest.fn(() => mockTree) as any,
+                uss: jest.fn(),
+                job: jest.fn(),
+            },
+            () => {}
+        );
         expect(SharedTreeProviders.ds).toEqual(mockTree);
     });
     it("should retrieve the uss provider", async () => {
         const mockTree = createTreeView("uss");
-        await SharedTreeProviders.initializeProviders({
-            ds: jest.fn(),
-            uss: jest.fn(() => mockTree) as any,
-            job: jest.fn(),
-        });
+        await SharedTreeProviders.initializeProviders(
+            {
+                ds: jest.fn(),
+                uss: jest.fn(() => mockTree) as any,
+                job: jest.fn(),
+            },
+            () => {}
+        );
         expect(SharedTreeProviders.uss).toEqual(mockTree);
     });
     it("should retrieve the uss provider", async () => {
         const mockTree = createTreeView("job");
-        await SharedTreeProviders.initializeProviders({
-            ds: jest.fn(),
-            uss: jest.fn(),
-            job: jest.fn(() => mockTree) as any,
-        });
+        await SharedTreeProviders.initializeProviders(
+            {
+                ds: jest.fn(),
+                uss: jest.fn(),
+                job: jest.fn(() => mockTree) as any,
+            },
+            () => {}
+        );
         expect(SharedTreeProviders.job).toEqual(mockTree);
+    });
+});
+describe("TreeProvider Unit Tests - Function initializeProviders", () => {
+    it("should call its postInit function", async () => {
+        const postInitMock = jest.fn();
+        await SharedTreeProviders.initializeProviders(
+            {
+                ds: jest.fn(),
+                uss: jest.fn(),
+                job: jest.fn(),
+            },
+            postInitMock
+        );
+        expect(postInitMock).toHaveBeenCalled();
     });
 });
 
 describe("TreeProvider Unit Tests - Function sessionIsPresentInOtherTrees", () => {
     it("should return true if session is present in another tree", async () => {
-        await SharedTreeProviders.initializeProviders({
-            ds: (): any => ({ mSessionNodes: [{ getLabel: () => "test1" }, { getLabel: () => "test2" }] } as any),
-            uss: (): any => ({ mSessionNodes: [{ getLabel: () => "test3" }, { getLabel: () => "test4" }] } as any),
-            job: (): any => ({ mSessionNodes: [{ getLabel: () => "test5" }, { getLabel: () => "test1" }] } as any),
-        });
+        await SharedTreeProviders.initializeProviders(
+            {
+                ds: (): any => ({ mSessionNodes: [{ getLabel: () => "test1" }, { getLabel: () => "test2" }] } as any),
+                uss: (): any => ({ mSessionNodes: [{ getLabel: () => "test3" }, { getLabel: () => "test4" }] } as any),
+                job: (): any => ({ mSessionNodes: [{ getLabel: () => "test5" }, { getLabel: () => "test1" }] } as any),
+            },
+            () => {}
+        );
         expect(SharedTreeProviders.sessionIsPresentInOtherTrees("test1")).toEqual(true);
     });
 });

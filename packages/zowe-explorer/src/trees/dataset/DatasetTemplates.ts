@@ -42,7 +42,9 @@ export class DataSetTemplates {
                 newTemplateName = key;
             });
             let userPick;
-            if (vscode.workspace.workspaceFolders?.[0] != null) {
+
+            const workspacePath = vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file")?.uri.fsPath;
+            if (workspacePath) {
                 userPick = await this.promptForSaveLocation();
             }
             let target = vscode.ConfigurationTarget.Global;
