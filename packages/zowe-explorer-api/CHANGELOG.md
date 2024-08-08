@@ -39,7 +39,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added the `onVaultUpdate` VSCode event to notify extenders when credentials are updated on the OS vault by other applications. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
 - Added the `onCredMgrsUpdate` VSCode event to notify extenders when the local PC's credential manager has been updated by other applications. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
 - **Breaking:** Updated most function signatures for exported programmatic interfaces. Changes make developing with the Zowe Explorer API more efficient for extenders by showing which properties they can expect when calling our APIs. [#2952](https://github.com/zowe/zowe-explorer-vscode/issues/2952)
-- Added support for logging in to multiple API ML instances per team config file. [#2264](https://github.com/zowe/zowe-explorer-vscode/issues/2264)
+- Enhanced the `ZoweVsCodeExtension.loginWithBaseProfile` and `ZoweVsCodeExtension.logoutWithBaseProfile` methods to store SSO token in parent profile when nested profiles are in use. [#2264](https://github.com/zowe/zowe-explorer-vscode/issues/2264)
 - **Next Breaking:** Changed return type of `ZoweVsCodeExtension.logoutWithBaseProfile` method from `void` to `boolean` to indicate whether logout was successful.
 
 ### Bug fixes

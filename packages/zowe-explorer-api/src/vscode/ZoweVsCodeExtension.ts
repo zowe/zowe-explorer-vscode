@@ -186,6 +186,7 @@ export class ZoweVsCodeExtension {
         // If the connection details do not match, then we MUST forcefully store the token in the service profile
         let profileToUpdate = serviceProfile;
         if (connOk) {
+            // If active profile is nested (e.g. lpar.zosmf), then set type to null so token can be stored in parent typeless profile
             profileToUpdate = serviceProfile.name.startsWith(baseProfile.name + ".") ? { ...baseProfile, type: null } : baseProfile;
         }
 
@@ -236,6 +237,7 @@ export class ZoweVsCodeExtension {
             });
             await (zeRegister?.getCommonApi(serviceProfile).logout ?? Logout.apimlLogout)(updSession);
 
+            // If active profile is nested (e.g. lpar.zosmf), then update service profile since base profile may be typeless
             const connOk =
                 serviceProfile.profile.host === baseProfile.profile.host &&
                 serviceProfile.profile.port === baseProfile.profile.port &&
@@ -243,7 +245,7 @@ export class ZoweVsCodeExtension {
             await cache.updateBaseProfileFileLogout(connOk ? baseProfile : serviceProfile);
             return true;
         } else {
-            Gui.errorMessage(`Logout failed: No base profile found to store SSO token for profile "${serviceProfile.name}"`);
+            Gui.errorMessage(`Logout failed: No base profile found to remove SSO token for profile "${serviceProfile.name}"`);
             return false;
         }
     }
