@@ -168,7 +168,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             }
         }
 
-        if (entry instanceof FileEntry) {
+        if (FsAbstractUtils.isFileEntry(entry)) {
             return this._lookupAsFile(uri) as UssFile;
         }
 
