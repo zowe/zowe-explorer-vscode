@@ -40,7 +40,7 @@ export class BufferBuilder extends Duplex {
         this.chunks = [];
     }
 
-    public _write(chunk: any, encoding: BufferEncoding, callback: (error?: Error) => void): void {
+    public _write(chunk: any, _encoding: BufferEncoding, callback: (error?: Error) => void): void {
         this.chunks.push(chunk);
         callback();
     }

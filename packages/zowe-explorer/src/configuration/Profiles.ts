@@ -398,7 +398,7 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public async editSession(profileLoaded: imperative.IProfileLoaded): Promise<any | undefined> {
+    public async editSession(profileLoaded: imperative.IProfileLoaded): Promise<void> {
         const currentProfile = await this.getProfileFromConfig(profileLoaded.name);
         const filePath = currentProfile.profLoc.osLoc[0];
         await this.openConfigFile(filePath);
@@ -422,7 +422,7 @@ export class Profiles extends ProfilesCache {
         return profileType;
     }
 
-    public async createZoweSchema(_zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<string | undefined> {
+    public async createZoweSchema(_zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<void> {
         ZoweLogger.trace("Profiles.createZoweSchema called.");
         try {
             let user = false;
@@ -487,7 +487,6 @@ export class Profiles extends ProfilesCache {
                 configName = config.configName;
             }
             await this.openConfigFile(path.join(rootPath, configName));
-            return path.join(rootPath, configName);
         } catch (err) {
             ZoweLogger.error(err);
             ZoweExplorerExtender.showZoweConfigError(err.message);
@@ -862,7 +861,6 @@ export class Profiles extends ProfilesCache {
             });
             ZoweLogger.error(message);
             Gui.errorMessage(message);
-            return;
         }
     }
 

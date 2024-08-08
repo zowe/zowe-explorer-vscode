@@ -28,7 +28,7 @@ import {
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager } from "../../__mocks__/mockCreators/profiles";
-import { imperative, Gui, ProfilesCache, ZoweTreeNode, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { imperative, Gui, ProfilesCache, ZoweTreeNode, ZoweVsCodeExtension, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
@@ -44,6 +44,8 @@ import { Constants } from "../../../src/configuration/Constants";
 import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { FilterDescriptor } from "../../../src/management/FilterManagement";
+import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
+import { USSTree } from "../../../src/trees/uss/USSTree";
 
 jest.mock("child_process");
 jest.mock("fs");
@@ -68,7 +70,7 @@ function createGlobalMocks(): { [key: string]: any } {
         testProfile: createValidIProfile(),
         testTeamConfigProfile: createTeamConfigMock(),
         testUnsecureTeamConfigProfile: createUnsecureTeamConfigMock(),
-        testUSSTree: null,
+        testUSSTree: null as any as USSTree,
         testNode: createMockNode("test", Constants.DS_SESSION_CONTEXT),
         testSession: createISession(),
         mockCliProfileManager: createProfileManager(),
@@ -85,10 +87,10 @@ function createGlobalMocks(): { [key: string]: any } {
             host: "fake.com",
             port: 143,
         },
-        mockProfileInstance: null,
-        mockProfilesCache: null,
+        mockProfileInstance: null as any as Profiles,
+        mockProfilesCache: null as any as ProfilesCache,
         mockConfigInstance: createConfigInstance(),
-        mockConfigLoad: null,
+        mockConfigLoad: null as any as typeof imperative.Config,
         FileSystemProvider: {
             createDirectory: jest.fn(),
         },
@@ -195,7 +197,7 @@ function createGlobalMocks(): { [key: string]: any } {
         configurable: true,
     });
 
-    newMocks.testUSSTree = createUSSTree(undefined, [createUSSNode(newMocks.testSession, newMocks.testProfile)], createTreeView());
+    newMocks.testUSSTree = createUSSTree(undefined as any, [createUSSNode(newMocks.testSession, newMocks.testProfile)], createTreeView());
 
     return newMocks;
 }
@@ -274,8 +276,8 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         const newMocks = {
             session: createISessionWithoutCredentials(),
             treeView: createTreeView(),
-            testDatasetSessionNode: null,
-            testDatasetTree: null,
+            testDatasetSessionNode: null as any as ZoweDatasetNode,
+            testDatasetTree: null as any as IZoweTree<IZoweTreeNode>,
             quickPickItem: createQuickPickItem(),
             qpPlaceholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
         };
@@ -406,8 +408,8 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         const newMocks = {
             session: createISessionWithoutCredentials(),
             treeView: createTreeView(),
-            testDatasetSessionNode: null,
-            testDatasetTree: null,
+            testDatasetSessionNode: null as any as ZoweDatasetNode,
+            testDatasetTree: null as any as IZoweTree<IZoweTreeNode>,
             quickPickItem: createQuickPickItem(),
             mockWsFolder: null,
             qpPlaceholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
@@ -553,7 +555,9 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
                 ? "file:\\globalPath\\.zowe\\zowe.config.json"
                 : "file:/globalPath/.zowe/zowe.config.json".split(path.sep).join(path.posix.sep);
 
-        await expect(Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree)).resolves.toBe(expectedValue);
+        const spyConfig = jest.spyOn(Profiles.getInstance(), "openConfigFile").mockImplementation();
+        await Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree);
+        expect(spyConfig).toHaveBeenCalledWith(expectedValue);
     });
 
     it("Test that createZoweSchema will create global configuration", async () => {
