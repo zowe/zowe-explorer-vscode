@@ -590,7 +590,7 @@ describe("writeFile", () => {
     it("throws an error if entry doesn't exist and 'create' option is false", async () => {
         let err;
         try {
-            await UssFSProvider.instance.writeFile(testUris.file, new Uint8Array([]), { create: false, overwrite: true });            
+            await UssFSProvider.instance.writeFile(testUris.file, new Uint8Array([]), { create: false, overwrite: true });
         } catch (error) {
             err = error;
             expect(err.code).toBe("FileNotFound");

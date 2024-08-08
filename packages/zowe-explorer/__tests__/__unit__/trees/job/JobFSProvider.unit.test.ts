@@ -39,7 +39,7 @@ const testEntries = {
         ...new SpoolEntry("JES2.JESMSGLG.2"),
         data: new Uint8Array([1, 2, 3]),
         metadata: {
-            profile: testProfile
+            profile: testProfile,
             path: "/TESTJOB(JOB1234) - ACTIVE/JES2.JESMSGLG.2",
         },
         spool: {
