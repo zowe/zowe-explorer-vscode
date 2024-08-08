@@ -283,7 +283,14 @@ describe("readFile", () => {
             .spyOn(DatasetFSProvider.instance as any, "_lookupAsFile")
             .mockReturnValueOnce({ ...testEntries.ps, metadata: { profile: null } });
 
-        await expect(DatasetFSProvider.instance.readFile(testUris.ps)).rejects.toThrow("file not found");
+        let err;
+        try {
+            await DatasetFSProvider.instance.readFile(testUris.ps);
+        } catch (error) {
+            err = error;
+            expect(err.code).toBe("FileNotFound");
+        }
+        expect(err).toBeDefined();
         expect(_lookupAsFileMock).toHaveBeenCalledWith(testUris.ps);
         _lookupAsFileMock.mockRestore();
     });
@@ -490,9 +497,14 @@ describe("writeFile", () => {
             entries: new Map(),
         };
         const lookupParentDirMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(session);
-        await expect(DatasetFSProvider.instance.writeFile(testUris.ps, new Uint8Array([]), { create: false, overwrite: true })).rejects.toThrow(
-            "file not found"
-        );
+        let err;
+        try {
+            await DatasetFSProvider.instance.writeFile(testUris.ps, new Uint8Array([]), { create: false, overwrite: true });
+        } catch (error) {
+            err = error;
+            expect(err.code).toBe("FileNotFound");
+        }
+        expect(err).toBeDefined();
         lookupParentDirMock.mockRestore();
     });
 
@@ -592,6 +604,70 @@ describe("stat", () => {
         lookupMock.mockRestore();
         lookupParentDirMock.mockRestore();
         mvsApiMock.mockRestore();
+    });
+});
+
+describe("fetchEntriesForDataset", () => {
+    it("calls allMembers to get the PDS members", async () => {
+        const allMembersMock = jest.fn().mockResolvedValue({
+            success: true,
+            apiResponse: {
+                items: ["MEMBER1", "MEMBER2", "MEMBER3"].map((m) => ({ member: m })),
+            },
+            commandResponse: "",
+        });
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+            allMembers: allMembersMock,
+        } as any);
+        const fakePds = Object.assign(Object.create(Object.getPrototypeOf(testEntries.pds)), testEntries.pds);
+        await (DatasetFSProvider.instance as any).fetchEntriesForDataset(fakePds, testUris.pds, {
+            isRoot: false,
+            slashAfterProfilePos: testUris.pds.path.indexOf("/", 1),
+            profileName: "sestest",
+            profile: testProfile,
+        });
+        expect(allMembersMock).toHaveBeenCalled();
+        mvsApiMock.mockRestore();
+    });
+});
+
+describe("fetchDataset", () => {
+    describe("calls dataSet to verify that the data set exists on the mainframe", () => {
+        it("non-existent URI", async () => {
+            const dataSetMock = jest.fn().mockResolvedValue({
+                success: true,
+                apiResponse: {
+                    items: [{ name: "USER.DATA.PS" }],
+                },
+                commandResponse: "",
+            });
+            const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                dataSet: dataSetMock,
+            } as any);
+            await (DatasetFSProvider.instance as any).fetchDataset(testUris.ps, {
+                isRoot: false,
+                slashAfterProfilePos: testUris.pds.path.indexOf("/", 1),
+                profileName: "sestest",
+                profile: testProfile,
+            });
+            expect(dataSetMock).toHaveBeenCalled();
+            mvsApiMock.mockRestore();
+        });
+
+        it("existing URI - PS", async () => {
+            const fakePs = Object.assign(Object.create(Object.getPrototypeOf(testEntries.ps)), testEntries.ps);
+            const lookupMock = jest.spyOn(DatasetFSProvider.instance, "lookup").mockReturnValue(fakePs);
+            const writeFileSpy = jest.spyOn(DatasetFSProvider.instance as any, "writeFile");
+            await (DatasetFSProvider.instance as any).fetchDataset(testUris.ps, {
+                isRoot: false,
+                slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                profileName: "sestest",
+                profile: testProfile,
+            });
+            expect(writeFileSpy).not.toHaveBeenCalled();
+            lookupMock.mockRestore();
+            writeFileSpy.mockRestore();
+        });
     });
 });
 

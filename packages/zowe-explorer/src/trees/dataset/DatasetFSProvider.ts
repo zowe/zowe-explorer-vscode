@@ -203,7 +203,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     private async fetchDataset(uri: vscode.Uri, uriInfo: UriFsInfo): Promise<PdsEntry | DsEntry> {
         let entry: PdsEntry | DsEntry;
         try {
-            entry = this._lookupAsDirectory(uri, false) as PdsEntry;
+            entry = this.lookup(uri, false) as PdsEntry | DsEntry;
         } catch (err) {
             if (!(err instanceof vscode.FileSystemError)) {
                 throw err;
@@ -215,7 +215,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
 
         const entryExists = entry != null;
-        let entryIsDir = false;
+        let entryIsDir = entry != null ? entry.type === vscode.FileType.Directory : false;
         if (!entryExists) {
             const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.posix.basename(uri.path), { attributes: true });
             if (resp.success) {

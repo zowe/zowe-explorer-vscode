@@ -387,7 +387,14 @@ describe("readFile", () => {
             path: "/aFile.txt",
         });
 
-        await expect(UssFSProvider.instance.readFile(testUris.file)).rejects.toThrow("file not found");
+        let err;
+        try {
+            await UssFSProvider.instance.readFile(testUris.file);
+        } catch (error) {
+            err = error;
+            expect(err.code).toBe("FileNotFound");
+        }
+        expect(err).toBeDefined();
     });
 
     it("returns data for a file", async () => {
@@ -581,9 +588,14 @@ describe("writeFile", () => {
     });
 
     it("throws an error if entry doesn't exist and 'create' option is false", async () => {
-        await expect(UssFSProvider.instance.writeFile(testUris.file, new Uint8Array([]), { create: false, overwrite: true })).rejects.toThrow(
-            "file not found"
-        );
+        let err;
+        try {
+            await UssFSProvider.instance.writeFile(testUris.file, new Uint8Array([]), { create: false, overwrite: true });            
+        } catch (error) {
+            err = error;
+            expect(err.code).toBe("FileNotFound");
+        }
+        expect(err).toBeDefined();
     });
 
     it("throws an error if entry exists and 'overwrite' option is false", async () => {

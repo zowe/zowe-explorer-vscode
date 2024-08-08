@@ -39,7 +39,7 @@ const testEntries = {
         ...new SpoolEntry("JES2.JESMSGLG.2"),
         data: new Uint8Array([1, 2, 3]),
         metadata: {
-            profile: testProfile,
+            profile: testProfile
             path: "/TESTJOB(JOB1234) - ACTIVE/JES2.JESMSGLG.2",
         },
         spool: {
@@ -275,9 +275,14 @@ describe("writeFile", () => {
     });
 
     it("throws an error if entry doesn't exist and 'create' option is false", () => {
-        expect(() => JobFSProvider.instance.writeFile(testUris.spool, new Uint8Array([]), { create: false, overwrite: true })).toThrow(
-            "file not found"
-        );
+        let err;
+        try {
+            JobFSProvider.instance.writeFile(testUris.spool, new Uint8Array([]), { create: false, overwrite: true });
+        } catch (error) {
+            err = error;
+            expect(err.code).toBe("FileNotFound");
+        }
+        expect(err).toBeDefined();
     });
 
     it("throws an error if the entry exists, 'create' opt is true and 'overwrite' opt is false", () => {

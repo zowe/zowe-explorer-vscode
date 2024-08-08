@@ -1095,7 +1095,9 @@ export class FileSystemError extends Error {
      * @param messageOrUri Message or uri.
      */
     static FileNotFound(messageOrUri?: string | Uri): FileSystemError {
-        return new FileSystemError("file not found");
+        const fse = new FileSystemError();
+        fse.code = "FileNotFound";
+        return fse;
     }
 
     /**
@@ -1155,7 +1157,7 @@ export class FileSystemError extends Error {
      * Possible values are names of errors, like {@linkcode FileSystemError.FileNotFound FileNotFound},
      * or `Unknown` for unspecified errors.
      */
-    readonly code: string;
+    code: string;
 }
 
 /**
