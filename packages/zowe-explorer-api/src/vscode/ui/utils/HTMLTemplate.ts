@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+/* eslint-disable max-len */
 
 /**
  * HTML template that is compiled with Mustache to load a WebView instance at runtime.
