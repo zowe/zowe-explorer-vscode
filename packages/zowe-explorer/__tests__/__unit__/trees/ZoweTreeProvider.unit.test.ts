@@ -208,7 +208,7 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
         blockMocks.jobNode.contextValue = Constants.JOBS_SESSION_CONTEXT;
         await blockMocks.testJobsProvider.editSession(blockMocks.jobNode);
         expect(globalMocks.mockEditSession).toHaveBeenCalled();
-        expect(deleteSessionSpy).toHaveBeenCalledWith(blockMocks.jobNode);
+        expect(deleteSessionSpy).not.toHaveBeenCalled();
     });
 });
 

@@ -136,7 +136,7 @@ export class CancellationTokenSource {
 }
 
 export namespace extensions {
-    export function getExtension(identifier: string) {
+    export function getExtension(_identifier: string): { packageJSON: { version: string } } {
         return {
             packageJSON: {
                 version: "2.0.0",
@@ -464,23 +464,23 @@ export namespace window {
      * @param items A set of items that will be rendered as actions in the message.
      * @return A thenable that resolves to the selected item or `undefined` when being dismissed.
      */
-    export function showInformationMessage(message: string, ...items: string[]): Thenable<string> {
+    export function showInformationMessage(_message: string, ..._items: string[]): Thenable<string> {
         return Promise.resolve("");
     }
 
-    export function showErrorMessage(message: string, ...items: string[]): undefined {
+    export function showErrorMessage(_message: string, ..._items: string[]): undefined {
         return undefined;
     }
 
-    export function showWarningMessage(message: string, ...items: string[]): undefined {
+    export function showWarningMessage(_message: string, ..._items: string[]): undefined {
         return undefined;
     }
 
-    export function setStatusBarMessage(message: string, ...items: string[]): undefined {
+    export function setStatusBarMessage(_message: string, ..._items: string[]): undefined {
         return undefined;
     }
 
-    export function createQuickPick<T extends QuickPickItem>(): QuickPick<T> {
+    export function createQuickPick<T extends QuickPickItem>(): QuickPick<T> | undefined {
         return undefined;
     }
 
@@ -494,11 +494,11 @@ export namespace window {
     }
 
     export function showQuickPick<T extends QuickPickItem>(
-        items: readonly T[] | Thenable<readonly T[]>,
-        options?: QuickPickOptions & { canPickMany: true },
-        token?: CancellationToken
+        _items: readonly T[] | Thenable<readonly T[]>,
+        _options?: QuickPickOptions & { canPickMany: true },
+        _token?: CancellationToken
     ): Thenable<T[] | undefined> {
-        return undefined;
+        return Promise.resolve(undefined);
     }
 
     /**
@@ -544,11 +544,11 @@ export namespace commands {
      * @param thisArg The `this` context used when invoking the handler function.
      * @return Disposable which unregisters this command on disposal.
      */
-    export function registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any): Disposable {
+    export function registerCommand(_command: string, callback: (...args: any[]) => any, _thisArg?: any): Disposable | undefined {
         return undefined;
     }
 
-    export function executeCommand(command: string): undefined {
+    export function executeCommand(_command: string): undefined {
         return undefined;
     }
 }
@@ -561,7 +561,7 @@ export class Disposable {
     constructor() {}
 }
 
-export function RelativePattern(base: string, pattern: string) {
+export function RelativePattern(_base: string, _pattern: string): {} {
     return {};
 }
 
@@ -614,7 +614,7 @@ export class Uri {
     public static file(path: string): Uri {
         return Uri.parse(path);
     }
-    public static parse(value: string, strict?: boolean): Uri {
+    public static parse(value: string, _strict?: boolean): Uri {
         const newUri = new Uri();
         newUri.path = value;
 
@@ -906,7 +906,7 @@ export class EventEmitter<T> {
      *
      * @param data The event object.
      */
-    fire(data?: T): void {}
+    fire(_data?: T): void {}
 
     /**
      * Dispose this object and free resources.
@@ -1011,7 +1011,7 @@ export class FileSystemError extends Error {
      * Create an error to signal that a file or folder wasn't found.
      * @param messageOrUri Message or uri.
      */
-    static FileNotFound(messageOrUri?: string | Uri): FileSystemError {
+    static FileNotFound(_messageOrUri?: string | Uri): FileSystemError {
         return new FileSystemError("file not found");
     }
 
@@ -1020,7 +1020,7 @@ export class FileSystemError extends Error {
      * creating but not overwriting a file.
      * @param messageOrUri Message or uri.
      */
-    static FileExists(messageOrUri?: string | Uri): FileSystemError {
+    static FileExists(_messageOrUri?: string | Uri): FileSystemError {
         return new FileSystemError("file exists");
     }
 
@@ -1028,7 +1028,7 @@ export class FileSystemError extends Error {
      * Create an error to signal that a file is not a folder.
      * @param messageOrUri Message or uri.
      */
-    static FileNotADirectory(messageOrUri?: string | Uri): FileSystemError {
+    static FileNotADirectory(_messageOrUri?: string | Uri): FileSystemError {
         return new FileSystemError("file not a directory");
     }
 
@@ -1036,7 +1036,7 @@ export class FileSystemError extends Error {
      * Create an error to signal that a file is a folder.
      * @param messageOrUri Message or uri.
      */
-    static FileIsADirectory(messageOrUri?: string | Uri): FileSystemError {
+    static FileIsADirectory(_messageOrUri?: string | Uri): FileSystemError {
         return new FileSystemError("file is a directory");
     }
 
@@ -1044,7 +1044,7 @@ export class FileSystemError extends Error {
      * Create an error to signal that an operation lacks required permissions.
      * @param messageOrUri Message or uri.
      */
-    static NoPermissions(messageOrUri?: string | Uri): FileSystemError {
+    static NoPermissions(_messageOrUri?: string | Uri): FileSystemError {
         return new FileSystemError("no permissions");
     }
 
@@ -1053,7 +1053,7 @@ export class FileSystemError extends Error {
      * complete a request.
      * @param messageOrUri Message or uri.
      */
-    static Unavailable(messageOrUri?: string | Uri): FileSystemError {
+    static Unavailable(_messageOrUri?: string | Uri): FileSystemError {
         return new FileSystemError("unavailable");
     }
 
@@ -1086,7 +1086,7 @@ export class FileSystemError extends Error {
  */
 export namespace workspace {
     export const textDocuments: TextDocument[] = [];
-    export function getConfiguration(configuration: string) {
+    export function getConfiguration(_configuration: string): { update: () => void; inspect: () => void } {
         return {
             update: () => {
                 return;
@@ -1097,7 +1097,7 @@ export namespace workspace {
         };
     }
 
-    export function createFileSystemWatcher() {
+    export function createFileSystemWatcher(): { onDidCreate: () => void; onDidChange: () => void; onDidDelete: () => void } {
         return {
             onDidCreate: () => {},
             onDidChange: () => {},
@@ -1105,11 +1105,11 @@ export namespace workspace {
         };
     }
 
-    export function onDidCloseTextDocument(event) {
+    export function onDidCloseTextDocument(_event): Disposable {
         return Disposable;
     }
 
-    export function onWillSaveTextDocument(event) {
+    export function onWillSaveTextDocument(_event): Disposable {
         return Disposable;
     }
 
@@ -1150,7 +1150,7 @@ export namespace workspace {
          * @returns The file metadata about the file.
          * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when `uri` doesn't exist.
          */
-        export function stat(uri: Uri): FileStat | Thenable<FileStat> {
+        export function stat(_uri: Uri): FileStat | Thenable<FileStat> {
             return {} as FileStat;
         }
 
@@ -1161,7 +1161,7 @@ export namespace workspace {
          * @returns An array of name/type-tuples or a thenable that resolves to such.
          * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when `uri` doesn't exist.
          */
-        export function readDirectory(uri: Uri): Array<[string, FileType]> | Thenable<Array<[string, FileType]>> {
+        export function readDirectory(_uri: Uri): Array<[string, FileType]> | Thenable<Array<[string, FileType]>> {
             return [];
         }
 
@@ -1173,7 +1173,7 @@ export namespace workspace {
          * @throws {@linkcode FileSystemError.FileExists FileExists} when `uri` already exists.
          * @throws {@linkcode FileSystemError.NoPermissions NoPermissions} when permissions aren't sufficient.
          */
-        export function createDirectory(uri: Uri): void | Thenable<void> {
+        export function createDirectory(_uri: Uri): void | Thenable<void> {
             return;
         }
 
@@ -1184,7 +1184,7 @@ export namespace workspace {
          * @returns An array of bytes or a thenable that resolves to such.
          * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when `uri` doesn't exist.
          */
-        export function readFile(uri: Uri): Uint8Array | Thenable<Uint8Array> {
+        export function readFile(_uri: Uri): Uint8Array | Thenable<Uint8Array> {
             return new Uint8Array();
         }
 
@@ -1200,9 +1200,9 @@ export namespace workspace {
          * @throws {@linkcode FileSystemError.NoPermissions NoPermissions} when permissions aren't sufficient.
          */
         export function writeFile(
-            uri: Uri,
-            content: Uint8Array,
-            options: {
+            _uri: Uri,
+            _content: Uint8Array,
+            _options: {
                 /**
                  * Create the file if it does not exist already.
                  */
@@ -1228,9 +1228,9 @@ export namespace workspace {
          * @throws {@linkcode FileSystemError.NoPermissions NoPermissions} when permissions aren't sufficient.
          */
         export function rename(
-            oldUri: Uri,
-            newUri: Uri,
-            options: {
+            _oldUri: Uri,
+            _newUri: Uri,
+            _options: {
                 /**
                  * Overwrite the file if it does exist.
                  */
@@ -1253,9 +1253,9 @@ export namespace workspace {
          * @throws {@linkcode FileSystemError.NoPermissions NoPermissions} when permissions aren't sufficient.
          */
         export function copy(
-            source: Uri,
-            destination: Uri,
-            options: {
+            _source: Uri,
+            _destination: Uri,
+            _options: {
                 /**
                  * Overwrite the file if it does exist.
                  */
@@ -1304,7 +1304,7 @@ export namespace env {
      * The system clipboard.
      */
     export const clipboard: Clipboard = {
-        writeText() {
+        writeText(): Thenable<void> {
             return Promise.resolve();
         },
     };

@@ -40,13 +40,13 @@ export namespace MainframeInteraction {
         getSession(profile?: imperative.IProfileLoaded): imperative.Session;
 
         /**
-         * Create a session for the specific profile type.
+         * Retrieve the status of a specific profile.
          *
-         * @param {imperative.IProfileLoaded} profile
-         *      will use the profile the API was retrieved with by default
-         * @returns {IZosmfInfoResponse} z/OSMF Check Status response
+         * @param {imperative.IProfileLoaded} profile the profile for which we will retrieve the status
+         * @param {string} profileType the type of profile being requested
+         * @returns {Promise<string>} The status of the profile (e.g. active, inactive, unverified)
          */
-        getStatus?(profile: imperative.IProfileLoaded, profileType?): Promise<string>;
+        getStatus?(profile: imperative.IProfileLoaded, profileType?: string): Promise<string>;
 
         /**
          * Create a session for a set command arguments. The session will be created independent

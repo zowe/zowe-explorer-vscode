@@ -66,6 +66,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed regression where `getProviderForNode` returned the wrong tree provider after performing an action on a Zowe tree node, causing some commands to fail silently. [#2967](https://github.com/zowe/zowe-explorer-vscode/issues/2967)
 - Fixed issue where creating a new team configuration file could cause Zowe Explorer to crash, resulting in all sessions disappearing from trees. [#2906](https://github.com/zowe/zowe-explorer-vscode/issues/2906)
 - Update Zowe SDKs to `8.0.0-next.202407232256` for technical currency. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
+- Addressed breaking changes from the Zowe Explorer API package.[#2952](https://github.com/zowe/zowe-explorer-vscode/issues/2952)
 
 ## `3.0.0-next.202404242037`
 
