@@ -291,7 +291,14 @@ describe("writeFile", () => {
             entries: new Map([[testEntries.spool.name, { ...testEntries.spool, wasAccessed: false }]]),
         };
         const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(jobEntry);
-        expect(() => JobFSProvider.instance.writeFile(testUris.spool, new Uint8Array([]), { create: true, overwrite: false })).toThrow("file exists");
+        let err;
+        try {
+            JobFSProvider.instance.writeFile(testUris.spool, new Uint8Array([]), { create: true, overwrite: false });
+        } catch (error) {
+            err = error;
+            expect(err.code).toBe("FileExists");
+        }
+        expect(err).toBeDefined();
         lookupParentDirMock.mockRestore();
     });
 });

@@ -604,9 +604,14 @@ describe("writeFile", () => {
             entries: new Map([[testEntries.file.name, { ...testEntries.file, wasAccessed: false }]]),
         };
         const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(rootFolder);
-        await expect(UssFSProvider.instance.writeFile(testUris.file, new Uint8Array([]), { create: true, overwrite: false })).rejects.toThrow(
-            "file exists"
-        );
+        let err;
+        try {
+            await UssFSProvider.instance.writeFile(testUris.file, new Uint8Array([]), { create: true, overwrite: false });
+        } catch (error) {
+            err = error;
+            expect(err.code).toBe("FileExists");
+        }
+        expect(err).toBeDefined();
         lookupParentDirMock.mockRestore();
     });
 
@@ -616,9 +621,14 @@ describe("writeFile", () => {
             entries: new Map([[testEntries.folder.name, { ...testEntries.folder }]]),
         };
         const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(rootFolder);
-        await expect(UssFSProvider.instance.writeFile(testUris.folder, new Uint8Array([]), { create: true, overwrite: false })).rejects.toThrow(
-            "file is a directory"
-        );
+        let err;
+        try {
+            await UssFSProvider.instance.writeFile(testUris.folder, new Uint8Array([]), { create: true, overwrite: false });
+        } catch (error) {
+            err = error;
+            expect(err.code).toBe("FileIsADirectory");
+        }
+        expect(err).toBeDefined();
         lookupParentDirMock.mockRestore();
     });
 });
@@ -638,7 +648,7 @@ describe("rename", () => {
         const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValueOnce({ ...testEntries.file });
         await expect(
             UssFSProvider.instance.rename(testUris.file, testUris.file.with({ path: "/sestest/aFile2.txt" }), { overwrite: false })
-        ).rejects.toThrow("file exists");
+        ).rejects.toThrow("Rename failed: aFile2.txt already exists in /");
 
         lookupMock.mockRestore();
     });

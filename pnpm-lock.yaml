@@ -78,6 +78,9 @@ importers:
       jest-junit:
         specifier: ^15.0.0
         version: 15.0.0
+      jest-mock-vscode:
+        specifier: ^3.0.5
+        version: 3.0.5
       jest-stare:
         specifier: ^2.4.1
         version: 2.5.1(@popperjs/core@2.11.8)
@@ -8429,6 +8432,13 @@ packages:
       stack-utils: 2.0.6
     dev: true
 
+  /jest-mock-vscode@3.0.5:
+    resolution: {integrity: sha512-fyOdwDnVMqPk4sqZkcIvFSuFjRxmLpAA91RX+Q3c6uWPB/dtE/Lnx8M5kwzUNk1PX9Xqo+dQsIFERTVCfeRGnA==}
+    engines: {node: '>16.0.0'}
+    dependencies:
+      vscode-uri: 3.0.8
+    dev: true
+
   /jest-mock@29.7.0:
     resolution: {integrity: sha512-ITOMZn+UkYS4ZFh83xYAOzWStloNzJFO2s8DWrE4lhtGD+AorgnbkiKERe4wQVBydIGPx059g6riW5Btp6Llnw==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -9160,11 +9170,13 @@ packages:
 
   /loglevel-plugin-prefix@0.8.4:
     resolution: {integrity: sha512-WpG9CcFAOjz/FtNht+QJeGpvVl/cdR6P0z6OcXSkr8wFJOsV2GRj2j10JLfjuA4aYkcKCNIEqRGCyTife9R8/g==}
+    requiresBuild: true
     dev: true
 
   /loglevel@1.9.1:
     resolution: {integrity: sha512-hP3I3kCrDIMuRwAwHltphhDM1r8i55H33GgqjXbrisuJhF4kRhW1dNuxsRklp4bXl8DSdLaNLuiL4A/LWRfxvg==}
     engines: {node: '>= 0.6.0'}
+    requiresBuild: true
     dev: true
 
   /loose-envify@1.4.0:
