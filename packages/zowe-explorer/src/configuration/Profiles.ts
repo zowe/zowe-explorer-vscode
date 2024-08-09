@@ -834,6 +834,7 @@ export class Profiles extends ProfilesCache {
 
         try {
             this.clearFilterFromAllTrees(node);
+            let logoutOk = true;
 
             // this will handle extenders
             if (
@@ -843,16 +844,18 @@ export class Profiles extends ProfilesCache {
             ) {
                 await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(node.getSession());
             } else {
-                await ZoweVsCodeExtension.logoutWithBaseProfile(serviceProfile, ZoweExplorerApiRegister.getInstance(), this);
+                logoutOk = await ZoweVsCodeExtension.logoutWithBaseProfile(serviceProfile, ZoweExplorerApiRegister.getInstance(), this);
             }
-            Gui.showMessage(
-                vscode.l10n.t({
-                    message: "Logout from authentication service was successful for {0}.",
-                    args: [serviceProfile.name],
-                    comment: ["Service profile name"],
-                })
-            );
-            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+            if (logoutOk) {
+                Gui.showMessage(
+                    vscode.l10n.t({
+                        message: "Logout from authentication service was successful for {0}.",
+                        args: [serviceProfile.name],
+                        comment: ["Service profile name"],
+                    })
+                );
+                await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+            }
         } catch (error) {
             const message = vscode.l10n.t({
                 message: "Unable to log out with {0}. {1}",

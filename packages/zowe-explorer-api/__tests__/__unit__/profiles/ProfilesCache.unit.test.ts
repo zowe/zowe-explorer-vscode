@@ -14,6 +14,7 @@ import * as fs from "fs";
 import * as imperative from "@zowe/imperative";
 import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
 import { FileManagement, Types } from "../../../src";
+import { mocked } from "../../../__mocks__/mockUtils";
 
 jest.mock("fs");
 
@@ -70,7 +71,7 @@ const baseProfileWithToken = {
         tokenValue: "baseToken",
     },
 };
-const profilemetadata: imperative.ICommandProfileTypeConfiguration[] = [
+const profileMetadata: imperative.ICommandProfileTypeConfiguration[] = [
     {
         type: "acme",
         schema: {
@@ -83,6 +84,13 @@ const profilemetadata: imperative.ICommandProfileTypeConfiguration[] = [
 ];
 
 function createProfInfoMock(profiles: Partial<imperative.IProfileLoaded>[]): imperative.ProfileInfo {
+    const teamConfigApi: Partial<imperative.Config> = {
+        api: {
+            profiles: { get: jest.fn() },
+            secure: { securePropsForProfile: jest.fn().mockReturnValue([]) },
+        } as any,
+        exists: true,
+    };
     return {
         getAllProfiles: (profType?: string) =>
             profiles
@@ -113,7 +121,7 @@ function createProfInfoMock(profiles: Partial<imperative.IProfileLoaded>[]): imp
                 knownArgs: Object.entries(profile.profile as object).map(([k, v]) => ({ argName: k, argValue: v as unknown })),
             };
         },
-        getTeamConfig: () => ({ exists: true }),
+        getTeamConfig: () => teamConfigApi,
         updateProperty: jest.fn(),
         updateKnownProperty: jest.fn(),
         isSecured: jest.fn(),
@@ -157,16 +165,16 @@ describe("ProfilesCache", () => {
 
     it("addToConfigArray should set the profileTypeConfigurations array", () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-        profilemetadata.push(profilemetadata[0]);
-        profCache.addToConfigArray(profilemetadata);
-        expect(profCache.profileTypeConfigurations).toEqual(profilemetadata.filter((a, index) => index == 0));
+        profileMetadata.push(profileMetadata[0]);
+        profCache.addToConfigArray(profileMetadata);
+        expect(profCache.profileTypeConfigurations).toEqual(profileMetadata.filter((a, index) => index == 0));
     });
 
     it("getConfigArray should return the data of profileTypeConfigurations Array", () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-        profCache.profileTypeConfigurations = profilemetadata;
+        profCache.profileTypeConfigurations = profileMetadata;
         const res = profCache.getConfigArray();
-        expect(res).toEqual(profilemetadata);
+        expect(res).toEqual(profileMetadata);
     });
 
     it("loadNamedProfile should find profiles by name and type", () => {
@@ -534,6 +542,29 @@ describe("ProfilesCache", () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
         jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([baseProfile]));
         const profile = await profCache.fetchBaseProfile();
+        expect(profile).toMatchObject(baseProfile);
+    });
+
+    it("fetchBaseProfile should return typeless profile if base profile not found", async () => {
+        const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([]));
+        const profile = await profCache.fetchBaseProfile("lpar1.zosmf");
+        expect(profile).toMatchObject({ name: "lpar1", type: "base" });
+    });
+
+    it("fetchBaseProfile should return typeless profile if base profile does not contain token value", async () => {
+        const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([baseProfile]));
+        const profile = await profCache.fetchBaseProfile("lpar1.zosmf");
+        expect(profile).toMatchObject({ name: "lpar1", type: "base" });
+    });
+
+    it("fetchBaseProfile should return base profile if it contains token value", async () => {
+        const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+        const profInfoMock = createProfInfoMock([baseProfile]);
+        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(profInfoMock);
+        mocked(profInfoMock.getTeamConfig().api.secure.securePropsForProfile).mockReturnValue(["tokenValue"]);
+        const profile = await profCache.fetchBaseProfile("lpar1.zosmf");
         expect(profile).toMatchObject(baseProfile);
     });
 
