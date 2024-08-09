@@ -353,6 +353,9 @@
   "jobs.refreshSpool": {
     "Pull from Mainframe": ""
   },
+  "jobsTableView": {
+    "Show as table": ""
+  },
   "manualPoll": {
     "Poll Content in Active Editor": ""
   },
