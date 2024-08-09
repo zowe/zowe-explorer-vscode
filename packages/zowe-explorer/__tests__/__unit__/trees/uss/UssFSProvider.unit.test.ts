@@ -9,7 +9,7 @@
  *
  */
 
-import { Disposable, FilePermission, FileType, TextEditor, Uri } from "vscode";
+import { Disposable, FilePermission, FileType, TextEditor, Uri, workspace } from "vscode";
 import { BaseProvider, DirEntry, FileEntry, Gui, UssDirectory, UssFile, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
@@ -179,6 +179,57 @@ describe("listFiles", () => {
             apiResponse: {
                 items: [],
             },
+        });
+    });
+});
+
+describe("fetchEntries", () => {
+    describe("file", () => {
+        it("existing URI", async () => {
+            const existsMock = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(true);
+            const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockReturnValue(testEntries.file);
+            const listFilesSpy = jest.spyOn(UssFSProvider.instance, "listFiles");
+            await expect(
+                (UssFSProvider.instance as any).fetchEntries(testUris.file, {
+                    isRoot: false,
+                    slashAfterProfilePos: testUris.file.path.indexOf("/", 1),
+                    profile: testProfile,
+                    profileName: testProfile.name,
+                })
+            ).resolves.toBe(testEntries.file);
+            expect(existsMock).toHaveBeenCalledWith(testUris.file);
+            expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.file);
+            expect(listFilesSpy).not.toHaveBeenCalled();
+            existsMock.mockRestore();
+            lookupAsFileMock.mockRestore();
+        });
+        it("non-existent URI", async () => {
+            const existsMock = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+            const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockReturnValue(testEntries.file);
+            const writeFileMock = jest.spyOn(UssFSProvider.instance, "writeFile").mockImplementation();
+            const listFilesMock = jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValue({
+                success: true,
+                apiResponse: {
+                    items: [{ name: testEntries.file.name, mode: "-rwxrwxrwx" }],
+                },
+                commandResponse: "",
+            });
+            await expect(
+                (UssFSProvider.instance as any).fetchEntries(testUris.file, {
+                    isRoot: false,
+                    slashAfterProfilePos: testUris.file.path.indexOf("/", 1),
+                    profile: testProfile,
+                    profileName: testProfile.name,
+                })
+            ).resolves.toBe(testEntries.file);
+            expect(existsMock).toHaveBeenCalledWith(testUris.file);
+            expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.file);
+            expect(listFilesMock).toHaveBeenCalledTimes(1);
+            expect(writeFileMock).toHaveBeenCalled();
+            existsMock.mockRestore();
+            lookupAsFileMock.mockRestore();
+            listFilesMock.mockRestore();
+            writeFileMock.mockRestore();
         });
     });
 });
@@ -377,10 +428,10 @@ describe("autoDetectEncoding", () => {
 });
 
 describe("readFile", () => {
-    const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile");
-    const getInfoFromUriMock = jest.spyOn((UssFSProvider as any).prototype, "_getInfoFromUri");
+    const getInfoFromUriMock = jest.spyOn(UssFSProvider.instance as any, "_getInfoFromUri");
 
     it("throws an error when trying to read a file that doesn't have a profile registered", async () => {
+        const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile");
         lookupAsFileMock.mockReturnValueOnce(testEntries.file);
         getInfoFromUriMock.mockReturnValueOnce({
             profile: null,
@@ -398,7 +449,8 @@ describe("readFile", () => {
     });
 
     it("returns data for a file", async () => {
-        lookupAsFileMock.mockReturnValueOnce(testEntries.file);
+        const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile");
+        lookupAsFileMock.mockReturnValue(testEntries.file);
         getInfoFromUriMock.mockReturnValueOnce({
             profile: testProfile,
             path: "/aFile.txt",
@@ -406,11 +458,13 @@ describe("readFile", () => {
         const fetchFileAtUriMock = jest.spyOn(UssFSProvider.instance, "fetchFileAtUri").mockResolvedValueOnce(undefined);
         expect((await UssFSProvider.instance.readFile(testUris.file)).toString()).toStrictEqual([1, 2, 3].toString());
         fetchFileAtUriMock.mockRestore();
+        lookupAsFileMock.mockRestore();
     });
 
     it("returns conflict data for a file with the conflict query parameter", async () => {
-        lookupAsFileMock.mockReturnValueOnce(testEntries.file);
-        getInfoFromUriMock.mockReturnValueOnce({
+        const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile");
+        lookupAsFileMock.mockReturnValue(testEntries.file);
+        getInfoFromUriMock.mockReturnValue({
             profile: testProfile,
             path: "/aFile.txt",
         });
@@ -427,6 +481,8 @@ describe("readFile", () => {
         ).toStrictEqual([4, 5, 6].toString());
         expect(fetchFileAtUriMock).toHaveBeenCalled();
         fetchFileAtUriMock.mockRestore();
+        lookupAsFileMock.mockRestore();
+        getInfoFromUriMock.mockRestore();
     });
 });
 
@@ -876,7 +932,7 @@ describe("copyTree", () => {
     describe("copying a file tree - same profiles (copy API)", () => {
         it("with naming collisions", async () => {
             const getInfoFromUri = jest
-                .spyOn((UssFSProvider as any).prototype, "_getInfoFromUri")
+                .spyOn(UssFSProvider.instance as any, "_getInfoFromUri")
                 // destination info
                 .mockReturnValueOnce({
                     profile: testProfile,

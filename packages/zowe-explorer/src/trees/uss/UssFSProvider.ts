@@ -147,8 +147,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     private async fetchEntries(uri: vscode.Uri, uriInfo: UriFsInfo): Promise<UssDirectory | UssFile> {
         const entryExists = this.exists(uri);
         let entryIsDir = false;
+        let resp: IZosFilesResponse;
         if (!entryExists) {
-            const resp = await this.listFiles(uriInfo.profile, uri);
+            resp = await this.listFiles(uriInfo.profile, uri);
             if (resp.success) {
                 const mode: string = resp.apiResponse?.items[0]?.mode;
                 entryIsDir = mode?.startsWith("d");
@@ -157,21 +158,20 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             }
         }
 
-        let entry = entryIsDir ? (this._lookupAsDirectory(uri, true) as UssDirectory) : (this._lookupAsFile(uri, { silent: true }) as UssFile);
-        if (entry == null) {
-            if (!entryIsDir) {
-                await this.writeFile(uri, new Uint8Array(), { create: true, overwrite: false });
-            } else {
+        if (!entryExists) {
+            if (entryIsDir) {
                 await vscode.workspace.fs.createDirectory(uri);
-                entry = this._lookupAsDirectory(uri, false) as UssDirectory;
+            } else {
+                await this.writeFile(uri, new Uint8Array(), { create: true, overwrite: false });
             }
         }
+        const entry = entryIsDir ? (this._lookupAsDirectory(uri, false) as UssDirectory) : (this._lookupAsFile(uri) as UssFile);
 
         if (FsAbstractUtils.isFileEntry(entry)) {
             return this._lookupAsFile(uri) as UssFile;
         }
 
-        const fileList = await this.listFiles(entry.metadata.profile, uri);
+        const fileList = entryExists ? await this.listFiles(entry.metadata.profile, uri) : resp;
         for (const item of fileList.apiResponse.items) {
             const itemName = item.name as string;
 
