@@ -1,0 +1,55 @@
+.ag-theme-vsc {
+    max-height: 95vh;
+    margin-top: 1em;
+    --ag-icon-font-family: "agGridQuartz";
+    --ag-row-hover-color: var(--vscode-list-hoverBackground);
+    --ag-range-selection-background-color: var(--vscode-list-activeSelectionBackground);
+    --ag-range-selection-highlight-color: var(--vscode-list-activeSelectionForeground);
+    --ag-background-color: var(--vscode-editor-background);
+    --ag-control-panel-background-color: var(--vscode-editorWidget-background);
+    --ag-tooltip-background-color: var(--vscode-editorWidget-background);
+    --ag-border-color: var(--vscode-editorWidget-border);
+    --ag-header-background-color: var(--vscode-keybindingTable-headerBackground);
+    --ag-range-selection-border-color: var(--vscode-tab-activeForeground);
+    --ag-foreground-color: var(--vscode-foreground);
+    --ag-selected-row-background-color: var(--vscode-notebook-selectedCellBackground);
+}
+
+.ctx-menu-open .ag-body-viewport {
+    overflow: hidden !important;
+}
+
+.focused-ctx-menu {
+    border: 1px solid var(--vscode-menu-foreground) !important;
+}
+
+.szh-menu {
+    background-color: var(--vscode-menu-background);
+    border: 1px solid var(--vscode-menu-border);
+}
+
+.szh-menu__item {
+    color: var(--vscode-menu-foreground);
+}
+
+.szh-menu__item--hover {
+    background-color: var(--vscode-menu-selectionBackground);
+    color: var(--vscode-menu-selectionForeground);
+}
+
+.szh-menu__item--disabled {
+    color: var(--vscode-debugIcon-breakpointDisabledForeground);
+}
+
+.szh-menu__divider {
+    background-color: var(--vscode-menu-separatorBackground);
+}
+
+.szh-menu-button {
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+}
+
+.szh-menu-button:hover {
+    background-color: var(--vscode-button-hoverBackground);
+}

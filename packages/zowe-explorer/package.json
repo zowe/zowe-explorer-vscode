@@ -45,6 +45,13 @@
           "title": "%viewsContainers.activitybar%",
           "icon": "resources/zowe.svg"
         }
+      ],
+      "panel": [
+        {
+          "id": "zowe-panel",
+          "icon": "resources/zowe.svg",
+          "title": "%viewsContainers.panel.tableView%"
+        }
       ]
     },
     "views": {
@@ -60,6 +67,13 @@
         {
           "id": "zowe.jobs.explorer",
           "name": "%zowe.jobs.explorer%"
+        }
+      ],
+      "zowe-panel": [
+        {
+          "type": "webview",
+          "id": "zowe-resources",
+          "name": "%zowe.resources.name%"
         }
       ]
     },

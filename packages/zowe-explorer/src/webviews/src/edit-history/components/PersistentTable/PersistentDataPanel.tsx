@@ -12,7 +12,8 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { VSCodePanelView, VSCodeDataGrid } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
-import { DataPanelContext, isSecureOrigin } from "../PersistentUtils";
+import { DataPanelContext } from "../PersistentUtils";
+import { isSecureOrigin } from "../../../utils";
 import { panelId } from "../../types";
 import PersistentToolBar from "../PersistentToolBar/PersistentToolBar";
 import PersistentTableData from "./PersistentTableData";

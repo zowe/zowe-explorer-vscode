@@ -10,7 +10,17 @@
  */
 
 import * as vscode from "vscode";
-import { FileManagement, Gui, IZoweTree, IZoweTreeNode, Validation, ZosEncoding, ZoweScheme, imperative } from "@zowe/zowe-explorer-api";
+import {
+    FileManagement,
+    Gui,
+    IZoweTree,
+    IZoweTreeNode,
+    TableViewProvider,
+    Validation,
+    ZosEncoding,
+    ZoweScheme,
+    imperative,
+} from "@zowe/zowe-explorer-api";
 import { SharedActions } from "./SharedActions";
 import { SharedHistoryView } from "./SharedHistoryView";
 import { SharedTreeProviders } from "./SharedTreeProviders";
@@ -80,6 +90,9 @@ export class SharedInit {
                 }
             })
         );
+
+        // Contribute the "Zowe Resources" view as a WebviewView panel in Zowe Explorer.
+        context.subscriptions.push(vscode.window.registerWebviewViewProvider("zowe-resources", TableViewProvider.getInstance()));
 
         // Webview for editing persistent items on Zowe Explorer
         context.subscriptions.push(

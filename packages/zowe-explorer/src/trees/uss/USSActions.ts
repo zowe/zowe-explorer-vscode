@@ -15,7 +15,7 @@ import * as path from "path";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { Gui, imperative, Validation, IZoweUSSTreeNode, Types } from "@zowe/zowe-explorer-api";
 import { isBinaryFileSync } from "isbinaryfile";
-import { USSAtributeView } from "./USSAttributeView";
+import { USSAttributeView } from "./USSAttributeView";
 import { USSFileStructure } from "./USSFileStructure";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { Constants } from "../../configuration/Constants";
@@ -231,8 +231,8 @@ export class USSActions {
         }
     }
 
-    public static editAttributes(context: vscode.ExtensionContext, fileProvider: Types.IZoweUSSTreeType, node: IZoweUSSTreeNode): USSAtributeView {
-        return new USSAtributeView(context, fileProvider, node);
+    public static editAttributes(context: vscode.ExtensionContext, fileProvider: Types.IZoweUSSTreeType, node: IZoweUSSTreeNode): USSAttributeView {
+        return new USSAttributeView(context, fileProvider, node);
     }
 
     /**

@@ -43,7 +43,9 @@ export class CertificateWizard extends WebView {
     }> = new DeferredPromise();
 
     public constructor(context: vscode.ExtensionContext, opts: CertWizardOpts) {
-        super(vscode.l10n.t("Certificate Wizard"), "certificate-wizard", context, (message: object) => this.onDidReceiveMessage(message));
+        super(vscode.l10n.t("Certificate Wizard"), "certificate-wizard", context, {
+            onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
+        });
         this.opts = opts;
         this.panel.onDidDispose(() => {
             this.userSubmission.reject(userDismissed);

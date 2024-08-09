@@ -81,6 +81,7 @@ fn code_cli_binary(dir: &Path) -> PathBuf {
 /// * `zip_path` - The path of the ZIP file to extract
 /// * `vsc_path` - The path where the archive should be extracted into
 ///
+#[allow(unused_variables)]
 async fn extract_code_zip(file: &std::fs::File, zip_path: &Path, vsc_path: &Path) -> anyhow::Result<()> {
     cfg_if::cfg_if! {
         if #[cfg(target_os = "macos")] {

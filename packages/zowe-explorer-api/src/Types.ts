@@ -36,6 +36,7 @@ export namespace Types {
     export type WebviewUris = {
         build: Uri;
         script: Uri;
+        css?: Uri;
     };
 
     export type FileAttributes = {

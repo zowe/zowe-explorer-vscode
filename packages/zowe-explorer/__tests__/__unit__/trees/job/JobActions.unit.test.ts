@@ -111,7 +111,7 @@ function createGlobalMocks() {
         get: activeTextEditorDocument,
         configurable: true,
     });
-    Object.defineProperty(Profiles, "getInstance", { value: jest.fn().mockResolvedValue(newMocks.mockProfileInstance), configurable: true });
+    Object.defineProperty(Profiles, "getInstance", { value: jest.fn().mockReturnValue(newMocks.mockProfileInstance), configurable: true });
     const executeCommand = jest.fn();
     Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand, configurable: true });
     Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
@@ -1130,9 +1130,20 @@ describe("cancelJob", () => {
     createGlobalMocks();
     const session = createISession();
     const profile = createIProfile();
-    const jobSessionNode = createJobSessionNode(session, profile);
-    const jobNode = createJobNode(jobSessionNode, profile);
-    const jobsProvider = createJobsTree(session, jobNode.job, profile, createTreeView());
+
+    const createBlockMocks = () => {
+        const jobSessionNode = createJobSessionNode(session, profile);
+        const jobNode = createJobNode(jobSessionNode, profile);
+
+        return {
+            session: createISession(),
+            profile,
+            jobSessionNode,
+            jobNode,
+            jobsProvider: createJobsTree(session, jobNode.job, profile, createTreeView()),
+        };
+    };
+
     const jesCancelJobMock = jest.fn();
 
     const mockJesApi = (mockFn?: jest.Mock<any, any>): void => {
@@ -1155,17 +1166,20 @@ describe("cancelJob", () => {
     });
 
     it("returns early if no nodes are specified", async () => {
+        const { jobsProvider } = createBlockMocks();
         await JobActions.cancelJobs(jobsProvider, []);
         expect(Gui.showMessage).not.toHaveBeenCalled();
     });
 
     it("returns early if all nodes in selection have been cancelled", async () => {
+        const { jobNode, jobsProvider } = createBlockMocks();
         jobNode.job.retcode = "CANCELED";
         await JobActions.cancelJobs(jobsProvider, [jobNode]);
         expect(Gui.showMessage).toHaveBeenCalledWith("The selected jobs were already cancelled.");
     });
 
     it("shows a warning message if one or more jobs failed to cancel", async () => {
+        const { jobNode, jobsProvider } = createBlockMocks();
         jobNode.job.retcode = "ACTIVE";
         jesCancelJobMock.mockResolvedValueOnce(false);
         await JobActions.cancelJobs(jobsProvider, [jobNode]);
@@ -1175,6 +1189,7 @@ describe("cancelJob", () => {
     });
 
     it("shows a warning message if one or more APIs do not support cancelJob", async () => {
+        const { jobNode, jobsProvider } = createBlockMocks();
         // Make cancelJob undefined
         mockJesApi();
         jobNode.job.retcode = "ACTIVE";
@@ -1188,6 +1203,7 @@ describe("cancelJob", () => {
     });
 
     it("shows matching error messages for one or more failed jobs", async () => {
+        const { jobNode, jobsProvider } = createBlockMocks();
         jobNode.job.retcode = "ACTIVE";
         jesCancelJobMock.mockRejectedValueOnce(new Error("Failed to cancel job... something went wrong."));
         await JobActions.cancelJobs(jobsProvider, [jobNode]);
@@ -1200,18 +1216,18 @@ describe("cancelJob", () => {
     });
 
     it("shows a message confirming the jobs were cancelled", async () => {
+        const { jobNode, jobsProvider, jobSessionNode } = createBlockMocks();
         jobNode.job.retcode = "ACTIVE";
         jesCancelJobMock.mockResolvedValueOnce(true);
-        const setImmediateSpy = jest.spyOn(global, "setImmediate");
+        const getChildrenMock = jest.spyOn(jobSessionNode, "getChildren");
         await JobActions.cancelJobs(jobsProvider, [jobNode]);
-
+        expect(getChildrenMock).toHaveBeenCalled();
         // Check that refreshElement was called through setImmediate
-        expect(setImmediateSpy).toHaveBeenCalled();
-
         expect(Gui.showMessage).toHaveBeenCalledWith("Cancelled selected jobs successfully.");
     });
 
     it("does not work for job session nodes", async () => {
+        const { jobsProvider, jobSessionNode } = createBlockMocks();
         await JobActions.cancelJobs(jobsProvider, [jobSessionNode]);
         expect(jesCancelJobMock).not.toHaveBeenCalled();
     });

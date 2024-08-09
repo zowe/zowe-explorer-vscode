@@ -145,7 +145,6 @@ export function createJobNode(session: any, profile: imperative.IProfileLoaded) 
         label: "sampleJob",
         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
         parentNode: session.getSessionNode(),
-        session,
         profile,
         job: createIJobObject(),
     });

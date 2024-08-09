@@ -14,7 +14,7 @@ import { Disposable, ExtensionContext } from "vscode";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { SharedContext } from "../shared/SharedContext";
 
-export class USSAtributeView extends WebView {
+export class USSAttributeView extends WebView {
     private treeProvider: Types.IZoweUSSTreeType;
     private readonly ussNode: IZoweUSSTreeNode;
     private readonly ussApi: MainframeInteraction.IUss;
@@ -24,7 +24,9 @@ export class USSAtributeView extends WebView {
 
     public constructor(context: ExtensionContext, treeProvider: Types.IZoweUSSTreeType, node: IZoweUSSTreeNode) {
         const label = node.label ? `Edit Attributes: ${node.label as string}` : "Edit Attributes";
-        super(label, "edit-attributes", context, (message: object) => this.onDidReceiveMessage(message));
+        super(label, "edit-attributes", context, {
+            onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
+        });
         this.treeProvider = treeProvider;
         this.ussNode = node;
         this.canUpdate = node.onUpdate != null;

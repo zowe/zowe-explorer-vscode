@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
-import { USSAtributeView } from "../../../../src/trees/uss/USSAttributeView";
+import { USSAttributeView } from "../../../../src/trees/uss/USSAttributeView";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { IZoweTree } from "../../../../../zowe-explorer-api/src/tree/IZoweTree";
 import { IZoweUSSTreeNode } from "../../../../../zowe-explorer-api/src/tree";
@@ -21,7 +21,7 @@ import { MainframeInteraction } from "../../../../../zowe-explorer-api/src/exten
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 
 describe("AttributeView unit tests", () => {
-    let view: USSAtributeView;
+    let view: USSAttributeView;
     const context = { extensionPath: "some/fake/ext/path" } as unknown as vscode.ExtensionContext;
     const treeProvider = { refreshElement: jest.fn(), refresh: jest.fn() } as unknown as IZoweTree<IZoweUSSTreeNode>;
     const createDirMock = jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation();
@@ -41,7 +41,7 @@ describe("AttributeView unit tests", () => {
             getTag: () => Promise.resolve("UTF-8"),
         } as unknown as MainframeInteraction.IUss);
         jest.spyOn(SharedContext, "isUssDirectory").mockReturnValue(false);
-        view = new USSAtributeView(context, treeProvider, node);
+        view = new USSAttributeView(context, treeProvider, node);
     });
 
     afterAll(() => {
