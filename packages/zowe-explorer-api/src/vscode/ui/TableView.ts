@@ -318,6 +318,7 @@ export namespace Table {
             super(data?.title ?? "Table view", "table-view", context, {
                 onDidReceiveMessage: (message) => this.onMessageReceived(message),
                 isView,
+                unsafeEval: true,
             });
             if (data) {
                 this.data = data;

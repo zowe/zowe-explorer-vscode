@@ -24,6 +24,8 @@ export type WebViewOpts = {
     retainContext?: boolean;
     /** Whether the webview should be prepared for a WebviewViewProvider. */
     isView?: boolean;
+    /** Allow evaluation of functions within the webview script code. */
+    unsafeEval?: boolean;
 };
 
 export type UriPair = {
@@ -96,6 +98,7 @@ export class WebView {
             };
 
             const builtHtml = Mustache.render(HTMLTemplate, {
+                unsafeEval: this.webviewOpts?.unsafeEval,
                 uris: this.uris,
                 nonce: this.nonce,
                 title: this.title,
@@ -123,6 +126,7 @@ export class WebView {
         };
 
         const builtHtml = Mustache.render(HTMLTemplate, {
+            unsafeEval: this.webviewOpts?.unsafeEval,
             uris: this.uris,
             nonce: this.nonce,
             title: this.title,
