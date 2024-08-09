@@ -42,6 +42,10 @@ export class TableBuilder {
         this.context = context;
     }
 
+    /**
+     * Prepares the table to be rendered within a WebviewViewProvider (such as the "Zowe Resources" panel)
+     * @returns The instance of the TableBuilder, with the private `forWebviewView` flag set to `true`
+     */
     public isView(): this {
         this.forWebviewView = true;
         return this;

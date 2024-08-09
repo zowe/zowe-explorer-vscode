@@ -107,7 +107,7 @@ export namespace Table {
         headerName?: string;
         headerTooltip?: string;
         headerClass?: string | string[];
-        weapHeaderText?: boolean;
+        wrapHeaderText?: boolean;
         autoHeaderHeight?: boolean;
         headerCheckboxSelection?: boolean;
 
