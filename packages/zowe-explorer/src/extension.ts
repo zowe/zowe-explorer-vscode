@@ -19,7 +19,7 @@ import { ProfilesUtils } from "./utils/ProfilesUtils";
 import { initializeSpoolProvider } from "./SpoolProvider";
 import { cleanTempDir, hideTempFolder, findRecoveredFiles } from "./utils/TempFolder";
 import { SettingsConfig } from "./utils/SettingsConfig";
-import { registerCommonCommands, registerCredentialManager, registerRefreshCommand, watchConfigProfile } from "./shared/init";
+import { registerCommonCommands, registerCredentialManager, registerRefreshCommand, registerZosConsoleView, watchConfigProfile } from "./shared/init";
 import { ZoweLogger } from "./utils/LoggerUtils";
 import { ZoweSaveQueue } from "./abstract/ZoweSaveQueue";
 import { PollDecorator } from "./utils/DecorationProviders";
@@ -60,6 +60,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     const providers = await TreeProviders.initializeProviders(context, { ds: initDatasetProvider, uss: initUSSProvider, job: initJobsProvider });
 
     registerCommonCommands(context, providers);
+    registerZosConsoleView(context);
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
     await SettingsConfig.standardizeSettings();
     watchConfigProfile(context);
