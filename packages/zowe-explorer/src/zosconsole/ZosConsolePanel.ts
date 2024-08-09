@@ -10,30 +10,35 @@
  */
 
 import * as vscode from "vscode";
-import { ProfileInfo, IProfAttrs } from "@zowe/imperative";
-import { IIssueParms, IssueCommand } from "@zowe/zos-console-for-zowe-sdk";
+import * as globals from "../globals";
+import { imperative } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
+import { ProfileManagement } from "../utils/ProfileManagement";
+import { Profiles } from "../Profiles";
+import { randomUUID } from "crypto";
 
 export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = "zosconsole";
 
     private _view?: vscode.WebviewView;
 
-    private profiles: Map<string, IProfAttrs> = new Map();
+    private profiles: Map<string, imperative.IProfileLoaded> = new Map();
     private defaultProfileName: string | undefined;
 
-    public constructor(private readonly _extensionUri: vscode.Uri) {
-        const profInfo = new ProfileInfo("zowe");
-        profInfo
-            .readProfilesFromDisk()
-            .then(() => {
-                const loadedProfiles = profInfo.getAllProfiles("zosmf");
-                const defaultProfile = profInfo.getDefaultProfile("zosmf");
-                this.defaultProfileName = defaultProfile?.profName;
-                loadedProfiles.forEach((profile) => {
-                    this.profiles.set(profile.profName, profile);
-                });
-            })
-            .catch(() => {});
+    public constructor(private _extensionUri: vscode.Uri) {
+        this.refreshProfileList();
+    }
+
+    private refreshProfileList() {
+        const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.MVS);
+        this.defaultProfileName = profileNamesList[0];
+
+        const loadedProfiles = Profiles.getInstance().allProfiles;
+        loadedProfiles.forEach((profile) => {
+            if (profileNamesList.includes(profile.name)) {
+                this.profiles.set(profile.name, profile);
+            }
+        });
     }
 
     public resolveWebviewView(
@@ -57,6 +62,7 @@ export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
 
             switch (command) {
                 case "startup": {
+                    this.refreshProfileList();
                     const profileArray = [];
                     for (const profileName of this.profiles.keys()) {
                         profileArray.push(profileName);
@@ -83,7 +89,7 @@ export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
     private _getHtmlForWebview(webview: vscode.Webview): string {
         const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "src", "webviews", "dist", "zos-console", "zos-console.js"));
         const codiconsUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "node_modules", "@vscode/codicons", "dist", "codicon.css"));
-        const nonce = this.getNonce();
+        const nonce = randomUUID();
 
         // Tip: Install the es6-string-html VS Code extension to enable code highlighting below
         return /*html*/ `
@@ -92,7 +98,7 @@ export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
               <head>
                   <meta charset="UTF-8" />
                   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                  <!--<meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; 
+                  <!--<meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource};
                         style-src ${webview.cspSource}; script-src 'nonce-${nonce}';" />-->
                   <link href="${codiconsUri.toString()}" rel="stylesheet" />
                   <style>
@@ -131,38 +137,11 @@ export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
 
     private async runOperCmd(command: string, profile: string): Promise<string> {
         try {
-            const profInfo = new ProfileInfo("zowe");
-            await profInfo.readProfilesFromDisk();
-            const zosmfProfAttrs = this.profiles.get(profile);
-            const zosmfMergedArgs = profInfo.mergeArgsForProfile(zosmfProfAttrs, { getSecureVals: true });
-            const session = ProfileInfo.createSession(zosmfMergedArgs.knownArgs);
-
-            const parms: IIssueParms = {
-                command: command,
-                sysplexSystem: undefined,
-                solicitedKeyword: undefined,
-                async: "N",
-            };
-            const response = await IssueCommand.issue(session, parms);
+            const theProfile: imperative.IProfileLoaded = this.profiles.get(profile);
+            const response = await ZoweExplorerApiRegister.getCommandApi(theProfile).issueMvsCommand(command, theProfile.profile?.consoleName);
             return response.commandResponse;
         } catch (e) {
-            return (e as Error).message;
+            return (e as Error).message + "\n";
         }
-    }
-
-    private getNonce(): string {
-        let text = "";
-        const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        for (let i = 0; i < 32; i++) {
-            text += possible.charAt(Math.floor(this.cryptoRandom() * possible.length));
-        }
-        return text;
-    }
-
-    private cryptoRandom(): number {
-        const typedArray = new Uint8Array(1);
-        const randomValue = crypto.getRandomValues(typedArray)[0];
-        const randomFloat = randomValue / Math.pow(2, 8);
-        return randomFloat;
     }
 }
