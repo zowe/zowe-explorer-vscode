@@ -746,7 +746,7 @@ export class DatasetActions {
      * @param datasetProvider - the tree which contains the nodes
      */
     public static async createFile(node: IZoweDatasetTreeNode, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
-        datasetProvider.checkCurrentProfile(node);
+        await datasetProvider.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
             return;
         }

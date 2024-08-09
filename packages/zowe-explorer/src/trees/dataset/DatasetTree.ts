@@ -114,9 +114,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public delete(_node: IZoweDatasetTreeNode): void {
         throw new Error("Method not implemented.");
     }
-    public saveSearch(node: IZoweDatasetTreeNode): Promise<void> {
+    public async saveSearch(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("DatasetTree.saveSearch called.");
-        return this.addFavorite(node);
+        await this.addFavorite(node);
     }
     public saveFile(_document: vscode.TextDocument): void {
         throw new Error("Method not implemented.");
@@ -654,7 +654,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         );
         // Remove profile node from Favorites if it contains no more favorites.
         if (profileNodeInFavorites.children.length < 1) {
-            return this.removeFavProfile(profileName, false);
+            await this.removeFavProfile(profileName, false);
         }
         this.updateFavorites();
         this.refreshElement(this.mFavoriteSession);
@@ -692,14 +692,13 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 comment: ["Profile name"],
             });
             const continueRemove = vscode.l10n.t("Continue");
-            await Gui.warningMessage(checkConfirmation, {
+            const selection = await Gui.warningMessage(checkConfirmation, {
                 items: [continueRemove],
                 vsCodeOpts: { modal: true },
-            }).then((selection) => {
-                if (!selection || selection === "Cancel") {
-                    cancelled = true;
-                }
             });
+            if (!selection || selection === "Cancel") {
+                cancelled = true;
+            }
         }
 
         if (cancelled) {
@@ -708,7 +707,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
         // Remove favorited profile from UI
         this.mFavorites.forEach((favProfileNode) => {
-            const favProfileLabel = favProfileNode.label as string;
+            const favProfileLabel = favProfileNode.label?.toString();
             if (favProfileLabel === profileName) {
                 this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label.toString() !== favProfileLabel);
                 favProfileNode.dirty = true;
@@ -720,7 +719,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         this.updateFavorites();
     }
 
-    public async onDidChangeConfiguration(e): Promise<void> {
+    public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent): Promise<void> {
         ZoweLogger.trace("DatasetTree.onDidChangeConfiguration called.");
         // Empties the persistent favorites & history arrays, if the user has set persistence to False
         if (e.affectsConfiguration(DatasetTree.persistenceSchema)) {

@@ -48,9 +48,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweDatasetNode> {
      */
     @MockMethod()
     public getChildren(_element?: ZoweDatasetNode): Promise<ZoweDatasetNode[]> {
-        return new Promise<ZoweDatasetNode[]>((resolve) => {
-            return resolve([]);
-        });
+        return Promise.resolve([]);
     }
 
     /**
@@ -76,23 +74,15 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweDatasetNode> {
     }
 
     @MockMethod()
-    public async addSession(_sessionName?: string): Promise<void> {
-        return new Promise<void>((resolve) => {
-            return resolve();
-        });
+    public addSession(_sessionName?: string): void | Promise<void> {
+        return Promise.resolve();
     }
 
     @MockMethod()
-    public async deleteSession(_node?: ZoweDatasetNode): Promise<void> {
-        return new Promise<void>((resolve) => {
-            return resolve();
-        });
-    }
+    public deleteSession(_node?: ZoweDatasetNode): void {}
 
     @MockMethod()
-    public async removeFavorite(_node: ZoweDatasetNode) {
-        return new Promise<void>((resolve) => {
-            return resolve();
-        });
+    public removeFavorite(_node: ZoweDatasetNode): void | Promise<void> {
+        return Promise.resolve();
     }
 }

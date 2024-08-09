@@ -1705,7 +1705,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
             imperativeProfile: createIProfile(),
             mockDefaultProfile: jest.fn(),
             treeView: createTreeView(),
-            datasetSessionNode: null,
+            datasetSessionNode: null as any as ZoweDatasetNode,
             profile: null,
             mockGetProfileSetting: jest.fn(),
             mockEditSession: jest.fn(),
@@ -1751,9 +1751,9 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
             parentNode: testTree.mSessionNodes[1],
         });
 
-        await testTree.editSession(node, testTree);
+        await testTree.editSession(node);
 
-        expect(node.getProfile().profile).toBe("testProfile");
+        expect(node.getProfile().profile).toEqual(blockMocks.imperativeProfile.profile);
     });
 });
 describe("Dataset Tree Unit Tests - Function getAllLoadedItems", () => {

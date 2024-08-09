@@ -17,7 +17,7 @@ export class SshUssApi implements MainframeInteraction.IUss {
         return new imperative.Session(sessCfg);
     }
 
-    public async getStatus(profile: imperative.IProfileLoaded, profileType?: any): Promise<string> {
+    public async getStatus(profile: imperative.IProfileLoaded, profileType?: string): Promise<string> {
         if (profileType === ZosUssProfile.type) {
             try {
                 return await this.withClient(this.getSession(profile), () => Promise.resolve("active"));
