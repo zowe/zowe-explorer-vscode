@@ -10,3 +10,4 @@
  */
 
 export * from "./WebView";
+export * as HTMLTemplate from "./utils/HTMLTemplate";
