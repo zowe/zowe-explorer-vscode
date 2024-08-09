@@ -93,10 +93,6 @@ export class TableMediator {
      * @returns `true` if the table was deleted; `false` otherwise
      */
     public removeTable(instance: Table.Instance): boolean {
-        if (Array.from(this.tables.values()).find((table) => table.getId() === instance.getId()) == null) {
-            return false;
-        }
-
         return this.tables.delete(instance.getId());
     }
 }

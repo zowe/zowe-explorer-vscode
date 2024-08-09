@@ -409,9 +409,7 @@ export namespace Table {
          * @returns The unique ID for this table view
          */
         public getId(): string {
-            if (this.uuid == null) {
-                this.uuid = randomUUID();
-            }
+            this.uuid ??= randomUUID();
             return `${this.data.title}-${this.uuid.substring(0, this.uuid.indexOf("-"))}##${this.context.extension.id}`;
         }
 
@@ -472,7 +470,7 @@ export namespace Table {
         /**
          * Update an existing row in the table view.
          * @param index The AG GRID row index to update within the table
-         * @param row The new row content
+         * @param row The new row content. If `null`, the given row index will be deleted from the list of rows.
          * @returns Whether the webview successfully updated the new row
          */
         public async updateRow(index: number, row: RowData | null): Promise<boolean> {

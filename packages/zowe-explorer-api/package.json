@@ -39,7 +39,6 @@
     "@zowe/zosmf-for-zowe-sdk": "8.0.0-next.202407232256",
     "deep-object-diff": "^1.1.9",
     "mustache": "^4.2.0",
-    "preact": "^10.16.0",
     "semver": "^7.6.0"
   },
   "scripts": {

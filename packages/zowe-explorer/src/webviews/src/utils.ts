@@ -30,9 +30,5 @@ export function isSecureOrigin(origin: string): boolean {
         eventUrl.hostname.endsWith(".github.dev");
     const isLocalVSCodeUser = eventUrl.protocol === "vscode-webview:";
 
-    if (!isWebUser && !isLocalVSCodeUser) {
-        return false;
-    }
-
-    return true;
+    return isWebUser || isLocalVSCodeUser;
 }
