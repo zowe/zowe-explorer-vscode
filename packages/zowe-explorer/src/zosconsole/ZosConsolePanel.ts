@@ -10,12 +10,13 @@
  */
 
 import * as vscode from "vscode";
-import { imperative } from "@zowe/zowe-explorer-api";
+import { imperative, HTMLTemplate } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { ProfileManagement } from "../management/ProfileManagement";
 import { Profiles } from "../configuration/Profiles";
 import { randomUUID } from "crypto";
 import { Definitions } from "../configuration/Definitions";
+import Mustache = require("mustache");
 
 export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = "zosconsole";
@@ -88,16 +89,12 @@ export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
         const nonce = randomUUID();
 
         // Tip: Install the es6-string-html VS Code extension to enable code highlighting below
-        return /*html*/ `
-          <!DOCTYPE html>
-          <html lang="en">
-              <head>
-                  <meta charset="UTF-8" />
-                  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                  <!--<meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource};
-                        style-src ${webview.cspSource}; script-src 'nonce-${nonce}';" />-->
-                  <link href="${codiconsUri.toString()}" rel="stylesheet" />
-                  <style>
+        return Mustache.render(HTMLTemplate.default, {
+            uris: { resource: { script: scriptUri } },
+            nonce,
+            style: /* html */ `
+                <link href="${codiconsUri.toString()}" rel="stylesheet" />
+                <style>
                     html,
                     body {
                         display: flex;
@@ -107,28 +104,24 @@ export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
                         margin: 0px;
                         padding: 0px;
                     }
-
+                    #webviewRoot {
+                        width: 100%;
+                    }
                     .box {
                         display: flex;
                         height: 100%;
                         width: 100%;
                         flex-direction: column;
                     }
-                 </style>
-              </head>
-              <body>
-                <div id="webviewRoot" style="width: 100%;"></div>
-                <script>
+                </style>`,
+            startup: /* html */ `
+                <script nonce="${nonce}">
                     const vscode = acquireVsCodeApi();
                     window.onload = function() {
                         vscode.postMessage({ command: 'startup' });
                     };
-                </script>
-                <script type="module" nonce="${nonce}" src="${scriptUri.toString()}"></script>
-                </body>
-              </body>
-          </html>
-          `;
+                </script>`,
+        });
     }
 
     private async runOperCmd(command: string, profile: string): Promise<string> {
