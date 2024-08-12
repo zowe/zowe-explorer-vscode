@@ -146,26 +146,15 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
     private async fetchEntries(uri: vscode.Uri, uriInfo: UriFsInfo): Promise<UssDirectory | UssFile> {
         const entryExists = this.exists(uri);
-        let entryIsDir = false;
         let resp: IZosFilesResponse;
         if (!entryExists) {
             resp = await this.listFiles(uriInfo.profile, uri);
-            if (resp.success) {
-                const mode: string = resp.apiResponse?.items[0]?.mode;
-                entryIsDir = mode?.startsWith("d");
-            } else {
+            if (!resp.success) {
                 throw vscode.FileSystemError.FileNotFound(uri);
             }
         }
 
-        if (!entryExists) {
-            if (entryIsDir) {
-                await vscode.workspace.fs.createDirectory(uri);
-            } else {
-                await this.writeFile(uri, new Uint8Array(), { create: true, overwrite: false });
-            }
-        }
-        const entry = entryIsDir ? (this._lookupAsDirectory(uri, false) as UssDirectory) : (this._lookupAsFile(uri) as UssFile);
+        const entry = this.lookup(uri, true) as UssDirectory | UssFile;
 
         if (FsAbstractUtils.isFileEntry(entry)) {
             return this._lookupAsFile(uri) as UssFile;
