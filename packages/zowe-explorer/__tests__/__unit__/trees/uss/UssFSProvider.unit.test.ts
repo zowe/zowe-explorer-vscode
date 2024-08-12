@@ -9,7 +9,7 @@
  *
  */
 
-import { Disposable, FilePermission, FileType, TextEditor, Uri, workspace } from "vscode";
+import { Disposable, FilePermission, FileType, TextEditor, Uri } from "vscode";
 import { BaseProvider, DirEntry, FileEntry, Gui, UssDirectory, UssFile, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
