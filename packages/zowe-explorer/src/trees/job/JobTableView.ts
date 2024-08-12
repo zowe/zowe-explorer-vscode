@@ -20,6 +20,7 @@ import { SharedContext } from "../shared/SharedContext";
 export class JobTableView {
     private static cachedChildren: IZoweJobTreeNode[];
     private static table: Table.Instance;
+
     private static contextOptions: Record<string, Table.ContextMenuOpts> = {
         getJcl: {
             title: "Get JCL",
@@ -48,7 +49,6 @@ export class JobTableView {
             },
         },
     };
-
     private static rowActions: Record<string, Table.ActionOpts> = {
         cancelJob: {
             title: "Cancel",
@@ -61,10 +61,9 @@ export class JobTableView {
                     if (childrenToCancel.length > 0) {
                         await JobActions.cancelJobs(SharedTreeProviders.job, childrenToCancel);
                         const profNode = childrenToCancel[0].getSessionNode() as ZoweJobNode;
+                        JobTableView.cachedChildren = await profNode.getChildren();
                         await view.setContent(
-                            (
-                                await profNode.getChildren()
-                            ).map((item) => ({
+                            JobTableView.cachedChildren.map((item) => ({
                                 name: item.job.jobname,
                                 class: item.job.class,
                                 owner: item.job.owner,
@@ -88,12 +87,19 @@ export class JobTableView {
                         .map((row) => JobTableView.cachedChildren.find((c) => row.id === c.job?.jobid))
                         .filter((child) => child);
                     if (childrenToDelete.length > 0) {
+                        const sessionNode = childrenToDelete[0].getSessionNode();
                         await JobActions.deleteCommand(SharedTreeProviders.job, undefined, childrenToDelete);
-                        const newData = view.getContent();
-                        for (const index of Object.keys(data).map(Number)) {
-                            newData.splice(index, 1);
-                        }
-                        await view.setContent(newData);
+                        JobTableView.cachedChildren = await sessionNode.getChildren();
+                        await view.setContent(
+                            JobTableView.cachedChildren.map((item: IZoweJobTreeNode) => ({
+                                name: item.job.jobname,
+                                class: item.job.class,
+                                owner: item.job.owner,
+                                id: item.job.jobid,
+                                retcode: item.job.retcode,
+                                status: item.job.status,
+                            }))
+                        );
                     }
                 },
                 typ: "multi-row",

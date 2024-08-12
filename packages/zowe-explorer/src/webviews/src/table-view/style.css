@@ -1,5 +1,5 @@
 .ag-theme-vsc {
-    max-height: 95vh;
+    max-height: 90vh;
     margin-top: 1em;
     --ag-icon-font-family: "agGridQuartz";
     --ag-row-hover-color: var(--vscode-list-hoverBackground);
