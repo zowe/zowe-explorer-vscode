@@ -2,6 +2,7 @@ import { Ref } from "preact/hooks";
 import type { Table } from "@zowe/zowe-explorer-api";
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import { GridApi } from "ag-grid-community";
+import { wrapFn } from "./types";
 
 export const ActionsBar = ({
   actions,
@@ -35,6 +36,17 @@ export const ActionsBar = ({
       <span style={{ marginBottom: "0.25em" }}>
         {actions
           .filter((action) => (itemCount > 1 ? action.callback.typ === "multi-row" : action.callback.typ.endsWith("row")))
+          .filter((item) => {
+            if (item.condition == null || gridRef.current?.api == null) {
+              return true;
+            }
+
+            const selectedRows = gridRef.current.api.getSelectedRows();
+            // Wrap function to properly handle named parameters
+            const cond = new Function(wrapFn(item.condition));
+            // Invoke the wrapped function once to get the built function, then invoke it again with the parameters
+            return cond()(item.callback.typ === "multi-row" ? selectedRows : selectedRows[0]);
+          })
           .map((action, i) => (
             <VSCodeButton
               key={`${action.command}-action-bar-${i}`}

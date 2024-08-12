@@ -25,7 +25,7 @@ export class JobTableView {
             title: "Get JCL",
             command: "get-jcl",
             callback: {
-                fn: async (view: Table.View, data: Table.RowInfo) => {
+                fn: async (_view: Table.View, data: Table.RowInfo) => {
                     const child = JobTableView.cachedChildren.find((c) => data.row.id === c.job?.jobid);
                     if (child != null) {
                         await JobActions.downloadJcl(child as ZoweJobNode);
@@ -38,7 +38,7 @@ export class JobTableView {
             title: "Reveal in tree",
             command: "edit",
             callback: {
-                fn: async (view: Table.View, data: Table.RowInfo) => {
+                fn: async (_view: Table.View, data: Table.RowInfo) => {
                     const child = JobTableView.cachedChildren.find((c) => data.row.id === c.job?.jobid);
                     if (child) {
                         await SharedTreeProviders.job.getTreeView().reveal(child, { expand: true });
@@ -77,7 +77,7 @@ export class JobTableView {
                 },
                 typ: "multi-row",
             },
-            condition: (data: Table.RowData): boolean => data["status"] === "ACTIVE",
+            condition: (data: Table.RowData[]): boolean => data.every((row) => row["status"] === "ACTIVE"),
         },
         deleteJob: {
             title: "Delete",
@@ -94,6 +94,21 @@ export class JobTableView {
                             newData.splice(index, 1);
                         }
                         await view.setContent(newData);
+                    }
+                },
+                typ: "multi-row",
+            },
+        },
+        downloadJob: {
+            title: "Download",
+            command: "download-job",
+            callback: {
+                fn: async (_view: Table.View, data: Record<number, Table.RowData>): Promise<void> => {
+                    const childrenToDelete = Object.values(data)
+                        .map((row) => JobTableView.cachedChildren.find((c) => row.id === c.job?.jobid))
+                        .filter((child) => child);
+                    if (childrenToDelete.length > 0) {
+                        await JobActions.downloadSpool(childrenToDelete);
                     }
                 },
                 typ: "multi-row",
@@ -172,6 +187,7 @@ export class JobTableView {
                 .addContextOption("all", this.contextOptions.revealInTree)
                 .addRowAction("all", this.rowActions.cancelJob)
                 .addRowAction("all", this.rowActions.deleteJob)
+                .addRowAction("all", this.rowActions.downloadJob)
                 .build();
         }
 

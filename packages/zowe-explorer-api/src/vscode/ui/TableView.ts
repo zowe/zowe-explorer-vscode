@@ -56,7 +56,7 @@ export namespace Table {
     export type Callback = SingleRowCallback | MultiRowCallback | CellCallback;
 
     /** Conditional callback function - whether an action or option should be rendered. */
-    export type Conditional = (data: RowData | ContentTypes) => boolean;
+    export type Conditional = (data: RowData[] | RowData | ContentTypes) => boolean;
 
     // Defines the supported actions and related types.
     export type ActionKind = "primary" | "secondary" | "icon";

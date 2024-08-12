@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+
 /* eslint-disable max-len */
 
 /**

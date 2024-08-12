@@ -34,7 +34,7 @@ export const actionsColumn = (newData: Table.ViewOpts, actionsCellRenderer: Tabl
               // Wrap function to properly handle named parameters
               const cond = new Function(wrapFn(action.condition));
               // Invoke the wrapped function once to get the built function, then invoke it again with the parameters
-              return cond()(null, params.data);
+              return cond()(params.data);
             })
             .map((action, i) => (
               <VSCodeButton
