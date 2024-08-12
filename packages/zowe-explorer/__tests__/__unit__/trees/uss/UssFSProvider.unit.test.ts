@@ -187,7 +187,7 @@ describe("fetchEntries", () => {
     describe("file", () => {
         it("existing URI", async () => {
             const existsMock = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(true);
-            const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockReturnValue(testEntries.file);
+            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValue(testEntries.file);
             const listFilesSpy = jest.spyOn(UssFSProvider.instance, "listFiles");
             await expect(
                 (UssFSProvider.instance as any).fetchEntries(testUris.file, {
@@ -198,14 +198,14 @@ describe("fetchEntries", () => {
                 })
             ).resolves.toBe(testEntries.file);
             expect(existsMock).toHaveBeenCalledWith(testUris.file);
-            expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.file);
+            expect(lookupMock).toHaveBeenCalledWith(testUris.file);
             expect(listFilesSpy).not.toHaveBeenCalled();
             existsMock.mockRestore();
-            lookupAsFileMock.mockRestore();
+            lookupMock.mockRestore();
         });
         it("non-existent URI", async () => {
             const existsMock = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
-            const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockReturnValue(testEntries.file);
+            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValue(undefined);
             const writeFileMock = jest.spyOn(UssFSProvider.instance, "writeFile").mockImplementation();
             const listFilesMock = jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValue({
                 success: true,
@@ -223,11 +223,11 @@ describe("fetchEntries", () => {
                 })
             ).resolves.toBe(testEntries.file);
             expect(existsMock).toHaveBeenCalledWith(testUris.file);
-            expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.file);
+            expect(lookupMock).toHaveBeenCalledWith(testUris.file);
             expect(listFilesMock).toHaveBeenCalledTimes(1);
             expect(writeFileMock).toHaveBeenCalled();
             existsMock.mockRestore();
-            lookupAsFileMock.mockRestore();
+            lookupMock.mockRestore();
             listFilesMock.mockRestore();
             writeFileMock.mockRestore();
         });
