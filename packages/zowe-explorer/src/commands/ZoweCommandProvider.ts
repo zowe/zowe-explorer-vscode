@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, PersistenceSchemaEnum, Validation } from "@zowe/zowe-explorer-api";
 import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedContext } from "../trees/shared/SharedContext";
@@ -52,7 +52,7 @@ export class ZoweCommandProvider {
         this.mOnDidChangeTreeData.fire();
     }
 
-    public async checkCurrentProfile(node: IZoweTreeNode): Promise<void> {
+    public async checkCurrentProfile(node: IZoweTreeNode): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("ZoweCommandProvider.checkCurrentProfile called.");
         const profile = node.getProfile();
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
@@ -99,5 +99,6 @@ export class ZoweCommandProvider {
             }
         }
         this.refresh();
+        return profileStatus;
     }
 }

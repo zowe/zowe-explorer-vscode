@@ -511,7 +511,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 job: node.job,
             });
             favJob.command = { command: "zowe.jobs.search", title: "", arguments: [favJob] };
-            this.saveSearch(favJob);
+            await this.saveSearch(favJob);
         } else {
             // Favorite a job
             favJob = new ZoweJobNode({
@@ -555,7 +555,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             );
             // Remove profile node from Favorites if it contains no more favorites.
             if (profileNodeInFavorites.children.length < 1) {
-                return this.removeFavProfile(profileName, false);
+                await this.removeFavProfile(profileName, false);
             }
             if (startLength !== profileNodeInFavorites.children.length) {
                 this.updateFavorites();
@@ -599,14 +599,13 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 comment: ["Profile name"],
             });
             const continueRemove = vscode.l10n.t("Continue");
-            await Gui.warningMessage(checkConfirmation, {
+            const selection = await Gui.warningMessage(checkConfirmation, {
                 items: [continueRemove],
                 vsCodeOpts: { modal: true },
-            }).then((selection) => {
-                if (!selection || selection === "Cancel") {
-                    cancelled = true;
-                }
             });
+            if (!selection || selection === "Cancel") {
+                cancelled = true;
+            }
         }
         if (cancelled) {
             return;
@@ -614,7 +613,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
 
         // Remove favorited profile from UI
         this.mFavorites.forEach((favProfileNode) => {
-            const favProfileLabel = favProfileNode.label as string;
+            const favProfileLabel = favProfileNode.label?.toString();
             if (favProfileLabel === profileName) {
                 this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label.toString() !== favProfileLabel);
                 favProfileNode.dirty = true;

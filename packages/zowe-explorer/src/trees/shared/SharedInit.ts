@@ -199,8 +199,8 @@ export class SharedInit {
                 )
             );
             context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.saveSearch", (node: IZoweTreeNode) => {
-                    SharedTreeProviders.getProviderForNode(node).saveSearch(node);
+                vscode.commands.registerCommand("zowe.saveSearch", async (node: IZoweTreeNode) => {
+                    await SharedTreeProviders.getProviderForNode(node).saveSearch(node);
                 })
             );
             context.subscriptions.push(

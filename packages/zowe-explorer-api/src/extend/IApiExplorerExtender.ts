@@ -37,12 +37,12 @@ export interface IApiExplorerExtender {
      * to make them automatically appears in the Explorer drop-
      * down dialogs.
      */
-    reloadProfiles(profileType?: string): Promise<void>;
+    reloadProfiles(profileType?: string): void | Promise<void>;
 
     /**
      * After an extenders registered all its API extensions it
      * might want to check for an existing profile folder with meta-file
      * or to create them automatically if it is non-existant.
      */
-    initForZowe(type: string, profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]): Promise<void>;
+    initForZowe(type: string, profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]): void | Promise<void>;
 }

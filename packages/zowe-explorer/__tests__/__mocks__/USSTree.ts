@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweTreeNode, Validation } from "@zowe/zowe-explorer-api";
 import { ZoweUSSNode } from "../../src/trees/uss/ZoweUSSNode";
 import { MockMethod } from "../__decorators__/MockMethod";
 import { createTreeView } from "./mockCreators/shared";
@@ -36,7 +36,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    public addFavorite(_node: IZoweUSSTreeNode) {}
+    public addFavorite(_node: IZoweUSSTreeNode): void | Promise<void> {}
 
     /**
      * @param {string} itemPath
@@ -44,14 +44,14 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    public async openItemFromPath(_itemPath: string, _sessionNode: IZoweUSSTreeNode) {}
+    public openItemFromPath(_itemPath: string, _sessionNode: IZoweUSSTreeNode): void | Promise<void> {}
 
     /**
      * @param {IZoweUSSTreeNode} node
      * @memberof USSTree
      */
     @MockMethod()
-    public removeFavorite(_node: IZoweUSSTreeNode) {}
+    public removeFavorite(_node: IZoweUSSTreeNode): void | Promise<void> {}
 
     /**
      * @returns {IZoweUSSTreeNode[]}
@@ -77,42 +77,44 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @memberof USSTree
      */
     @MockMethod()
-    public setItem(_treeView: vscode.TreeView<IZoweTreeNode>, _item: IZoweTreeNode) {}
+    public setItem(_treeView: vscode.TreeView<IZoweTreeNode>, _item: IZoweTreeNode): void {}
 
     /**
      * @param {string} criteria
      * @memberof USSTree
      */
     @MockMethod()
-    public addSearchHistory(_criteria: string) {}
+    public addSearchHistory(_criteria: string): void {}
 
     /**
      * @param {IZoweDatasetTreeNode} element
      * @memberof USSTree
      */
     @MockMethod()
-    public refreshElement(_element: IZoweDatasetTreeNode) {}
+    public refreshElement(_element: IZoweDatasetTreeNode): void {}
 
     /**
      * @param {IZoweUSSTreeNode} node
      * @memberof USSTree
      */
     @MockMethod()
-    public checkCurrentProfile(_node: IZoweUSSTreeNode) {}
+    public checkCurrentProfile(_node: IZoweUSSTreeNode): Validation.IValidationProfile | Promise<Validation.IValidationProfile> {
+        return { status: "unverified", name: "mock" };
+    }
 
     /**
      * @param {string} name - The name to remove from the file history array
      * @memberof USSTree
      */
     @MockMethod()
-    public removeFileHistory(_name: string) {}
+    public removeFileHistory(_name: string): void {}
 
     /**
      * @param {string} criteria - The name to add to the file history array
      * @memberof USSTree
      */
     @MockMethod()
-    public addFileHistory(_criteria: string) {}
+    public addFileHistory(_criteria: string): void {}
 
     /**
      * @returns {string[]}
@@ -144,9 +146,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      */
     @MockMethod()
     public getChildren(_element?: ZoweUSSNode): Promise<ZoweUSSNode[]> {
-        return new Promise<ZoweUSSNode[]>((resolve) => {
-            return resolve([]);
-        });
+        return Promise.resolve([]);
     }
 
     /**
@@ -172,16 +172,10 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
     }
 
     @MockMethod()
-    public async addSession(_sessionName?: string): Promise<void> {
-        return new Promise<void>((resolve) => {
-            return resolve();
-        });
+    public addSession(_sessionName?: string): void | Promise<void> {
+        return Promise.resolve();
     }
 
     @MockMethod()
-    public async deleteSession(_node?: ZoweUSSNode): Promise<void> {
-        return new Promise<void>((resolve) => {
-            return resolve();
-        });
-    }
+    public deleteSession(_node?: ZoweUSSNode): void {}
 }
