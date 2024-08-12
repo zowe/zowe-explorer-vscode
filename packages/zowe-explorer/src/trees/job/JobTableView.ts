@@ -26,25 +26,15 @@ export class JobTableView {
             title: "Get JCL",
             command: "get-jcl",
             callback: {
-                fn: async (_view: Table.View, data: Table.RowInfo) => {
-                    const child = JobTableView.cachedChildren.find((c) => data.row.id === c.job?.jobid);
-                    if (child != null) {
-                        await JobActions.downloadJcl(child as ZoweJobNode);
-                    }
-                },
+                fn: JobTableView.getJcl,
                 typ: "single-row",
             },
         },
         revealInTree: {
             title: "Reveal in tree",
-            command: "edit",
+            command: "reveal-in-tree",
             callback: {
-                fn: async (_view: Table.View, data: Table.RowInfo) => {
-                    const child = JobTableView.cachedChildren.find((c) => data.row.id === c.job?.jobid);
-                    if (child) {
-                        await SharedTreeProviders.job.getTreeView().reveal(child, { expand: true });
-                    }
-                },
+                fn: JobTableView.revealInTree,
                 typ: "single-row",
             },
         },
@@ -54,26 +44,7 @@ export class JobTableView {
             title: "Cancel",
             command: "cancel-job",
             callback: {
-                fn: async (view: Table.View, data: Record<number, Table.RowData>): Promise<void> => {
-                    const childrenToCancel = Object.values(data)
-                        .map((row) => JobTableView.cachedChildren.find((c) => row.id === c.job?.jobid))
-                        .filter((child) => child);
-                    if (childrenToCancel.length > 0) {
-                        await JobActions.cancelJobs(SharedTreeProviders.job, childrenToCancel);
-                        const profNode = childrenToCancel[0].getSessionNode() as ZoweJobNode;
-                        JobTableView.cachedChildren = await profNode.getChildren();
-                        await view.setContent(
-                            JobTableView.cachedChildren.map((item) => ({
-                                name: item.job.jobname,
-                                class: item.job.class,
-                                owner: item.job.owner,
-                                id: item.job.jobid,
-                                retcode: item.job.retcode,
-                                status: item.job.status,
-                            }))
-                        );
-                    }
-                },
+                fn: JobTableView.cancelJobs,
                 typ: "multi-row",
             },
             condition: (data: Table.RowData[]): boolean => data.every((row) => row["status"] === "ACTIVE"),
@@ -82,26 +53,7 @@ export class JobTableView {
             title: "Delete",
             command: "delete-job",
             callback: {
-                fn: async (view: Table.View, data: Record<number, Table.RowData>): Promise<void> => {
-                    const childrenToDelete = Object.values(data)
-                        .map((row) => JobTableView.cachedChildren.find((c) => row.id === c.job?.jobid))
-                        .filter((child) => child);
-                    if (childrenToDelete.length > 0) {
-                        const sessionNode = childrenToDelete[0].getSessionNode();
-                        await JobActions.deleteCommand(SharedTreeProviders.job, undefined, childrenToDelete);
-                        JobTableView.cachedChildren = await sessionNode.getChildren();
-                        await view.setContent(
-                            JobTableView.cachedChildren.map((item: IZoweJobTreeNode) => ({
-                                name: item.job.jobname,
-                                class: item.job.class,
-                                owner: item.job.owner,
-                                id: item.job.jobid,
-                                retcode: item.job.retcode,
-                                status: item.job.status,
-                            }))
-                        );
-                    }
-                },
+                fn: JobTableView.deleteJobs,
                 typ: "multi-row",
             },
         },
@@ -109,19 +61,109 @@ export class JobTableView {
             title: "Download",
             command: "download-job",
             callback: {
-                fn: async (_view: Table.View, data: Record<number, Table.RowData>): Promise<void> => {
-                    const childrenToDelete = Object.values(data)
-                        .map((row) => JobTableView.cachedChildren.find((c) => row.id === c.job?.jobid))
-                        .filter((child) => child);
-                    if (childrenToDelete.length > 0) {
-                        await JobActions.downloadSpool(childrenToDelete);
-                    }
-                },
+                fn: JobTableView.downloadJobs,
                 typ: "multi-row",
             },
         },
     };
 
+    /**
+     * Action callback fired when selecting the "Get JCL" context-menu option.
+     * @param _view The table view (for use within the callback)
+     * @param data The selected job (row contents) to fetch the JCL for.
+     */
+    public static async getJcl(_view: Table.View, data: Table.RowInfo) {
+        const child = JobTableView.cachedChildren.find((c) => data.row.id === c.job?.jobid);
+        if (child != null) {
+            await JobActions.downloadJcl(child as ZoweJobNode);
+        }
+    }
+
+    /**
+     * Action callback fired when selecting the "Reveal in tree" context-menu option.
+     * @param _view The table view (for use within the callback)
+     * @param data The selected job (row contents) to reveal in the tree view.
+     */
+    public static async revealInTree(_view: Table.View, data: Table.RowInfo) {
+        const child = JobTableView.cachedChildren.find((c) => data.row.id === c.job?.jobid);
+        if (child) {
+            await SharedTreeProviders.job.getTreeView().reveal(child, { expand: true });
+        }
+    }
+
+    /**
+     * "Cancel job" action callback for one or more jobs in the table.
+     * @param view The table view, for use inside the callback
+     * @param data The selected job row(s) to cancel
+     */
+    public static async cancelJobs(view: Table.View, data: Record<number, Table.RowData>): Promise<void> {
+        const childrenToCancel = Object.values(data)
+            .map((row) => JobTableView.cachedChildren.find((c) => row.id === c.job?.jobid))
+            .filter((child) => child);
+        if (childrenToCancel.length > 0) {
+            await JobActions.cancelJobs(SharedTreeProviders.job, childrenToCancel);
+            const profNode = childrenToCancel[0].getSessionNode() as ZoweJobNode;
+            JobTableView.cachedChildren = await profNode.getChildren();
+            await view.setContent(
+                JobTableView.cachedChildren.map((item) => ({
+                    name: item.job.jobname,
+                    class: item.job.class,
+                    owner: item.job.owner,
+                    id: item.job.jobid,
+                    retcode: item.job.retcode,
+                    status: item.job.status,
+                }))
+            );
+        }
+    }
+
+    /**
+     * "Delete job" action callback for one or more jobs in the table.
+     * @param view The table view, for use inside the callback
+     * @param data The selected job row(s) to delete
+     */
+    public static async deleteJobs(view: Table.View, data: Record<number, Table.RowData>): Promise<void> {
+        const childrenToDelete = Object.values(data)
+            .map((row) => JobTableView.cachedChildren.find((c) => row.id === c.job?.jobid))
+            .filter((child) => child);
+        if (childrenToDelete.length > 0) {
+            const sessionNode = childrenToDelete[0].getSessionNode();
+            await JobActions.deleteCommand(SharedTreeProviders.job, undefined, childrenToDelete);
+            JobTableView.cachedChildren = await sessionNode.getChildren();
+            await view.setContent(
+                JobTableView.cachedChildren.map((item: IZoweJobTreeNode) => ({
+                    name: item.job.jobname,
+                    class: item.job.class,
+                    owner: item.job.owner,
+                    id: item.job.jobid,
+                    retcode: item.job.retcode,
+                    status: item.job.status,
+                }))
+            );
+        }
+    }
+
+    /**
+     * "Download job" action callback for one or more jobs in the table.
+     * @param view The table view, for use inside the callback
+     * @param data The selected job row(s) to download
+     */
+    public static async downloadJobs(_view: Table.View, data: Record<number, Table.RowData>): Promise<void> {
+        const childrenToDelete = Object.values(data)
+            .map((row) => JobTableView.cachedChildren.find((c) => row.id === c.job?.jobid))
+            .filter((child) => child);
+        if (childrenToDelete.length > 0) {
+            await JobActions.downloadSpool(childrenToDelete);
+        }
+    }
+
+    /**
+     * Command handler for the Jobs table view. Called when the action "Show as table" is selected on a Job session node.
+     *
+     * @param context The VS Code extension context (to provide to the table view)
+     * @param node The Job session node that was selected for the action
+     * @param nodeList (unused)
+     */
     public static async handleCommand(context: ExtensionContext, node: IZoweJobTreeNode, nodeList: IZoweJobTreeNode[]): Promise<void> {
         const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
         if (selectedNodes.length !== 1) {
@@ -133,18 +175,19 @@ export class JobTableView {
 
         const profileNode = selectedNodes[0];
         this.cachedChildren = await profileNode.getChildren();
-        TableViewProvider.getInstance().setTableView(await JobTableView.generateTable(context, this.cachedChildren, profileNode));
+        TableViewProvider.getInstance().setTableView(await JobTableView.generateTable(context, profileNode));
     }
 
-    public static async generateTable(
-        context: ExtensionContext,
-        children: IZoweJobTreeNode[],
-        profileNode: IZoweJobTreeNode
-    ): Promise<Table.Instance> {
+    /**
+     * Generates a table given the list of children and the profile node that was selected.
+     * @param context The VS Code extension context (to provide to the table view)
+     * @param profileNode The profile node selected for the "Show as table" action
+     */
+    private static async generateTable(context: ExtensionContext, profileNode: IZoweJobTreeNode): Promise<Table.Instance> {
         if (this.table) {
             await this.table.setTitle(`Jobs view: ${profileNode.owner} | ${profileNode.prefix} | ${profileNode.status}`);
             await this.table.setContent(
-                children
+                JobTableView.cachedChildren
                     .filter((c) => c.label !== l10n.t("No jobs found"))
                     .map((item) => ({
                         name: item.job.jobname,
@@ -164,7 +207,7 @@ export class JobTableView {
                 .isView()
                 .title(`Jobs view: ${profileNode.owner} | ${profileNode.prefix} | ${profileNode.status}`)
                 .rows(
-                    ...children
+                    ...JobTableView.cachedChildren
                         .filter((c) => c.label !== l10n.t("No jobs found"))
                         .map((item) => ({
                             name: item.job.jobname,
