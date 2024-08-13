@@ -198,38 +198,38 @@ describe("fetchEntries", () => {
                 })
             ).resolves.toBe(testEntries.file);
             expect(existsMock).toHaveBeenCalledWith(testUris.file);
-            expect(lookupMock).toHaveBeenCalledWith(testUris.file);
+            expect(lookupMock).toHaveBeenCalledWith(testUris.file, true);
             expect(listFilesSpy).not.toHaveBeenCalled();
             existsMock.mockRestore();
             lookupMock.mockRestore();
         });
-        it("non-existent URI", async () => {
-            const existsMock = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
-            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValue(undefined);
-            const writeFileMock = jest.spyOn(UssFSProvider.instance, "writeFile").mockImplementation();
+    });
+    describe("folder", () => {
+        it("existing URI", async () => {
+            const fakeFolder = Object.assign(Object.create(Object.getPrototypeOf(testEntries.folder)), testEntries.folder);
+            fakeFolder.entries = new Map();
+            const existsMock = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(true);
+            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValue(fakeFolder);
             const listFilesMock = jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValue({
                 success: true,
                 apiResponse: {
-                    items: [{ name: testEntries.file.name, mode: "-rwxrwxrwx" }],
+                    items: [{ name: testEntries.file.name }],
                 },
                 commandResponse: "",
             });
             await expect(
-                (UssFSProvider.instance as any).fetchEntries(testUris.file, {
+                (UssFSProvider.instance as any).fetchEntries(testUris.folder, {
                     isRoot: false,
-                    slashAfterProfilePos: testUris.file.path.indexOf("/", 1),
+                    slashAfterProfilePos: testUris.folder.path.indexOf("/", 1),
                     profile: testProfile,
                     profileName: testProfile.name,
                 })
-            ).resolves.toBe(testEntries.file);
-            expect(existsMock).toHaveBeenCalledWith(testUris.file);
-            expect(lookupMock).toHaveBeenCalledWith(testUris.file);
+            ).resolves.toBe(fakeFolder);
+            expect(existsMock).toHaveBeenCalledWith(testUris.folder);
+            expect(lookupMock).toHaveBeenCalledWith(testUris.folder, true);
             expect(listFilesMock).toHaveBeenCalledTimes(1);
-            expect(writeFileMock).toHaveBeenCalled();
             existsMock.mockRestore();
             lookupMock.mockRestore();
-            listFilesMock.mockRestore();
-            writeFileMock.mockRestore();
         });
     });
 });
