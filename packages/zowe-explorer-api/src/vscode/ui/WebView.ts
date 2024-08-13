@@ -73,20 +73,23 @@ export class WebView {
 
         this.webviewOpts = opts;
 
+        const codiconPath = joinPath(context.extensionPath, "src", "webviews", "node_modules", "@vscode/codicons", "dist", "codicon.css");
         const cssPath = joinPath(context.extensionPath, "src", "webviews", "dist", "style", "style.css");
+        const codiconsExists = fs.existsSync(codiconPath);
         const cssExists = fs.existsSync(cssPath);
 
         // Build URIs for the webview directory and get the paths as VScode resources
         this.uris.disk = {
             build: Uri.file(joinPath(context.extensionPath, "src", "webviews")),
             script: Uri.file(joinPath(context.extensionPath, "src", "webviews", "dist", webviewName, `${webviewName}.js`)),
+            codicons: codiconsExists ? Uri.file(codiconPath) : undefined,
             css: cssExists ? Uri.file(cssPath) : undefined,
         };
 
         if (!(opts?.isView ?? false)) {
             this.panel = window.createWebviewPanel("ZEAPIWebview", this.title, ViewColumn.Beside, {
                 enableScripts: true,
-                localResourceRoots: [this.uris.disk.build],
+                localResourceRoots: [this.uris.disk.build, this.uris.disk.codicons],
                 retainContextWhenHidden: opts?.retainContext ?? false,
             });
 
@@ -94,10 +97,12 @@ export class WebView {
             this.uris.resource = {
                 build: this.panel.webview.asWebviewUri(this.uris.disk.build),
                 script: this.panel.webview.asWebviewUri(this.uris.disk.script),
+                codicons: this.uris.disk.codicons ? this.panel.webview.asWebviewUri(this.uris.disk.codicons) : undefined,
                 css: this.uris.disk.css ? this.panel.webview.asWebviewUri(this.uris.disk.css) : undefined,
             };
 
             const builtHtml = Mustache.render(HTMLTemplate, {
+                cspSource: this.panel.webview.cspSource,
                 unsafeEval: this.webviewOpts?.unsafeEval,
                 uris: this.uris,
                 nonce: this.nonce,
@@ -122,10 +127,12 @@ export class WebView {
         this.uris.resource = {
             build: webviewView.webview.asWebviewUri(this.uris.disk.build),
             script: webviewView.webview.asWebviewUri(this.uris.disk.script),
+            codicons: this.uris.disk.codicons ? webviewView.webview.asWebviewUri(this.uris.disk.codicons) : undefined,
             css: this.uris.disk.css ? webviewView.webview.asWebviewUri(this.uris.disk.css) : undefined,
         };
 
         const builtHtml = Mustache.render(HTMLTemplate, {
+            cspSource: webviewView.webview.cspSource,
             unsafeEval: this.webviewOpts?.unsafeEval,
             uris: this.uris,
             nonce: this.nonce,

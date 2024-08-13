@@ -10,6 +10,8 @@
 !resources/**/*.svg
 !prebuilds/**
 !src/webviews/dist/**
+# Required for codicons to be included in VSIX
+!src/webviews/node_modules/@vscode/codicons/**
 
 !CHANGELOG.md
 !LICENSE

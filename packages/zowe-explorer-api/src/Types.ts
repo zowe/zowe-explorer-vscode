@@ -37,6 +37,7 @@ export namespace Types {
         build: Uri;
         script: Uri;
         css?: Uri;
+        codicons?: Uri;
     };
 
     export type FileAttributes = {

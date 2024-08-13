@@ -23,11 +23,6 @@
   "categories": [
     "Other"
   ],
-  "files": [
-    "out",
-    "README.md",
-    "resources"
-  ],
   "activationEvents": [
     "onStartupFinished",
     "onFileSystem:zowe-ds",

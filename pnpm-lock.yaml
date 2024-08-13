@@ -336,6 +336,9 @@ importers:
       '@types/vscode-webview':
         specifier: ^1.57.1
         version: 1.57.5
+      '@vscode/codicons':
+        specifier: ^0.0.36
+        version: 0.0.36
       '@vscode/webview-ui-toolkit':
         specifier: ^1.2.2
         version: 1.4.0(react@18.3.1)
@@ -361,9 +364,6 @@ importers:
       '@types/lodash':
         specifier: ^4.17.0
         version: 4.17.4
-      '@vscode/codicons':
-        specifier: ^0.0.33
-        version: 0.0.33
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
@@ -3077,9 +3077,9 @@ packages:
       pretty-format: 29.7.0
     dev: true
 
-  /@vscode/codicons@0.0.33:
-    resolution: {integrity: sha512-VdgpnD75swH9hpXjd34VBgQ2w2quK63WljodlUcOoJDPKiV+rPjHrcUc2sjLCNKxhl6oKqmsZgwOWcDAY2GKKQ==}
-    dev: true
+  /@vscode/codicons@0.0.36:
+    resolution: {integrity: sha512-wsNOvNMMJ2BY8rC2N2MNBG7yOowV3ov8KlvUE/AiVUlHKTfWsw3OgAOQduX7h0Un6GssKD3aoTVH+TF3DSQwKQ==}
+    dev: false
 
   /@vscode/l10n-dev@0.0.35:
     resolution: {integrity: sha512-s6uzBXsVDSL69Z85HSqpc5dfKswQkeucY8L00t1TWzGalw7wkLQUKMRwuzqTq+AMwQKrRd7Po14cMoTcd11iDw==}
