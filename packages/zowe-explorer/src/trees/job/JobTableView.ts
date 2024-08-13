@@ -70,6 +70,22 @@ export class JobTableView {
         },
     };
 
+    private static async cacheChildren(sessionNode: IZoweJobTreeNode) {
+        this.cachedChildren = (await sessionNode.getChildren()).filter((child) => !SharedContext.isInformation(child));
+    }
+
+    private static buildTitle(profileNode: IZoweJobTreeNode) {
+        if (profileNode.searchId) {
+            `Jobs with ID: ${profileNode.searchId}`;
+        }
+
+        if (profileNode.owner && profileNode.prefix && profileNode.status) {
+            `Jobs: ${profileNode.owner} | ${profileNode.prefix} | ${profileNode.status}`;
+        }
+
+        return "Jobs";
+    }
+
     /**
      * Action callback fired when selecting the "Get JCL" context-menu option.
      * @param _view The table view (for use within the callback)
@@ -105,8 +121,8 @@ export class JobTableView {
             .filter((child) => child);
         if (childrenToCancel.length > 0) {
             await JobActions.cancelJobs(SharedTreeProviders.job, childrenToCancel);
-            const profNode = childrenToCancel[0].getSessionNode() as ZoweJobNode;
-            JobTableView.cachedChildren = await profNode.getChildren();
+            const profNode = childrenToCancel[0].getSessionNode();
+            await this.cacheChildren(profNode);
             await view.setContent(
                 JobTableView.cachedChildren.map((item) => ({
                     name: item.job.jobname,
@@ -132,7 +148,7 @@ export class JobTableView {
         if (childrenToDelete.length > 0) {
             const sessionNode = childrenToDelete[0].getSessionNode();
             await JobActions.deleteCommand(SharedTreeProviders.job, undefined, childrenToDelete);
-            JobTableView.cachedChildren = await sessionNode.getChildren();
+            await this.cacheChildren(sessionNode);
             await view.setContent(
                 JobTableView.cachedChildren.map((item: IZoweJobTreeNode) => ({
                     name: item.job.jobname,
@@ -176,9 +192,8 @@ export class JobTableView {
             return;
         }
 
-        const profileNode = selectedNodes[0];
-        this.cachedChildren = await profileNode.getChildren();
-        TableViewProvider.getInstance().setTableView(await JobTableView.generateTable(context, profileNode));
+        await this.cacheChildren(selectedNodes[0]);
+        TableViewProvider.getInstance().setTableView(await JobTableView.generateTable(context, selectedNodes[0]));
     }
 
     /**
@@ -190,16 +205,14 @@ export class JobTableView {
         if (this.table) {
             await this.table.setTitle(`Jobs view: ${profileNode.owner} | ${profileNode.prefix} | ${profileNode.status}`);
             await this.table.setContent(
-                JobTableView.cachedChildren
-                    .filter((c) => c.label !== l10n.t("No jobs found"))
-                    .map((item) => ({
-                        name: item.job.jobname,
-                        class: item.job.class,
-                        owner: item.job.owner,
-                        id: item.job.jobid,
-                        retcode: item.job.retcode,
-                        status: item.job.status,
-                    }))
+                JobTableView.cachedChildren.map((item) => ({
+                    name: item.job.jobname,
+                    class: item.job.class,
+                    owner: item.job.owner,
+                    id: item.job.jobid,
+                    retcode: item.job.retcode,
+                    status: item.job.status,
+                }))
             );
         } else {
             this.table = new TableBuilder(context)
@@ -209,7 +222,7 @@ export class JobTableView {
                     rowSelection: "multiple",
                 })
                 .isView()
-                .title(`Jobs: ${profileNode.owner} | ${profileNode.prefix} | ${profileNode.status}`)
+                .title(this.buildTitle(profileNode))
                 .rows(
                     ...JobTableView.cachedChildren
                         .filter((c) => c.label !== l10n.t("No jobs found"))

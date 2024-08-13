@@ -112,7 +112,16 @@ export const ActionsBar = ({
           ))}
         &nbsp;|&nbsp;
         <div style={{ marginTop: "2px", marginLeft: "0.25em", marginRight: "0.25em" }}>
-          <Menu menuButton={<VSCodeButton appearance="secondary">Columns</VSCodeButton>}>{columnDropdownItems(visibleColumns)}</Menu>
+          <Menu
+            menuButton={
+              <VSCodeButton appearance="secondary">
+                <span className="codicon codicon-gear"></span>
+              </VSCodeButton>
+            }
+            menuClassName="toggle-cols-menu"
+          >
+            {columnDropdownItems(visibleColumns)}
+          </Menu>
         </div>
       </span>
     </div>
