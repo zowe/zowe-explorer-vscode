@@ -42,6 +42,9 @@ importers:
       '@vscode/vsce':
         specifier: ^2.26.0
         version: 2.26.1
+      adm-zip:
+        specifier: ^0.5.15
+        version: 0.5.15
       concurrently:
         specifier: ^6.5.1
         version: 6.5.1
@@ -3820,6 +3823,11 @@ packages:
     resolution: {integrity: sha512-Y9rRfJG5jcKOE0CLisYbojUjIrIEE7AGMzA/Sm4BslANhbS+cDMpgBdcPT91oJ7OuJ9hYJBx59RjbhxVnrF8Xg==}
     engines: {node: '>=0.4.0'}
     hasBin: true
+    dev: true
+
+  /adm-zip@0.5.15:
+    resolution: {integrity: sha512-jYPWSeOA8EFoZnucrKCNihqBjoEGQSU4HKgHYQgKNEQ0pQF9a/DYuo/+fAxY76k4qe75LUlLWpAM1QWcBMTOKw==}
+    engines: {node: '>=12.0'}
     dev: true
 
   /ag-charts-types@10.0.2:
