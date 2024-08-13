@@ -30,11 +30,11 @@ export class JobTableView {
                 typ: "single-row",
             },
         },
-        revealInTree: {
-            title: "Reveal in tree",
-            command: "reveal-in-tree",
+        displayInTree: {
+            title: "Display in tree",
+            command: "display-in-tree",
             callback: {
-                fn: JobTableView.revealInTree,
+                fn: JobTableView.displayInTree,
                 typ: "single-row",
             },
         },
@@ -87,7 +87,7 @@ export class JobTableView {
      * @param _view The table view (for use within the callback)
      * @param data The selected job (row contents) to reveal in the tree view.
      */
-    public static async revealInTree(_view: Table.View, data: Table.RowInfo) {
+    public static async displayInTree(_view: Table.View, data: Table.RowInfo) {
         const child = JobTableView.cachedChildren.find((c) => data.row.id === c.job?.jobid);
         if (child) {
             await SharedTreeProviders.job.getTreeView().reveal(child, { expand: true });
@@ -245,7 +245,7 @@ export class JobTableView {
                     ]
                 )
                 .addContextOption("all", this.contextOptions.getJcl)
-                .addContextOption("all", this.contextOptions.revealInTree)
+                .addContextOption("all", this.contextOptions.displayInTree)
                 .addRowAction("all", this.rowActions.cancelJob)
                 .addRowAction("all", this.rowActions.deleteJob)
                 .addRowAction("all", this.rowActions.downloadJob)

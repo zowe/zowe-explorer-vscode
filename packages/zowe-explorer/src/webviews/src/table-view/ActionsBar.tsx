@@ -112,7 +112,7 @@ export const ActionsBar = ({
           ))}
         &nbsp;|&nbsp;
         <div style={{ marginTop: "2px", marginLeft: "0.25em", marginRight: "0.25em" }}>
-          <Menu menuButton={<VSCodeButton appearance="primary">Columns</VSCodeButton>}>{columnDropdownItems(visibleColumns)}</Menu>
+          <Menu menuButton={<VSCodeButton appearance="secondary">Columns</VSCodeButton>}>{columnDropdownItems(visibleColumns)}</Menu>
         </div>
       </span>
     </div>
