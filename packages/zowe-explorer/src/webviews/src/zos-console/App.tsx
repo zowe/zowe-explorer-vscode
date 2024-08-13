@@ -80,7 +80,7 @@ export function App() {
         onKeyDown={sendCommand}
         style={{
           width: "100%",
-          "font-family": "monospace",
+          "font-family": "Times New Roman",
         }}
       >
         <span slot="start" className="codicon codicon-chevron-right"></span>
