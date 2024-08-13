@@ -30,7 +30,7 @@ export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
         this.refreshProfileList();
     }
 
-    private refreshProfileList() {
+    private refreshProfileList(): void {
         const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.MVS);
         this.defaultProfileName = profileNamesList[0];
 
