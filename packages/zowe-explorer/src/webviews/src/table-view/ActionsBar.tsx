@@ -1,4 +1,4 @@
-import { Ref } from "preact/hooks";
+import { Dispatch, Ref } from "preact/hooks";
 import type { Table } from "@zowe/zowe-explorer-api";
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import { GridApi } from "ag-grid-community";
@@ -12,6 +12,9 @@ export const ActionsBar = ({
   itemCount,
   selectionCount,
   title,
+  columns,
+  visibleColumns,
+  setVisibleColumns,
   vscodeApi,
 }: {
   actions: Table.Action[];
@@ -19,21 +22,29 @@ export const ActionsBar = ({
   itemCount: number;
   selectionCount: number;
   title: string;
+  columns: string[];
+  visibleColumns: string[];
+  setVisibleColumns: Dispatch<string[]>;
   vscodeApi: any;
 }) => {
-  const columnDropdownItems = () =>
-    (gridRef.current?.api as GridApi)
-      ?.getColumns()
-      ?.filter((col) => col.getColDef().field !== "actions")
+  const columnDropdownItems = (visibleColumns: string[]) =>
+    columns
+      .filter((col) => col !== "actions")
       .map((col) => (
         <MenuItem
           type="checkbox"
-          checked={col.isVisible()}
+          checked={visibleColumns.includes(col)}
           onClick={(_e: any) => {
-            (gridRef.current.api as GridApi).setColumnsVisible([col.getId()], !col.isVisible());
+            const gridApi = gridRef.current.api as GridApi;
+            const colVisibility = !visibleColumns.includes(col);
+            gridApi.setColumnsVisible(
+              [gridApi.getColumns()?.find((c) => c.getColDef().field === col || c.getColDef().headerName === col)!],
+              colVisibility
+            );
+            setVisibleColumns(colVisibility ? [...visibleColumns, col] : visibleColumns.filter((c) => c !== col));
           }}
         >
-          {col.getColDef().headerName ?? col.getColDef().field}
+          {col}
         </MenuItem>
       ));
 
@@ -101,7 +112,7 @@ export const ActionsBar = ({
           ))}
         &nbsp;|&nbsp;
         <div style={{ marginTop: "2px", marginLeft: "0.25em", marginRight: "0.25em" }}>
-          <Menu menuButton={<VSCodeButton appearance="primary">Columns</VSCodeButton>}>{columnDropdownItems()}</Menu>
+          <Menu menuButton={<VSCodeButton appearance="primary">Columns</VSCodeButton>}>{columnDropdownItems(visibleColumns)}</Menu>
         </div>
       </span>
     </div>

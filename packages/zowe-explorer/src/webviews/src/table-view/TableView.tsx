@@ -20,6 +20,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
   const [theme, setTheme] = useState<string>(baseTheme ?? "ag-theme-quartz");
   const [selectionCount, setSelectionCount] = useState<number>(0);
   const gridRef = useRef<any>();
+  const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
 
   const contextMenu = useContextMenu({
     options: [
@@ -78,8 +79,10 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
             return { ...row, actions: "" };
           });
           const columns = [...(newData.columns ?? []), actionsColumn(newData, actionsCellRenderer, vscodeApi)];
+          setVisibleColumns(columns.map((c) => c.headerName ?? c.field));
           setTableData({ ...newData, rows, columns });
         } else {
+          setVisibleColumns(newData.columns.map((c) => c.headerName ?? c.field));
           setTableData(newData);
         }
       }
@@ -105,10 +108,13 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
         {contextMenu.component}
         <ActionsBar
           actions={tableData?.actions.all ?? []}
+          columns={tableData?.columns?.map((c) => c.headerName ?? c.field) ?? []}
           gridRef={gridRef}
           itemCount={tableData?.rows?.length ?? 0}
           title={tableData?.title ?? ""}
           selectionCount={selectionCount}
+          visibleColumns={visibleColumns}
+          setVisibleColumns={setVisibleColumns}
           vscodeApi={vscodeApi}
         />
         {tableData ? <AgGridReact {...tableProps(contextMenu, setSelectionCount, tableData, vscodeApi)} ref={gridRef} /> : null}
