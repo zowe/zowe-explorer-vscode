@@ -47,6 +47,7 @@ export class JobTableView {
                 fn: JobTableView.cancelJobs,
                 typ: "multi-row",
             },
+            type: "secondary",
             condition: (data: Table.RowData[]): boolean => data.every((row) => row["status"] === "ACTIVE"),
         },
         deleteJob: {
@@ -56,6 +57,7 @@ export class JobTableView {
                 fn: JobTableView.deleteJobs,
                 typ: "multi-row",
             },
+            type: "secondary",
         },
         downloadJob: {
             title: "Download",
@@ -64,6 +66,7 @@ export class JobTableView {
                 fn: JobTableView.downloadJobs,
                 typ: "multi-row",
             },
+            type: "primary",
         },
     };
 
@@ -202,10 +205,11 @@ export class JobTableView {
             this.table = new TableBuilder(context)
                 .options({
                     autoSizeStrategy: { type: "fitCellContents", colIds: ["name", "class", "owner", "id", "retcode", "status"] },
+                    pagination: true,
                     rowSelection: "multiple",
                 })
                 .isView()
-                .title(`Jobs view: ${profileNode.owner} | ${profileNode.prefix} | ${profileNode.status}`)
+                .title(`Jobs: ${profileNode.owner} | ${profileNode.prefix} | ${profileNode.status}`)
                 .rows(
                     ...JobTableView.cachedChildren
                         .filter((c) => c.label !== l10n.t("No jobs found"))
@@ -220,15 +224,23 @@ export class JobTableView {
                 )
                 .columns(
                     ...[
-                        { field: "name", checkboxSelection: true, filter: true, sort: "asc" } as Table.ColumnOpts,
+                        {
+                            field: "name",
+                            headerName: "Name",
+                            checkboxSelection: true,
+                            filter: true,
+                            headerCheckboxSelection: true,
+                            sort: "asc",
+                        } as Table.ColumnOpts,
                         {
                             field: "class",
+                            headerName: "Class",
                             filter: true,
                         },
-                        { field: "owner", filter: true },
+                        { field: "owner", headerName: "Owner", filter: true },
                         { field: "id", headerName: "ID", filter: true },
                         { field: "retcode", headerName: "Return Code", filter: true },
-                        { field: "status", filter: true },
+                        { field: "status", headerName: "Status", filter: true },
                         { field: "actions", hide: true },
                     ]
                 )

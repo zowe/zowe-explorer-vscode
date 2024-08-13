@@ -39,7 +39,7 @@ export const actionsColumn = (newData: Table.ViewOpts, actionsCellRenderer: Tabl
             .map((action, i) => (
               <VSCodeButton
                 key={`${action.command}-row-${params.rowIndex ?? 0}-action-${i}`}
-                appearance={action.type ?? "primary"}
+                appearance={action.type}
                 onClick={(_e: any) =>
                   vscodeApi.postMessage({
                     command: action.command,

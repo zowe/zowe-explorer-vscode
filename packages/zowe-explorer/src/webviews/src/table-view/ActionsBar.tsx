@@ -3,37 +3,63 @@ import type { Table } from "@zowe/zowe-explorer-api";
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import { GridApi } from "ag-grid-community";
 import { wrapFn } from "./types";
+import { Menu, MenuItem } from "@szhsin/react-menu";
+import "@szhsin/react-menu/dist/index.css";
 
 export const ActionsBar = ({
   actions,
   gridRef,
   itemCount,
+  selectionCount,
+  title,
   vscodeApi,
 }: {
   actions: Table.Action[];
   gridRef: Ref<any>;
   itemCount: number;
+  selectionCount: number;
+  title: string;
   vscodeApi: any;
 }) => {
+  const columnDropdownItems = () =>
+    (gridRef.current?.api as GridApi)
+      ?.getColumns()
+      ?.filter((col) => col.getColDef().field !== "actions")
+      .map((col) => (
+        <MenuItem
+          type="checkbox"
+          checked={col.isVisible()}
+          onClick={(_e: any) => {
+            (gridRef.current.api as GridApi).setColumnsVisible([col.getId()], !col.isVisible());
+          }}
+        >
+          {col.getColDef().headerName ?? col.getColDef().field}
+        </MenuItem>
+      ));
+
   return (
     <div
       style={{
-        height: "2.5em",
+        height: "3em",
         display: "flex",
         alignItems: "center",
-        borderRadius: "var(--ag-wrapper-border-radius)",
         border: "1px solid var(--vscode-editorWidget-border)",
+        borderTopLeftRadius: "var(--ag-wrapper-border-radius)",
+        borderTopRightRadius: "var(--ag-wrapper-border-radius)",
         justifyContent: "space-between",
         backgroundColor: "var(--vscode-keybindingTable-headerBackground)",
         color: "var(--vscode-foreground) !important",
         padding: "0 0.25em",
-        marginBottom: "3px",
+        marginBottom: "-1px",
       }}
     >
-      <h5 style={{ marginLeft: "0.25em" }}>
-        {itemCount === 0 ? "No" : itemCount} item{itemCount === 1 ? "" : "s"} selected
-      </h5>
-      <span style={{ marginBottom: "0.25em" }}>
+      <h3 style={{ marginLeft: "0.25em" }}>
+        {title} ({itemCount})
+      </h3>
+      <span style={{ display: "flex", alignItems: "center", marginBottom: "0.25em" }}>
+        <p style={{ fontSize: "0.9em", paddingTop: "2px", marginRight: "0.75em" }}>
+          {selectionCount === 0 ? "No" : selectionCount} item{selectionCount > 1 || selectionCount === 0 ? "s" : ""} selected
+        </p>
         {actions
           .filter((action) => (itemCount > 1 ? action.callback.typ === "multi-row" : action.callback.typ.endsWith("row")))
           .filter((item) => {
@@ -50,8 +76,8 @@ export const ActionsBar = ({
           .map((action, i) => (
             <VSCodeButton
               key={`${action.command}-action-bar-${i}`}
-              type={action.type}
-              style={{ height: "1.5em", fontWeight: "bold", marginRight: "0.25em" }}
+              appearance={action.type}
+              style={{ fontWeight: "bold", marginTop: "3px", marginRight: "0.25em" }}
               onClick={(_event: any) => {
                 const selectedRows = (gridRef.current.api as GridApi).getSelectedNodes();
                 if (selectedRows.length === 0) {
@@ -73,6 +99,10 @@ export const ActionsBar = ({
               {action.title}
             </VSCodeButton>
           ))}
+        &nbsp;|&nbsp;
+        <div style={{ marginTop: "2px", marginLeft: "0.25em", marginRight: "0.25em" }}>
+          <Menu menuButton={<VSCodeButton appearance="primary">Columns</VSCodeButton>}>{columnDropdownItems()}</Menu>
+        </div>
       </span>
     </div>
   );

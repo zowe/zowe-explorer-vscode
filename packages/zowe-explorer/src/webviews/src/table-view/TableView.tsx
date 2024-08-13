@@ -101,10 +101,16 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
 
   return (
     <>
-      {tableData?.title ? <h1>{tableData.title}</h1> : null}
       <div className={`${theme} ag-theme-vsc ${contextMenu.open ? "ctx-menu-open" : ""}`}>
         {contextMenu.component}
-        <ActionsBar actions={tableData?.actions.all ?? []} gridRef={gridRef} itemCount={selectionCount} vscodeApi={vscodeApi} />
+        <ActionsBar
+          actions={tableData?.actions.all ?? []}
+          gridRef={gridRef}
+          itemCount={tableData?.rows?.length ?? 0}
+          title={tableData?.title ?? ""}
+          selectionCount={selectionCount}
+          vscodeApi={vscodeApi}
+        />
         {tableData ? <AgGridReact {...tableProps(contextMenu, setSelectionCount, tableData, vscodeApi)} ref={gridRef} /> : null}
       </div>
     </>
