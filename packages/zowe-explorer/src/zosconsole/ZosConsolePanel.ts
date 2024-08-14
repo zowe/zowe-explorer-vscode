@@ -97,7 +97,7 @@ export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
             uris: { resource: { script: scriptUri } },
             nonce,
             style: /* html */ `
-                <link href="${codiconsUri.toString()}" rel="stylesheet" />
+                <link href="${codiconsUri?.toString()}" rel="stylesheet" />
                 <style>
                     html,
                     body {
