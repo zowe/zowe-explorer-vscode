@@ -76,11 +76,11 @@ export class JobTableView {
 
     private static buildTitle(profileNode: IZoweJobTreeNode) {
         if (profileNode.searchId) {
-            `Jobs with ID: ${profileNode.searchId}`;
+            return `Jobs with ID: ${profileNode.searchId}`;
         }
 
         if (profileNode.owner && profileNode.prefix && profileNode.status) {
-            `Jobs: ${profileNode.owner} | ${profileNode.prefix} | ${profileNode.status}`;
+            return `Jobs: ${profileNode.owner} | ${profileNode.prefix} | ${profileNode.status}`;
         }
 
         return "Jobs";
