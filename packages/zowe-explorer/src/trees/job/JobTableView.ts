@@ -123,16 +123,7 @@ export class JobTableView {
             await JobActions.cancelJobs(SharedTreeProviders.job, childrenToCancel);
             const profNode = childrenToCancel[0].getSessionNode();
             await this.cacheChildren(profNode);
-            await view.setContent(
-                JobTableView.cachedChildren.map((item) => ({
-                    name: item.job.jobname,
-                    class: item.job.class,
-                    owner: item.job.owner,
-                    id: item.job.jobid,
-                    retcode: item.job.retcode,
-                    status: item.job.status,
-                }))
-            );
+            await view.setContent(JobTableView.cachedChildren.map((item) => this.jobPropertiesFor(item)));
         }
     }
 
@@ -149,16 +140,7 @@ export class JobTableView {
             const sessionNode = childrenToDelete[0].getSessionNode();
             await JobActions.deleteCommand(SharedTreeProviders.job, undefined, childrenToDelete);
             await this.cacheChildren(sessionNode);
-            await view.setContent(
-                JobTableView.cachedChildren.map((item: IZoweJobTreeNode) => ({
-                    name: item.job.jobname,
-                    class: item.job.class,
-                    owner: item.job.owner,
-                    id: item.job.jobid,
-                    retcode: item.job.retcode,
-                    status: item.job.status,
-                }))
-            );
+            await view.setContent(JobTableView.cachedChildren.map((item: IZoweJobTreeNode) => this.jobPropertiesFor(item)));
         }
     }
 
@@ -196,6 +178,23 @@ export class JobTableView {
         TableViewProvider.getInstance().setTableView(await JobTableView.generateTable(context, selectedNodes[0]));
     }
 
+    private static jobPropertiesFor(item: IZoweJobTreeNode) {
+        return {
+            name: item.job.jobname,
+            class: item.job.class,
+            owner: item.job.owner,
+            id: item.job.jobid,
+            retcode: item.job.retcode,
+            status: item.job.status,
+            subsystem: item.job.subsystem,
+            type: item.job.type,
+            "job-correlator": item.job["job-correlator"],
+            phase: item.job.phase,
+            "phase-name": item.job["phase-name"],
+            "reason-not-running": item.job["reason-not-running"],
+        };
+    }
+
     /**
      * Generates a table given the list of children and the profile node that was selected.
      * @param context The VS Code extension context (to provide to the table view)
@@ -203,46 +202,25 @@ export class JobTableView {
      */
     private static async generateTable(context: ExtensionContext, profileNode: IZoweJobTreeNode): Promise<Table.Instance> {
         if (this.table) {
-            await this.table.setTitle(`Jobs view: ${profileNode.owner} | ${profileNode.prefix} | ${profileNode.status}`);
-            await this.table.setContent(
-                JobTableView.cachedChildren.map((item) => ({
-                    name: item.job.jobname,
-                    class: item.job.class,
-                    owner: item.job.owner,
-                    id: item.job.jobid,
-                    retcode: item.job.retcode,
-                    status: item.job.status,
-                }))
-            );
+            await this.table.setTitle(this.buildTitle(profileNode));
+            await this.table.setContent(JobTableView.cachedChildren.map((item) => this.jobPropertiesFor(item)));
         } else {
             this.table = new TableBuilder(context)
                 .options({
-                    autoSizeStrategy: { type: "fitCellContents", colIds: ["name", "class", "owner", "id", "retcode", "status"] },
                     pagination: true,
                     rowSelection: "multiple",
+                    selectEverything: true,
+                    suppressRowClickSelection: true,
                 })
                 .isView()
                 .title(this.buildTitle(profileNode))
-                .rows(
-                    ...JobTableView.cachedChildren
-                        .filter((c) => c.label !== l10n.t("No jobs found"))
-                        .map((item) => ({
-                            name: item.job.jobname,
-                            class: item.job.class,
-                            owner: item.job.owner,
-                            id: item.job.jobid,
-                            retcode: item.job.retcode,
-                            status: item.job.status,
-                        }))
-                )
+                .rows(...JobTableView.cachedChildren.filter((c) => c.label !== l10n.t("No jobs found")).map((item) => this.jobPropertiesFor(item)))
                 .columns(
                     ...[
                         {
                             field: "name",
                             headerName: "Name",
-                            checkboxSelection: true,
                             filter: true,
-                            headerCheckboxSelection: true,
                             sort: "asc",
                         } as Table.ColumnOpts,
                         {
@@ -254,6 +232,12 @@ export class JobTableView {
                         { field: "id", headerName: "ID", filter: true },
                         { field: "retcode", headerName: "Return Code", filter: true },
                         { field: "status", headerName: "Status", filter: true },
+                        { field: "subsystem", headerName: "Subsystem", filter: true },
+                        { field: "type", headerName: "Type", filter: true },
+                        { field: "job-correlator", headerName: "Job Correlator", filter: true },
+                        { field: "phase", headerName: "Phase", filter: true },
+                        { field: "phase-name", headerName: "Phase Name", filter: true },
+                        { field: "reason-not-running", headerName: "Error Details", filter: true },
                         { field: "actions", hide: true },
                     ]
                 )

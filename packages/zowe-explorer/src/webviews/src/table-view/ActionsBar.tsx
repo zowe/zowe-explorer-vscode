@@ -1,9 +1,9 @@
-import { Dispatch, Ref } from "preact/hooks";
+import { Dispatch, Ref, useState } from "preact/hooks";
 import type { Table } from "@zowe/zowe-explorer-api";
-import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
+import { VSCodeButton, VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
 import { GridApi } from "ag-grid-community";
 import { wrapFn } from "./types";
-import { Menu, MenuItem } from "@szhsin/react-menu";
+import { FocusableItem, Menu, MenuGroup, MenuItem } from "@szhsin/react-menu";
 import "@szhsin/react-menu/dist/index.css";
 
 export const ActionsBar = ({
@@ -27,14 +27,16 @@ export const ActionsBar = ({
   setVisibleColumns: Dispatch<string[]>;
   vscodeApi: any;
 }) => {
+  const [searchFilter, setSearchFilter] = useState<string>("");
+
   const columnDropdownItems = (visibleColumns: string[]) =>
     columns
-      .filter((col) => col !== "actions")
+      .filter((col) => col !== "actions" && (searchFilter.length === 0 || col.toLowerCase().includes(searchFilter)))
       .map((col) => (
         <MenuItem
+          key={`toggle-vis-${col}`}
           type="checkbox"
-          checked={visibleColumns.includes(col)}
-          onClick={(_e: any) => {
+          onClick={(e: any) => {
             const gridApi = gridRef.current.api as GridApi;
             const colVisibility = !visibleColumns.includes(col);
             gridApi.setColumnsVisible(
@@ -42,9 +44,26 @@ export const ActionsBar = ({
               colVisibility
             );
             setVisibleColumns(colVisibility ? [...visibleColumns, col] : visibleColumns.filter((c) => c !== col));
+            e.keepOpen = true;
           }}
         >
-          {col}
+          {() => (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-evenly",
+                alignItems: "center",
+                height: "1.25rem",
+                marginLeft: "-1.25rem",
+                overflow: "hidden",
+              }}
+            >
+              <span style={{ paddingRight: visibleColumns.includes(col) ? "1em" : "2.15em", marginTop: "3px" }}>
+                {visibleColumns.includes(col) ? <span className="codicon codicon-check"></span> : null}
+              </span>
+              {col}
+            </div>
+          )}
         </MenuItem>
       ));
 
@@ -110,18 +129,43 @@ export const ActionsBar = ({
               {action.title}
             </VSCodeButton>
           ))}
-        &nbsp;|&nbsp;
-        <div style={{ marginTop: "2px", marginLeft: "0.25em", marginRight: "0.25em" }}>
-          <Menu
-            menuButton={
-              <VSCodeButton appearance="secondary">
-                <span className="codicon codicon-gear"></span>
-              </VSCodeButton>
-            }
-            menuClassName="toggle-cols-menu"
-          >
-            {columnDropdownItems(visibleColumns)}
-          </Menu>
+        <div
+          style={{
+            borderLeft: "1px solid var(--ag-border-color)",
+            marginTop: "1px",
+            marginLeft: "0.25em",
+            marginRight: "0.25em",
+            paddingLeft: "0.5em",
+          }}
+        >
+          <span id="colsToggleMenu">
+            <Menu
+              boundingBoxPadding="55 20 40 0"
+              menuButton={
+                <VSCodeButton appearance="secondary">
+                  <span className="codicon codicon-gear"></span>
+                </VSCodeButton>
+              }
+              menuClassName="toggle-cols-menu"
+              overflow="auto"
+              setDownOverflow
+            >
+              <FocusableItem style={{ marginBottom: "0.5rem" }}>
+                {({ ref }: { ref: any }) => (
+                  <VSCodeTextField
+                    ref={ref}
+                    type="text"
+                    placeholder="Search"
+                    value={searchFilter}
+                    onInput={(e: any) => setSearchFilter((e.target!.value as string).toLowerCase())}
+                  >
+                    <span slot="start" className="codicon codicon-search"></span>
+                  </VSCodeTextField>
+                )}
+              </FocusableItem>
+              <MenuGroup takeOverflow>{columnDropdownItems(visibleColumns)}</MenuGroup>
+            </Menu>
+          </span>
         </div>
       </span>
     </div>

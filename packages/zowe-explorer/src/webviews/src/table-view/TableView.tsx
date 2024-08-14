@@ -12,8 +12,15 @@ import { useContextMenu } from "./ContextMenu";
 import "./style.css";
 import { ActionsBar } from "./ActionsBar";
 import { actionsColumn } from "./actionsColumn";
+import { CheckboxSelectionCallbackParams, HeaderCheckboxSelectionCallbackParams } from "ag-grid-community";
 
 const vscodeApi = acquireVsCodeApi();
+
+function isFirstColumn(params: CheckboxSelectionCallbackParams | HeaderCheckboxSelectionCallbackParams) {
+  var displayedColumns = params.api.getAllDisplayedColumns();
+  var thisIsFirstColumn = displayedColumns[0] === params.column;
+  return thisIsFirstColumn;
+}
 
 export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewProps) => {
   const [tableData, setTableData] = useState<Table.ViewOpts | undefined>(data);
@@ -73,6 +80,12 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
       if (response.command === "ondatachanged") {
         // Update received from a VS Code extender; update table state
         const newData: Table.ViewOpts = response.data;
+        if (newData.options?.selectEverything) {
+          (newData.options as any).defaultColDef = {
+            headerCheckboxSelection: isFirstColumn,
+            checkboxSelection: isFirstColumn,
+          };
+        }
         if (Object.keys(newData.actions).length > 1 || newData.actions.all?.length > 0) {
           // Add an extra column to the end of each row if row actions are present
           const rows = newData.rows?.map((row: Table.RowData) => {

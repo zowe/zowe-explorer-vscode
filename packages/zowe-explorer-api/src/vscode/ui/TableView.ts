@@ -200,6 +200,10 @@ export namespace Table {
         columnMenu?: "legacy" | "new";
         /** Set this to `true` to enable debugging information from the grid */
         debug?: boolean;
+        /** Set this to `true` to allow checkbox selection, no matter what row is visible. */
+        selectEverything?: boolean;
+        /** Set this to suppress row-click selection, in favor of checkbox selection. */
+        suppressRowClickSelection?: boolean;
         /** The height in pixels for the rows containing floating filters. */
         floatingFiltersHeight?: number;
         /** The height in pixels for the rows containing header column groups. */
