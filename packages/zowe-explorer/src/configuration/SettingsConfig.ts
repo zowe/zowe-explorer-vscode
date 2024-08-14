@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { Gui, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { Gui, PersistenceSchemaEnum, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { Constants } from "./Constants";
 import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
 import { Definitions } from "./Definitions";
@@ -91,7 +91,7 @@ export class SettingsConfig {
         const localStorageIsMigrated = ZoweLocalStorage.getValue<boolean>(Definitions.LocalStorageKey.SETTINGS_LOCAL_STORAGE_MIGRATED);
         const globalIsMigrated = ZoweLocalStorage.getValue<boolean>(Definitions.LocalStorageKey.SETTINGS_OLD_SETTINGS_MIGRATED);
         const workspaceIsMigrated = SettingsConfig.configurations.inspect(Definitions.LocalStorageKey.SETTINGS_OLD_SETTINGS_MIGRATED).workspaceValue;
-        const workspaceIsOpen = vscode.workspace.workspaceFolders?.some((f) => f.uri.scheme === "file");
+        const workspaceIsOpen = ZoweVsCodeExtension.workspaceRootPath != null;
         const zoweSettingsExist = SettingsConfig.zoweOldConfigurations.length > 0;
 
         if (!localStorageIsMigrated) {

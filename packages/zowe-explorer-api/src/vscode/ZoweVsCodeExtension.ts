@@ -30,7 +30,7 @@ export class ZoweVsCodeExtension {
      * @internal
      */
     public static get profilesCache(): ProfilesCache {
-        const workspacePath = vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file")?.uri.fsPath;
+        const workspacePath = this.workspaceRootPath?.uri.fsPath;
         return new ProfilesCache(imperative.Logger.getAppLogger(), workspacePath);
     }
 
