@@ -1,6 +1,0 @@
-node_modules/**/*
-results/**/*
-out/**/*
-*.config.js
-**/.wdio-vscode-service/
-**/*.wdio.conf.ts
