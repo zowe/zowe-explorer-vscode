@@ -40,7 +40,7 @@ import { AuthUtils } from "../utils/AuthUtils";
 export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: imperative.Logger): Promise<Profiles> {
-        Profiles.loader = new Profiles(log, ZoweVsCodeExtension.workspaceRootPath?.uri.fsPath);
+        Profiles.loader = new Profiles(log, ZoweVsCodeExtension.workspaceRoot?.uri.fsPath);
         Constants.PROFILES_CACHE = Profiles.loader;
         await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
         await Profiles.getInstance().getProfileInfo();
@@ -428,7 +428,7 @@ export class Profiles extends ProfilesCache {
             let user = false;
             let global = true;
             let rootPath = FileManagement.getZoweDir();
-            const workspaceDir = ZoweVsCodeExtension.workspaceRootPath;
+            const workspaceDir = ZoweVsCodeExtension.workspaceRoot;
             if (workspaceDir != null) {
                 const choice = await this.getConfigLocationPrompt("create");
                 if (choice === undefined) {
@@ -979,7 +979,7 @@ export class Profiles extends ProfilesCache {
         const existingLayers: imperative.IConfigLayer[] = [];
         const config = await imperative.Config.load("zowe", {
             homeDir: FileManagement.getZoweDir(),
-            projectDir: ZoweVsCodeExtension.workspaceRootPath?.uri.fsPath,
+            projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath,
         });
         const layers = config.layers;
         layers.forEach((layer) => {

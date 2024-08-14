@@ -19,7 +19,7 @@ export class LocalFileManagement {
     public static fileSelectedToCompare: boolean = false;
 
     public static getDefaultUri(): vscode.Uri {
-        return ZoweVsCodeExtension.workspaceRootPath?.uri ?? vscode.Uri.file(os.homedir());
+        return ZoweVsCodeExtension.workspaceRoot?.uri ?? vscode.Uri.file(os.homedir());
     }
 
     public static setCompareSelection(val: boolean): void {

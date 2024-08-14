@@ -21,7 +21,7 @@ export class KeytarApi {
     // v1 specific
     public async activateKeytar(initialized: boolean): Promise<void> {
         const log = imperative.Logger.getAppLogger();
-        const profiles = new ProfilesCache(log, ZoweVsCodeExtension.workspaceRootPath?.uri.fsPath);
+        const profiles = new ProfilesCache(log, ZoweVsCodeExtension.workspaceRoot?.uri.fsPath);
         const isSecure = await profiles.isCredentialsSecured();
         if (isSecure) {
             let keytar: object;

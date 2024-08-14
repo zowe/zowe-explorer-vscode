@@ -43,7 +43,7 @@ export class DataSetTemplates {
             });
             let userPick;
 
-            const workspacePath = ZoweVsCodeExtension.workspaceRootPath?.uri.fsPath;
+            const workspacePath = ZoweVsCodeExtension.workspaceRoot?.uri.fsPath;
             if (workspacePath) {
                 userPick = await this.promptForSaveLocation();
             }

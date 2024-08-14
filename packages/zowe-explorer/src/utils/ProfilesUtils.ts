@@ -318,7 +318,7 @@ export class ProfilesUtils {
         ZoweLogger.trace("ProfilesUtils.readConfigFromDisk called.");
         let rootPath: string;
         const mProfileInfo = await ProfilesUtils.getProfileInfo();
-        const workspacePath = ZoweVsCodeExtension.workspaceRootPath?.uri.fsPath;
+        const workspacePath = ZoweVsCodeExtension.workspaceRoot?.uri.fsPath;
         if (workspacePath) {
             rootPath = workspacePath;
             await mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: FileManagement.getFullPath(rootPath) });

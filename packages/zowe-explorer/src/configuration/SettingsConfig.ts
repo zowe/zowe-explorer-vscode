@@ -91,7 +91,7 @@ export class SettingsConfig {
         const localStorageIsMigrated = ZoweLocalStorage.getValue<boolean>(Definitions.LocalStorageKey.SETTINGS_LOCAL_STORAGE_MIGRATED);
         const globalIsMigrated = ZoweLocalStorage.getValue<boolean>(Definitions.LocalStorageKey.SETTINGS_OLD_SETTINGS_MIGRATED);
         const workspaceIsMigrated = SettingsConfig.configurations.inspect(Definitions.LocalStorageKey.SETTINGS_OLD_SETTINGS_MIGRATED).workspaceValue;
-        const workspaceIsOpen = ZoweVsCodeExtension.workspaceRootPath != null;
+        const workspaceIsOpen = ZoweVsCodeExtension.workspaceRoot != null;
         const zoweSettingsExist = SettingsConfig.zoweOldConfigurations.length > 0;
 
         if (!localStorageIsMigrated) {
