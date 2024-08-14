@@ -22,6 +22,10 @@ import { Types } from "../Types";
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
  */
 export class ZoweVsCodeExtension {
+    public static get workspaceRootPath(): vscode.WorkspaceFolder | undefined {
+        return vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file");
+    }
+
     /**
      * @internal
      */

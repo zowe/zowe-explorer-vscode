@@ -9,19 +9,19 @@
  *
  */
 
-import * as vscode from "vscode";
 import * as imperative from "@zowe/imperative";
 import { ProfilesCache } from "../profiles";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
 import { Types } from "../Types";
 import { Constants } from "../globals";
+import { ZoweVsCodeExtension } from "../vscode";
 export class KeytarApi {
     public constructor(protected log: imperative.Logger) {}
 
     // v1 specific
     public async activateKeytar(initialized: boolean): Promise<void> {
         const log = imperative.Logger.getAppLogger();
-        const profiles = new ProfilesCache(log, vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file")?.uri.fsPath);
+        const profiles = new ProfilesCache(log, ZoweVsCodeExtension.workspaceRootPath?.uri.fsPath);
         const isSecure = await profiles.isCredentialsSecured();
         if (isSecure) {
             let keytar: object;

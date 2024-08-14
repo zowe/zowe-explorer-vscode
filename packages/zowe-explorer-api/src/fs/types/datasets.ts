@@ -20,7 +20,7 @@ interface DsEntryProps {
 export class DsEntry extends FileEntry implements DsEntryProps {
     public metadata: DsEntryMetadata;
 
-    public constructor(name: string, public isMember: boolean) {
+    public constructor(name: string, public isMember: boolean = false) {
         super(name);
     }
 

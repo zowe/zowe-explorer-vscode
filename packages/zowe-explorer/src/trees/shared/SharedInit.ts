@@ -10,7 +10,17 @@
  */
 
 import * as vscode from "vscode";
-import { FileManagement, Gui, IZoweTree, IZoweTreeNode, Validation, ZosEncoding, ZoweScheme, imperative } from "@zowe/zowe-explorer-api";
+import {
+    FileManagement,
+    Gui,
+    IZoweTree,
+    IZoweTreeNode,
+    Validation,
+    ZosEncoding,
+    ZoweScheme,
+    ZoweVsCodeExtension,
+    imperative,
+} from "@zowe/zowe-explorer-api";
 import { SharedActions } from "./SharedActions";
 import { SharedHistoryView } from "./SharedHistoryView";
 import { SharedTreeProviders } from "./SharedTreeProviders";
@@ -298,7 +308,7 @@ export class SharedInit {
             vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(FileManagement.getZoweDir(), "{zowe.config,zowe.config.user}.json"))
         );
 
-        const workspacePath = vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file")?.uri.fsPath;
+        const workspacePath = ZoweVsCodeExtension.workspaceRootPath?.uri.fsPath;
         if (workspacePath) {
             watchers.push(vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(workspacePath, "{zowe.config,zowe.config.user}.json")));
         }

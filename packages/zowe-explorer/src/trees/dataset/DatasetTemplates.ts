@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { Gui, Types } from "@zowe/zowe-explorer-api";
+import { Gui, Types, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { Constants } from "../../configuration/Constants";
@@ -43,7 +43,7 @@ export class DataSetTemplates {
             });
             let userPick;
 
-            const workspacePath = vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file")?.uri.fsPath;
+            const workspacePath = ZoweVsCodeExtension.workspaceRootPath?.uri.fsPath;
             if (workspacePath) {
                 userPick = await this.promptForSaveLocation();
             }

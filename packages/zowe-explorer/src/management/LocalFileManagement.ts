@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as os from "os";
-import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../tools/ZoweLogger";
 
 export class LocalFileManagement {
@@ -19,7 +19,7 @@ export class LocalFileManagement {
     public static fileSelectedToCompare: boolean = false;
 
     public static getDefaultUri(): vscode.Uri {
-        return vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file")?.uri ?? vscode.Uri.file(os.homedir());
+        return ZoweVsCodeExtension.workspaceRootPath?.uri ?? vscode.Uri.file(os.homedir());
     }
 
     public static setCompareSelection(val: boolean): void {
