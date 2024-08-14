@@ -9,8 +9,7 @@
  *
  */
 
-export * from "./utils/TableBuilder";
-export * from "./utils/TableMediator";
-export * from "./TableView";
-export * from "./TableViewProvider";
-export * from "./WebView";
+import { render } from "preact";
+import { App } from "./App";
+
+render(<App />, document.getElementById("webviewRoot")!);

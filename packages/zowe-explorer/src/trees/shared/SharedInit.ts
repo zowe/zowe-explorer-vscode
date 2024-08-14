@@ -15,6 +15,7 @@ import {
     Gui,
     IZoweTree,
     IZoweTreeNode,
+    TableViewProvider,
     Validation,
     ZosEncoding,
     ZoweScheme,
@@ -90,6 +91,9 @@ export class SharedInit {
                 }
             })
         );
+
+        // Contribute the "Zowe Resources" view as a WebviewView panel in Zowe Explorer.
+        context.subscriptions.push(vscode.window.registerWebviewViewProvider("zowe-resources", TableViewProvider.getInstance()));
 
         // Webview for editing persistent items on Zowe Explorer
         context.subscriptions.push(

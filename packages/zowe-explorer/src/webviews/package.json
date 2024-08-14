@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "fresh-clone": "pnpm clean && rimraf node_modules",
     "clean": "rimraf dist || true",
-    "package": "echo \"webviews: nothing to package.\"",
+    "package": "node -e \"fs.accessSync(path.join(__dirname, 'dist'))\" && echo \"webviews: nothing to package.\" || pnpm build",
     "test": "echo \"webviews: nothing to test\"",
     "lint": "echo \"webviews: nothing to lint.\"",
     "lint:html": "echo \"webviews: nothing to lint.\"",
@@ -19,10 +19,14 @@
     "madge": "echo \"webviews: nothing to madge.\""
   },
   "dependencies": {
+    "@szhsin/react-menu": "^4.1.0",
     "@types/vscode-webview": "^1.57.1",
     "@vscode/webview-ui-toolkit": "^1.2.2",
+    "ag-grid-community": "^32.0.2",
+    "ag-grid-react": "^32.0.2",
     "lodash": "^4.17.21",
-    "preact": "^10.16.0"
+    "preact": "^10.16.0",
+    "preact-render-to-string": "^6.5.4"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.5.0",
