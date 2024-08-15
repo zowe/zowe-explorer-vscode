@@ -16,11 +16,10 @@ import { JobActions } from "./JobActions";
 import { ZoweJobNode } from "./ZoweJobNode";
 import { SharedUtils } from "../shared/SharedUtils";
 import { SharedContext } from "../shared/SharedContext";
+import { IJob } from "@zowe/zos-jobs-for-zowe-sdk";
 
 export class JobTableView {
     private static cachedChildren: IZoweJobTreeNode[];
-    private static table: Table.Instance;
-
     private static contextOptions: Record<string, Table.ContextMenuOpts> = {
         getJcl: {
             title: "Get JCL",
@@ -69,10 +68,7 @@ export class JobTableView {
             type: "primary",
         },
     };
-
-    private static async cacheChildren(sessionNode: IZoweJobTreeNode) {
-        this.cachedChildren = (await sessionNode.getChildren()).filter((child) => !SharedContext.isInformation(child));
-    }
+    private static table: Table.Instance;
 
     private static buildTitle(profileNode: IZoweJobTreeNode) {
         if (profileNode.searchId) {
@@ -86,28 +82,8 @@ export class JobTableView {
         return "Jobs";
     }
 
-    /**
-     * Action callback fired when selecting the "Get JCL" context-menu option.
-     * @param _view The table view (for use within the callback)
-     * @param data The selected job (row contents) to fetch the JCL for.
-     */
-    public static async getJcl(_view: Table.View, data: Table.RowInfo) {
-        const child = JobTableView.cachedChildren.find((c) => data.row.id === c.job?.jobid);
-        if (child != null) {
-            await JobActions.downloadJcl(child as ZoweJobNode);
-        }
-    }
-
-    /**
-     * Action callback fired when selecting the "Reveal in tree" context-menu option.
-     * @param _view The table view (for use within the callback)
-     * @param data The selected job (row contents) to reveal in the tree view.
-     */
-    public static async displayInTree(_view: Table.View, data: Table.RowInfo) {
-        const child = JobTableView.cachedChildren.find((c) => data.row.id === c.job?.jobid);
-        if (child) {
-            await SharedTreeProviders.job.getTreeView().reveal(child, { expand: true });
-        }
+    private static async cacheChildren(sessionNode: IZoweJobTreeNode) {
+        this.cachedChildren = (await sessionNode.getChildren()).filter((child) => !SharedContext.isInformation(child));
     }
 
     /**
@@ -117,7 +93,7 @@ export class JobTableView {
      */
     public static async cancelJobs(view: Table.View, data: Record<number, Table.RowData>): Promise<void> {
         const childrenToCancel = Object.values(data)
-            .map((row) => JobTableView.cachedChildren.find((c) => row.id === c.job?.jobid))
+            .map((row) => JobTableView.cachedChildren.find((c) => row.jobid === c.job?.jobid))
             .filter((child) => child);
         if (childrenToCancel.length > 0) {
             await JobActions.cancelJobs(SharedTreeProviders.job, childrenToCancel);
@@ -134,7 +110,7 @@ export class JobTableView {
      */
     public static async deleteJobs(view: Table.View, data: Record<number, Table.RowData>): Promise<void> {
         const childrenToDelete = Object.values(data)
-            .map((row) => JobTableView.cachedChildren.find((c) => row.id === c.job?.jobid))
+            .map((row) => JobTableView.cachedChildren.find((c) => row.jobid === c.job?.jobid))
             .filter((child) => child);
         if (childrenToDelete.length > 0) {
             const sessionNode = childrenToDelete[0].getSessionNode();
@@ -145,13 +121,25 @@ export class JobTableView {
     }
 
     /**
+     * Action callback fired when selecting the "Reveal in tree" context-menu option.
+     * @param _view The table view (for use within the callback)
+     * @param data The selected job (row contents) to reveal in the tree view.
+     */
+    public static async displayInTree(_view: Table.View, data: Table.RowInfo) {
+        const child = JobTableView.cachedChildren.find((c) => data.row.jobid === c.job?.jobid);
+        if (child) {
+            await SharedTreeProviders.job.getTreeView().reveal(child, { expand: true });
+        }
+    }
+
+    /**
      * "Download job" action callback for one or more jobs in the table.
      * @param view The table view, for use inside the callback
-     * @param data The selected job row(s) to download
+     * @param data The selected job row(s) to download spool files for
      */
     public static async downloadJobs(_view: Table.View, data: Record<number, Table.RowData>): Promise<void> {
         const childrenToDelete = Object.values(data)
-            .map((row) => JobTableView.cachedChildren.find((c) => row.id === c.job?.jobid))
+            .map((row) => JobTableView.cachedChildren.find((c) => row.jobid === c.job?.jobid))
             .filter((child) => child);
         if (childrenToDelete.length > 0) {
             await JobActions.downloadSpool(childrenToDelete);
@@ -159,40 +147,15 @@ export class JobTableView {
     }
 
     /**
-     * Command handler for the Jobs table view. Called when the action "Show as table" is selected on a Job session node.
-     *
-     * @param context The VS Code extension context (to provide to the table view)
-     * @param node The Job session node that was selected for the action
-     * @param nodeList (unused)
+     * Action callback fired when selecting the "Get JCL" context-menu option.
+     * @param _view The table view (for use within the callback)
+     * @param data The selected job (row contents) to fetch the JCL for.
      */
-    public static async handleCommand(context: ExtensionContext, node: IZoweJobTreeNode, nodeList: IZoweJobTreeNode[]): Promise<void> {
-        const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
-        if (selectedNodes.length !== 1) {
-            return;
+    public static async getJcl(_view: Table.View, data: Table.RowInfo) {
+        const child = JobTableView.cachedChildren.find((c) => data.row.jobid === c.job?.jobid);
+        if (child != null) {
+            await JobActions.downloadJcl(child as ZoweJobNode);
         }
-        if (!SharedContext.isSession(selectedNodes[0])) {
-            return;
-        }
-
-        await this.cacheChildren(selectedNodes[0]);
-        TableViewProvider.getInstance().setTableView(await JobTableView.generateTable(context, selectedNodes[0]));
-    }
-
-    private static jobPropertiesFor(item: IZoweJobTreeNode) {
-        return {
-            name: item.job.jobname,
-            class: item.job.class,
-            owner: item.job.owner,
-            id: item.job.jobid,
-            retcode: item.job.retcode,
-            status: item.job.status,
-            subsystem: item.job.subsystem,
-            type: item.job.type,
-            "job-correlator": item.job["job-correlator"],
-            phase: item.job.phase,
-            "phase-name": item.job["phase-name"],
-            "reason-not-running": item.job["reason-not-running"],
-        };
     }
 
     /**
@@ -218,7 +181,7 @@ export class JobTableView {
                 .columns(
                     ...[
                         {
-                            field: "name",
+                            field: "jobname",
                             headerName: "Name",
                             filter: true,
                             sort: "asc",
@@ -229,7 +192,7 @@ export class JobTableView {
                             filter: true,
                         },
                         { field: "owner", headerName: "Owner", filter: true },
-                        { field: "id", headerName: "ID", filter: true },
+                        { field: "jobid", headerName: "ID", filter: true },
                         { field: "retcode", headerName: "Return Code", filter: true },
                         { field: "status", headerName: "Status", filter: true },
                         { field: "subsystem", headerName: "Subsystem", filter: true },
@@ -250,5 +213,49 @@ export class JobTableView {
         }
 
         return this.table;
+    }
+
+    /**
+     * Command handler for the Jobs table view. Called when the action "Show as table" is selected on a Job session node.
+     *
+     * @param context The VS Code extension context (to provide to the table view)
+     * @param node The Job session node that was selected for the action
+     * @param nodeList Passed to `SharedUtils.getSelectedNodeList` to get final list of selected nodes
+     */
+    public static async handleCommand(context: ExtensionContext, node: IZoweJobTreeNode, nodeList: IZoweJobTreeNode[]): Promise<void> {
+        const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
+        if (selectedNodes.length !== 1) {
+            return;
+        }
+        if (!SharedContext.isSession(selectedNodes[0])) {
+            return;
+        }
+
+        await this.cacheChildren(selectedNodes[0]);
+        TableViewProvider.getInstance().setTableView(await JobTableView.generateTable(context, selectedNodes[0]));
+    }
+
+    /**
+     * Helper function to obtain all renderable properties from a job node.
+     * @param item The job node to get the properties from
+     * @returns A subset of the `IJob` object, containing renderable properties only
+     */
+    private static jobPropertiesFor(item: IZoweJobTreeNode): Omit<IJob, "step-data"> {
+        return {
+            jobname: item.job.jobname,
+            class: item.job.class,
+            owner: item.job.owner,
+            jobid: item.job.jobid,
+            retcode: item.job.retcode,
+            status: item.job.status,
+            subsystem: item.job.subsystem,
+            type: item.job.type,
+            url: item.job.url,
+            "files-url": item.job["files-url"],
+            "job-correlator": item.job["job-correlator"],
+            phase: item.job.phase,
+            "phase-name": item.job["phase-name"],
+            "reason-not-running": item.job["reason-not-running"],
+        };
     }
 }
