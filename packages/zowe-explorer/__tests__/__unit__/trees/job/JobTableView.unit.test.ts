@@ -62,6 +62,11 @@ describe("JobTableView unit tests", () => {
     });
 
     describe("cancelJobs", () => {
+        it("callback condition on row action works as expected", () => {
+            expect((JobTableView as any).rowActions.cancelJob.condition([{ status: "ACTIVE" }, { status: "ACTIVE" }])).toBe(true);
+            expect((JobTableView as any).rowActions.cancelJob.condition([{ status: "ACTIVE" }, { status: "ABEND S222" }])).toBe(false);
+        });
+
         it("calls JobActions.cancelJobs for each selected job", async () => {
             const blockMocks = getBlockMocks();
             const cancelJobsMock = jest.spyOn(JobActions, "cancelJobs").mockImplementation();
@@ -156,6 +161,26 @@ describe("JobTableView unit tests", () => {
             getChildrenMock.mockRestore();
             generateTableMock.mockRestore();
             setTableViewMock.mockRestore();
+        });
+        it("returns early if invalid number of nodes are provided", async () => {
+            const blockMocks = getBlockMocks();
+            const getChildrenSpy = jest.spyOn(blockMocks.sessionNode, "getChildren");
+            const generateTableSpy = jest.spyOn(JobTableView as any, "generateTable");
+            const setTableViewSpy = jest.spyOn(TableViewProvider.prototype, "setTableView");
+            await JobTableView.handleCommand({} as any, blockMocks.sessionNode, []);
+            expect(getChildrenSpy).not.toHaveBeenCalled();
+            expect(generateTableSpy).not.toHaveBeenCalled();
+            expect(setTableViewSpy).not.toHaveBeenCalled();
+        });
+        it("returns early if a non-session node is provided", async () => {
+            const blockMocks = getBlockMocks();
+            const getChildrenSpy = jest.spyOn(blockMocks.sessionNode, "getChildren");
+            const generateTableSpy = jest.spyOn(JobTableView as any, "generateTable");
+            const setTableViewSpy = jest.spyOn(TableViewProvider.prototype, "setTableView");
+            await JobTableView.handleCommand({} as any, blockMocks.jobNode, undefined as any);
+            expect(getChildrenSpy).not.toHaveBeenCalled();
+            expect(generateTableSpy).not.toHaveBeenCalled();
+            expect(setTableViewSpy).not.toHaveBeenCalled();
         });
     });
 
