@@ -177,7 +177,7 @@ export class JobTableView {
                 })
                 .isView()
                 .title(this.buildTitle(profileNode))
-                .rows(...JobTableView.cachedChildren.filter((c) => c.label !== l10n.t("No jobs found")).map((item) => this.jobPropertiesFor(item)))
+                .rows(...JobTableView.cachedChildren.map((item) => this.jobPropertiesFor(item)))
                 .columns(
                     ...[
                         {

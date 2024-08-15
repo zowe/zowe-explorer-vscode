@@ -14,6 +14,8 @@ import { JobTableView } from "../../../../src/trees/job/JobTableView";
 import { createJobNode, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
 import { Table, TableViewProvider } from "@zowe/zowe-explorer-api";
+import { MockedProperty } from "../../../__mocks__/mockUtils";
+import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 
 describe("JobTableView unit tests", () => {
     afterEach(() => {
@@ -99,6 +101,22 @@ describe("JobTableView unit tests", () => {
             expect(cacheChildrenMock).toHaveBeenCalled();
             cacheChildrenMock.mockRestore();
             deleteCommandMock.mockRestore();
+        });
+    });
+
+    describe("displayInTree", () => {
+        it("calls SharedTreeProviders.job.getTreeView().reveal for a selected job", async () => {
+            const blockMocks = getBlockMocks();
+            const reveal = jest.fn();
+            const sharedTreeProvidersMock = new MockedProperty(SharedTreeProviders, "job", {
+                get: () => ({ getTreeView: () => ({ reveal } as any) } as any),
+            });
+            (JobTableView as any).cachedChildren = [blockMocks.jobNode];
+            await JobTableView.displayInTree({} as any, {
+                row: { jobid: blockMocks.jobNode.job.jobid },
+            });
+            expect(reveal).toHaveBeenCalled();
+            sharedTreeProvidersMock[Symbol.dispose]();
         });
     });
 

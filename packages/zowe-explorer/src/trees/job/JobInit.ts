@@ -151,6 +151,9 @@ export class JobInit {
         );
         context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.copyName", async (job: IZoweJobTreeNode) => JobActions.copyName(job)));
         context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.jobs.tabularView", async (node, nodeList) => JobTableView.handleCommand(context, node, nodeList))
+        );
+        context.subscriptions.push(
             vscode.workspace.onDidOpenTextDocument((doc) => {
                 if (doc.uri.scheme !== ZoweScheme.Jobs) {
                     return;
@@ -158,9 +161,6 @@ export class JobInit {
 
                 JobFSProvider.instance.cacheOpenedUri(doc.uri);
             })
-        );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.jobs.tabularView", async (node, nodeList) => JobTableView.handleCommand(context, node, nodeList))
         );
         SharedInit.initSubscribers(context, jobsProvider);
         return jobsProvider;
