@@ -325,17 +325,17 @@ export class ProfilesCache {
     public async fetchBaseProfile(profileName?: string): Promise<imperative.IProfileLoaded | undefined> {
         const mProfileInfo = await this.getProfileInfo();
         const baseProfileAttrs = mProfileInfo.getDefaultProfile("base");
-        const configApi = mProfileInfo.getTeamConfig().api;
+        const config = mProfileInfo.getTeamConfig();
         if (
             profileName?.includes(".") &&
-            (baseProfileAttrs == null || !configApi.secure.securePropsForProfile(baseProfileAttrs.profName).includes("tokenValue"))
+            (baseProfileAttrs == null || !config.api.secure.securePropsForProfile(baseProfileAttrs.profName).includes("tokenValue"))
         ) {
             // Retrieve parent typeless profile as base profile if:
             // (1) The active profile name is nested (contains a period) AND
             // (2) No default base profile was found OR
             //     Default base profile does not have tokenValue in secure array
-            const parentProfile = profileName.slice(0, profileName.lastIndexOf("."));
-            return this.getProfileLoaded(parentProfile, "base", configApi.profiles.get(parentProfile));
+            const parentProfile = this.getParentProfileForToken(profileName, config);
+            return this.getProfileLoaded(parentProfile, "base", config.api.profiles.get(parentProfile));
         } else if (baseProfileAttrs == null) {
             return undefined;
         }
@@ -414,6 +414,20 @@ export class ProfilesCache {
         const externalTypeArray: string[] = Array.from(this.allExternalTypes);
         const allTypes = registeredTypes.concat(externalTypeArray.filter((exType) => registeredTypes.every((type) => type !== exType)));
         return allTypes;
+    }
+
+    private getParentProfileForToken(profileName: string, config: imperative.Config): string {
+        const secureProps = config.api.secure.secureFields();
+        let parentProfile = profileName.slice(0, profileName.lastIndexOf("."));
+        let tempProfile = profileName;
+        while (tempProfile.includes(".")) {
+            tempProfile = tempProfile.slice(0, tempProfile.lastIndexOf("."));
+            if (secureProps.includes(`${config.api.profiles.getProfilePathFromName(tempProfile)}.properties.tokenValue`)) {
+                parentProfile = tempProfile;
+                break;
+            }
+        }
+        return parentProfile;
     }
 
     private shouldRemoveTokenFromProfile(profile: imperative.IProfileLoaded, baseProfile: imperative.IProfileLoaded): boolean {

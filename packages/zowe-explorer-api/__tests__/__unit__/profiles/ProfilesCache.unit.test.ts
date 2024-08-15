@@ -86,8 +86,14 @@ const profileMetadata: imperative.ICommandProfileTypeConfiguration[] = [
 function createProfInfoMock(profiles: Partial<imperative.IProfileLoaded>[]): imperative.ProfileInfo {
     const teamConfigApi: Partial<imperative.Config> = {
         api: {
-            profiles: { get: jest.fn() },
-            secure: { securePropsForProfile: jest.fn().mockReturnValue([]) },
+            profiles: {
+                get: jest.fn(),
+                getProfilePathFromName: jest.fn().mockImplementation((x) => x),
+            },
+            secure: {
+                secureFields: jest.fn().mockReturnValue([]),
+                securePropsForProfile: jest.fn().mockReturnValue([]),
+            },
         } as any,
         exists: true,
     };
@@ -566,6 +572,15 @@ describe("ProfilesCache", () => {
         mocked(profInfoMock.getTeamConfig().api.secure.securePropsForProfile).mockReturnValue(["tokenValue"]);
         const profile = await profCache.fetchBaseProfile("lpar1.zosmf");
         expect(profile).toMatchObject(baseProfile);
+    });
+
+    it("fetchBaseProfile should return typeless profile up one level if it contains token value", async () => {
+        const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+        const profInfoMock = createProfInfoMock([]);
+        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(profInfoMock);
+        mocked(profInfoMock.getTeamConfig().api.secure.secureFields).mockReturnValue(["sysplex1.properties.tokenValue"]);
+        const profile = await profCache.fetchBaseProfile("sysplex1.lpar1.zosmf");
+        expect(profile).toMatchObject({ name: "sysplex1", type: "base" });
     });
 
     it("fetchBaseProfile should return undefined if base profile not found", async () => {
