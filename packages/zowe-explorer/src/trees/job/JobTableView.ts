@@ -11,7 +11,7 @@
 
 import { IZoweJobTreeNode, Table, TableBuilder, TableViewProvider } from "@zowe/zowe-explorer-api";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
-import { ExtensionContext, l10n } from "vscode";
+import { ExtensionContext } from "vscode";
 import { JobActions } from "./JobActions";
 import { ZoweJobNode } from "./ZoweJobNode";
 import { SharedUtils } from "../shared/SharedUtils";
