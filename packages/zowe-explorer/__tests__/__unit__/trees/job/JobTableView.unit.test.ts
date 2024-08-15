@@ -11,9 +11,9 @@
 
 import { JobActions } from "../../../../src/trees/job/JobActions";
 import { JobTableView } from "../../../../src/trees/job/JobTableView";
-import { createJobNode, createJobSessionNode, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
+import { createJobNode, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
-import { TableViewProvider } from "@zowe/zowe-explorer-api";
+import { Table, TableViewProvider } from "@zowe/zowe-explorer-api";
 
 describe("JobTableView unit tests", () => {
     afterEach(() => {
@@ -107,6 +107,26 @@ describe("JobTableView unit tests", () => {
             });
             expect(downloadSpoolMock).toHaveBeenCalled();
             downloadSpoolMock.mockRestore();
+        });
+    });
+
+    describe("generateTable", () => {
+        it("creates a new table if one did not already exist", async () => {
+            const blockMocks = getBlockMocks();
+            await expect((JobTableView as any).generateTable({ extensionPath: "/a/b/c/" } as any, blockMocks.sessionNode)).resolves.toBeInstanceOf(
+                Table.Instance
+            );
+        });
+
+        it("updates an existing table if it exists", async () => {
+            const blockMocks = getBlockMocks();
+            const setTitleMock = jest.spyOn(Table.View.prototype, "setTitle").mockImplementation();
+            const setContentMock = jest.spyOn(Table.View.prototype, "setContent").mockImplementation();
+            await expect((JobTableView as any).generateTable({ extensionPath: "/a/b/c/" } as any, blockMocks.sessionNode)).resolves.toBeInstanceOf(
+                Table.Instance
+            );
+            expect(setContentMock).toHaveBeenCalled();
+            expect(setTitleMock).toHaveBeenCalled();
         });
     });
 

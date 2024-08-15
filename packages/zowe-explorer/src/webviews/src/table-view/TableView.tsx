@@ -17,8 +17,8 @@ import { CheckboxSelectionCallbackParams, HeaderCheckboxSelectionCallbackParams 
 const vscodeApi = acquireVsCodeApi();
 
 function isFirstColumn(params: CheckboxSelectionCallbackParams | HeaderCheckboxSelectionCallbackParams) {
-  var displayedColumns = params.api.getAllDisplayedColumns();
-  var thisIsFirstColumn = displayedColumns[0] === params.column;
+  const displayedColumns = params.api.getAllDisplayedColumns();
+  const thisIsFirstColumn = displayedColumns[0] === params.column;
   return thisIsFirstColumn;
 }
 
@@ -116,22 +116,20 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
   );
 
   return (
-    <>
-      <div className={`${theme} ag-theme-vsc ${contextMenu.open ? "ctx-menu-open" : ""}`}>
-        {contextMenu.component}
-        <ActionsBar
-          actions={tableData?.actions.all ?? []}
-          columns={tableData?.columns?.map((c) => c.headerName ?? c.field) ?? []}
-          gridRef={gridRef}
-          itemCount={tableData?.rows?.length ?? 0}
-          title={tableData?.title ?? ""}
-          selectionCount={selectionCount}
-          visibleColumns={visibleColumns}
-          setVisibleColumns={setVisibleColumns}
-          vscodeApi={vscodeApi}
-        />
-        {tableData ? <AgGridReact {...tableProps(contextMenu, setSelectionCount, tableData, vscodeApi)} ref={gridRef} /> : null}
-      </div>
-    </>
+    <div className={`${theme} ag-theme-vsc ${contextMenu.open ? "ctx-menu-open" : ""}`}>
+      {contextMenu.component}
+      <ActionsBar
+        actions={tableData?.actions.all ?? []}
+        columns={tableData?.columns?.map((c) => c.headerName ?? c.field) ?? []}
+        gridRef={gridRef}
+        itemCount={tableData?.rows?.length ?? 0}
+        title={tableData?.title ?? ""}
+        selectionCount={selectionCount}
+        visibleColumns={visibleColumns}
+        setVisibleColumns={setVisibleColumns}
+        vscodeApi={vscodeApi}
+      />
+      {tableData ? <AgGridReact {...tableProps(contextMenu, setSelectionCount, tableData, vscodeApi)} ref={gridRef} /> : null}
+    </div>
   );
 };
