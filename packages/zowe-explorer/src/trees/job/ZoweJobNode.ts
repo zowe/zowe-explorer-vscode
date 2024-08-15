@@ -175,6 +175,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 );
                 if (existing) {
                     existing.tooltip = existing.label = newLabel;
+                    (existing as ZoweSpoolNode).spool = spool;
                     elementChildren[newLabel] = existing;
                 } else {
                     const spoolNode = new ZoweSpoolNode({
@@ -237,13 +238,13 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 if (existing) {
                     // If matched, update the label to reflect latest retcode/status
                     existing.tooltip = existing.label = nodeTitle;
+                    existing.job = job;
                     elementChildren[nodeTitle] = existing;
                 } else {
                     const jobNode = new ZoweJobNode({
                         label: nodeTitle,
                         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                         parentNode: this,
-                        session: this.session,
                         profile: this.getProfile(),
                         job,
                     });

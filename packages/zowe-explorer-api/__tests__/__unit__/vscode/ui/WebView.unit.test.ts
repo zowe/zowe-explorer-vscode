@@ -44,12 +44,9 @@ describe("WebView unit tests", () => {
         const createWebviewPanelSpy = jest.spyOn(vscode.window, "createWebviewPanel");
         const renderSpy = jest.spyOn(Mustache, "render");
 
-        const testView = new WebView(
-            "Test Webview Title",
-            "example-folder",
-            { extensionPath: "test/path" } as vscode.ExtensionContext,
-            async (_message: any) => {}
-        );
+        const testView = new WebView("Test Webview Title", "example-folder", { extensionPath: "test/path" } as vscode.ExtensionContext, {
+            onDidReceiveMessage: async (_message: any) => {},
+        });
         expect(createWebviewPanelSpy).toHaveBeenCalled();
         expect(renderSpy).toHaveBeenCalled();
         (testView as any).dispose();
@@ -57,12 +54,9 @@ describe("WebView unit tests", () => {
     });
 
     it("returns HTML content from WebView", () => {
-        const testView = new WebView(
-            "Test Webview Title",
-            "example-folder",
-            { extensionPath: "test/path" } as vscode.ExtensionContext,
-            async (_message: any) => {}
-        );
+        const testView = new WebView("Test Webview Title", "example-folder", { extensionPath: "test/path" } as vscode.ExtensionContext, {
+            onDidReceiveMessage: async (_message: any) => {},
+        });
         expect(testView.htmlContent).toBe(testView.panel.webview.html);
     });
 });

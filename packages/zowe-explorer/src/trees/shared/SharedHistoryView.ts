@@ -25,7 +25,10 @@ export class SharedHistoryView extends WebView {
 
     public constructor(context: ExtensionContext, treeProviders: Definitions.IZoweProviders) {
         const label = "Edit History";
-        super(label, "edit-history", context, (message: object) => this.onDidReceiveMessage(message), true);
+        super(label, "edit-history", context, {
+            onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
+            retainContext: true,
+        });
         this.treeProviders = treeProviders;
         this.currentSelection = { ds: "search", uss: "search", jobs: "search" };
     }

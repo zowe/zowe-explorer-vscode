@@ -421,7 +421,7 @@ export class JobActions {
 
         const failedJobs: { job: zosjobs.IJob; error: string }[] = [];
         // Build list of common sessions from node selection
-        const sessionNodes = [];
+        const sessionNodes = new Set<IZoweJobTreeNode>();
         for (const jobNode of nodes) {
             if (!jobNode.job) {
                 continue;
@@ -444,11 +444,8 @@ export class JobActions {
                 const cancelled = await jesApis[sesLabel].cancelJob(jobNode.job);
                 if (!cancelled) {
                     failedJobs.push({ job: jobNode.job, error: vscode.l10n.t("The job was not cancelled.") });
-                } else if (!sessionNodes.includes(sesNode)) {
-                    setImmediate(() => {
-                        jobsProvider.refreshElement(sesNode);
-                    });
-                    sessionNodes.push(sesNode);
+                } else {
+                    sessionNodes.add(sesNode);
                 }
             } catch (err) {
                 if (err instanceof Error) {
@@ -457,9 +454,19 @@ export class JobActions {
             }
         }
 
+        for (const session of sessionNodes) {
+            session.dirty = true;
+            await session.getChildren();
+            jobsProvider.refreshElement(session);
+        }
+
+        // `await`ing the following Gui methods causes unwanted side effects for other features (such as the jobs table view):
+        //   * code execution stops before function returns (unexpected, undefined behavior)
+        //   * before, we used `setImmediate` to delay updates to the jobs tree (to avoid desync), but removing the `await`s resolves the desync.
+        //   * we do not expect the user to respond to these toasts, so we do not need to wait for their promises to be resolved.
         if (failedJobs.length > 0) {
             // Display any errors from the API
-            await Gui.warningMessage(
+            Gui.warningMessage(
                 vscode.l10n.t({
                     message: "One or more jobs failed to cancel: {0}",
                     args: [failedJobs.reduce((prev, j) => prev.concat(`\n${j.job.jobname}(${j.job.jobid}): ${j.error}`), "\n")],
@@ -470,7 +477,7 @@ export class JobActions {
                 }
             );
         } else {
-            await Gui.showMessage(vscode.l10n.t("Cancelled selected jobs successfully."));
+            Gui.showMessage(vscode.l10n.t("Cancelled selected jobs successfully."));
         }
     }
     public static async sortJobs(session: IZoweJobTreeNode, jobsProvider: JobTree): Promise<void> {
