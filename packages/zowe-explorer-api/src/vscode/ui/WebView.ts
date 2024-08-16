@@ -73,7 +73,7 @@ export class WebView {
 
         this.webviewOpts = opts;
 
-        const codiconPath = joinPath(context.extensionPath, "src", "webviews", "node_modules", "@vscode/codicons", "dist", "codicon.css");
+        const codiconPath = joinPath(context.extensionPath, "src", "webviews", "dist", "codicons", "codicon.css");
         const cssPath = joinPath(context.extensionPath, "src", "webviews", "dist", "style", "style.css");
         const codiconsExists = fs.existsSync(codiconPath);
         const cssExists = fs.existsSync(cssPath);

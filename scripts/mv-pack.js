@@ -12,7 +12,6 @@
 const childProcess = require("child_process");
 const fs = require("fs");
 const path = require("path");
-const Zip = require("adm-zip");
 const packageName = process.argv[2];
 const extension = process.argv[3];
 const fullPackageName = `${packageName}-${process.env.npm_package_version}.${extension}`;
@@ -23,13 +22,4 @@ if (targetPath.includes("-SNAPSHOT") && process.env.GITHUB_REF_PROTECTED !== "tr
     targetPath = targetPath.replace("-SNAPSHOT", gitSha ? `-${gitBranch}.${gitSha}` : `-${gitBranch}`);
 }
 fs.renameSync(fullPackageName, targetPath);
-if (packageName === "vscode-extension-for-zowe") {
-    console.log("[Zowe Explorer] injecting @vscode/codicons webview dependency into VSIX...");
-    const codiconsPath = path.resolve("..", "..", "node_modules", "@vscode", "codicons", "dist");
-    if (fs.existsSync(codiconsPath)) {
-        const vsix = new Zip(targetPath);
-        vsix.addLocalFolder(codiconsPath, "extension/src/webviews/node_modules/@vscode/codicons/dist");
-        vsix.writeZip(targetPath);
-    }
-}
 console.log(`Published package to ${targetPath}.`);

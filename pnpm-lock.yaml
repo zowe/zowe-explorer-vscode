@@ -42,9 +42,6 @@ importers:
       '@vscode/vsce':
         specifier: ^2.26.0
         version: 2.26.1
-      adm-zip:
-        specifier: ^0.5.15
-        version: 0.5.15
       concurrently:
         specifier: ^6.5.1
         version: 6.5.1
@@ -376,6 +373,9 @@ importers:
       vite-plugin-checker:
         specifier: ^0.6.4
         version: 0.6.4(eslint@8.57.0)(typescript@5.4.5)(vite@4.5.3)
+      vite-plugin-static-copy:
+        specifier: ^0.17.1
+        version: 0.17.1(vite@4.5.3)
 
 packages:
 
@@ -3823,11 +3823,6 @@ packages:
     resolution: {integrity: sha512-Y9rRfJG5jcKOE0CLisYbojUjIrIEE7AGMzA/Sm4BslANhbS+cDMpgBdcPT91oJ7OuJ9hYJBx59RjbhxVnrF8Xg==}
     engines: {node: '>=0.4.0'}
     hasBin: true
-    dev: true
-
-  /adm-zip@0.5.15:
-    resolution: {integrity: sha512-jYPWSeOA8EFoZnucrKCNihqBjoEGQSU4HKgHYQgKNEQ0pQF9a/DYuo/+fAxY76k4qe75LUlLWpAM1QWcBMTOKw==}
-    engines: {node: '>=12.0'}
     dev: true
 
   /ag-charts-types@10.0.2:
@@ -13042,6 +13037,19 @@ packages:
       vscode-languageserver: 7.0.0
       vscode-languageserver-textdocument: 1.0.11
       vscode-uri: 3.0.8
+    dev: true
+
+  /vite-plugin-static-copy@0.17.1(vite@4.5.3):
+    resolution: {integrity: sha512-9h3iaVs0bqnqZOM5YHJXGHqdC5VAVlTZ2ARYsuNpzhEJUHmFqXY7dAK4ZFpjEQ4WLFKcaN8yWbczr81n01U4sQ==}
+    engines: {node: ^14.18.0 || >=16.0.0}
+    peerDependencies:
+      vite: ^3.0.0 || ^4.0.0 || ^5.0.0
+    dependencies:
+      chokidar: 3.6.0
+      fast-glob: 3.3.2
+      fs-extra: 11.2.0
+      picocolors: 1.0.1
+      vite: 4.5.3(@types/node@18.19.33)
     dev: true
 
   /vite@4.5.3(@types/node@18.19.33):
