@@ -36,8 +36,8 @@ parserOptions:
   ecmaVersion: 6
   sourceType: module
   project:
-    - "./packages/**/tsconfig.json"
-    - "./packages/**/tsconfig-tests.json"
+    - "**/tsconfig.json"
+    - "**/tsconfig-tests.json"
 plugins:
   - "@typescript-eslint"
   - zowe-explorer
