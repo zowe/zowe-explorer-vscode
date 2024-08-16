@@ -98,8 +98,8 @@ export class JobTableView {
         if (childrenToCancel.length > 0) {
             await JobActions.cancelJobs(SharedTreeProviders.job, childrenToCancel);
             const profNode = childrenToCancel[0].getSessionNode();
-            await this.cacheChildren(profNode);
-            await view.setContent(JobTableView.cachedChildren.map((item) => this.jobPropertiesFor(item)));
+            await JobTableView.cacheChildren(profNode);
+            await view.setContent(JobTableView.cachedChildren.map((item) => JobTableView.jobPropertiesFor(item)));
         }
     }
 
@@ -115,8 +115,8 @@ export class JobTableView {
         if (childrenToDelete.length > 0) {
             const sessionNode = childrenToDelete[0].getSessionNode();
             await JobActions.deleteCommand(SharedTreeProviders.job, undefined, childrenToDelete);
-            await this.cacheChildren(sessionNode);
-            await view.setContent(JobTableView.cachedChildren.map((item: IZoweJobTreeNode) => this.jobPropertiesFor(item)));
+            await JobTableView.cacheChildren(sessionNode);
+            await view.setContent(JobTableView.cachedChildren.map((item: IZoweJobTreeNode) => JobTableView.jobPropertiesFor(item)));
         }
     }
 
