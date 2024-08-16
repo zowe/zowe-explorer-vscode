@@ -39,7 +39,7 @@ describe("ZoweCommandProvider Unit Tests", () => {
     });
 });
 
-describe("ZoweCommandProvide Unit Tests - function checkCurrentProfile", () => {
+describe("ZoweCommandProvider Unit Tests - function checkCurrentProfile", () => {
     const testNode: any = new ZoweDatasetNode({
         label: "test",
         collapsibleState: vscode.TreeItemCollapsibleState.None,

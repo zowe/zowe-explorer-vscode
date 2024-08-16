@@ -28,7 +28,7 @@ import {
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager } from "../../__mocks__/mockCreators/profiles";
-import { imperative, Gui, ProfilesCache, ZoweTreeNode, ZoweVsCodeExtension, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { imperative, Gui, ZoweTreeNode, ZoweVsCodeExtension, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
@@ -88,7 +88,6 @@ function createGlobalMocks(): { [key: string]: any } {
             port: 143,
         },
         mockProfileInstance: null as any as Profiles,
-        mockProfilesCache: null as any as ProfilesCache,
         mockConfigInstance: createConfigInstance(),
         mockConfigLoad: null as any as typeof imperative.Config,
         FileSystemProvider: {
@@ -100,7 +99,6 @@ function createGlobalMocks(): { [key: string]: any } {
     jest.spyOn(JobFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
 
-    newMocks.mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
     newMocks.withProgress = jest.fn().mockImplementation((_progLocation, _callback) => {
         return newMocks.mockCallback;
     });
@@ -206,6 +204,48 @@ afterEach(() => {
     jest.clearAllMocks();
 });
 
+describe("Profiles Unit Tests - Function getProfileInfo", () => {
+    const zoweDir = jest.requireActual("@zowe/imperative").ConfigUtils.getZoweDir();
+
+    beforeAll(() => {
+        // Disable Imperative mock to use real Config API
+        jest.dontMock("@zowe/imperative");
+    });
+
+    beforeEach(() => {
+        // Reset module cache and re-require the Profiles API in each test
+        // below. This ensures that the tests cover static properties defined
+        // at import time in the zowe-explorer-api package.
+        jest.resetModules();
+    });
+
+    afterAll(() => {
+        jest.restoreAllMocks();
+    });
+
+    it("should load profiles from both home directory and current directory", async () => {
+        const { ProfilesCache, ...zeApi } = await import("@zowe/zowe-explorer-api");
+        Object.defineProperty(zeApi.imperative.ProfileCredentials.prototype, "isSecured", { get: () => false });
+        const profilesCache = new ProfilesCache(imperative.Logger.getAppLogger(), __dirname);
+        const config = (await profilesCache.getProfileInfo()).getTeamConfig();
+        expect(config.layers[0].path).toContain(__dirname);
+        expect(config.layers[1].path).toContain(__dirname);
+        expect(config.layers[2].path).toContain(zoweDir);
+        expect(config.layers[3].path).toContain(zoweDir);
+        expect(config.layers.map((layer) => layer.exists)).toEqual([true, true, true, true]);
+    });
+
+    it("should not load project profiles from same directory as global profiles", async () => {
+        const { ProfilesCache, ...zeApi } = await import("@zowe/zowe-explorer-api");
+        Object.defineProperty(zeApi.imperative.ProfileCredentials.prototype, "isSecured", { get: () => false });
+        const profilesCache = new ProfilesCache(imperative.Logger.getAppLogger(), zoweDir);
+        const config = (await profilesCache.getProfileInfo()).getTeamConfig();
+        expect(config.layers[0].path).not.toContain(zoweDir);
+        expect(config.layers[1].path).not.toContain(zoweDir);
+        expect(config.layers.map((layer) => layer.exists)).toEqual([true, true, true, true]);
+    });
+});
+
 describe("Profiles Unit Test - Function createInstance", () => {
     const mockWorkspaceFolders = jest.fn();
 
@@ -220,6 +260,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
             });
             return originalVscodeMock;
         });
+        jest.doMock("@zowe/imperative");
     });
 
     beforeEach(() => {
