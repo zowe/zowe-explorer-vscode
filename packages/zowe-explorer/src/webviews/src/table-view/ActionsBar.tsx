@@ -105,6 +105,7 @@ export const ActionsBar = ({
           })
           .map((action, i) => (
             <VSCodeButton
+              disabled={selectionCount === 0}
               key={`${action.command}-action-bar-${i}`}
               appearance={action.type}
               style={{ fontWeight: "bold", marginTop: "3px", marginRight: "0.25em" }}

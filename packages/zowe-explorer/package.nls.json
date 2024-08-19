@@ -117,7 +117,7 @@
   "showFileErrorDetails": "Show Error Details",
   "jobs.refreshJob": "Refresh Job",
   "jobs.refreshSpool": "Pull from Mainframe",
-  "jobsTableView": "Show as table",
+  "jobsTableView": "Show as Table",
   "manualPoll": "Poll Content in Active Editor",
   "downloadSingleSpool": "Download",
   "downloadSingleSpoolBinary": "Download (Binary)",

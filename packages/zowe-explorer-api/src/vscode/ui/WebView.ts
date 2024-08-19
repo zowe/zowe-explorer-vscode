@@ -145,6 +145,7 @@ export class WebView {
         webviewView.onDidDispose(() => this.dispose(), null, this.disposables);
         webviewView.webview.html = this.webviewContent;
         this.view = webviewView;
+        this.view.show();
     }
 
     /**
