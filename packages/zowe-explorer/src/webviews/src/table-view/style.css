@@ -2,9 +2,12 @@ html {
     scrollbar-color: unset;
 }
 
-.ag-theme-vsc {
-    height: 88vh;
+.table-view {
     margin-top: 1em;
+    height: 88vh;
+}
+
+.ag-theme-vsc {
     --ag-icon-font-family: "agGridQuartz";
     --ag-row-hover-color: var(--vscode-list-hoverBackground);
     --ag-range-selection-background-color: var(--vscode-list-activeSelectionBackground);
@@ -20,13 +23,13 @@ html {
 }
 
 @media (max-height: 480px) {
-    .ag-theme-vsc {
+    .table-view {
         height: 78vh;
     }
 }
 
 @media (max-height: 300px) {
-    .ag-theme-vsc {
+    .table-view {
         height: 68vh;
     }
 }

@@ -116,7 +116,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
   );
 
   return (
-    <div className={`${theme} ag-theme-vsc ${contextMenu.open ? "ctx-menu-open" : ""}`}>
+    <div className={`table-view ${theme} ag-theme-vsc ${contextMenu.open ? "ctx-menu-open" : ""}`}>
       {contextMenu.component}
       <ActionsBar
         actions={tableData?.actions.all ?? []}
