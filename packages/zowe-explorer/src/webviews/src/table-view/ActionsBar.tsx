@@ -92,44 +92,44 @@ export const ActionsBar = ({
         </p>
         {actions
           .filter((action) => (itemCount > 1 ? action.callback.typ === "multi-row" : action.callback.typ.endsWith("row")))
-          .filter((item) => {
-            if (item.condition == null || gridRef.current?.api == null) {
-              return true;
+          .map((action, i) => {
+            // Wrap function to properly handle named parameters
+            const selectedRows = gridRef.current?.api?.getSelectedRows() ?? 0;
+            const cond = action.condition ? new Function(wrapFn(action.condition)) : undefined;
+            // Invoke the wrapped function once to get the built function, then invoke it again with the parameters
+            let shouldDisable = selectionCount === 0;
+            if (cond != null) {
+              shouldDisable ||= !cond()(action.callback.typ === "multi-row" ? selectedRows : selectedRows[0]);
             }
 
-            const selectedRows = gridRef.current.api.getSelectedRows();
-            // Wrap function to properly handle named parameters
-            const cond = new Function(wrapFn(item.condition));
-            // Invoke the wrapped function once to get the built function, then invoke it again with the parameters
-            return cond()(item.callback.typ === "multi-row" ? selectedRows : selectedRows[0]);
-          })
-          .map((action, i) => (
-            <VSCodeButton
-              disabled={selectionCount === 0}
-              key={`${action.command}-action-bar-${i}`}
-              appearance={action.type}
-              style={{ fontWeight: "bold", marginTop: "3px", marginRight: "0.25em" }}
-              onClick={(_event: any) => {
-                const selectedRows = (gridRef.current.api as GridApi).getSelectedNodes();
-                if (selectedRows.length === 0) {
-                  return;
-                }
+            return (
+              <VSCodeButton
+                disabled={shouldDisable}
+                key={`${action.command}-action-bar-${i}`}
+                appearance={action.type}
+                style={{ fontWeight: "bold", marginTop: "3px", marginRight: "0.25em" }}
+                onClick={(_event: any) => {
+                  const selectedNodes = (gridRef.current.api as GridApi).getSelectedNodes();
+                  if (selectedNodes.length === 0) {
+                    return;
+                  }
 
-                vscodeApi.postMessage({
-                  command: action.command,
-                  data: {
-                    row: action.callback.typ === "single-row" ? selectedRows[0].data : undefined,
-                    rows:
-                      action.callback.typ === "multi-row"
-                        ? selectedRows.reduce((all, row) => ({ ...all, [row.rowIndex!]: row.data }), {})
-                        : undefined,
-                  },
-                });
-              }}
-            >
-              {action.title}
-            </VSCodeButton>
-          ))}
+                  vscodeApi.postMessage({
+                    command: action.command,
+                    data: {
+                      row: action.callback.typ === "single-row" ? selectedNodes[0].data : undefined,
+                      rows:
+                        action.callback.typ === "multi-row"
+                          ? selectedNodes.reduce((all, row) => ({ ...all, [row.rowIndex!]: row.data }), {})
+                          : undefined,
+                    },
+                  });
+                }}
+              >
+                {action.title}
+              </VSCodeButton>
+            );
+          })}
         <div
           style={{
             borderLeft: "1px solid var(--ag-border-color)",
