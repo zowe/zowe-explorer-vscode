@@ -240,7 +240,7 @@ export class JobTableView {
         }
 
         await this.cacheChildren(selectedNodes[0]);
-        TableViewProvider.getInstance().setTableView(await JobTableView.generateTable(context, selectedNodes[0]));
+        await TableViewProvider.getInstance().setTableView(await JobTableView.generateTable(context, selectedNodes[0]));
     }
 
     /**

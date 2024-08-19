@@ -245,8 +245,8 @@ importers:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@18.19.33)(typescript@5.5.4)
       wdio-vscode-service:
-        specifier: ^6.0.3
-        version: 6.0.3(webdriverio@8.38.2)
+        specifier: ^6.1.0
+        version: 6.1.0(webdriverio@8.38.2)
       wdio-wait-for:
         specifier: ^3.0.11
         version: 3.0.11
@@ -1808,7 +1808,7 @@ packages:
       content-disposition: 0.5.4
       fastify-plugin: 4.5.1
       fastq: 1.17.1
-      glob: 10.3.15
+      glob: 10.4.5
     dev: true
 
   /@humanwhocodes/config-array@0.11.14:
@@ -3123,7 +3123,7 @@ packages:
     engines: {node: '>=16'}
     dependencies:
       http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.4
+      https-proxy-agent: 7.0.5
       jszip: 3.10.1
       ora: 7.0.1
       semver: 7.6.2
@@ -13165,8 +13165,8 @@ packages:
       defaults: 1.0.4
     dev: true
 
-  /wdio-vscode-service@6.0.3(webdriverio@8.38.2):
-    resolution: {integrity: sha512-sfX3w8UxNPcms8GmunWsQSEkiM4bQm4yHe0f4K2En6tiIGc+aWOACZbwSF3WN+laL9kQ49dBcBaWVbAxnmReJg==}
+  /wdio-vscode-service@6.1.0(webdriverio@8.38.2):
+    resolution: {integrity: sha512-WyrfPQFvPIiVe8PeQMXOkdkdHYI/MjiQsTEJcO4q93EWkrMGUzQhCCypFuue5EpLzThnqwrS5EzlruAcD50ghw==}
     engines: {node: ^16.13 || >=18}
     peerDependencies:
       webdriverio: ^8.32.2
@@ -13190,7 +13190,7 @@ packages:
       undici: 5.28.4
       vscode-uri: 3.0.8
       webdriverio: 8.38.2(typescript@5.5.4)
-      ws: 8.17.0
+      ws: 8.18.0
       yargs-parser: 21.1.1
     transitivePeerDependencies:
       - bufferutil
@@ -13578,7 +13578,6 @@ packages:
       utf-8-validate:
         optional: true
     dev: true
-    optional: true
 
   /xml2js@0.5.0:
     resolution: {integrity: sha512-drPFnkQJik/O+uPKpqSgr22mpuFHqKdbS835iAQrUC73L2F5WkboIRd63ai/2Yg6I1jzifPFKH2NTK+cfglkIA==}

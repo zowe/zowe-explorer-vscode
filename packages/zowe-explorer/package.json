@@ -1826,7 +1826,7 @@
     "markdownlint-cli": "^0.33.0",
     "sinon": "^16.1.1",
     "ts-node": "^10.9.2",
-    "wdio-vscode-service": "^6.0.3",
+    "wdio-vscode-service": "^6.1.0",
     "wdio-wait-for": "^3.0.11",
     "webdriverio": "^8.36.1"
   },
