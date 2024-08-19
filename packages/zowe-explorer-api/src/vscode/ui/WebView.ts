@@ -118,6 +118,7 @@ export class WebView {
     }
 
     public resolveForView(webviewView: WebviewView): void {
+        webviewView.title = this.title;
         webviewView.webview.options = {
             enableScripts: true,
             localResourceRoots: [this.uris.disk.build],

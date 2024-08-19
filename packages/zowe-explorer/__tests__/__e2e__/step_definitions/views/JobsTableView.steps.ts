@@ -10,15 +10,24 @@
  */
 
 import { Then } from "@cucumber/cucumber";
-import { ContextMenu } from "wdio-vscode-service";
+import { BottomBarPanel, ContextMenu, WebView } from "wdio-vscode-service";
 
 Then('the user can right-click on the jobs profile and select "Show as Table"', async function () {
+    this.workbench = await browser.getWorkbench();
+
     const ctxMenu: ContextMenu = await this.profileNode.openContextMenu();
     await ctxMenu.wait();
+
     const showAsTableItem = await ctxMenu.getItem("Show as Table");
     await (await showAsTableItem.elem).click();
-    const bottomBar = (await browser.getWorkbench()).getBottomBar();
+
+    const bottomBar: BottomBarPanel = this.workbench.getBottomBar();
     await bottomBar.toggle(true);
     await (bottomBar as any).openTab("Zowe Resources");
-    await (await $("#webviewRoot > div")).waitForExist();
+
+    const webview: WebView = await this.workbench.getWebviewByTitle(`Jobs: ${process.env.ZE_TEST_PROFILE_USER} | * | *`);
+    await webview.wait();
+    const webviewFrame = await webview.activeFrame;
+    const tableView = await webviewFrame.$(".table-view");
+    await tableView.waitForExist();
 });
