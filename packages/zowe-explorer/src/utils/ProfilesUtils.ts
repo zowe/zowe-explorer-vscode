@@ -74,7 +74,7 @@ export class ProfilesUtils {
      */
     public static updateCredentialManagerSetting(credentialManager?: string | false): void {
         ZoweLogger.trace("ProfilesUtils.updateCredentialManagerSetting called.");
-        const settingEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        const settingEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED, true);
         if (settingEnabled && credentialManager) {
             this.PROFILE_SECURITY = credentialManager;
             return;
