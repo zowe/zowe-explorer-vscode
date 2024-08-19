@@ -11,7 +11,7 @@
 
 import { IZoweJobTreeNode, Table, TableBuilder, TableViewProvider } from "@zowe/zowe-explorer-api";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
-import { ExtensionContext } from "vscode";
+import { ExtensionContext, l10n } from "vscode";
 import { JobActions } from "./JobActions";
 import { ZoweJobNode } from "./ZoweJobNode";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -22,7 +22,7 @@ export class JobTableView {
     private static cachedChildren: IZoweJobTreeNode[];
     private static contextOptions: Record<string, Table.ContextMenuOpts> = {
         getJcl: {
-            title: "Get JCL",
+            title: l10n.t("Get JCL"),
             command: "get-jcl",
             callback: {
                 fn: JobTableView.getJcl,
@@ -30,7 +30,7 @@ export class JobTableView {
             },
         },
         displayInTree: {
-            title: "Display in tree",
+            title: l10n.t("Display in Tree"),
             command: "display-in-tree",
             callback: {
                 fn: JobTableView.displayInTree,
@@ -40,7 +40,7 @@ export class JobTableView {
     };
     private static rowActions: Record<string, Table.ActionOpts> = {
         cancelJob: {
-            title: "Cancel",
+            title: l10n.t("Cancel"),
             command: "cancel-job",
             callback: {
                 fn: JobTableView.cancelJobs,
@@ -50,7 +50,7 @@ export class JobTableView {
             condition: (data: Table.RowData[]): boolean => data.every((row) => row["status"] === "ACTIVE"),
         },
         deleteJob: {
-            title: "Delete",
+            title: l10n.t("Delete"),
             command: "delete-job",
             callback: {
                 fn: JobTableView.deleteJobs,
@@ -59,7 +59,7 @@ export class JobTableView {
             type: "secondary",
         },
         downloadJob: {
-            title: "Download",
+            title: l10n.t("Download"),
             command: "download-job",
             callback: {
                 fn: JobTableView.downloadJobs,
@@ -72,14 +72,22 @@ export class JobTableView {
 
     private static buildTitle(profileNode: IZoweJobTreeNode): string {
         if (profileNode.searchId) {
-            return `Jobs with ID: ${profileNode.searchId}`;
+            return l10n.t({
+                message: `Jobs with ID: {0}`,
+                args: [profileNode.searchId],
+                comment: ["Job Search ID"],
+            });
         }
 
         if (profileNode.owner && profileNode.prefix && profileNode.status) {
-            return `Jobs: ${profileNode.owner} | ${profileNode.prefix} | ${profileNode.status}`;
+            return l10n.t({
+                message: `Jobs: {0} | {1} | {2}`,
+                args: [profileNode.owner, profileNode.prefix, profileNode.status],
+                comment: ["Job Owner", "Job Prefix", "Job Status"],
+            });
         }
 
-        return "Jobs";
+        return l10n.t("Jobs");
     }
 
     private static async cacheChildren(sessionNode: IZoweJobTreeNode): Promise<void> {
@@ -182,25 +190,25 @@ export class JobTableView {
                     ...[
                         {
                             field: "jobname",
-                            headerName: "Name",
+                            headerName: l10n.t("Name"),
                             filter: true,
                             sort: "asc",
                         } as Table.ColumnOpts,
                         {
                             field: "class",
-                            headerName: "Class",
+                            headerName: l10n.t("Class"),
                             filter: true,
                         },
-                        { field: "owner", headerName: "Owner", filter: true },
-                        { field: "jobid", headerName: "ID", filter: true },
-                        { field: "retcode", headerName: "Return Code", filter: true },
-                        { field: "status", headerName: "Status", filter: true },
-                        { field: "subsystem", headerName: "Subsystem", filter: true },
-                        { field: "type", headerName: "Type", filter: true },
-                        { field: "job-correlator", headerName: "Job Correlator", filter: true },
-                        { field: "phase", headerName: "Phase", filter: true },
-                        { field: "phase-name", headerName: "Phase Name", filter: true },
-                        { field: "reason-not-running", headerName: "Error Details", filter: true },
+                        { field: "owner", headerName: l10n.t("Owner"), filter: true },
+                        { field: "jobid", headerName: l10n.t("ID"), filter: true },
+                        { field: "retcode", headerName: l10n.t("Return Code"), filter: true },
+                        { field: "status", headerName: l10n.t("Status"), filter: true },
+                        { field: "subsystem", headerName: l10n.t("Subsystem"), filter: true },
+                        { field: "type", headerName: l10n.t("Type"), filter: true },
+                        { field: "job-correlator", headerName: l10n.t("Job Correlator"), filter: true },
+                        { field: "phase", headerName: l10n.t("Phase"), filter: true },
+                        { field: "phase-name", headerName: l10n.t("Phase Name"), filter: true },
+                        { field: "reason-not-running", headerName: l10n.t("Error Details"), filter: true },
                         { field: "actions", hide: true },
                     ]
                 )
