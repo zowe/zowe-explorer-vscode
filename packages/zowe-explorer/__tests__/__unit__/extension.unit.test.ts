@@ -209,7 +209,7 @@ function createGlobalMocks() {
             "zowe.jobs.sortBy",
             "zowe.jobs.filterJobs",
             "zowe.jobs.copyName",
-            "zowe.jobs.tabularView",
+            "zowe.jobs.tableView",
             "zowe.updateSecureCredentials",
             "zowe.manualPoll",
             "zowe.editHistory",

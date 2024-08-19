@@ -174,7 +174,7 @@
         }
       },
       {
-        "command": "zowe.jobs.tabularView",
+        "command": "zowe.jobs.tableView",
         "title": "%jobsTableView%",
         "category": "Zowe Explorer"
       },
@@ -1257,7 +1257,7 @@
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
-          "command": "zowe.jobs.tabularView",
+          "command": "zowe.jobs.tableView",
           "group": "100_zowe_tableview"
         },
         {
@@ -1368,6 +1368,10 @@
         },
         {
           "command": "zowe.saveSearch",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.tableView",
           "when": "never"
         },
         {

@@ -151,7 +151,7 @@ export class JobInit {
         );
         context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.copyName", async (job: IZoweJobTreeNode) => JobActions.copyName(job)));
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.jobs.tabularView", async (node, nodeList) => JobTableView.handleCommand(context, node, nodeList))
+            vscode.commands.registerCommand("zowe.jobs.tableView", async (node, nodeList) => JobTableView.handleCommand(context, node, nodeList))
         );
         context.subscriptions.push(
             vscode.workspace.onDidOpenTextDocument((doc) => {

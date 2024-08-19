@@ -140,7 +140,7 @@ describe("Test src/jobs/extension", () => {
                 mock: [{ spy: jest.spyOn(jobsProvider, "filterJobsDialog"), arg: [test.value] }],
             },
             {
-                name: "zowe.jobs.tabularView",
+                name: "zowe.jobs.tableView",
                 mock: [{ spy: jest.spyOn(JobTableView, "handleCommand"), arg: [test.context, test.value, undefined] }],
             },
         ];
