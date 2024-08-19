@@ -93,6 +93,7 @@ describe("TableViewProvider", () => {
             const resolveForViewSpy = jest.spyOn(table, "resolveForView");
             const fakeView = {
                 onDidDispose: jest.fn(),
+                show: jest.fn(),
                 viewType: "zowe.panel",
                 title: "SomeWebviewView",
                 webview: { asWebviewUri: jest.fn(), onDidReceiveMessage: jest.fn(), options: {} },

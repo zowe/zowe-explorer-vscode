@@ -203,12 +203,9 @@ describe("JobTableView unit tests", () => {
     });
 
     describe("jobPropertiesFor", () => {
-        it("returns most job properties from the job node", () => {
+        it("returns job properties from the job node", () => {
             const blockMocks = getBlockMocks();
             const expectedProperties = { ...blockMocks.jobNode.job };
-            delete expectedProperties["exec-member"];
-            // `step-data` property is an array - omitted from table view
-            delete expectedProperties["step-data"];
             expect((JobTableView as any).jobPropertiesFor(blockMocks.jobNode)).toStrictEqual(expectedProperties);
         });
     });

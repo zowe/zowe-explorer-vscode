@@ -241,7 +241,6 @@ export class JobTableView {
      * @returns A subset of the `IJob` object, containing renderable properties only
      */
     private static jobPropertiesFor(item: IZoweJobTreeNode): Omit<IJob, "step-data"> {
-        const { "step-data": _, ...rest } = { ...item.job };
-        return rest;
+        return item.job;
     }
 }
