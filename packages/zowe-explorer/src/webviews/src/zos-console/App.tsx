@@ -59,7 +59,22 @@ export function App() {
 
   return (
     <div className="box">
-      <VSCodeDropdown id="systems" style={{ "align-self": "flex-end" }}></VSCodeDropdown>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <VSCodeTextField
+          id="command-input"
+          name="command-input"
+          type="text"
+          placeholder="Enter command here..."
+          onKeyDown={sendCommand}
+          style={{
+            width: "100%",
+            "font-family": "Consolas,monospace",
+          }}
+        >
+          <span slot="start" className="codicon codicon-chevron-right"></span>
+        </VSCodeTextField>
+        <VSCodeDropdown id="systems"></VSCodeDropdown>
+      </div>
       <VSCodeTextArea
         id="output"
         readonly
@@ -70,21 +85,9 @@ export function App() {
           height: "100%",
           overflow: "auto",
           display: "flex",
-          "font-family": "monospace",
+          "font-family": "Consolas,monospace",
         }}
       ></VSCodeTextArea>
-      <VSCodeTextField
-        id="command-input"
-        name="command-input"
-        type="text"
-        onKeyDown={sendCommand}
-        style={{
-          width: "100%",
-          "font-family": "Times New Roman",
-        }}
-      >
-        <span slot="start" className="codicon codicon-chevron-right"></span>
-      </VSCodeTextField>
     </div>
   );
 }
