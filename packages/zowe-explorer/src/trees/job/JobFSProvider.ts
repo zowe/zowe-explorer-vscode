@@ -67,7 +67,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns A structure containing file type, time, size and other metrics
      */
     public stat(uri: vscode.Uri): vscode.FileStat | Thenable<vscode.FileStat> {
-        const entry = this._lookup(uri, false);
+        const entry = this.lookup(uri, false);
         if (FsJobsUtils.isSpoolEntry(entry)) {
             return { ...entry, permissions: vscode.FilePermission.Readonly };
         }
@@ -277,7 +277,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
      * - `deleteRemote` - Deletes the job from the remote system if set to true.
      */
     public async delete(uri: vscode.Uri, options: { readonly recursive: boolean; readonly deleteRemote: boolean }): Promise<void> {
-        const entry = this._lookup(uri, false);
+        const entry = this.lookup(uri, false);
         const isJob = FsJobsUtils.isJobEntry(entry);
         if (!isJob) {
             return;

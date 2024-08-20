@@ -10,15 +10,15 @@
  */
 
 import { IFileSystemEntry } from "../types/abstract";
-import { DsEntry, MemberEntry, PdsEntry } from "../types/datasets";
+import { DsEntry, PdsEntry } from "../types/datasets";
 
 export class FsDatasetsUtils {
     public static isDsEntry(entry: IFileSystemEntry): entry is DsEntry {
-        return entry instanceof DsEntry;
+        return entry instanceof DsEntry && !entry.isMember;
     }
 
-    public static isMemberEntry(entry: IFileSystemEntry): entry is MemberEntry {
-        return entry != null && entry instanceof MemberEntry;
+    public static isMemberEntry(entry: IFileSystemEntry): entry is DsEntry {
+        return entry != null && entry instanceof DsEntry && entry.isMember;
     }
 
     public static isPdsEntry(entry: IFileSystemEntry): entry is PdsEntry {

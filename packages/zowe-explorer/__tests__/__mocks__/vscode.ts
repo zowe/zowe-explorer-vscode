@@ -1252,80 +1252,26 @@ export interface FileSystemProvider {
     copy?(source: Uri, destination: Uri, options: { readonly overwrite: boolean }): void | Thenable<void>;
 }
 
+export enum FileSystemProviderErrorCode {
+    FileExists = "EntryExists",
+    FileNotFound = "EntryNotFound",
+    FileNotADirectory = "EntryNotADirectory",
+    FileIsADirectory = "EntryIsADirectory",
+    FileExceedsStorageQuota = "EntryExceedsStorageQuota",
+    FileTooLarge = "EntryTooLarge",
+    FileWriteLocked = "EntryWriteLocked",
+    NoPermissions = "NoPermissions",
+    Unavailable = "Unavailable",
+    Unknown = "Unknown",
+}
+
 /**
  * A type that filesystem providers should use to signal errors.
  *
  * This class has factory methods for common error-cases, like `FileNotFound` when
  * a file or folder doesn't exist, use them like so: `throw vscode.FileSystemError.FileNotFound(someUri);`
  */
-export class FileSystemError extends Error {
-    /**
-     * Create an error to signal that a file or folder wasn't found.
-     * @param messageOrUri Message or uri.
-     */
-    static FileNotFound(messageOrUri?: string | Uri): FileSystemError {
-        return new FileSystemError("file not found");
-    }
-
-    /**
-     * Create an error to signal that a file or folder already exists, e.g. when
-     * creating but not overwriting a file.
-     * @param messageOrUri Message or uri.
-     */
-    static FileExists(messageOrUri?: string | Uri): FileSystemError {
-        return new FileSystemError("file exists");
-    }
-
-    /**
-     * Create an error to signal that a file is not a folder.
-     * @param messageOrUri Message or uri.
-     */
-    static FileNotADirectory(messageOrUri?: string | Uri): FileSystemError {
-        return new FileSystemError("file not a directory");
-    }
-
-    /**
-     * Create an error to signal that a file is a folder.
-     * @param messageOrUri Message or uri.
-     */
-    static FileIsADirectory(messageOrUri?: string | Uri): FileSystemError {
-        return new FileSystemError("file is a directory");
-    }
-
-    /**
-     * Create an error to signal that an operation lacks required permissions.
-     * @param messageOrUri Message or uri.
-     */
-    static NoPermissions(messageOrUri?: string | Uri): FileSystemError {
-        return new FileSystemError("no permissions");
-    }
-
-    /**
-     * Create an error to signal that the file system is unavailable or too busy to
-     * complete a request.
-     * @param messageOrUri Message or uri.
-     */
-    static Unavailable(messageOrUri?: string | Uri): FileSystemError {
-        return new FileSystemError("unavailable");
-    }
-
-    /**
-     * Creates a new filesystem error.
-     *
-     * @param messageOrUri Message or uri.
-     */
-    constructor(messageOrUri?: string | Uri) {
-        super(typeof messageOrUri === "string" ? messageOrUri : undefined);
-    }
-
-    /**
-     * A code that identifies this error.
-     *
-     * Possible values are names of errors, like {@linkcode FileSystemError.FileNotFound FileNotFound},
-     * or `Unknown` for unspecified errors.
-     */
-    readonly code: string;
-}
+export const { FileSystemError } = require("jest-mock-vscode").createVSCodeMock(jest);
 
 /**
  * Namespace for dealing with the current workspace. A workspace is the representation
@@ -1356,6 +1302,19 @@ export namespace workspace {
     ): Disposable {
         return new Disposable();
     }
+
+    export interface WorkspaceFoldersChangeEvent {
+        /**
+         * Added workspace folders.
+         */
+        readonly added: readonly WorkspaceFolder[];
+
+        /**
+         * Removed workspace folders.
+         */
+        readonly removed: readonly WorkspaceFolder[];
+    }
+    export const onDidChangeWorkspaceFolders: Event<WorkspaceFoldersChangeEvent> = jest.fn();
 
     export function onDidCloseTextDocument<T>(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) {}
     export function onDidOpenTextDocument<T>(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) {}

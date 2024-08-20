@@ -171,7 +171,6 @@ export class USSInit {
                 UssFSProvider.instance.cacheOpenedUri(doc.uri);
             })
         );
-
         SharedInit.initSubscribers(context, ussFileProvider);
         return ussFileProvider;
     }
