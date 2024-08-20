@@ -228,7 +228,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors
-        const responses = await this.getDatasets();
+        const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+        const responses = await this.getDatasets(cachedProfile);
         if (responses.length === 0) {
             return;
         }
@@ -256,7 +257,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                         parentNode: this,
-                        profile: this.getProfile(),
+                        profile: cachedProfile,
                     });
                     elementChildren[temp.label.toString()] = temp;
                     // Creates a ZoweDatasetNode for a dataset with imperative errors
@@ -266,7 +267,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
                         contextOverride: Constants.DS_FILE_ERROR_CONTEXT,
-                        profile: this.getProfile(),
+                        profile: cachedProfile,
                     });
                     temp.errorDetails = item.error; // Save imperative error to avoid extra z/OS requests
                     elementChildren[temp.label.toString()] = temp;
@@ -277,7 +278,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
                         contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
-                        profile: this.getProfile(),
+                        profile: cachedProfile,
                     });
                     elementChildren[temp.label.toString()] = temp;
                     // Creates a ZoweDatasetNode for a VSAM file
@@ -296,7 +297,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                             collapsibleState: vscode.TreeItemCollapsibleState.None,
                             parentNode: this,
                             contextOverride: Constants.VSAM_CONTEXT,
-                            profile: this.getProfile(),
+                            profile: cachedProfile,
                         });
                     }
                 } else if (SharedContext.isSession(this)) {
@@ -307,7 +308,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
                         encoding: cachedEncoding,
-                        profile: this.getProfile(),
+                        profile: cachedProfile,
                     });
                     temp.command = { command: "vscode.open", title: "", arguments: [temp.resourceUri] };
                     elementChildren[temp.label.toString()] = temp;
@@ -321,7 +322,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         parentNode: this,
                         contextOverride: memberInvalid ? Constants.DS_FILE_ERROR_CONTEXT : undefined,
                         encoding: cachedEncoding,
-                        profile: this.getProfile(),
+                        profile: cachedProfile,
                     });
                     if (!memberInvalid) {
                         temp.command = { command: "vscode.open", title: "", arguments: [temp.resourceUri] };
@@ -524,13 +525,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return fileEntry.etag;
     }
 
-    private async getDatasets(): Promise<zosfiles.IZosFilesResponse[]> {
+    private async getDatasets(profile: imperative.IProfileLoaded): Promise<zosfiles.IZosFilesResponse[]> {
         ZoweLogger.trace("ZoweDatasetNode.getDatasets called.");
         const responses: zosfiles.IZosFilesResponse[] = [];
-        const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         const options: zosfiles.IListOptions = {
             attributes: true,
-            responseTimeout: cachedProfile.profile.responseTimeout,
+            responseTimeout: profile.profile.responseTimeout,
         };
         if (SharedContext.isSession(this) && this.pattern) {
             const dsPatterns = [
@@ -541,8 +541,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         .map((p) => p.trim())
                 ),
             ];
-            const mvsApi = ZoweExplorerApiRegister.getMvsApi(cachedProfile);
-            if (!mvsApi.getSession(cachedProfile)) {
+            const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
+            if (!mvsApi.getSession(profile)) {
                 throw new imperative.ImperativeError({
                     msg: vscode.l10n.t("Profile auth error"),
                     additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
@@ -560,10 +560,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.memberPattern = this.memberPattern.toUpperCase();
             for (const memPattern of this.memberPattern.split(",")) {
                 options.pattern = memPattern;
-                responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(this.label as string, options));
+                responses.push(await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(this.label as string, options));
             }
         } else {
-            responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(this.label as string, options));
+            responses.push(await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(this.label as string, options));
         }
         return responses;
     }
