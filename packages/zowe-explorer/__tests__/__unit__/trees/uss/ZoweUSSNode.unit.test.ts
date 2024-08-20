@@ -1416,6 +1416,13 @@ describe("ZoweUSSNode Unit Tests - Function node.getAttributes", () => {
         expect(node.getAttributes()).toStrictEqual(attrs);
         lookupMock.mockRestore();
     });
+
+    it("returns undefined if no entry is found", () => {
+        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(undefined);
+        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        expect(node.getAttributes()).toBeUndefined();
+        lookupMock.mockRestore();
+    });
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.setAttributes", () => {
@@ -1427,8 +1434,17 @@ describe("ZoweUSSNode Unit Tests - Function node.setAttributes", () => {
 
         const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setAttributes({ perms: "r-xr-xr-x" });
+
+        // verify that attributes were never updated
         expect(lookupMock).toHaveBeenCalled();
-        expect(fileEntry.attributes).toStrictEqual({ ...attrs, perms: "r-xr-xr-x" });
+        expect(node.getAttributes()).toBeUndefined();
+        lookupMock.mockRestore();
+    });
+
+    it("returns early if no entry is found", () => {
+        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValue(undefined);
+        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        expect(node.setAttributes({ perms: "r-xr-xr-x" })).toBeUndefined();
         lookupMock.mockRestore();
     });
 
