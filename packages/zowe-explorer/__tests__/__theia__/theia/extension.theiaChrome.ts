@@ -93,7 +93,7 @@ export async function getFavoriteProfileNameFromJobs() {
 
 export async function removeFavoriteProfileFromDatasets() {
     const removeFromFavorite = await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.favoriteProfileInDatasetXpath)), WAITTIME);
-    await driverChrome.actions().click(removeFromFavorite, Button.RIGHT).perform();
+    await driverChrome.actions().contextClick(removeFromFavorite).perform();
     await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.removeFavoriteProfileFromDatasetsOptionXpath)), WAITTIME).click();
     await driverChrome.sleep(SHORTSLEEPTIME);
@@ -102,7 +102,7 @@ export async function removeFavoriteProfileFromDatasets() {
 
 export async function removeFavoriteProfileFromUss() {
     const removeFromFavorite = await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.favoriteProfileInUssXpath)), WAITTIME);
-    await driverChrome.actions().click(removeFromFavorite, Button.RIGHT).perform();
+    await driverChrome.actions().contextClick(removeFromFavorite).perform();
     await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.removeFavoriteProfileFromUssOptionXpath)), WAITTIME).click();
     await driverChrome.sleep(SHORTSLEEPTIME);
@@ -111,7 +111,7 @@ export async function removeFavoriteProfileFromUss() {
 
 export async function removeFavoriteProfileFromJobs() {
     const removeFromFavorite = await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.favoriteProfileInJobsXpath)), WAITTIME);
-    await driverChrome.actions().click(removeFromFavorite, Button.RIGHT).perform();
+    await driverChrome.actions().contextClick(removeFromFavorite).perform();
     await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.removeFavoriteProfileFromJobsOptionXpath)), WAITTIME).click();
     await driverChrome.sleep(SHORTSLEEPTIME);
@@ -122,7 +122,7 @@ export async function addProfileToFavoritesInDatasets() {
     const addTofavorite = await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.secondDatasetProfileXpath)), WAITTIME);
     await addTofavorite.click();
     await driverChrome.sleep(SHORTSLEEPTIME);
-    await driverChrome.actions().click(addTofavorite, Button.RIGHT).perform();
+    await driverChrome.actions().contextClick(addTofavorite).perform();
     await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.addToFavoriteOptionXpath)), WAITTIME).click();
 }
@@ -131,7 +131,7 @@ export async function addProfileToFavoritesInUss() {
     const addTofavorite = await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.secondUssProfileXpath)), WAITTIME);
     await addTofavorite.click();
     await driverChrome.sleep(SHORTSLEEPTIME);
-    await driverChrome.actions().click(addTofavorite, Button.RIGHT).perform();
+    await driverChrome.actions().contextClick(addTofavorite).perform();
     await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.addToFavoriteOptionXpath)), WAITTIME).click();
 }
@@ -140,14 +140,14 @@ export async function addProfileToFavoritesInJobs() {
     const addTofavorite = await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.secondJobsProfileXpath)), WAITTIME);
     await addTofavorite.click();
     await driverChrome.sleep(SHORTSLEEPTIME);
-    await driverChrome.actions().click(addTofavorite, Button.RIGHT).perform();
+    await driverChrome.actions().contextClick(addTofavorite).perform();
     await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.addToFavoriteOptionXpath)), WAITTIME).click();
 }
 
 export async function hideProfileInUss() {
     const hideProfileFromUss = await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.secondUssProfileXpath)), WAITTIME);
-    await driverChrome.actions().click(hideProfileFromUss, Button.RIGHT).perform();
+    await driverChrome.actions().contextClick(hideProfileFromUss).perform();
     driverChrome.wait(until.elementLocated(By.xpath(UssLocators.manageProfileFromUnixXpath)), WAITTIME).click();
     await driverChrome.sleep(SHORTSLEEPTIME);
     const manageProfile = driverChrome.wait(until.elementLocated(By.xpath(UssLocators.emptyInputBoxXpath)), WAITTIME);
@@ -159,7 +159,7 @@ export async function hideProfileInUss() {
 
 export async function hideProfileInJobs() {
     const hideProfileFromJobs = await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.secondJobsProfileBeforeHidingXpath)), WAITTIME);
-    await driverChrome.actions().click(hideProfileFromJobs, Button.RIGHT).perform();
+    await driverChrome.actions().contextClick(hideProfileFromJobs).perform();
     driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.manageProfileFromJobsXpath)), WAITTIME).click();
     await driverChrome.sleep(SHORTSLEEPTIME);
     const manageProfile = driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.emptyInputBoxXpath)), WAITTIME);
@@ -193,7 +193,7 @@ export async function deleteDefaultProfileInDatasets() {
     const profileName = await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.defaultDatasetsProfileXpath)), WAITTIME);
     await profileName.click();
     await driverChrome.sleep(SHORTSLEEPTIME);
-    await driverChrome.actions().click(profileName, Button.RIGHT).perform();
+    await driverChrome.actions().contextClick(profileName).perform();
     await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.manageProfileFromDatasetsXpath)), WAITTIME).click();
     await driverChrome.sleep(SHORTSLEEPTIME);
     const manageProfile = driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)), WAITTIME);
@@ -207,7 +207,7 @@ export async function deleteDefaultProfileInDatasets() {
 
 export async function deleteProfileInDatasets() {
     const favprofile = await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.secondDatasetProfileXpath)), WAITTIME);
-    await driverChrome.actions().click(favprofile, Button.RIGHT).perform();
+    await driverChrome.actions().contextClick(favprofile).perform();
     await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.manageProfileFromDatasetsXpath)), WAITTIME).click();
     await driverChrome.sleep(SHORTSLEEPTIME);
     const manageProfile = driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)), WAITTIME);
