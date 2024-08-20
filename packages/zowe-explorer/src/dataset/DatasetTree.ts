@@ -1095,7 +1095,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             const childProfile = child.getProfile();
                             const options: IListOptions = {};
                             options.pattern = item.memberPattern;
-                            options.attributes = true;
+                            options.attributes = false;
                             options.responseTimeout = childProfile.profile?.responseTimeout;
                             const memResponse = await ZoweExplorerApiRegister.getMvsApi(childProfile).allMembers(label, options);
                             let existing = false;

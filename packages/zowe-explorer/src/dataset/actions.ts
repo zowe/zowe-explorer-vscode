@@ -841,7 +841,7 @@ export async function showAttributes(node: api.IZoweDatasetTreeNode, datasetProv
             if (contextually.isDsMember(node)) {
                 const dsName = node.getParent().getLabel() as string;
                 attributes = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).allMembers(dsName.toUpperCase(), {
-                    attributes: true,
+                    attributes: false,
                     pattern: label.toUpperCase(),
                     responseTimeout: nodeProfile?.profile?.responseTimeout,
                 });

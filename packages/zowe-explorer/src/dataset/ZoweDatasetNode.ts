@@ -477,7 +477,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         const responses: zowe.IZosFilesResponse[] = [];
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         const options: zowe.IListOptions = {
-            attributes: true,
+            attributes: false,
             responseTimeout: cachedProfile.profile.responseTimeout,
         };
         if (contextually.isSessionNotFav(this)) {
