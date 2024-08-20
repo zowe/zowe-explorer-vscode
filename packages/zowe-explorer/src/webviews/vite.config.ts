@@ -14,6 +14,7 @@ import preact from "@preact/preset-vite";
 import * as path from "path";
 import { readdirSync } from "fs";
 import checker from "vite-plugin-checker";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 
 // https://vitejs.dev/config/
 
@@ -39,6 +40,18 @@ export default defineConfig({
         preact(),
         checker({
             typescript: true,
+        }),
+        viteStaticCopy({
+            targets: [
+                {
+                    src: "../../../node_modules/@vscode/codicons/dist/codicon.css",
+                    dest: "codicons/",
+                },
+                {
+                    src: "../../../node_modules/@vscode/codicons/dist/codicon.ttf",
+                    dest: "codicons/",
+                },
+            ],
         }),
     ],
     root: path.resolve(__dirname, "src"),

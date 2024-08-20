@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added new Zowe Explorer z/OS Console webview with access via VS Code command pallete to issue MVS Console commands.
+
 ### Bug fixes
 
 - Fixed issue where creating a new team configuration file could cause Zowe Explorer to crash, resulting in all sessions disappearing from trees. [#2906](https://github.com/zowe/zowe-explorer-vscode/issues/2906)
