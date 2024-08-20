@@ -94,6 +94,7 @@ export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
 
         // Tip: Install the es6-string-html VS Code extension to enable code highlighting below
         return Mustache.render(HTMLTemplate.default, {
+            cspSource: webview.cspSource,
             uris: { resource: { script: scriptUri } },
             nonce,
             style: /* html */ `
@@ -131,6 +132,9 @@ export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
     private async runOperCmd(command: string, profile: string): Promise<string> {
         try {
             const theProfile: imperative.IProfileLoaded = this.profiles.get(profile);
+            if (theProfile == null) {
+                return "Error: No profile found to issue console commands\n";
+            }
             const response = await ZoweExplorerApiRegister.getCommandApi(theProfile).issueMvsCommand(command, theProfile.profile?.consoleName);
             return response.commandResponse;
         } catch (e) {

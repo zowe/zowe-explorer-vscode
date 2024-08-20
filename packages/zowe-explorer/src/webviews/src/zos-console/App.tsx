@@ -51,7 +51,7 @@ export function App() {
       } else {
         vscode.postMessage({
           command: "opercmd",
-          profile: profileList.options[profileList.selectedIndex].text,
+          profile: profileList.options[profileList.selectedIndex]?.text,
           text: consoleField.value,
         });
       }
