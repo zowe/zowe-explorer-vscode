@@ -178,6 +178,7 @@ export class JobTableView {
         } else {
             this.table = new TableBuilder(context)
                 .options({
+                    autoSizeStrategy: { type: "fitCellContents" },
                     pagination: true,
                     rowSelection: "multiple",
                     selectEverything: true,
