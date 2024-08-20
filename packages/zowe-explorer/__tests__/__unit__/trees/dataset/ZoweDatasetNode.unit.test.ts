@@ -10,7 +10,8 @@
  */
 
 import * as vscode from "vscode";
-import { DsEntry, Gui, PdsEntry, Validation } from "@zowe/zowe-explorer-api";
+import { DsEntry, Gui, imperative, PdsEntry, Validation } from "@zowe/zowe-explorer-api";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import {
     createSessCfgFromArgs,
     createInstanceOfProfile,
@@ -64,6 +65,300 @@ function createGlobalMocks() {
 
     return newMocks;
 }
+
+describe("ZoweDatasetNode Unit Tests", () => {
+    // Globals
+    const session = new imperative.Session({
+        user: "fake",
+        password: "fake",
+        hostname: "fake",
+        protocol: "https",
+        type: "basic",
+    });
+    const profileOne: imperative.IProfileLoaded = {
+        name: "profile1",
+        profile: {},
+        type: "zosmf",
+        message: "",
+        failNotFound: false,
+    };
+    const ProgressLocation = jest.fn().mockImplementation(() => {
+        return {
+            Notification: 15,
+        };
+    });
+
+    const withProgress = jest.fn().mockImplementation((progLocation, callback) => {
+        return callback();
+    });
+
+    Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
+    Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
+
+    beforeEach(() => {
+        withProgress.mockImplementation((progLocation, callback) => {
+            return callback();
+        });
+    });
+
+    const showErrorMessage = jest.fn();
+    Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
+
+    afterEach(() => {
+        jest.resetAllMocks();
+    });
+
+    /*************************************************************************************************************
+     * Creates an ZoweDatasetNode and checks that its members are all initialized by the constructor
+     *************************************************************************************************************/
+    it("Testing that the ZoweDatasetNode is defined", () => {
+        const testNode = new ZoweDatasetNode({ label: "BRTVS99", collapsibleState: vscode.TreeItemCollapsibleState.None, session });
+        testNode.contextValue = Constants.DS_SESSION_CONTEXT;
+
+        expect(testNode.label).toBeDefined();
+        expect(testNode.collapsibleState).toBeDefined();
+        expect(testNode.label).toBeDefined();
+        expect(testNode.getParent()).toBeUndefined();
+        expect(testNode.getSession()).toBeDefined();
+    });
+
+    /*************************************************************************************************************
+     * Checks that returning an unsuccessful response results in an error being thrown and caught
+     *************************************************************************************************************/
+    it("Checks that when List.dataSet/allMembers() returns an unsuccessful response, " + "it returns a label of 'No data sets found'", async () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+                };
+            }),
+        });
+        // Creating a rootNode
+        const rootNode = new ZoweDatasetNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile: profileOne,
+        });
+        rootNode.contextValue = Constants.DS_SESSION_CONTEXT;
+        rootNode.dirty = true;
+        const subNode = new ZoweDatasetNode({
+            label: "Response Fail",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: rootNode,
+            profile: profileOne,
+        });
+        jest.spyOn(subNode as any, "getDatasets").mockReturnValueOnce([
+            {
+                success: true,
+                apiResponse: {
+                    items: [],
+                },
+            },
+        ]);
+        subNode.dirty = true;
+        const response = await subNode.getChildren();
+        expect(response[0].label).toBe("No data sets found");
+    });
+
+    /*************************************************************************************************************
+     * Checks that passing a session node that is not dirty ignores the getChildren() method
+     *************************************************************************************************************/
+    it("Checks that passing a session node that is not dirty the getChildren() method is exited early", async () => {
+        // Creating a rootNode
+        const rootNode = new ZoweDatasetNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile: profileOne,
+        });
+        const infoChild = new ZoweDatasetNode({
+            label: "Use the search button to display data sets",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: rootNode,
+            profile: profileOne,
+            contextOverride: Constants.INFORMATION_CONTEXT,
+        });
+        infoChild.command = {
+            command: "zowe.placeholderCommand",
+            title: "Placeholder",
+        };
+        rootNode.contextValue = Constants.DS_SESSION_CONTEXT;
+        rootNode.dirty = false;
+        expect(await rootNode.getChildren()).toEqual([infoChild]);
+    });
+
+    /*************************************************************************************************************
+     * Checks that passing a session node with no hlq ignores the getChildren() method
+     *************************************************************************************************************/
+    it("Checks that passing a session node with no hlq the getChildren() method is exited early", async () => {
+        // Creating a rootNode
+        const rootNode = new ZoweDatasetNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile: profileOne,
+        });
+        const infoChild = new ZoweDatasetNode({
+            label: "Use the search button to display data sets",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: rootNode,
+            profile: profileOne,
+            contextOverride: Constants.INFORMATION_CONTEXT,
+        });
+        infoChild.command = {
+            command: "zowe.placeholderCommand",
+            title: "Placeholder",
+        };
+        rootNode.contextValue = Constants.DS_SESSION_CONTEXT;
+        expect(await rootNode.getChildren()).toEqual([infoChild]);
+    });
+
+    /*************************************************************************************************************
+     * Checks that when getSession() is called on a memeber it returns the proper session
+     *************************************************************************************************************/
+    it("Checks that a member can reach its session properly", () => {
+        // Creating a rootNode
+        const rootNode = new ZoweDatasetNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile: profileOne,
+        });
+        rootNode.contextValue = Constants.DS_SESSION_CONTEXT;
+        const subNode = new ZoweDatasetNode({
+            label: Constants.DS_PDS_CONTEXT,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: rootNode,
+            profile: profileOne,
+        });
+        const member = new ZoweDatasetNode({
+            label: Constants.DS_MEMBER_CONTEXT,
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: subNode,
+            profile: profileOne,
+        });
+        expect(member.getSession()).toBeDefined();
+    });
+    /*************************************************************************************************************
+     * Tests that certain types can't have children
+     *************************************************************************************************************/
+    it("Testing that certain types can't have children", async () => {
+        // Creating a rootNode
+        const rootNode = new ZoweDatasetNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile: profileOne,
+        });
+        rootNode.dirty = true;
+        rootNode.contextValue = Constants.DS_DS_CONTEXT;
+        expect(await rootNode.getChildren()).toHaveLength(0);
+        rootNode.contextValue = Constants.DS_MEMBER_CONTEXT;
+        expect(await rootNode.getChildren()).toHaveLength(0);
+        rootNode.contextValue = Constants.INFORMATION_CONTEXT;
+        expect(await rootNode.getChildren()).toHaveLength(0);
+    });
+    /*************************************************************************************************************
+     * Tests that we shouldn't be updating children
+     *************************************************************************************************************/
+    it("Tests that we shouldn't be updating children", async () => {
+        // Creating a rootNode
+        const rootNode = new ZoweDatasetNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile: profileOne,
+        });
+        rootNode.children = [
+            new ZoweDatasetNode({ label: "onestep", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed, session, profile: profileOne }),
+        ];
+        rootNode.dirty = false;
+        rootNode.contextValue = Constants.DS_PDS_CONTEXT;
+        expect((await rootNode.getChildren())[0].label).toEqual("onestep");
+    });
+
+    /*************************************************************************************************************
+     * Multiple member names returned
+     *************************************************************************************************************/
+    it("Testing what happens when response has multiple members", async () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+                };
+            }),
+        });
+
+        const getStatsMock = jest.spyOn(ZoweDatasetNode.prototype, "getStats").mockImplementation();
+
+        const sessionNode = createDatasetSessionNode(session, profileOne);
+        const getSessionNodeSpy = jest.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
+        // Creating a rootNode
+        const pds = new ZoweDatasetNode({
+            label: "[root]: something",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session,
+            profile: profileOne,
+        });
+        pds.dirty = true;
+        pds.contextValue = Constants.DS_PDS_CONTEXT;
+        const allMembers = jest.fn().mockReturnValueOnce({
+            success: true,
+            apiResponse: {
+                items: [{ member: "BADMEM\ufffd" }, { member: "GOODMEM1" }],
+            },
+        });
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
+        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+        Object.defineProperty(zosfiles.List, "allMembers", { value: allMembers });
+        const pdsChildren = await pds.getChildren();
+        expect(pdsChildren[0].label).toEqual("BADMEM\ufffd");
+        expect(pdsChildren[0].contextValue).toEqual(Constants.DS_FILE_ERROR_CONTEXT);
+        expect(pdsChildren[1].label).toEqual("GOODMEM1");
+        expect(pdsChildren[1].contextValue).toEqual(Constants.DS_MEMBER_CONTEXT);
+        getSessionNodeSpy.mockRestore();
+        getStatsMock.mockRestore();
+    });
+
+    /*************************************************************************************************************
+     * Profile properties have changed
+     *************************************************************************************************************/
+    it("Testing what happens when profile has been updated", async () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue({ ...profileOne, profile: { encoding: "IBM-939" } }),
+                };
+            }),
+        });
+
+        const sessionNode = createDatasetSessionNode(session, profileOne);
+        const pds = new ZoweDatasetNode({
+            label: "TEST.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session,
+            profile: profileOne,
+        });
+        pds.dirty = true;
+        pds.contextValue = Constants.DS_PDS_CONTEXT;
+        jest.spyOn(pds as any, "getDatasets").mockReturnValueOnce([
+            {
+                success: true,
+                apiResponse: {
+                    items: [{ member: "IEFBR14" }],
+                },
+            },
+        ]);
+        const pdsChildren = await pds.getChildren();
+        expect(pdsChildren[0].label).toEqual("IEFBR14");
+        expect(pds.getProfile().profile?.encoding).toBeUndefined();
+        expect(pdsChildren[0].getProfile().profile?.encoding).toBe("IBM-939");
+    });
+});
 
 describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
     function createBlockMocks() {
