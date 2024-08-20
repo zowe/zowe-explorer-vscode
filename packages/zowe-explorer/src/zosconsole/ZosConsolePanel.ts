@@ -85,7 +85,7 @@ export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
 
     private _getHtmlForWebview(webview: vscode.Webview): string {
         const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "src", "webviews", "dist", "zos-console", "zos-console.js"));
-        const codiconsUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "node_modules", "@vscode/codicons", "dist", "codicon.css"));
+        const codiconsUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "src", "webviews", "dist", "codicons", "codicon.css"));
         const nonce = randomUUID();
 
         // Tip: Install the es6-string-html VS Code extension to enable code highlighting below
