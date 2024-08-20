@@ -131,6 +131,7 @@ export const ActionsBar = ({
             );
           })}
         <div
+          id="colsToggleBtn"
           style={{
             borderLeft: "1px solid var(--ag-border-color)",
             marginTop: "1px",
