@@ -56,11 +56,13 @@ describe("Table.View", () => {
                 disk: {
                     build: Uri.parse(buildPath),
                     script: Uri.parse(scriptPath),
+                    codicons: undefined,
                     css: undefined,
                 },
                 resource: {
                     build: buildPath,
                     script: scriptPath,
+                    codicons: undefined,
                     css: undefined,
                 },
             });

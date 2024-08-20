@@ -248,8 +248,8 @@ importers:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@18.19.33)(typescript@5.5.4)
       wdio-vscode-service:
-        specifier: ^6.0.3
-        version: 6.0.3(webdriverio@8.38.2)
+        specifier: ^6.1.0
+        version: 6.1.0(webdriverio@8.38.2)
       wdio-wait-for:
         specifier: ^3.0.11
         version: 3.0.11
@@ -339,6 +339,9 @@ importers:
       '@types/vscode-webview':
         specifier: ^1.57.1
         version: 1.57.5
+      '@vscode/codicons':
+        specifier: ^0.0.36
+        version: 0.0.36
       '@vscode/webview-ui-toolkit':
         specifier: ^1.2.2
         version: 1.4.0(react@18.3.1)
@@ -364,9 +367,6 @@ importers:
       '@types/lodash':
         specifier: ^4.17.0
         version: 4.17.4
-      '@vscode/codicons':
-        specifier: ^0.0.33
-        version: 0.0.33
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
@@ -376,6 +376,9 @@ importers:
       vite-plugin-checker:
         specifier: ^0.6.4
         version: 0.6.4(eslint@8.57.0)(typescript@5.4.5)(vite@4.5.3)
+      vite-plugin-static-copy:
+        specifier: ^0.17.1
+        version: 0.17.1(vite@4.5.3)
 
 packages:
 
@@ -1808,7 +1811,7 @@ packages:
       content-disposition: 0.5.4
       fastify-plugin: 4.5.1
       fastq: 1.17.1
-      glob: 10.3.15
+      glob: 10.4.5
     dev: true
 
   /@humanwhocodes/config-array@0.11.14:
@@ -3080,9 +3083,9 @@ packages:
       pretty-format: 29.7.0
     dev: true
 
-  /@vscode/codicons@0.0.33:
-    resolution: {integrity: sha512-VdgpnD75swH9hpXjd34VBgQ2w2quK63WljodlUcOoJDPKiV+rPjHrcUc2sjLCNKxhl6oKqmsZgwOWcDAY2GKKQ==}
-    dev: true
+  /@vscode/codicons@0.0.36:
+    resolution: {integrity: sha512-wsNOvNMMJ2BY8rC2N2MNBG7yOowV3ov8KlvUE/AiVUlHKTfWsw3OgAOQduX7h0Un6GssKD3aoTVH+TF3DSQwKQ==}
+    dev: false
 
   /@vscode/l10n-dev@0.0.35:
     resolution: {integrity: sha512-s6uzBXsVDSL69Z85HSqpc5dfKswQkeucY8L00t1TWzGalw7wkLQUKMRwuzqTq+AMwQKrRd7Po14cMoTcd11iDw==}
@@ -3123,7 +3126,7 @@ packages:
     engines: {node: '>=16'}
     dependencies:
       http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.4
+      https-proxy-agent: 7.0.5
       jszip: 3.10.1
       ora: 7.0.1
       semver: 7.6.2
@@ -13048,6 +13051,19 @@ packages:
       vscode-uri: 3.0.8
     dev: true
 
+  /vite-plugin-static-copy@0.17.1(vite@4.5.3):
+    resolution: {integrity: sha512-9h3iaVs0bqnqZOM5YHJXGHqdC5VAVlTZ2ARYsuNpzhEJUHmFqXY7dAK4ZFpjEQ4WLFKcaN8yWbczr81n01U4sQ==}
+    engines: {node: ^14.18.0 || >=16.0.0}
+    peerDependencies:
+      vite: ^3.0.0 || ^4.0.0 || ^5.0.0
+    dependencies:
+      chokidar: 3.6.0
+      fast-glob: 3.3.2
+      fs-extra: 11.2.0
+      picocolors: 1.0.1
+      vite: 4.5.3(@types/node@18.19.33)
+    dev: true
+
   /vite@4.5.3(@types/node@18.19.33):
     resolution: {integrity: sha512-kQL23kMeX92v3ph7IauVkXkikdDRsYMGTVl5KY2E9OY4ONLvkHf04MDTbnfo6NKxZiDLWzVpP5oTa8hQD8U3dg==}
     engines: {node: ^14.18.0 || >=16.0.0}
@@ -13161,8 +13177,8 @@ packages:
       defaults: 1.0.4
     dev: true
 
-  /wdio-vscode-service@6.0.3(webdriverio@8.38.2):
-    resolution: {integrity: sha512-sfX3w8UxNPcms8GmunWsQSEkiM4bQm4yHe0f4K2En6tiIGc+aWOACZbwSF3WN+laL9kQ49dBcBaWVbAxnmReJg==}
+  /wdio-vscode-service@6.1.0(webdriverio@8.38.2):
+    resolution: {integrity: sha512-WyrfPQFvPIiVe8PeQMXOkdkdHYI/MjiQsTEJcO4q93EWkrMGUzQhCCypFuue5EpLzThnqwrS5EzlruAcD50ghw==}
     engines: {node: ^16.13 || >=18}
     peerDependencies:
       webdriverio: ^8.32.2
@@ -13186,7 +13202,7 @@ packages:
       undici: 5.28.4
       vscode-uri: 3.0.8
       webdriverio: 8.38.2(typescript@5.5.4)
-      ws: 8.17.0
+      ws: 8.18.0
       yargs-parser: 21.1.1
     transitivePeerDependencies:
       - bufferutil
@@ -13574,7 +13590,6 @@ packages:
       utf-8-validate:
         optional: true
     dev: true
-    optional: true
 
   /xml2js@0.5.0:
     resolution: {integrity: sha512-drPFnkQJik/O+uPKpqSgr22mpuFHqKdbS835iAQrUC73L2F5WkboIRd63ai/2Yg6I1jzifPFKH2NTK+cfglkIA==}

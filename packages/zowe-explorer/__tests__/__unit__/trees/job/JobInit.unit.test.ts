@@ -20,6 +20,7 @@ import { SharedActions } from "../../../../src/trees/shared/SharedActions";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { JobInit } from "../../../../src/trees/job/JobInit";
 import { SharedInit } from "../../../../src/trees/shared/SharedInit";
+import { JobTableView } from "../../../../src/trees/job/JobTableView";
 
 describe("Test src/jobs/extension", () => {
     describe("initJobsProvider", () => {
@@ -137,6 +138,10 @@ describe("Test src/jobs/extension", () => {
             {
                 name: "zowe.jobs.filterJobs",
                 mock: [{ spy: jest.spyOn(jobsProvider, "filterJobsDialog"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.jobs.tableView",
+                mock: [{ spy: jest.spyOn(JobTableView, "handleCommand"), arg: [test.context, test.value, undefined] }],
             },
         ];
 

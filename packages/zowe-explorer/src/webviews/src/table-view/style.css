@@ -1,6 +1,13 @@
-.ag-theme-vsc {
-    max-height: 95vh;
+html {
+    scrollbar-color: unset;
+}
+
+.table-view {
     margin-top: 1em;
+    height: 88vh;
+}
+
+.ag-theme-vsc {
     --ag-icon-font-family: "agGridQuartz";
     --ag-row-hover-color: var(--vscode-list-hoverBackground);
     --ag-range-selection-background-color: var(--vscode-list-activeSelectionBackground);
@@ -13,6 +20,18 @@
     --ag-range-selection-border-color: var(--vscode-tab-activeForeground);
     --ag-foreground-color: var(--vscode-foreground);
     --ag-selected-row-background-color: var(--vscode-notebook-selectedCellBackground);
+}
+
+@media (max-height: 480px) {
+    .table-view {
+        height: 78vh;
+    }
+}
+
+@media (max-height: 300px) {
+    .table-view {
+        height: 68vh;
+    }
 }
 
 .ctx-menu-open .ag-body-viewport {
@@ -52,4 +71,10 @@
 
 .szh-menu-button:hover {
     background-color: var(--vscode-button-hoverBackground);
+}
+
+.ag-root-wrapper {
+    border-radius: 0;
+    border-bottom-left-radius: var(--ag-wrapper-border-radius);
+    border-bottom-right-radius: var(--ag-wrapper-border-radius);
 }

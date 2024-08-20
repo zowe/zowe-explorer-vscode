@@ -12,14 +12,22 @@ import { useContextMenu } from "./ContextMenu";
 import "./style.css";
 import { ActionsBar } from "./ActionsBar";
 import { actionsColumn } from "./actionsColumn";
+import { CheckboxSelectionCallbackParams, HeaderCheckboxSelectionCallbackParams } from "ag-grid-community";
 
 const vscodeApi = acquireVsCodeApi();
+
+function isFirstColumn(params: CheckboxSelectionCallbackParams | HeaderCheckboxSelectionCallbackParams) {
+  const displayedColumns = params.api.getAllDisplayedColumns();
+  const thisIsFirstColumn = displayedColumns[0] === params.column;
+  return thisIsFirstColumn;
+}
 
 export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewProps) => {
   const [tableData, setTableData] = useState<Table.ViewOpts | undefined>(data);
   const [theme, setTheme] = useState<string>(baseTheme ?? "ag-theme-quartz");
   const [selectionCount, setSelectionCount] = useState<number>(0);
   const gridRef = useRef<any>();
+  const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
 
   const contextMenu = useContextMenu({
     options: [
@@ -72,14 +80,22 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
       if (response.command === "ondatachanged") {
         // Update received from a VS Code extender; update table state
         const newData: Table.ViewOpts = response.data;
+        if (newData.options?.selectEverything) {
+          (newData.options as any).defaultColDef = {
+            headerCheckboxSelection: isFirstColumn,
+            checkboxSelection: isFirstColumn,
+          };
+        }
         if (Object.keys(newData.actions).length > 1 || newData.actions.all?.length > 0) {
           // Add an extra column to the end of each row if row actions are present
           const rows = newData.rows?.map((row: Table.RowData) => {
             return { ...row, actions: "" };
           });
           const columns = [...(newData.columns ?? []), actionsColumn(newData, actionsCellRenderer, vscodeApi)];
+          setVisibleColumns(columns.map((c) => c.headerName ?? c.field));
           setTableData({ ...newData, rows, columns });
         } else {
+          setVisibleColumns(newData.columns.map((c) => c.headerName ?? c.field));
           setTableData(newData);
         }
       }
@@ -100,13 +116,20 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
   );
 
   return (
-    <>
-      {tableData?.title ? <h1>{tableData.title}</h1> : null}
-      <div className={`${theme} ag-theme-vsc ${contextMenu.open ? "ctx-menu-open" : ""}`}>
-        {contextMenu.component}
-        <ActionsBar actions={tableData?.actions.all ?? []} gridRef={gridRef} itemCount={selectionCount} vscodeApi={vscodeApi} />
-        {tableData ? <AgGridReact {...tableProps(contextMenu, setSelectionCount, tableData, vscodeApi)} ref={gridRef} /> : null}
-      </div>
-    </>
+    <div className={`table-view ${theme} ag-theme-vsc ${contextMenu.open ? "ctx-menu-open" : ""}`}>
+      {contextMenu.component}
+      <ActionsBar
+        actions={tableData?.actions.all ?? []}
+        columns={tableData?.columns?.map((c) => c.headerName ?? c.field) ?? []}
+        gridRef={gridRef}
+        itemCount={tableData?.rows?.length ?? 0}
+        title={tableData?.title ?? ""}
+        selectionCount={selectionCount}
+        visibleColumns={visibleColumns}
+        setVisibleColumns={setVisibleColumns}
+        vscodeApi={vscodeApi}
+      />
+      {tableData ? <AgGridReact {...tableProps(contextMenu, setSelectionCount, tableData, vscodeApi)} ref={gridRef} /> : null}
+    </div>
   );
 };
