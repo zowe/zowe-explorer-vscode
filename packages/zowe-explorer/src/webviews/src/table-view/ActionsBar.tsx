@@ -18,34 +18,24 @@ interface ActionsProps {
   vscodeApi: any;
 }
 
-export const ActionsBar = ({
-  actions,
-  gridRef,
-  itemCount,
-  selectionCount,
-  title,
-  columns,
-  visibleColumns,
-  setVisibleColumns,
-  vscodeApi,
-}: ActionsProps) => {
+export const ActionsBar = (props: ActionsProps) => {
   const [searchFilter, setSearchFilter] = useState<string>("");
 
   const columnDropdownItems = (visibleColumns: string[]) =>
-    columns
+    props.columns
       .filter((col) => col !== "actions" && (searchFilter.length === 0 || col.toLowerCase().includes(searchFilter)))
       .map((col) => (
         <MenuItem
           key={`toggle-vis-${col}`}
           type="checkbox"
           onClick={(e: any) => {
-            const gridApi = gridRef.current.api as GridApi;
+            const gridApi = props.gridRef.current.api as GridApi;
             const colVisibility = !visibleColumns.includes(col);
             gridApi.setColumnsVisible(
               [gridApi.getColumns()?.find((c) => c.getColDef().field === col || c.getColDef().headerName === col)!],
               colVisibility
             );
-            setVisibleColumns(colVisibility ? [...visibleColumns, col] : visibleColumns.filter((c) => c !== col));
+            props.setVisibleColumns(colVisibility ? [...visibleColumns, col] : visibleColumns.filter((c) => c !== col));
             e.keepOpen = true;
           }}
         >
@@ -86,20 +76,20 @@ export const ActionsBar = ({
       }}
     >
       <h3 style={{ marginLeft: "0.25em" }}>
-        {title} ({itemCount})
+        {props.title} ({props.itemCount})
       </h3>
       <span style={{ display: "flex", alignItems: "center", marginBottom: "0.25em" }}>
         <p style={{ fontSize: "0.9em", paddingTop: "2px", marginRight: "0.75em" }}>
-          {selectionCount === 0 ? "No" : selectionCount} item{selectionCount > 1 || selectionCount === 0 ? "s" : ""} selected
+          {props.selectionCount === 0 ? "No" : props.selectionCount} item{props.selectionCount > 1 || props.selectionCount === 0 ? "s" : ""} selected
         </p>
-        {actions
-          .filter((action) => (itemCount > 1 ? action.callback.typ === "multi-row" : action.callback.typ.endsWith("row")))
+        {props.actions
+          .filter((action) => (props.itemCount > 1 ? action.callback.typ === "multi-row" : action.callback.typ.endsWith("row")))
           .map((action, i) => {
             // Wrap function to properly handle named parameters
-            const selectedRows = gridRef.current?.api?.getSelectedRows() ?? 0;
+            const selectedRows = props.gridRef.current?.api?.getSelectedRows() ?? 0;
             const cond = action.condition ? new Function(wrapFn(action.condition)) : undefined;
             // Invoke the wrapped function once to get the built function, then invoke it again with the parameters
-            let shouldDisable = selectionCount === 0;
+            let shouldDisable = props.selectionCount === 0;
             if (cond != null) {
               shouldDisable ||= !cond()(action.callback.typ === "multi-row" ? selectedRows : selectedRows[0]);
             }
@@ -111,12 +101,12 @@ export const ActionsBar = ({
                 appearance={action.type}
                 style={{ fontWeight: "bold", marginTop: "3px", marginRight: "0.25em" }}
                 onClick={(_event: any) => {
-                  const selectedNodes = (gridRef.current.api as GridApi).getSelectedNodes();
+                  const selectedNodes = (props.gridRef.current.api as GridApi).getSelectedNodes();
                   if (selectedNodes.length === 0) {
                     return;
                   }
 
-                  vscodeApi.postMessage({
+                  props.vscodeApi.postMessage({
                     command: action.command,
                     data: {
                       row: action.callback.typ === "single-row" ? selectedNodes[0].data : undefined,
@@ -167,7 +157,7 @@ export const ActionsBar = ({
                   </VSCodeTextField>
                 )}
               </FocusableItem>
-              <MenuGroup takeOverflow>{columnDropdownItems(visibleColumns)}</MenuGroup>
+              <MenuGroup takeOverflow>{columnDropdownItems(props.visibleColumns)}</MenuGroup>
             </Menu>
           </span>
         </div>
