@@ -6,6 +6,18 @@ import { wrapFn } from "./types";
 import { FocusableItem, Menu, MenuGroup, MenuItem } from "@szhsin/react-menu";
 import "@szhsin/react-menu/dist/index.css";
 
+interface ActionsProps {
+  actions: Table.Action[];
+  gridRef: Ref<any>;
+  itemCount: number;
+  selectionCount: number;
+  title: string;
+  columns: string[];
+  visibleColumns: string[];
+  setVisibleColumns: Dispatch<string[]>;
+  vscodeApi: any;
+}
+
 export const ActionsBar = ({
   actions,
   gridRef,
@@ -16,17 +28,7 @@ export const ActionsBar = ({
   visibleColumns,
   setVisibleColumns,
   vscodeApi,
-}: {
-  actions: Table.Action[];
-  gridRef: Ref<any>;
-  itemCount: number;
-  selectionCount: number;
-  title: string;
-  columns: string[];
-  visibleColumns: string[];
-  setVisibleColumns: Dispatch<string[]>;
-  vscodeApi: any;
-}) => {
+}: ActionsProps) => {
   const [searchFilter, setSearchFilter] = useState<string>("");
 
   const columnDropdownItems = (visibleColumns: string[]) =>
