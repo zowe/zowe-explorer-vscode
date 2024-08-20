@@ -9,7 +9,7 @@
  *
  */
 
-import { CancellationToken, WebviewView, WebviewViewProvider, WebviewViewResolveContext } from "vscode";
+import { CancellationToken, commands, WebviewView, WebviewViewProvider, WebviewViewResolveContext } from "vscode";
 import { Table } from "./TableView";
 
 /**
@@ -60,7 +60,7 @@ export class TableViewProvider implements WebviewViewProvider {
      * Provide a table view to display in the "Zowe Resources" view.
      * @param tableView The table view to prepare for rendering
      */
-    public setTableView(tableView: Table.Instance | null): void {
+    public async setTableView(tableView: Table.Instance | null): Promise<void> {
         if (this.tableView != null) {
             this.tableView.dispose();
         }
@@ -75,6 +75,8 @@ export class TableViewProvider implements WebviewViewProvider {
 
         if (this.view) {
             this.tableView.resolveForView(this.view);
+        } else {
+            await commands.executeCommand("workbench.view.extension.zowe-panel");
         }
     }
 

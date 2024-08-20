@@ -153,6 +153,17 @@ export function createJobNode(session: any, profile: imperative.IProfileLoaded) 
     return jobNode;
 }
 
+export function createJobInfoNode(session: any, profile: imperative.IProfileLoaded) {
+    const jobNode = new ZoweJobNode({
+        label: "Generic node for displaying information",
+        collapsibleState: vscode.TreeItemCollapsibleState.None,
+        parentNode: session.getSessionNode(),
+        profile,
+    });
+    jobNode.contextValue = Constants.INFORMATION_CONTEXT;
+    return jobNode;
+}
+
 export function createJobFavoritesNode() {
     const jobFavoritesNode = new ZoweJobNode({
         label: "Favorites",

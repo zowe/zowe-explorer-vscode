@@ -417,6 +417,37 @@
       "Job label"
     ]
   },
+  "Get JCL": "Get JCL",
+  "Display in Tree": "Display in Tree",
+  "Cancel": "Cancel",
+  "Download": "Download",
+  "Jobs with ID: {0}/Job Search ID": {
+    "message": "Jobs with ID: {0}",
+    "comment": [
+      "Job Search ID"
+    ]
+  },
+  "Jobs: {0} | {1} | {2}/Job OwnerJob PrefixJob Status": {
+    "message": "Jobs: {0} | {1} | {2}",
+    "comment": [
+      "Job Owner",
+      "Job Prefix",
+      "Job Status"
+    ]
+  },
+  "Jobs": "Jobs",
+  "Name": "Name",
+  "Class": "Class",
+  "Owner": "Owner",
+  "ID": "ID",
+  "Return Code": "Return Code",
+  "Status": "Status",
+  "Subsystem": "Subsystem",
+  "Type": "Type",
+  "Job Correlator": "Job Correlator",
+  "Phase": "Phase",
+  "Phase Name": "Phase Name",
+  "Error Details": "Error Details",
   "$(sync~spin) Fetching spool file...": "$(sync~spin) Fetching spool file...",
   "Failed to fetch jobs: getJobsByParameters is not implemented for this session's JES API.": "Failed to fetch jobs: getJobsByParameters is not implemented for this session's JES API.",
   "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}/Job name": {
@@ -471,7 +502,6 @@
       "Job profile type"
     ]
   },
-  "Owner": "Owner",
   "Prefix": "Prefix",
   "The selected jobs were already cancelled.": "The selected jobs were already cancelled.",
   "The cancel function is not implemented in this API.": "The cancel function is not implemented in this API.",
@@ -792,7 +822,6 @@
   "Name of Data Set Member": "Name of Data Set Member",
   "Copying data sets is not supported.": "Copying data sets is not supported.",
   "Replace": "Replace",
-  "Cancel": "Cancel",
   "The data set member already exists.\nDo you want to replace it?": "The data set member already exists.\nDo you want to replace it?",
   "The physical sequential (PS) data set already exists.\nDo you want to replace it?": "The physical sequential (PS) data set already exists.\nDo you want to replace it?",
   "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?": "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?",

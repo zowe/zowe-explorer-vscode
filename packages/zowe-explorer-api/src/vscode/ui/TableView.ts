@@ -56,7 +56,7 @@ export namespace Table {
     export type Callback = SingleRowCallback | MultiRowCallback | CellCallback;
 
     /** Conditional callback function - whether an action or option should be rendered. */
-    export type Conditional = (data: RowData | ContentTypes) => boolean;
+    export type Conditional = (data: RowData[] | RowData | ContentTypes) => boolean;
 
     // Defines the supported actions and related types.
     export type ActionKind = "primary" | "secondary" | "icon";
@@ -200,6 +200,10 @@ export namespace Table {
         columnMenu?: "legacy" | "new";
         /** Set this to `true` to enable debugging information from the grid */
         debug?: boolean;
+        /** Set this to `true` to allow checkbox selection, no matter what row is visible. */
+        selectEverything?: boolean;
+        /** Set this to suppress row-click selection, in favor of checkbox selection. */
+        suppressRowClickSelection?: boolean;
         /** The height in pixels for the rows containing floating filters. */
         floatingFiltersHeight?: number;
         /** The height in pixels for the rows containing header column groups. */
