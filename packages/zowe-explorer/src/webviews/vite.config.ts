@@ -44,11 +44,11 @@ export default defineConfig({
         viteStaticCopy({
             targets: [
                 {
-                    src: "../node_modules/@vscode/codicons/dist/codicon.css",
+                    src: "../../../node_modules/@vscode/codicons/dist/codicon.css",
                     dest: "codicons/",
                 },
                 {
-                    src: "../node_modules/@vscode/codicons/dist/codicon.ttf",
+                    src: "../../../node_modules/@vscode/codicons/dist/codicon.ttf",
                     dest: "codicons/",
                 },
             ],
