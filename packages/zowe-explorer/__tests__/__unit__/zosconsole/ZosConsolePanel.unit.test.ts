@@ -9,9 +9,9 @@
  *
  */
 
-import { createInstanceOfProfile, createIProfile } from "../../../__mocks__/mockCreators/shared";
+import { createInstanceOfProfile, createIProfile } from "../../__mocks__/mockCreators/shared";
 import { ZosConsoleViewProvider } from "../../../src/zosconsole/ZosConsolePanel";
-import { Profiles } from "../../../src/Profiles";
+import { Profiles } from "../../../src/configuration/Profiles";
 import * as vscode from "vscode";
 
 describe("ZosConsoleViewProvider", () => {
