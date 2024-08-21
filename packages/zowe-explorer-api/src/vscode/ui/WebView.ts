@@ -75,6 +75,7 @@ export class WebView {
         };
 
         const builtHtml = Mustache.render(HTMLTemplate, {
+            cspSource: this.panel.webview.cspSource,
             uris: this.uris,
             nonce: this.nonce,
             title: this.title,
