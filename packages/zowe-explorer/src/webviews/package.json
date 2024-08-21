@@ -25,13 +25,12 @@
     "@vscode/webview-ui-toolkit": "^1.2.2",
     "ag-grid-community": "^32.0.2",
     "ag-grid-react": "^32.0.2",
-    "lodash": "^4.17.21",
+    "es-toolkit": "^1.16.0",
     "preact": "^10.16.0",
     "preact-render-to-string": "^6.5.4"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.5.0",
-    "@types/lodash": "^4.17.0",
     "typescript": "^5.3.3",
     "vite": "^4.5.3",
     "vite-plugin-checker": "^0.6.4",
