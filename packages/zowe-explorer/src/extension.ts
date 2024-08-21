@@ -54,8 +54,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     SharedInit.watchConfigProfile(context);
     await SharedInit.watchForZoweButtonClick();
-    const provider = new ZosConsoleViewProvider(context.extensionUri);
-    context.subscriptions.push(vscode.window.registerWebviewViewProvider(ZosConsoleViewProvider.viewType, provider));
 
     return ZoweExplorerApiRegister.getInstance();
 }
