@@ -23,7 +23,6 @@ import { SharedInit } from "./trees/shared/SharedInit";
 import { SharedTreeProviders } from "./trees/shared/SharedTreeProviders";
 import { USSInit } from "./trees/uss/USSInit";
 import { ProfilesUtils } from "./utils/ProfilesUtils";
-import { ZosConsoleViewProvider } from "./zosconsole/ZosConsolePanel";
 
 /**
  * The function that runs when the extension is loaded
