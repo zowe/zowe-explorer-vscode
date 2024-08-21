@@ -2,6 +2,8 @@ import { Dropdown, Option, TextArea, TextField } from "@vscode/webview-ui-toolki
 import { VSCodeDropdown, VSCodeTextArea, VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
 import { useEffect, useState } from "preact/hooks";
 
+declare const vscode: any;
+
 export function App() {
   const [consoleContent, setConsoleContent] = useState("");
   useEffect(() => {
@@ -47,7 +49,7 @@ export function App() {
       if (consoleField!.value === "clear") {
         setConsoleContent("");
       } else {
-        postMessage({
+        vscode.postMessage({
           command: "opercmd",
           profile: profileList.options[profileList.selectedIndex].text,
           text: consoleField.value,
