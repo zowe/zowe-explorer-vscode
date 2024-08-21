@@ -10,7 +10,7 @@
  */
 
 import { writeFileSync } from "fs";
-import { Builder, By, Key, until, Button, WebDriver } from "selenium-webdriver";
+import { Builder, By, Key, until, WebDriver } from "selenium-webdriver";
 import * as chrome from "selenium-webdriver/chrome";
 import { TheiaLocator, DatasetsLocators, UssLocators, JobsLocators, TheiaNotificationMessages } from "./Locators";
 
@@ -18,7 +18,7 @@ const WAITTIME = 40000;
 const SHORTSLEEPTIME = 2000;
 let driverChrome: WebDriver;
 
-export async function openBrowser(headless = true) {
+export async function openBrowser(headless = true): Promise<WebDriver> {
     const chromeOptions = new chrome.Options();
     if (headless) {
         chromeOptions.addArguments("--headless");
@@ -28,70 +28,70 @@ export async function openBrowser(headless = true) {
     // chromeOptions.addArguments("--disable-dev-shm-usage"); // Linux ONLY
 
     chromeOptions.addArguments("--window-size=1200,1100");
-    driverChrome = new Builder().forBrowser("chrome").setChromeOptions(chromeOptions).build();
+    driverChrome = await new Builder().forBrowser("chrome").setChromeOptions(chromeOptions).build();
     return driverChrome;
 }
 
-export async function takeScreenshot(filename: string) {
+export async function takeScreenshot(filename: string): Promise<void> {
     const image = await driverChrome.takeScreenshot();
     writeFileSync(filename, image, "base64");
 }
 
-export async function OpenTheiaInChrome() {
+export async function OpenTheiaInChrome(): Promise<void> {
     await driverChrome.get(TheiaLocator.theiaUrl);
 }
 
-export async function clickOnZoweExplorer() {
+export async function clickOnZoweExplorer(): Promise<void> {
     await driverChrome.wait(until.elementLocated(By.id(TheiaLocator.zoweExplorerxId)), WAITTIME).click();
 }
 
-export async function clickOnFavoriteTabInDatasets() {
+export async function clickOnFavoriteTabInDatasets(): Promise<void> {
     await driverChrome.findElement(By.id(DatasetsLocators.datasetTabId)).click();
     await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.favoriteTabXpath)), WAITTIME).click();
 }
 
-export async function clickOnFavoriteTabInUss() {
+export async function clickOnFavoriteTabInUss(): Promise<void> {
     await driverChrome.findElement(By.id(UssLocators.ussTabId)).click();
     await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.favoriteTabXpath)), WAITTIME).click();
 }
 
-export async function clickOnFavoriteTabInJobs() {
+export async function clickOnFavoriteTabInJobs(): Promise<void> {
     await driverChrome.findElement(By.id(JobsLocators.jobTabId)).click();
     await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.favoriteTabXpath)), WAITTIME).click();
 }
 
-export async function clickOnDatasetsTab() {
+export async function clickOnDatasetsTab(): Promise<void> {
     await driverChrome.findElement(By.id(DatasetsLocators.datasetTabId)).click();
     await driverChrome.findElement(By.xpath(DatasetsLocators.datasetTabXpath)).click();
 }
 
-export async function clickOnUssTab() {
+export async function clickOnUssTab(): Promise<void> {
     await driverChrome.findElement(By.id(UssLocators.ussTabId)).click();
     await driverChrome.findElement(By.xpath(UssLocators.ussTabXpath)).click();
 }
 
-export async function clickOnJobsTab() {
+export async function clickOnJobsTab(): Promise<void> {
     await driverChrome.findElement(By.id(JobsLocators.jobTabId)).click();
     await driverChrome.findElement(By.xpath(JobsLocators.jobTabXpath)).click();
 }
 
-export async function getFavoriteProfileNameFromDatasets() {
+export async function getFavoriteProfileNameFromDatasets(): Promise<string> {
     const favoriteProfile = await driverChrome
         .wait(until.elementLocated(By.xpath(DatasetsLocators.favoriteProfileInDatasetXpath)), WAITTIME)
         .getText();
     return favoriteProfile;
 }
 
-export async function getFavoriteProfileNameFromUss() {
+export async function getFavoriteProfileNameFromUss(): Promise<string> {
     const favoriteProfile = await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.favoriteProfileInUssXpath)), WAITTIME).getText();
     return favoriteProfile;
 }
 
-export async function getFavoriteProfileNameFromJobs() {
+export async function getFavoriteProfileNameFromJobs(): Promise<string> {
     return driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.favoriteProfileInJobsXpath)), WAITTIME).getText();
 }
 
-export async function removeFavoriteProfileFromDatasets() {
+export async function removeFavoriteProfileFromDatasets(): Promise<void> {
     const removeFromFavorite = await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.favoriteProfileInDatasetXpath)), WAITTIME);
     await driverChrome.actions().contextClick(removeFromFavorite).perform();
     await driverChrome.sleep(SHORTSLEEPTIME);
@@ -100,7 +100,7 @@ export async function removeFavoriteProfileFromDatasets() {
     await driverChrome.wait(until.elementLocated(By.xpath(TheiaNotificationMessages.removeFavoriteProfileConfirmationXpath)), WAITTIME).click();
 }
 
-export async function removeFavoriteProfileFromUss() {
+export async function removeFavoriteProfileFromUss(): Promise<void> {
     const removeFromFavorite = await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.favoriteProfileInUssXpath)), WAITTIME);
     await driverChrome.actions().contextClick(removeFromFavorite).perform();
     await driverChrome.sleep(SHORTSLEEPTIME);
@@ -109,7 +109,7 @@ export async function removeFavoriteProfileFromUss() {
     await driverChrome.wait(until.elementLocated(By.xpath(TheiaNotificationMessages.removeFavoriteProfileConfirmationXpath)), WAITTIME).click();
 }
 
-export async function removeFavoriteProfileFromJobs() {
+export async function removeFavoriteProfileFromJobs(): Promise<void> {
     const removeFromFavorite = await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.favoriteProfileInJobsXpath)), WAITTIME);
     await driverChrome.actions().contextClick(removeFromFavorite).perform();
     await driverChrome.sleep(SHORTSLEEPTIME);
@@ -118,7 +118,7 @@ export async function removeFavoriteProfileFromJobs() {
     await driverChrome.wait(until.elementLocated(By.xpath(TheiaNotificationMessages.removeFavoriteProfileConfirmationXpath)), WAITTIME).click();
 }
 
-export async function addProfileToFavoritesInDatasets() {
+export async function addProfileToFavoritesInDatasets(): Promise<void> {
     const addTofavorite = await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.secondDatasetProfileXpath)), WAITTIME);
     await addTofavorite.click();
     await driverChrome.sleep(SHORTSLEEPTIME);
@@ -127,7 +127,7 @@ export async function addProfileToFavoritesInDatasets() {
     await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.addToFavoriteOptionXpath)), WAITTIME).click();
 }
 
-export async function addProfileToFavoritesInUss() {
+export async function addProfileToFavoritesInUss(): Promise<void> {
     const addTofavorite = await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.secondUssProfileXpath)), WAITTIME);
     await addTofavorite.click();
     await driverChrome.sleep(SHORTSLEEPTIME);
@@ -136,7 +136,7 @@ export async function addProfileToFavoritesInUss() {
     await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.addToFavoriteOptionXpath)), WAITTIME).click();
 }
 
-export async function addProfileToFavoritesInJobs() {
+export async function addProfileToFavoritesInJobs(): Promise<void> {
     const addTofavorite = await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.secondJobsProfileXpath)), WAITTIME);
     await addTofavorite.click();
     await driverChrome.sleep(SHORTSLEEPTIME);
@@ -145,31 +145,31 @@ export async function addProfileToFavoritesInJobs() {
     await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.addToFavoriteOptionXpath)), WAITTIME).click();
 }
 
-export async function hideProfileInUss() {
+export async function hideProfileInUss(): Promise<void> {
     const hideProfileFromUss = await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.secondUssProfileXpath)), WAITTIME);
     await driverChrome.actions().contextClick(hideProfileFromUss).perform();
-    driverChrome.wait(until.elementLocated(By.xpath(UssLocators.manageProfileFromUnixXpath)), WAITTIME).click();
+    await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.manageProfileFromUnixXpath)), WAITTIME).click();
     await driverChrome.sleep(SHORTSLEEPTIME);
     const manageProfile = driverChrome.wait(until.elementLocated(By.xpath(UssLocators.emptyInputBoxXpath)), WAITTIME);
-    manageProfile.sendKeys("Hide Profile");
-    manageProfile.sendKeys(Key.ENTER);
-    manageProfile.sendKeys("No");
-    manageProfile.sendKeys(Key.ENTER);
+    await manageProfile.sendKeys("Hide Profile");
+    await manageProfile.sendKeys(Key.ENTER);
+    await manageProfile.sendKeys("No");
+    await manageProfile.sendKeys(Key.ENTER);
 }
 
-export async function hideProfileInJobs() {
+export async function hideProfileInJobs(): Promise<void> {
     const hideProfileFromJobs = await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.secondJobsProfileBeforeHidingXpath)), WAITTIME);
     await driverChrome.actions().contextClick(hideProfileFromJobs).perform();
-    driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.manageProfileFromJobsXpath)), WAITTIME).click();
+    await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.manageProfileFromJobsXpath)), WAITTIME).click();
     await driverChrome.sleep(SHORTSLEEPTIME);
     const manageProfile = driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.emptyInputBoxXpath)), WAITTIME);
-    manageProfile.sendKeys("Hide Profile");
-    manageProfile.sendKeys(Key.ENTER);
-    manageProfile.sendKeys("No");
-    manageProfile.sendKeys(Key.ENTER);
+    await manageProfile.sendKeys("Hide Profile");
+    await manageProfile.sendKeys(Key.ENTER);
+    await manageProfile.sendKeys("No");
+    await manageProfile.sendKeys(Key.ENTER);
 }
 
-export async function verifyProfileIsHideInUss() {
+export async function verifyProfileIsHideInUss(): Promise<boolean> {
     const hideProfileFromUss = await driverChrome.findElements(By.xpath(UssLocators.secondUssProfileXpath)).then((found) => !!found.length);
     if (!hideProfileFromUss) {
         return true;
@@ -178,7 +178,7 @@ export async function verifyProfileIsHideInUss() {
     }
 }
 
-export async function verifyProfileIsHideInJobs() {
+export async function verifyProfileIsHideInJobs(): Promise<boolean> {
     const hideProfileFromJobs = await driverChrome
         .findElements(By.xpath(JobsLocators.secondJobsProfileBeforeHidingXpath))
         .then((found) => !!found.length);
@@ -189,7 +189,7 @@ export async function verifyProfileIsHideInJobs() {
     }
 }
 
-export async function deleteDefaultProfileInDatasets() {
+export async function deleteDefaultProfileInDatasets(): Promise<void> {
     const profileName = await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.defaultDatasetsProfileXpath)), WAITTIME);
     await profileName.click();
     await driverChrome.sleep(SHORTSLEEPTIME);
@@ -197,29 +197,29 @@ export async function deleteDefaultProfileInDatasets() {
     await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.manageProfileFromDatasetsXpath)), WAITTIME).click();
     await driverChrome.sleep(SHORTSLEEPTIME);
     const manageProfile = driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)), WAITTIME);
-    manageProfile.sendKeys("Delete Profile");
-    manageProfile.sendKeys(Key.ENTER);
+    await manageProfile.sendKeys("Delete Profile");
+    await manageProfile.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const deleteProfile = driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)), WAITTIME);
-    deleteProfile.sendKeys("Delete");
-    deleteProfile.sendKeys(Key.ENTER);
+    await deleteProfile.sendKeys("Delete");
+    await deleteProfile.sendKeys(Key.ENTER);
 }
 
-export async function deleteProfileInDatasets() {
+export async function deleteProfileInDatasets(): Promise<void> {
     const favprofile = await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.secondDatasetProfileXpath)), WAITTIME);
     await driverChrome.actions().contextClick(favprofile).perform();
     await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.manageProfileFromDatasetsXpath)), WAITTIME).click();
     await driverChrome.sleep(SHORTSLEEPTIME);
     const manageProfile = driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)), WAITTIME);
-    manageProfile.sendKeys("Delete Profile");
-    manageProfile.sendKeys(Key.ENTER);
+    await manageProfile.sendKeys("Delete Profile");
+    await manageProfile.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const deleteProfile = driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)), WAITTIME);
-    deleteProfile.sendKeys("Delete");
-    deleteProfile.sendKeys(Key.ENTER);
+    await deleteProfile.sendKeys("Delete");
+    await deleteProfile.sendKeys(Key.ENTER);
 }
 
-export async function verifyRemovedFavoriteProfileInDatasets() {
+export async function verifyRemovedFavoriteProfileInDatasets(): Promise<boolean> {
     const favoriteProfile = await driverChrome.findElements(By.xpath(DatasetsLocators.favoriteProfileInDatasetXpath)).then((found) => !!found.length);
     if (!favoriteProfile) {
         return true;
@@ -228,7 +228,7 @@ export async function verifyRemovedFavoriteProfileInDatasets() {
     }
 }
 
-export async function verifyRemovedFavoriteProfileInUss() {
+export async function verifyRemovedFavoriteProfileInUss(): Promise<boolean> {
     const favoriteProfile = await driverChrome.findElements(By.xpath(UssLocators.favoriteProfileInUssXpath)).then((found) => !!found.length);
     if (!favoriteProfile) {
         return true;
@@ -237,7 +237,7 @@ export async function verifyRemovedFavoriteProfileInUss() {
     }
 }
 
-export async function verifyRemovedFavoriteProfileInJobs() {
+export async function verifyRemovedFavoriteProfileInJobs(): Promise<boolean> {
     const favoriteProfile = await driverChrome.findElements(By.xpath(JobsLocators.favoriteProfileInJobsXpath)).then((found) => !!found.length);
     if (!favoriteProfile) {
         return true;
@@ -246,7 +246,7 @@ export async function verifyRemovedFavoriteProfileInJobs() {
     }
 }
 
-export async function verifyRemovedDefaultProfileInDataSet() {
+export async function verifyRemovedDefaultProfileInDataSet(): Promise<boolean> {
     const defaultProfile = await driverChrome.findElements(By.xpath(DatasetsLocators.defaultDatasetsProfileXpath)).then((found) => !!found.length);
     if (!defaultProfile) {
         return true;
@@ -255,7 +255,7 @@ export async function verifyRemovedDefaultProfileInDataSet() {
     }
 }
 
-export async function verifyRemovedOtherProfileInDataSet() {
+export async function verifyRemovedOtherProfileInDataSet(): Promise<boolean> {
     const defaultProfile = await driverChrome.findElements(By.xpath(DatasetsLocators.secondDatasetProfileXpath)).then((found) => !!found.length);
     if (!defaultProfile) {
         return true;
@@ -264,7 +264,7 @@ export async function verifyRemovedOtherProfileInDataSet() {
     }
 }
 
-export async function verifyRemovedDefaultProfileInUss() {
+export async function verifyRemovedDefaultProfileInUss(): Promise<boolean> {
     const defaultProfile = await driverChrome.findElements(By.xpath(UssLocators.defaultUssProfileXpath)).then((found) => !!found.length);
     if (!defaultProfile) {
         return true;
@@ -273,7 +273,7 @@ export async function verifyRemovedDefaultProfileInUss() {
     }
 }
 
-export async function verifyRemovedDefaultProfileInJobs() {
+export async function verifyRemovedDefaultProfileInJobs(): Promise<boolean> {
     const defaultProfile = await driverChrome.findElements(By.xpath(JobsLocators.defaultJobsProfileXpath)).then((found) => !!found.length);
     if (!defaultProfile) {
         return true;
@@ -281,81 +281,81 @@ export async function verifyRemovedDefaultProfileInJobs() {
         return false;
     }
 }
-export async function closeNotificationMessage() {
+export async function closeNotificationMessage(): Promise<void> {
     await driverChrome.findElement(By.xpath(TheiaNotificationMessages.closeTheiaNotificationWarningMsgXpath)).click();
 }
 
-export async function sleepTime(sleeptime: number) {
+export async function sleepTime(sleeptime: number): Promise<void> {
     await driverChrome.sleep(sleeptime);
 }
 
-export async function refreshBrowser() {
+export async function refreshBrowser(): Promise<void> {
     await driverChrome.navigate().refresh();
 }
 
-export function closeBrowser() {
-    driverChrome.close();
+export async function closeBrowser(): Promise<void> {
+    await driverChrome.close();
 }
 
-export async function addProfileDetails(profileName: string) {
+export async function addProfileDetails(profileName: string): Promise<void> {
     await driverChrome.findElement(By.xpath(DatasetsLocators.createNewConnectionListXpath)).click();
     await driverChrome.sleep(SHORTSLEEPTIME);
     const datasetProfileName = await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)), WAITTIME);
-    datasetProfileName.sendKeys(profileName);
-    datasetProfileName.sendKeys(Key.ENTER);
+    await datasetProfileName.sendKeys(profileName);
+    await datasetProfileName.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const zosUrl = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
-    zosUrl.sendKeys("fakehost.net:1003");
-    zosUrl.sendKeys(Key.ENTER);
+    await zosUrl.sendKeys("fakehost.net:1003");
+    await zosUrl.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const username = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
-    username.sendKeys("fake");
-    username.sendKeys(Key.ENTER);
+    await username.sendKeys("fake");
+    await username.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const password = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
-    password.sendKeys("fake");
-    password.sendKeys(Key.ENTER);
+    await password.sendKeys("fake");
+    await password.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const authorization = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
-    authorization.sendKeys("False - Accept connections with self-signed certificates");
-    authorization.sendKeys(Key.ENTER);
+    await authorization.sendKeys("False - Accept connections with self-signed certificates");
+    await authorization.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const certFile = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
-    certFile.sendKeys(Key.ENTER);
+    await certFile.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const certKeyFile = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
-    certKeyFile.sendKeys(Key.ENTER);
+    await certKeyFile.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const basepath = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
-    basepath.sendKeys(Key.ENTER);
+    await basepath.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const protocol = await driverChrome.findElement(By.xpath(DatasetsLocators.inputBoxXpath));
-    protocol.sendKeys(Key.ENTER);
+    await protocol.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const encoding = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
-    encoding.sendKeys(Key.ENTER);
+    await encoding.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const responseTimeout = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
-    responseTimeout.sendKeys(Key.ENTER);
+    await responseTimeout.sendKeys(Key.ENTER);
     await driverChrome.sleep(SHORTSLEEPTIME);
     const addToAllTrees = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
-    addToAllTrees.sendKeys("No");
-    addToAllTrees.sendKeys(Key.ENTER);
+    await addToAllTrees.sendKeys("No");
+    await addToAllTrees.sendKeys(Key.ENTER);
 }
-export async function clickOnDatasetsPanel() {
+export async function clickOnDatasetsPanel(): Promise<void> {
     await driverChrome.findElement(By.id(DatasetsLocators.datasetsPanelId)).click();
 }
 
-export async function clickOnAddSessionInDatasets() {
+export async function clickOnAddSessionInDatasets(): Promise<void> {
     await driverChrome.findElement(By.id(DatasetsLocators.datasetsAddSessionId)).click();
 }
 
-export async function getDatasetsDefaultProfilename() {
+export async function getDatasetsDefaultProfilename(): Promise<string> {
     const datasetProfile = await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.defaultDatasetsProfileXpath)), WAITTIME).getText();
     return datasetProfile;
 }
 
-export async function getDatasetsProfilename() {
+export async function getDatasetsProfilename(): Promise<string> {
     const datasetProfile = await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.secondDatasetProfileXpath)), WAITTIME).getText();
     return datasetProfile;
 }
