@@ -94,6 +94,11 @@ export class ZoweLogger {
     }
 
     private static writeLogMessage(message: string, severity: MessageSeverity): void {
+        // Do not use Imperative logger if it hasn't been initialized.
+        if (ZoweLogger.imperativeLogger == null) {
+            return;
+        }
+
         if (+MessageSeverity[this.getLogSetting()] <= +severity) {
             const severityName = MessageSeverity[severity];
             this.imperativeLogger[severityName?.toLowerCase()](message);
