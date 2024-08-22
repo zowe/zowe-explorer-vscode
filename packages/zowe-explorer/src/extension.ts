@@ -23,7 +23,6 @@ import { SharedInit } from "./trees/shared/SharedInit";
 import { SharedTreeProviders } from "./trees/shared/SharedTreeProviders";
 import { USSInit } from "./trees/uss/USSInit";
 import { ProfilesUtils } from "./utils/ProfilesUtils";
-import { Definitions } from "./configuration/Definitions";
 
 /**
  * The function that runs when the extension is loaded
@@ -56,16 +55,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     SharedInit.watchConfigProfile(context);
     await SharedInit.watchForZoweButtonClick();
 
-    switch (ZoweLocalStorage.getValue<string>(Definitions.LocalStorageKey.SETTINGS_UPGRADED_FROM_V1)) {
-        case "create":
-            vscode.commands.executeCommand("zowe.ds.addSession", SharedTreeProviders.ds);
-        // eslint-disable-next-line no-fallthrough
-        case "yes":
-            ZoweLocalStorage.setValue(Definitions.LocalStorageKey.SETTINGS_UPGRADED_FROM_V1, undefined);
-            break;
-        default:
-            break;
-    }
+    ProfilesUtils.handleV1MigrationStatus();
 
     return ZoweExplorerApiRegister.getInstance();
 }
