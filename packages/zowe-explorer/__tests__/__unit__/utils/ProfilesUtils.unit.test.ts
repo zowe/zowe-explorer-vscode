@@ -302,47 +302,6 @@ describe("ProfilesUtils unit tests", () => {
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
             profInfoSpy.mockRestore();
         });
-        it("should prompt user if v1 profiles detected and call execute command with Create New chosen", async () => {
-            const mockReadProfilesFromDisk = jest.fn();
-            const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
-                readProfilesFromDisk: mockReadProfilesFromDisk,
-                getTeamConfig: jest.fn().mockReturnValue([]),
-                getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
-            } as never);
-            const msgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Create New" as any);
-            const commandSpy = jest.spyOn(vscode.commands, "executeCommand");
-
-            Object.defineProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", { value: true, configurable: true });
-            await expect(ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
-            Object.defineProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", { value: false, configurable: true });
-
-            expect(msgSpy).toHaveBeenCalledWith(expect.stringContaining("Zowe V1 profiles in use."), {
-                items: ["Convert Existing Profiles", "Create New"],
-                vsCodeOpts: { modal: true },
-            });
-            expect(commandSpy).toHaveBeenCalledWith("zowe.ds.addSession", undefined);
-            msgSpy.mockRestore();
-            commandSpy.mockRestore();
-            profInfoSpy.mockRestore();
-        });
-        it("should prompt user if v1 profiles detected and return Operation Cancelled if nothing chosen", async () => {
-            const mockReadProfilesFromDisk = jest.fn();
-            const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
-                readProfilesFromDisk: mockReadProfilesFromDisk,
-                getTeamConfig: jest.fn().mockReturnValue([]),
-                getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
-            } as never);
-            const infoMsgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(undefined);
-
-            Object.defineProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", { value: true, configurable: true });
-            await expect(ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
-            Object.defineProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", { value: false, configurable: true });
-
-            expect(infoMsgSpy).toHaveBeenCalledTimes(2);
-            expect(infoMsgSpy).toHaveBeenLastCalledWith("Operation cancelled");
-            infoMsgSpy.mockRestore();
-            profInfoSpy.mockRestore();
-        });
 
         it("should warn the user when using team config with a missing schema", async () => {
             const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockReturnValueOnce({
@@ -1087,6 +1046,61 @@ describe("ProfilesUtils unit tests", () => {
             expect(infoMsgSpy).toHaveBeenCalledTimes(2);
             expect(getValueMock).toHaveBeenCalled();
             expect(execCommandSpy).toHaveBeenCalledWith("workbench.action.reloadWindow");
+            getValueMock.mockRestore();
+            infoMsgSpy.mockRestore();
+            profInfoSpy.mockRestore();
+        });
+
+        it("should prompt user if v1 profiles detected and call execute command with Create New chosen", async () => {
+            const mockReadProfilesFromDisk = jest.fn();
+            const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
+                readProfilesFromDisk: mockReadProfilesFromDisk,
+                getTeamConfig: jest.fn().mockReturnValue([]),
+                getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
+            } as never);
+            const msgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Create New" as any);
+            const commandSpy = jest.spyOn(vscode.commands, "executeCommand");
+
+            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
+                configurable: true,
+                get: () => true,
+            });
+            const getValueMock = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(false);
+            await expect(ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
+            onlyV1ProfsExistMock[Symbol.dispose]();
+
+            expect(msgSpy).toHaveBeenCalledWith(expect.stringContaining("Zowe V1 profiles in use."), {
+                items: ["Convert Existing Profiles", "Create New"],
+                vsCodeOpts: { modal: true },
+            });
+            expect(commandSpy).toHaveBeenCalledWith("zowe.ds.addSession", undefined);
+            expect(getValueMock).toHaveBeenCalled();
+            getValueMock.mockRestore();
+            msgSpy.mockRestore();
+            commandSpy.mockRestore();
+            profInfoSpy.mockRestore();
+        });
+
+        it("should prompt user if v1 profiles detected and return Operation Cancelled if nothing chosen", async () => {
+            const mockReadProfilesFromDisk = jest.fn();
+            const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
+                readProfilesFromDisk: mockReadProfilesFromDisk,
+                getTeamConfig: jest.fn().mockReturnValue([]),
+                getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
+            } as never);
+            const infoMsgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(undefined);
+
+            const getValueMock = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(false);
+            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
+                configurable: true,
+                get: () => true,
+            });
+            await expect(ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
+            onlyV1ProfsExistMock[Symbol.dispose]();
+
+            expect(infoMsgSpy).toHaveBeenCalledTimes(2);
+            expect(infoMsgSpy).toHaveBeenLastCalledWith("Operation cancelled");
+            expect(getValueMock).toHaveBeenCalled();
             getValueMock.mockRestore();
             infoMsgSpy.mockRestore();
             profInfoSpy.mockRestore();
