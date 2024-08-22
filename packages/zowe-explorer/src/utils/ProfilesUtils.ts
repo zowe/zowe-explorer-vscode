@@ -18,6 +18,8 @@ import { SettingsConfig } from "../configuration/SettingsConfig";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { AuthUtils } from "./AuthUtils";
+import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
+import { Definitions } from "../configuration/Definitions";
 
 export class ProfilesUtils {
     public static PROFILE_SECURITY: string | boolean = Constants.ZOWE_CLI_SCM;
@@ -600,5 +602,13 @@ export class ProfilesUtils {
             return msgs;
         }, []);
         Gui.infoMessage(responseMsg.join(""), { vsCodeOpts: { modal: true } });
+
+        // For users upgrading from v1 to v3, we must force a "Reload Window" operation to make sure that
+        // VS Code registers our updated TreeView IDs. Otherwise, VS Code's "Refresh Extensions" option will break
+        // v3 initialization after the profile conversion process is complete.
+        const globalIsMigrated = ZoweLocalStorage.getValue<boolean>(Definitions.LocalStorageKey.SETTINGS_OLD_SETTINGS_MIGRATED);
+        if (!globalIsMigrated) {
+            await vscode.commands.executeCommand("workbench.action.reloadWindow");
+        }
     }
 }
