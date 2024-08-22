@@ -16,7 +16,6 @@ import { IZoweTreeNode, ZoweTreeNode, FileManagement, Gui, ProfilesCache, impera
 import { Constants } from "../configuration/Constants";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { ZoweLogger } from "../tools/ZoweLogger";
-import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { AuthUtils } from "./AuthUtils";
 import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
 import { Definitions } from "../configuration/Definitions";
@@ -348,6 +347,14 @@ export class ProfilesUtils {
             );
             ZoweLogger.debug(`Summary of team configuration files considered for Zowe Explorer: ${JSON.stringify(layerSummary)}`);
         } else {
+            // For users upgrading from v1 to v3, we must force a "Reload Window" operation to make sure that
+            // VS Code registers our updated TreeView IDs. Otherwise, VS Code's "Refresh Extensions" option will break v3 init.
+            const ussPersistentSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent");
+            const upgradingFromV1 = ZoweLocalStorage.getValue<string>(Definitions.LocalStorageKey.SETTINGS_UPGRADED_FROM_V1);
+            if (ussPersistentSettings != null && upgradingFromV1 == null) {
+                ZoweLocalStorage.setValue(Definitions.LocalStorageKey.SETTINGS_UPGRADED_FROM_V1, "yes");
+                await vscode.commands.executeCommand("workbench.action.reloadWindow");
+            }
             if (imperative.ProfileInfo.onlyV1ProfilesExist) {
                 await this.v1ProfileOptions();
             }
@@ -517,7 +524,7 @@ export class ProfilesUtils {
         switch (selection) {
             case createButton: {
                 ZoweLogger.info("Create new team configuration chosen.");
-                vscode.commands.executeCommand("zowe.ds.addSession", SharedTreeProviders.ds);
+                ZoweLocalStorage.setValue(Definitions.LocalStorageKey.SETTINGS_UPGRADED_FROM_V1, "create");
                 break;
             }
             case convertButton: {
@@ -526,16 +533,9 @@ export class ProfilesUtils {
                 break;
             }
             default: {
-                Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
+                void Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
                 break;
             }
-        }
-
-        // For users upgrading from v1 to v3, we must force a "Reload Window" operation to make sure that
-        // VS Code registers our updated TreeView IDs. Otherwise, VS Code's "Refresh Extensions" option will break v3 init.
-        const globalIsMigrated = ZoweLocalStorage.getValue<boolean>(Definitions.LocalStorageKey.SETTINGS_OLD_SETTINGS_MIGRATED);
-        if (!globalIsMigrated) {
-            await vscode.commands.executeCommand("workbench.action.reloadWindow");
         }
     }
 

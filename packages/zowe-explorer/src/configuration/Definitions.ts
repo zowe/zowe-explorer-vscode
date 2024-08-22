@@ -131,5 +131,6 @@ export namespace Definitions {
         ENCODING_HISTORY = "zowe.encodingHistory",
         SETTINGS_LOCAL_STORAGE_MIGRATED = "zowe.settings.localStorageMigrated",
         SETTINGS_OLD_SETTINGS_MIGRATED = "zowe.settings.oldSettingsMigrated",
+        SETTINGS_UPGRADED_FROM_V1 = "zowe.upgradedFromV1",
     }
 }
