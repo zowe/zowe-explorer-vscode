@@ -1102,7 +1102,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             this.addSearchHistory(pattern);
         }
         if (!SharedContext.isFavorite(sessionNode)) {
-            DatasetFSProvider.instance.updateFilterForUri(sessionNode.resourceUri, pattern);
+            sessionNode.resourceUri = sessionNode.resourceUri.with({ query: `pattern=${pattern}` });
         }
         await TreeViewUtils.expandNode(sessionNode, this);
     }

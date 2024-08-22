@@ -9,11 +9,11 @@
  *
  */
 
-import { DsEntry, MemberEntry, PdsEntry, FsDatasetsUtils } from "../../../../src";
+import { DsEntry, PdsEntry, FsDatasetsUtils } from "../../../../src";
 
 describe("isDsEntry", () => {
     it("returns true if value is a DsEntry", () => {
-        const entry = new DsEntry("TEST.DS");
+        const entry = new DsEntry("TEST.DS", false);
         expect(FsDatasetsUtils.isDsEntry(entry)).toBe(true);
     });
 
@@ -24,14 +24,14 @@ describe("isDsEntry", () => {
 });
 
 describe("isMemberEntry", () => {
-    it("returns true if value is a MemberEntry", () => {
-        const entry = new MemberEntry("TESTMEMB");
+    it("returns true if value is a PDS member", () => {
+        const entry = new DsEntry("TEST", true);
         expect(FsDatasetsUtils.isMemberEntry(entry)).toBe(true);
     });
 
-    it("returns false if value is not a MemberEntry", () => {
-        const pds = new PdsEntry("TEST.PDS");
-        expect(FsDatasetsUtils.isMemberEntry(pds)).toBe(false);
+    it("returns false if value is not a PDS member", () => {
+        const entry = new DsEntry("TEST.PS", false);
+        expect(FsDatasetsUtils.isMemberEntry(entry)).toBe(false);
     });
 });
 
@@ -42,7 +42,7 @@ describe("isPdsEntry", () => {
     });
 
     it("returns false if value is not a PdsEntry", () => {
-        const ds = new DsEntry("TEST.DS");
+        const ds = new DsEntry("TEST.DS", false);
         expect(FsDatasetsUtils.isPdsEntry(ds)).toBe(false);
     });
 });

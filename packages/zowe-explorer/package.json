@@ -23,11 +23,6 @@
   "categories": [
     "Other"
   ],
-  "files": [
-    "out",
-    "README.md",
-    "resources"
-  ],
   "activationEvents": [
     "onStartupFinished",
     "onFileSystem:zowe-ds",
@@ -177,6 +172,11 @@
           "light": "./resources/light/history.svg",
           "dark": "./resources/dark/history.svg"
         }
+      },
+      {
+        "command": "zowe.jobs.tableView",
+        "title": "%jobsTableView%",
+        "category": "Zowe Explorer"
       },
       {
         "command": "zowe.uss.copyPath",
@@ -1257,6 +1257,11 @@
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "command": "zowe.jobs.tableView",
+          "group": "100_zowe_tableview"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
           "command": "zowe.editHistory",
           "group": "100_zowe_editHistory"
         },
@@ -1363,6 +1368,10 @@
         },
         {
           "command": "zowe.saveSearch",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.tableView",
           "when": "never"
         },
         {
@@ -1774,12 +1783,12 @@
     "watch:webviews": "pnpm --filter webviews dev",
     "compile": "tsc -b",
     "markdown": "markdownlint CHANGELOG.md README.md",
-    "lint": "concurrently -n \"_eslint_,prettier,markdown\" \"pnpm lint:src; pnpm lint:test\" \"pnpm lint:pretty\" \"pnpm markdown\"",
+    "lint": "concurrently -n \"_eslint_,prettier,markdown\" \"pnpm run \"/lint:[st].*/\"\" \"pnpm lint:pretty\" \"pnpm markdown\"",
     "lint:all": "pnpm lint:src; pnpm lint:test; pnpm lint:html",
-    "lint:src": "eslint --format stylish \"src/**/*.ts\"",
-    "lint:test": "eslint --format stylish \"__tests__/**/*.ts\"",
     "lint:html": "mkdir -p results && eslint . --format html > results/eslint.html",
     "lint:pretty": "prettier --write . && prettier --check .",
+    "lint:src": "eslint --format stylish \"src/**/*.ts\"",
+    "lint:test": "eslint --format stylish \"__tests__/**/*.ts\"",
     "clean:bundle": "rimraf out || true",
     "clean:dependencies": "rimraf node_modules || true",
     "fresh-clone": "pnpm clean:bundle && pnpm clean:dependencies",
@@ -1821,7 +1830,7 @@
     "markdownlint-cli": "^0.33.0",
     "sinon": "^16.1.1",
     "ts-node": "^10.9.2",
-    "wdio-vscode-service": "^6.0.3",
+    "wdio-vscode-service": "^6.1.0",
     "wdio-wait-for": "^3.0.11",
     "webdriverio": "^8.36.1"
   },

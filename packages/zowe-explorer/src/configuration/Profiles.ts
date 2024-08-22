@@ -40,7 +40,7 @@ import { AuthUtils } from "../utils/AuthUtils";
 export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: imperative.Logger): Promise<Profiles> {
-        Profiles.loader = new Profiles(log, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
+        Profiles.loader = new Profiles(log, ZoweVsCodeExtension.workspaceRoot?.uri.fsPath);
         Constants.PROFILES_CACHE = Profiles.loader;
         await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
         await Profiles.getInstance().getProfileInfo();
@@ -428,14 +428,15 @@ export class Profiles extends ProfilesCache {
             let user = false;
             let global = true;
             let rootPath = FileManagement.getZoweDir();
-            if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
+            const workspaceDir = ZoweVsCodeExtension.workspaceRoot;
+            if (workspaceDir != null) {
                 const choice = await this.getConfigLocationPrompt("create");
                 if (choice === undefined) {
                     Gui.showMessage(this.profilesOpCancelled);
                     return;
                 }
                 if (choice === "project") {
-                    rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+                    rootPath = workspaceDir.uri.fsPath;
                     global = false;
                 }
             }
@@ -452,7 +453,7 @@ export class Profiles extends ProfilesCache {
                 homeDir: FileManagement.getZoweDir(),
                 projectDir: FileManagement.getFullPath(rootPath),
             });
-            if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
+            if (workspaceDir != null) {
                 config.api.layers.activate(user, global, rootPath);
             }
 
@@ -834,6 +835,7 @@ export class Profiles extends ProfilesCache {
 
         try {
             this.clearFilterFromAllTrees(node);
+            let logoutOk = true;
 
             // this will handle extenders
             if (
@@ -843,16 +845,18 @@ export class Profiles extends ProfilesCache {
             ) {
                 await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(node.getSession());
             } else {
-                await ZoweVsCodeExtension.logoutWithBaseProfile(serviceProfile, ZoweExplorerApiRegister.getInstance(), this);
+                logoutOk = await ZoweVsCodeExtension.logoutWithBaseProfile(serviceProfile, ZoweExplorerApiRegister.getInstance(), this);
             }
-            Gui.showMessage(
-                vscode.l10n.t({
-                    message: "Logout from authentication service was successful for {0}.",
-                    args: [serviceProfile.name],
-                    comment: ["Service profile name"],
-                })
-            );
-            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+            if (logoutOk) {
+                Gui.showMessage(
+                    vscode.l10n.t({
+                        message: "Logout from authentication service was successful for {0}.",
+                        args: [serviceProfile.name],
+                        comment: ["Service profile name"],
+                    })
+                );
+                await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+            }
         } catch (error) {
             const message = vscode.l10n.t({
                 message: "Unable to log out with {0}. {1}",
@@ -978,7 +982,7 @@ export class Profiles extends ProfilesCache {
         const existingLayers: imperative.IConfigLayer[] = [];
         const config = await imperative.Config.load("zowe", {
             homeDir: FileManagement.getZoweDir(),
-            projectDir: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+            projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath,
         });
         const layers = config.layers;
         layers.forEach((layer) => {

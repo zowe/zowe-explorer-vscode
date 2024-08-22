@@ -21,6 +21,7 @@ import { SharedInit } from "../shared/SharedInit";
 import { SharedUtils } from "../shared/SharedUtils";
 import { JobFSProvider } from "./JobFSProvider";
 import { PollProvider } from "./JobPollProvider";
+import { JobTableView } from "./JobTableView";
 
 export class JobInit {
     /**
@@ -150,6 +151,9 @@ export class JobInit {
         );
         context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.copyName", async (job: IZoweJobTreeNode) => JobActions.copyName(job)));
         context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.jobs.tableView", async (node, nodeList) => JobTableView.handleCommand(context, node, nodeList))
+        );
+        context.subscriptions.push(
             vscode.workspace.onDidOpenTextDocument((doc) => {
                 if (doc.uri.scheme !== ZoweScheme.Jobs) {
                     return;
@@ -158,7 +162,6 @@ export class JobInit {
                 JobFSProvider.instance.cacheOpenedUri(doc.uri);
             })
         );
-
         SharedInit.initSubscribers(context, jobsProvider);
         return jobsProvider;
     }

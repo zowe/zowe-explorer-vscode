@@ -21,6 +21,7 @@
   "dependencies": {
     "@szhsin/react-menu": "^4.1.0",
     "@types/vscode-webview": "^1.57.1",
+    "@vscode/codicons": "^0.0.36",
     "@vscode/webview-ui-toolkit": "^1.2.2",
     "ag-grid-community": "^32.0.2",
     "ag-grid-react": "^32.0.2",
@@ -31,9 +32,9 @@
   "devDependencies": {
     "@preact/preset-vite": "^2.5.0",
     "@types/lodash": "^4.17.0",
-    "@vscode/codicons": "^0.0.33",
     "typescript": "^5.3.3",
     "vite": "^4.5.3",
-    "vite-plugin-checker": "^0.6.4"
+    "vite-plugin-checker": "^0.6.4",
+    "vite-plugin-static-copy": "^0.17.1"
   }
 }

@@ -22,11 +22,16 @@ import { Types } from "../Types";
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
  */
 export class ZoweVsCodeExtension {
+    public static get workspaceRoot(): vscode.WorkspaceFolder | undefined {
+        return vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file");
+    }
+
     /**
      * @internal
      */
     public static get profilesCache(): ProfilesCache {
-        return new ProfilesCache(imperative.Logger.getAppLogger(), vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
+        const workspacePath = this.workspaceRoot?.uri.fsPath;
+        return new ProfilesCache(imperative.Logger.getAppLogger(), workspacePath);
     }
 
     /**
@@ -120,12 +125,13 @@ export class ZoweVsCodeExtension {
         zeProfiles?: ProfilesCache // Profiles extends ProfilesCache
     ): Promise<boolean> {
         const cache: ProfilesCache = zeProfiles ?? ZoweVsCodeExtension.profilesCache;
-        const baseProfile = await cache.fetchBaseProfile();
-        if (baseProfile == null) {
-            return false;
-        }
         if (typeof serviceProfile === "string") {
             serviceProfile = await ZoweVsCodeExtension.getServiceProfileForAuthPurposes(cache, serviceProfile);
+        }
+        const baseProfile = await cache.fetchBaseProfile(serviceProfile.name);
+        if (baseProfile == null) {
+            Gui.errorMessage(`Login failed: No base profile found to store SSO token for profile "${serviceProfile.name}"`);
+            return false;
         }
         const tokenType =
             serviceProfile.profile.tokenType ?? baseProfile.profile.tokenType ?? loginTokenType ?? imperative.SessConstants.TOKEN_TYPE_APIML;
@@ -144,7 +150,10 @@ export class ZoweVsCodeExtension {
             { label: "$(account) User and Password", description: "Log in with basic authentication" },
             { label: "$(note) Certificate", description: "Log in with PEM format certificate file" },
         ];
-        const response = await Gui.showQuickPick(qpItems, { placeHolder: "Select an authentication method for obtaining token" });
+        const response = await Gui.showQuickPick(qpItems, {
+            placeHolder: "Select an authentication method for obtaining token",
+            title: `[${baseProfile.name}] Log in to authentication service`,
+        });
         if (response === qpItems[0]) {
             const creds = await ZoweVsCodeExtension.promptUserPass({ session: updSession.ISession, rePrompt: true });
             if (!creds) {
@@ -180,11 +189,10 @@ export class ZoweVsCodeExtension {
             // If base profile already has a token type stored, then we check whether or not the connection details are the same
             (serviceProfile.profile.host === baseProfile.profile.host && serviceProfile.profile.port === baseProfile.profile.port);
         // If the connection details do not match, then we MUST forcefully store the token in the service profile
-        let profileToUpdate: imperative.IProfileLoaded;
+        let profileToUpdate = serviceProfile;
         if (connOk) {
-            profileToUpdate = baseProfile;
-        } else {
-            profileToUpdate = serviceProfile;
+            // If active profile is nested (e.g. lpar.zosmf), then set type to null so token can be stored in parent typeless profile
+            profileToUpdate = serviceProfile.name.startsWith(baseProfile.name + ".") ? { ...baseProfile, type: null } : baseProfile;
         }
 
         await cache.updateBaseProfileFileLogin(profileToUpdate, updBaseProfile, !connOk);
@@ -212,13 +220,13 @@ export class ZoweVsCodeExtension {
         serviceProfile: string | imperative.IProfileLoaded,
         zeRegister?: Types.IApiRegisterClient, // ZoweExplorerApiRegister
         zeProfiles?: ProfilesCache // Profiles extends ProfilesCache
-    ): Promise<void> {
+    ): Promise<boolean> {
         const cache: ProfilesCache = zeProfiles ?? ZoweVsCodeExtension.profilesCache;
-        const baseProfile = await cache.fetchBaseProfile();
+        if (typeof serviceProfile === "string") {
+            serviceProfile = await ZoweVsCodeExtension.getServiceProfileForAuthPurposes(cache, serviceProfile);
+        }
+        const baseProfile = await cache.fetchBaseProfile(serviceProfile.name);
         if (baseProfile) {
-            if (typeof serviceProfile === "string") {
-                serviceProfile = await ZoweVsCodeExtension.getServiceProfileForAuthPurposes(cache, serviceProfile);
-            }
             const tokenType =
                 serviceProfile.profile.tokenType ??
                 baseProfile.profile.tokenType ??
@@ -234,12 +242,16 @@ export class ZoweVsCodeExtension {
             });
             await (zeRegister?.getCommonApi(serviceProfile).logout ?? Logout.apimlLogout)(updSession);
 
-            const connOk = serviceProfile.profile.host === baseProfile.profile.host && serviceProfile.profile.port === baseProfile.profile.port;
-            if (connOk) {
-                await cache.updateBaseProfileFileLogout(baseProfile);
-            } else {
-                await cache.updateBaseProfileFileLogout(serviceProfile);
-            }
+            // If active profile is nested (e.g. lpar.zosmf), then update service profile since base profile may be typeless
+            const connOk =
+                serviceProfile.profile.host === baseProfile.profile.host &&
+                serviceProfile.profile.port === baseProfile.profile.port &&
+                !serviceProfile.name.startsWith(baseProfile.name + ".");
+            await cache.updateBaseProfileFileLogout(connOk ? baseProfile : serviceProfile);
+            return true;
+        } else {
+            Gui.errorMessage(`Logout failed: No base profile found to remove SSO token for profile "${serviceProfile.name}"`);
+            return false;
         }
     }
 

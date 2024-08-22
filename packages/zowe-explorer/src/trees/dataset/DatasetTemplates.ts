@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { Gui, Types } from "@zowe/zowe-explorer-api";
+import { Gui, Types, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { Constants } from "../../configuration/Constants";
@@ -42,7 +42,9 @@ export class DataSetTemplates {
                 newTemplateName = key;
             });
             let userPick;
-            if (vscode.workspace.workspaceFolders?.[0] != null) {
+
+            const workspacePath = ZoweVsCodeExtension.workspaceRoot?.uri.fsPath;
+            if (workspacePath) {
                 userPick = await this.promptForSaveLocation();
             }
             let target = vscode.ConfigurationTarget.Global;

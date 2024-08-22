@@ -1,66 +1,166 @@
-import { Ref } from "preact/hooks";
+import { Dispatch, Ref, useState } from "preact/hooks";
 import type { Table } from "@zowe/zowe-explorer-api";
-import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
+import { VSCodeButton, VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
 import { GridApi } from "ag-grid-community";
+import { wrapFn } from "./types";
+import { FocusableItem, Menu, MenuGroup, MenuItem } from "@szhsin/react-menu";
+import "@szhsin/react-menu/dist/index.css";
 
-export const ActionsBar = ({
-  actions,
-  gridRef,
-  itemCount,
-  vscodeApi,
-}: {
+interface ActionsProps {
   actions: Table.Action[];
   gridRef: Ref<any>;
   itemCount: number;
+  selectionCount: number;
+  title: string;
+  columns: string[];
+  visibleColumns: string[];
+  setVisibleColumns: Dispatch<string[]>;
   vscodeApi: any;
-}) => {
+}
+
+export const ActionsBar = (props: ActionsProps) => {
+  const [searchFilter, setSearchFilter] = useState<string>("");
+
+  const columnDropdownItems = (visibleColumns: string[]) =>
+    props.columns
+      .filter((col) => col !== "actions" && (searchFilter.length === 0 || col.toLowerCase().includes(searchFilter)))
+      .map((col) => (
+        <MenuItem
+          key={`toggle-vis-${col}`}
+          type="checkbox"
+          onClick={(e: any) => {
+            const gridApi = props.gridRef.current.api as GridApi;
+            const colVisibility = !visibleColumns.includes(col);
+            gridApi.setColumnsVisible(
+              [gridApi.getColumns()?.find((c) => c.getColDef().field === col || c.getColDef().headerName === col)!],
+              colVisibility
+            );
+            props.setVisibleColumns(colVisibility ? [...visibleColumns, col] : visibleColumns.filter((c) => c !== col));
+            e.keepOpen = true;
+          }}
+        >
+          {() => (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-evenly",
+                alignItems: "center",
+                height: "1.25rem",
+                marginLeft: "-1.25rem",
+                overflow: "hidden",
+              }}
+            >
+              <span style={{ paddingRight: visibleColumns.includes(col) ? "1em" : "2.15em", marginTop: "3px" }}>
+                {visibleColumns.includes(col) ? <span className="codicon codicon-check"></span> : null}
+              </span>
+              {col}
+            </div>
+          )}
+        </MenuItem>
+      ));
+
   return (
     <div
       style={{
-        height: "2.5em",
+        height: "3em",
         display: "flex",
         alignItems: "center",
-        borderRadius: "var(--ag-wrapper-border-radius)",
         border: "1px solid var(--vscode-editorWidget-border)",
+        borderTopLeftRadius: "var(--ag-wrapper-border-radius)",
+        borderTopRightRadius: "var(--ag-wrapper-border-radius)",
         justifyContent: "space-between",
         backgroundColor: "var(--vscode-keybindingTable-headerBackground)",
         color: "var(--vscode-foreground) !important",
         padding: "0 0.25em",
-        marginBottom: "3px",
+        marginBottom: "-1px",
       }}
     >
-      <h5 style={{ marginLeft: "0.25em" }}>
-        {itemCount === 0 ? "No" : itemCount} item{itemCount === 1 ? "" : "s"} selected
-      </h5>
-      <span style={{ marginBottom: "0.25em" }}>
-        {actions
-          .filter((action) => (itemCount > 1 ? action.callback.typ === "multi-row" : action.callback.typ.endsWith("row")))
-          .map((action, i) => (
-            <VSCodeButton
-              key={`${action.command}-action-bar-${i}`}
-              type={action.type}
-              style={{ height: "1.5em", fontWeight: "bold", marginRight: "0.25em" }}
-              onClick={(_event: any) => {
-                const selectedRows = (gridRef.current.api as GridApi).getSelectedNodes();
-                if (selectedRows.length === 0) {
-                  return;
-                }
+      <h3 style={{ marginLeft: "0.25em" }}>
+        {props.title} ({props.itemCount})
+      </h3>
+      <span style={{ display: "flex", alignItems: "center", marginBottom: "0.25em" }}>
+        <p style={{ fontSize: "0.9em", paddingTop: "2px", marginRight: "0.75em" }}>
+          {props.selectionCount === 0 ? "No" : props.selectionCount} item{props.selectionCount > 1 || props.selectionCount === 0 ? "s" : ""} selected
+        </p>
+        {props.actions
+          .filter((action) => (props.itemCount > 1 ? action.callback.typ === "multi-row" : action.callback.typ.endsWith("row")))
+          .map((action, i) => {
+            // Wrap function to properly handle named parameters
+            const selectedRows = props.gridRef.current?.api?.getSelectedRows() ?? 0;
+            const cond = action.condition ? new Function(wrapFn(action.condition)) : undefined;
+            // Invoke the wrapped function once to get the built function, then invoke it again with the parameters
+            let shouldDisable = props.selectionCount === 0;
+            if (cond != null) {
+              shouldDisable ||= !cond()(action.callback.typ === "multi-row" ? selectedRows : selectedRows[0]);
+            }
 
-                vscodeApi.postMessage({
-                  command: action.command,
-                  data: {
-                    row: action.callback.typ === "single-row" ? selectedRows[0].data : undefined,
-                    rows:
-                      action.callback.typ === "multi-row"
-                        ? selectedRows.reduce((all, row) => ({ ...all, [row.rowIndex!]: row.data }), {})
-                        : undefined,
-                  },
-                });
-              }}
+            return (
+              <VSCodeButton
+                disabled={shouldDisable}
+                key={`${action.command}-action-bar-${i}`}
+                appearance={action.type}
+                style={{ fontWeight: "bold", marginTop: "3px", marginRight: "0.25em" }}
+                onClick={(_event: any) => {
+                  const selectedNodes = (props.gridRef.current.api as GridApi).getSelectedNodes();
+                  if (selectedNodes.length === 0) {
+                    return;
+                  }
+
+                  props.vscodeApi.postMessage({
+                    command: action.command,
+                    data: {
+                      row: action.callback.typ === "single-row" ? selectedNodes[0].data : undefined,
+                      rows:
+                        action.callback.typ === "multi-row"
+                          ? selectedNodes.reduce((all, row) => ({ ...all, [row.rowIndex!]: row.data }), {})
+                          : undefined,
+                    },
+                  });
+                }}
+              >
+                {action.title}
+              </VSCodeButton>
+            );
+          })}
+        <div
+          id="colsToggleBtn"
+          style={{
+            borderLeft: "1px solid var(--ag-border-color)",
+            marginTop: "1px",
+            marginLeft: "0.25em",
+            marginRight: "0.25em",
+            paddingLeft: "0.5em",
+          }}
+        >
+          <span id="colsToggleMenu">
+            <Menu
+              boundingBoxPadding="55 20 40 0"
+              menuButton={
+                <VSCodeButton appearance="secondary">
+                  <span className="codicon codicon-gear"></span>
+                </VSCodeButton>
+              }
+              menuClassName="toggle-cols-menu"
+              overflow="auto"
+              setDownOverflow
             >
-              {action.title}
-            </VSCodeButton>
-          ))}
+              <FocusableItem style={{ marginBottom: "0.5rem" }}>
+                {({ ref }: { ref: any }) => (
+                  <VSCodeTextField
+                    ref={ref}
+                    type="text"
+                    placeholder="Search"
+                    value={searchFilter}
+                    onInput={(e: any) => setSearchFilter((e.target!.value as string).toLowerCase())}
+                  >
+                    <span slot="start" className="codicon codicon-search"></span>
+                  </VSCodeTextField>
+                )}
+              </FocusableItem>
+              <MenuGroup takeOverflow>{columnDropdownItems(props.visibleColumns)}</MenuGroup>
+            </Menu>
+          </span>
+        </div>
       </span>
     </div>
   );

@@ -111,7 +111,7 @@ export const ContextMenu = (gridRefs: any, menuItems: Table.ContextMenuOption[],
       // Wrap function to properly handle named parameters
       const cond = new Function(wrapFn(item.condition));
       // Invoke the wrapped function once to get the built function, then invoke it again with the parameters
-      return cond()(null, gridRefs.clickedRow);
+      return cond()(gridRefs.clickedRow);
     })
     .map((item, i) => (
       <MenuItem

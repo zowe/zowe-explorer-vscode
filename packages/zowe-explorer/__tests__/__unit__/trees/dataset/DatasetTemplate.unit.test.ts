@@ -91,12 +91,13 @@ describe("DataSetTemplates Class Unit Tests", () => {
                     {
                         uri: {
                             fsPath: "test",
+                            scheme: "file",
                         },
                     },
                 ],
             };
             Object.defineProperty(vscode.workspace, "workspaceFolders", {
-                value: [newMocks.mockWsFolder],
+                value: newMocks.mockWsFolder,
                 configurable: true,
             });
 

@@ -36,26 +36,29 @@ parserOptions:
   ecmaVersion: 6
   sourceType: module
   project:
-    - "./tsconfig.json"
-    - "./tsconfig-tests.json"
+    - "**/tsconfig.json"
+    - "**/tsconfig-tests.json"
 plugins:
   - "@typescript-eslint"
   - zowe-explorer
 rules:
   "@typescript-eslint/await-thenable": off
   "@typescript-eslint/consistent-type-assertions": warn
-  "@typescript-eslint/explicit-function-return-type": [ 'error', {
-      # We only disallow the rules that provide value (i.e. that found some errors while configuring)
-      # Documentation: https://typescript-eslint.io/rules/explicit-function-return-type
-      allowHigherOrderFunctions: false,
-      allowFunctionsWithoutTypeParameters: false,
+  "@typescript-eslint/explicit-function-return-type": [
+      "error",
+      {
+        # We only disallow the rules that provide value (i.e. that found some errors while configuring)
+        # Documentation: https://typescript-eslint.io/rules/explicit-function-return-type
+        allowHigherOrderFunctions: false,
+        allowFunctionsWithoutTypeParameters: false,
 
-      # Disabling (i.e. setting to `false`) the following rule will force us to unnecessarily type built-in functions
-      # For example, to find the index of a profile in a profiles array we will have to go:
-      #     FROM: profiles.findIndex((profile) => profile.name === "my_profile"))
-      #     TO:   profiles.findIndex((profile): boolean => profile.name === "my_profile"))
-      allowTypedFunctionExpressions: true,
-  }]
+        # Disabling (i.e. setting to `false`) the following rule will force us to unnecessarily type built-in functions
+        # For example, to find the index of a profile in a profiles array we will have to go:
+        #     FROM: profiles.findIndex((profile) => profile.name === "my_profile"))
+        #     TO:   profiles.findIndex((profile): boolean => profile.name === "my_profile"))
+        allowTypedFunctionExpressions: true,
+      },
+    ]
   "@typescript-eslint/explicit-member-accessibility": error
 
   # There are several errors falling under these rules; resolve

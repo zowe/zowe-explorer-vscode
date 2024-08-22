@@ -27,7 +27,10 @@ import { UnixCommandHandler } from "../../../../src/commands/UnixCommandHandler"
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import * as certWizard from "../../../../src/utils/CertificateWizard";
-import { Gui, imperative } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { MockedProperty } from "../../../__mocks__/mockUtils";
+import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
+import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
@@ -504,6 +507,54 @@ describe("Test src/shared/extension", () => {
             expect(spyExpand).toHaveBeenCalled();
             expect(spyFlipState).toHaveBeenCalledWith("collapse", false);
             expect(spyFlipState).toHaveBeenCalledWith("expand", true);
+        });
+    });
+
+    describe("setupRemoteWorkspaceFolders", () => {
+        const getFakeEventInfo = (added?: any): vscode.WorkspaceFoldersChangeEvent => ({
+            added,
+            removed: [],
+        });
+        it("should iterate over vscode.workspaces.workspaceFolders when no event is given", async () => {
+            const fakeWorkspaceFolders = jest.fn().mockReturnValue([]);
+            const workspaceFoldersPropertyMock = new MockedProperty(vscode.workspace, "workspaceFolders", {
+                get: fakeWorkspaceFolders,
+                configurable: true,
+            });
+            await SharedInit.setupRemoteWorkspaceFolders();
+            expect(fakeWorkspaceFolders).toHaveBeenCalled();
+            workspaceFoldersPropertyMock[Symbol.dispose]();
+        });
+        it("should iterate over the added folders when an event is given", async () => {
+            const fakeEventInfo = getFakeEventInfo();
+            const addedArr = jest.fn();
+            Object.defineProperty(fakeEventInfo, "added", {
+                get: addedArr,
+            });
+            await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo);
+            expect(addedArr).toHaveBeenCalled();
+        });
+        it("calls DatasetFSProvider for ZoweScheme.DS", async () => {
+            const fakeEventInfo = getFakeEventInfo([{ uri: vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/lpar.zosmf/TEST.PDS" }) }]);
+            const remoteLookupMock = jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockImplementation();
+            await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo);
+            expect(remoteLookupMock).toHaveBeenCalled();
+            remoteLookupMock.mockRestore();
+        });
+        it("calls DatasetFSProvider for ZoweScheme.USS", async () => {
+            const fakeEventInfo = getFakeEventInfo([{ uri: vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/lpar.zosmf/u/user/folder" }) }]);
+            const remoteLookupMock = jest.spyOn(UssFSProvider.instance, "remoteLookupForResource").mockImplementation();
+            await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo);
+            expect(remoteLookupMock).toHaveBeenCalled();
+            remoteLookupMock.mockRestore();
+        });
+        it("does nothing for file URIs", async () => {
+            const fakeEventInfo = getFakeEventInfo([{ uri: vscode.Uri.from({ scheme: "file", path: "/a/b/c" }) }]);
+            const remoteLookupDsSpy = jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource");
+            const remoteLookupUssSpy = jest.spyOn(UssFSProvider.instance, "remoteLookupForResource");
+            await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo);
+            expect(remoteLookupDsSpy).not.toHaveBeenCalled();
+            expect(remoteLookupUssSpy).not.toHaveBeenCalled();
         });
     });
 });

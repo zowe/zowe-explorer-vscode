@@ -35,7 +35,6 @@ export const tableProps = (
     tableData: Table.ViewOpts,
     vscodeApi: any
 ): Partial<AgGridReactProps> => ({
-    domLayout: "autoHeight",
     enableCellTextSelection: true,
     ensureDomOrder: true,
     rowData: tableData.rows,

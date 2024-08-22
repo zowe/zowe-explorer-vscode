@@ -45,6 +45,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Changed default base profile naming scheme in newly generated configuration files to prevent name and property conflicts between Global and Project profiles [#2682](https://github.com/zowe/zowe-explorer-vscode/issues/2682)
 - Implemented the `onCredMgrUpdate` VSCode events to notify extenders when the local PC's credential manager has been updated by other applications. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
 - Implemented support for building, exposing and displaying table views within Zowe Explorer. Tables can be customized and exposed using the helper facilities (`TableBuilder` and `TableMediator`) for an extender's specific use case. For more information on how to configure and show tables, please refer to the [wiki article on Table Views](https://github.com/zowe/zowe-explorer-vscode/wiki/Table-Views). [#2258](https://github.com/zowe/zowe-explorer-vscode/issues/2258)
+- Added support for logging in to multiple API ML instances per team config file. [#2264](https://github.com/zowe/zowe-explorer-vscode/issues/2264)
+- Added remote lookup functionality for Data Sets and USS, allowing Zowe Explorer to locate and resolve mainframe resources on demand. [#3040](https://github.com/zowe/zowe-explorer-vscode/pull/3040)
+- Implemented change detection in the Data Sets and USS filesystems, so that changes on the mainframe will be reflected in opened editors for Data Sets and USS files. [#3040](https://github.com/zowe/zowe-explorer-vscode/pull/3040)
+- Implemented a "Show as Table" option for profile nodes in the Jobs tree, displaying lists of jobs in a tabular view. Jobs can be filtered and sorted within this view, and users can select jobs to cancel, delete or download. [#2258](https://github.com/zowe/zowe-explorer-vscode/issues/2258)
 
 ### Bug fixes
 
@@ -67,7 +71,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue where creating a new team configuration file could cause Zowe Explorer to crash, resulting in all sessions disappearing from trees. [#2906](https://github.com/zowe/zowe-explorer-vscode/issues/2906)
 - Update Zowe SDKs to `8.0.0-next.202407232256` for technical currency. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
 - Addressed breaking changes from the Zowe Explorer API package.[#2952](https://github.com/zowe/zowe-explorer-vscode/issues/2952)
-- Fixed an issue with profile migration where upgrading from v1 and selecting "Reload Extensions" causes Zowe Explorer v3 to fail to load after converting profiles. [#3051](https://github.com/zowe/zowe-explorer-vscode/pull/3051)
+- Fixed data set not opening when the token has expired. [#3001](https://github.com/zowe/zowe-explorer-vscode/issues/3001)
+- Fixed an issue where upgrading from Zowe Explorer v1 and selecting "Reload Extensions" causes Zowe Explorer v3 to fail during initialization. [#3051](https://github.com/zowe/zowe-explorer-vscode/pull/3051)
 
 ## `3.0.0-next.202404242037`
 

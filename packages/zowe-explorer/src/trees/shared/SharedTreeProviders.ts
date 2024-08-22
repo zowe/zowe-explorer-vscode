@@ -18,10 +18,15 @@ export class SharedTreeProviders {
     static #uss: Types.IZoweUSSTreeType;
     static #job: Types.IZoweJobTreeType;
 
-    public static async initializeProviders(initializers: Definitions.ProviderFunctions): Promise<Definitions.IZoweProviders> {
+    public static async initializeProviders(
+        initializers: Definitions.ProviderFunctions,
+        postInit: () => void | PromiseLike<void>
+    ): Promise<Definitions.IZoweProviders> {
         SharedTreeProviders.#ds = await initializers.ds();
         SharedTreeProviders.#uss = await initializers.uss();
         SharedTreeProviders.#job = await initializers.job();
+        await postInit();
+
         return SharedTreeProviders.providers;
     }
 

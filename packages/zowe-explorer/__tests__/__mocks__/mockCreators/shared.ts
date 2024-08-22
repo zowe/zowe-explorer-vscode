@@ -410,7 +410,14 @@ export function createInstanceOfProfileInfo() {
         updateProperty: jest.fn(),
         updateKnownProperty: jest.fn(),
         createSession: jest.fn(),
-        getTeamConfig: () => ({ exists: true }),
+        getTeamConfig: () => ({
+            api: {
+                secure: {
+                    securePropsForProfile: jest.fn().mockReturnValue([]),
+                },
+            },
+            exists: true,
+        }),
         mergeArgsForProfile: jest.fn().mockReturnValue({
             knownArgs: [
                 {
