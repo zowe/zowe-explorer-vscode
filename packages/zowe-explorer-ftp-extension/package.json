@@ -1,6 +1,6 @@
 {
   "name": "zowe-explorer-ftp-extension",
-  "displayName": "Zowe Explorer Extension for FTP",
+  "displayName": "IBM z/OS FTP for Zowe Explorer",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
@@ -47,9 +47,9 @@
     "vscode": "^1.53.2"
   },
   "dependencies": {
-    "@zowe/zos-ftp-for-zowe-cli": "2.1.8",
+    "@zowe/zos-ftp-for-zowe-cli": "^2.1.8",
     "@zowe/zowe-explorer-api": "2.18.0-SNAPSHOT",
-    "tmp": "0.2.1"
+    "tmp": "^0.2.1"
   },
   "devDependencies": {
     "@types/tmp": "0.2.0",
