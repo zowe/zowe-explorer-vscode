@@ -6,7 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-- Added new Zowe Explorer z/OS Console webview with access via VS Code command pallete to issue MVS Console commands.
+- Added new Zowe Explorer z/OS Console webview with access via VS Code command pallete to issue MVS Console commands. [#2925](https://github.com/zowe/zowe-explorer-vscode/pull/2925)
 
 ### Bug fixes
 
