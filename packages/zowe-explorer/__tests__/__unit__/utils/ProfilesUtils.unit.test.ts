@@ -1095,4 +1095,42 @@ describe("ProfilesUtils unit tests", () => {
             profInfoSpy.mockRestore();
         });
     });
+
+    describe("handleV1MigrationStatus", () => {
+        function getBlockMocks() {
+            return {
+                getValueMock: jest.spyOn(ZoweLocalStorage, "getValue"),
+                setValueMock: jest.spyOn(ZoweLocalStorage, "setValue"),
+            };
+        }
+
+        it("should return early if the migration status is nullish", () => {
+            const blockMocks = getBlockMocks();
+            blockMocks.getValueMock.mockReturnValueOnce(undefined);
+            ProfilesUtils.handleV1MigrationStatus();
+            expect(blockMocks.setValueMock).not.toHaveBeenCalled();
+            blockMocks.getValueMock.mockRestore();
+        });
+
+        it("should call executeCommand with zowe.ds.addSession if the migration status is CreateConfigSelected", () => {
+            const blockMocks = getBlockMocks();
+            const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+            blockMocks.getValueMock.mockReturnValueOnce(Definitions.V1MigrationStatus.CreateConfigSelected);
+            blockMocks.setValueMock.mockImplementation();
+            ProfilesUtils.handleV1MigrationStatus();
+            expect(executeCommandMock.mock.lastCall?.[0]).toBe("zowe.ds.addSession");
+            blockMocks.getValueMock.mockRestore();
+            blockMocks.setValueMock.mockRestore();
+        });
+
+        it("should clear the v1 migration status once the migration status is handled", () => {
+            const blockMocks = getBlockMocks();
+            blockMocks.getValueMock.mockReturnValueOnce(Definitions.V1MigrationStatus.JustMigrated);
+            blockMocks.setValueMock.mockImplementation();
+            ProfilesUtils.handleV1MigrationStatus();
+            expect(blockMocks.setValueMock).toHaveBeenCalledWith(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, undefined);
+            blockMocks.getValueMock.mockRestore();
+            blockMocks.setValueMock.mockRestore();
+        });
+    });
 });
