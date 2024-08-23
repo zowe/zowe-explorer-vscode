@@ -333,6 +333,72 @@ describe("ProfilesUtils unit tests", () => {
             );
             profInfoSpy.mockRestore();
         });
+
+        it("should reload the window once if the user just migrated from v1", async () => {
+            const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockReturnValueOnce({
+                readProfilesFromDisk: jest.fn(),
+                hasValidSchema: false,
+                getTeamConfig: () => ({
+                    exists: false,
+                }),
+            } as never);
+            const getConfigurationMock = jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                persistent: true,
+                get: jest.fn(),
+                has: jest.fn(),
+                inspect: jest.fn(),
+                update: jest.fn(),
+            });
+            const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+            const getValueMock = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+            const setValueMock = jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
+            await ProfilesUtils.readConfigFromDisk(true);
+            expect(getConfigurationMock).toHaveBeenCalledWith("Zowe-USS-Persistent");
+            expect(getValueMock).toHaveBeenCalledWith(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
+            expect(setValueMock).toHaveBeenCalledWith(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.JustMigrated);
+            expect(executeCommandMock).toHaveBeenCalledWith("workbench.action.reloadWindow");
+            executeCommandMock.mockRestore();
+            getConfigurationMock.mockRestore();
+            getValueMock.mockRestore();
+            setValueMock.mockRestore();
+
+            profInfoSpy.mockRestore();
+        });
+
+        it("should call v1ProfileOptions if team config does not exist and only v1 profiles exist", async () => {
+            const fakeProfInfo = {
+                readProfilesFromDisk: jest.fn(),
+                hasValidSchema: false,
+                getTeamConfig: () => ({
+                    exists: false,
+                }),
+                onlyV1ProfilesExist: () => true,
+            };
+            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
+                configurable: true,
+                get: () => true,
+            });
+            const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockReturnValueOnce(fakeProfInfo as any);
+            const getConfigurationMock = jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                persistent: true,
+                get: jest.fn(),
+                has: jest.fn(),
+                inspect: jest.fn(),
+                update: jest.fn(),
+            });
+            const v1ProfileOptionsMock = jest.spyOn(ProfilesUtils as any, "v1ProfileOptions").mockImplementation();
+            const getValueMock = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(Definitions.V1MigrationStatus.JustMigrated);
+            await ProfilesUtils.readConfigFromDisk(true);
+            expect(getConfigurationMock).toHaveBeenCalledWith("Zowe-USS-Persistent");
+            expect(getValueMock).toHaveBeenCalledWith(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
+            expect(v1ProfileOptionsMock).toHaveBeenCalled();
+            getConfigurationMock.mockRestore();
+            getValueMock.mockRestore();
+            v1ProfileOptionsMock.mockRestore();
+            onlyV1ProfsExistMock[Symbol.dispose]();
+
+            profInfoSpy.mockRestore();
+        });
     });
 
     describe("promptCredentials", () => {
