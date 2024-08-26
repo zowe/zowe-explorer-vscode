@@ -12,7 +12,6 @@
 import * as path from "path";
 import * as vscode from "vscode";
 import * as dayjs from "dayjs";
-import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import {
     Gui,
     Validation,
@@ -965,60 +964,39 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         }
     }
 
-    public async applyPatternsToChildren(
-        children: IZoweDatasetTreeNode[],
-        patterns: DatasetMatch[],
-        sessionNode: IZoweDatasetTreeNode
-    ): Promise<void> {
-        for (const child of children) {
-            for (const item of patterns) {
-                const label = child.label as string;
-                if (item.member && label !== "No data sets found") {
-                    const dsn = item.dsn.split(".");
-                    const name = label.split(".");
-                    let index = 0;
-                    let includes = false;
-                    if (!child.pattern) {
-                        for (const each of dsn) {
-                            let inc = false;
-                            inc = this.checkFilterPattern(name[index], each);
-                            if (inc) {
-                                child.pattern = item.dsn;
-                                includes = true;
-                            } else {
-                                child.pattern = "";
-                                includes = false;
-                            }
-                            index++;
-                        }
+    private patternAppliesToChild(child: IZoweDatasetTreeNode, item: DatasetMatch): boolean {
+        const name = (child.label as string).split(".");
+        let includes = false;
+        if (!child.pattern) {
+            let index = 0;
+            for (const each of item.dsn.split(".")) {
+                includes = this.checkFilterPattern(name[index], each);
+                child.pattern = includes ? item.dsn : "";
+                index++;
+            }
+        }
+
+        return includes;
+    }
+
+    public applyPatternsToChildren(children: IZoweDatasetTreeNode[], patterns: DatasetMatch[], sessionNode: IZoweDatasetTreeNode): void {
+        for (const child of children.filter((c) => c.label !== "No data sets found")) {
+            for (const item of patterns.filter((p) => p.member && this.patternAppliesToChild(child, p))) {
+                // Only apply to PDS that match the given patterns
+                if (child.contextValue.includes("pds")) {
+                    child.memberPattern = item.member;
+                    if (!child.contextValue.includes(Constants.FILTER_SEARCH)) {
+                        child.contextValue = String(child.contextValue) + Constants.FILTER_SEARCH;
                     }
-                    if (includes && child.contextValue.includes("pds")) {
-                        const childProfile = child.getProfile();
-                        const options: zosfiles.IListOptions = {};
-                        options.attributes = true;
-                        options.responseTimeout = childProfile.profile?.responseTimeout;
-                        const memResponse = await ZoweExplorerApiRegister.getMvsApi(childProfile).allMembers(label, options);
-                        let existing = false;
-                        for (const mem of memResponse.apiResponse.items) {
-                            existing = this.checkFilterPattern(mem.member, item.member);
-                            if (existing) {
-                                child.memberPattern = item.member;
-                                if (!child.contextValue.includes(Constants.FILTER_SEARCH)) {
-                                    child.contextValue = String(child.contextValue) + Constants.FILTER_SEARCH;
-                                }
-                                let setIcon: IconUtils.IIconItem;
-                                if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
-                                    setIcon = IconGenerator.getIconById(IconUtils.IconId.filterFolder);
-                                }
-                                if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
-                                    setIcon = IconGenerator.getIconById(IconUtils.IconId.filterFolderOpen);
-                                }
-                                if (setIcon) {
-                                    child.iconPath = setIcon.path;
-                                }
-                                this.refreshElement(child);
-                            }
-                        }
+                    let setIcon: IconUtils.IIconItem;
+                    if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+                        setIcon = IconGenerator.getIconById(IconUtils.IconId.filterFolder);
+                    }
+                    if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
+                        setIcon = IconGenerator.getIconById(IconUtils.IconId.filterFolderOpen);
+                    }
+                    if (setIcon) {
+                        child.iconPath = setIcon.path;
                     }
                 }
             }
@@ -1111,7 +1089,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             // reset and remove previous search patterns for each child of getChildren
             this.resetFilterForChildren(response);
             // set new search patterns for each child of getChildren
-            await this.applyPatternsToChildren(response, dsSets, sessionNode);
+            this.applyPatternsToChildren(response, dsSets, sessionNode);
             this.addSearchHistory(pattern);
         }
         if (!SharedContext.isFavorite(sessionNode)) {
