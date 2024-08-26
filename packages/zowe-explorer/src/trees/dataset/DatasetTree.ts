@@ -909,6 +909,26 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         return loadedItems;
     }
 
+    public extractPatterns(userInput: string): { dsn: string; member?: string }[] {
+        // Split the user input by comma to handle each pattern.
+        return userInput.split(",").map((p) => {
+            // Check if the pattern contains parentheses with text inside (member wildcard)
+            const match = /(.*)\((.*)\)/.exec(p);
+            if (match) {
+                const [, dataSetName, memberName] = match;
+                return {
+                    dsn: dataSetName,
+                    member: memberName,
+                };
+            }
+
+            // No member wildcard; remove spaces from dataset name pattern
+            return {
+                dsn: p.replace(/\s/g, ""),
+            };
+        });
+    }
+
     public async datasetFilterPrompt(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("DatasetTree.datasetFilterPrompt called.");
         ZoweLogger.debug(vscode.l10n.t("Prompting the user for a data set pattern"));
@@ -966,26 +986,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             node.children = [];
             node.dirty = true;
             AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getMvsApi(profile), sessionNode);
-            let dataSet: zosfiles.IDataSet;
-            const dsSets: (zosfiles.IDataSet & { memberPattern?: string })[] = [];
-            const dsNames = pattern.split(",");
 
-            for (const ds of dsNames) {
-                const match = /(.*)\((.*)\)/.exec(ds);
-                if (match) {
-                    const [, dataSetName, memberName] = match;
-                    dataSet = {
-                        dsn: dataSetName,
-                        member: memberName,
-                    };
-                } else {
-                    dataSet = {
-                        dsn: ds.replace(/\s/g, ""),
-                    };
-                }
-                dsSets.push(dataSet);
-            }
-
+            const dsSets = this.extractPatterns(pattern);
             let datasets: string;
             for (const item of dsSets) {
                 const newItem = item;
@@ -1062,7 +1064,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         if (includes && child.contextValue.includes("pds")) {
                             const childProfile = child.getProfile();
                             const options: zosfiles.IListOptions = {};
-                            options.pattern = item.memberPattern;
                             options.attributes = true;
                             options.responseTimeout = childProfile.profile?.responseTimeout;
                             const memResponse = await ZoweExplorerApiRegister.getMvsApi(childProfile).allMembers(label, options);
