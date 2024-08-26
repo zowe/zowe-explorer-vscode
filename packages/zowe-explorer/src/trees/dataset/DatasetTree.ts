@@ -983,7 +983,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         for (const child of children.filter((c) => c.label !== "No data sets found")) {
             for (const item of patterns.filter((p) => p.member && this.patternAppliesToChild(child, p))) {
                 // Only apply to PDS that match the given patterns
-                if (child.contextValue.includes("pds")) {
+                if (SharedContext.isPds(child)) {
                     child.memberPattern = item.member;
                     if (!child.contextValue.includes(Constants.FILTER_SEARCH)) {
                         child.contextValue = String(child.contextValue) + Constants.FILTER_SEARCH;
