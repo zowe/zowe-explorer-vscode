@@ -49,7 +49,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added remote lookup functionality for Data Sets and USS, allowing Zowe Explorer to locate and resolve mainframe resources on demand. [#3040](https://github.com/zowe/zowe-explorer-vscode/pull/3040)
 - Implemented change detection in the Data Sets and USS filesystems, so that changes on the mainframe will be reflected in opened editors for Data Sets and USS files. [#3040](https://github.com/zowe/zowe-explorer-vscode/pull/3040)
 - Implemented a "Show as Table" option for profile nodes in the Jobs tree, displaying lists of jobs in a tabular view. Jobs can be filtered and sorted within this view, and users can select jobs to cancel, delete or download. [#2258](https://github.com/zowe/zowe-explorer-vscode/issues/2258)
-- To add the ability to switch between basic authentication and token-based authentication. [#3062](https://github.com/zowe/zowe-explorer-vscode/pull/3062)
+- Replaced `lodash` dependency with `es-toolkit` to reduce webview bundle size and add technical currency. [#3060](https://github.com/zowe/zowe-explorer-vscode/pull/3060)
 
 ### Bug fixes
 
@@ -170,6 +170,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Migrated to new package manager PNPM from Yarn.
 
+## `2.17.0`
+
+### New features and enhancements
+
+- To add the ability to switch between basic authentication and token-based authentication. [#3062](https://github.com/zowe/zowe-explorer-vscode/pull/3062)
+
 ## `2.16.2`
 
 ### Bug fixes
@@ -178,7 +184,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## `2.16.0`
 
-## New features and enhancements
+### New features and enhancements
 
 - Added Status bar to indicate that data is being pulled from mainframe. [#2484](https://github.com/zowe/zowe-explorer-vscode/issues/2484)
 - Updated MVS view progress indicator for entering a filter search. [#2181](https://github.com/zowe/zowe-explorer-vscode/issues/2181)
