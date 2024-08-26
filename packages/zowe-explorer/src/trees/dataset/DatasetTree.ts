@@ -504,31 +504,29 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             await this.addFavorite(node.getParent() as IZoweDatasetTreeNode);
             return;
         } else if (SharedContext.isDsSession(node)) {
-            if (!node.pattern) {
+            if (!node.pattern && !node.resourceUri.query?.includes("pattern=")) {
                 this.refreshElement(this.mFavoriteSession);
                 return;
             }
 
+            const queryParams = new URLSearchParams(node.resourceUri.query);
+
             temp = new ZoweDatasetNode({
-                label: node.pattern,
-                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                label: queryParams.get("pattern") ?? node.pattern,
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 parentNode: profileNodeInFavorites,
                 session: node.getSession(),
                 contextOverride: node.contextValue,
-                etag: await node.getEtag(),
                 profile: node.getProfile(),
             });
 
             await this.checkCurrentProfile(node);
-
             temp.contextValue = Constants.DS_SESSION_CONTEXT + Constants.FAV_SUFFIX;
             temp.resourceUri = node.resourceUri;
             const icon = IconGenerator.getIconByNode(temp);
             if (icon) {
                 temp.iconPath = icon.path;
             }
-            // add a command to execute the search
-            temp.command = { command: "zowe.ds.pattern", title: "", arguments: [temp] };
         } else {
             // pds | ds
             temp = new ZoweDatasetNode({
