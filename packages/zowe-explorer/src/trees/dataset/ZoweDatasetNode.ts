@@ -551,8 +551,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
                 this.tooltip = this.pattern = dsPattern.toUpperCase();
                 // reset and remove previous search patterns for each child of getChildren
-            } else {
-                this.tooltip = this.pattern = this.pattern.toUpperCase();
             }
 
             const dsPatterns = [
