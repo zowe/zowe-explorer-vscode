@@ -420,10 +420,10 @@
   resolved "https://registry.npmjs.org/@vue/shared/-/shared-3.3.4.tgz#06e83c5027f464eef861c329be81454bc8b70780"
   integrity sha512-7OjdcV8vQ74eiz1TZLzZP4JwqM5fA94K6yntPS5Z25r9HDuGNzaGdgvwKYq6S+MxwF0TFRwe50fIR/MYnakdkQ==
 
-"@zowe/cli@^7.28.4":
-  version "7.29.0"
-  resolved "https://registry.npmjs.org/@zowe/cli/-/cli-7.29.0.tgz#3be10966d2620f60b6ab59f9dc7a40c98139b8fc"
-  integrity sha512-7Y52sT3B5JSz13Ms6ku0qCmn9YcAMEMzUhioyYNwCu5TXuKEE0kH2ZEifxe0jt+kA93WCpEqn+Rj1pmomNZ91g==
+"@zowe/cli@^7.29.1":
+  version "7.29.1"
+  resolved "https://registry.npmjs.org/@zowe/cli/-/cli-7.29.1.tgz#77e27aa48bf271285e5a530922b69a0505d70fed"
+  integrity sha512-H9dcds7W+TFD9yJ8HqCtxDcy/oasYa9vtmtJXZEnt6HQ6NZ3rK2SinZStVNGxBS6H7r31rZyPhgULlEJOgjg5A==
   dependencies:
     "@zowe/core-for-zowe-sdk" "7.29.0"
     "@zowe/imperative" "5.27.0"
@@ -562,7 +562,7 @@
   version "2.18.0-SNAPSHOT"
   dependencies:
     "@types/vscode" "^1.53.2"
-    "@zowe/cli" "^7.28.4"
+    "@zowe/cli" "^7.29.1"
     "@zowe/secrets-for-zowe-sdk" "^7.18.6"
     mustache "^4.2.0"
     semver "^7.5.3"
@@ -697,7 +697,7 @@ brace-expansion@^2.0.1:
   dependencies:
     balanced-match "^1.0.0"
 
-braces@^3.0.2:
+braces@^3.0.3:
   version "3.0.3"
   resolved "https://registry.npmjs.org/braces/-/braces-3.0.3.tgz#490332f40919452272d55a8480adc0c441358789"
   integrity sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==
@@ -1675,11 +1675,11 @@ merge2@^1.3.0, merge2@^1.4.1:
   integrity sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==
 
 micromatch@^4.0.4:
-  version "4.0.5"
-  resolved "https://registry.npmjs.org/micromatch/-/micromatch-4.0.5.tgz#bc8999a7cbbf77cdc89f132f6e467051b49090c6"
-  integrity sha512-DMy+ERcEW2q8Z2Po+WNXuw3c5YaUSFjAO5GsJqfEl7UjvtIuFKO6ZrKvcItdy98dwFI2N1tg3zNIdKaQT+aNdA==
+  version "4.0.8"
+  resolved "https://registry.npmjs.org/micromatch/-/micromatch-4.0.8.tgz#d66fa18f3a47076789320b9b1af32bd86d9fa202"
+  integrity sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==
   dependencies:
-    braces "^3.0.2"
+    braces "^3.0.3"
     picomatch "^2.3.1"
 
 minimatch@5.0.1:
