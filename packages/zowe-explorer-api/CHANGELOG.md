@@ -10,6 +10,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Fixed an issue where the `ZoweVsCodeExtension.updateCredentials` method could remove credentials from session when input prompt was cancelled. [#3018](https://github.com/zowe/zowe-explorer-vscode/pull/3018)
 - Updated the `@zowe/cli` dependency to fix error when using session with auth type "none". [zowe-cli#2219](https://github.com/zowe/zowe-cli/issues/2219)
+- Fixed errors being logged silently rather than thrown in `ProfilesCache.refresh` method. [#3066](https://github.com/zowe/zowe-explorer-vscode/issues/3066)
 
 ## `2.17.0`
 

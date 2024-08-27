@@ -12,6 +12,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Fixed issue where creating a new team configuration file could cause Zowe Explorer to crash, resulting in all sessions disappearing from trees. [#2906](https://github.com/zowe/zowe-explorer-vscode/issues/2906)
 - Fixed data set not opening when the token has expired. [#3001](https://github.com/zowe/zowe-explorer-vscode/issues/3001)
+- Fixed JSON errors being ignored when `zowe.config.json` files change on disk and are reloaded. [#3066](https://github.com/zowe/zowe-explorer-vscode/issues/3066)
 
 ## `2.17.0`
 
