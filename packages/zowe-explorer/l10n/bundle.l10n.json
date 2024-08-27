@@ -847,6 +847,8 @@
   "Update profile connection information": "Update profile connection information",
   "$(eye-closed) Hide Profile": "$(eye-closed) Hide Profile",
   "Hide profile name from tree view": "Hide profile name from tree view",
+  "$(key) Change the Authentication Method": "$(key) Change the Authentication Method",
+  "Change the authentication method": "Change the authentication method",
   "$(arrow-right) Log in to authentication service": "$(arrow-right) Log in to authentication service",
   "Log in to obtain a new token value": "Log in to obtain a new token value",
   "$(arrow-left) Log out of authentication service": "$(arrow-left) Log out of authentication service",
@@ -969,6 +971,15 @@
       "Error message"
     ]
   },
+  "To change the authentication": "To change the authentication",
+  "To continue in current authentication": "To continue in current authentication",
+  "Do you wish to change the Authentication": "Do you wish to change the Authentication",
+  "Cannot switch to Token-based Authentication for profile {0}.": "Cannot switch to Token-based Authentication for profile {0}.",
+  "Login using token-based authentication service was successful for profile {0}.": "Login using token-based authentication service was successful for profile {0}.",
+  "Unable to switch to Token-based authentication for profile {0}.": "Unable to switch to Token-based authentication for profile {0}.",
+  "Login using basic authentication was successful for profile {0}.": "Login using basic authentication was successful for profile {0}.",
+  "Unable to switch to Basic authentication for profile {0}.": "Unable to switch to Basic authentication for profile {0}.",
+  "Unable to Switch Authentication for profile {0}.": "Unable to Switch Authentication for profile {0}.",
   "Logout from authentication service was successful for {0}./Service profile name": {
     "message": "Logout from authentication service was successful for {0}.",
     "comment": [
