@@ -15,10 +15,6 @@ import { ZoweCommandProvider } from "./ZoweCommandProvider";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { Profiles } from "../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
-import { ProfileManagement } from "../management/ProfileManagement";
-import { Constants } from "../configuration/Constants";
-import { SettingsConfig } from "../configuration/SettingsConfig";
-import { FilterDescriptor, FilterItem } from "../management/FilterManagement";
 import { AuthUtils } from "../utils/AuthUtils";
 import { Definitions } from "../configuration/Definitions";
 
@@ -42,7 +38,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
         return this.instance;
     }
 
-    private static readonly defaultDialogText: string = vscode.l10n.t("$(plus) Create a new MVS command");
+    public readonly defaultDialogText: string = vscode.l10n.t("$(plus) Create a new MVS command");
     private static instance: MvsCommandHandler;
     public outputChannel: vscode.OutputChannel;
 
@@ -67,37 +63,12 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 session = ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getSession();
                 if (!session) {
                     return;
+                    this.getQuickPick;
                 }
             }
         }
         if (!session) {
-            const allProfiles = profiles.allProfiles;
-            const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS);
-            if (profileNamesList.length) {
-                const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: vscode.l10n.t("Select the Profile to use to submit the command"),
-                    ignoreFocusOut: true,
-                    canPickMany: false,
-                };
-                const sesName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
-                if (sesName === undefined) {
-                    Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
-                    return;
-                }
-                profile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
-                if (!node) {
-                    await profiles.checkCurrentProfile(profile);
-                }
-                if (profiles.validProfile !== Validation.ValidationType.INVALID) {
-                    session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
-                } else {
-                    Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
-                    return;
-                }
-            } else {
-                Gui.showMessage(vscode.l10n.t("No profiles available"));
-                return;
-            }
+            profile = await this.selectNodeProfile(Definitions.Trees.MVS);
         } else {
             profile = node.getProfile();
         }
@@ -129,60 +100,6 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 await AuthUtils.errorHandling(error, profile.name);
             }
         }
-    }
-
-    private async getQuickPick(hostname: string): Promise<string> {
-        ZoweLogger.trace("MvsCommandHandler.getQuickPick called.");
-        let response = "";
-        const alwaysEdit: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_ALWAYS_EDIT);
-        if (this.history.getSearchHistory().length > 0) {
-            const createPick = new FilterDescriptor(MvsCommandHandler.defaultDialogText);
-            const items: vscode.QuickPickItem[] = this.history.getSearchHistory().map((element) => new FilterItem({ text: element }));
-            const quickpick = Gui.createQuickPick();
-            quickpick.placeholder = alwaysEdit
-                ? vscode.l10n.t({
-                      message: "Select an MVS command to run against {0} (An option to edit will follow)",
-                      args: [hostname],
-                      comment: ["Host name"],
-                  })
-                : vscode.l10n.t({
-                      message: "Select an MVS command to run immediately against {0}",
-                      args: [hostname],
-                      comment: ["Host name"],
-                  });
-
-            quickpick.items = [createPick, ...items];
-            quickpick.ignoreFocusOut = true;
-            quickpick.show();
-            const choice = await Gui.resolveQuickPick(quickpick);
-            quickpick.hide();
-            if (!choice) {
-                Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-                return;
-            }
-            if (choice instanceof FilterDescriptor) {
-                if (quickpick.value) {
-                    response = quickpick.value;
-                }
-            } else {
-                response = choice.label;
-            }
-        }
-        if (!response || alwaysEdit) {
-            // manually entering a search
-            const options2: vscode.InputBoxOptions = {
-                prompt: vscode.l10n.t("Enter or update the MVS command"),
-                value: response,
-                valueSelection: response ? [response.length, response.length] : undefined,
-            };
-            // get user input
-            response = await Gui.showInputBox(options2);
-            if (!response) {
-                Gui.showMessage(vscode.l10n.t("No command entered."));
-                return;
-            }
-        }
-        return response;
     }
 
     /**

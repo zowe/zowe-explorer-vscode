@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweTreeNode, PersistenceSchemaEnum, Validation } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweTreeNode, PersistenceSchemaEnum, Validation } from "@zowe/zowe-explorer-api";
 import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedContext } from "../trees/shared/SharedContext";
@@ -19,11 +19,15 @@ import { Constants } from "../configuration/Constants";
 import { IconGenerator } from "../icons/IconGenerator";
 import { IconUtils } from "../icons/IconUtils";
 import { AuthUtils } from "../utils/AuthUtils";
+import { ProfileManagement } from "../management/ProfileManagement";
+import { Definitions } from "../configuration/Definitions";
+import { SettingsConfig } from "../configuration/SettingsConfig";
+import { FilterDescriptor, FilterItem } from "../management/FilterManagement";
 
-export class ZoweCommandProvider {
+export abstract class ZoweCommandProvider {
     // eslint-disable-next-line no-magic-numbers
     private static readonly totalFilters: number = 10;
-
+    public profileInstance: Profiles;
     public history: ZowePersistentFilters;
     // Event Emitters used to notify subscribers that the refresh event has fired
     public mOnDidChangeTreeData: vscode.EventEmitter<IZoweTreeNode | void> = new vscode.EventEmitter<IZoweTreeNode | undefined>();
@@ -31,6 +35,117 @@ export class ZoweCommandProvider {
 
     public constructor() {
         this.history = new ZowePersistentFilters(PersistenceSchemaEnum.Commands, ZoweCommandProvider.totalFilters);
+        this.profileInstance = Profiles.getInstance();
+    }
+
+    public async selectNodeProfile(cmdTree: Definitions.Trees): Promise<imperative.IProfileLoaded> {
+        ZoweLogger.trace("ZoweCommandProvider.selectNodeProfile called.");
+
+        const allProfiles = this.profileInstance.allProfiles;
+        const profileNamesList = ProfileManagement.getRegisteredProfileNameList(cmdTree);
+        if (profileNamesList.length > 0) {
+            const quickPickOptions: vscode.QuickPickOptions = {
+                placeHolder: vscode.l10n.t("Select a profile for this command"),
+                ignoreFocusOut: true,
+                canPickMany: false,
+            };
+            const sesName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
+            if (sesName === undefined) {
+                Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
+                return;
+            }
+            const profile = allProfiles.find((tempProfile) => tempProfile.name === sesName);
+            await this.profileInstance.checkCurrentProfile(profile);
+            if (this.profileInstance.validProfile === Validation.ValidationType.INVALID) {
+                Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
+                return;
+            }
+            return profile;
+        } else {
+            const noProfAvailable = vscode.l10n.t("No profiles available.");
+            ZoweLogger.info(noProfAvailable);
+            Gui.showMessage(noProfAvailable);
+        }
+    }
+
+    public async selectServiceProfile(profiles: imperative.IProfileLoaded[] = []): Promise<imperative.IProfileLoaded> {
+        ZoweLogger.trace("ZoweCommandProvider.selectServiceProfile called.");
+        let profile: imperative.IProfileLoaded;
+        if (profiles.length > 1) {
+            const profileNamesList = profiles.map((tempProfile) => {
+                return tempProfile.name;
+            });
+            const quickPickOptions: vscode.QuickPickOptions = {
+                placeHolder: vscode.l10n.t("Select a profile for this command"),
+                ignoreFocusOut: true,
+                canPickMany: false,
+            };
+            const sesName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
+            if (sesName === undefined) {
+                Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
+                return;
+            }
+            profile = profiles.filter((tempProfile) => tempProfile.name === sesName)[0];
+        } else if (profiles.length > 0) {
+            profile = profiles[0];
+        }
+        return profile;
+    }
+
+    public abstract defaultDialogText: string;
+
+    public async getQuickPick(hostname: string): Promise<string> {
+        ZoweLogger.trace("ZoweCommandProvider.getQuickPick called.");
+        let response = "";
+        const alwaysEdit: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_ALWAYS_EDIT);
+        if (this.history.getSearchHistory().length > 0) {
+            const createPick = new FilterDescriptor(this.defaultDialogText);
+            const items: vscode.QuickPickItem[] = this.history.getSearchHistory().map((element) => new FilterItem({ text: element }));
+            const quickpick = Gui.createQuickPick();
+            quickpick.placeholder = alwaysEdit
+                ? vscode.l10n.t({
+                      message: "Select a command to run against {0} (An option to edit will follow)",
+                      args: [hostname],
+                      comment: ["Host name"],
+                  })
+                : vscode.l10n.t({
+                      message: "Select a command to run immediately against {0}",
+                      args: [hostname],
+                      comment: ["Host name"],
+                  });
+
+            quickpick.items = [createPick, ...items];
+            quickpick.ignoreFocusOut = true;
+            quickpick.show();
+            const choice = await Gui.resolveQuickPick(quickpick);
+            quickpick.hide();
+            if (!choice) {
+                Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
+                return;
+            }
+            if (choice instanceof FilterDescriptor) {
+                if (quickpick.value) {
+                    response = quickpick.value;
+                }
+            } else {
+                response = choice.label;
+            }
+        }
+        if (!response || alwaysEdit) {
+            // manually entering a search
+            const options2: vscode.InputBoxOptions = {
+                prompt: vscode.l10n.t("Enter or update the command"),
+                value: response,
+                valueSelection: response ? [response.length, response.length] : undefined,
+            };
+            // get user input
+            response = await Gui.showInputBox(options2);
+            if (!response) {
+                Gui.showMessage(vscode.l10n.t("No command entered."));
+                return;
+            }
+        }
+        return response;
     }
 
     /**
