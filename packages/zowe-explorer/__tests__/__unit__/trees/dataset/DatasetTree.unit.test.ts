@@ -3124,3 +3124,32 @@ describe("Dataset Tree Unit Tests - Function createProfileNodeForFavs", () => {
         isGlobalProfNodeMock.mockRestore();
     });
 });
+
+describe("Dataset Tree Unit Tests - Function extractPatterns", () => {
+    it("Handles member wildcards that match the regex", () => {
+        const testTree = new DatasetTree();
+        expect(testTree.extractPatterns("HLQ.PROD.STUFF(TEST*)")).toStrictEqual([
+            {
+                dsn: "HLQ.PROD.STUFF",
+                member: "TEST*",
+            },
+        ]);
+    });
+    it("Handles data set wildcards that do not match the regex", () => {
+        const testTree = new DatasetTree();
+        expect(testTree.extractPatterns("HLQ.PROD.*")).toStrictEqual([
+            {
+                dsn: "HLQ.PROD.*",
+            },
+        ]);
+    });
+});
+
+describe("Dataset Tree Unit Tests - Function buildFinalPattern", () => {
+    it("Handles both patterns with member wildcards and normal patterns", () => {
+        const testTree = new DatasetTree();
+        const patterns = testTree.extractPatterns("HLQ.PROD.STUFF*(TEST*), HLQ.DEV.STUFF.*");
+        // The member wildcard will not appear in the final pattern, but the member pattern is attached to the PDS nodes
+        expect(testTree.buildFinalPattern(patterns)).toStrictEqual("HLQ.PROD.STUFF*, HLQ.DEV.STUFF.*");
+    });
+});
