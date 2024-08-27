@@ -126,10 +126,15 @@ export namespace Definitions {
         OtherUserJobs,
         AllJobs,
     }
+    export enum V1MigrationStatus {
+        CreateConfigSelected,
+        JustMigrated,
+    }
     export enum LocalStorageKey {
         CLI_LOGGER_SETTING_PRESENTED = "zowe.cliLoggerSetting.presented",
         ENCODING_HISTORY = "zowe.encodingHistory",
         SETTINGS_LOCAL_STORAGE_MIGRATED = "zowe.settings.localStorageMigrated",
         SETTINGS_OLD_SETTINGS_MIGRATED = "zowe.settings.oldSettingsMigrated",
+        V1_MIGRATION_STATUS = "zowe.v1MigrationStatus",
     }
 }
