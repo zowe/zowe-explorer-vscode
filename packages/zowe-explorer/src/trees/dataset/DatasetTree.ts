@@ -913,7 +913,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         // Split the user input by comma to handle each pattern.
         return userInput.split(",").map((p) => {
             // Check if the pattern contains parentheses with text inside (member wildcard)
-            const match = /((?:.{0,8}){0,4})\((.{0,8})\)/.exec(p);
+            const match = /((?:.{1,8}){1,4})\((.{0,8})\)/.exec(p);
             if (match) {
                 const [, dataSetName, memberName] = match;
                 return {
