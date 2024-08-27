@@ -51,6 +51,7 @@ describe("ProfileManagement unit tests", () => {
             mockUpdateChosen: ProfileManagement.basicAuthUpdateQpItems[ProfileManagement.AuthQpLabels.update],
             mockAddBasicChosen: ProfileManagement.basicAuthAddQpItems[ProfileManagement.AuthQpLabels.add],
             mockLoginChosen: ProfileManagement.tokenAuthLoginQpItem[ProfileManagement.AuthQpLabels.login],
+            mockSwitchChosen: ProfileManagement.switchAuthenticationQpItems[ProfileManagement.AuthQpLabels.switch],
             mockLogoutChosen: ProfileManagement.tokenAuthLogoutQpItem[ProfileManagement.AuthQpLabels.logout],
             mockEditProfChosen: ProfileManagement.editProfileQpItems[ProfileManagement.AuthQpLabels.edit],
             mockDeleteProfChosen: ProfileManagement.deleteProfileQpItem[ProfileManagement.AuthQpLabels.delete],
@@ -64,6 +65,7 @@ describe("ProfileManagement unit tests", () => {
             promptSpy: null as any,
             editSpy: null as any,
             loginSpy: null as any,
+            handleSwitchAuthenticationSpy: null as any,
             logoutSpy: null as any,
             logMsg: null as any,
             commandSpy: null as any,
@@ -105,6 +107,8 @@ describe("ProfileManagement unit tests", () => {
         newMocks.editSpy = jest.spyOn(newMocks.mockProfileInstance, "editSession");
         Object.defineProperty(newMocks.mockProfileInstance, "ssoLogin", { value: jest.fn(), configurable: true });
         newMocks.loginSpy = jest.spyOn(newMocks.mockProfileInstance, "ssoLogin");
+        Object.defineProperty(newMocks.mockProfileInstance, "handleSwitchAuthentication", { value: jest.fn(), configurable: true });
+        newMocks.handleSwitchAuthenticationSpy = jest.spyOn(newMocks.mockProfileInstance, "handleSwitchAuthentication");
         Object.defineProperty(newMocks.mockProfileInstance, "ssoLogout", { value: jest.fn(), configurable: true });
         newMocks.logoutSpy = jest.spyOn(newMocks.mockProfileInstance, "ssoLogout");
         Object.defineProperty(vscode.commands, "executeCommand", { value: jest.fn(), configurable: true });
@@ -115,6 +119,14 @@ describe("ProfileManagement unit tests", () => {
     }
 
     describe("unit tests around basic auth selections", () => {
+        beforeEach(() => {
+            jest.resetModules();
+        });
+
+        afterAll(() => {
+            jest.restoreAllMocks();
+        });
+
         function createBlockMocks(globalMocks): any {
             globalMocks.logMsg = `Profile ${globalMocks.mockBasicAuthProfile.name as string} is using basic authentication.`;
             globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockBasicAuthProfile);
@@ -133,6 +145,12 @@ describe("ProfileManagement unit tests", () => {
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
             expect(mocks.promptSpy).toHaveBeenCalled();
+        });
+        it("profile using basic authentication should see handleSwitchAuthentication called when Change the Authentication method chosen", async () => {
+            const mocks = createBlockMocks(createGlobalMocks());
+            mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockSwitchAuthChosen);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
         });
         it("profile using basic authentication should see editSession called when Edit Profile chosen", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
@@ -166,6 +184,13 @@ describe("ProfileManagement unit tests", () => {
         });
     });
     describe("unit tests around token auth selections", () => {
+        beforeEach(() => {
+            jest.resetModules();
+        });
+
+        afterAll(() => {
+            jest.restoreAllMocks();
+        });
         function createBlockMocks(globalMocks): any {
             globalMocks.logMsg = `Profile ${globalMocks.mockTokenAuthProfile.name as string} is using token authentication.`;
             globalMocks.mockUnixSessionNode = unixMock.createUSSSessionNode(globalMocks.mockSession, globalMocks.mockBasicAuthProfile) as any;
@@ -218,6 +243,13 @@ describe("ProfileManagement unit tests", () => {
             await ProfileManagement.manageProfile(mocks.mockUnixSessionNode);
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
             expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.disableValidation", mocks.mockUnixSessionNode);
+        });
+        it("profile using token authentication should see handleSwitchAuthentication called when Change the Authentication method chosen", async () => {
+            const mocks = createBlockMocks(createGlobalMocks());
+            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(true);
+            mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockSwitchAuthChosen);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
         });
     });
     describe("unit tests around no auth declared selections", () => {

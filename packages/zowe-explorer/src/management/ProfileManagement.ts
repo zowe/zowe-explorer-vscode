@@ -68,6 +68,7 @@ export class ProfileManagement {
         edit: "edit-profile",
         enable: "enable-validation",
         hide: "hide-profile",
+        switch: "switch-auth",
         login: "obtain-token",
         logout: "invalidate-token",
         update: "update-credentials",
@@ -111,6 +112,12 @@ export class ProfileManagement {
         [ProfileManagement.AuthQpLabels.hide]: {
             label: vscode.l10n.t("$(eye-closed) Hide Profile"),
             description: vscode.l10n.t("Hide profile name from tree view"),
+        },
+    };
+    public static switchAuthenticationQpItems: Record<string, vscode.QuickPickItem> = {
+        [ProfileManagement.AuthQpLabels.switch]: {
+            label: vscode.l10n.t("$(key) Change the Authentication Method"),
+            description: vscode.l10n.t("Change the authentication method"),
         },
     };
     public static tokenAuthLoginQpItem: Record<string, vscode.QuickPickItem> = {
@@ -181,6 +188,10 @@ export class ProfileManagement {
                 await this.handleHideProfiles(node);
                 break;
             }
+            case this.switchAuthenticationQpItems[this.AuthQpLabels.switch]: {
+                await Profiles.getInstance().handleSwitchAuthentication(node);
+                break;
+            }
             case this.deleteProfileQpItem[this.AuthQpLabels.delete]: {
                 await this.handleDeleteProfiles(node);
                 break;
@@ -222,6 +233,7 @@ export class ProfileManagement {
 
     private static basicAuthQp(node: IZoweTreeNode): vscode.QuickPickItem[] {
         const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.basicAuthUpdateQpItems);
+        quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
         return this.addFinalQpOptions(node, quickPickOptions);
     }
     private static tokenAuthQp(node: IZoweTreeNode): vscode.QuickPickItem[] {
@@ -230,6 +242,7 @@ export class ProfileManagement {
         if (profile.profile.tokenValue) {
             quickPickOptions.push(this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]);
         }
+        quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
         return this.addFinalQpOptions(node, quickPickOptions);
     }
     private static chooseAuthQp(node: IZoweTreeNode): vscode.QuickPickItem[] {
