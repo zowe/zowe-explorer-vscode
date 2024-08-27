@@ -19,6 +19,7 @@ import { removeSession } from "../utils/SessionUtils";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeProviders } from "./TreeProviders";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
 
 /**
  * View (DATA SETS, JOBS, USS) refresh button
@@ -34,7 +35,13 @@ export async function refreshAll(treeProvider?: IZoweTree<IZoweTreeNode>): Promi
         }
         return;
     }
-    await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+    try {
+        await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+    } catch (err) {
+        ZoweLogger.error(err);
+        ZoweExplorerExtender.showZoweConfigError(err.message);
+        return;
+    }
     for (const sessNode of treeProvider.mSessionNodes) {
         const profiles = await Profiles.getInstance().fetchAllProfiles();
         const found = profiles.some((prof) => prof.name === sessNode.label.toString().trim());
