@@ -19,7 +19,7 @@ import { Gui, imperative, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zow
 export class ZoweLogger {
     public static zeOutputChannel: vscode.OutputChannel;
     public static log: imperative.Logger;
-    private static defaultLogLevel: "INFO";
+    private static defaultLogLevel = "INFO";
     private static zeLogLevel: string;
 
     private static impLogger: imperative.Logger;
@@ -94,6 +94,11 @@ export class ZoweLogger {
     }
 
     private static writeLogMessage(message: string, severity: MessageSeverity): void {
+        // Do not use Imperative logger if it hasn't been initialized.
+        if (ZoweLogger.imperativeLogger == null) {
+            return;
+        }
+
         if (+MessageSeverity[this.getLogSetting()] <= +severity) {
             const severityName = MessageSeverity[severity];
             this.imperativeLogger[severityName?.toLowerCase()](message);
