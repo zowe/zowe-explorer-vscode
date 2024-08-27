@@ -515,7 +515,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 label: queryParams.get("pattern") ?? node.pattern,
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 parentNode: profileNodeInFavorites,
-                session: node.getSession(),
                 contextOverride: node.contextValue,
                 profile: node.getProfile(),
             });
@@ -533,7 +532,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 label: node.label as string,
                 collapsibleState: node.collapsibleState,
                 parentNode: profileNodeInFavorites,
-                session: node.getSession(),
                 contextOverride: node.contextValue,
                 etag: await node.getEtag(),
                 profile: node.getProfile(),
