@@ -1073,6 +1073,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             } else {
                 sessionNode.tooltip = sessionNode.pattern = pattern.toUpperCase();
             }
+
             let response: IZoweDatasetTreeNode[] = [];
             try {
                 await Gui.withProgress({ location: { viewId: "zowe.ds.explorer" } }, async () => {
@@ -1082,7 +1083,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 await AuthUtils.errorHandling(err, String(node.label));
             }
             if (response.length === 0) {
-                sessionNode.tooltip = sessionNode.pattern = undefined;
                 return;
             }
             // reset and remove previous search patterns for each child of getChildren
