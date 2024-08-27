@@ -931,10 +931,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
     public buildFinalPattern(matches: DatasetMatch[]): string {
         return matches.reduce((all, cur) => {
-            if (!cur.dsn) {
-                return all;
-            }
-
             return all.length ? all + `, ${cur.dsn}` : cur.dsn;
         }, "");
     }
@@ -984,7 +980,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 // Only apply to PDS that match the given patterns
                 if (SharedContext.isPds(child)) {
                     child.memberPattern = item.member;
-                    if (!child.contextValue.includes(Constants.FILTER_SEARCH)) {
+                    if (!SharedContext.isFilterFolder(child)) {
                         child.contextValue = String(child.contextValue) + Constants.FILTER_SEARCH;
                     }
                     let setIcon: IconUtils.IIconItem;

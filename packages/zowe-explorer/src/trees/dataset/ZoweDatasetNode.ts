@@ -547,10 +547,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             const dsPattern = dsTree.buildFinalPattern(this.patternMatches);
             if (dsPattern.length != 0) {
                 if (dsPattern !== this.pattern) {
+                    // reset and remove previous search patterns if pattern has changed
                     dsTree.resetFilterForChildren(this.children);
                 }
                 this.tooltip = this.pattern = dsPattern.toUpperCase();
-                // reset and remove previous search patterns for each child of getChildren
             }
 
             const dsPatterns = [
