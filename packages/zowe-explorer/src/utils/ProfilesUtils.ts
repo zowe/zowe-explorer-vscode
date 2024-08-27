@@ -16,8 +16,10 @@ import { IZoweTreeNode, ZoweTreeNode, FileManagement, Gui, ProfilesCache, impera
 import { Constants } from "../configuration/Constants";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { ZoweLogger } from "../tools/ZoweLogger";
-import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { AuthUtils } from "./AuthUtils";
+import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
+import { Definitions } from "../configuration/Definitions";
+import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 
 export class ProfilesUtils {
     public static PROFILE_SECURITY: string | boolean = Constants.ZOWE_CLI_SCM;
@@ -74,7 +76,7 @@ export class ProfilesUtils {
      */
     public static updateCredentialManagerSetting(credentialManager?: string | false): void {
         ZoweLogger.trace("ProfilesUtils.updateCredentialManagerSetting called.");
-        const settingEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        const settingEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED, true);
         if (settingEnabled && credentialManager) {
             this.PROFILE_SECURITY = credentialManager;
             return;
@@ -346,10 +348,33 @@ export class ProfilesUtils {
             );
             ZoweLogger.debug(`Summary of team configuration files considered for Zowe Explorer: ${JSON.stringify(layerSummary)}`);
         } else {
+            // For users upgrading from v1 to v3, we must force a "Reload Window" operation to make sure that
+            // VS Code registers our updated TreeView IDs. Otherwise, VS Code's "Refresh Extensions" option will break v3 init.
+            const ussPersistentSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent");
+            const upgradingFromV1 = ZoweLocalStorage.getValue<Definitions.V1MigrationStatus>(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
+            if (ussPersistentSettings != null && upgradingFromV1 == null) {
+                ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.JustMigrated);
+                await vscode.commands.executeCommand("workbench.action.reloadWindow");
+            }
             if (imperative.ProfileInfo.onlyV1ProfilesExist) {
                 await this.v1ProfileOptions();
             }
         }
+    }
+
+    public static handleV1MigrationStatus(): void {
+        const migrationStatus = ZoweLocalStorage.getValue<Definitions.V1MigrationStatus>(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
+        if (migrationStatus == null) {
+            // If there is no v1 migration status, return.
+            return;
+        }
+
+        // Open the "Add Session" quick pick if the user selected "Create New" in the v1 migration prompt.
+        if (migrationStatus === Definitions.V1MigrationStatus.CreateConfigSelected) {
+            vscode.commands.executeCommand("zowe.ds.addSession", SharedTreeProviders.ds);
+        }
+
+        ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, undefined);
     }
 
     public static async promptCredentials(node: IZoweTreeNode): Promise<void> {
@@ -515,7 +540,7 @@ export class ProfilesUtils {
         switch (selection) {
             case createButton: {
                 ZoweLogger.info("Create new team configuration chosen.");
-                vscode.commands.executeCommand("zowe.ds.addSession", SharedTreeProviders.ds);
+                ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.CreateConfigSelected);
                 break;
             }
             case convertButton: {
@@ -524,7 +549,7 @@ export class ProfilesUtils {
                 break;
             }
             default: {
-                Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
+                void Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
                 break;
             }
         }
