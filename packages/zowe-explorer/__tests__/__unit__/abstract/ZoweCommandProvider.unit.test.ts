@@ -10,7 +10,7 @@
  */
 
 import { ZoweCommandProvider } from "../../../src/abstract/ZoweCommandProvider";
-import { ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { ProfilesCache, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { Profiles } from "../../../src/Profiles";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
@@ -41,7 +41,7 @@ describe("ZoweCommandProvider Unit Tests", () => {
     });
 });
 
-describe("ZoweCommandProvide Unit Tests - function checkCurrentProfile", () => {
+describe("ZoweCommandProvider Unit Tests - function checkCurrentProfile", () => {
     const testNode = new ZoweDatasetNode({
         label: "test",
         collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -51,13 +51,14 @@ describe("ZoweCommandProvide Unit Tests - function checkCurrentProfile", () => {
     testNode.contextValue = "session server";
 
     beforeEach(async () => {
-        void Profiles.createInstance(undefined);
-        Object.defineProperty(Profiles.getInstance(), "log", {
+        jest.spyOn(ProfilesCache.prototype, "refresh").mockImplementation();
+        const profilesInstance = await Profiles.createInstance(undefined);
+        Object.defineProperty(profilesInstance, "log", {
             value: {
                 error: jest.fn(),
             },
         });
-        Object.defineProperty(Profiles.getInstance(), "allProfiles", {
+        Object.defineProperty(profilesInstance, "allProfiles", {
             value: [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }],
             configurable: true,
         });
