@@ -34,6 +34,8 @@ export type ZosEncoding = TextEncoding | BinaryEncoding | OtherEncoding;
 
 export type EncodingMap = Record<string, ZosEncoding>;
 
+export type DatasetMatch = { dsn: string; member?: string };
+
 /**
  * The base interface for Zowe tree nodes that are implemented by vscode.TreeItem.
  *
@@ -137,6 +139,11 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      * Search criteria for a Dataset member search
      */
     memberPattern?: string;
+
+    /**
+     * Pattern matches used for parsing member wildcards
+     */
+    patternMatches?: DatasetMatch[];
 
     /**
      * @deprecated Please use `setStats` and `getStats` instead.

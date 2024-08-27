@@ -23,6 +23,7 @@ import {
     Sorting,
     ZosEncoding,
     FsAbstractUtils,
+    DatasetMatch,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetFSProvider } from "./DatasetFSProvider";
@@ -41,8 +42,6 @@ import { FilterDescriptor, FilterItem } from "../../management/FilterManagement"
 import { IconUtils } from "../../icons/IconUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { DataSetTemplates } from "./DatasetTemplates";
-
-export type DatasetMatch = { dsn: string; member?: string };
 
 /**
  * A tree that contains nodes of sessions and data sets
