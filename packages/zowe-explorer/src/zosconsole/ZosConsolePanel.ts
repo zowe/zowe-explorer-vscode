@@ -18,6 +18,9 @@ import { randomUUID } from "crypto";
 import { Definitions } from "../configuration/Definitions";
 import Mustache = require("mustache");
 
+/**
+ * @deprecated
+ */
 export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = "zosconsole";
 

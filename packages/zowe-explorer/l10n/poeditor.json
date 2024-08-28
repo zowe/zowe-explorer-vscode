@@ -11,8 +11,14 @@
   "viewsContainers.panel.tableView": {
     "Zowe Resources": ""
   },
+  "zowe.zosconsole": {
+    "Zowe Explorer z/OS Console": ""
+  },
   "zowe.resources.name": {
     "Zowe Resources": ""
+  },
+  "zosconsole": {
+    "z/OS Console": ""
   },
   "zowe.placeholderCommand": {
     "Placeholder": ""

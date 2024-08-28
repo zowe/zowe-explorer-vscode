@@ -424,6 +424,10 @@ export class SharedInit {
         ZoweLogger.zeOutputChannel = await LoggerUtils.initVscLogger(context, logsPath);
     }
 
+    /**
+     *
+     * @param context @deprecated
+     */
     public static registerZosConsoleView(context: vscode.ExtensionContext): void {
         const provider = new ZosConsoleViewProvider(context.extensionUri);
         context.subscriptions.push(vscode.window.registerWebviewViewProvider(ZosConsoleViewProvider.viewType, provider));

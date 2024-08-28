@@ -4,6 +4,10 @@ import { useEffect, useState } from "preact/hooks";
 
 declare const vscode: any;
 
+/**
+ *
+ * @deprecated
+ */
 export function App() {
   const [consoleContent, setConsoleContent] = useState("");
   useEffect(() => {
