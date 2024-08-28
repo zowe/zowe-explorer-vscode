@@ -22,17 +22,12 @@ const HTMLTemplate: string = /*html*/ `
         <title>{{ title }}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta
-            http-equiv="Content-Security-Policy" 
-            content="default-src 'none'; font-src data: {{ cspSource }}; img-src data: vscode-resource: https:; script-src {{#unsafeEval}}'unsafe-eval'{{/unsafeEval}} 'nonce-{{ nonce }}';
-            style-src {{ cspSource }} vscode-resource: 'unsafe-inline' http: https: data:;"
+            http-equiv="Content-Security-Policy"
+            content="default-src 'none'; font-src data: https:; img-src data: vscode-resource: https:; script-src 'nonce-{{ nonce }}';
+            style-src vscode-resource: 'unsafe-inline' http: https: data:;"
         />
         <base href="{{ uris.resource.build }}">
-        {{#uris.resource.css}}
-        <link type="text/css" rel="stylesheet" href="{{ uris.resource.css }}" />
-        {{/uris.resource.css}}
-        {{#uris.resource.codicons}}
-        <link type="text/css" rel="stylesheet" href="{{ uris.resource.codicons }}" />
-        {{/uris.resource.codicons}}
+         {{{ style }}}
     </head>
     <body>
         <noscript>You'll need to enable JavaScript to run this app.</noscript>
