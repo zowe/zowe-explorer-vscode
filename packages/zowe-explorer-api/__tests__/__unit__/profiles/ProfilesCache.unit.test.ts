@@ -87,12 +87,11 @@ function createProfInfoMock(profiles: Partial<imperative.IProfileLoaded>[]): imp
     const teamConfigApi: Partial<imperative.Config> = {
         api: {
             profiles: {
-                get: jest.fn(),
+                get: jest.fn().mockReturnValue({}),
                 getProfilePathFromName: jest.fn().mockImplementation((x) => x),
             },
             secure: {
                 secureFields: jest.fn().mockReturnValue([]),
-                securePropsForProfile: jest.fn().mockReturnValue([]),
             },
         } as any,
         exists: true,
@@ -565,11 +564,11 @@ describe("ProfilesCache", () => {
         expect(profile).toMatchObject({ name: "lpar1", type: "base" });
     });
 
-    it("fetchBaseProfile should return base profile if it contains token value", async () => {
+    it("fetchBaseProfile should return base profile if it contains token type", async () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
         const profInfoMock = createProfInfoMock([baseProfile]);
         jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(profInfoMock);
-        mocked(profInfoMock.getTeamConfig().api.secure.securePropsForProfile).mockReturnValue(["tokenValue"]);
+        mocked(profInfoMock.getTeamConfig().api.profiles.get).mockReturnValueOnce({ tokenType: imperative.SessConstants.TOKEN_TYPE_JWT });
         const profile = await profCache.fetchBaseProfile("lpar1.zosmf");
         expect(profile).toMatchObject(baseProfile);
     });
