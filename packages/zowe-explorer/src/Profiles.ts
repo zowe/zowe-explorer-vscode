@@ -104,7 +104,14 @@ export class Profiles extends ProfilesCache {
     public async checkCurrentProfile(theProfile: zowe.imperative.IProfileLoaded): Promise<IProfileValidation> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
         let profileStatus: IProfileValidation;
-        const usingTokenAuth = await ProfilesUtils.isUsingTokenAuth(theProfile.name);
+        let usingTokenAuth: boolean;
+        try {
+            usingTokenAuth = await ProfilesUtils.isUsingTokenAuth(theProfile.name);
+        } catch (err) {
+            ZoweLogger.error(err);
+            ZoweExplorerExtender.showZoweConfigError(err.message);
+            return { name: theProfile.name, status: "unverified" };
+        }
 
         if (usingTokenAuth && !theProfile.profile.tokenType) {
             const error = new zowe.imperative.ImperativeError({

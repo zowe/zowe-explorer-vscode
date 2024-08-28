@@ -1453,12 +1453,22 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         setupProfilesCheck(globalMocks);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "inactive" });
     });
-    it("should throw an error if using token auth and is logged out or has expired token", async () => {
+    it("should show as unverified if using token auth and is logged out or has expired token", async () => {
         const globalMocks = await createGlobalMocks();
         jest.spyOn(utils, "errorHandling").mockImplementation();
-        jest.spyOn(utils.ProfilesUtils, "isUsingTokenAuth").mockResolvedValue(true);
+        jest.spyOn(utils.ProfilesUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
         setupProfilesCheck(globalMocks);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
+    });
+    it("should show as unverified if profiles fail to load", async () => {
+        const globalMocks = await createGlobalMocks();
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockRejectedValueOnce(new Error("test error"));
+        jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("");
+        const errorSpy = jest.spyOn(ZoweLogger, "error");
+        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
+        expect(errorSpy).toBeCalledTimes(1);
+        expect(errorSpy).toBeCalledWith(Error("test error"));
+        errorSpy.mockClear();
     });
 });
 
