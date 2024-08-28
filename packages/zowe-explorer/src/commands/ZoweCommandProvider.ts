@@ -24,6 +24,15 @@ import { Definitions } from "../configuration/Definitions";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { FilterDescriptor, FilterItem } from "../management/FilterManagement";
 
+export interface ICommandProviderDialogs {
+    commandSubmitted: string;
+    searchCommand: string;
+    selectCommand: (args: string[]) => string;
+    writeCommand: (args: string[]) => string;
+    defaultText: string;
+    selectProfile: string;
+}
+
 export abstract class ZoweCommandProvider {
     // eslint-disable-next-line no-magic-numbers
     private static readonly totalFilters: number = 10;
@@ -33,9 +42,40 @@ export abstract class ZoweCommandProvider {
     public mOnDidChangeTreeData: vscode.EventEmitter<IZoweTreeNode | void> = new vscode.EventEmitter<IZoweTreeNode | undefined>();
     public readonly onDidChangeTreeData: vscode.Event<IZoweTreeNode | void> = this.mOnDidChangeTreeData.event;
 
-    public constructor() {
+    public abstract dialogs: ICommandProviderDialogs;
+    public outputChannel: vscode.OutputChannel;
+
+    public constructor(terminalName: string) {
         this.history = new ZowePersistentFilters(PersistenceSchemaEnum.Commands, ZoweCommandProvider.totalFilters);
         this.profileInstance = Profiles.getInstance();
+
+        // Initialize terminal or output channel
+        this.outputChannel = Gui.createOutputChannel(terminalName);
+    }
+
+    public abstract formatCommandLine(command: string): string;
+    public abstract runCommand(profile: imperative.IProfileLoaded, command: string): Promise<string>;
+
+    public async issueCommand(profile: imperative.IProfileLoaded, command: string): Promise<void> {
+        ZoweLogger.trace("MvsCommandHandler.issueCommand called.");
+        try {
+            this.outputChannel.appendLine(this.formatCommandLine(command));
+
+            const response = await Gui.withProgress(
+                {
+                    location: vscode.ProgressLocation.Notification,
+                    title: this.dialogs.commandSubmitted,
+                },
+                () => {
+                    return this.runCommand(profile, command);
+                }
+            );
+            this.outputChannel.appendLine(response);
+            this.outputChannel.show(true);
+        } catch (error) {
+            await AuthUtils.errorHandling(error, profile.name);
+        }
+        this.history.addSearchHistory(command);
     }
 
     public async selectNodeProfile(cmdTree: Definitions.Trees): Promise<imperative.IProfileLoaded> {
@@ -45,7 +85,7 @@ export abstract class ZoweCommandProvider {
         const profileNamesList = ProfileManagement.getRegisteredProfileNameList(cmdTree);
         if (profileNamesList.length > 0) {
             const quickPickOptions: vscode.QuickPickOptions = {
-                placeHolder: vscode.l10n.t("Select a profile for this command"),
+                placeHolder: this.dialogs.selectProfile,
                 ignoreFocusOut: true,
                 canPickMany: false,
             };
@@ -76,7 +116,7 @@ export abstract class ZoweCommandProvider {
                 return tempProfile.name;
             });
             const quickPickOptions: vscode.QuickPickOptions = {
-                placeHolder: vscode.l10n.t("Select a profile for this command"),
+                placeHolder: this.dialogs.selectProfile,
                 ignoreFocusOut: true,
                 canPickMany: false,
             };
@@ -92,28 +132,15 @@ export abstract class ZoweCommandProvider {
         return profile;
     }
 
-    public abstract defaultDialogText: string;
-
-    public async getQuickPick(hostname: string): Promise<string> {
+    public async getQuickPick(dialogOptions: string[]): Promise<string> {
         ZoweLogger.trace("ZoweCommandProvider.getQuickPick called.");
         let response = "";
         const alwaysEdit: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_ALWAYS_EDIT);
         if (this.history.getSearchHistory().length > 0) {
-            const createPick = new FilterDescriptor(this.defaultDialogText);
+            const createPick = new FilterDescriptor(this.dialogs.defaultText);
             const items: vscode.QuickPickItem[] = this.history.getSearchHistory().map((element) => new FilterItem({ text: element }));
             const quickpick = Gui.createQuickPick();
-            quickpick.placeholder = alwaysEdit
-                ? vscode.l10n.t({
-                      message: "Select a command to run against {0} (An option to edit will follow)",
-                      args: [hostname],
-                      comment: ["Host name"],
-                  })
-                : vscode.l10n.t({
-                      message: "Select a command to run immediately against {0}",
-                      args: [hostname],
-                      comment: ["Host name"],
-                  });
-
+            quickpick.placeholder = alwaysEdit ? this.dialogs.writeCommand(dialogOptions) : this.dialogs.selectCommand(dialogOptions);
             quickpick.items = [createPick, ...items];
             quickpick.ignoreFocusOut = true;
             quickpick.show();
@@ -134,7 +161,7 @@ export abstract class ZoweCommandProvider {
         if (!response || alwaysEdit) {
             // manually entering a search
             const options2: vscode.InputBoxOptions = {
-                prompt: vscode.l10n.t("Enter or update the command"),
+                prompt: this.dialogs.searchCommand,
                 value: response,
                 valueSelection: response ? [response.length, response.length] : undefined,
             };

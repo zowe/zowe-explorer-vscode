@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zostso from "@zowe/zos-tso-for-zowe-sdk";
 import { Gui, Validation, imperative, IZoweTreeNode } from "@zowe/zowe-explorer-api";
-import { ZoweCommandProvider } from "./ZoweCommandProvider";
+import { ICommandProviderDialogs, ZoweCommandProvider } from "./ZoweCommandProvider";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { Profiles } from "../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
@@ -40,13 +40,30 @@ export class TsoCommandHandler extends ZoweCommandProvider {
     }
 
     private static instance: TsoCommandHandler;
-    public outputChannel: vscode.OutputChannel;
 
-    public readonly defaultDialogText: string = vscode.l10n.t("$(plus) Create a new TSO command");
+    public readonly dialogs: ICommandProviderDialogs = {
+        commandSubmitted: vscode.l10n.t("TSO command submitted."),
+        defaultText: vscode.l10n.t("$(plus) Create a new TSO command"),
+        selectProfile: vscode.l10n.t("Select a TSO profile for this command"),
+        searchCommand: vscode.l10n.t("Enter or update the TSO command"),
+        writeCommand: (options) =>
+            vscode.l10n.t({
+                message: "Select a TSO command to run against {0} (An option to edit will follow)",
+                args: options,
+                comment: ["Host name"],
+            }),
+        selectCommand: (options) =>
+            vscode.l10n.t({
+                message: "Select a TSO command to run immediately against {0}",
+                args: options,
+                comment: ["Host name"],
+            }),
+    };
+
+    public tsoParams: zostso.IStartTsoParms;
 
     public constructor() {
-        super();
-        this.outputChannel = Gui.createOutputChannel(vscode.l10n.t("Zowe TSO Command"));
+        super(vscode.l10n.t("Zowe TSO Command"));
     }
 
     /**
@@ -77,18 +94,16 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             if (profiles.validProfile !== Validation.ValidationType.INVALID) {
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
                 if (commandApi) {
-                    let tsoParams: zostso.IStartTsoParms;
                     if (profile.type === "zosmf") {
-                        tsoParams = await this.getTsoParams();
-                        if (!tsoParams) {
+                        this.tsoParams = await this.getTsoParams();
+                        if (!this.tsoParams) {
                             return;
                         }
                     }
-                    let command1: string = command;
                     if (!command) {
-                        command1 = await this.getQuickPick(session && session.ISession ? session.ISession.hostname : "unknown");
+                        command = await this.getQuickPick([session && session.ISession ? session.ISession.hostname : "unknown"]);
                     }
-                    await this.issueCommand(command1, profile, tsoParams);
+                    await this.issueCommand(profile, command);
                 } else {
                     Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
                     return;
@@ -110,46 +125,19 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         }
     }
 
-    /**
-     * Allow the user to submit an TSO command to the selected server. Response is written
-     * to the output channel.
-     * @param command the command string
-     * @param profile profile to be used
-     * @param tsoParams parameters (from TSO profile, when used)
-     */
-    private async issueCommand(command: string, profile: imperative.IProfileLoaded, tsoParams?: zostso.IStartTsoParms): Promise<void> {
-        ZoweLogger.trace("TsoCommandHandler.issueCommand called.");
-        try {
-            if (command) {
-                // If the user has started their command with a / then remove it
-                if (command.startsWith("/")) {
-                    command = command.substring(1);
-                }
-                this.outputChannel.appendLine(`> ${command}`);
-                const submitResponse = await Gui.withProgress(
-                    {
-                        location: vscode.ProgressLocation.Notification,
-                        title: vscode.l10n.t("TSO command submitted."),
-                    },
-                    () => {
-                        return ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommandWithParms(command, tsoParams);
-                    }
-                );
-                if (submitResponse.success) {
-                    this.outputChannel.appendLine(submitResponse.commandResponse);
-                    this.outputChannel.show(true);
-                }
-            }
-            this.history.addSearchHistory(command);
-        } catch (error) {
-            if (error.toString().includes("account number")) {
-                const message = vscode.l10n.t("No account number was supplied.");
-                ZoweLogger.error(message);
-                Gui.errorMessage(message);
-            } else {
-                await AuthUtils.errorHandling(error, profile.name);
-            }
+    public formatCommandLine(command: string): string {
+        if (command.startsWith("/")) {
+            command = command.substring(1);
         }
+        return `> ${command}`;
+    }
+
+    public async runCommand(profile: imperative.IProfileLoaded, command: string): Promise<string> {
+        if (command.startsWith("/")) {
+            command = command.substring(1);
+        }
+        const response = await ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommandWithParms(command, this.tsoParams);
+        return response.commandResponse;
     }
 
     /**
