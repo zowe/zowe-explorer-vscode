@@ -354,9 +354,9 @@ importers:
       ag-grid-react:
         specifier: ^32.0.2
         version: 32.0.2(react-dom@18.3.1)(react@18.3.1)
-      lodash:
-        specifier: ^4.17.21
-        version: 4.17.21
+      es-toolkit:
+        specifier: ^1.16.0
+        version: 1.16.0
       preact:
         specifier: ^10.16.0
         version: 10.22.0
@@ -367,9 +367,6 @@ importers:
       '@preact/preset-vite':
         specifier: ^2.5.0
         version: 2.8.2(@babel/core@7.24.9)(preact@10.22.0)(vite@4.5.3)
-      '@types/lodash':
-        specifier: ^4.17.0
-        version: 4.17.4
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
@@ -2751,10 +2748,6 @@ packages:
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
     dependencies:
       '@types/node': 18.19.33
-    dev: true
-
-  /@types/lodash@4.17.4:
-    resolution: {integrity: sha512-wYCP26ZLxaT3R39kiN2+HcJ4kTd3U1waI/cY7ivWYqFP6pW3ZNpvi6Wd6PHZx7T/t8z0vlkXMg3QYLa7DZ/IJQ==}
     dev: true
 
   /@types/mocha@10.0.6:
@@ -5991,6 +5984,10 @@ packages:
       is-callable: 1.2.7
       is-date-object: 1.0.5
       is-symbol: 1.0.4
+    dev: false
+
+  /es-toolkit@1.16.0:
+    resolution: {integrity: sha512-eNJh3zF1KmAHRYd1D8rFi1cMFMCjrC6tumBfwuuZdSur97mED/ifyeBoGzxS11L4owCMx3XSmWTo6oxJQkdGng==}
     dev: false
 
   /esbuild-loader@4.1.0(webpack@5.91.0):

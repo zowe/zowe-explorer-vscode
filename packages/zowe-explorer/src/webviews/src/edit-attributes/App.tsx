@@ -10,7 +10,7 @@ import {
   VSCodeProgressRing,
   VSCodeTextField,
 } from "@vscode/webview-ui-toolkit/react";
-import { isEqual } from "lodash";
+import { isEqual } from "es-toolkit";
 
 const vscodeApi = acquireVsCodeApi();
 
