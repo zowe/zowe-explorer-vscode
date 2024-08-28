@@ -558,7 +558,7 @@ describe("ProfilesCache", () => {
         expect(profile).toMatchObject({ name: "lpar1", type: "base" });
     });
 
-    it("fetchBaseProfile should return typeless profile if base profile does not contain token value", async () => {
+    it("fetchBaseProfile should return typeless profile if base profile does not contain token type", async () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
         jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([baseProfile]));
         const profile = await profCache.fetchBaseProfile("lpar1.zosmf");

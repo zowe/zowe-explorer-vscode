@@ -228,8 +228,8 @@ export class ZoweVsCodeExtension {
         const baseProfile = await cache.fetchBaseProfile(serviceProfile.name);
         if (baseProfile) {
             const tokenType =
-                serviceProfile.profile.tokenType ??
                 baseProfile.profile.tokenType ??
+                serviceProfile.profile.tokenType ??
                 zeRegister?.getCommonApi(serviceProfile).getTokenTypeName() ??
                 imperative.SessConstants.TOKEN_TYPE_APIML;
             const updSession = new imperative.Session({
@@ -237,7 +237,7 @@ export class ZoweVsCodeExtension {
                 port: serviceProfile.profile.port,
                 rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
                 tokenType: tokenType,
-                tokenValue: serviceProfile.profile.tokenValue ?? baseProfile.profile.tokenValue,
+                tokenValue: baseProfile.profile.tokenValue ?? serviceProfile.profile.tokenValue,
                 type: imperative.SessConstants.AUTH_TYPE_TOKEN,
             });
             await (zeRegister?.getCommonApi(serviceProfile).logout ?? Logout.apimlLogout)(updSession);
