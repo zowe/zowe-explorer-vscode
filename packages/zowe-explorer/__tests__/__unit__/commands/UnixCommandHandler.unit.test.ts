@@ -22,6 +22,7 @@ import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { UnixCommandHandler } from "../../../src/commands/UnixCommandHandler";
 import { Constants } from "../../../src/configuration/Constants";
+import { Definitions } from "../../../src/configuration/Definitions";
 
 jest.mock("Session");
 
@@ -53,8 +54,8 @@ describe("UnixCommand Actions Unit Testing", () => {
     Object.defineProperty(profileLoader.Profiles, "createInstance", {
         value: jest.fn(() => {
             return {
-                allProfiles: [{ name: "firstName" }, { name: "secondName" }],
-                defaultProfile: { name: "firstName" },
+                allProfiles: [{ name: "firstProfile" }, { name: "secondProfile" }],
+                defaultProfile: { name: "firstProfile" },
             };
         }),
     });
@@ -136,7 +137,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         } as imperative.IProfileLoaded,
     ];
 
-    const profilefromConfig = {
+    const profileFromConfig = {
         isDefaultProfile: false,
         profLoc: { osLoc: ["/user/configpath"] },
     };
@@ -150,7 +151,7 @@ describe("UnixCommand Actions Unit Testing", () => {
     Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
     Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
     Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
-        value: jest.fn().mockReturnValue(["firstName", "secondName"]),
+        value: jest.fn().mockReturnValue(["firstProfile", "secondProfile"]),
         configurable: true,
     });
 
@@ -180,8 +181,8 @@ describe("UnixCommand Actions Unit Testing", () => {
     Object.defineProperty(profileLoader.Profiles, "getInstance", {
         value: jest.fn(() => {
             return {
-                allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "pass" } }, { name: "secondName" }],
-                defaultProfile: { name: "firstName" },
+                allProfiles: [{ name: "firstProfile", profile: { user: "testUser", password: "testPass" } }, { name: "secondProfile" }],
+                defaultProfile: { name: "firstProfile" },
                 zosmfProfile: mockLoadNamedProfile,
                 checkCurrentProfile: jest.fn(() => {
                     return profilesForValidation;
@@ -196,7 +197,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     return ["entered"];
                 }),
                 getProfileFromConfig: jest.fn(() => {
-                    return profilefromConfig;
+                    return profileFromConfig;
                 }),
                 openConfigFile: jest.fn(),
             };
@@ -204,6 +205,7 @@ describe("UnixCommand Actions Unit Testing", () => {
     });
 
     afterEach(() => {
+        (UnixCommandHandler as any).instance = undefined;
         jest.clearAllMocks();
     });
 
@@ -214,8 +216,10 @@ describe("UnixCommand Actions Unit Testing", () => {
     });
 
     const apiRegisterInstance = ZoweExplorerApiRegister.getInstance();
-    const unixActions = UnixCommandHandler.getInstance();
     const profilesForValidation = { status: "active", name: "fake" };
+    const getUnixActions = () => {
+        return UnixCommandHandler.getInstance();
+    };
 
     it("test the issueUnixCommand function", async () => {
         const mockUssApi = await apiRegisterInstance.getUssApi(profileOne);
@@ -224,7 +228,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         apiRegisterInstance.getUssApi = getUssApiMock.bind(apiRegisterInstance);
         jest.spyOn(mockUssApi, "getSession").mockReturnValue(session);
 
-        showQuickPick.mockReturnValueOnce("firstName");
+        showQuickPick.mockReturnValueOnce("firstProfile");
 
         const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
         const getCommandApiMock = jest.fn();
@@ -242,34 +246,34 @@ describe("UnixCommand Actions Unit Testing", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
         jest.spyOn(mockCommandApi, "issueUnixCommand").mockReturnValue("iplinfo1" as any);
 
-        await unixActions.issueUnixCommand();
+        await getUnixActions().issueUnixCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstProfile", "secondProfile"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the Unix command",
+            placeHolder: "Select an SSH profile for this command",
         });
 
         expect(showInputBox.mock.calls.length).toBe(2);
         expect(appendLine.mock.calls.length).toBe(2);
-        expect(appendLine.mock.calls[0][0]).toBe("> firstName@ssh:/u/directorypath$ /d iplinfo1");
+        expect(appendLine.mock.calls[0][0]).toBe("> testUser@firstProfile:/u/directorypath$ /d iplinfo1");
         expect(appendLine.mock.calls[1][0]["commandResponse"]).toBe("iplinfo1");
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
-    it("tests the selectSshProfile function with quickpick", async () => {
+    it("tests the selectServiceProfile function with quickpick", async () => {
         showQuickPick.mockReturnValueOnce("test1" as any);
         await expect(
-            (unixActions as any).selectSshProfile([
+            getUnixActions().selectServiceProfile([
                 {
                     name: "test1",
                 },
                 {
                     name: "test2",
                 },
-            ])
+            ] as any)
         ).resolves.toEqual({
             name: "test1",
         });
@@ -282,7 +286,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         apiRegisterInstance.getUssApi = getUssApiMock.bind(apiRegisterInstance);
         jest.spyOn(mockUssApi, "getSession").mockReturnValue(session);
 
-        showQuickPick.mockReturnValueOnce("firstName");
+        showQuickPick.mockReturnValueOnce("firstProfile");
 
         const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
         const getCommandApiMock = jest.fn();
@@ -299,24 +303,27 @@ describe("UnixCommand Actions Unit Testing", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem2));
         jest.spyOn(mockCommandApi, "issueUnixCommand").mockReturnValue("iplinfo0" as any);
 
-        await unixActions.issueUnixCommand();
+        const actions = getUnixActions();
+        (actions.history as any).mSearchHistory = [qpItem2];
+
+        await actions.issueUnixCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstProfile", "secondProfile"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the Unix command",
+            placeHolder: "Select an SSH profile for this command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(appendLine.mock.calls.length).toBe(2);
-        expect(appendLine.mock.calls[0][0]).toBe("> firstName@ssh:/u/directorypath$ /d iplinfo0");
+        expect(appendLine.mock.calls[0][0]).toBe("> testUSer@firstProfile:/u/directorypath$ /d iplinfo0");
         expect(appendLine.mock.calls[1][0]["commandResponse"]).toBe("iplinfo0");
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
     it("tests the issueUnixCommand function user escapes the quick pick box", async () => {
-        showQuickPick.mockReturnValueOnce("firstName");
+        showQuickPick.mockReturnValueOnce("firstProfile");
         showInputBox.mockReturnValueOnce("/u/directorypath");
 
         const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
@@ -331,22 +338,25 @@ describe("UnixCommand Actions Unit Testing", () => {
 
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(undefined));
 
-        await unixActions.issueUnixCommand();
+        const actions = getUnixActions();
+        (actions.history as any).mSearchHistory = [qpItem2];
+
+        await actions.issueUnixCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstProfile", "secondProfile"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the Unix command",
+            placeHolder: "Select an SSH profile for this command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
     });
 
     it("tests the issueUnixCommand function user escapes the commandbox", async () => {
-        showQuickPick.mockReturnValueOnce("firstName");
+        showQuickPick.mockReturnValueOnce("firstProfile");
         showInputBox.mockReturnValueOnce("/directorypath");
         showInputBox.mockReturnValueOnce(undefined);
 
@@ -362,22 +372,22 @@ describe("UnixCommand Actions Unit Testing", () => {
 
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
 
-        await unixActions.issueUnixCommand();
+        await getUnixActions().issueUnixCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstProfile", "secondProfile"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the Unix command",
+            placeHolder: "Select an SSH profile for this command",
         });
         expect(showInputBox.mock.calls.length).toBe(2);
         expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
     });
 
     it("tests the issueUnixCommand function - issueUnixCommand throws an error", async () => {
-        showQuickPick.mockReturnValueOnce("firstName");
+        showQuickPick.mockReturnValueOnce("firstProfile");
         showInputBox.mockReturnValueOnce("/u/directorypath");
         showInputBox.mockReturnValueOnce("/d iplinfo3");
         withProgress.mockRejectedValueOnce(Error("fake testError"));
@@ -395,14 +405,14 @@ describe("UnixCommand Actions Unit Testing", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
         jest.spyOn(mockCommandApi, "issueUnixCommand").mockReturnValue("iplinfo3" as any);
 
-        await unixActions.issueUnixCommand();
+        await getUnixActions().issueUnixCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstProfile", "secondProfile"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the Unix command",
+            placeHolder: "Select an SSH profile for this command",
         });
         expect(showInputBox.mock.calls.length).toBe(2);
         expect(showErrorMessage.mock.calls.length).toBe(1);
@@ -414,12 +424,12 @@ describe("UnixCommand Actions Unit Testing", () => {
             value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
-        showQuickPick.mockReturnValueOnce("firstName");
+        showQuickPick.mockReturnValueOnce("firstProfile");
 
         showInputBox.mockReturnValueOnce("");
         showInputBox.mockReturnValue("/d iplinfo0");
 
-        await unixActions.issueUnixCommand();
+        await getUnixActions().issueUnixCommand();
 
         expect(showInformationMessage.mock.calls[0][0]).toEqual("Redirecting to Home Directory");
     });
@@ -429,11 +439,11 @@ describe("UnixCommand Actions Unit Testing", () => {
             value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
-        showQuickPick.mockReturnValueOnce("firstName");
+        showQuickPick.mockReturnValueOnce("firstProfile");
 
         showInputBox.mockReturnValueOnce(undefined);
 
-        await unixActions.issueUnixCommand();
+        await getUnixActions().issueUnixCommand();
 
         expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
     });
@@ -456,7 +466,7 @@ describe("UnixCommand Actions Unit Testing", () => {
             }),
         });
 
-        showQuickPick.mockReturnValueOnce("firstName");
+        showQuickPick.mockReturnValueOnce("firstProfile");
         showInputBox.mockReturnValueOnce("/u/directorypath");
         showInputBox.mockReturnValueOnce(undefined);
 
@@ -472,21 +482,24 @@ describe("UnixCommand Actions Unit Testing", () => {
 
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
 
-        await unixActions.issueUnixCommand();
+        const actions = getUnixActions();
+        (actions.history as any).mSearchHistory = [qpItem];
+
+        await actions.issueUnixCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstProfile", "secondProfile"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the Unix command",
+            placeHolder: "Select an SSH profile for this command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
     });
 
     it("tests the issueUnixCommand function user does not select a profile", async () => {
         Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
-            value: jest.fn().mockReturnValue(["firstName"]),
+            value: jest.fn().mockReturnValue(["firstProfile"]),
             configurable: true,
         });
         Object.defineProperty(profInstance, "getDefaultProfile", {
@@ -495,10 +508,10 @@ describe("UnixCommand Actions Unit Testing", () => {
         });
         showQuickPick.mockReturnValueOnce(undefined);
 
-        await unixActions.issueUnixCommand();
+        await getUnixActions().issueUnixCommand();
 
         expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
     });
 
     it("tests the issueUnixCommand function no profiles error", async () => {
@@ -510,13 +523,13 @@ describe("UnixCommand Actions Unit Testing", () => {
             value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
-        await unixActions.issueUnixCommand();
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles available.");
+        await getUnixActions().issueUnixCommand();
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles available");
     });
 
     it("ssh profile not found", async () => {
         fetchSshProfiles = [];
-        await (unixActions as any).getSshProfile();
+        await (getUnixActions() as any).getSshProfile();
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toEqual("No SSH profile found. Please create an SSH profile.");
     });
@@ -541,10 +554,10 @@ describe("UnixCommand Actions Unit Testing", () => {
             value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
-        await (unixActions as any).getSshProfile();
+        ((await getUnixActions()) as any).getSshProfile();
     });
 
-    it("the shh profile doesnot have port or host or both", async () => {
+    it("the shh profile does not have port or host or both", async () => {
         fetchSshProfiles = [
             {
                 name: "ssh",
@@ -557,39 +570,39 @@ describe("UnixCommand Actions Unit Testing", () => {
                 failNotFound: false,
             } as imperative.IProfileLoaded,
         ];
-        await (unixActions as any).getSshProfile();
+        await (getUnixActions() as any).getSshProfile();
         expect(showErrorMessage.mock.calls[0][0]).toEqual("SSH profile missing connection details. Please update.");
     });
 
-    it("tests the selectSshProfile function-1", async () => {
+    it("tests the selectServiceProfile function-1", async () => {
         await expect(
-            (unixActions as any).selectSshProfile([
+            getUnixActions().selectServiceProfile([
                 {
                     name: "test1",
                 },
-            ])
+            ] as any)
         ).resolves.toEqual({
             name: "test1",
         });
     });
 
-    it("tests the selectSshProfile function when user escapes", async () => {
+    it("tests the selectServiceProfile function when user escapes", async () => {
         showQuickPick.mockReturnValueOnce(undefined);
         await expect(
-            (unixActions as any).selectSshProfile([
+            getUnixActions().selectServiceProfile([
                 {
                     name: "test1",
                 },
                 {
                     name: "test2",
                 },
-            ])
+            ] as any)
         ).resolves.toBe(undefined);
         Object.defineProperty(profInstance, "getDefaultProfile", {
             value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
     });
 
     it("getCommand API is not implemented", async () => {
@@ -600,8 +613,8 @@ describe("UnixCommand Actions Unit Testing", () => {
                 };
             }),
         });
-        await unixActions.issueUnixCommand(testNode, null as any);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("Issuing commands is not supported for this profile type, undefined.");
+        await getUnixActions().issueUnixCommand(testNode, null as any);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("Issuing commands is not supported for this profile type, zosmf.");
     });
 
     it("issueUnixCommand API is not yet implemented", async () => {
@@ -616,13 +629,13 @@ describe("UnixCommand Actions Unit Testing", () => {
                 };
             }),
         });
-        await unixActions.issueUnixCommand(testNode, null as any);
+        await getUnixActions().issueUnixCommand(testNode, null as any);
         expect(showErrorMessage.mock.calls[0][0]).toEqual("Issuing UNIX commands is not supported for this profile type, zosmf.");
     });
 
     it("tests the issueUnixCommand function user does not select a profile - userSelectProfile", async () => {
         Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
-            value: jest.fn().mockReturnValue(["firstName"]),
+            value: jest.fn().mockReturnValue(["firstProfile"]),
             configurable: true,
         });
         Object.defineProperty(profInstance, "getDefaultProfile", {
@@ -631,9 +644,9 @@ describe("UnixCommand Actions Unit Testing", () => {
         });
         showQuickPick.mockReturnValueOnce(undefined);
 
-        await (unixActions as any).userSelectProfile();
+        await getUnixActions().selectNodeProfile(Definitions.Trees.USS);
 
         expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
     });
 });

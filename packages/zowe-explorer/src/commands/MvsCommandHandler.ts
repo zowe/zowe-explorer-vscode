@@ -13,7 +13,6 @@ import * as vscode from "vscode";
 import { Validation, imperative, IZoweTreeNode, Gui } from "@zowe/zowe-explorer-api";
 import { ICommandProviderDialogs, ZoweCommandProvider } from "./ZoweCommandProvider";
 import { ZoweLogger } from "../tools/ZoweLogger";
-import { Profiles } from "../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { AuthUtils } from "../utils/AuthUtils";
 import { Definitions } from "../configuration/Definitions";
@@ -71,7 +70,6 @@ export class MvsCommandHandler extends ZoweCommandProvider {
      */
     public async issueMvsCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode): Promise<void> {
         ZoweLogger.trace("MvsCommandHandler.issueMvsCommand called.");
-        const profiles = Profiles.getInstance();
         let profile: imperative.IProfileLoaded;
         if (node) {
             await this.checkCurrentProfile(node);
@@ -84,11 +82,14 @@ export class MvsCommandHandler extends ZoweCommandProvider {
         }
         if (!session) {
             profile = await this.selectNodeProfile(Definitions.Trees.MVS);
+            if (!profile) {
+                return;
+            }
         } else {
             profile = node.getProfile();
         }
         try {
-            if (profiles.validProfile !== Validation.ValidationType.INVALID) {
+            if (this.profileInstance.validProfile !== Validation.ValidationType.INVALID) {
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
                 if (commandApi) {
                     let command1: string = command;

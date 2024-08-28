@@ -56,10 +56,13 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             }),
         sshSessionErrorMsg: vscode.l10n.t("Error preparing SSH connection for issuing UNIX commands, please check SSH profile for correctness."),
         cwdRedirectingMsg: vscode.l10n.t("Redirecting to Home Directory"),
+        sshProfMissingInfoMsg: vscode.l10n.t("SSH profile missing connection details. Please update."),
+        sshProfNotFoundMsg: vscode.l10n.t("No SSH profile found. Please create an SSH profile."),
     };
 
     public sshCwd: string;
     public sshSession: zosuss.SshSession;
+    public sshProfile: imperative.IProfileLoaded;
     public isSshRequiredForProf: boolean = false;
 
     public readonly dialogs: ICommandProviderDialogs = {
@@ -130,10 +133,9 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             await this.profileInstance.checkCurrentProfile(this.nodeProfile);
 
             if (this.isSshRequiredForProf) {
-                const profiles = await this.profileInstance.fetchAllProfilesByType("ssh");
-                const sshProfile = await this.selectServiceProfile(profiles);
+                await this.getSshProfile();
 
-                const cmdArgs: imperative.ICommandArguments = this.getSshCmdArgs(sshProfile.profile);
+                const cmdArgs: imperative.ICommandArguments = this.getSshCmdArgs(this.sshProfile.profile);
                 // create the ssh session
                 const sshSessCfg = zosuss.SshSession.createSshSessCfgFromArgs(cmdArgs);
                 imperative.ConnectionPropsForSessCfg.resolveSessCfgProps<zosuss.ISshSession>(sshSessCfg, cmdArgs);
@@ -181,6 +183,33 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 );
             } else {
                 await AuthUtils.errorHandling(error, this.nodeProfile.name);
+            }
+        }
+    }
+
+    private async getSshProfile(): Promise<void> {
+        const profiles = await this.profileInstance.fetchAllProfilesByType("ssh");
+        if (!profiles.length) {
+            ZoweLogger.error(this.unixCmdMsgs.sshProfNotFoundMsg);
+            Gui.errorMessage(this.unixCmdMsgs.sshProfNotFoundMsg);
+            return;
+        }
+        this.sshProfile = await this.selectServiceProfile(profiles);
+        if (!this.sshProfile) {
+            return;
+        }
+        if (!(this.sshProfile.profile.host && this.sshProfile.profile.port)) {
+            const currentProfile = await this.profileInstance.getProfileFromConfig(this.sshProfile.name);
+            const filePath = currentProfile.profLoc.osLoc[0];
+            await this.profileInstance.openConfigFile(filePath);
+            ZoweLogger.error(this.unixCmdMsgs.sshProfMissingInfoMsg);
+            Gui.errorMessage(this.unixCmdMsgs.sshProfMissingInfoMsg);
+            return;
+        }
+        if (!(this.sshProfile.profile.user || this.sshProfile.profile.password) && !this.sshProfile.profile.privateKey) {
+            const prompted = await this.profileInstance.promptCredentials(this.sshProfile);
+            if (!prompted) {
+                return;
             }
         }
     }

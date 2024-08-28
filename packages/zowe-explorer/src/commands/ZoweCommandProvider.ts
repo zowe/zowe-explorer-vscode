@@ -36,6 +36,7 @@ export interface ICommandProviderDialogs {
 export abstract class ZoweCommandProvider {
     // eslint-disable-next-line no-magic-numbers
     private static readonly totalFilters: number = 10;
+    private readonly operationCancelled: string = vscode.l10n.t("Operation cancelled");
     public profileInstance: Profiles;
     public history: ZowePersistentFilters;
     // Event Emitters used to notify subscribers that the refresh event has fired
@@ -81,7 +82,6 @@ export abstract class ZoweCommandProvider {
     public async selectNodeProfile(cmdTree: Definitions.Trees): Promise<imperative.IProfileLoaded> {
         ZoweLogger.trace("ZoweCommandProvider.selectNodeProfile called.");
 
-        const allProfiles = this.profileInstance.allProfiles;
         const profileNamesList = ProfileManagement.getRegisteredProfileNameList(cmdTree);
         if (profileNamesList.length > 0) {
             const quickPickOptions: vscode.QuickPickOptions = {
@@ -91,10 +91,10 @@ export abstract class ZoweCommandProvider {
             };
             const sesName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
             if (sesName === undefined) {
-                Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
+                Gui.showMessage(this.operationCancelled);
                 return;
             }
-            const profile = allProfiles.find((tempProfile) => tempProfile.name === sesName);
+            const profile = this.profileInstance.allProfiles.find((tempProfile) => tempProfile.name === sesName);
             await this.profileInstance.checkCurrentProfile(profile);
             if (this.profileInstance.validProfile === Validation.ValidationType.INVALID) {
                 Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
@@ -102,7 +102,7 @@ export abstract class ZoweCommandProvider {
             }
             return profile;
         } else {
-            const noProfAvailable = vscode.l10n.t("No profiles available.");
+            const noProfAvailable = vscode.l10n.t("No profiles available");
             ZoweLogger.info(noProfAvailable);
             Gui.showMessage(noProfAvailable);
         }
@@ -122,7 +122,7 @@ export abstract class ZoweCommandProvider {
             };
             const sesName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
             if (sesName === undefined) {
-                Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
+                Gui.showMessage(this.operationCancelled);
                 return;
             }
             profile = profiles.filter((tempProfile) => tempProfile.name === sesName)[0];
@@ -147,7 +147,7 @@ export abstract class ZoweCommandProvider {
             const choice = await Gui.resolveQuickPick(quickpick);
             quickpick.hide();
             if (!choice) {
-                Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
+                Gui.showMessage(this.operationCancelled);
                 return;
             }
             if (choice instanceof FilterDescriptor) {
@@ -168,7 +168,7 @@ export abstract class ZoweCommandProvider {
             // get user input
             response = await Gui.showInputBox(options2);
             if (!response) {
-                Gui.showMessage(vscode.l10n.t("No command entered."));
+                Gui.showMessage(this.operationCancelled);
                 return;
             }
         }

@@ -14,7 +14,6 @@ import * as zostso from "@zowe/zos-tso-for-zowe-sdk";
 import { Gui, Validation, imperative, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ICommandProviderDialogs, ZoweCommandProvider } from "./ZoweCommandProvider";
 import { ZoweLogger } from "../tools/ZoweLogger";
-import { Profiles } from "../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { AuthUtils } from "../utils/AuthUtils";
 import { Definitions } from "../configuration/Definitions";
@@ -74,7 +73,6 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      */
     public async issueTsoCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode): Promise<void> {
         ZoweLogger.trace("TsoCommandHandler.issueTsoCommand called.");
-        const profiles = Profiles.getInstance();
         let profile: imperative.IProfileLoaded;
         if (node) {
             await this.checkCurrentProfile(node);
@@ -87,11 +85,14 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         }
         if (!session) {
             profile = await this.selectNodeProfile(Definitions.Trees.MVS);
+            if (!profile) {
+                return;
+            }
         } else {
             profile = node.getProfile();
         }
         try {
-            if (profiles.validProfile !== Validation.ValidationType.INVALID) {
+            if (this.profileInstance.validProfile !== Validation.ValidationType.INVALID) {
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
                 if (commandApi) {
                     if (profile.type === "zosmf") {
@@ -147,7 +148,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      */
     private async getTsoParams(): Promise<zostso.IStartTsoParms> {
         ZoweLogger.trace("TsoCommandHandler.getTsoParams called.");
-        const profileInfo = await Profiles.getInstance().getProfileInfo();
+        const profileInfo = await this.profileInstance.getProfileInfo();
         let tsoParms: zostso.IStartTsoParms = {};
 
         // Keys in the IStartTsoParms interface
