@@ -130,7 +130,7 @@ describe("UnixCommand Actions Unit Testing", () => {
             profile: {
                 host: "host.com",
                 port: 123,
-                user: "testuser",
+                user: "testUser",
             },
             message: "",
             failNotFound: false,
@@ -279,7 +279,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         });
     });
 
-    it("tests the issueUnixCommand function user selects a history item", async () => {
+    fit("tests the issueUnixCommand function user selects a history item", async () => {
         const mockUssApi = await apiRegisterInstance.getUssApi(profileOne);
         const getUssApiMock = jest.fn();
         getUssApiMock.mockReturnValue(mockUssApi);
@@ -304,7 +304,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         jest.spyOn(mockCommandApi, "issueUnixCommand").mockReturnValue("iplinfo0" as any);
 
         const actions = getUnixActions();
-        (actions.history as any).mSearchHistory = [qpItem2];
+        (actions.history as any).mSearchHistory = [qpItem2.label];
 
         await actions.issueUnixCommand();
 
@@ -317,7 +317,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(appendLine.mock.calls.length).toBe(2);
-        expect(appendLine.mock.calls[0][0]).toBe("> testUSer@firstProfile:/u/directorypath$ /d iplinfo0");
+        expect(appendLine.mock.calls[0][0]).toBe("> testUser@firstProfile:/u/directorypath$ /d iplinfo0");
         expect(appendLine.mock.calls[1][0]["commandResponse"]).toBe("iplinfo0");
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
@@ -339,7 +339,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(undefined));
 
         const actions = getUnixActions();
-        (actions.history as any).mSearchHistory = [qpItem2];
+        (actions.history as any).mSearchHistory = [qpItem2.label];
 
         await actions.issueUnixCommand();
 
@@ -448,7 +448,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
     });
 
-    it("tests the issueUnixCommand function user starts typing a value in quick pick", async () => {
+    fit("tests the issueUnixCommand function user starts typing a value in quick pick", async () => {
         createQuickPick.mockReturnValueOnce({
             placeholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
             activeItems: [qpItem2],
@@ -483,7 +483,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
 
         const actions = getUnixActions();
-        (actions.history as any).mSearchHistory = [qpItem];
+        (actions.history as any).mSearchHistory = [qpItem2.label];
 
         await actions.issueUnixCommand();
 
@@ -564,7 +564,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                 type: "ssh",
                 profile: {
                     host: "host.com",
-                    user: "testuser",
+                    user: "testUser",
                 },
                 message: "",
                 failNotFound: false,

@@ -226,7 +226,7 @@ describe("mvsCommandActions unit testing", () => {
         jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValue({ commandResponse: "iplinfo0" } as any);
 
         const actions = getMvsActions();
-        (actions.history as any).mSearchHistory = [qpItem2];
+        (actions.history as any).mSearchHistory = [qpItem2.label];
 
         await actions.issueMvsCommand();
 
@@ -313,7 +313,7 @@ describe("mvsCommandActions unit testing", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(undefined));
 
         const actions = getMvsActions();
-        (actions.history as any).mSearchHistory = [qpItem];
+        (actions.history as any).mSearchHistory = [qpItem2.label];
 
         await actions.issueMvsCommand();
 
@@ -413,7 +413,7 @@ describe("mvsCommandActions unit testing", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
 
         const actions = getMvsActions();
-        (actions.history as any).mSearchHistory = [qpItem];
+        (actions.history as any).mSearchHistory = [qpItem2.label];
 
         await actions.issueMvsCommand();
 

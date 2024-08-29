@@ -226,10 +226,10 @@ describe("TsoCommandHandler unit testing", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem2));
         jest.spyOn(mockCommandApi, "issueTsoCommandWithParms").mockReturnValue({ commandResponse: "iplinfo0" } as any);
 
-        const tsoActions = getTsoActions();
-        (tsoActions.history as any).mSearchHistory = [qpItem2];
+        const actions = getTsoActions();
+        (actions.history as any).mSearchHistory = [qpItem2.label];
 
-        await tsoActions.issueTsoCommand();
+        await actions.issueTsoCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
@@ -313,10 +313,10 @@ describe("TsoCommandHandler unit testing", () => {
 
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(undefined));
 
-        const tsoActions = getTsoActions();
-        (tsoActions.history as any).mSearchHistory = [qpItem2];
+        const actions = getTsoActions();
+        (actions.history as any).mSearchHistory = [qpItem2.label];
 
-        await tsoActions.issueTsoCommand();
+        await actions.issueTsoCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showInputBox.mock.calls.length).toBe(0);
@@ -413,10 +413,10 @@ describe("TsoCommandHandler unit testing", () => {
 
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
 
-        const tsoActions = getTsoActions();
-        (tsoActions.history as any).mSearchHistory = [qpItem, qpItem2];
+        const actions = getTsoActions();
+        (actions.history as any).mSearchHistory = [qpItem2.label];
 
-        await tsoActions.issueTsoCommand();
+        await actions.issueTsoCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
