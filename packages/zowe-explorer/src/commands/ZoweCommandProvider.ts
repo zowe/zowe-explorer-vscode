@@ -33,6 +33,134 @@ export interface ICommandProviderDialogs {
     selectProfile: string;
 }
 
+class ZoweTerminal implements vscode.Pseudoterminal {
+    public static readonly termX = ">";
+    public static readonly Keys = {
+        EMPTY_LINE: `${this.termX} `,
+        CLEAR_ALL: "\x1b[2J\x1b[3J\x1b[;H",
+        CLEAR_LINE: `\x1b[2K\r${this.termX} `,
+        DEL: "\x1b[P",
+        ENTER: "\r",
+        NEW_LINE: "\r\n",
+        UP: "\x1b[A",
+        DOWN: "\x1b[B",
+        RIGHT: "\x1b[C",
+        LEFT: "\x1b[D",
+        BACKSPACE: "\x7f",
+    };
+
+    public runCommand: () => string;
+    public constructor(public terminalName: string) {}
+
+    protected command = "";
+    protected history: string[] = [];
+    private historyIndex = 0;
+
+    private writeEmitter = new vscode.EventEmitter<string>();
+    protected write(text: string) {
+        this.writeEmitter.fire(text);
+    }
+    protected writeLine(text: string) {
+        this.write(text);
+        this.writeEmitter.fire(ZoweTerminal.Keys.NEW_LINE);
+        this.writeEmitter.fire(ZoweTerminal.Keys.EMPTY_LINE);
+    }
+    protected refreshCmd() {
+        this.write(ZoweTerminal.Keys.CLEAR_LINE);
+        this.write(this.command);
+    }
+    private cursorPosition = 0;
+
+    public onDidWrite: vscode.Event<string> = this.writeEmitter.event;
+
+    private closeEmitter = new vscode.EventEmitter<void>();
+    public onDidClose?: vscode.Event<void> = this.closeEmitter.event;
+
+    // Start is called when the terminal is opened
+    public open(initialDimensions: vscode.TerminalDimensions | undefined): void {
+        this.writeLine(`Welcome to the ${this.terminalName} Terminal!`);
+    }
+
+    // Close is called when the terminal is closed
+    public close(): void {
+        this.closeEmitter.fire();
+    }
+
+    // Handle input from the terminal
+    public handleInput(data: string): void {
+        console.log(data, this.historyIndex, this.history);
+        if (data === ZoweTerminal.Keys.UP) {
+            this.command = this.history[this.historyIndex] ?? "";
+            this.historyIndex = Math.max(0, this.historyIndex - 1);
+            this.cursorPosition = this.command.length;
+            this.refreshCmd();
+            return;
+        }
+        if (data === ZoweTerminal.Keys.DOWN) {
+            if (this.historyIndex === this.history.length - 1) {
+                this.command = "";
+            } else {
+                this.historyIndex = Math.min(Math.max(0, this.history.length - 1), this.historyIndex + 1);
+                this.command = this.history[this.historyIndex] ?? "";
+            }
+            this.cursorPosition = this.command.length;
+            this.refreshCmd();
+            return;
+        }
+        if (data === ZoweTerminal.Keys.LEFT) {
+            this.cursorPosition = Math.max(0, this.cursorPosition - 1);
+            this.write(ZoweTerminal.Keys.LEFT);
+            return;
+        }
+        if (data === ZoweTerminal.Keys.RIGHT) {
+            this.cursorPosition = Math.min(Math.max(0, this.command.length - 1), this.cursorPosition + 1);
+            this.write(ZoweTerminal.Keys.RIGHT);
+            return;
+        }
+        if (data === ZoweTerminal.Keys.BACKSPACE) {
+            if (this.command.length === 0) {
+                return;
+            }
+            const tmp = this.command.split("");
+            tmp.splice(this.cursorPosition - 1, 1);
+            this.cursorPosition--;
+            this.command = tmp.join("");
+            this.write(ZoweTerminal.Keys.LEFT);
+            this.write(ZoweTerminal.Keys.DEL);
+            // this.refreshCmd();
+            return;
+        }
+        if (data === ZoweTerminal.Keys.ENTER) {
+            this.write(ZoweTerminal.Keys.NEW_LINE);
+            if (this.command.length === 0) {
+                this.write(ZoweTerminal.Keys.EMPTY_LINE);
+                return;
+            }
+            if (this.command === "hello") {
+                this.writeLine("Hello there!");
+            } else if (this.command === "date") {
+                this.writeLine(`Current date: ${new Date().toLocaleString()}`);
+            } else if (this.command === "exit") {
+                this.writeLine("Exiting...");
+                this.closeEmitter.fire();
+            } else {
+                this.writeLine(`Unknown command: ${this.command}`);
+            }
+
+            if (this.command !== this.history[this.historyIndex]) {
+                this.historyIndex = this.history.length;
+                this.history.push(this.command);
+            }
+            this.command = "";
+            this.cursorPosition = 0;
+            return;
+        }
+
+        this.writeEmitter.fire(data.trim());
+        this.command += data.trim();
+        this.cursorPosition++;
+    }
+}
 export abstract class ZoweCommandProvider {
     // eslint-disable-next-line no-magic-numbers
     private static readonly totalFilters: number = 10;
@@ -44,14 +172,24 @@ export abstract class ZoweCommandProvider {
     public readonly onDidChangeTreeData: vscode.Event<IZoweTreeNode | void> = this.mOnDidChangeTreeData.event;
 
     public abstract dialogs: ICommandProviderDialogs;
+    private useIntegratedTerminals: boolean;
     public outputChannel: vscode.OutputChannel;
+    public terminal: vscode.Terminal;
+    public pseudoTerminal: ZoweTerminal;
 
     public constructor(terminalName: string) {
         this.history = new ZowePersistentFilters(PersistenceSchemaEnum.Commands, ZoweCommandProvider.totalFilters);
         this.profileInstance = Profiles.getInstance();
 
-        // Initialize terminal or output channel
-        this.outputChannel = Gui.createOutputChannel(terminalName);
+        this.useIntegratedTerminals = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS) ?? true;
+        if (this.useIntegratedTerminals) {
+            // this.pseudoTerminal = new CustomPseudoterminal();
+            this.pseudoTerminal = new ZoweTerminal(terminalName);
+            this.terminal = vscode.window.createTerminal({ name: terminalName, pty: this.pseudoTerminal });
+        } else {
+            // Initialize terminal or output channel
+            this.outputChannel = Gui.createOutputChannel(terminalName);
+        }
     }
 
     public abstract formatCommandLine(command: string): string;
@@ -60,7 +198,7 @@ export abstract class ZoweCommandProvider {
     public async issueCommand(profile: imperative.IProfileLoaded, command: string): Promise<void> {
         ZoweLogger.trace("MvsCommandHandler.issueCommand called.");
         try {
-            this.outputChannel.appendLine(this.formatCommandLine(command));
+            if (!this.useIntegratedTerminals) this.outputChannel.appendLine(this.formatCommandLine(command));
 
             const response = await Gui.withProgress(
                 {
@@ -71,8 +209,13 @@ export abstract class ZoweCommandProvider {
                     return this.runCommand(profile, command);
                 }
             );
-            this.outputChannel.appendLine(response);
-            this.outputChannel.show(true);
+            if (this.useIntegratedTerminals) {
+                // this.terminal.sendText(response);
+                this.terminal.show(true);
+            } else {
+                this.outputChannel.appendLine(response);
+                this.outputChannel.show(true);
+            }
         } catch (error) {
             await AuthUtils.errorHandling(error, profile.name);
         }
