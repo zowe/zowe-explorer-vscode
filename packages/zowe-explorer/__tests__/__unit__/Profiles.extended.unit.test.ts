@@ -137,10 +137,6 @@ async function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     newMocks.mockProfileInstance = new Profiles(newMocks.log);
-    Object.defineProperty(Profiles, "CreateInstance", {
-        value: () => newMocks.mockProfileInstance,
-        configurable: true,
-    });
     Object.defineProperty(Profiles, "getInstance", {
         value: () => newMocks.mockProfileInstance,
         configurable: true,
@@ -249,6 +245,17 @@ describe("Profiles Unit Test - Function createInstance", () => {
         const profilesInstance = await testProfiles.createInstance(undefined);
         expect(mockWorkspaceFolders).toHaveBeenCalledTimes(1);
         expect(profilesInstance.cwd).toBe("fakePath");
+    });
+
+    it("Tests that createInstance catches error and logs it", async () => {
+        const globalMocks = await createGlobalMocks();
+        jest.spyOn(Profiles.prototype, "refresh").mockRejectedValueOnce(new Error("test error"));
+        jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("");
+        const errorSpy = jest.spyOn(ZoweLogger, "error");
+        await expect(Profiles.createInstance(globalMocks.log)).resolves.not.toThrow();
+        expect(errorSpy).toBeCalledTimes(1);
+        expect(errorSpy).toBeCalledWith(Error("test error"));
+        errorSpy.mockClear();
     });
 });
 
@@ -583,6 +590,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new utils.FilterDescriptor("Test1"));
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new utils.FilterDescriptor("Test2"));
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getAllProfiles: jest.fn().mockReturnValue([]),
             usingTeamConfig: false,
         } as any);
         jest.spyOn(Gui, "showInputBox").mockResolvedValue("test");
@@ -617,7 +625,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         spyInfo.mockClear();
     });
 
-    it("Tests that createZoweSession catches error and log warning", async () => {
+    it("Tests that createZoweSession catches error and logs it", async () => {
         const globalMocks = await createGlobalMocks();
         jest.spyOn(Gui, "createQuickPick").mockReturnValue({
             show: jest.fn(),
@@ -626,11 +634,12 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         } as any);
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new utils.FilterDescriptor("Test"));
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockRejectedValueOnce(new Error("test error"));
-        const warnSpy = jest.spyOn(ZoweLogger, "warn");
+        jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("");
+        const errorSpy = jest.spyOn(ZoweLogger, "error");
         await expect(Profiles.getInstance().createZoweSession(globalMocks.testUSSTree)).resolves.not.toThrow();
-        expect(warnSpy).toBeCalledTimes(1);
-        expect(warnSpy).toBeCalledWith(Error("test error"));
-        warnSpy.mockClear();
+        expect(errorSpy).toBeCalledTimes(1);
+        expect(errorSpy).toBeCalledWith(Error("test error"));
+        errorSpy.mockClear();
     });
 });
 
@@ -1099,6 +1108,17 @@ describe("Profiles Unit Tests - function promptCredentials", () => {
         jest.spyOn(Profiles.getInstance(), "updateProfilesArrays").mockImplementation();
         await expect(Profiles.getInstance().promptCredentials("secure_config_props")).resolves.toEqual(["test", "12345", "encodedAuth"]);
     });
+
+    it("Tests that promptCredentials catches error and logs it", async () => {
+        const globalMocks = await createGlobalMocks();
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockRejectedValueOnce(new Error("test error"));
+        jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("");
+        const errorSpy = jest.spyOn(ZoweLogger, "error");
+        await expect(Profiles.getInstance().promptCredentials(globalMocks.testProfile)).resolves.not.toThrow();
+        expect(errorSpy).toBeCalledTimes(1);
+        expect(errorSpy).toBeCalledWith(Error("test error"));
+        errorSpy.mockClear();
+    });
 });
 
 describe("Profiles Unit Tests - function getDeleteProfile", () => {
@@ -1342,6 +1362,24 @@ describe("Profiles Unit Tests - function deleteProfile", () => {
 
         await expect(Profiles.getInstance().deleteProfile(datasetTree, ussTree, jobsTree, testNode)).resolves.not.toThrow();
     });
+
+    it("Tests that deleteProfile catches error and logs it", async () => {
+        const globalMocks = await createGlobalMocks();
+        const datasetSessionNode = createDatasetSessionNode(globalMocks.testSession, globalMocks.testProfile);
+        const datasetTree = createDatasetTree(datasetSessionNode, globalMocks.testProfile);
+        const ussSessionNode = [createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile)];
+        const ussTree = createUSSTree([], ussSessionNode);
+        const jobsTree = createJobsTree(globalMocks.testSession, createIJobObject(), globalMocks.testProfile, createTreeView());
+
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockRejectedValueOnce(new Error("test error"));
+        jest.spyOn(Profiles.getInstance(), "getDeleteProfile").mockResolvedValue(globalMocks.testProfile);
+        jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("");
+        const errorSpy = jest.spyOn(ZoweLogger, "error");
+        await expect(Profiles.getInstance().deleteProfile(datasetTree, ussTree, jobsTree)).resolves.not.toThrow();
+        expect(errorSpy).toBeCalledTimes(1);
+        expect(errorSpy).toBeCalledWith(Error("test error"));
+        errorSpy.mockClear();
+    });
 });
 
 describe("Profiles Unit Tests - function checkCurrentProfile", () => {
@@ -1415,12 +1453,22 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         setupProfilesCheck(globalMocks);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "inactive" });
     });
-    it("should throw an error if using token auth and is logged out or has expired token", async () => {
+    it("should show as unverified if using token auth and is logged out or has expired token", async () => {
         const globalMocks = await createGlobalMocks();
         jest.spyOn(utils, "errorHandling").mockImplementation();
-        jest.spyOn(utils.ProfilesUtils, "isUsingTokenAuth").mockResolvedValue(true);
+        jest.spyOn(utils.ProfilesUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
         setupProfilesCheck(globalMocks);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
+    });
+    it("should show as unverified if profiles fail to load", async () => {
+        const globalMocks = await createGlobalMocks();
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockRejectedValueOnce(new Error("test error"));
+        jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("");
+        const errorSpy = jest.spyOn(ZoweLogger, "error");
+        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
+        expect(errorSpy).toBeCalledTimes(1);
+        expect(errorSpy).toBeCalledWith(Error("test error"));
+        errorSpy.mockClear();
     });
 });
 
@@ -1490,6 +1538,17 @@ describe("Profiles Unit Tests - function editSession", () => {
             numberTest: 4321,
             base64EncodedAuth: "base64Auth",
         });
+    });
+
+    it("Tests that editSession catches error and logs it", async () => {
+        const globalMocks = await createGlobalMocks();
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockRejectedValueOnce(new Error("test error"));
+        jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("");
+        const errorSpy = jest.spyOn(ZoweLogger, "error");
+        await expect(Profiles.getInstance().editSession(globalMocks.testProfile, globalMocks.testProfile.name)).resolves.not.toThrow();
+        expect(errorSpy).toBeCalledTimes(1);
+        expect(errorSpy).toBeCalledWith(Error("test error"));
+        errorSpy.mockClear();
     });
 });
 

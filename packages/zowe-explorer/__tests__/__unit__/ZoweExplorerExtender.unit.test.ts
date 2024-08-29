@@ -148,7 +148,7 @@ describe("ZoweExplorerExtender unit tests", () => {
         ZoweExplorerExtender.createInstance();
 
         Object.defineProperty(vscode.Uri, "file", { value: jest.fn(), configurable: true });
-        Object.defineProperty(Gui, "showTextDocument", { value: jest.fn(), configurable: true });
+        const showTextDocumentSpy = jest.spyOn(Gui, "showTextDocument").mockResolvedValue({} as any);
 
         const zoweDir = getZoweDir();
         const userInputs = [
@@ -167,8 +167,9 @@ describe("ZoweExplorerExtender unit tests", () => {
             },
             {
                 choice: "Show Config",
-                configError: `Error parsing JSON in the file '${path.join(zoweDir, "zowe.config.user.json")}'`,
+                configError: `Error parsing JSON in the file '${path.join(zoweDir, "zowe.config.user.json")}' at Line 4, Column 0`,
                 shouldFail: false,
+                shouldNavigate: true,
                 fileChecks: ["zowe.config.user.json"],
                 mockExistsSync: blockMocks.mockExistsSync.mockImplementationOnce,
             },
@@ -176,7 +177,7 @@ describe("ZoweExplorerExtender unit tests", () => {
                 choice: "Show Config",
                 configError: "Error parsing JSON",
                 fileChecks: ["zowe.config.user.json", "zowe.config.json"],
-                shouldFail: false,
+                shouldFail: true,
                 mockExistsSync: blockMocks.mockExistsSync.mockImplementationOnce,
             },
             {
@@ -188,18 +189,20 @@ describe("ZoweExplorerExtender unit tests", () => {
             },
         ];
         for (const userInput of userInputs) {
+            showTextDocumentSpy.mockClear();
             blockMocks.mockErrorMessage.mockImplementationOnce((_msg, ..._items) => Promise.resolve(userInput.choice));
             if (userInput.fileChecks.length > 1) {
                 userInput.mockExistsSync((_path) => false);
             }
-            await ZoweExplorerExtender.showZoweConfigError(userInput.configError);
+            ZoweExplorerExtender.showZoweConfigError(userInput.configError);
+            await new Promise<void>((resolve) => process.nextTick(() => resolve()));
             expect(blockMocks.mockErrorMessage).toHaveBeenCalledWith(
                 'Error encountered when loading your Zowe config. Click "Show Config" for more details.',
                 undefined,
                 "Show Config"
             );
             if (userInput.choice == null) {
-                expect(Gui.showTextDocument).not.toHaveBeenCalled();
+                expect(showTextDocumentSpy).not.toHaveBeenCalled();
             } else {
                 if (userInput.v1) {
                     expect(vscode.Uri.file).toHaveBeenCalledWith(path.join(zoweDir, "profiles", "exampleType", "exampleType_meta.yaml"));
@@ -209,9 +212,12 @@ describe("ZoweExplorerExtender unit tests", () => {
                     }
                 }
                 if (userInput.shouldFail) {
-                    expect(Gui.showTextDocument).not.toHaveBeenCalled();
+                    expect(showTextDocumentSpy).not.toHaveBeenCalled();
                 } else {
-                    expect(Gui.showTextDocument).toHaveBeenCalled();
+                    expect(showTextDocumentSpy).toHaveBeenCalled();
+                    if (userInput.shouldNavigate) {
+                        expect((await showTextDocumentSpy.mock.results[0].value).selection).toBeDefined();
+                    }
                 }
             }
         }

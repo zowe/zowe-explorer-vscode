@@ -825,7 +825,7 @@ describe("ProfilesUtils unit tests", () => {
             expect(promptAndDisableCredentialManagementSpy).toHaveBeenCalledTimes(1);
         });
 
-        it("should throw new error if error is not an instance of ProfInfoErr", async () => {
+        it("should ignore error if it is not an instance of ProfInfoErr", async () => {
             const expectedErrorMsg = "Another error unrelated to credential management";
             getDirectValueSpy.mockReturnValueOnce(false);
             getCredentialManagerOverrideSpy.mockReturnValue("@zowe/cli");
@@ -836,7 +836,7 @@ describe("ProfilesUtils unit tests", () => {
             readProfilesFromDiskSpy.mockImplementation(() => {
                 throw new Error(expectedErrorMsg);
             });
-            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).rejects.toThrow(expectedErrorMsg);
+            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).resolves.not.toThrow();
             expect(promptAndDisableCredentialManagementSpy).toHaveBeenCalledTimes(0);
         });
     });

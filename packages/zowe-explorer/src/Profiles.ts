@@ -53,7 +53,12 @@ export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: zowe.imperative.Logger): Promise<Profiles> {
         Profiles.loader = new Profiles(log, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
-        await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
+        try {
+            await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
+        } catch (err) {
+            ZoweLogger.error(err);
+            ZoweExplorerExtender.showZoweConfigError(err.message);
+        }
         return Profiles.loader;
     }
 
@@ -99,7 +104,14 @@ export class Profiles extends ProfilesCache {
     public async checkCurrentProfile(theProfile: zowe.imperative.IProfileLoaded): Promise<IProfileValidation> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
         let profileStatus: IProfileValidation;
-        const usingTokenAuth = await ProfilesUtils.isUsingTokenAuth(theProfile.name);
+        let usingTokenAuth: boolean;
+        try {
+            usingTokenAuth = await ProfilesUtils.isUsingTokenAuth(theProfile.name);
+        } catch (err) {
+            ZoweLogger.error(err);
+            ZoweExplorerExtender.showZoweConfigError(err.message);
+            return { name: theProfile.name, status: "unverified" };
+        }
 
         if (usingTokenAuth && !theProfile.profile.tokenType) {
             const error = new zowe.imperative.ImperativeError({
@@ -337,13 +349,15 @@ export class Profiles extends ProfilesCache {
         let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
             mProfileInfo = await this.getProfileInfo();
-            const profAllAttrs = mProfileInfo.getAllProfiles();
-            for (const pName of profileNamesList) {
-                const osLocInfo = mProfileInfo.getOsLocInfo(profAllAttrs.find((p) => p.profName === pName));
-                items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(osLocInfo)[0] }));
-            }
         } catch (err) {
-            ZoweLogger.warn(err);
+            ZoweLogger.error(err);
+            ZoweExplorerExtender.showZoweConfigError(err.message);
+            return;
+        }
+        const profAllAttrs = mProfileInfo.getAllProfiles();
+        for (const pName of profileNamesList) {
+            const osLocInfo = mProfileInfo.getOsLocInfo(profAllAttrs.find((p) => p.profName === pName));
+            items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(osLocInfo)[0] }));
         }
 
         const quickpick = Gui.createQuickPick();
@@ -406,6 +420,7 @@ export class Profiles extends ProfilesCache {
             } catch (error) {
                 ZoweLogger.error(error);
                 ZoweExplorerExtender.showZoweConfigError(error.message);
+                return;
             }
             if (config.usingTeamConfig) {
                 const profiles = config.getAllProfiles();
@@ -468,7 +483,15 @@ export class Profiles extends ProfilesCache {
 
     public async editSession(profileLoaded: zowe.imperative.IProfileLoaded, profileName: string): Promise<any | undefined> {
         ZoweLogger.trace("Profiles.editSession called.");
-        if ((await this.getProfileInfo()).usingTeamConfig) {
+        let usingTeamConfig: boolean;
+        try {
+            usingTeamConfig = (await this.getProfileInfo()).usingTeamConfig;
+        } catch (err) {
+            ZoweLogger.error(err);
+            ZoweExplorerExtender.showZoweConfigError(err.message);
+            return;
+        }
+        if (usingTeamConfig) {
             const currentProfile = await this.getProfileFromConfig(profileLoaded.name);
             const filePath = currentProfile.profLoc.osLoc[0];
             await this.openConfigFile(filePath);
@@ -926,13 +949,21 @@ export class Profiles extends ProfilesCache {
             placeHolder: localize("promptCredentials.passwordInputBoxOptions.placeholder", "Password"),
             prompt: localize("promptCredentials.passwordInputBoxOptions.prompt", "Enter the password for the connection. Leave blank to not store."),
         };
+        let mProfileInfo: zowe.imperative.ProfileInfo;
+        try {
+            mProfileInfo = await this.getProfileInfo();
+        } catch (err) {
+            ZoweLogger.error(err);
+            ZoweExplorerExtender.showZoweConfigError(err.message);
+            return;
+        }
 
         const promptInfo = await ZoweVsCodeExtension.updateCredentials(
             {
                 profile: typeof profile === "string" ? undefined : profile,
                 sessionName: typeof profile === "string" ? profile : undefined,
                 rePrompt,
-                secure: (await this.getProfileInfo()).isSecured(),
+                secure: mProfileInfo.isSecured(),
                 userInputBoxOptions,
                 passwordInputBoxOptions,
             },
@@ -993,8 +1024,16 @@ export class Profiles extends ProfilesCache {
         }
 
         const deleteLabel = deletedProfile.name;
+        let usingTeamConfig: boolean;
+        try {
+            usingTeamConfig = (await this.getProfileInfo()).usingTeamConfig;
+        } catch (err) {
+            ZoweLogger.error(err);
+            ZoweExplorerExtender.showZoweConfigError(err.message);
+            return;
+        }
 
-        if ((await this.getProfileInfo()).usingTeamConfig) {
+        if (usingTeamConfig) {
             const currentProfile = await this.getProfileFromConfig(deleteLabel);
             const filePath = currentProfile.profLoc.osLoc[0];
             await this.openConfigFile(filePath);
