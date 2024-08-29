@@ -375,13 +375,10 @@ export class ProfilesUtils {
             await profileInfo.readProfilesFromDisk();
             return profileInfo;
         } catch (err) {
-            if (err instanceof imperative.ProfInfoErr) {
-                if (err.errorCode === imperative.ProfInfoErr.LOAD_CRED_MGR_FAILED) {
-                    await ProfilesUtils.promptAndDisableCredentialManagement();
-                    return;
-                }
+            if (err instanceof imperative.ProfInfoErr && err.errorCode === imperative.ProfInfoErr.LOAD_CRED_MGR_FAILED) {
+                await ProfilesUtils.promptAndDisableCredentialManagement();
             }
-            throw err;
+            // Ignore other types of errors since they will be handled later
         }
     }
 

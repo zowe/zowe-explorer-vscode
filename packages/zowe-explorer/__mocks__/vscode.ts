@@ -809,3 +809,5 @@ export enum DiagnosticSeverity {
     Information = 2,
     Hint = 3,
 }
+
+export class Selection {}
