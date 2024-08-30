@@ -22,6 +22,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
   - `ZoweVsCodeExtension.showVsCodeMessage` - use `Gui.showMessage` instead.
   - `ZoweVsCodeExtension.inputBox` - use `Gui.showInputBox` instead.
   - `ZoweVsCodeExtension.promptCredentials` - use `ZoweVsCodeExtension.updateCredentials` instead.
+- **Breaking:** Removed unused property `profileManagerByType` which used the V1-profile class `CLIProfileManager`. [#3057](https://github.com/zowe/zowe-explorer-vscode/issues/3057)
 - **Breaking:** Added return type of `Promise<void>` to the following `IZoweTree` methods: [#2238](https://github.com/zowe/zowe-explorer-vscode/issues/2238)
   - addFavorite
   - removeFavorite
