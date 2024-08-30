@@ -163,6 +163,8 @@ describe("UnixCommand Actions Unit Testing", () => {
     });
 
     const profInstance = createInstanceOfProfile(createValidIProfile());
+    const origProfilesCache = Object.getOwnPropertyDescriptor(Constants, "PROFILES_CACHE");
+
     Object.defineProperty(Constants, "PROFILES_CACHE", {
         value: profInstance,
         configurable: true,
@@ -203,6 +205,12 @@ describe("UnixCommand Actions Unit Testing", () => {
 
     afterEach(() => {
         jest.clearAllMocks();
+    });
+
+    afterAll(() => {
+        if (origProfilesCache) {
+            Object.defineProperty(Constants, "PROFILES_CACHE", origProfilesCache);
+        }
     });
 
     const apiRegisterInstance = ZoweExplorerApiRegister.getInstance();
