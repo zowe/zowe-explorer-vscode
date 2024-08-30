@@ -226,9 +226,6 @@ describe("UnixCommand Actions Unit Testing", () => {
         showInputBox.mockReturnValueOnce("/u/directorypath");
         showInputBox.mockReturnValueOnce("/d iplinfo1");
 
-        // jest.spyOn(Constants.PROFILES_CACHE, "getDefaultProfile").mockReturnValueOnce({
-        //     profile: { user: "testuser", password: "testpassword" },
-        // } as any);
         Object.defineProperty(profInstance, "getDefaultProfile", {
             value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
