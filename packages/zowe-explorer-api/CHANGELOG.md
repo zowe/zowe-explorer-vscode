@@ -116,6 +116,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Removed `handlebars` dependency in favor of `mustache` for technical currency purposes. [#2975](https://github.com/zowe/zowe-explorer-vscode/pull/2975)
 - Fixed an issue where the `ZoweVsCodeExtension.updateCredentials` method could remove credentials from session when input prompt was cancelled. [#3009](https://github.com/zowe/zowe-explorer-vscode/pull/3009)
 - Fixed an issue where the loaded configuration could be overridden when extenders retrieved the Zowe home directory. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
+- Update Zowe SDKs to `8.0.0-next.202407232256` for technical currency. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
+- Fixed an issue where remote lookup functionality caused the local side of a conflict to be overwritten with the remote contents. [#3085](https://github.com/zowe/zowe-explorer-vscode/pull/3085)
 - Update Zowe SDKs to `8.0.0-next.202408261543` for technical currency. [#3057](https://github.com/zowe/zowe-explorer-vscode/pull/3057)
 
 ## `3.0.0-next.202404242037`

@@ -684,12 +684,12 @@
         {
           "command": "zowe.diff.useLocalContent",
           "group": "navigation@0",
-          "when": "resourceScheme =~ /zowe-.*/ && isInDiffEditor"
+          "when": "resourceScheme =~ /zowe-.*/ && isInDiffEditor && zowe.vscode-extension-for-zowe.inConflict"
         },
         {
           "command": "zowe.diff.useRemoteContent",
           "group": "navigation@1",
-          "when": "resourceScheme =~ /zowe-.*/ && isInDiffEditor"
+          "when": "resourceScheme =~ /zowe-.*/ && isInDiffEditor && zowe.vscode-extension-for-zowe.inConflict"
         }
       ],
       "view/title": [
