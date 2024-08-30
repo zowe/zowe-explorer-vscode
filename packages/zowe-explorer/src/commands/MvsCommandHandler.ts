@@ -92,11 +92,10 @@ export class MvsCommandHandler extends ZoweCommandProvider {
             if (this.profileInstance.validProfile !== Validation.ValidationType.INVALID) {
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
                 if (commandApi) {
-                    let command1: string = command;
                     if (!command) {
-                        command1 = await this.getQuickPick([session && session.ISession ? session.ISession.hostname : "unknown"]);
+                        command = await this.getQuickPick([session && session.ISession ? session.ISession.hostname : "unknown"]);
                     }
-                    await this.issueCommand(profile, command1);
+                    await this.issueCommand(profile, command);
                 } else {
                     Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
                     return;

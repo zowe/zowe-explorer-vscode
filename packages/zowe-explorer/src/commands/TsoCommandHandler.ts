@@ -182,7 +182,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             };
             tsoParms.account = await Gui.showInputBox(InputBoxOptions);
             if (!tsoParms.account) {
-                Gui.showMessage(vscode.l10n.t("Operation Cancelled."));
+                Gui.showMessage(this.operationCancelled);
                 return;
             }
         }

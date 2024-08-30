@@ -1034,6 +1034,12 @@
   "All jobs": "All jobs",
   "Ascending": "Ascending",
   "Descending": "Descending",
+  "Welcome to the integrated terminal for: {0}/Terminal Name": {
+    "message": "Welcome to the integrated terminal for: {0}",
+    "comment": [
+      "Terminal Name"
+    ]
+  },
   "Profile is invalid": "Profile is invalid",
   "Issuing commands is not supported for this profile type, {0}./Profile type": {
     "message": "Issuing commands is not supported for this profile type, {0}.",
@@ -1096,7 +1102,6 @@
   "Zowe TSO Command": "Zowe TSO Command",
   "Account Number": "Account Number",
   "Enter the account number for the TSO connection.": "Enter the account number for the TSO connection.",
-  "Operation Cancelled.": "Operation Cancelled.",
   "MVS command submitted.": "MVS command submitted.",
   "$(plus) Create a new MVS command": "$(plus) Create a new MVS command",
   "Select an MVS profile for this command": "Select an MVS profile for this command",

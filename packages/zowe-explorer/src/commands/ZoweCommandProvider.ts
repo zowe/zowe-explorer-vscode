@@ -37,7 +37,7 @@ export interface ICommandProviderDialogs {
 export abstract class ZoweCommandProvider {
     // eslint-disable-next-line no-magic-numbers
     private static readonly totalFilters: number = 10;
-    private readonly operationCancelled: string = vscode.l10n.t("Operation cancelled");
+    protected readonly operationCancelled: string = vscode.l10n.t("Operation cancelled");
     public profileInstance: Profiles;
     public history: ZowePersistentFilters;
     // Event Emitters used to notify subscribers that the refresh event has fired
@@ -50,18 +50,13 @@ export abstract class ZoweCommandProvider {
     public terminal: vscode.Terminal;
     public pseudoTerminal: ZoweTerminal;
 
-    public constructor(terminalName: string) {
+    public constructor(protected terminalName: string) {
         this.history = new ZowePersistentFilters(PersistenceSchemaEnum.Commands, ZoweCommandProvider.totalFilters);
         this.profileInstance = Profiles.getInstance();
 
         this.useIntegratedTerminals = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS) ?? true;
-        if (this.useIntegratedTerminals) {
-            // this.pseudoTerminal = new CustomPseudoterminal();
-            this.pseudoTerminal = new ZoweTerminal(terminalName);
-            this.terminal = vscode.window.createTerminal({ name: terminalName, pty: this.pseudoTerminal });
-        } else {
-            // Initialize terminal or output channel
-            this.outputChannel = Gui.createOutputChannel(terminalName);
+        if (!this.useIntegratedTerminals) {
+            this.outputChannel = Gui.createOutputChannel(this.terminalName);
         }
     }
 
@@ -69,23 +64,41 @@ export abstract class ZoweCommandProvider {
     public abstract runCommand(profile: imperative.IProfileLoaded, command: string): Promise<string>;
 
     public async issueCommand(profile: imperative.IProfileLoaded, command: string): Promise<void> {
-        ZoweLogger.trace("MvsCommandHandler.issueCommand called.");
+        ZoweLogger.trace("ZoweCommandProvider.issueCommand called.");
+        if (profile == null || command == null) {
+            return;
+        }
         try {
-            if (!this.useIntegratedTerminals) this.outputChannel.appendLine(this.formatCommandLine(command));
-
-            const response = await Gui.withProgress(
-                {
-                    location: vscode.ProgressLocation.Notification,
-                    title: this.dialogs.commandSubmitted,
-                },
-                () => {
-                    return this.runCommand(profile, command);
-                }
-            );
             if (this.useIntegratedTerminals) {
-                // this.terminal.sendText(response);
-                this.terminal.show(true);
+                this.pseudoTerminal = new ZoweTerminal(
+                    this.terminalName,
+                    async (command: string): Promise<string> => {
+                        this.history.addSearchHistory(command);
+                        return this.runCommand(profile, command);
+                    },
+                    {
+                        message: vscode.l10n.t({
+                            message: "Welcome to the integrated terminal for: {0}",
+                            args: [this.terminalName],
+                            comment: ["Terminal Name"],
+                        }),
+                        history: [...this.history.getSearchHistory()].reverse() ?? [],
+                        startup: command,
+                    }
+                );
+                this.terminal = vscode.window.createTerminal({ name: this.terminalName, pty: this.pseudoTerminal });
+                this.terminal.show();
             } else {
+                this.outputChannel.appendLine(this.formatCommandLine(command));
+                const response = await Gui.withProgress(
+                    {
+                        location: vscode.ProgressLocation.Notification,
+                        title: this.dialogs.commandSubmitted,
+                    },
+                    () => {
+                        return this.runCommand(profile, command);
+                    }
+                );
                 this.outputChannel.appendLine(response);
                 this.outputChannel.show(true);
             }

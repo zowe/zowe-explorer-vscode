@@ -27,11 +27,17 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         BACKSPACE: "\x7f",
     };
 
-    public constructor(terminalName: string, message?: string, history: string[] = []) {
+    public constructor(
+        terminalName: string,
+        private processCmd: (cmd: string) => Promise<string>,
+        options?: { startup?: string; message?: string; history?: string[] }
+    ) {
         this.mTerminalName = terminalName;
-        this.mMessage = message ?? `Welcome to the ${this.mTerminalName} Terminal!`;
-        this.mHistory = history;
-        this.historyIndex = history.length;
+        this.mMessage = options?.message ?? `Welcome to the ${this.mTerminalName} Terminal!`;
+        this.mHistory = options?.history ?? [];
+        this.historyIndex = this.mHistory.length;
+        this.command = options?.startup ?? "";
+        this.cursorPosition = this.command.length;
     }
 
     private mMessage: string;
@@ -57,8 +63,8 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.writeLine(this.mMessage);
     }
 
-    protected command: string = "";
-    protected cursorPosition = 0;
+    protected command: string;
+    protected cursorPosition: number;
 
     public onDidWrite: vscode.Event<string> = this.writeEmitter.event;
 
@@ -68,6 +74,10 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     // Start is called when the terminal is opened
     public open(initialDimensions: vscode.TerminalDimensions | undefined): void {
         this.writeLine(this.mMessage);
+        if (this.command.length > 0) {
+            this.write(this.command);
+            this.handleInput(ZoweTerminal.Keys.ENTER);
+        }
     }
 
     // Close is called when the terminal is closed
@@ -76,8 +86,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     }
 
     // Handle input from the terminal
-    public handleInput(data: string): void {
-        console.log(data, this.historyIndex, this.mHistory);
+    public async handleInput(data: string): Promise<void> {
         if (data === ZoweTerminal.Keys.UP) {
             this.historyIndex = Math.max(0, this.historyIndex - 1);
             this.command = this.mHistory[this.historyIndex] ?? "";
@@ -122,8 +131,6 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
             this.command = tmp.join("");
 
             this.cursorPosition = Math.max(0, this.cursorPosition - 1);
-
-            // this.refreshCmd();
             return;
         }
         if (data === ZoweTerminal.Keys.ENTER) {
@@ -132,19 +139,17 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                 this.write(ZoweTerminal.Keys.EMPTY_LINE);
                 return;
             }
-            if (this.command === "hello") {
-                this.writeLine("Hello there!");
-            } else if (this.command === ":clear") {
-                this.clear();
-            } else if (this.command === "date") {
-                this.writeLine(`Current date: ${new Date().toLocaleString()}`);
-            } else if (this.command === ":exit") {
-                this.writeLine("Exiting...");
-                this.closeEmitter.fire();
-            } else {
-                this.writeLine(`Unknown command: ${this.command}`);
-            }
 
+            if (this.command[0] === ":") {
+                if (this.command === ":clear") {
+                    this.clear();
+                } else if (this.command === ":exit") {
+                    this.closeEmitter.fire();
+                }
+            } else {
+                const output = await this.processCmd(this.command);
+                this.writeLine(output.trim().split("\n").join("\r\n"));
+            }
             this.mHistory.push(this.command);
             this.historyIndex = this.mHistory.length;
             this.cursorPosition = 0;

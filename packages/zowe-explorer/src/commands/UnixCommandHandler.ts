@@ -41,7 +41,6 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     private static instance: UnixCommandHandler;
     private nodeProfile: imperative.IProfileLoaded = undefined;
     private unixCmdMsgs = {
-        opCancelledMsg: vscode.l10n.t("Operation Cancelled"),
         issueCmdNotSupportedMsg: (profileType: string) =>
             vscode.l10n.t({
                 message: "Issuing commands is not supported for this profile type, {0}.",
@@ -134,6 +133,9 @@ export class UnixCommandHandler extends ZoweCommandProvider {
 
             if (this.isSshRequiredForProf) {
                 await this.getSshProfile();
+                if (!this.sshProfile) {
+                    return;
+                }
 
                 const cmdArgs: imperative.ICommandArguments = this.getSshCmdArgs(this.sshProfile.profile);
                 // create the ssh session
@@ -162,8 +164,8 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 }
                 if (this.sshCwd == undefined) {
                     this.nodeProfile = undefined;
-                    ZoweLogger.info(this.unixCmdMsgs.opCancelledMsg);
-                    Gui.showMessage(this.unixCmdMsgs.opCancelledMsg);
+                    ZoweLogger.info(this.operationCancelled);
+                    Gui.showMessage(this.operationCancelled);
                     return;
                 }
             }
