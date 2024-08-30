@@ -44,7 +44,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             uss: () => USSInit.initUSSProvider(context),
             job: () => JobInit.initJobsProvider(context),
         },
-        async () => SharedInit.setupRemoteWorkspaceFolders()
+        async () => {
+            await SharedInit.setupRemoteWorkspaceFolders();
+        }
     );
     SharedInit.registerCommonCommands(context, providers);
     SharedInit.registerRefreshCommand(context, activate, deactivate);
@@ -52,6 +54,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     SharedInit.watchConfigProfile(context);
     await SharedInit.watchForZoweButtonClick();
+
+    ProfilesUtils.handleV1MigrationStatus();
 
     return ZoweExplorerApiRegister.getInstance();
 }

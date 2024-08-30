@@ -13,7 +13,7 @@ import { VSCodeCheckbox, VSCodeDataGridCell, VSCodeDataGridRow } from "@vscode/w
 import { JSXInternal } from "preact/src/jsx";
 import { useDataPanelContext } from "../PersistentUtils";
 import { useEffect, useState } from "preact/hooks";
-import { isEqual } from "lodash";
+import { isEqual } from "es-toolkit";
 
 export default function PersistentTableData({ persistentProp }: Readonly<{ persistentProp: readonly string[] }>): JSXInternal.Element {
   const { type, selection, selectedItems } = useDataPanelContext();

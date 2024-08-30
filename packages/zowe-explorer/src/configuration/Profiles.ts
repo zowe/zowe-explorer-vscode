@@ -764,6 +764,127 @@ export class Profiles extends ProfilesCache {
         }
     }
 
+    public async basicAuthClearSecureArray(profileName?: string, loginTokenType?: string): Promise<void> {
+        const profInfo = await this.getProfileInfo();
+        const configApi = profInfo.getTeamConfig();
+        const profAttrs = await this.getProfileFromConfig(profileName);
+        if (loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken")) {
+            configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, []);
+        } else {
+            configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, ["tokenValue"]);
+        }
+        configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "user")?.argLoc.jsonLoc);
+        configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "password")?.argLoc.jsonLoc);
+        await configApi.save();
+    }
+
+    public async tokenAuthClearSecureArray(profileName?: string, loginTokenType?: string): Promise<void> {
+        const profInfo = await this.getProfileInfo();
+        const configApi = profInfo.getTeamConfig();
+        if (loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken")) {
+            const profAttrs = await this.getProfileFromConfig("base");
+            configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, []);
+            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc);
+            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenValue")?.argLoc.jsonLoc);
+            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenExpiration")?.argLoc.jsonLoc);
+        } else {
+            const profAttrs = await this.getProfileFromConfig(profileName);
+            configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, ["user", "password"]);
+            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc);
+            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenValue")?.argLoc.jsonLoc);
+            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenExpiration")?.argLoc.jsonLoc);
+        }
+        await configApi.save();
+    }
+
+    public async handleSwitchAuthentication(node: Types.IZoweNodeType): Promise<void> {
+        const qp = Gui.createQuickPick();
+        const qpItemYes: vscode.QuickPickItem = {
+            label: vscode.l10n.t("Yes"),
+            description: vscode.l10n.t("To change the authentication"),
+        };
+        const qpItemNo: vscode.QuickPickItem = {
+            label: vscode.l10n.t("No"),
+            description: vscode.l10n.t("To continue in current authentication"),
+        };
+        qp.items = [qpItemYes, qpItemNo];
+        qp.placeholder = vscode.l10n.t("Do you wish to change the Authentication");
+        qp.activeItems = [qpItemYes];
+        qp.show();
+        const qpSelection = await Gui.resolveQuickPick(qp);
+        qp.hide();
+
+        if (qpSelection === undefined) {
+            Gui.infoMessage(vscode.l10n.t("Operation Cancelled"));
+            return;
+        }
+        if (qpSelection.label === vscode.l10n.t("No")) {
+            return;
+        }
+
+        let loginTokenType: string;
+        const serviceProfile = node.getProfile() ?? this.loadNamedProfile(node.label.toString().trim());
+        const zeInstance = ZoweExplorerApiRegister.getInstance();
+        try {
+            loginTokenType = await zeInstance.getCommonApi(serviceProfile).getTokenTypeName();
+        } catch (error) {
+            ZoweLogger.warn(error);
+            Gui.errorMessage(vscode.l10n.t("Cannot switch to Token-based Authentication for profile {0}.", serviceProfile.name));
+            return;
+        }
+        switch (true) {
+            case AuthUtils.isProfileUsingBasicAuth(serviceProfile): {
+                let loginOk = false;
+                if (loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken")) {
+                    loginOk = await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, loginTokenType, node, zeInstance, this);
+                } else {
+                    loginOk = await this.loginWithRegularProfile(serviceProfile, node);
+                }
+
+                if (loginOk) {
+                    Gui.showMessage(
+                        vscode.l10n.t("Login using token-based authentication service was successful for profile {0}.", serviceProfile.name)
+                    );
+                    await this.basicAuthClearSecureArray(serviceProfile.name, loginTokenType);
+                    const updBaseProfile: imperative.IProfile = {
+                        user: undefined,
+                        password: undefined,
+                    };
+                    node.setProfileToChoice({
+                        ...node.getProfile(),
+                        profile: { ...node.getProfile().profile, ...updBaseProfile },
+                    });
+                } else {
+                    Gui.errorMessage(vscode.l10n.t("Unable to switch to Token-based authentication for profile {0}.", serviceProfile.name));
+                    return;
+                }
+                break;
+            }
+            case await AuthUtils.isUsingTokenAuth(serviceProfile.name): {
+                const profile: string | imperative.IProfileLoaded = node.getProfile();
+                const creds = await Profiles.getInstance().promptCredentials(profile, true);
+
+                if (creds !== undefined) {
+                    const successMsg = vscode.l10n.t(
+                        "Login using basic authentication was successful for profile {0}.",
+                        typeof profile === "string" ? profile : profile.name
+                    );
+                    ZoweLogger.info(successMsg);
+                    Gui.showMessage(successMsg);
+                    await this.tokenAuthClearSecureArray(serviceProfile.name, loginTokenType);
+                    ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
+                } else {
+                    Gui.errorMessage(vscode.l10n.t("Unable to switch to Basic authentication for profile {0}.", serviceProfile.name));
+                    return;
+                }
+                break;
+            }
+            default: {
+                Gui.errorMessage(vscode.l10n.t("Unable to Switch Authentication for profile {0}.", serviceProfile.name));
+            }
+        }
+    }
+
     public clearDSFilterFromTree(node: Types.IZoweNodeType): void {
         if (!SharedTreeProviders.ds?.mSessionNodes || !SharedTreeProviders.ds?.mSessionNodes.length) {
             return;

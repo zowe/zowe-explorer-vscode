@@ -23,10 +23,11 @@ export class SettingsConfig {
      *  SettingsConfig.getDirectValue<boolean>("zowe.commands.alwaysEdit");
      * }</pre>
      * @param {string} key - The config property that needs retrieving
+     * @param {T} defaultValue - Default value if config property is undefined
      */
-    public static getDirectValue<T>(key: string): T {
+    public static getDirectValue<T>(key: string, defaultValue?: T): T {
         const [first, ...rest] = key.split(".");
-        return vscode.workspace.getConfiguration(first).get(rest.join("."));
+        return vscode.workspace.getConfiguration(first).get(rest.join("."), defaultValue);
     }
 
     /**
