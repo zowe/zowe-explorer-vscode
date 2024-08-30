@@ -67,6 +67,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             const queryParams = new URLSearchParams(uri.query);
             if (queryParams.has("conflict")) {
                 return { ...this.lookup(uri, false), permissions: vscode.FilePermission.Readonly };
+            } else if (queryParams.has("inDiff")) {
+                return this.lookup(uri, false);
             }
             isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
         }
@@ -315,7 +317,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // Fetch contents from the mainframe if:
         // - the file hasn't been accessed yet
         // - fetching a conflict from the remote FS
-        if (!file.wasAccessed || isConflict) {
+        if ((!file.wasAccessed && !urlQuery.has("inDiff")) || isConflict) {
             await this.fetchFileAtUri(uri, { isConflict });
             if (!isConflict) {
                 file.wasAccessed = true;
