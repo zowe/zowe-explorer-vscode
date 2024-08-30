@@ -570,6 +570,11 @@ describe("stat", () => {
         expect(lookupMock).toHaveBeenCalledWith(conflictUri, false);
         lookupMock.mockRestore();
     });
+    it("returns a file as-is when query has inDiff parameter", async () => {
+        const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValueOnce(testEntries.ps);
+        await expect(DatasetFSProvider.instance.stat(testUris.ps.with({ query: "inDiff=true" }))).resolves.toStrictEqual(testEntries.ps);
+        expect(lookupMock).toHaveBeenCalledWith(testUris.ps.with({ query: "inDiff=true" }), false);
+    });
     it("calls lookup for a profile URI", async () => {
         const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(testEntries.session);
         const res = await DatasetFSProvider.instance.stat(testUris.session);
