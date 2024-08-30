@@ -306,7 +306,7 @@ export class BaseProvider {
                     fsEntry.inDiffView = false;
                 }
 
-                if (vscode.window.visibleTextEditors.every((editor) => !editor.document.uri.query.includes("conflict=true"))) {
+                if (vscode.window.visibleTextEditors.every((editor) => !editor.document.uri.query?.includes("conflict=true"))) {
                     vscode.commands.executeCommand("setContext", "zowe.vscode-extension-for-zowe.inConflict", false);
                     this.onDocClosedEventDisposable.dispose();
                 }
