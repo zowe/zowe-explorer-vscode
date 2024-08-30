@@ -27,6 +27,7 @@ export class BaseProvider {
     public onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._onDidChangeFileEmitter.event;
     protected root: DirEntry;
     public openedUris: vscode.Uri[] = [];
+    public onDocClosedEventDisposable: vscode.Disposable = null;
 
     protected constructor() {}
 
@@ -296,13 +297,18 @@ export class BaseProvider {
 
     // This event removes the "diff view" flag from the local file,
     // so that API calls can continue after the conflict dialog is closed.
-    private static onCloseEvent(provider: BaseProvider, e: vscode.TextDocument): void {
+    private static onCloseEvent(this: BaseProvider, e: vscode.TextDocument): void {
         if (e.uri.query && e.uri.scheme.startsWith("zowe-")) {
             const queryParams = new URLSearchParams(e.uri.query);
             if (queryParams.has("conflict")) {
-                const fsEntry = provider._lookupAsFile(e.uri, { silent: true });
+                const fsEntry = this._lookupAsFile(e.uri, { silent: true });
                 if (fsEntry) {
                     fsEntry.inDiffView = false;
+                }
+
+                if (vscode.window.visibleTextEditors.every((editor) => !editor.document.uri.query.includes("conflict=true"))) {
+                    vscode.commands.executeCommand("setContext", "zowe.vscode-extension-for-zowe.inConflict", false);
+                    this.onDocClosedEventDisposable.dispose();
                 }
             }
         }
@@ -332,13 +338,14 @@ export class BaseProvider {
 
         // User selected "Compare", show diff with local contents and LPAR contents
         if (userSelection === conflictOptions[0]) {
-            vscode.workspace.onDidCloseTextDocument(BaseProvider.onCloseEvent.bind(this));
+            await vscode.commands.executeCommand("setContext", "zowe.vscode-extension-for-zowe.inConflict", true);
             await vscode.commands.executeCommand(
                 "vscode.diff",
                 uri.with({ query: "conflict=true" }),
                 uri.with({ query: "inDiff=true" }),
                 `${entry.name} (Remote) ↔ ${entry.name}`
             );
+            this.onDocClosedEventDisposable = vscode.workspace.onDidCloseTextDocument(BaseProvider.onCloseEvent.bind(this));
             return ConflictViewSelection.Compare;
         }
 
