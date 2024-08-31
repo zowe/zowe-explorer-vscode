@@ -4,6 +4,12 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### New features and enhancements
 
+### Bug fixes
+
+## `3.0.0-next.202408301858`
+
+### New features and enhancements
+
 - Replaced `ts-loader` with `esbuild-loader` to improve build speed for developers. [#2909](https://github.com/zowe/zowe-explorer-vscode/pull/2909)
 
 ### Bug fixes
@@ -11,7 +17,7 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 - Changed the hashing algorithm for e-tag generation from `sha1` to `sha256` to avoid collisions. [#2890](https://github.com/zowe/zowe-explorer-vscode/pull/2890)
 - Updated the FTP plugin dependency to `3.0.0-next.202403191358` for technical currency [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783).
 - Renamed extension to `IBM z/OS FTP for Zowe Explorer`. [#2990](https://github.com/zowe/zowe-explorer-vscode/issues/2990)
-- Update Zowe SDKs to `8.0.0-next.202407232256` for technical currency. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
+- Update Zowe SDKs to `8.0.0-next.202408291544` for technical currency. [#3057](https://github.com/zowe/zowe-explorer-vscode/pull/3057)
 
 ## `3.0.0-next.202404242037`
 

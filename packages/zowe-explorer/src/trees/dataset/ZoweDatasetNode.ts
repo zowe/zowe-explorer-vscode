@@ -84,7 +84,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.iconPath = icon.path;
         }
 
-        if (this.getParent() == null) {
+        if (this.getParent() == null || this.getParent().label === vscode.l10n.t("Favorites")) {
             // set default sort options for session nodes
             this.sort = {
                 method: Sorting.DatasetSortOpts.Name,
