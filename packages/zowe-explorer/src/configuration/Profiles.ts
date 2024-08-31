@@ -554,6 +554,7 @@ export class Profiles extends ProfilesCache {
             return; // See https://github.com/zowe/zowe-explorer-vscode/issues/1827
         }
 
+        // TODO Is this redundant with refresh call in ZoweVsCodeExtension.updateCredentials?
         const returnValue: string[] = [promptInfo.profile.user, promptInfo.profile.password, promptInfo.profile.base64EncodedAuth];
         this.updateProfilesArrays(promptInfo);
 
@@ -737,7 +738,14 @@ export class Profiles extends ProfilesCache {
             if (loginTokenType && !loginTokenType.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)) {
                 loginOk = await this.loginWithRegularProfile(serviceProfile, node);
             } else {
-                loginOk = await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, loginTokenType, node, zeInstance, this);
+                loginOk = await ZoweVsCodeExtension.loginWithBaseProfile({
+                    serviceProfile,
+                    defaultTokenType: loginTokenType,
+                    profileNode: node,
+                    zeRegister: zeInstance,
+                    zeProfiles: this,
+                    preferBaseToken: true,
+                });
             }
             if (loginOk) {
                 Gui.showMessage(
@@ -835,7 +843,14 @@ export class Profiles extends ProfilesCache {
             case AuthUtils.isProfileUsingBasicAuth(serviceProfile): {
                 let loginOk = false;
                 if (loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken")) {
-                    loginOk = await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, loginTokenType, node, zeInstance, this);
+                    loginOk = await ZoweVsCodeExtension.loginWithBaseProfile({
+                        serviceProfile,
+                        defaultTokenType: loginTokenType,
+                        profileNode: node,
+                        zeRegister: zeInstance,
+                        zeProfiles: this,
+                        preferBaseToken: true,
+                    });
                 } else {
                     loginOk = await this.loginWithRegularProfile(serviceProfile, node);
                 }
@@ -966,7 +981,15 @@ export class Profiles extends ProfilesCache {
             ) {
                 await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(node.getSession());
             } else {
-                logoutOk = await ZoweVsCodeExtension.logoutWithBaseProfile(serviceProfile, ZoweExplorerApiRegister.getInstance(), this);
+                const zeRegister = ZoweExplorerApiRegister.getInstance();
+                logoutOk = await ZoweVsCodeExtension.logoutWithBaseProfile({
+                    serviceProfile,
+                    defaultTokenType: zeRegister?.getCommonApi(serviceProfile).getTokenTypeName(),
+                    profileNode: node,
+                    zeRegister,
+                    zeProfiles: this,
+                    preferBaseToken: true,
+                });
             }
             if (logoutOk) {
                 Gui.showMessage(
@@ -1031,6 +1054,7 @@ export class Profiles extends ProfilesCache {
         session.ISession.user = creds[0];
         session.ISession.password = creds[1];
         await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(session);
+        // TODO Should we call ZoweVsCodeExtension.updateProfileInCache method here?
         const profIndex = this.allProfiles.findIndex((profile) => profile.name === serviceProfile.name);
         this.allProfiles[profIndex] = { ...serviceProfile, profile: { ...serviceProfile, ...session } };
         if (node) {
