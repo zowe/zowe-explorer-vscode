@@ -95,6 +95,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const queryParams = new URLSearchParams(uri.query);
             if (queryParams.has("conflict")) {
                 return { ...this.lookup(uri, false), permissions: vscode.FilePermission.Readonly };
+            } else if (queryParams.has("inDiff")) {
+                return this.lookup(uri, false);
             }
             isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
         }
@@ -389,7 +391,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const isConflict = urlQuery.has("conflict");
 
         // we need to fetch the contents from the mainframe if the file hasn't been accessed yet
-        if (!file.wasAccessed || isConflict) {
+        if ((!file.wasAccessed && !urlQuery.has("inDiff")) || isConflict) {
             await this.fetchDatasetAtUri(uri, { isConflict });
             if (!isConflict) {
                 file.wasAccessed = true;
