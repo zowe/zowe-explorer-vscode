@@ -696,12 +696,12 @@
         {
           "command": "zowe.diff.useLocalContent",
           "group": "navigation@0",
-          "when": "resourceScheme =~ /zowe-.*/ && isInDiffEditor"
+          "when": "resourceScheme =~ /zowe-.*/ && isInDiffEditor && zowe.vscode-extension-for-zowe.inConflict"
         },
         {
           "command": "zowe.diff.useRemoteContent",
           "group": "navigation@1",
-          "when": "resourceScheme =~ /zowe-.*/ && isInDiffEditor"
+          "when": "resourceScheme =~ /zowe-.*/ && isInDiffEditor && zowe.vscode-extension-for-zowe.inConflict"
         }
       ],
       "view/title": [
@@ -1847,11 +1847,11 @@
     "webdriverio": "^8.36.1"
   },
   "dependencies": {
-    "@zowe/core-for-zowe-sdk": "8.0.0-next.202407232256",
-    "@zowe/secrets-for-zowe-sdk": "8.0.0-next.202407232256",
-    "@zowe/zos-files-for-zowe-sdk": "8.0.0-next.202407232256",
-    "@zowe/zos-jobs-for-zowe-sdk": "8.0.0-next.202407232256",
-    "@zowe/zosmf-for-zowe-sdk": "8.0.0-next.202407232256",
+    "@zowe/core-for-zowe-sdk": "8.0.0-next.202408291544",
+    "@zowe/secrets-for-zowe-sdk": "8.0.0-next.202408291544",
+    "@zowe/zos-files-for-zowe-sdk": "8.0.0-next.202408291544",
+    "@zowe/zos-jobs-for-zowe-sdk": "8.0.0-next.202408291544",
+    "@zowe/zosmf-for-zowe-sdk": "8.0.0-next.202408291544",
     "@zowe/zowe-explorer-api": "3.0.0-next-SNAPSHOT",
     "@vscode/codicons": "^0.0.35",
     "dayjs": "^1.11.10",

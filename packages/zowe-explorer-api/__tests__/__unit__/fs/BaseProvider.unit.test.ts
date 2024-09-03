@@ -636,3 +636,17 @@ describe("_reopenEditorForRelocatedUri", () => {
         tabGroupsMock[Symbol.dispose]();
     });
 });
+
+describe("onCloseEvent", () => {
+    it("disposes the event if all visible text editors are not in a conflict", () => {
+        const fakeProvider = { _lookupAsFile: jest.fn(), onDocClosedEventDisposable: { dispose: jest.fn() } };
+        const visibleTextEditorsMock = new MockedProperty(vscode.window, "visibleTextEditors", undefined, [
+            { document: { uri: vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/DATA.SET.TWO" }) } },
+        ]);
+        (BaseProvider as any).onCloseEvent.bind(fakeProvider)({
+            uri: vscode.Uri.from({ scheme: ZoweScheme.DS, query: "conflict=true", path: "/profile/DATA.SET" }),
+        });
+        expect(fakeProvider.onDocClosedEventDisposable.dispose).toHaveBeenCalled();
+        visibleTextEditorsMock[Symbol.dispose]();
+    });
+});
