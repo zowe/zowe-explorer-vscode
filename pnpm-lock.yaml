@@ -136,20 +136,20 @@ importers:
   packages/zowe-explorer:
     dependencies:
       '@zowe/core-for-zowe-sdk':
-        specifier: 8.0.0-next.202408291544
-        version: 8.0.0-next.202408291544(@zowe/imperative@8.0.0-next.202408291544)
+        specifier: 8.0.0-next.202408301809
+        version: 8.0.0-next.202408301809(@zowe/imperative@8.0.0-next.202408301809)
       '@zowe/secrets-for-zowe-sdk':
-        specifier: 8.0.0-next.202408291544
-        version: 8.0.0-next.202408291544
+        specifier: 8.0.0-next.202408301809
+        version: 8.0.0-next.202408301809
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: 8.0.0-next.202408291544
-        version: 8.0.0-next.202408291544(@zowe/core-for-zowe-sdk@8.0.0-next.202408291544)(@zowe/imperative@8.0.0-next.202408291544)
+        specifier: 8.0.0-next.202408301809
+        version: 8.0.0-next.202408301809(@zowe/core-for-zowe-sdk@8.0.0-next.202408301809)(@zowe/imperative@8.0.0-next.202408301809)
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: 8.0.0-next.202408291544
-        version: 8.0.0-next.202408291544(@zowe/core-for-zowe-sdk@8.0.0-next.202408291544)(@zowe/imperative@8.0.0-next.202408291544)
+        specifier: 8.0.0-next.202408301809
+        version: 8.0.0-next.202408301809(@zowe/core-for-zowe-sdk@8.0.0-next.202408301809)(@zowe/imperative@8.0.0-next.202408301809)
       '@zowe/zosmf-for-zowe-sdk':
-        specifier: 8.0.0-next.202408291544
-        version: 8.0.0-next.202408291544(@zowe/core-for-zowe-sdk@8.0.0-next.202408291544)(@zowe/imperative@8.0.0-next.202408291544)
+        specifier: 8.0.0-next.202408301809
+        version: 8.0.0-next.202408301809(@zowe/core-for-zowe-sdk@8.0.0-next.202408301809)(@zowe/imperative@8.0.0-next.202408301809)
       '@zowe/zowe-explorer-api':
         specifier: 3.0.0-next-SNAPSHOT
         version: link:../zowe-explorer-api
@@ -228,7 +228,7 @@ importers:
         version: 24.9.0
       expect-webdriverio:
         specifier: ^4.13.0
-        version: 4.14.0
+        version: 4.14.0(typescript@5.5.4)
       glob:
         specifier: ^7.1.6
         version: 7.2.3
@@ -246,7 +246,7 @@ importers:
         version: 16.1.3
       ts-node:
         specifier: ^10.9.2
-        version: 10.9.2(@types/node@18.19.33)(typescript@5.5.4)
+        version: 10.9.2(@types/node@22.5.2)(typescript@5.5.4)
       wdio-vscode-service:
         specifier: ^6.1.0
         version: 6.1.0(webdriverio@8.38.2)
@@ -263,32 +263,32 @@ importers:
         specifier: ^1.53.2
         version: 1.89.0
       '@zowe/core-for-zowe-sdk':
-        specifier: 8.0.0-next.202408291544
-        version: 8.0.0-next.202408291544(@zowe/imperative@8.0.0-next.202408291544)
+        specifier: 8.0.0-next.202408301809
+        version: 8.0.0-next.202408301809(@zowe/imperative@8.0.0-next.202408301809)
       '@zowe/imperative':
-        specifier: 8.0.0-next.202408291544
-        version: 8.0.0-next.202408291544
+        specifier: 8.0.0-next.202408301809
+        version: 8.0.0-next.202408301809
       '@zowe/secrets-for-zowe-sdk':
-        specifier: 8.0.0-next.202408291544
-        version: 8.0.0-next.202408291544
+        specifier: 8.0.0-next.202408301809
+        version: 8.0.0-next.202408301809
       '@zowe/zos-console-for-zowe-sdk':
-        specifier: 8.0.0-next.202408291544
-        version: 8.0.0-next.202408291544(@zowe/core-for-zowe-sdk@8.0.0-next.202408291544)(@zowe/imperative@8.0.0-next.202408291544)
+        specifier: 8.0.0-next.202408301809
+        version: 8.0.0-next.202408301809(@zowe/core-for-zowe-sdk@8.0.0-next.202408301809)(@zowe/imperative@8.0.0-next.202408301809)
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: 8.0.0-next.202408291544
-        version: 8.0.0-next.202408291544(@zowe/core-for-zowe-sdk@8.0.0-next.202408291544)(@zowe/imperative@8.0.0-next.202408291544)
+        specifier: 8.0.0-next.202408301809
+        version: 8.0.0-next.202408301809(@zowe/core-for-zowe-sdk@8.0.0-next.202408301809)(@zowe/imperative@8.0.0-next.202408301809)
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: 8.0.0-next.202408291544
-        version: 8.0.0-next.202408291544(@zowe/core-for-zowe-sdk@8.0.0-next.202408291544)(@zowe/imperative@8.0.0-next.202408291544)
+        specifier: 8.0.0-next.202408301809
+        version: 8.0.0-next.202408301809(@zowe/core-for-zowe-sdk@8.0.0-next.202408301809)(@zowe/imperative@8.0.0-next.202408301809)
       '@zowe/zos-tso-for-zowe-sdk':
-        specifier: 8.0.0-next.202408291544
-        version: 8.0.0-next.202408291544(@zowe/core-for-zowe-sdk@8.0.0-next.202408291544)(@zowe/imperative@8.0.0-next.202408291544)
+        specifier: 8.0.0-next.202408301809
+        version: 8.0.0-next.202408301809(@zowe/core-for-zowe-sdk@8.0.0-next.202408301809)(@zowe/imperative@8.0.0-next.202408301809)
       '@zowe/zos-uss-for-zowe-sdk':
-        specifier: 8.0.0-next.202408291544
-        version: 8.0.0-next.202408291544(@zowe/imperative@8.0.0-next.202408291544)
+        specifier: 8.0.0-next.202408301809
+        version: 8.0.0-next.202408301809(@zowe/imperative@8.0.0-next.202408301809)
       '@zowe/zosmf-for-zowe-sdk':
-        specifier: 8.0.0-next.202408291544
-        version: 8.0.0-next.202408291544(@zowe/core-for-zowe-sdk@8.0.0-next.202408291544)(@zowe/imperative@8.0.0-next.202408291544)
+        specifier: 8.0.0-next.202408301809
+        version: 8.0.0-next.202408301809(@zowe/core-for-zowe-sdk@8.0.0-next.202408301809)(@zowe/imperative@8.0.0-next.202408301809)
       deep-object-diff:
         specifier: ^1.1.9
         version: 1.1.9
@@ -312,14 +312,14 @@ importers:
   packages/zowe-explorer-ftp-extension:
     dependencies:
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: 8.0.0-next.202408291544
-        version: 8.0.0-next.202408291544(@zowe/core-for-zowe-sdk@8.0.0-next.202408291544)(@zowe/imperative@8.0.0-next.202408291544)
+        specifier: 8.0.0-next.202408301809
+        version: 8.0.0-next.202408301809(@zowe/core-for-zowe-sdk@8.0.0-next.202408301809)(@zowe/imperative@8.0.0-next.202408301809)
       '@zowe/zos-ftp-for-zowe-cli':
         specifier: 3.0.0-next.202403191358
-        version: 3.0.0-next.202403191358(@zowe/imperative@8.0.0-next.202408291544)
+        version: 3.0.0-next.202403191358(@zowe/imperative@8.0.0-next.202408301809)
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: 8.0.0-next.202408291544
-        version: 8.0.0-next.202408291544(@zowe/core-for-zowe-sdk@8.0.0-next.202408291544)(@zowe/imperative@8.0.0-next.202408291544)
+        specifier: 8.0.0-next.202408301809
+        version: 8.0.0-next.202408301809(@zowe/core-for-zowe-sdk@8.0.0-next.202408301809)(@zowe/imperative@8.0.0-next.202408301809)
       '@zowe/zowe-explorer-api':
         specifier: 3.0.0-next-SNAPSHOT
         version: link:../zowe-explorer-api
@@ -552,7 +552,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/highlight': 7.24.7
-      picocolors: 1.0.1
+      picocolors: 1.1.0
     dev: true
 
   /@babel/compat-data@7.24.4:
@@ -821,7 +821,7 @@ packages:
       '@babel/helper-validator-identifier': 7.24.7
       chalk: 2.4.2
       js-tokens: 4.0.0
-      picocolors: 1.0.1
+      picocolors: 1.1.0
     dev: true
 
   /@babel/parser@7.24.5:
@@ -2219,7 +2219,7 @@ packages:
     dependencies:
       agent-base: 7.1.1
       http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.5
+      https-proxy-agent: 7.0.4
       lru-cache: 10.4.3
       socks-proxy-agent: 8.0.4
     transitivePeerDependencies:
@@ -2742,6 +2742,12 @@ packages:
     dev: true
     optional: true
 
+  /@types/node@22.5.2:
+    resolution: {integrity: sha512-acJsPTEqYqulZS/Yp/S3GgeE6GZ0qYODUR8aVr/DkhHQ8l9nd4j5x1/ZJy9/gHrRlFMqkO6i0I3E27Alu4jjPg==}
+    dependencies:
+      undici-types: 6.19.8
+    dev: true
+
   /@types/normalize-package-data@2.4.4:
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
     dev: true
@@ -3247,7 +3253,7 @@ packages:
     resolution: {integrity: sha512-iIrUF1EODfHLh3V/CSNCqbNNxUTe3ND+c86zDjzJcPFjawLX1plvAApsU/eDmtsFShcOS2KHbfSjiydFoqQG1Q==}
     engines: {node: ^16.13 || >=18}
     optionalDependencies:
-      expect-webdriverio: 4.14.0
+      expect-webdriverio: 4.14.0(typescript@5.5.4)
       webdriverio: 8.38.2(typescript@5.5.4)
     transitivePeerDependencies:
       - bufferutil
@@ -3258,18 +3264,19 @@ packages:
       - utf-8-validate
     dev: true
 
-  /@wdio/globals@8.40.5:
+  /@wdio/globals@8.40.5(typescript@5.5.4):
     resolution: {integrity: sha512-pHWNDhAO25BqfuxXmEwBceUeGzfEjkym9I4EzfUlPpoi39BRasDXbWSpX3us/5snUv5Xk+NWMDv4aTpTxfDQrA==}
     engines: {node: ^16.13 || >=18}
     requiresBuild: true
     optionalDependencies:
-      expect-webdriverio: 4.14.0
+      expect-webdriverio: 4.14.0(typescript@5.5.4)
       webdriverio: 8.40.5
     transitivePeerDependencies:
       - bufferutil
       - devtools
       - encoding
       - supports-color
+      - typescript
       - utf-8-validate
     dev: true
     optional: true
@@ -3389,7 +3396,7 @@ packages:
       '@wdio/types': 8.38.2
       '@wdio/utils': 8.38.2
       deepmerge-ts: 5.1.0
-      expect-webdriverio: 4.14.0
+      expect-webdriverio: 4.14.0(typescript@5.5.4)
       gaze: 1.1.3
       webdriver: 8.38.2
       webdriverio: 8.38.2(typescript@5.5.4)
@@ -3636,19 +3643,19 @@ packages:
     dev: true
     optional: true
 
-  /@zowe/core-for-zowe-sdk@8.0.0-next.202408291544(@zowe/imperative@8.0.0-next.202408291544):
-    resolution: {integrity: sha512-IS/Yu8iYGEOUf7b2tw/7uFPGfQueUjE542fdsOAfJRphYHhnQAO9WPoWmmnGH5zFnU/a4t9KudvnpID0+aQspg==}
+  /@zowe/core-for-zowe-sdk@8.0.0-next.202408301809(@zowe/imperative@8.0.0-next.202408301809):
+    resolution: {integrity: sha512-ACs+qLn96p2CjneAW61clv38TNLdHcqJR4HhZ9Lu0z61c9vyxml7BOKLKDpGDDZ468ipkX1thGCKcDRIPWdkRQ==}
     engines: {node: '>=18.12.0'}
     peerDependencies:
       '@zowe/imperative': ^8.0.0-next
     dependencies:
-      '@zowe/imperative': 8.0.0-next.202408291544
+      '@zowe/imperative': 8.0.0-next.202408301809
       comment-json: 4.2.5
       string-width: 4.2.3
     dev: false
 
-  /@zowe/imperative@8.0.0-next.202408291544:
-    resolution: {integrity: sha512-o28cH0prNyrh6NNuf0dQQ2J+H5F4WJAYzARw+ys2np2WfzARukHCbFRq2/SVeOXHBPUgaWNF8AxrXOe8rzl8YA==}
+  /@zowe/imperative@8.0.0-next.202408301809:
+    resolution: {integrity: sha512-jO4wK3LSONGVg+axzBc2tADzoJw8q14AKdsu6q9Kgd/PYrHyROOKr98b2Yy9ketZSZgUFimlgeFHeIgqGdKVMA==}
     engines: {node: '>=18.12.0'}
     dependencies:
       '@types/yargs': 17.0.33
@@ -3692,87 +3699,87 @@ packages:
       - supports-color
     dev: false
 
-  /@zowe/secrets-for-zowe-sdk@8.0.0-next.202408291544:
-    resolution: {integrity: sha512-UAzQ+HOOgrEAAHVfIxBC3vaL4NhIjGAfJQ9sUREuTI/1PxS5v0XeeVWz3yfAvaJPQUxPz4Ovmxs5QhOCvV1l+Q==}
+  /@zowe/secrets-for-zowe-sdk@8.0.0-next.202408301809:
+    resolution: {integrity: sha512-LwytQJ57OI+JxJP37+zfrkWGOORW5yrH7QITsgmXfvVPRD2wuUmsBtwlKjgIfoGegsP/97oKg62Sso9JuqK53Q==}
     engines: {node: '>=14'}
     requiresBuild: true
     dev: false
 
-  /@zowe/zos-console-for-zowe-sdk@8.0.0-next.202408291544(@zowe/core-for-zowe-sdk@8.0.0-next.202408291544)(@zowe/imperative@8.0.0-next.202408291544):
-    resolution: {integrity: sha512-nuLS5PWXpmh/LizLjv+NZWGpMDu85tUDOMX9dk0DivkEd8Ecyb8a8cR7/nsUL+UF43E6PAGsBtGrFupMlcFKkw==}
+  /@zowe/zos-console-for-zowe-sdk@8.0.0-next.202408301809(@zowe/core-for-zowe-sdk@8.0.0-next.202408301809)(@zowe/imperative@8.0.0-next.202408301809):
+    resolution: {integrity: sha512-Zs6kB3mQOqOebV7IIIRf0FEWTeC+x3QAk27rxGbiHSkFZ/0y31nwXl2YopfljmiCUdXGbl+nXwUHkEL1X5logg==}
     engines: {node: '>=18.12.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0-next
       '@zowe/imperative': ^8.0.0-next
     dependencies:
-      '@zowe/core-for-zowe-sdk': 8.0.0-next.202408291544(@zowe/imperative@8.0.0-next.202408291544)
-      '@zowe/imperative': 8.0.0-next.202408291544
+      '@zowe/core-for-zowe-sdk': 8.0.0-next.202408301809(@zowe/imperative@8.0.0-next.202408301809)
+      '@zowe/imperative': 8.0.0-next.202408301809
     dev: false
 
-  /@zowe/zos-files-for-zowe-sdk@8.0.0-next.202408291544(@zowe/core-for-zowe-sdk@8.0.0-next.202408291544)(@zowe/imperative@8.0.0-next.202408291544):
-    resolution: {integrity: sha512-JDyYq88UMAnVnVgaI6NbC1WJjqR/iUMHx5zYGqYBPAElrlYJ/LlohX9iqh+cjqlkR0B4P3ZrWz2Hl1+coL8TbQ==}
+  /@zowe/zos-files-for-zowe-sdk@8.0.0-next.202408301809(@zowe/core-for-zowe-sdk@8.0.0-next.202408301809)(@zowe/imperative@8.0.0-next.202408301809):
+    resolution: {integrity: sha512-JX8yJC6Cz8cgorN34hPa4iXo8q0ZpMEFnYKZ/kbgEWcdgUOextTwCIHFTOeVdFBG/ex4OkKryLKSrELmG1wmeQ==}
     engines: {node: '>=18.12.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0-next
       '@zowe/imperative': ^8.0.0-next
     dependencies:
-      '@zowe/core-for-zowe-sdk': 8.0.0-next.202408291544(@zowe/imperative@8.0.0-next.202408291544)
-      '@zowe/imperative': 8.0.0-next.202408291544
+      '@zowe/core-for-zowe-sdk': 8.0.0-next.202408301809(@zowe/imperative@8.0.0-next.202408301809)
+      '@zowe/imperative': 8.0.0-next.202408301809
       minimatch: 9.0.5
     dev: false
 
-  /@zowe/zos-ftp-for-zowe-cli@3.0.0-next.202403191358(@zowe/imperative@8.0.0-next.202408291544):
+  /@zowe/zos-ftp-for-zowe-cli@3.0.0-next.202403191358(@zowe/imperative@8.0.0-next.202408301809):
     resolution: {integrity: sha512-jTiGcqFZNKIanUQAWOT+2M+3X6P9FAlPrie999HjDm79DpEltkjNwdNLM8EZLtSXsTjBrifaTo/pMVVmmhfl4A==}
     peerDependencies:
       '@zowe/imperative': '>=8.0.0-next.0 <8.0.0'
     dependencies:
-      '@zowe/imperative': 8.0.0-next.202408291544
+      '@zowe/imperative': 8.0.0-next.202408301809
       zos-node-accessor: 2.0.9
     dev: false
 
-  /@zowe/zos-jobs-for-zowe-sdk@8.0.0-next.202408291544(@zowe/core-for-zowe-sdk@8.0.0-next.202408291544)(@zowe/imperative@8.0.0-next.202408291544):
-    resolution: {integrity: sha512-8H1bT1C4LPP3g/ktI9586eWPXiqQT9Pz5bZ+7nCiFozcAsAYtrsoISdm55xUqUrNcgtB9QxqRCG9+fxeb954Sw==}
+  /@zowe/zos-jobs-for-zowe-sdk@8.0.0-next.202408301809(@zowe/core-for-zowe-sdk@8.0.0-next.202408301809)(@zowe/imperative@8.0.0-next.202408301809):
+    resolution: {integrity: sha512-ftxLFZCAlcyriowCnTK8Bo9FqZj19Do+vnigx4zunzK1zzgHZu4STZqxvJR3KGiv9ZFxggiBWVjJ0nxywbDLDg==}
     engines: {node: '>=18.12.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0-next
       '@zowe/imperative': ^8.0.0-next
     dependencies:
-      '@zowe/core-for-zowe-sdk': 8.0.0-next.202408291544(@zowe/imperative@8.0.0-next.202408291544)
-      '@zowe/imperative': 8.0.0-next.202408291544
-      '@zowe/zos-files-for-zowe-sdk': 8.0.0-next.202408291544(@zowe/core-for-zowe-sdk@8.0.0-next.202408291544)(@zowe/imperative@8.0.0-next.202408291544)
+      '@zowe/core-for-zowe-sdk': 8.0.0-next.202408301809(@zowe/imperative@8.0.0-next.202408301809)
+      '@zowe/imperative': 8.0.0-next.202408301809
+      '@zowe/zos-files-for-zowe-sdk': 8.0.0-next.202408301809(@zowe/core-for-zowe-sdk@8.0.0-next.202408301809)(@zowe/imperative@8.0.0-next.202408301809)
     dev: false
 
-  /@zowe/zos-tso-for-zowe-sdk@8.0.0-next.202408291544(@zowe/core-for-zowe-sdk@8.0.0-next.202408291544)(@zowe/imperative@8.0.0-next.202408291544):
-    resolution: {integrity: sha512-je2Dp7S5WIqGWcuqvN1vXDz/5fOqcBU5qZU3G3R/1rBppWj2eb2UUtdGVHvHu4gCGM0P9jTmoPq3te3tyydL5A==}
+  /@zowe/zos-tso-for-zowe-sdk@8.0.0-next.202408301809(@zowe/core-for-zowe-sdk@8.0.0-next.202408301809)(@zowe/imperative@8.0.0-next.202408301809):
+    resolution: {integrity: sha512-j2jIBxeTO5UEI3I0wPKor9TqxnGXNiWXbtZM4dH50xcogT+hBB6LEy7JRKZijYW3H5qu45w3WCJ3gavd6yfZ2g==}
     engines: {node: '>=18.12.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0-next
       '@zowe/imperative': ^8.0.0-next
     dependencies:
-      '@zowe/core-for-zowe-sdk': 8.0.0-next.202408291544(@zowe/imperative@8.0.0-next.202408291544)
-      '@zowe/imperative': 8.0.0-next.202408291544
-      '@zowe/zosmf-for-zowe-sdk': 8.0.0-next.202408291544(@zowe/core-for-zowe-sdk@8.0.0-next.202408291544)(@zowe/imperative@8.0.0-next.202408291544)
+      '@zowe/core-for-zowe-sdk': 8.0.0-next.202408301809(@zowe/imperative@8.0.0-next.202408301809)
+      '@zowe/imperative': 8.0.0-next.202408301809
+      '@zowe/zosmf-for-zowe-sdk': 8.0.0-next.202408301809(@zowe/core-for-zowe-sdk@8.0.0-next.202408301809)(@zowe/imperative@8.0.0-next.202408301809)
     dev: false
 
-  /@zowe/zos-uss-for-zowe-sdk@8.0.0-next.202408291544(@zowe/imperative@8.0.0-next.202408291544):
-    resolution: {integrity: sha512-mPUqvoFLj11Mn2jq5fDU9le3ahsgw4mLfBshP0L7Ur31aAepjqvUkECEMX+voj77dsFhVajpRJVk27gJq8hCsQ==}
+  /@zowe/zos-uss-for-zowe-sdk@8.0.0-next.202408301809(@zowe/imperative@8.0.0-next.202408301809):
+    resolution: {integrity: sha512-3OD5YRakB6VT8o8bwmK0Lg/Y6bQU4CM4YIHWLec/jjiNr9BviEM0SibgWopza4UrY46zOwhOdrHsbcq9R5xIKw==}
     engines: {node: '>=18.12.0'}
     peerDependencies:
       '@zowe/imperative': ^8.0.0-next
     dependencies:
-      '@zowe/imperative': 8.0.0-next.202408291544
+      '@zowe/imperative': 8.0.0-next.202408301809
       ssh2: 1.15.0
     dev: false
 
-  /@zowe/zosmf-for-zowe-sdk@8.0.0-next.202408291544(@zowe/core-for-zowe-sdk@8.0.0-next.202408291544)(@zowe/imperative@8.0.0-next.202408291544):
-    resolution: {integrity: sha512-94voQyHZxUaQFpwPyBddIUSmRTVHvGukr4ft5Sm47ONATeZ3g2pTTJTKhiYIkhVcNEAE6qxndV+NBiYWngoVzA==}
+  /@zowe/zosmf-for-zowe-sdk@8.0.0-next.202408301809(@zowe/core-for-zowe-sdk@8.0.0-next.202408301809)(@zowe/imperative@8.0.0-next.202408301809):
+    resolution: {integrity: sha512-yJGDE4C9n7YIMBEmRbabTnqDWcefHdKIHhoH+DtR15cxEux4KioCOK2cKdl5HahUf4oDJdYUKAZO8Lvfl7FC6A==}
     engines: {node: '>=18.12.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0-next
       '@zowe/imperative': ^8.0.0-next
     dependencies:
-      '@zowe/core-for-zowe-sdk': 8.0.0-next.202408291544(@zowe/imperative@8.0.0-next.202408291544)
-      '@zowe/imperative': 8.0.0-next.202408291544
+      '@zowe/core-for-zowe-sdk': 8.0.0-next.202408301809(@zowe/imperative@8.0.0-next.202408301809)
+      '@zowe/imperative': 8.0.0-next.202408301809
     dev: false
 
   /abbrev@1.1.1:
@@ -6113,11 +6120,11 @@ packages:
   /escalade@3.1.2:
     resolution: {integrity: sha512-ErCHMCae19vR8vQGe50xIsVomy19rg6gFu3+r3jkEO46suLMWBksvVyoGgQV+jOfl84ZSOSlmv6Gxa89PmTGmA==}
     engines: {node: '>=6'}
+    dev: true
 
   /escalade@3.2.0:
     resolution: {integrity: sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA==}
     engines: {node: '>=6'}
-    dev: true
 
   /escape-html@1.0.3:
     resolution: {integrity: sha512-NiSupZ4OeuGwr68lGIeym/ksIZMJodUGOSCZ/FSnTxcrekbvqrgdUxlJOMpijaKZVjAJrWrGs/6Jy8OMuyj9ow==}
@@ -6457,7 +6464,7 @@ packages:
     dev: true
     optional: true
 
-  /expect-webdriverio@4.14.0:
+  /expect-webdriverio@4.14.0(typescript@5.5.4):
     resolution: {integrity: sha512-bPZ9zfyJHF41dO8o7iFcEV4Dvcw45yhsv1WjtJyPLZPjQ+ixVBrbSil9+rjRiONoX4f45EZRCqaGvPlzNC523Q==}
     engines: {node: '>=16 || >=18 || >=20'}
     dependencies:
@@ -6466,14 +6473,15 @@ packages:
       jest-matcher-utils: 29.7.0
       lodash.isequal: 4.5.0
     optionalDependencies:
-      '@wdio/globals': 8.40.5
+      '@wdio/globals': 8.40.5(typescript@5.5.4)
       '@wdio/logger': 8.38.0
-      webdriverio: 8.40.5
+      webdriverio: 8.38.2(typescript@5.5.4)
     transitivePeerDependencies:
       - bufferutil
       - devtools
       - encoding
       - supports-color
+      - typescript
       - utf-8-validate
     dev: true
 
@@ -7673,6 +7681,7 @@ packages:
       debug: 4.3.4(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
+    dev: true
 
   /human-signals@2.1.0:
     resolution: {integrity: sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==}
@@ -10688,6 +10697,10 @@ packages:
     resolution: {integrity: sha512-anP1Z8qwhkbmu7MFP5iTt+wQKXgwzf7zTyGlcdzabySa9vd0Xt392U0rVmz9poOaBj0uHJKyyo9/upk0HrEQew==}
     dev: true
 
+  /picocolors@1.1.0:
+    resolution: {integrity: sha512-TQ92mBOW0l3LeMeyLV6mzy/kWr8lkd/hp3mTg7wYK7zJhuBStmGMBG0BdeDZS/dZx1IukaX6Bk11zcln25o1Aw==}
+    dev: true
+
   /picomatch@2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
@@ -12692,7 +12705,7 @@ packages:
       yargs-parser: 21.1.1
     dev: true
 
-  /ts-node@10.9.2(@types/node@18.19.33)(typescript@5.5.4):
+  /ts-node@10.9.2(@types/node@22.5.2)(typescript@5.5.4):
     resolution: {integrity: sha512-f0FFpIdcHgn8zcPSbf1dRevwt047YMnaiJM3u2w2RewrB+fob/zePZcrOyQoLMMO7aBIddLcQIEK5dYjkLnGrQ==}
     hasBin: true
     peerDependencies:
@@ -12711,7 +12724,7 @@ packages:
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 18.19.33
+      '@types/node': 22.5.2
       acorn: 8.11.3
       acorn-walk: 8.3.2
       arg: 4.1.3
@@ -12938,7 +12951,6 @@ packages:
     resolution: {integrity: sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==}
     requiresBuild: true
     dev: true
-    optional: true
 
   /undici@5.28.4:
     resolution: {integrity: sha512-72RFADWFqKmUb2hmmvNODKL3p9hcB6Gt2DOQMis1SEBaV6a4MH8soBvzg+95CYhCKPFedut2JY9bMfrDl9D23g==}
@@ -13026,7 +13038,7 @@ packages:
     dependencies:
       browserslist: 4.23.3
       escalade: 3.2.0
-      picocolors: 1.0.1
+      picocolors: 1.1.0
     dev: true
 
   /upper-case-first@2.0.2:
@@ -13476,7 +13488,7 @@ packages:
       jszip: 3.10.1
       lodash.clonedeep: 4.5.0
       lodash.zip: 4.2.0
-      minimatch: 9.0.4
+      minimatch: 9.0.5
       puppeteer-core: 21.11.0
       query-selector-shadow-dom: 1.0.1
       resq: 1.11.0
@@ -13851,7 +13863,7 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       cliui: 8.0.1
-      escalade: 3.1.2
+      escalade: 3.2.0
       get-caller-file: 2.0.5
       require-directory: 2.1.1
       string-width: 4.2.3
