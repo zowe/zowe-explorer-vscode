@@ -243,14 +243,14 @@ export function watchConfigProfile(context: vscode.ExtensionContext): void {
     context.subscriptions.push(...watchers);
 
     watchers.forEach((watcher) => {
-        watcher.onDidCreate(async () => {
+        watcher.onDidCreate(() => {
             ZoweLogger.info(localize("watchConfigProfile.create", "Team config file created, refreshing Zowe Explorer."));
-            await refreshActions.refreshAll();
+            void refreshActions.refreshAll();
             ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.CREATE);
         });
-        watcher.onDidDelete(async () => {
+        watcher.onDidDelete(() => {
             ZoweLogger.info(localize("watchConfigProfile.delete", "Team config file deleted, refreshing Zowe Explorer."));
-            await refreshActions.refreshAll();
+            void refreshActions.refreshAll();
             ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.DELETE);
         });
         watcher.onDidChange(async (uri: vscode.Uri) => {
@@ -260,7 +260,7 @@ export function watchConfigProfile(context: vscode.ExtensionContext): void {
                 return;
             }
             globals.setSavedProfileContents(newProfileContents);
-            await refreshActions.refreshAll();
+            void refreshActions.refreshAll();
             ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.UPDATE);
         });
     });
