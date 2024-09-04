@@ -7,6 +7,8 @@ module.exports = async ({ github, context }) => {
 
     const wasJustPushed = context.action === "synchronize";
     
+    const owner = context.repo.owner;
+    const repo = context.repo.repo;
     const comments = (await github.rest.issues.listComments({ owner, repo, issue_number: context.payload.pull_request.number }))?.data;
     const existingComment = comments?.find((comment) => 
         comment.user.login === "github-actions[bot]" && comment.body.includes("**📅 Suggested merge-by date:"));
@@ -21,9 +23,6 @@ module.exports = async ({ github, context }) => {
     const mergeBy = new Date();
     mergeBy.setDate(currentTime.getDate() + 14);
     const mergeByDate = mergeBy.toLocaleDateString("en-US");
-    
-    const owner = context.repo.owner;
-    const repo = context.repo.repo;
     
     // Check if the bot already made a comment on this PR
     const body = `**📅 Suggested merge-by date:** ${mergeByDate}`;
