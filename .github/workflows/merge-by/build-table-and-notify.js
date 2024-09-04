@@ -16,7 +16,7 @@ const buildTableRow = (owner, repo, pr) =>
   `| [#${pr.number}](https://github.com/${owner}/${repo}/pull/${pr.number}) | [**${pr.title.trim()}**](https://github.com/${owner}/${repo}/pull/${pr.number}) | ${pr.author} | ${pr.mergeBy ?? "N/A"} | ${pr.hasReviews ? ":white_check_mark:" : ":white_large_square:"} |`;
 
 const tableHeader = `
-| # | Title | Author | Merge-by date | Reviewed (>= 2 approvals) |
+| # | Title | Author | Merge by | Ready to merge? |
 | - | ----- | ------ | ------------- | -------------- |`;
 
 /**
