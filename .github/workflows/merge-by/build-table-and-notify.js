@@ -118,7 +118,7 @@ const scanPRsAndUpdateTable = async ({ github, owner, pullRequests, repo }) => {
 const notifyUsers = async ({ dayJs, github, owner, pullRequests, repo, today }) => {
   const prsCloseToMergeDate = pullRequests.filter((pr) => {
     if (pr.mergeBy == null) {
-      return true;
+      return false;
     }
 
     // Filter out any PRs that don't have merge-by dates within a day from now
