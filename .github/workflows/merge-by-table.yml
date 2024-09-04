@@ -3,6 +3,10 @@ name: Merge-by
 on:
     pull_request:
       types: [opened, ready_for_review]
+    push:
+      branches:
+        - main
+        - next
     workflow_dispatch:
     schedule:
     - cron: "0 11 * * *"
