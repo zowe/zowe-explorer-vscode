@@ -190,7 +190,7 @@ const fetchPullRequests = async ({ dayJs, github, owner, repo, today }) => {
       // Filter out any PRs that have merge-by dates > 1 week from now
       const mergeByDate = dayJs(pr.mergeBy);
       return nextWeek.diff(mergeByDate, "day") <= 7;
-    });
+    }).reverse();
 }
 
 module.exports = async ({ github, context }) => {
