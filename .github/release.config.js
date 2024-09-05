@@ -1,25 +1,29 @@
 module.exports = {
     branches: [
         {
-            name: "main",
-            channel: "latest",
-            level: "minor",
-        },
-        {
-            name: "maintenance",
-            channel: "latest",
-            level: "patch",
-        },
-        {
             name: "v1-lts",
             channel: "zowe-v1-lts",
             level: "patch",
         },
         {
-            name: "next",
-            level: "none",
-            prerelease: true,
-        }
+            name: "main",
+            channel: "latest",
+            level: "minor"
+        },
+        {
+            name: "release/2.*",
+            channel: "zowe-v2-lts",
+            level: "patch"
+        },
+        {
+            name: "release/3.*",
+            channel: "latest",
+            level: "patch"
+        },
+        // {
+        //     name: "next",
+        //     prerelease: true,
+        // }
     ],
     plugins: [
         [
