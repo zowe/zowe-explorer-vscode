@@ -23,8 +23,8 @@ const HTMLTemplate: string = /*html*/ `
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta
             http-equiv="Content-Security-Policy"
-            content="default-src 'none'; font-src data: https:; img-src data: vscode-resource: https:; script-src 'nonce-{{ nonce }}';
-            style-src vscode-resource: 'unsafe-inline' http: https: data:;"
+            content="default-src 'none'; font-src data: https: {{ cspSource }}; img-src data: vscode-resource: https:; script-src {{#unsafeEval}}'unsafe-eval'{{/unsafeEval}} 'nonce-{{ nonce }}';
+            style-src {{ cspSource }} vscode-resource: 'unsafe-inline' http: https: data:;"
         />
         <base href="{{ uris.resource.build }}">
         {{#uris.resource.css}}
