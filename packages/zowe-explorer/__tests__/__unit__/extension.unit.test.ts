@@ -39,8 +39,8 @@ jest.mock("fs-extra");
 jest.mock("util");
 jest.mock("isbinaryfile");
 
-function createGlobalMocks() {
-    const mockReadProfilesFromDisk = jest.fn();
+async function createGlobalMocks() {
+    const mockReadProfilesFromDisk = jest.fn().mockReturnValue(Promise.resolve());
     const globalMocks = {
         mockLoadNamedProfile: jest.fn(),
         mockMkdirSync: jest.fn(),
@@ -50,6 +50,8 @@ function createGlobalMocks() {
         mockCreateTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         mockExecuteCommand: jest.fn(),
         mockRegisterCommand: jest.fn(),
+        mockRegisterWebviewViewProvider: jest.fn(),
+        mockOnDidCloseTextDocument: jest.fn(),
         mockOnDidSaveTextDocument: jest.fn(),
         mockOnDidChangeSelection: jest.fn(),
         mockOnDidChangeConfiguration: jest.fn(),
@@ -255,6 +257,10 @@ function createGlobalMocks() {
     });
     Object.defineProperty(vscode.commands, "registerCommand", {
         value: globalMocks.mockRegisterCommand,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "registerWebviewViewProvider", {
+        value: globalMocks.mockRegisterWebviewViewProvider,
         configurable: true,
     });
     Object.defineProperty(vscode.commands, "executeCommand", {

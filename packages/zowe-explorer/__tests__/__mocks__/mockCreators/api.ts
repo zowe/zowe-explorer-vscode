@@ -38,3 +38,12 @@ export function bindUssApi(api: MainframeInteraction.IUss) {
     getUssApiMock.mockReturnValue(api);
     ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
 }
+
+export function createCommandApi(profile: imperative.IProfileLoaded) {
+    return ZoweExplorerApiRegister.getCommandApi(profile);
+}
+export function bindCommandApi(api: MainframeInteraction.IJes) {
+    const getCommandApiMock = jest.fn();
+    getCommandApiMock.mockReturnValue(api);
+    ZoweExplorerApiRegister.getCommandApi = getCommandApiMock.bind(ZoweExplorerApiRegister);
+}
