@@ -75,8 +75,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const entry = isFetching ? await this.remoteLookupForResource(uri) : this.lookup(uri, false);
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-        // Do not perform remote lookup for profile URIs
-        if (uriInfo.isRoot) {
+        // Do not perform remote lookup for profile URIs or URIs without fetch query
+        if (uriInfo.isRoot || !isFetching) {
             return entry;
         }
 

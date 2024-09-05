@@ -103,8 +103,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const entry = isFetching ? await this.remoteLookupForResource(uri) : this.lookup(uri, false);
-        // Return the entry for profiles as there is no remote info to fetch
-        if (uriInfo.isRoot) {
+        // Return the entry for profiles or URIs without fetch query
+        if (uriInfo.isRoot || !isFetching) {
             return entry;
         }
 
