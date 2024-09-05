@@ -83,6 +83,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where the remote conflict icons showed when using the "Compare with Selected" feature. [#3085](https://github.com/zowe/zowe-explorer-vscode/pull/3085)
 - Resolved an issue where extender event callbacks were not always fired when the team configuration file was created, updated or deleted. [#3078](https://github.com/zowe/zowe-explorer-vscode/issues/3078)
 - Update Zowe SDKs to `8.0.0-next.202408291544` for technical currency. [#3057](https://github.com/zowe/zowe-explorer-vscode/pull/3057)
+- Fix issue with UnixCommand prompting for credentials. [#2762](https://github.com/zowe/zowe-explorer-vscode/issues/2762)
 
 ## `3.0.0-next.202404242037`
 
