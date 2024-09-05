@@ -321,14 +321,14 @@ export class SharedInit {
         context.subscriptions.push(...watchers);
 
         watchers.forEach((watcher) => {
-            watcher.onDidCreate(async () => {
+            watcher.onDidCreate(() => {
                 ZoweLogger.info(vscode.l10n.t("Team config file created, refreshing Zowe Explorer."));
-                await SharedActions.refreshAll();
+                void SharedActions.refreshAll();
                 ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.CREATE);
             });
-            watcher.onDidDelete(async () => {
+            watcher.onDidDelete(() => {
                 ZoweLogger.info(vscode.l10n.t("Team config file deleted, refreshing Zowe Explorer."));
-                await SharedActions.refreshAll();
+                void SharedActions.refreshAll();
                 ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.DELETE);
             });
             watcher.onDidChange(async (uri: vscode.Uri) => {
@@ -338,7 +338,7 @@ export class SharedInit {
                     return;
                 }
                 Constants.SAVED_PROFILE_CONTENTS = newProfileContents;
-                await SharedActions.refreshAll();
+                void SharedActions.refreshAll();
                 ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
             });
         });
