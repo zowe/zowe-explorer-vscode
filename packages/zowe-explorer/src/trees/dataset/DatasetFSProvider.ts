@@ -104,9 +104,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const entry = isFetching ? await this.remoteLookupForResource(uri) : this.lookup(uri, false);
         // Return the entry for profiles or URIs without fetch query
-        if (uriInfo.isRoot || !isFetching) {
+        if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry)) {
             return entry;
         }
+
+        ZoweLogger.trace(`[DatasetFSProvider] stat is locating resource ${uri.toString()}`);
 
         // Locate the resource using the profile in the given URI.
         let resp;
