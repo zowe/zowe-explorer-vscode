@@ -80,6 +80,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             return entry;
         }
 
+        ZoweLogger.trace(`[UssFSProvider] stat is locating resource ${uri.toString()}`);
+
         const fileResp = await this.listFiles(entry.metadata.profile, uri, true);
         if (fileResp.success) {
             // Regardless of the resource type, it will be the first item in a successful response.
