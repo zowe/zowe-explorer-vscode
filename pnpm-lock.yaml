@@ -228,7 +228,7 @@ importers:
         version: 24.9.0
       expect-webdriverio:
         specifier: ^4.13.0
-        version: 4.14.0(typescript@5.5.4)
+        version: 4.14.0
       glob:
         specifier: ^7.1.6
         version: 7.2.3
@@ -246,7 +246,7 @@ importers:
         version: 16.1.3
       ts-node:
         specifier: ^10.9.2
-        version: 10.9.2(@types/node@22.5.2)(typescript@5.5.4)
+        version: 10.9.2(@types/node@18.19.33)(typescript@5.5.4)
       wdio-vscode-service:
         specifier: ^6.1.0
         version: 6.1.0(webdriverio@8.38.2)
@@ -315,8 +315,8 @@ importers:
         specifier: 8.0.0-next.202408301809
         version: 8.0.0-next.202408301809(@zowe/core-for-zowe-sdk@8.0.0-next.202408301809)(@zowe/imperative@8.0.0-next.202408301809)
       '@zowe/zos-ftp-for-zowe-cli':
-        specifier: 3.0.0-next.202403191358
-        version: 3.0.0-next.202403191358(@zowe/imperative@8.0.0-next.202408301809)
+        specifier: 3.0.0-next.202407311518
+        version: 3.0.0-next.202407311518(@zowe/imperative@8.0.0-next.202408301809)
       '@zowe/zos-jobs-for-zowe-sdk':
         specifier: 8.0.0-next.202408301809
         version: 8.0.0-next.202408301809(@zowe/core-for-zowe-sdk@8.0.0-next.202408301809)(@zowe/imperative@8.0.0-next.202408301809)
@@ -580,7 +580,7 @@ packages:
       '@babel/traverse': 7.24.5
       '@babel/types': 7.24.5
       convert-source-map: 2.0.0
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.6
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -2219,7 +2219,7 @@ packages:
     dependencies:
       agent-base: 7.1.1
       http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.4
+      https-proxy-agent: 7.0.5
       lru-cache: 10.4.3
       socks-proxy-agent: 8.0.4
     transitivePeerDependencies:
@@ -2734,19 +2734,13 @@ packages:
       undici-types: 5.26.5
     dev: true
 
-  /@types/node@22.5.1:
-    resolution: {integrity: sha512-KkHsxej0j9IW1KKOOAA/XBA0z08UFSrRQHErzEfA3Vgq57eXIMYboIlHJuYIfd+lwCQjtKqUu3UnmKbtUc9yRw==}
+  /@types/node@22.5.2:
+    resolution: {integrity: sha512-acJsPTEqYqulZS/Yp/S3GgeE6GZ0qYODUR8aVr/DkhHQ8l9nd4j5x1/ZJy9/gHrRlFMqkO6i0I3E27Alu4jjPg==}
     requiresBuild: true
     dependencies:
       undici-types: 6.19.8
     dev: true
     optional: true
-
-  /@types/node@22.5.2:
-    resolution: {integrity: sha512-acJsPTEqYqulZS/Yp/S3GgeE6GZ0qYODUR8aVr/DkhHQ8l9nd4j5x1/ZJy9/gHrRlFMqkO6i0I3E27Alu4jjPg==}
-    dependencies:
-      undici-types: 6.19.8
-    dev: true
 
   /@types/normalize-package-data@2.4.4:
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
@@ -2809,6 +2803,7 @@ packages:
 
   /@types/which@2.0.2:
     resolution: {integrity: sha512-113D3mDkZDjo+EeUEHCFy0qniNc1ZpecGiAU7WSo7YDoSzolZIQKpYFHrPpjkB2nuyahcKfrmLXeQlh7gqJYdw==}
+    requiresBuild: true
     dev: true
 
   /@types/ws@8.5.10:
@@ -2986,7 +2981,7 @@ packages:
     dependencies:
       '@typescript-eslint/types': 6.21.0
       '@typescript-eslint/visitor-keys': 6.21.0
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.6
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.3
@@ -3253,7 +3248,7 @@ packages:
     resolution: {integrity: sha512-iIrUF1EODfHLh3V/CSNCqbNNxUTe3ND+c86zDjzJcPFjawLX1plvAApsU/eDmtsFShcOS2KHbfSjiydFoqQG1Q==}
     engines: {node: ^16.13 || >=18}
     optionalDependencies:
-      expect-webdriverio: 4.14.0(typescript@5.5.4)
+      expect-webdriverio: 4.14.0
       webdriverio: 8.38.2(typescript@5.5.4)
     transitivePeerDependencies:
       - bufferutil
@@ -3264,19 +3259,18 @@ packages:
       - utf-8-validate
     dev: true
 
-  /@wdio/globals@8.40.5(typescript@5.5.4):
+  /@wdio/globals@8.40.5:
     resolution: {integrity: sha512-pHWNDhAO25BqfuxXmEwBceUeGzfEjkym9I4EzfUlPpoi39BRasDXbWSpX3us/5snUv5Xk+NWMDv4aTpTxfDQrA==}
     engines: {node: ^16.13 || >=18}
     requiresBuild: true
     optionalDependencies:
-      expect-webdriverio: 4.14.0(typescript@5.5.4)
+      expect-webdriverio: 4.14.0
       webdriverio: 8.40.5
     transitivePeerDependencies:
       - bufferutil
       - devtools
       - encoding
       - supports-color
-      - typescript
       - utf-8-validate
     dev: true
     optional: true
@@ -3370,7 +3364,7 @@ packages:
     engines: {node: ^16.13 || >=18}
     requiresBuild: true
     dependencies:
-      '@types/node': 22.5.1
+      '@types/node': 22.5.2
     dev: true
     optional: true
 
@@ -3396,7 +3390,7 @@ packages:
       '@wdio/types': 8.38.2
       '@wdio/utils': 8.38.2
       deepmerge-ts: 5.1.0
-      expect-webdriverio: 4.14.0(typescript@5.5.4)
+      expect-webdriverio: 4.14.0
       gaze: 1.1.3
       webdriver: 8.38.2
       webdriverio: 8.38.2(typescript@5.5.4)
@@ -3432,7 +3426,7 @@ packages:
     engines: {node: ^16.13 || >=18}
     requiresBuild: true
     dependencies:
-      '@types/node': 22.5.1
+      '@types/node': 22.5.2
     dev: true
     optional: true
 
@@ -3728,13 +3722,13 @@ packages:
       minimatch: 9.0.5
     dev: false
 
-  /@zowe/zos-ftp-for-zowe-cli@3.0.0-next.202403191358(@zowe/imperative@8.0.0-next.202408301809):
-    resolution: {integrity: sha512-jTiGcqFZNKIanUQAWOT+2M+3X6P9FAlPrie999HjDm79DpEltkjNwdNLM8EZLtSXsTjBrifaTo/pMVVmmhfl4A==}
+  /@zowe/zos-ftp-for-zowe-cli@3.0.0-next.202407311518(@zowe/imperative@8.0.0-next.202408301809):
+    resolution: {integrity: sha512-yi82lTRmy0DeyL/LglLH91z2G40N00Orvten1awctqHfdkx4bj7sU9J0BItpsVnhQzJs9J87+joLdUhFxWkajg==}
     peerDependencies:
       '@zowe/imperative': '>=8.0.0-next.0 <8.0.0'
     dependencies:
       '@zowe/imperative': 8.0.0-next.202408301809
-      zos-node-accessor: 2.0.9
+      zos-node-accessor: 2.0.11
     dev: false
 
   /@zowe/zos-jobs-for-zowe-sdk@8.0.0-next.202408301809(@zowe/core-for-zowe-sdk@8.0.0-next.202408301809)(@zowe/imperative@8.0.0-next.202408301809):
@@ -3869,7 +3863,7 @@ packages:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
     engines: {node: '>= 6.0.0'}
     dependencies:
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.6
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -3878,7 +3872,7 @@ packages:
     resolution: {integrity: sha512-H0TSyFNDMomMNJQBn8wFV5YC/2eJ+VXECwOadZJT554xP6cODZHPX3H9QMQECxvrgiSOP1pHjy1sMWQVYJOUOA==}
     engines: {node: '>= 14'}
     dependencies:
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.6
     transitivePeerDependencies:
       - supports-color
 
@@ -4024,7 +4018,7 @@ packages:
     resolution: {integrity: sha512-wuLJMmIBQYCsGZgYLTy5FIB2pF6Lfb6cXMSF8Qywwk3t20zWnAi7zLcQFdKQmIB8wyZpY5ER38x08GbwtR2cLA==}
     engines: {node: '>= 14'}
     dependencies:
-      glob: 10.3.15
+      glob: 10.4.5
       graceful-fs: 4.2.11
       is-stream: 2.0.1
       lazystream: 1.0.1
@@ -5237,6 +5231,7 @@ packages:
   /data-uri-to-buffer@4.0.1:
     resolution: {integrity: sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A==}
     engines: {node: '>= 12'}
+    requiresBuild: true
     dev: true
 
   /data-uri-to-buffer@6.0.2:
@@ -6464,7 +6459,7 @@ packages:
     dev: true
     optional: true
 
-  /expect-webdriverio@4.14.0(typescript@5.5.4):
+  /expect-webdriverio@4.14.0:
     resolution: {integrity: sha512-bPZ9zfyJHF41dO8o7iFcEV4Dvcw45yhsv1WjtJyPLZPjQ+ixVBrbSil9+rjRiONoX4f45EZRCqaGvPlzNC523Q==}
     engines: {node: '>=16 || >=18 || >=20'}
     dependencies:
@@ -6473,15 +6468,14 @@ packages:
       jest-matcher-utils: 29.7.0
       lodash.isequal: 4.5.0
     optionalDependencies:
-      '@wdio/globals': 8.40.5(typescript@5.5.4)
+      '@wdio/globals': 8.40.5
       '@wdio/logger': 8.38.0
-      webdriverio: 8.38.2(typescript@5.5.4)
+      webdriverio: 8.40.5
     transitivePeerDependencies:
       - bufferutil
       - devtools
       - encoding
       - supports-color
-      - typescript
       - utf-8-validate
     dev: true
 
@@ -6574,7 +6568,7 @@ packages:
     engines: {node: '>= 10.17.0'}
     hasBin: true
     dependencies:
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.6
       get-stream: 5.2.0
       yauzl: 2.10.0
     optionalDependencies:
@@ -6715,6 +6709,7 @@ packages:
   /fetch-blob@3.2.0:
     resolution: {integrity: sha512-7yAQpD2UMJzLi1Dqv7qFYnPbaPx7ZfFK6PiIxQ4PfkGPyNyl2Ugx+a/umUonmKqjhM4DnfbMvdX6otXq83soQQ==}
     engines: {node: ^12.20 || >= 14.13}
+    requiresBuild: true
     dependencies:
       node-domexception: 1.0.0
       web-streams-polyfill: 3.3.3
@@ -6945,6 +6940,7 @@ packages:
   /formdata-polyfill@4.0.10:
     resolution: {integrity: sha512-buewHzMvYL29jdeQTVILecSaZKnt/RJWjoZCF5OW60Z67/GmSLBkOFM7qh1PI3zFNtJbaZL5eQu1vLfazOwj4g==}
     engines: {node: '>=12.20.0'}
+    requiresBuild: true
     dependencies:
       fetch-blob: 3.2.0
     dev: true
@@ -7302,7 +7298,7 @@ packages:
       fs.realpath: 1.0.0
       inflight: 1.0.6
       inherits: 2.0.4
-      minimatch: 3.0.8
+      minimatch: 3.1.2
       once: 1.4.0
       path-is-absolute: 1.0.1
     dev: true
@@ -7678,10 +7674,9 @@ packages:
     engines: {node: '>= 14'}
     dependencies:
       agent-base: 7.1.1
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.6
     transitivePeerDependencies:
       - supports-color
-    dev: true
 
   /human-signals@2.1.0:
     resolution: {integrity: sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==}
@@ -8259,7 +8254,7 @@ packages:
     resolution: {integrity: sha512-n3s8EwkdFIJCG3BPKBYvskgXGoy88ARzvegkitk60NxRdwltLOTaH7CUiMRXvwYorl0Q712iEjcWB+fK/MrWVw==}
     engines: {node: '>=10'}
     dependencies:
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.6
       istanbul-lib-coverage: 3.2.2
       source-map: 0.6.1
     transitivePeerDependencies:
@@ -10055,11 +10050,13 @@ packages:
   /node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
     engines: {node: '>=10.5.0'}
+    requiresBuild: true
     dev: true
 
   /node-fetch@2.7.0:
     resolution: {integrity: sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==}
     engines: {node: 4.x || >=6.0.0}
+    requiresBuild: true
     peerDependencies:
       encoding: ^0.1.0
     peerDependenciesMeta:
@@ -11028,7 +11025,7 @@ packages:
     engines: {node: '>= 14'}
     dependencies:
       agent-base: 7.1.1
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.6
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.5
       lru-cache: 7.18.3
@@ -11119,6 +11116,10 @@ packages:
   /q@1.4.1:
     resolution: {integrity: sha512-/CdEdaw49VZVmyIDGUQKDDT53c7qBkO6g5CefWz91Ae+l4+cRtcDYwMTXh6me4O8TMldeGHG3N2Bl84V78Ywbg==}
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
+    deprecated: |-
+      You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
+
+      (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
     dev: false
 
   /qs@6.12.1:
@@ -12639,6 +12640,7 @@ packages:
 
   /tr46@0.0.3:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
+    requiresBuild: true
     dev: true
 
   /traverse@0.3.9:
@@ -12705,7 +12707,7 @@ packages:
       yargs-parser: 21.1.1
     dev: true
 
-  /ts-node@10.9.2(@types/node@22.5.2)(typescript@5.5.4):
+  /ts-node@10.9.2(@types/node@18.19.33)(typescript@5.5.4):
     resolution: {integrity: sha512-f0FFpIdcHgn8zcPSbf1dRevwt047YMnaiJM3u2w2RewrB+fob/zePZcrOyQoLMMO7aBIddLcQIEK5dYjkLnGrQ==}
     hasBin: true
     peerDependencies:
@@ -12724,7 +12726,7 @@ packages:
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 22.5.2
+      '@types/node': 18.19.33
       acorn: 8.11.3
       acorn-walk: 8.3.2
       arg: 4.1.3
@@ -12951,6 +12953,7 @@ packages:
     resolution: {integrity: sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==}
     requiresBuild: true
     dev: true
+    optional: true
 
   /undici@5.28.4:
     resolution: {integrity: sha512-72RFADWFqKmUb2hmmvNODKL3p9hcB6Gt2DOQMis1SEBaV6a4MH8soBvzg+95CYhCKPFedut2JY9bMfrDl9D23g==}
@@ -13368,6 +13371,7 @@ packages:
   /web-streams-polyfill@3.3.3:
     resolution: {integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==}
     engines: {node: '>= 8'}
+    requiresBuild: true
     dev: true
 
   /web-tree-sitter@0.20.8:
@@ -13400,7 +13404,7 @@ packages:
     engines: {node: ^16.13 || >=18}
     requiresBuild: true
     dependencies:
-      '@types/node': 22.5.1
+      '@types/node': 22.5.2
       '@types/ws': 8.5.12
       '@wdio/config': 8.40.3
       '@wdio/logger': 8.38.0
@@ -13470,7 +13474,7 @@ packages:
       devtools:
         optional: true
     dependencies:
-      '@types/node': 22.5.1
+      '@types/node': 22.5.2
       '@wdio/config': 8.40.3
       '@wdio/logger': 8.38.0
       '@wdio/protocols': 8.40.3
@@ -13488,7 +13492,7 @@ packages:
       jszip: 3.10.1
       lodash.clonedeep: 4.5.0
       lodash.zip: 4.2.0
-      minimatch: 9.0.5
+      minimatch: 9.0.4
       puppeteer-core: 21.11.0
       query-selector-shadow-dom: 1.0.1
       resq: 1.11.0
@@ -13505,6 +13509,7 @@ packages:
 
   /webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
+    requiresBuild: true
     dev: true
 
   /webpack-cli@5.1.4(webpack@5.91.0):
@@ -13604,6 +13609,7 @@ packages:
 
   /whatwg-url@5.0.0:
     resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
+    requiresBuild: true
     dependencies:
       tr46: 0.0.3
       webidl-conversions: 3.0.1
@@ -13915,8 +13921,8 @@ packages:
       readable-stream: 4.5.2
     dev: true
 
-  /zos-node-accessor@2.0.9:
-    resolution: {integrity: sha512-AkliQcdGlHAQSzBYMCZPNf7KMwQ8b5jDUjQtZ9ce6LQ++u7iVyMYEgUrbCsKi16Jhw6bgVGuN1J5kffQlSdt5w==}
+  /zos-node-accessor@2.0.11:
+    resolution: {integrity: sha512-SLGFqVTudzhtZyYXnrGnMdGwgo3I8jk3ZnownxqnXkR5k6N0/GkxpLiqkjsTRhl6go3S/8Jwmbpj6JgeTQ1x4g==}
     engines: {node: '>= 8'}
     dependencies:
       ftp4: 0.3.13
