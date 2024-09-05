@@ -6,9 +6,14 @@ module.exports = {
             level: "patch",
         },
         {
-            name: "release/2.*",
+            name: "main",
             channel: "latest",
             level: "minor"
+        },
+        {
+            name: "release/2.*",
+            channel: "latest",
+            level: "patch"
         }
         // {
         //     name: "next",
