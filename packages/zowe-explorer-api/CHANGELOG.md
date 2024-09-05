@@ -4,9 +4,9 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
+
+- Update Zowe SDKs to `8.0.0-next.202408301809` for technical currency.
 
 ## `3.0.0-next.202408301858`
 
