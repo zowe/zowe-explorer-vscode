@@ -121,6 +121,8 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     )
                 );
             }
+            await this.profileInstance.checkCurrentProfile(this.serviceProf);
+
             if (this.isSshRequiredForProf) {
                 await this.setsshSession();
                 if (!this.sshSession) {
@@ -130,8 +132,6 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     return;
                 }
             }
-
-            await this.profileInstance.checkCurrentProfile(this.serviceProf);
 
             if (!cwd) {
                 const options: vscode.InputBoxOptions = {
@@ -243,6 +243,11 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 ZoweLogger.error(this.unixCmdMsgs.sshProfMissingInfoMsg);
                 Gui.errorMessage(this.unixCmdMsgs.sshProfMissingInfoMsg);
                 return;
+            }
+            const baseProfile = Constants.PROFILES_CACHE.getDefaultProfile("base");
+            if (baseProfile.profile.user && baseProfile.profile.password) {
+                this.sshProfile.profile.user = baseProfile.profile.user;
+                this.sshProfile.profile.password = baseProfile.profile.password;
             }
             if (!(this.sshProfile.profile.user || this.sshProfile.profile.password) && !this.sshProfile.profile.privateKey) {
                 const prompted = await this.profileInstance.promptCredentials(this.sshProfile);

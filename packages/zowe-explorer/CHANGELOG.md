@@ -6,6 +6,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+### Bug fixes
+
+## `3.0.0-next.202408301858`
+
+### New features and enhancements
+
 - Refactored behavior and management of Favorites in Zowe Explorer. [#2026](https://github.com/zowe/zowe-explorer-vscode/issues/2026)
 - Renamed `isHomeProfile` context helper function to `isGlobalProfile` for clarity. [#2026](https://github.com/zowe/zowe-explorer-vscode/issues/2026)
 - Set up [POEditor project](https://poeditor.com/join/project/Siy3KCNFKk) for contributing translations and cleaned up redundant localization strings. [#546](https://github.com/zowe/zowe-explorer-vscode/issues/546)
@@ -16,7 +22,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
   - Added a "Copy Relative Path" context option for USS files and directories in the tree view. [#2908](https://github.com/zowe/zowe-explorer-vscode/pull/2908)
   - Added a "Copy Name" context option for data sets, jobs and spool files in the tree view. [#2908](https://github.com/zowe/zowe-explorer-vscode/pull/2908)
 - Added integration and end-to-end test framework to verify extension behavior and catch issues during Zowe Explorer development. [#2322](https://github.com/zowe/zowe-explorer-vscode/issues/2322)
-- Removed deprecated methods: [#2238](https://github.com/zowe/zowe-explorer-vscode/issues/2238)
+- **Breaking:** Removed deprecated methods: [#2238](https://github.com/zowe/zowe-explorer-vscode/issues/2238)
   - `DatasetActions.copyDataSet` - use `DatasetActions.copyDataSets` instead
   - `USSActions.pasteUssFile` - use `DatasetActions.pasteUss` instead
   - `ZoweUSSNode.refreshAndReopen` - use `ZoweUSSNode.reopen` instead
@@ -72,10 +78,14 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue where multiple extensions that contribute profiles to a tree view using the Zowe Explorer API may fail to load. [#2888](https://github.com/zowe/zowe-explorer-vscode/issues/2888)
 - Fixed regression where `getProviderForNode` returned the wrong tree provider after performing an action on a Zowe tree node, causing some commands to fail silently. [#2967](https://github.com/zowe/zowe-explorer-vscode/issues/2967)
 - Fixed issue where creating a new team configuration file could cause Zowe Explorer to crash, resulting in all sessions disappearing from trees. [#2906](https://github.com/zowe/zowe-explorer-vscode/issues/2906)
-- Update Zowe SDKs to `8.0.0-next.202407232256` for technical currency. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
 - Addressed breaking changes from the Zowe Explorer API package.[#2952](https://github.com/zowe/zowe-explorer-vscode/issues/2952)
 - Fixed data set not opening when the token has expired. [#3001](https://github.com/zowe/zowe-explorer-vscode/issues/3001)
 - Fixed an issue where upgrading from Zowe Explorer v1 and selecting "Reload Extensions" causes Zowe Explorer v3 to fail during initialization. [#3051](https://github.com/zowe/zowe-explorer-vscode/pull/3051)
+- Fixed an issue where remote lookup functionality caused the local side of a conflict to be overwritten with the remote contents. [#3085](https://github.com/zowe/zowe-explorer-vscode/pull/3085)
+- Fixed an issue where the remote conflict icons showed when using the "Compare with Selected" feature. [#3085](https://github.com/zowe/zowe-explorer-vscode/pull/3085)
+- Resolved an issue where extender event callbacks were not always fired when the team configuration file was created, updated or deleted. [#3078](https://github.com/zowe/zowe-explorer-vscode/issues/3078)
+- Update Zowe SDKs to `8.0.0-next.202408291544` for technical currency. [#3057](https://github.com/zowe/zowe-explorer-vscode/pull/3057)
+- Fix issue with UnixCommand prompting for credentials. [#2762](https://github.com/zowe/zowe-explorer-vscode/issues/2762)
 
 ## `3.0.0-next.202404242037`
 

@@ -45,6 +45,7 @@ import { SharedUtils } from "./SharedUtils";
 import { SharedContext } from "./SharedContext";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { CertificateWizard } from "../../utils/CertificateWizard";
+import { ZosConsoleViewProvider } from "../../zosconsole/ZosConsolePanel";
 
 export class SharedInit {
     public static registerRefreshCommand(
@@ -320,14 +321,14 @@ export class SharedInit {
         context.subscriptions.push(...watchers);
 
         watchers.forEach((watcher) => {
-            watcher.onDidCreate(async () => {
+            watcher.onDidCreate(() => {
                 ZoweLogger.info(vscode.l10n.t("Team config file created, refreshing Zowe Explorer."));
-                await SharedActions.refreshAll();
+                void SharedActions.refreshAll();
                 ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.CREATE);
             });
-            watcher.onDidDelete(async () => {
+            watcher.onDidDelete(() => {
                 ZoweLogger.info(vscode.l10n.t("Team config file deleted, refreshing Zowe Explorer."));
-                await SharedActions.refreshAll();
+                void SharedActions.refreshAll();
                 ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.DELETE);
             });
             watcher.onDidChange(async (uri: vscode.Uri) => {
@@ -337,7 +338,7 @@ export class SharedInit {
                     return;
                 }
                 Constants.SAVED_PROFILE_CONTENTS = newProfileContents;
-                await SharedActions.refreshAll();
+                void SharedActions.refreshAll();
                 ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
             });
         });
@@ -421,6 +422,15 @@ export class SharedInit {
     public static async initZoweLogger(context: vscode.ExtensionContext): Promise<void> {
         const logsPath = await ZoweLogger.initializeZoweLogger(context);
         ZoweLogger.zeOutputChannel = await LoggerUtils.initVscLogger(context, logsPath);
+    }
+
+    /**
+     *
+     * @param context @deprecated
+     */
+    public static registerZosConsoleView(context: vscode.ExtensionContext): void {
+        const provider = new ZosConsoleViewProvider(context.extensionUri);
+        context.subscriptions.push(vscode.window.registerWebviewViewProvider(ZosConsoleViewProvider.viewType, provider));
     }
 
     /**

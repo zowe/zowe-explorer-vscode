@@ -9,9 +9,4 @@
  *
  */
 
-export * from "./utils/TableBuilder";
-export * from "./utils/TableMediator";
-export * from "./TableView";
-export * from "./TableViewProvider";
-export * from "./WebView";
-export * as HTMLTemplate from "./utils/HTMLTemplate";
+export interface IIssueParms {}

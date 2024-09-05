@@ -23,7 +23,7 @@ import {
     createInstanceOfProfile,
 } from "../../../__mocks__/mockCreators/shared";
 import { createIJobFile, createIJobObject, createJobNode, createJobSessionNode, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
-import { createJesApi, bindJesApi } from "../../../__mocks__/mockCreators/api";
+import { createJesApi, bindJesApi, createCommandApi, bindCommandApi } from "../../../__mocks__/mockCreators/api";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { Constants } from "../../../../src/configuration/Constants";
 import { Profiles } from "../../../../src/configuration/Profiles";
@@ -74,6 +74,7 @@ function createGlobalMocks() {
         mockJobArray: [],
         testJobsTree: null as any,
         jesApi: null as any,
+        commandApi: null as any,
         mockProfileInstance: null,
     };
     newMocks.mockProfileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
@@ -82,6 +83,8 @@ function createGlobalMocks() {
     newMocks.mockJobArray = [newMocks.JobNode1, newMocks.JobNode2, newMocks.JobNode3] as any;
     newMocks.jesApi = createJesApi(newMocks.imperativeProfile);
     bindJesApi(newMocks.jesApi);
+    newMocks.commandApi = createCommandApi(newMocks.imperativeProfile);
+    bindCommandApi(newMocks.commandApi);
     Object.defineProperty(vscode.workspace, "getConfiguration", {
         value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", false]])),
         configurable: true,
@@ -93,7 +96,6 @@ function createGlobalMocks() {
     Object.defineProperty(Gui, "showOpenDialog", { value: jest.fn(), configurable: true });
     Object.defineProperty(LocalFileManagement, "getDefaultUri", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showWarningMessage", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zosconsole.IssueCommand, "issueSimple", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showOpenDialog", { value: jest.fn(), configurable: true });
     Object.defineProperty(zosjobs.CancelJobs, "cancelJobForJob", { value: jest.fn(), configurable: true });
     Object.defineProperty(zosjobs.GetJobs, "getJclForJob", { value: jest.fn(), configurable: true });
@@ -199,7 +201,7 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
             job: blockMocks.iJob,
         });
 
-        mocked(zosconsole.IssueCommand.issueSimple).mockResolvedValueOnce({
+        jest.spyOn(blockMocks.commandApi, "issueMvsCommand").mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
@@ -216,7 +218,7 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
             session: blockMocks.session,
             profile: blockMocks.imperativeProfile,
         });
-        mocked(zosconsole.IssueCommand.issueSimple).mockResolvedValueOnce({
+        jest.spyOn(blockMocks.commandApi, "issueMvsCommand").mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
@@ -238,7 +240,7 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
         });
 
         mocked(vscode.window.showInputBox).mockResolvedValue("modify");
-        mocked(zosconsole.IssueCommand.issueSimple).mockResolvedValueOnce({
+        jest.spyOn(blockMocks.commandApi, "issueMvsCommand").mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
@@ -256,7 +258,7 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
             profile: blockMocks.imperativeProfile,
         });
         mocked(vscode.window.showInputBox).mockResolvedValue("modify");
-        mocked(zosconsole.IssueCommand.issueSimple).mockResolvedValueOnce({
+        jest.spyOn(blockMocks.commandApi, "issueMvsCommand").mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",

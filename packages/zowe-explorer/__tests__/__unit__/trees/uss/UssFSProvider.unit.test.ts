@@ -94,6 +94,11 @@ describe("stat", () => {
         });
         expect(lookupMock).toHaveBeenCalledWith(testUris.conflictFile, false);
     });
+    it("returns a file as-is when query has inDiff parameter", async () => {
+        lookupMock.mockReturnValueOnce(testEntries.file);
+        await expect(UssFSProvider.instance.stat(testUris.file.with({ query: "inDiff=true" }))).resolves.toStrictEqual(testEntries.file);
+        expect(lookupMock).toHaveBeenCalledWith(testUris.file, false);
+    });
 });
 
 describe("move", () => {

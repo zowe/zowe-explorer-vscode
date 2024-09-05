@@ -6,6 +6,12 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+### Bug fixes
+
+## `3.0.0-next.202408301858`
+
+### New features and enhancements
+
 - Deprecated the following properties on Zowe tree interfaces in favor of setters and getters to incentivize encapsulation: [#2026](https://github.com/zowe/zowe-explorer-vscode/issues/2026)
   - `binary` property on the `IZoweDatasetTreeNode` interface - use the `getEncoding` and `setEncoding` functions instead.
   - `encodingMap` property on the `IZoweDatasetTreeNode` and `IZoweUSSTreeNode` interfaces - use the `getEncodingInMap` and `updateEncodingInMap` functions instead.
@@ -22,6 +28,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
   - `ZoweVsCodeExtension.showVsCodeMessage` - use `Gui.showMessage` instead.
   - `ZoweVsCodeExtension.inputBox` - use `Gui.showInputBox` instead.
   - `ZoweVsCodeExtension.promptCredentials` - use `ZoweVsCodeExtension.updateCredentials` instead.
+- **Breaking:** Removed unused property `profileManagerByType` which used the V1-profile class `CLIProfileManager`. [#3057](https://github.com/zowe/zowe-explorer-vscode/issues/3057)
 - **Breaking:** Added return type of `Promise<void>` to the following `IZoweTree` methods: [#2238](https://github.com/zowe/zowe-explorer-vscode/issues/2238)
   - addFavorite
   - removeFavorite
@@ -116,7 +123,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Removed `handlebars` dependency in favor of `mustache` for technical currency purposes. [#2975](https://github.com/zowe/zowe-explorer-vscode/pull/2975)
 - Fixed an issue where the `ZoweVsCodeExtension.updateCredentials` method could remove credentials from session when input prompt was cancelled. [#3009](https://github.com/zowe/zowe-explorer-vscode/pull/3009)
 - Fixed an issue where the loaded configuration could be overridden when extenders retrieved the Zowe home directory. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
-- Update Zowe SDKs to `8.0.0-next.202407232256` for technical currency. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
+- Fixed an issue where remote lookup functionality caused the local side of a conflict to be overwritten with the remote contents. [#3085](https://github.com/zowe/zowe-explorer-vscode/pull/3085)
+- Update Zowe SDKs to `8.0.0-next.202408291544` for technical currency. [#3057](https://github.com/zowe/zowe-explorer-vscode/pull/3057)
 
 ## `3.0.0-next.202404242037`
 
