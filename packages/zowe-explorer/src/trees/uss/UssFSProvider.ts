@@ -135,7 +135,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
         const response = await ZoweExplorerApiRegister.getUssApi(profile).fileList(ussPath);
         // If request was successful, create directories for the path if it doesn't exist
-        if (!this.exists(uri)) {
+        if (response.success && response.apiResponse.items?.[0]?.mode.startsWith("d") && !this.exists(uri)) {
             await vscode.workspace.fs.createDirectory(uri);
         }
 
@@ -162,6 +162,22 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         if (FsAbstractUtils.isFileEntry(entry)) {
             return entry;
+        }
+        if (resp.success && entry == null) {
+            // if entry is null, listFiles did not create a new directory entry - this is a file
+            let parentDir = this._lookupParentDirectory(uri, true);
+            if (parentDir == null) {
+                const parentPath = path.posix.join(uri.path, "..");
+                const parentUri = uri.with({ path: parentPath });
+                await vscode.workspace.fs.createDirectory(parentUri);
+                parentDir = this._lookupParentDirectory(uri, false);
+                parentDir.metadata = this._getInfoFromUri(parentUri);
+            }
+            const filename = path.posix.basename(uri.path);
+            const file = new UssFile(filename);
+            file.metadata = { profile: uriInfo.profile, path: path.posix.join(parentDir.metadata.path, filename) };
+            parentDir.entries.set(filename, file);
+            return parentDir.entries.get(filename) as UssFile;
         }
 
         const fileList = entryExists ? await this.listFiles(entry.metadata.profile, uri) : resp;
@@ -306,7 +322,28 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns The file's contents as an array of bytes
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        const file = this._lookupAsFile(uri, { silent: false });
+        let file: UssFile | UssDirectory;
+        try {
+            file = this._lookupAsFile(uri) as UssFile;
+        } catch (err) {
+            if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
+                throw err;
+            }
+
+            // check if parent directory exists; if not, do a remote lookup
+            const parent = this._lookupParentDirectory(uri, true);
+            if (parent == null) {
+                file = await this.remoteLookupForResource(uri);
+            }
+        }
+
+        if (file == null) {
+            throw vscode.FileSystemError.FileNotFound(uri);
+        }
+        if (FsAbstractUtils.isDirectoryEntry(file)) {
+            throw vscode.FileSystemError.FileIsADirectory(uri);
+        }
+
         const profInfo = this._getInfoFromUri(uri);
 
         if (profInfo.profile == null) {
