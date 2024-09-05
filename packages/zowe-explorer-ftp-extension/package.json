@@ -52,9 +52,9 @@
     "vscode": "^1.79.0"
   },
   "dependencies": {
-    "@zowe/zos-files-for-zowe-sdk": "8.0.0-next.202408291544",
-    "@zowe/zos-ftp-for-zowe-cli": "3.0.0-next.202403191358",
-    "@zowe/zos-jobs-for-zowe-sdk": "8.0.0-next.202408291544",
+    "@zowe/zos-files-for-zowe-sdk": "8.0.0-next.202408301809",
+    "@zowe/zos-ftp-for-zowe-cli": "3.0.0-next.202407311518",
+    "@zowe/zos-jobs-for-zowe-sdk": "8.0.0-next.202408301809",
     "@zowe/zowe-explorer-api": "3.0.0-next-SNAPSHOT",
     "tmp": "0.2.3"
   },
