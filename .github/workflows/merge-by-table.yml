@@ -3,6 +3,8 @@ name: Merge-by
 on:
     pull_request:
       types: [opened, ready_for_review]
+    pull_request_review:
+      types: [submitted]
     push:
       branches:
         - main
@@ -31,7 +33,7 @@ jobs:
 
             - name: Install dependencies
               run: pnpm install
-              
+
             - uses: actions/github-script@v7
               with:
                 script: |
