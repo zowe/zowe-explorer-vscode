@@ -46,6 +46,11 @@
           "id": "zowe-panel",
           "icon": "resources/zowe.svg",
           "title": "%viewsContainers.panel.tableView%"
+        },
+        {
+          "id": "zowezosconsole",
+          "title": "%zowe.zosconsole%",
+          "icon": ""
         }
       ]
     },
@@ -69,6 +74,13 @@
           "type": "webview",
           "id": "zowe-resources",
           "name": "%zowe.resources.name%"
+        }
+      ],
+      "zowezosconsole": [
+        {
+          "id": "zosconsole",
+          "name": "%zosconsole%",
+          "type": "webview"
         }
       ]
     },
@@ -1841,6 +1853,7 @@
     "@zowe/zos-jobs-for-zowe-sdk": "8.0.0-next.202408291544",
     "@zowe/zosmf-for-zowe-sdk": "8.0.0-next.202408291544",
     "@zowe/zowe-explorer-api": "3.0.0-next-SNAPSHOT",
+    "@vscode/codicons": "^0.0.35",
     "dayjs": "^1.11.10",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",

@@ -45,6 +45,7 @@ import { SharedUtils } from "./SharedUtils";
 import { SharedContext } from "./SharedContext";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { CertificateWizard } from "../../utils/CertificateWizard";
+import { ZosConsoleViewProvider } from "../../zosconsole/ZosConsolePanel";
 
 export class SharedInit {
     public static registerRefreshCommand(
@@ -421,6 +422,15 @@ export class SharedInit {
     public static async initZoweLogger(context: vscode.ExtensionContext): Promise<void> {
         const logsPath = await ZoweLogger.initializeZoweLogger(context);
         ZoweLogger.zeOutputChannel = await LoggerUtils.initVscLogger(context, logsPath);
+    }
+
+    /**
+     *
+     * @param context @deprecated
+     */
+    public static registerZosConsoleView(context: vscode.ExtensionContext): void {
+        const provider = new ZosConsoleViewProvider(context.extensionUri);
+        context.subscriptions.push(vscode.window.registerWebviewViewProvider(ZosConsoleViewProvider.viewType, provider));
     }
 
     /**
