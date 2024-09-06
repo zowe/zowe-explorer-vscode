@@ -142,8 +142,8 @@ describe("TableBuilder", () => {
             const builder = new TableBuilder(globalMocks.context as any);
             const newCols: Table.ColumnOpts[] = [
                 { field: "cat", valueFormatter: (data: { value: Table.ContentTypes }) => `val: ${data.value.toString()}` },
-                { field: "doge", filter: true, comparator: (valueA, valueB, nodeA, nodeB, isDescending) => -1, colSpan: (params) => 2 },
-                { field: "parrot", sort: "asc", rowSpan: (params) => 2 },
+                { field: "doge", filter: true, comparator: (_valueA, _valueB, _nodeA, _nodeB, _isDescending) => -1, colSpan: (_params) => 2 },
+                { field: "parrot", sort: "asc", rowSpan: (_params) => 2 },
             ];
             expect((builder as any).convertColumnOpts(newCols)).toStrictEqual(
                 newCols.map((col) => ({
