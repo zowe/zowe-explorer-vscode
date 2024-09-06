@@ -1,11 +1,6 @@
 module.exports = {
     branches: [
         {
-            name: "v1-lts",
-            channel: "zowe-v1-lts",
-            level: "patch",
-        },
-        {
             name: "main",
             channel: "latest",
             level: "minor"
