@@ -9,7 +9,7 @@
  *
  */
 
-import { Disposable, FilePermission, FileType, TextEditor, Uri, workspace } from "vscode";
+import { Disposable, FilePermission, FileSystemError, FileType, TextEditor, Uri, workspace } from "vscode";
 import { BaseProvider, DirEntry, FileEntry, Gui, UssDirectory, UssFile, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
@@ -490,6 +490,62 @@ describe("readFile", () => {
             expect(err.code).toBe("FileNotFound");
         }
         expect(err).toBeDefined();
+    });
+
+    it("throws an error if an error was encountered during lookup and the code is not FileNotFound", async () => {
+        const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockImplementationOnce((uri) => {
+            throw FileSystemError.FileIsADirectory(uri as Uri);
+        });
+
+        let err;
+        try {
+            await UssFSProvider.instance.readFile(testUris.file);
+        } catch (error) {
+            err = error;
+            expect(err.code).toBe("FileIsADirectory");
+        }
+        expect(err).toBeDefined();
+        lookupAsFileMock.mockRestore();
+    });
+
+    it("throws an error if an error was encountered during lookup and parent dir exists", async () => {
+        const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockImplementationOnce((uri) => {
+            throw FileSystemError.FileNotFound(uri as Uri);
+        });
+        const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(testEntries.folder);
+
+        let err;
+        try {
+            await UssFSProvider.instance.readFile(testUris.innerFile);
+        } catch (error) {
+            err = error;
+            expect(err.code).toBe("FileNotFound");
+        }
+        expect(err).toBeDefined();
+        lookupAsFileMock.mockRestore();
+        lookupParentDirMock.mockRestore();
+    });
+
+    it("throws an error if an error was encountered during lookup and parent dir doesn't exist, but URI is a directory", async () => {
+        const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockImplementationOnce((uri) => {
+            throw FileSystemError.FileNotFound(uri as Uri);
+        });
+        const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(null);
+        const remoteLookupForResource = jest
+            .spyOn(UssFSProvider.instance, "remoteLookupForResource")
+            .mockResolvedValueOnce(testEntries.folder as any);
+
+        let err;
+        try {
+            await UssFSProvider.instance.readFile(testUris.innerFile);
+        } catch (error) {
+            err = error;
+            expect(err.code).toBe("FileIsADirectory");
+        }
+        expect(err).toBeDefined();
+        lookupAsFileMock.mockRestore();
+        lookupParentDirMock.mockRestore();
+        remoteLookupForResource.mockRestore();
     });
 
     it("returns data for a file", async () => {
