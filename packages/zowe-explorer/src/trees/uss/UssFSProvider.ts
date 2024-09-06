@@ -135,7 +135,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
         const response = await ZoweExplorerApiRegister.getUssApi(profile).fileList(ussPath);
         // If request was successful, create directories for the path if it doesn't exist
-        if (response.success && !(keepRelative ?? true) && response.apiResponse.items?.[0]?.mode.startsWith("d") && !this.exists(uri)) {
+        if (response.success && !(keepRelative ?? false) && response.apiResponse.items?.[0]?.mode?.startsWith("d") && !this.exists(uri)) {
             await vscode.workspace.fs.createDirectory(uri);
         }
 

@@ -158,7 +158,12 @@ describe("listFiles", () => {
                 success: true,
                 commandResponse: "",
                 apiResponse: {
-                    items: [{ name: "." }, { name: ".." }, { name: "..." }, { name: "test.txt" }],
+                    items: [
+                        { name: ".", mode: "drwxrwxrwx" },
+                        { name: "..", mode: "drwxrwxrwx" },
+                        { name: "...", mode: "drwxrwxrwx" },
+                        { name: "test.txt", mode: "-rwxrwxrwx" },
+                    ],
                 },
             }),
         } as any);
@@ -166,7 +171,7 @@ describe("listFiles", () => {
             success: true,
             commandResponse: "",
             apiResponse: {
-                items: [{ name: "test.txt" }],
+                items: [{ name: "test.txt", mode: "-rwxrwxrwx" }],
             },
         });
     });
