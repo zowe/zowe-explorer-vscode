@@ -125,7 +125,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return true;
     }
 
-    public async listFiles(profile: imperative.IProfileLoaded, uri: vscode.Uri, keepRelative?: boolean): Promise<IZosFilesResponse> {
+    public async listFiles(profile: imperative.IProfileLoaded, uri: vscode.Uri, keepRelative: boolean = false): Promise<IZosFilesResponse> {
         const queryParams = new URLSearchParams(uri.query);
         const ussPath = queryParams.has("searchPath") ? queryParams.get("searchPath") : uri.path.substring(uri.path.indexOf("/", 1));
         if (ussPath.length === 0) {
@@ -135,7 +135,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
         const response = await ZoweExplorerApiRegister.getUssApi(profile).fileList(ussPath);
         // If request was successful, create directories for the path if it doesn't exist
-        if (response.success && !(keepRelative ?? false) && response.apiResponse.items?.[0]?.mode?.startsWith("d") && !this.exists(uri)) {
+        if (response.success && !keepRelative && response.apiResponse.items?.[0]?.mode?.startsWith("d") && !this.exists(uri)) {
             await vscode.workspace.fs.createDirectory(uri);
         }
 
