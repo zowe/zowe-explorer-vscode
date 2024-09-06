@@ -377,7 +377,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 this.serviceProf = undefined;
             }
         } catch (error) {
-            await AuthUtils.errorHandling(error, profile.name);
+            await AuthUtils.errorHandling(error, this.sshProfile.name);
         }
     }
 }
