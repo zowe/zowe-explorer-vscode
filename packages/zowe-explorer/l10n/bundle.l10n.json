@@ -929,9 +929,19 @@
   },
   "Profile Type": "Profile Type",
   "User Name": "User Name",
-  "Enter the user name for the {0} connection. Leave blank to not store.": "Enter the user name for the {0} connection. Leave blank to not store.",
+  "Enter the user name for the {0} connection. Leave blank to not store./Profile name": {
+    "message": "Enter the user name for the {0} connection. Leave blank to not store.",
+    "comment": [
+      "Profile name"
+    ]
+  },
   "Password": "Password",
-  "Enter the password for the {0} connection. Leave blank to not store.": "Enter the password for the {0} connection. Leave blank to not store.",
+  "Enter the password for the {0} connection. Leave blank to not store./Profile name": {
+    "message": "Enter the password for the {0} connection. Leave blank to not store.",
+    "comment": [
+      "Profile name"
+    ]
+  },
   "Select the profile you want to delete": "Select the profile you want to delete",
   "Validating {0} Profile./The profile name": {
     "message": "Validating {0} Profile.",
