@@ -4,9 +4,9 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
+
+- Update Zowe SDKs to `8.0.0-next.202408301809` for technical currency.
 
 ## `3.0.0-next.202408301858`
 
@@ -217,6 +217,86 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Migrated to new package manager PNPM from Yarn.
 
+## `2.18.0`
+
+### Bug fixes
+
+- Fixed an issue where the `ZoweVsCodeExtension.updateCredentials` method could remove credentials from session when input prompt was cancelled. [#3018](https://github.com/zowe/zowe-explorer-vscode/pull/3018)
+- Updated the `@zowe/cli` dependency to fix error when using session with auth type "none". [zowe-cli#2219](https://github.com/zowe/zowe-cli/issues/2219)
+- Fixed errors being logged silently rather than thrown in `ProfilesCache.refresh` method. [#3066](https://github.com/zowe/zowe-explorer-vscode/issues/3066)
+
+## `2.17.0`
+
+### New features and enhancements
+
+- Updated the `@zowe/cli` dependency to 7.27.0 to support proxy environment variables [#3003](https://github.com/zowe/zowe-explorer-vscode/issues/3003)
+
+### Bug fixes
+
+- Removed `handlebars` dependency in favor of `mustache` for technical currency purposes. [#2974](https://github.com/zowe/zowe-explorer-vscode/pull/2974)
+
+## `2.16.3`
+
+## `2.16.2`
+
+### Bug fixes
+
+- Fixed an issue where the `onProfilesUpdate` event did not fire after secure credentials were updated. [#2822](https://github.com/zowe/zowe-explorer-vscode/issues/2822)
+- Update dependencies for technical currency purposes.
+
+## `2.16.1`
+
+## `2.16.0`
+
+### New features and enhancements
+
+- Added optional `consoleName` argument to `ZosmfCommandApi.issueMvsCommand`. [#1667](https://github.com/zowe/vscode-extension-for-zowe/issues/1667)
+- Added "Date Completed" attribute to JobSortOpts enum type. [#1685](https://github.com/zowe/vscode-extension-for-zowe/issues/1685)
+- Added PEM certificate support as an authentication method for logging into the API ML. [#2621](https://github.com/zowe/zowe-explorer-vscode/issues/2621)
+
+### Bug fixes
+
+- Updated `@zowe/cli` dependency to fix issue where "Log out of authentication service" doesn't show in Manage Profile menu. [#2633](https://github.com/zowe/zowe-explorer-vscode/issues/2633)
+- Fixed regression of issue where the `ProfilesCache` class would retain old service profiles, even if they were removed from the team config. [#2910](https://github.com/zowe/zowe-explorer-vscode/issues/2910)
+
+## `2.15.4`
+
+## `2.15.3`
+
+### Bug fixes
+
+- Fixed an issue where `ProfilesCache` may return missing or incorrect profile values when multiple extensions call it during activation. [#2831](https://github.com/zowe/zowe-explorer-vscode/issues/2831)
+
+## `2.15.2`
+
+### New features and enhancements
+
+- Added optional method `getDsDocumentFilePath` to `IZoweDatasetTreeNode` interface to make it easier for extenders to get the local file path of a data set node. [#2760](https://github.com/zowe/vscode-extension-for-zowe/pull/2760)
+
+### Bug fixes
+
+- Fixed an issue where the `ProfilesCache` class would retain old service profiles, even if they were removed from the team config. [#2395](https://github.com/zowe/zowe-explorer-vscode/issues/2395)
+
+## `2.15.1`
+
+### Bug fixes
+
+- Fixed TypeError encountered in the `ProfilesCache.checkMergingConfigAllProfiles` function when merging profiles. [#2771](https://github.com/zowe/vscode-extension-for-zowe/pull/2771)
+
+## `2.15.0`
+
+### Bug fixes
+
+- Fix login and logout operations when APIML dynamic tokens are enabled. [#2692](https://github.com/zowe/vscode-extension-for-zowe/pull/2692)
+- Fixed issue where `zosmf` profiles did not respect the `protocol` property. [#2703](https://github.com/zowe/vscode-extension-for-zowe/issues/2703)
+- Fix to restore accessibility to all profiles when default profile has APIML token authentication. [#2111](https://github.com/zowe/vscode-extension-for-zowe/issues/2111)
+
+## `2.14.1`
+
+### Bug fixes
+
+- Update transitive dependencies for technical currency.
+
 ## `2.14.0`
 
 ### New features and enhancements
@@ -229,6 +309,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added new functions `loginWithBaseProfile` and `logoutWithBaseProfile` to provide extenders with the ability to automatically login to their respective services. [#2493](https://github.com/zowe/vscode-extension-for-zowe/pull/2493)
 - Added APIML dynamic token support. [#2665](https://github.com/zowe/vscode-extension-for-zowe/issues/2665)
 - Added new optional method `getCommonApi` to `ZoweExplorerApi.IApiRegisterClient` for enhanced typings in other Zowe Explorer APIs. [#2493](https://github.com/zowe/vscode-extension-for-zowe/pull/2493)
+- Add Created Date to `stats` optional variable for storing dataset stats
+- Add Date created to DatasetSortOpts enum [#2707](https://github.com/zowe/vscode-extension-for-zowe/pull/2707)
 
 ### Bug fixes
 
@@ -260,11 +342,11 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ### New features and enhancements
 
 - Added optional `getTag` function to `ZoweExplorerAPI.IUss` for getting the tag of a file on USS.
-- Added new API {ZE Extender MetaData} to allow extenders to have the metadata of registered extenders to aid in team configuration file creation from a view that isn't Zowe Explorer's. [#2394](https://github.com/zowe/vscode-extension-for-zowe/issues/2394)
+- Added new ProfilesCache API `getConfigArray` to allow extenders to get the registered profile type's metadata for team configuration file creation handled outside of Zowe Explorer views. [#2394](https://github.com/zowe/vscode-extension-for-zowe/issues/2394)
 - Add `sort` and `filter` optional variables for storing sort/filter options alongside tree nodes. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
-- Add `stats` optional variable for storing dataset stats (such as user, modified date, etc.)
+- Add `stats` optional variable for storing dataset stats (such as user, modified date, etc.).
 - Add option enums and types for sorting, filtering and sort direction in tree nodes. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
-- Added option for retaining context when generating webviews in Webview API
+- Added option for retaining context when generating webviews in Webview API.
 
 ## `2.11.2`
 
