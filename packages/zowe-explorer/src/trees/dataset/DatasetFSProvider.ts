@@ -103,10 +103,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const entry = isFetching ? await this.remoteLookupForResource(uri) : this.lookup(uri, false);
-        // Return the entry for profiles as there is no remote info to fetch
-        if (uriInfo.isRoot) {
+        // Do not perform remote lookup for profile or directory URIs; the code below is for change detection on PS or PDS members only
+        if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry)) {
             return entry;
         }
+
+        ZoweLogger.trace(`[DatasetFSProvider] stat is locating resource ${uri.toString()}`);
 
         // Locate the resource using the profile in the given URI.
         let resp;
@@ -218,11 +220,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         const entryExists = entry != null;
         let entryIsDir = entry != null ? entry.type === vscode.FileType.Directory : false;
+        const uriPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1).split("/");
+        const pdsMember = uriPath.length === 2;
         if (!entryExists) {
-            const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.posix.basename(uri.path), { attributes: true });
+            const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(uriPath[0], { attributes: true });
             if (resp.success) {
                 const dsorg: string = resp.apiResponse?.items?.[0]?.dsorg;
-                entryIsDir = dsorg?.startsWith("PO") ?? false;
+                entryIsDir = pdsMember ? false : dsorg?.startsWith("PO") ?? false;
             } else {
                 throw vscode.FileSystemError.FileNotFound(uri);
             }
@@ -235,8 +239,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
             await this.fetchEntriesForDataset(entry as PdsEntry, uri, uriInfo);
         } else if (!entryExists) {
-            await this.writeFile(uri, new Uint8Array(), { create: true, overwrite: false });
-            entry = this._lookupAsFile(uri) as DsEntry;
+            this.createDirectory(uri.with({ path: path.posix.join(uri.path, "..") }));
+            const parentDir = this._lookupParentDirectory(uri);
+            const dsname = uriPath[Number(pdsMember)];
+            const ds = new DsEntry(dsname, pdsMember);
+            ds.metadata = new DsEntryMetadata({ path: path.posix.join(parentDir.metadata.path, dsname), profile: parentDir.metadata.profile });
+            parentDir.entries.set(dsname, ds);
+            entry = parentDir.entries.get(dsname) as DsEntry;
         }
 
         return entry;
@@ -380,7 +389,28 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @returns The data set's contents as an array of bytes
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        const file = this._lookupAsFile(uri);
+        let ds: DsEntry | DirEntry;
+        try {
+            ds = this._lookupAsFile(uri) as DsEntry;
+        } catch (err) {
+            if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
+                throw err;
+            }
+
+            // check if parent directory exists; if not, do a remote lookup
+            const parent = this._lookupParentDirectory(uri, true);
+            if (parent == null) {
+                ds = await this.remoteLookupForResource(uri);
+            }
+        }
+
+        if (ds == null) {
+            throw vscode.FileSystemError.FileNotFound(uri);
+        }
+        if (FsAbstractUtils.isDirectoryEntry(ds)) {
+            throw vscode.FileSystemError.FileIsADirectory(uri);
+        }
+
         const profInfo = this._getInfoFromUri(uri);
 
         if (profInfo.profile == null) {
@@ -391,14 +421,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const isConflict = urlQuery.has("conflict");
 
         // we need to fetch the contents from the mainframe if the file hasn't been accessed yet
-        if ((!file.wasAccessed && !urlQuery.has("inDiff")) || isConflict) {
+        if ((!ds.wasAccessed && !urlQuery.has("inDiff")) || isConflict) {
             await this.fetchDatasetAtUri(uri, { isConflict });
             if (!isConflict) {
-                file.wasAccessed = true;
+                ds.wasAccessed = true;
             }
         }
 
-        return isConflict ? file.conflictData.contents : file.data;
+        return isConflict ? ds.conflictData.contents : ds.data;
     }
 
     public makeEmptyDsWithEncoding(uri: vscode.Uri, encoding: ZosEncoding, isMember?: boolean): void {
