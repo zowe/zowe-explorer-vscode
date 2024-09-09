@@ -12,6 +12,9 @@ env:
   PR_STATUS_DRAFT: 'In Progress'
   PR_STATUS_READY: 'Review/QA'
 
+permissions:
+  pull-requests: write
+
 jobs:
   update-project:
     name: Move project item
