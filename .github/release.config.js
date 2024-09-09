@@ -3,21 +3,20 @@ module.exports = {
         {
             name: "main",
             channel: "latest",
-            level: "minor",
+            level: "minor"
         },
         {
-            name: "maintenance",
+            name: "release/2.*",
+            channel: "zowe-v2-lts",
+            level: "patch"
+        },
+        {
+            name: "release/3.*",
             channel: "latest",
-            level: "patch",
-        },
-        {
-            name: "v1-lts",
-            channel: "zowe-v1-lts",
-            level: "patch",
+            level: "patch"
         },
         {
             name: "next",
-            level: "none",
             prerelease: true,
         }
     ],
