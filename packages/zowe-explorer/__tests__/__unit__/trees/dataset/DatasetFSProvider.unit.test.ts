@@ -295,6 +295,44 @@ describe("readFile", () => {
         _lookupAsFileMock.mockRestore();
     });
 
+    it("throws an error if the entry does not exist and the URI is actually a directory", async () => {
+        const _lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockImplementationOnce((uri) => {
+            throw FileSystemError.FileNotFound(uri as Uri);
+        });
+        const lookupParentDir = jest.spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(null);
+        const remoteLookupForResourceMock = jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockResolvedValue(testEntries.pds);
+
+        let err;
+        try {
+            await DatasetFSProvider.instance.readFile(testUris.ps);
+        } catch (error) {
+            err = error;
+            expect(err.code).toBe("FileIsADirectory");
+        }
+        expect(err).toBeDefined();
+        expect(_lookupAsFileMock).toHaveBeenCalledWith(testUris.ps);
+        _lookupAsFileMock.mockRestore();
+        lookupParentDir.mockRestore();
+        remoteLookupForResourceMock.mockRestore();
+    });
+
+    it("throws an error if the entry does not exist and the error is not FileNotFound", async () => {
+        const _lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockImplementationOnce((uri) => {
+            throw FileSystemError.FileIsADirectory(uri as Uri);
+        });
+
+        let err;
+        try {
+            await DatasetFSProvider.instance.readFile(testUris.ps);
+        } catch (error) {
+            err = error;
+            expect(err.code).toBe("FileIsADirectory");
+        }
+        expect(err).toBeDefined();
+        expect(_lookupAsFileMock).toHaveBeenCalledWith(testUris.ps);
+        _lookupAsFileMock.mockRestore();
+    });
+
     it("calls fetchDatasetAtUri if the entry has not yet been accessed", async () => {
         const _lookupAsFileMock = jest
             .spyOn(DatasetFSProvider.instance as any, "_lookupAsFile")
@@ -309,6 +347,55 @@ describe("readFile", () => {
         expect(_lookupAsFileMock).toHaveBeenCalledWith(testUris.ps);
         expect(fetchDatasetAtUriMock).toHaveBeenCalled();
         fetchDatasetAtUriMock.mockRestore();
+        _getInfoFromUriMock.mockRestore();
+    });
+
+    it("checks if parent dir exists when lookup fails & calls remoteLookupForResource if parent dir doesn't exist", async () => {
+        const _lookupAsFileMock = jest
+            .spyOn(DatasetFSProvider.instance as any, "_lookupAsFile")
+            .mockImplementationOnce(() => {
+                throw FileSystemError.FileNotFound(testUris.pdsMember);
+            })
+            .mockReturnValue(testEntries.pdsMember);
+
+        const fetchDatasetAtUriMock = jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockImplementation();
+        const _lookupParentDirectoryMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(null);
+        const _getInfoFromUriMock = jest.spyOn(DatasetFSProvider.instance as any, "_getInfoFromUri").mockReturnValueOnce({
+            profile: testProfile,
+            path: "/USER.DATA.PS",
+        });
+        const remoteLookupForResourceMock = jest
+            .spyOn(DatasetFSProvider.instance, "remoteLookupForResource")
+            .mockResolvedValue(testEntries.pdsMember);
+
+        await DatasetFSProvider.instance.readFile(testUris.pdsMember);
+        expect(_lookupAsFileMock).toHaveBeenCalledWith(testUris.pdsMember);
+        expect(_lookupParentDirectoryMock).toHaveBeenCalledWith(testUris.pdsMember, true);
+        expect(remoteLookupForResourceMock).toHaveBeenCalledWith(testUris.pdsMember);
+        expect(fetchDatasetAtUriMock).toHaveBeenCalledWith(testUris.pdsMember, { isConflict: false });
+        _getInfoFromUriMock.mockRestore();
+    });
+
+    it("throws error if parent exists and file cannot be found", async () => {
+        const _lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockImplementationOnce(() => {
+            throw FileSystemError.FileNotFound(testUris.pdsMember);
+        });
+        const _lookupParentDirectoryMock = jest
+            .spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory")
+            .mockReturnValueOnce(testEntries.pds);
+        const _getInfoFromUriMock = jest.spyOn(DatasetFSProvider.instance as any, "_getInfoFromUri").mockReturnValueOnce({
+            profile: testProfile,
+            path: "/USER.DATA.PS",
+        });
+        const remoteLookupForResourceMock = jest
+            .spyOn(DatasetFSProvider.instance, "remoteLookupForResource")
+            .mockReset()
+            .mockResolvedValue(testEntries.pdsMember);
+
+        await expect(DatasetFSProvider.instance.readFile(testUris.pdsMember)).rejects.toThrow();
+        expect(_lookupAsFileMock).toHaveBeenCalledWith(testUris.pdsMember);
+        expect(_lookupParentDirectoryMock).toHaveBeenCalledWith(testUris.pdsMember, true);
+        expect(remoteLookupForResourceMock).not.toHaveBeenCalledWith(testUris.pdsMember);
         _getInfoFromUriMock.mockRestore();
     });
 
