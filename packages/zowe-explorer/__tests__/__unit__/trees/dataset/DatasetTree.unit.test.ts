@@ -52,6 +52,7 @@ import { IZoweDatasetTreeNode } from "../../../../../zowe-explorer-api/src/tree/
 import { ZoweScheme } from "../../../../../zowe-explorer-api/src/fs/types/abstract";
 import { Sorting } from "../../../../../zowe-explorer-api/src/tree";
 import { IconUtils } from "../../../../src/icons/IconUtils";
+import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 
 jest.mock("fs");
 jest.mock("util");
@@ -3122,5 +3123,79 @@ describe("Dataset Tree Unit Tests - Function createProfileNodeForFavs", () => {
         createDirMock.mockRestore();
         existsMock.mockRestore();
         isGlobalProfNodeMock.mockRestore();
+    });
+});
+
+describe("Dataset Tree Unit Tests - Function extractPatterns", () => {
+    it("Handles member wildcards that match the regex", () => {
+        const testTree = new DatasetTree();
+        expect(testTree.extractPatterns("HLQ.PROD.STUFF(TEST*)")).toStrictEqual([
+            {
+                dsn: "HLQ.PROD.STUFF",
+                member: "TEST*",
+            },
+        ]);
+    });
+    it("Handles data set wildcards that do not match the regex", () => {
+        const testTree = new DatasetTree();
+        expect(testTree.extractPatterns("HLQ.PROD.*")).toStrictEqual([
+            {
+                dsn: "HLQ.PROD.*",
+            },
+        ]);
+    });
+});
+
+describe("Dataset Tree Unit Tests - Function buildFinalPattern", () => {
+    it("Handles both patterns with member wildcards and normal patterns", () => {
+        const testTree = new DatasetTree();
+        const patterns = testTree.extractPatterns("HLQ.PROD.STUFF*(TEST*), HLQ.DEV.STUFF.*");
+        // The member wildcard will not appear in the final pattern, but the member pattern is attached to the PDS nodes
+        expect(testTree.buildFinalPattern(patterns)).toStrictEqual("HLQ.PROD.STUFF*, HLQ.DEV.STUFF.*");
+    });
+});
+
+describe("Dataset Tree Unit Tests - Function applyPatternsToChildren", () => {
+    it("applies the filter search context value to a PDS that matches the given patterns", () => {
+        const testTree = new DatasetTree();
+        const fakeSessionNode = { dirty: false, contextValue: Constants.DS_SESSION_CONTEXT };
+        const fakeChildren = [{ label: "HLQ.PROD.PDS", contextValue: Constants.DS_PDS_CONTEXT }];
+        const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+        testTree.applyPatternsToChildren(fakeChildren as any[], [{ dsn: "HLQ.PROD.PDS", member: "A*" }], fakeSessionNode as any);
+        expect(SharedContext.isFilterFolder(fakeChildren[0])).toBe(true);
+        expect(fakeSessionNode.dirty).toBe(true);
+        withProfileMock.mockRestore();
+    });
+    it("applies a closed filter folder icon to the PDS if collapsed", () => {
+        const testTree = new DatasetTree();
+        const fakeSessionNode = { dirty: false, contextValue: Constants.DS_SESSION_CONTEXT };
+        const fakeChildren = [
+            {
+                label: "HLQ.PROD.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextValue: Constants.DS_PDS_CONTEXT,
+                iconPath: undefined,
+            },
+        ];
+        const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+        testTree.applyPatternsToChildren(fakeChildren as any[], [{ dsn: "HLQ.PROD.PDS", member: "A*" }], fakeSessionNode as any);
+        expect(fakeChildren[0].iconPath).toBe(IconGenerator.getIconById(IconUtils.IconId.filterFolder).path);
+        withProfileMock.mockRestore();
+    });
+    it("applies an open filter folder icon to the PDS if expanded", () => {
+        const testTree = new DatasetTree();
+        const fakeSessionNode = { dirty: false, contextValue: Constants.DS_SESSION_CONTEXT };
+        const fakeChildren = [
+            {
+                label: "HLQ.PROD.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+                contextValue: Constants.DS_PDS_CONTEXT,
+                iconPath: undefined,
+            },
+        ];
+        const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+        testTree.applyPatternsToChildren(fakeChildren as any[], [{ dsn: "HLQ.PROD.PDS", member: "A*" }], fakeSessionNode as any);
+        expect(fakeChildren[0].iconPath).toBe(IconGenerator.getIconById(IconUtils.IconId.filterFolderOpen).path);
+        withProfileMock.mockRestore();
     });
 });
