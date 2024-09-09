@@ -37,6 +37,8 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedContext } from "../shared/SharedContext";
 import { AuthUtils } from "../../utils/AuthUtils";
 import type { Definitions } from "../../configuration/Definitions";
+import type { DatasetTree } from "./DatasetTree";
+import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 
 /**
  * A type of TreeItem used to represent sessions and data sets
@@ -49,6 +51,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public command: vscode.Command;
     public pattern = "";
     public memberPattern = "";
+    public patternMatches = [];
     public dirty = true;
     public children: ZoweDatasetNode[] = [];
     public errorDetails: imperative.ImperativeError;
@@ -398,6 +401,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 .filter((c) => (c.label as string) in elementChildren)
                 .filter(filter ? ZoweDatasetNode.filterBy(filter) : (_c): boolean => true)
                 .sort(ZoweDatasetNode.sortBy(sortOpts));
+
+            if (SharedContext.isSession(this)) {
+                const dsTree = SharedTreeProviders.ds as DatasetTree;
+                // set new search patterns for each child of getChildren
+                dsTree.applyPatternsToChildren(this.children, this.patternMatches, this);
+            }
         }
 
         return this.children;
@@ -531,7 +540,19 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             attributes: true,
             responseTimeout: profile.profile.responseTimeout,
         };
-        if (SharedContext.isSession(this) && this.pattern) {
+        if (SharedContext.isSession(this) || SharedContext.isFavoriteSearch(this)) {
+            const fullPattern = SharedContext.isFavoriteSearch(this) ? (this.label as string) : this.pattern;
+            const dsTree = SharedTreeProviders.ds as DatasetTree;
+            this.patternMatches = dsTree.extractPatterns(fullPattern);
+            const dsPattern = dsTree.buildFinalPattern(this.patternMatches);
+            if (dsPattern.length != 0) {
+                if (dsPattern !== this.pattern) {
+                    // reset and remove previous search patterns if pattern has changed
+                    dsTree.resetFilterForChildren(this.children);
+                }
+                this.tooltip = this.pattern = dsPattern.toUpperCase();
+            }
+
             const dsPatterns = [
                 ...new Set(
                     this.pattern

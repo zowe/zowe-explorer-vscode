@@ -120,6 +120,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - **Breaking:** Removed the `MemberEntry` filesystem class, in favor of using the `DsEntry` class with `isMember` set to `true`.
 - Changed `TableViewProvider.setTableView` function to be asynchronous for more optimized data updates.
 - Updated `Table.Conditional` and `Table.Callback` types to support multi-row callbacks.
+- Added optional `patternMatches` property to the `IZoweDatasetTreeNode` interface to cache pattern matches from an applied filter search. [#1164](https://github.com/zowe/zowe-explorer-vscode/issues/1164)
 
 ### Bug fixes
 
