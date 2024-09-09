@@ -1847,13 +1847,13 @@
     "webdriverio": "^8.36.1"
   },
   "dependencies": {
+    "@vscode/codicons": "^0.0.35",
     "@zowe/core-for-zowe-sdk": "8.0.0-next.202408301809",
     "@zowe/secrets-for-zowe-sdk": "8.0.0-next.202408301809",
     "@zowe/zos-files-for-zowe-sdk": "8.0.0-next.202408301809",
     "@zowe/zos-jobs-for-zowe-sdk": "8.0.0-next.202408301809",
     "@zowe/zosmf-for-zowe-sdk": "8.0.0-next.202408301809",
     "@zowe/zowe-explorer-api": "3.0.0-next-SNAPSHOT",
-    "@vscode/codicons": "^0.0.35",
     "dayjs": "^1.11.10",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",

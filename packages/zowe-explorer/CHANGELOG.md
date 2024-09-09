@@ -4,6 +4,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
+### New features and enhancements
+
+### Bug fixes
+
+## `3.0.0-next.202409091409`
+
 ### Bug fixes
 
 - Update Zowe SDKs to `8.0.0-next.202408301809` for technical currency.
