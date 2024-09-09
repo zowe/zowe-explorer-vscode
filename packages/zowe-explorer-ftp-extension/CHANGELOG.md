@@ -6,6 +6,9 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
+- Update Zowe SDKs to `8.0.0-next.202408301809` for technical currency.
+- Update z/OS FTP Plug-in for Zowe CLI dependency to `3.0.0-next.202407311518`.
+
 ## `3.0.0-next.202408301858`
 
 ### New features and enhancements
@@ -90,15 +93,47 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 - Fixed ECONNRESET error when trying to upload or create an empty data set member. [#2350](https://github.com/zowe/vscode-extension-for-zowe/issues/2350)
 - Update Zowe SDKs to `8.0.0-next.202407051717` for technical currency. [#2918](https://github.com/zowe/zowe-explorer-vscode/issues/2918)
 
+## `2.18.0`
+
+### Bug fixes
+
+- Renamed extension to `IBM z/OS FTP for Zowe Explorer`. [#2990](https://github.com/zowe/zowe-explorer-vscode/issues/2990)
+
 ## `2.17.0`
+
+## `2.16.3`
+
+## `2.16.2`
+
+### Bug fixes
+
+- Update dependencies for technical currency purposes.
+
+## `2.16.1`
 
 ## `2.16.0`
 
 ### Bug fixes
 
-Fix issue with zFTP spool files not listing properly for active jobs. #2832
+- Fix issue with zFTP spool files not listing properly for active jobs. [#2832](https://github.com/zowe/zowe-explorer-vscode/issues/2832)
+- Changed the hashing algorithm for e-tag generation from `sha1` to `sha256` to avoid collisions. [#2890](https://github.com/zowe/zowe-explorer-vscode/pull/2890)
+
+## `2.15.4`
+
+## `2.15.3`
 
 ## `2.15.2`
+
+## `2.15.1`
+
+## `2.15.0`
+
+## `2.14.1`
+
+### Bug fixes
+
+- Fix Windows-specific hangs when saving members that contain JCL via the FTP extension. Thanks @tiantn & @std4lqi. [#2533](https://github.com/zowe/vscode-extension-for-zowe/issues/2533)
+- Update transitive dependencies for technical currency.
 
 ## `2.14.0`
 
