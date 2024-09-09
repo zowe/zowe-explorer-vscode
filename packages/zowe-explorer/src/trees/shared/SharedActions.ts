@@ -23,6 +23,7 @@ import { FilterItem, FilterDescriptor } from "../../management/FilterManagement"
 import { IconUtils } from "../../icons/IconUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { SharedTreeProviders } from "./SharedTreeProviders";
+import { ZoweExplorerExtender } from "../../extending/ZoweExplorerExtender";
 
 export class SharedActions {
     /**
@@ -240,7 +241,13 @@ export class SharedActions {
             }
             return;
         }
-        await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+        try {
+            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+        } catch (err) {
+            ZoweLogger.error(err);
+            ZoweExplorerExtender.showZoweConfigError(err.message);
+            return;
+        }
         for (const sessNode of treeProvider.mSessionNodes) {
             const profiles = await Profiles.getInstance().fetchAllProfiles();
             const found = profiles.some((prof) => prof.name === sessNode.label.toString().trim());
