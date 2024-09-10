@@ -152,6 +152,7 @@ export class ProfilesCache {
             }
             const allTypes = this.getAllProfileTypes(apiRegister?.registeredApiTypes() ?? []);
             allTypes.push("base");
+            allTypes.push("ssh");
             for (const type of allTypes) {
                 const tmpAllProfiles: imperative.IProfileLoaded[] = [];
                 // Step 1: Get all profiles for each registered type
