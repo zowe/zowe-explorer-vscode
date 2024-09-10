@@ -10,6 +10,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Fix extender's ability to fetch profile information from ProfilesCache for SSH profile types.
+
 ## `3.0.0-next.202409091409`
 
 ### Bug fixes
