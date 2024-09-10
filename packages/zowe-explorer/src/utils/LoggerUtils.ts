@@ -35,7 +35,7 @@ export class ZoweLogger {
     public static async initializeZoweLogger(context: vscode.ExtensionContext): Promise<void> {
         try {
             const logsPath: string = ZoweVsCodeExtension.customLoggingPath ?? context.extensionPath;
-            const extInfo = context.extension ?? vscode.extensions.getExtension("zowe.vscode-extension-for-zowe");
+            const extInfo = context.extension ?? vscode.extensions.getExtension(globals.ZE_EXT_NAME);
             this.displayName = extInfo.packageJSON.displayName;
             this.zeVersion = extInfo.packageJSON.version;
             globals.initLogger(logsPath);
@@ -83,7 +83,7 @@ export class ZoweLogger {
     }
 
     private static async initVscLogger(logFileLocation: string): Promise<void> {
-        this.zeOutputChannel ??= Gui.createOutputChannel(localize("zoweExplorer.outputchannel.title", "Zowe Explorer"));
+        this.zeOutputChannel = Gui.createOutputChannel(localize("zoweExplorer.outputchannel.title", "Zowe Explorer"));
         this.writeVscLoggerInfo(logFileLocation);
         this.info(localize("initialize.log.info", "Initialized logger for Zowe Explorer"));
         await this.compareCliLogSetting();

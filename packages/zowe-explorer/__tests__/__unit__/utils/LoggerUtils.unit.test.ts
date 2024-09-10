@@ -113,7 +113,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
 
         expect(await logger.ZoweLogger.initializeZoweLogger({ extension: undefined } as any)).toBeUndefined();
         expect(infoSpy).toHaveBeenCalled();
-        expect(getExtensionMock).toHaveBeenCalledWith("zowe.vscode-extension-for-zowe");
+        expect(getExtensionMock).toHaveBeenCalledWith(globals.ZE_EXT_NAME);
         infoSpy.mockClear();
     });
 
