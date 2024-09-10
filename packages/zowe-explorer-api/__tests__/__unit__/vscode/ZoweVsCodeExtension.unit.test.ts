@@ -97,6 +97,7 @@ describe("ZoweVsCodeExtension", () => {
         let updProfile;
         let testRegister: any;
         let testCache: any;
+        let getTeamConfig: any;
 
         beforeEach(() => {
             testProfile = {
@@ -126,7 +127,9 @@ describe("ZoweVsCodeExtension", () => {
                     getTokenTypeName: () => "apimlAuthenticationToken",
                 }),
             };
+            getTeamConfig = jest.fn().mockReturnValue({ properties: { autoStore: true } });
             testCache = {
+                ...ProfilesCache.prototype,
                 allProfiles,
                 allExternalTypes: [],
                 fetchBaseProfile: jest.fn(),
@@ -140,11 +143,12 @@ describe("ZoweVsCodeExtension", () => {
                     ...imperative.ProfileInfo.prototype,
                     getDefaultProfile: jest.fn().mockReturnValue({ ...baseProfile, profName: baseProfile.name, profType: baseProfile.type }),
                     isSecured: jest.fn().mockReturnValue(false),
-                    getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: true } }),
+                    getTeamConfig,
                     getAllProfiles: jest.fn().mockReturnValue(allProfiles),
                     mergeArgsForProfile: jest.fn().mockReturnValue({ knownArgs: [] }),
                 }),
                 refresh: jest.fn(),
+                getAllProfileTypes: (ProfilesCache.prototype as any).getAllProfileTypes,
             };
 
             jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue(testCache);
@@ -446,9 +450,9 @@ describe("ZoweVsCodeExtension", () => {
 
         it("should prefer base profile token type even if the user does not provide credentials to login with ", async () => {
             const serviceProfileLoaded = testCache.getProfileLoaded(serviceProfile.name, serviceProfile.type, serviceProfile.profile);
-            serviceProfileLoaded.profile.tokenType = "serviceProfileTokenType";
+            serviceProfileLoaded.profile.tokenType = "SERVICE";
             const baseProfileLoaded = testCache.getProfileLoaded(baseProfile.name, baseProfile.type, baseProfile.profile);
-            baseProfileLoaded.profile.tokenType = "baseProfileTokenType";
+            baseProfileLoaded.profile.tokenType = "BASE";
             testCache.fetchBaseProfile.mockResolvedValue(baseProfileLoaded);
 
             const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(undefined);
@@ -468,16 +472,42 @@ describe("ZoweVsCodeExtension", () => {
             delete testSession.ISession.password;
             expect(testSpy).toHaveBeenCalledWith({
                 rePrompt: true,
-                session: { ...testSession.ISession, tokenType: "baseProfileTokenType" },
+                session: { ...testSession.ISession, tokenType: "BASE" },
             });
             expect(didLogin).toBeFalsy();
             quickPickMock.mockRestore();
         });
 
-        it("should prefer base profile when it exists and it has tokenValue in secure array", async () => {});
-        it("should prefer base profile when it exists, it does not have tokenValue in its secure array, and service profile is flat", async () => {});
-        it("should prefer parent profile when base profile does not exist and service profile is nested", () => {});
-        it("should cancel the operation if the base profile does not exist and service profile is flat", () => {});
+        it("should update the cache when autoStore is false after a successful login operation", async () => {
+            const serviceProfileLoaded = testCache.getProfileLoaded(serviceProfile.name, serviceProfile.type, serviceProfile.profile);
+            serviceProfileLoaded.profile = { ...testProfile, tokenType: "SERVICE" };
+            const baseProfileLoaded = testCache.getProfileLoaded(baseProfile.name, baseProfile.type, baseProfile.profile);
+            baseProfileLoaded.profile = { ...testProfile, tokenType: "BASE" };
+            testCache.fetchBaseProfile.mockResolvedValue(baseProfileLoaded);
+
+            getTeamConfig.mockReturnValue({ exists: true, properties: { autoStore: false } });
+
+            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
+            const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+            const didLogin = await ZoweVsCodeExtension.loginWithBaseProfile({
+                serviceProfile: serviceProfileLoaded,
+                defaultTokenType: "apimlAuthenticationToken",
+                profileNode: testNode,
+                zeRegister: testRegister,
+                zeProfiles: testCache,
+            });
+
+            const expectedProfile = { ...serviceProfileLoaded, profile: { ...testProfile, tokenType: "SERVICE", tokenValue: "tokenValue" } };
+            expect(didLogin).toBeTruthy();
+            expect(testCache.allProfiles).toEqual([expectedProfile, baseProfile]);
+            quickPickMock.mockRestore();
+        });
+
+        // TODO: e2e test the following scenarios
+        // it("should prefer base profile when it exists and it has tokenValue in secure array", async () => {});
+        // it("should prefer base profile when it exists, it does not have tokenValue in its secure array, and service profile is flat", async () => {});
+        // it("should prefer parent profile when base profile does not exist and service profile is nested", () => {});
+        // it("should cancel the operation if the base profile does not exist and service profile is flat", () => {});
     });
     describe("updateCredentials", () => {
         const promptCredsOptions: PromptCredentialsOptions.ComplexOptions = {
@@ -509,7 +539,7 @@ describe("ZoweVsCodeExtension", () => {
             expect(mockUpdateProperty).toHaveBeenCalledTimes(2);
         });
 
-        it("should update user and password as secure fields with reprompt", async () => {
+        it("should update user and password as secure fields with rePrompt", async () => {
             const mockUpdateProperty = jest.fn();
             jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
                 getLoadedProfConfig: jest.fn().mockReturnValue({

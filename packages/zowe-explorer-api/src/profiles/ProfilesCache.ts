@@ -155,7 +155,7 @@ export class ProfilesCache {
             for (const type of allTypes) {
                 const tmpAllProfiles: imperative.IProfileLoaded[] = [];
                 // Step 1: Get all profiles for each registered type
-                const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc.length !== 0);
+                const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc?.length > 0);
                 if (profilesForType && profilesForType.length > 0) {
                     for (const prof of profilesForType) {
                         // Step 2: Merge args for each profile
