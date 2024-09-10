@@ -573,12 +573,20 @@ export class Profiles extends ProfilesCache {
             }),
         };
 
+        let mProfileInfo: imperative.ProfileInfo;
+        try {
+            mProfileInfo = await this.getProfileInfo();
+        } catch (err) {
+            ZoweLogger.error(err);
+            ZoweExplorerExtender.showZoweConfigError(err.message);
+            return;
+        }
         const promptInfo = await ZoweVsCodeExtension.updateCredentials(
             {
                 profile: typeof profile === "string" ? undefined : profile,
                 sessionName: typeof profile === "string" ? profile : undefined,
                 rePrompt,
-                secure: (await this.getProfileInfo()).isSecured(),
+                secure: mProfileInfo.isSecured(),
                 userInputBoxOptions,
                 passwordInputBoxOptions,
             },
@@ -641,7 +649,14 @@ export class Profiles extends ProfilesCache {
 
         const deleteLabel = deletedProfile.name;
 
-        const currentProfile = await this.getProfileFromConfig(deleteLabel);
+        let currentProfile: imperative.IProfAttrs;
+        try {
+            currentProfile = await this.getProfileFromConfig(deleteLabel);
+        } catch (err) {
+            ZoweLogger.error(err);
+            ZoweExplorerExtender.showZoweConfigError(err.message);
+            return;
+        }
         const filePath = currentProfile.profLoc.osLoc[0];
         await this.openConfigFile(filePath);
     }

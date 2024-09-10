@@ -151,7 +151,7 @@ describe("ZoweExplorerExtender unit tests", () => {
         const blockMocks = await createBlockMocks();
         ZoweExplorerExtender.createInstance();
 
-        Object.defineProperty(Gui, "showTextDocument", { value: jest.fn(), configurable: true });
+        Object.defineProperty(vscode.Uri, "file", { value: jest.fn(), configurable: true });
         const showTextDocumentSpy = jest.spyOn(Gui, "showTextDocument").mockResolvedValue({} as any);
 
         const zoweDir = FileManagement.getZoweDir();
@@ -173,6 +173,7 @@ describe("ZoweExplorerExtender unit tests", () => {
                 choice: "Show Config",
                 configError: `Error parsing JSON in the file '${path.join(zoweDir, "zowe.config.user.json")}' at Line 4, Column 0`,
                 shouldFail: false,
+                shouldNavigate: true,
                 fileChecks: ["zowe.config.user.json"],
                 mockExistsSync: blockMocks.mockExistsSync.mockImplementationOnce,
             },
@@ -205,10 +206,10 @@ describe("ZoweExplorerExtender unit tests", () => {
                 "Show Config"
             );
             if (userInput.choice == null) {
-                expect(Gui.showTextDocument).not.toHaveBeenCalled();
+                expect(showTextDocumentSpy).not.toHaveBeenCalled();
             } else {
                 if (userInput.v1) {
-                    expect(showTextDocumentSpy).toHaveBeenCalledWith(path.join(zoweDir, "profiles", "exampleType", "exampleType_meta.yaml"));
+                    expect(vscode.Uri.file).toHaveBeenCalledWith(path.join(zoweDir, "profiles", "exampleType", "exampleType_meta.yaml"));
                 } else {
                     for (const fileName of userInput.fileChecks) {
                         expect(blockMocks.mockExistsSync).toHaveBeenCalledWith(path.join(zoweDir, fileName));
@@ -236,10 +237,6 @@ describe("ZoweExplorerExtender unit tests", () => {
                     },
                 },
             ],
-            configurable: true,
-        });
-        Object.defineProperty(imperative.CliProfileManager, "initialize", {
-            value: jest.fn(),
             configurable: true,
         });
 
