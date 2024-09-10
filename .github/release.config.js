@@ -15,10 +15,10 @@ module.exports = {
             channel: "latest",
             level: "patch"
         },
-        // {
-        //     name: "next",
-        //     prerelease: true,
-        // }
+        {
+            name: "next",
+            prerelease: true,
+        }
     ],
     plugins: [
         [
