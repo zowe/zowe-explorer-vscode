@@ -271,7 +271,7 @@ describe("ProfilesCache", () => {
             expect(profCache.allProfiles.length).toEqual(2);
             expect(profCache.allProfiles[0]).toMatchObject(lpar1Profile);
             expect(profCache.allProfiles[1]).toMatchObject(zftpProfile);
-            expect(profCache.getAllTypes()).toEqual([...profileTypes, "base"]);
+            expect(profCache.getAllTypes()).toEqual([...profileTypes, "ssh", "base"]);
             expect(mockLogError).not.toHaveBeenCalled();
         });
 
@@ -285,7 +285,7 @@ describe("ProfilesCache", () => {
             expect(profCache.allProfiles[0]).toMatchObject(lpar1ProfileWithToken);
             expect(profCache.allProfiles[1]).toMatchObject(lpar2Profile); // without token
             expect(profCache.allProfiles[2]).toMatchObject(baseProfileWithToken);
-            expect(profCache.getAllTypes()).toEqual([...profileTypes, "base"]);
+            expect(profCache.getAllTypes()).toEqual([...profileTypes, "ssh", "base"]);
             expect(mockLogError).not.toHaveBeenCalled();
         });
 
@@ -313,7 +313,7 @@ describe("ProfilesCache", () => {
             expect((profCache as any).profilesByType.size).toBe(0);
             expect((profCache as any).defaultProfileByType.size).toBe(0);
             expect((profCache as any).allProfiles.length).toBe(0);
-            expect((profCache as any).allTypes).toEqual(["base"]);
+            expect((profCache as any).allTypes).toEqual(["ssh", "base"]);
             expect(mockLogError).not.toHaveBeenCalled();
         });
     });
