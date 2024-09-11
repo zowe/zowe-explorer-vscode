@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed JSON errors being ignored when `zowe.config.json` files change on disk and are reloaded. [#3066](https://github.com/zowe/zowe-explorer-vscode/issues/3066)
+
 ## `3.0.0-next.202409091409`
 
 ### Bug fixes

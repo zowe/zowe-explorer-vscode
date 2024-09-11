@@ -145,47 +145,43 @@ export class ProfilesCache {
 
     public async refresh(apiRegister?: IRegisterClient): Promise<void> {
         const allProfiles: imperative.IProfileLoaded[] = [];
-        try {
-            const mProfileInfo = await this.getProfileInfo();
-            if (!mProfileInfo.getTeamConfig().exists) {
-                return;
-            }
-            const allTypes = this.getAllProfileTypes(apiRegister?.registeredApiTypes() ?? []);
-            allTypes.push("base");
-            for (const type of allTypes) {
-                const tmpAllProfiles: imperative.IProfileLoaded[] = [];
-                // Step 1: Get all profiles for each registered type
-                const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc.length !== 0);
-                if (profilesForType && profilesForType.length > 0) {
-                    for (const prof of profilesForType) {
-                        // Step 2: Merge args for each profile
-                        const profAttr = this.getMergedAttrs(mProfileInfo, prof);
-                        // Work-around. TODO: Discuss with imperative team
-                        const profileFix = this.getProfileLoaded(prof.profName, prof.profType, profAttr);
-                        // set default for type
-                        if (prof.isDefaultProfile) {
-                            this.defaultProfileByType.set(type, profileFix);
-                        }
-
-                        // Step 3: Update allProfiles list
-                        tmpAllProfiles.push(profileFix);
-                    }
-                    allProfiles.push(...tmpAllProfiles);
-                    this.profilesByType.set(type, tmpAllProfiles);
-                }
-            }
-            this.allProfiles = allProfiles;
-            this.allTypes = allTypes;
-            for (const oldType of [...this.profilesByType.keys()].filter((type) => !allProfiles.some((prof) => prof.type === type))) {
-                this.profilesByType.delete(oldType);
-                this.defaultProfileByType.delete(oldType);
-            }
-            // check for proper merging of apiml tokens
-            this.checkMergingConfigAllProfiles();
-            this.profilesForValidation = [];
-        } catch (error) {
-            this.log.error(error as string);
+        const mProfileInfo = await this.getProfileInfo();
+        if (!mProfileInfo.getTeamConfig().exists) {
+            return;
         }
+        const allTypes = this.getAllProfileTypes(apiRegister?.registeredApiTypes() ?? []);
+        allTypes.push("base");
+        for (const type of allTypes) {
+            const tmpAllProfiles: imperative.IProfileLoaded[] = [];
+            // Step 1: Get all profiles for each registered type
+            const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc.length !== 0);
+            if (profilesForType && profilesForType.length > 0) {
+                for (const prof of profilesForType) {
+                    // Step 2: Merge args for each profile
+                    const profAttr = this.getMergedAttrs(mProfileInfo, prof);
+                    // Work-around. TODO: Discuss with imperative team
+                    const profileFix = this.getProfileLoaded(prof.profName, prof.profType, profAttr);
+                    // set default for type
+                    if (prof.isDefaultProfile) {
+                        this.defaultProfileByType.set(type, profileFix);
+                    }
+
+                    // Step 3: Update allProfiles list
+                    tmpAllProfiles.push(profileFix);
+                }
+                allProfiles.push(...tmpAllProfiles);
+                this.profilesByType.set(type, tmpAllProfiles);
+            }
+        }
+        this.allProfiles = allProfiles;
+        this.allTypes = allTypes;
+        for (const oldType of [...this.profilesByType.keys()].filter((type) => !allProfiles.some((prof) => prof.type === type))) {
+            this.profilesByType.delete(oldType);
+            this.defaultProfileByType.delete(oldType);
+        }
+        // check for proper merging of apiml tokens
+        this.checkMergingConfigAllProfiles();
+        this.profilesForValidation = [];
     }
 
     public validateAndParseUrl(newUrl: string): Validation.IValidationUrl {
