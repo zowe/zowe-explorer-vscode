@@ -1679,3 +1679,5 @@ export namespace env {
         },
     };
 }
+
+export class Selection {}

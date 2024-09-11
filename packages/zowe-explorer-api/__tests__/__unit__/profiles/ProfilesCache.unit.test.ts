@@ -258,25 +258,23 @@ describe("ProfilesCache", () => {
     });
 
     describe("refresh", () => {
-        const mockLogError = jest.fn();
         const profileTypes = ["zosmf", "zftp"];
         const fakeApiRegister = {
             registeredApiTypes: jest.fn().mockReturnValue(profileTypes),
         };
 
         it("should refresh profile data for multiple profile types", async () => {
-            const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as unknown as imperative.Logger);
+            const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
             jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, zftpProfile]));
             await profCache.refresh(fakeApiRegister as unknown as Types.IApiRegisterClient);
             expect(profCache.allProfiles.length).toEqual(2);
             expect(profCache.allProfiles[0]).toMatchObject(lpar1Profile);
             expect(profCache.allProfiles[1]).toMatchObject(zftpProfile);
             expect(profCache.getAllTypes()).toEqual([...profileTypes, "ssh", "base"]);
-            expect(mockLogError).not.toHaveBeenCalled();
         });
 
         it("should refresh profile data for and merge tokens with base profile", async () => {
-            const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as unknown as imperative.Logger);
+            const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
             jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(
                 createProfInfoMock([lpar1ProfileWithToken, lpar2ProfileWithToken, baseProfileWithToken])
             );
@@ -286,23 +284,21 @@ describe("ProfilesCache", () => {
             expect(profCache.allProfiles[1]).toMatchObject(lpar2Profile); // without token
             expect(profCache.allProfiles[2]).toMatchObject(baseProfileWithToken);
             expect(profCache.getAllTypes()).toEqual([...profileTypes, "ssh", "base"]);
-            expect(mockLogError).not.toHaveBeenCalled();
         });
 
         it("should handle error when refreshing profile data", async () => {
             const fakeError = "Profile IO Error";
-            const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as unknown as imperative.Logger);
+            const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
             jest.spyOn(profCache, "getProfileInfo").mockImplementation(() => {
                 throw fakeError;
             });
-            await profCache.refresh(fakeApiRegister as unknown as Types.IApiRegisterClient);
+            await expect(profCache.refresh(fakeApiRegister as unknown as Types.IApiRegisterClient)).rejects.toBe(fakeError);
             expect(profCache.allProfiles.length).toEqual(0);
             expect(profCache.getAllTypes().length).toEqual(0);
-            expect(mockLogError).toHaveBeenCalledWith(fakeError);
         });
 
         it("should remove old types from profilesByType and defaultProfileByType maps when reloading profiles", async () => {
-            const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as unknown as imperative.Logger);
+            const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
             jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([]));
             (profCache as any).profilesByType.set("base", { name: "someProf" as any });
             (profCache as any).defaultProfileByType.set("base", { name: "someProf" as any });
@@ -314,7 +310,6 @@ describe("ProfilesCache", () => {
             expect((profCache as any).defaultProfileByType.size).toBe(0);
             expect((profCache as any).allProfiles.length).toBe(0);
             expect((profCache as any).allTypes).toEqual(["ssh", "base"]);
-            expect(mockLogError).not.toHaveBeenCalled();
         });
     });
 
