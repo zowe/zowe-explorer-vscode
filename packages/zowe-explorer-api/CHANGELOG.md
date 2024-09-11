@@ -8,6 +8,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Fixed errors being logged silently rather than thrown in `ProfilesCache.refresh` method. [#3066](https://github.com/zowe/zowe-explorer-vscode/issues/3066)
+
 ## `3.0.0-next.202409091409`
 
 ### Bug fixes
