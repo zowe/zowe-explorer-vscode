@@ -3,6 +3,8 @@ name: Zowe Explorer Auto Responder for New Issues
 on:
   issues:
     types: labeled
+permissions:
+  issues: write
 
 jobs:
   processLabelAction:
