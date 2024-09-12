@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as path from "path";
-import { FsJobsUtils, imperative, IZoweJobTreeNode, Sorting, ZoweScheme, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { DirEntry, FsJobsUtils, imperative, IZoweJobTreeNode, Sorting, ZoweScheme, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { JobFSProvider } from "./JobFSProvider";
 import { JobUtils } from "./JobUtils";
 import { Constants } from "../../configuration/Constants";
@@ -280,6 +280,14 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                   .filter((ch) => Object.values(elementChildren).find((recordCh) => recordCh.label === ch.label) != null);
         this.dirty = false;
         return this.children;
+    }
+
+    public setProfileToChoice(profile: imperative.IProfileLoaded): void {
+        super.setProfileToChoice(profile);
+        const jobEntry = JobFSProvider.instance.lookup(this.resourceUri, true) as DirEntry;
+        if (jobEntry != null) {
+            jobEntry.metadata.profile = profile;
+        }
     }
 
     public static sortJobs(sortOpts: Sorting.NodeSort): (x: IZoweJobTreeNode, y: IZoweJobTreeNode) => number {

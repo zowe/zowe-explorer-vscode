@@ -16,6 +16,7 @@ import { Validation } from "./Validation";
 import { ZosmfProfile } from "@zowe/zosmf-for-zowe-sdk";
 import { ZosTsoProfile } from "@zowe/zos-tso-for-zowe-sdk";
 import { ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
+import { Types } from "../Types";
 
 export class ProfilesCache {
     public profilesForValidation: Validation.IValidationProfile[] = [];
@@ -79,9 +80,8 @@ export class ProfilesCache {
 
     /**
      * Updates profile in allProfiles array and if default updates defaultProfileByType
-     *
+     * @deprecated Use `updateCachedProfile` instead
      * @param {string} profileLoaded
-     *
      * @returns {void}
      */
     public updateProfilesArrays(profileLoaded: imperative.IProfileLoaded): void {
@@ -94,6 +94,32 @@ export class ProfilesCache {
         const defaultProf = this.defaultProfileByType.get(profileLoaded?.type);
         if (defaultProf?.name === profileLoaded?.name) {
             this.defaultProfileByType.set(profileLoaded?.type, profileLoaded);
+        }
+    }
+
+    public async updateCachedProfile(
+        profileLoaded: imperative.IProfileLoaded,
+        profileNode?: Types.IZoweNodeType,
+        zeRegister?: Types.IApiRegisterClient
+    ): Promise<void> {
+        if ((await this.getProfileInfo()).getTeamConfig().properties.autoStore) {
+            await this.refresh(zeRegister);
+        } else {
+            // TODO For loginWithBaseProfile, when autoStore=false is it correct to update service profile here instead of base?
+            // zFernand0: Yes, it is fine to update the service profile in the cache to avoid impacting other in memory credentials.
+            // Note: It should be expected that nested profiles within this service profile will have their credentials updated.
+            const profIndex = this.allProfiles.findIndex((profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name);
+            this.allProfiles[profIndex].profile = profileLoaded.profile;
+            const defaultProf = this.defaultProfileByType.get(profileLoaded.type);
+            if (defaultProf != null && defaultProf.name === profileLoaded.name) {
+                this.defaultProfileByType.set(profileLoaded.type, profileLoaded);
+            }
+        }
+        if (profileNode) {
+            profileNode.setProfileToChoice({
+                ...profileNode.getProfile(),
+                profile: { ...profileNode.getProfile().profile, ...profileLoaded.profile },
+            });
         }
     }
 

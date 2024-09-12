@@ -110,7 +110,6 @@ export class Profiles extends ProfilesCache {
             if (values) {
                 theProfile.profile.user = values[0];
                 theProfile.profile.password = values[1];
-                theProfile.profile.base64EncodedAuth = values[2];
 
                 // Validate profile
                 profileStatus = await this.getProfileSetting(theProfile);
@@ -563,9 +562,7 @@ export class Profiles extends ProfilesCache {
             return; // See https://github.com/zowe/zowe-explorer-vscode/issues/1827
         }
 
-        // TODO Is this redundant with refresh call in ZoweVsCodeExtension.updateCredentials?
-        const returnValue: string[] = [promptInfo.profile.user, promptInfo.profile.password, promptInfo.profile.base64EncodedAuth];
-        this.updateProfilesArrays(promptInfo);
+        const returnValue: string[] = [promptInfo.profile.user, promptInfo.profile.password];
 
         // If secure credentials are enabled, the config file won't change after updating existing credentials
         // (as the "secure" fields are already set). Fire the event emitter to notify extenders of the change.
@@ -764,7 +761,6 @@ export class Profiles extends ProfilesCache {
                         comment: ["Service profile name"],
                     })
                 );
-                await Profiles.getInstance().refresh(zeInstance);
             } else {
                 Gui.showMessage(this.profilesOpCancelled);
             }
@@ -989,6 +985,7 @@ export class Profiles extends ProfilesCache {
                 !serviceProfile.profile.tokenType?.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)
             ) {
                 await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(node.getSession());
+                await Profiles.getInstance().updateCachedProfile(serviceProfile, node);
             } else {
                 const zeRegister = ZoweExplorerApiRegister.getInstance();
                 logoutOk = await ZoweVsCodeExtension.logoutWithBaseProfile({
@@ -1008,7 +1005,6 @@ export class Profiles extends ProfilesCache {
                         comment: ["Service profile name"],
                     })
                 );
-                await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
             }
         } catch (error) {
             const message = vscode.l10n.t({
@@ -1063,22 +1059,7 @@ export class Profiles extends ProfilesCache {
         session.ISession.user = creds[0];
         session.ISession.password = creds[1];
         await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(session);
-        // TODO Should we call ZoweVsCodeExtension.updateProfileInCache method here?
-        const profIndex = this.allProfiles.findIndex((profile) => profile.name === serviceProfile.name);
-        this.allProfiles[profIndex] = { ...serviceProfile, profile: { ...serviceProfile, ...session } };
-        if (node) {
-            node.setProfileToChoice({
-                ...node.getProfile(),
-                profile: { ...node.getProfile().profile, ...session },
-            });
-        }
-        Gui.showMessage(
-            vscode.l10n.t({
-                message: "Login to authentication service was successful for {0}.",
-                args: [serviceProfile.name],
-                comment: ["Service profile name"],
-            })
-        );
+        await Profiles.getInstance().updateCachedProfile(serviceProfile, node);
         return true;
     }
 
