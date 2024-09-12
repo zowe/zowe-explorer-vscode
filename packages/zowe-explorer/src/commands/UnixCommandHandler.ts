@@ -247,7 +247,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 return;
             }
             const baseProfile = Constants.PROFILES_CACHE.getDefaultProfile("base");
-            if (baseProfile && baseProfile.profile.user && baseProfile.profile.password) {
+            if (baseProfile?.profile?.user && baseProfile?.profile?.password) {
                 this.sshProfile.profile.user = baseProfile.profile.user;
                 this.sshProfile.profile.password = baseProfile.profile.password;
             }
