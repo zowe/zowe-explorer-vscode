@@ -157,7 +157,6 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         } catch (error) {
             if (error.toString().includes("non-existing")) {
                 ZoweLogger.error(error);
-                this.serviceProf = undefined;
                 Gui.errorMessage(
                     vscode.l10n.t({
                         message: "Not implemented yet for profile of type: {0}",
