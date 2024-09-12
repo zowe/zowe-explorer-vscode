@@ -89,6 +89,7 @@ export class WebView {
         if (!(opts?.isView ?? false)) {
             this.panel = window.createWebviewPanel("ZEAPIWebview", this.title, ViewColumn.Beside, {
                 enableScripts: true,
+                enableCommandUris: true,
                 localResourceRoots: [this.uris.disk.build, this.uris.disk.codicons],
                 retainContextWhenHidden: opts?.retainContext ?? false,
             });

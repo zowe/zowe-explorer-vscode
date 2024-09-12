@@ -325,6 +325,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.ds.pdsSearchFor",
+        "title": "%pdsSearchFor%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.ds.uploadDialog",
         "title": "%uploadDialog%",
         "category": "Zowe Explorer"
@@ -993,14 +998,19 @@
           "group": "001_zowe_dsCreate@5"
         },
         {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/ && !listMultiSelection",
+          "command": "zowe.ds.pdsSearchFor",
+          "group": "001_zowe_dsCreate@6"
+        },
+        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*profile=zftp.*)(ds|member|pds).*/",
           "command": "zowe.ds.copyDataSets",
-          "group": "001_zowe_dsCreate@6"
+          "group": "001_zowe_dsCreate@7"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*profile=zftp.*)(session|pds).*/ && !listMultiSelection",
           "command": "zowe.ds.pasteDataSets",
-          "group": "001_zowe_dsCreate@7"
+          "group": "001_zowe_dsCreate@8"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
@@ -1536,6 +1546,10 @@
         },
         {
           "command": "zowe.jobs.stopPolling",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.pdsSearchFor",
           "when": "never"
         }
       ]

@@ -319,6 +319,9 @@ export namespace ZoweExplorerZosmf {
         public copyDataSet(fromDataSetName: string, toDataSetName: string, enq?: string, replace?: boolean): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.Copy.dataSet(this.getSession(), { dsn: toDataSetName }, { "from-dataset": { dsn: fromDataSetName }, enq, replace });
         }
+        public searchDataSets(searchOptions: zosfiles.ISearchOptions): Promise<zosfiles.IZosFilesResponse> {
+            return zosfiles.Search.dataSets(this.getSession(), searchOptions);
+        }
     }
 
     /**
