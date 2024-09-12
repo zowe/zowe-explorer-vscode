@@ -105,6 +105,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                         comment: ["Profile type"],
                     })
                 );
+                this.serviceProf = undefined;
                 return;
             }
             try {
@@ -156,6 +157,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         } catch (error) {
             if (error.toString().includes("non-existing")) {
                 ZoweLogger.error(error);
+                this.serviceProf = undefined;
                 Gui.errorMessage(
                     vscode.l10n.t({
                         message: "Not implemented yet for profile of type: {0}",
@@ -245,7 +247,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 return;
             }
             const baseProfile = Constants.PROFILES_CACHE.getDefaultProfile("base");
-            if (baseProfile.profile.user && baseProfile.profile.password) {
+            if (baseProfile && baseProfile.profile.user && baseProfile.profile.password) {
                 this.sshProfile.profile.user = baseProfile.profile.user;
                 this.sshProfile.profile.password = baseProfile.profile.password;
             }
