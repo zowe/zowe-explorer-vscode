@@ -1780,17 +1780,53 @@ export class DatasetActions {
         }
     }
 
-    public static async searchPds(context: vscode.ExtensionContext, node: IZoweDatasetTreeNode): Promise<void> {
-        const pdsName = node.label as string;
-        const searchString = await Gui.showInputBox({}); // Figure out show input box
-        if (searchString == null) {
+    public static async search(context: vscode.ExtensionContext, node: IZoweDatasetTreeNode): Promise<void> {
+        
+        let pattern: string;
+        let generateFullUri: boolean = false;
+
+        if (SharedContext.isSessionNotFav(node)) {
+            if (node.pattern) {
+                pattern = node.pattern;
+                generateFullUri = true;
+            } else {
+                Gui.errorMessage(vscode.l10n.t("No search pattern applied. Search for a pattern and try again."));
+                return;
+            }
+        } else if (SharedContext.isFavoriteSearch(node)) {
+            pattern = node.label as string;
+            generateFullUri = true;
+        } else if (SharedContext.isPds(node)) {
+            pattern = node.label as string;
+        }
+
+        const searchString = await Gui.showInputBox({prompt: vscode.l10n.t("Enter the text to search for.")}); // Figure out show input box
+        if (!searchString) {
+            Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
             return;
         }
-        const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
-        const response = await mvsApi.searchDataSets({pattern: pdsName, searchString});
-        // Show results in table view
-        Gui.infoMessage(response.apiResponse);
 
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
+        let response: zosfiles.IZosFilesResponse;
+        
+        await Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: vscode.l10n.t("Searching for: {0}", searchString),
+                cancellable: true,
+            },
+            async (_progress, token) => {
+                if (token.isCancellationRequested) {
+                    Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+                    return;
+                }
+                try {
+                    response = await mvsApi.searchDataSets({pattern, searchString});
+                } catch (err) {
+                    ZoweLogger.error(err);
+                }
+            }
+        );
         const matches = response.apiResponse;
         const newMatches: any = [];
 
@@ -1798,10 +1834,21 @@ export class DatasetActions {
             const dsn = ds.dsn as string;
             const member = ds.member as string;
             for (const match of ds.matchList) {
-                const uri = node.resourceUri.path + "/" + member;
-                Gui.showMessage(uri);
+                let uri: string;
+                let name: string = dsn;
+                if (!generateFullUri) {
+                    uri = node.resourceUri.path;
+                } else {
+                    uri = node.getSessionNode().resourceUri.path + dsn;
+                }
+
+                if (member) {
+                    uri = uri + "/" + member;
+                    name = name + "(" + member + ")";
+                }
+
                 newMatches.push({
-                    name: dsn + "(" + member + ")",
+                    name,
                     line: match.line as number,
                     column: match.column as number,
                     contents: match.contents,
@@ -1812,7 +1859,7 @@ export class DatasetActions {
         }
 
         const open: Table.ActionOpts = {
-            title: "Open",
+            title: vscode.l10n.t("Open"),
             command: "open",
             callback: {
                 fn: DatasetActions.openMemberAtLocation,
@@ -1822,7 +1869,7 @@ export class DatasetActions {
         }
 
         const table = new TableBuilder(context)
-        .title("PDS Search Results")
+        .title(vscode.l10n.t("Search Results for {0}", searchString))
         .options(
             {
                 autoSizeStrategy: { type: "fitCellContents" },
@@ -1837,23 +1884,23 @@ export class DatasetActions {
             ...[
                 {
                     field: "name",
-                    headerName: "Data Set Name",
+                    headerName: vscode.l10n.t("Data Set Name"),
                     filter: true,
                     sort: "asc",
                 } as Table.ColumnOpts,
                 {
                     field: "line",
-                    headerName: "Line",
+                    headerName: vscode.l10n.t("Line"),
                     filter: false
                 },
                 {
                     field: "column",
-                    headerName: "Column",
+                    headerName: vscode.l10n.t("Column"),
                     filter: false
                 },
                 {
                     field: "contents",
-                    headerName: "Contents",
+                    headerName: vscode.l10n.t("Contents"),
                     filter: true
                 },
                 {
@@ -1866,13 +1913,14 @@ export class DatasetActions {
         await TableViewProvider.getInstance().setTableView(table);
     }
 
-    public static async openMemberAtLocation(this: void, view: Table.View, data: Record<number, Table.RowData>): Promise<void> {
+    private static async openMemberAtLocation(this: void, _view: Table.View, data: Record<number, Table.RowData>): Promise<void> {
         const childrenToOpen = Object.values(data);
         if (childrenToOpen.length > 0) {
             for (const child of childrenToOpen) {
-                const childUri = vscode.Uri.from({scheme: ZoweScheme.DS, path: child.uri as string, query: "fetch=true"});
+                Gui.showMessage(child.uri as string);
+                const childUri = vscode.Uri.from({scheme: ZoweScheme.DS, path: child.uri as string});
                 await DatasetFSProvider.instance.remoteLookupForResource(childUri);
-                Gui.showTextDocument(childUri).then(editor => {
+                Gui.showTextDocument(childUri, {preview: false}).then(editor => {
                     const startPosition = new vscode.Position(child.line as number - 1, child.column as number - 1);
                     const endPosition = new vscode.Position(child.line as number - 1,
                         child.column as number - 1 + ((child.searchString as string).length))

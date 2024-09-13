@@ -137,5 +137,6 @@
   "compareWithSelectedReadOnly": "Compare with Selected (Read-Only)",
   "openWithEncoding": "Open with Encoding",
   "zowe.history.deprecationMsg": "Changes made here will not be reflected in Zowe Explorer, use right-click Edit History option to access information from local storage.",
-  "pdsSearchFor": "Search PDS Members"
+  "pdsSearchFor": "Search PDS Members",
+  "filteredDataSetsSearchFor": "Search Filtered Data Sets"
 }

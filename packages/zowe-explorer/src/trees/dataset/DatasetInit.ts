@@ -184,7 +184,12 @@ export class DatasetInit {
         );
         context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(DatasetFSProvider.onDidOpenTextDocument));
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.pdsSearchFor", async (node: IZoweDatasetTreeNode) => DatasetActions.searchPds(context, node))
+            vscode.commands.registerCommand("zowe.ds.pdsSearchFor", async (node: IZoweDatasetTreeNode) => DatasetActions.search(context, node))
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.ds.filteredDataSetsSearchFor", async (node: IZoweDatasetTreeNode) =>
+                DatasetActions.search(context, node)
+            )
         );
 
         SharedInit.initSubscribers(context, datasetProvider);
