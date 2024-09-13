@@ -1812,16 +1812,31 @@ export class DatasetActions {
         await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: vscode.l10n.t("Searching for: {0}", searchString),
+                title: vscode.l10n.t("Searching for {0}", searchString),
                 cancellable: true,
             },
-            async (_progress, token) => {
+            async (progress, token) => {
                 if (token.isCancellationRequested) {
                     Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
                     return;
                 }
+
+                let realPercentComplete = 0;
+                const task: imperative.ITaskWithStatus = {
+                    set percentComplete(value: number) {
+                        realPercentComplete = value;
+                        // eslint-disable-next-line no-magic-numbers
+                        Gui.reportProgress(progress, 100, value - 1, vscode.l10n.t("Percent Complete"));
+                    },
+                    get percentComplete(): number {
+                        return realPercentComplete;
+                    },
+                    statusMessage: "",
+                    stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
+                };
+                
                 try {
-                    response = await mvsApi.searchDataSets({pattern, searchString});
+                    response = await mvsApi.searchDataSets({pattern, searchString, progressTask: task});
                 } catch (err) {
                     ZoweLogger.error(err);
                 }
