@@ -81,21 +81,24 @@ export class Profiles extends ProfilesCache {
 
     public async checkCurrentProfile(theProfile: imperative.IProfileLoaded): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
-        let profileStatus: Validation.IValidationProfile;
+        let profileStatus: Validation.IValidationProfile = { name: theProfile.name, status: "unverified" };
         const usingTokenAuth = await AuthUtils.isUsingTokenAuth(theProfile.name);
 
         if (usingTokenAuth && !theProfile.profile.tokenType) {
-            const error = new imperative.ImperativeError({
-                msg: vscode.l10n.t(`Token auth error`),
-                additionalDetails: vscode.l10n.t(`Profile was found using token auth, please log in to continue.`),
-                errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
-            });
-            await AuthUtils.errorHandling(error, theProfile.name, error.message);
-            profileStatus = { name: theProfile.name, status: "unverified" };
-            return profileStatus;
-        }
-
-        if (!usingTokenAuth && (!theProfile.profile.user || !theProfile.profile.password)) {
+            // The profile will need to be reactivated, so remove it from profilesForValidation
+            this.profilesForValidation = this.profilesForValidation.filter(
+                (profile) => profile.status === "unverified" && profile.name !== theProfile.name
+            );
+            try {
+                await Profiles.getInstance().ssoLogin(null, theProfile.name);
+                theProfile = Profiles.getInstance().loadNamedProfile(theProfile.name);
+                // Validate profile
+                profileStatus = await this.getProfileSetting(theProfile);
+            } catch (error) {
+                await AuthUtils.errorHandling(error, theProfile.name, error.message);
+                return profileStatus;
+            }
+        } else if (!usingTokenAuth && (!theProfile.profile.user || !theProfile.profile.password)) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(
                 (profile) => profile.status === "unverified" && profile.name !== theProfile.name
@@ -113,13 +116,12 @@ export class Profiles extends ProfilesCache {
 
                 // Validate profile
                 profileStatus = await this.getProfileSetting(theProfile);
-            } else {
-                profileStatus = { name: theProfile.name, status: "unverified" };
             }
         } else {
             // Profile should have enough information to allow validation
             profileStatus = await this.getProfileSetting(theProfile);
         }
+
         switch (profileStatus.status) {
             case "unverified":
                 this.validProfile = Validation.ValidationType.UNVERIFIED;
