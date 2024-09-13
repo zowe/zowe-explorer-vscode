@@ -105,6 +105,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                         comment: ["Profile type"],
                     })
                 );
+                this.serviceProf = undefined;
                 return;
             }
             try {
@@ -245,7 +246,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 return;
             }
             const baseProfile = Constants.PROFILES_CACHE.getDefaultProfile("base");
-            if (baseProfile.profile.user && baseProfile.profile.password) {
+            if (baseProfile?.profile?.user && baseProfile?.profile?.password) {
                 this.sshProfile.profile.user = baseProfile.profile.user;
                 this.sshProfile.profile.password = baseProfile.profile.password;
             }
@@ -353,6 +354,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
 
     private async issueCommand(profile: imperative.IProfileLoaded, command: string, cwd: string): Promise<void> {
         ZoweLogger.trace("UnixCommandHandler.issueCommand called.");
+        const profName = this.sshProfile !== undefined ? this.sshProfile.name : profile.name;
         try {
             if (command) {
                 const user: string = profile.profile.user;
@@ -377,7 +379,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 this.serviceProf = undefined;
             }
         } catch (error) {
-            await AuthUtils.errorHandling(error, profile.name);
+            await AuthUtils.errorHandling(error, profName);
         }
     }
 }

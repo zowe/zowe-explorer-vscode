@@ -41,7 +41,10 @@ export class AuthUtils {
                         return;
                     }
                 }
-            } else if (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401) {
+            } else if (
+                httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
+                imperativeError.message.includes("All configured authentication methods failed")
+            ) {
                 const errMsg = vscode.l10n.t({
                     message:
                         "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",

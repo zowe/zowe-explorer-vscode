@@ -11,6 +11,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fix issue with outdated SSH credentials stored securely in the SSH profile causing errors. [#2901](https://github.com/zowe/zowe-explorer-vscode/issues/2901)
+
 ## `3.0.0-next.202409091409`
 
 ### Bug fixes
