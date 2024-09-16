@@ -563,7 +563,6 @@ export class Profiles extends ProfilesCache {
             return; // See https://github.com/zowe/zowe-explorer-vscode/issues/1827
         }
 
-        // TODO Is this redundant with refresh call in ZoweVsCodeExtension.updateCredentials?
         const returnValue: string[] = [promptInfo.profile.user, promptInfo.profile.password, promptInfo.profile.base64EncodedAuth];
         this.updateProfilesArrays(promptInfo);
 
@@ -1063,7 +1062,6 @@ export class Profiles extends ProfilesCache {
         session.ISession.user = creds[0];
         session.ISession.password = creds[1];
         await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(session);
-        // TODO Should we call ZoweVsCodeExtension.updateProfileInCache method here?
         const profIndex = this.allProfiles.findIndex((profile) => profile.name === serviceProfile.name);
         this.allProfiles[profIndex] = { ...serviceProfile, profile: { ...serviceProfile, ...session } };
         if (node) {

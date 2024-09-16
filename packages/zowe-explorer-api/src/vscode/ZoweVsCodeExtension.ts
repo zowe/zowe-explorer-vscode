@@ -253,14 +253,12 @@ export class ZoweVsCodeExtension {
 
     private static async updateProfileInCache(opts: BaseProfileAuthOptions & { serviceProfile: imperative.IProfileLoaded }): Promise<void> {
         const cache: ProfilesCache = opts.zeProfiles ?? ZoweVsCodeExtension.profilesCache;
-        if ((await cache.getProfileInfo()).getTeamConfig().properties.autoStore) {
+        if ((await cache.getProfileInfo()).getTeamConfig().properties.autoStore !== false) {
             await cache.refresh();
         } else {
-            // TODO For loginWithBaseProfile, when autoStore=false is it correct to update service profile here instead of base?
-            // zFernand0: Yes, it is fine to update the service profile in the cache to avoid impacting other in memory credentials.
             // Note: It should be expected that nested profiles within this service profile will have their credentials updated.
             const profIndex = cache.allProfiles.findIndex((profile) => profile.name === opts.serviceProfile.name);
-            cache.allProfiles[profIndex] = opts.serviceProfile;
+            cache.allProfiles[profIndex] = { ...cache.allProfiles[profIndex], profile: opts.serviceProfile.profile };
         }
         if (opts.profileNode) {
             opts.profileNode.setProfileToChoice({
