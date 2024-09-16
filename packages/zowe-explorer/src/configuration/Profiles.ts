@@ -42,7 +42,12 @@ export class Profiles extends ProfilesCache {
     public static async createInstance(log: imperative.Logger): Promise<Profiles> {
         Profiles.loader = new Profiles(log, ZoweVsCodeExtension.workspaceRoot?.uri.fsPath);
         Constants.PROFILES_CACHE = Profiles.loader;
-        await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
+        try {
+            await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
+        } catch (err) {
+            ZoweLogger.error(err);
+            ZoweExplorerExtender.showZoweConfigError(err.message);
+        }
         await Profiles.getInstance().getProfileInfo();
         return Profiles.loader;
     }
@@ -75,14 +80,25 @@ export class Profiles extends ProfilesCache {
      */
     public async getProfileInfo(): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("Profiles.getProfileInfo called.");
-        this.mProfileInfo = await super.getProfileInfo();
+        if (this.mProfileInfo == null) {
+            this.mProfileInfo = await super.getProfileInfo();
+            // Cache profile info object until current thread is done executing
+            setImmediate(() => (this.mProfileInfo = null));
+        }
         return this.mProfileInfo;
     }
 
     public async checkCurrentProfile(theProfile: imperative.IProfileLoaded): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
         let profileStatus: Validation.IValidationProfile = { name: theProfile.name, status: "unverified" };
-        const usingTokenAuth = await AuthUtils.isUsingTokenAuth(theProfile.name);
+        let usingTokenAuth: boolean;
+        try {
+            usingTokenAuth = await AuthUtils.isUsingTokenAuth(theProfile.name);
+        } catch (err) {
+            ZoweLogger.error(err);
+            ZoweExplorerExtender.showZoweConfigError(err.message);
+            return profileStatus;
+        }
 
         if (usingTokenAuth && !theProfile.profile.tokenType) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
@@ -317,13 +333,15 @@ export class Profiles extends ProfilesCache {
         let mProfileInfo: imperative.ProfileInfo;
         try {
             mProfileInfo = await this.getProfileInfo();
-            const profAllAttrs = mProfileInfo.getAllProfiles();
-            for (const pName of profileNamesList) {
-                const osLocInfo = mProfileInfo.getOsLocInfo(profAllAttrs.find((p) => p.profName === pName));
-                items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(osLocInfo)[0] }));
-            }
         } catch (err) {
-            ZoweLogger.warn(err);
+            ZoweLogger.error(err);
+            ZoweExplorerExtender.showZoweConfigError(err.message);
+            return;
+        }
+        const profAllAttrs = mProfileInfo.getAllProfiles();
+        for (const pName of profileNamesList) {
+            const osLocInfo = mProfileInfo.getOsLocInfo(profAllAttrs.find((p) => p.profName === pName));
+            items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(osLocInfo)[0] }));
         }
 
         const quickpick = Gui.createQuickPick();
@@ -377,6 +395,7 @@ export class Profiles extends ProfilesCache {
             } catch (error) {
                 ZoweLogger.error(error);
                 ZoweExplorerExtender.showZoweConfigError(error.message);
+                return;
             }
             const profiles = config.getAllProfiles();
             const currentProfile = await this.getProfileFromConfig(profiles[0].profName);
@@ -400,7 +419,14 @@ export class Profiles extends ProfilesCache {
     }
 
     public async editSession(profileLoaded: imperative.IProfileLoaded): Promise<void> {
-        const currentProfile = await this.getProfileFromConfig(profileLoaded.name);
+        let currentProfile: imperative.IProfAttrs;
+        try {
+            currentProfile = await this.getProfileFromConfig(profileLoaded.name);
+        } catch (err) {
+            ZoweLogger.error(err);
+            ZoweExplorerExtender.showZoweConfigError(err.message);
+            return;
+        }
         const filePath = currentProfile.profLoc.osLoc[0];
         await this.openConfigFile(filePath);
     }
@@ -548,12 +574,20 @@ export class Profiles extends ProfilesCache {
             }),
         };
 
+        let mProfileInfo: imperative.ProfileInfo;
+        try {
+            mProfileInfo = await this.getProfileInfo();
+        } catch (err) {
+            ZoweLogger.error(err);
+            ZoweExplorerExtender.showZoweConfigError(err.message);
+            return;
+        }
         const promptInfo = await ZoweVsCodeExtension.updateCredentials(
             {
                 profile: typeof profile === "string" ? undefined : profile,
                 sessionName: typeof profile === "string" ? profile : undefined,
                 rePrompt,
-                secure: (await this.getProfileInfo()).isSecured(),
+                secure: mProfileInfo.isSecured(),
                 userInputBoxOptions,
                 passwordInputBoxOptions,
             },
@@ -615,7 +649,14 @@ export class Profiles extends ProfilesCache {
 
         const deleteLabel = deletedProfile.name;
 
-        const currentProfile = await this.getProfileFromConfig(deleteLabel);
+        let currentProfile: imperative.IProfAttrs;
+        try {
+            currentProfile = await this.getProfileFromConfig(deleteLabel);
+        } catch (err) {
+            ZoweLogger.error(err);
+            ZoweExplorerExtender.showZoweConfigError(err.message);
+            return;
+        }
         const filePath = currentProfile.profLoc.osLoc[0];
         await this.openConfigFile(filePath);
     }
@@ -746,7 +787,7 @@ export class Profiles extends ProfilesCache {
             if (loginTokenType && !loginTokenType.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)) {
                 loginOk = await this.loginWithRegularProfile(serviceProfile, node);
             } else {
-                loginOk = await ZoweVsCodeExtension.loginWithBaseProfile({
+                loginOk = await ZoweVsCodeExtension.ssoLogin({
                     serviceProfile,
                     defaultTokenType: loginTokenType,
                     profileNode: node,
@@ -850,7 +891,7 @@ export class Profiles extends ProfilesCache {
             case AuthUtils.isProfileUsingBasicAuth(serviceProfile): {
                 let loginOk = false;
                 if (loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken")) {
-                    loginOk = await ZoweVsCodeExtension.loginWithBaseProfile({
+                    loginOk = await ZoweVsCodeExtension.ssoLogin({
                         serviceProfile,
                         defaultTokenType: loginTokenType,
                         profileNode: node,
@@ -990,7 +1031,7 @@ export class Profiles extends ProfilesCache {
                 await Profiles.getInstance().updateCachedProfile(serviceProfile, node);
             } else {
                 const zeRegister = ZoweExplorerApiRegister.getInstance();
-                logoutOk = await ZoweVsCodeExtension.logoutWithBaseProfile({
+                logoutOk = await ZoweVsCodeExtension.ssoLogout({
                     serviceProfile,
                     defaultTokenType: zeRegister?.getCommonApi(serviceProfile).getTokenTypeName(),
                     profileNode: node,

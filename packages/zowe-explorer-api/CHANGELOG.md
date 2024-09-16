@@ -6,9 +6,22 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added the `BaseProfileAuthOptions` interface to define base profile authentication options for SSO login and logout. [#3076](https://github.com/zowe/zowe-explorer-vscode/pull/3076)
+- Deprecated the methods `ZoweVsCodeExtension.loginWithBaseProfile` and `ZoweVsCodeExtension.logoutWithBaseProfile`. Use `ZoweVsCodeExtension.ssoLogin` and `ZoweVsCodeExtension.ssoLogout` instead, which use the `BaseProfileAuthOptions` interface and allow you to choose whether the token value in the base profile should have precedence in case there are conflicts. [#3076](https://github.com/zowe/zowe-explorer-vscode/pull/3076)
+
 ### Bug fixes
 
 - Fixed behavior of logout action when token is defined in both base profile and parent profile. [#3076](https://github.com/zowe/zowe-explorer-vscode/issues/3076)
+
+## `3.0.0-next.202409132122`
+
+### New features and enhancements
+
+- Added optional `patternMatches` property to the `IZoweDatasetTreeNode` interface to cache pattern matches from an applied filter search. [#1164](https://github.com/zowe/zowe-explorer-vscode/issues/1164)
+
+### Bug fixes
+
+- Fix extender's ability to fetch profile information from ProfilesCache for SSH profile types.
 
 ## `3.0.0-next.202409091409`
 
@@ -123,7 +136,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - **Breaking:** Removed the `MemberEntry` filesystem class, in favor of using the `DsEntry` class with `isMember` set to `true`.
 - Changed `TableViewProvider.setTableView` function to be asynchronous for more optimized data updates.
 - Updated `Table.Conditional` and `Table.Callback` types to support multi-row callbacks.
-- Added optional `patternMatches` property to the `IZoweDatasetTreeNode` interface to cache pattern matches from an applied filter search. [#1164](https://github.com/zowe/zowe-explorer-vscode/issues/1164)
 
 ### Bug fixes
 
