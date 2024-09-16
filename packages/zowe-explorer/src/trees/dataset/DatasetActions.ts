@@ -1932,7 +1932,6 @@ export class DatasetActions {
         const childrenToOpen = Object.values(data);
         if (childrenToOpen.length > 0) {
             for (const child of childrenToOpen) {
-                Gui.showMessage(child.uri as string);
                 const childUri = vscode.Uri.from({scheme: ZoweScheme.DS, path: child.uri as string});
                 await DatasetFSProvider.instance.remoteLookupForResource(childUri);
                 Gui.showTextDocument(childUri, {preview: false}).then(editor => {
