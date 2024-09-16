@@ -95,7 +95,6 @@ export class ZoweVsCodeExtension {
                 shouldSave = await ZoweVsCodeExtension.saveCredentials(loadProfile);
             }
 
-            // TODO Should we call updateProfileInCache method here?
             if (shouldSave) {
                 // write changes to the file, autoStore value determines if written to file
                 const upd = { profileName: loadProfile.name, profileType: loadProfile.type };
@@ -113,13 +112,30 @@ export class ZoweVsCodeExtension {
      * Trigger a login operation with the merged contents between the service profile and the base profile.
      *  If the connection details (host:port) do not match (service vs base), the token will be stored in the service profile.
      *  If there is no API registered for the profile type, this method defaults the login behavior to that of the APIML.
+     * @deprecated Use `ZoweVsCodeExtension.ssoLogin` instead
      * @param serviceProfile Profile to be used for login purposes (either the name of the IProfileLoaded instance)
      * @param loginTokenType The tokenType value for compatibility purposes
      * @param node The node for compatibility purposes
      * @param zeRegister The ZoweExplorerApiRegister instance for compatibility purposes
      * @param zeProfiles The Zowe Explorer "Profiles.ts" instance for compatibility purposes
      */
-    public static async loginWithBaseProfile(opts: BaseProfileAuthOptions): Promise<boolean> {
+    public static async loginWithBaseProfile(
+        serviceProfile: string | imperative.IProfileLoaded,
+        loginTokenType?: string,
+        node?: Types.IZoweNodeType,
+        zeRegister?: Types.IApiRegisterClient, // ZoweExplorerApiRegister
+        zeProfiles?: ProfilesCache // Profiles extends ProfilesCache
+    ): Promise<boolean> {
+        return this.ssoLogin({ serviceProfile, defaultTokenType: loginTokenType, profileNode: node, zeRegister, zeProfiles });
+    }
+
+    /**
+     * Trigger a login operation with the merged contents between the service profile and the base profile.
+     *  If the connection details (host:port) do not match (service vs base), the token will be stored in the service profile.
+     *  If there is no API registered for the profile type, this method defaults the login behavior to that of the APIML.
+     * @param {BaseProfileAuthOptions} opts Object defining options for base profile authentication
+     */
+    public static async ssoLogin(opts: BaseProfileAuthOptions): Promise<boolean> {
         const cache: ProfilesCache = opts.zeProfiles ?? ZoweVsCodeExtension.profilesCache;
         const serviceProfile =
             typeof opts.serviceProfile === "string"
@@ -207,11 +223,26 @@ export class ZoweVsCodeExtension {
      * Trigger a logout operation with the merged contents between the service profile and the base profile.
      *  If the connection details (host:port) do not match (service vs base), the token will be removed from the service profile.
      *  If there is no API registered for the profile type, this method defaults the logout behavior to that of the APIML.
+     * @deprecated Use `ZoweVsCodeExtension.ssoLogout` instead
      * @param serviceProfile Profile to be used for logout purposes (either the name of the IProfileLoaded instance)
      * @param zeRegister The ZoweExplorerApiRegister instance for compatibility purposes
      * @param zeProfiles The Zowe Explorer "Profiles.ts" instance for compatibility purposes
      */
-    public static async logoutWithBaseProfile(opts: BaseProfileAuthOptions): Promise<boolean> {
+    public static async logoutWithBaseProfile(
+        serviceProfile: string | imperative.IProfileLoaded,
+        zeRegister?: Types.IApiRegisterClient, // ZoweExplorerApiRegister
+        zeProfiles?: ProfilesCache // Profiles extends ProfilesCache
+    ): Promise<boolean> {
+        return this.ssoLogout({ serviceProfile, zeRegister, zeProfiles });
+    }
+
+    /**
+     * Trigger a logout operation with the merged contents between the service profile and the base profile.
+     *  If the connection details (host:port) do not match (service vs base), the token will be removed from the service profile.
+     *  If there is no API registered for the profile type, this method defaults the logout behavior to that of the APIML.
+     * @param {BaseProfileAuthOptions} opts Object defining options for base profile authentication
+     */
+    public static async ssoLogout(opts: BaseProfileAuthOptions): Promise<boolean> {
         const cache: ProfilesCache = opts.zeProfiles ?? ZoweVsCodeExtension.profilesCache;
         const serviceProfile =
             typeof opts.serviceProfile === "string"

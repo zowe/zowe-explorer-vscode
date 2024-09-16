@@ -787,7 +787,7 @@ export class Profiles extends ProfilesCache {
             if (loginTokenType && !loginTokenType.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)) {
                 loginOk = await this.loginWithRegularProfile(serviceProfile, node);
             } else {
-                loginOk = await ZoweVsCodeExtension.loginWithBaseProfile({
+                loginOk = await ZoweVsCodeExtension.ssoLogin({
                     serviceProfile,
                     defaultTokenType: loginTokenType,
                     profileNode: node,
@@ -892,7 +892,7 @@ export class Profiles extends ProfilesCache {
             case AuthUtils.isProfileUsingBasicAuth(serviceProfile): {
                 let loginOk = false;
                 if (loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken")) {
-                    loginOk = await ZoweVsCodeExtension.loginWithBaseProfile({
+                    loginOk = await ZoweVsCodeExtension.ssoLogin({
                         serviceProfile,
                         defaultTokenType: loginTokenType,
                         profileNode: node,
@@ -1031,7 +1031,7 @@ export class Profiles extends ProfilesCache {
                 await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(node.getSession());
             } else {
                 const zeRegister = ZoweExplorerApiRegister.getInstance();
-                logoutOk = await ZoweVsCodeExtension.logoutWithBaseProfile({
+                logoutOk = await ZoweVsCodeExtension.ssoLogout({
                     serviceProfile,
                     defaultTokenType: zeRegister?.getCommonApi(serviceProfile).getTokenTypeName(),
                     profileNode: node,
