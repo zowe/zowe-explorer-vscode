@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { ZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
+import { ProfilesCache, ZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
 import { createIProfile, createISession } from "../../__mocks__/mockCreators/shared";
 import { ZoweCommandProvider } from "../../../src/commands/ZoweCommandProvider";
 import { Profiles } from "../../../src/configuration/Profiles";
@@ -48,9 +48,10 @@ describe("ZoweCommandProvider Unit Tests - function checkCurrentProfile", () => 
     testNode.setProfileToChoice(globalMocks.testProfile);
     testNode.contextValue = "session server";
 
-    beforeEach(() => {
-        void Profiles.createInstance(imperative.Logger.getAppLogger());
-        Object.defineProperty(Profiles.getInstance(), "log", {
+    beforeEach(async () => {
+        jest.spyOn(ProfilesCache.prototype, "refresh").mockImplementation();
+        const profilesInstance = await Profiles.createInstance(undefined as any);
+        Object.defineProperty(profilesInstance, "log", {
             value: {
                 error: jest.fn(),
             },

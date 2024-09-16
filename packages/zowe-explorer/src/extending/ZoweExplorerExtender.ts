@@ -71,7 +71,13 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
                     return;
                 }
             }
-            Gui.showTextDocument(vscode.Uri.file(configPath));
+            Gui.showTextDocument(vscode.Uri.file(configPath)).then((editor) => {
+                const errorLocation = errorDetails.match(/Line (\d+), Column (\d+)/);
+                if (errorLocation != null) {
+                    const position = new vscode.Position(+errorLocation[1] - 1, +errorLocation[2]);
+                    editor.selection = new vscode.Selection(position, position);
+                }
+            });
         });
     }
 
