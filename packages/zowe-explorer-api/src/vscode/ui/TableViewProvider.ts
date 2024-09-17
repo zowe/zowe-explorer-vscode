@@ -42,24 +42,13 @@ export class TableViewProvider implements WebviewViewProvider {
 
     private static instance: TableViewProvider;
 
-    public static readonly FALLBACK_HTML = `
-            <html>
-                <head>
-                </head>
-                <body>
-                    <p style="color: var(--vscode-debugIcon-breakpointDisabledForeground)">
-                        Right-click on a profile in Zowe Explorer and select the "Show as table" option to present its search results in this view.
-                    </p>
-                </body>
-            </html>`;
-
     private constructor() {}
 
     /**
      * Retrieve the singleton instance of the TableViewProvider.
      * @returns the TableViewProvider instance used by Zowe Explorer
      */
-    public static getInstance(): TableViewProvider {
+public static getInstance(): TableViewProvider {
         if (!this.instance) {
             this.instance = new TableViewProvider();
         }
@@ -81,8 +70,11 @@ export class TableViewProvider implements WebviewViewProvider {
             if (this.view != null) {
                 this.view.webview.html = "";
             }
+            await commands.executeCommand("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", false);
             return;
         }
+
+        await commands.executeCommand("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", true);
 
         if (this.view) {
             this.tableView.resolveForView(this.view);
@@ -113,8 +105,6 @@ export class TableViewProvider implements WebviewViewProvider {
 
         if (this.tableView != null) {
             this.tableView.resolveForView(this.view);
-        } else if (this.view) {
-            this.view.webview.html = TableViewProvider.FALLBACK_HTML;
         }
     }
 }

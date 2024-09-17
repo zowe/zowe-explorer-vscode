@@ -8,7 +8,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
-- Added placeholder text to the TableViewProvider (used for "Zowe Resources" panel) to provide clarity when a table is not visible. [#3113](https://github.com/zowe/zowe-explorer-vscode/issues/3113)
+- Updated the `TableViewProvider.setTableView` function to show the Zowe Resources panel if a table is provided. If `null` is passed, the Zowe Resources panel will be hidden. [#3113](https://github.com/zowe/zowe-explorer-vscode/issues/3113)
 
 ## `3.0.0-next.202409132122`
 
