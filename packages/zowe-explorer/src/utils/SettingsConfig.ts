@@ -137,7 +137,7 @@ export class SettingsConfig {
 
     private static get currentVersionNumber(): number {
         ZoweLogger.trace("SettingsConfig.currentVersionNumber called.");
-        const version = vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version as string;
+        const version = vscode.extensions.getExtension(globals.ZE_EXT_NAME).packageJSON.version as string;
         // Strip off minor and patch from version number
         if (version.includes(".")) {
             return parseInt(version.substring(0, version.indexOf(".")));
