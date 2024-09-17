@@ -102,6 +102,17 @@ export class TableViewProvider implements WebviewViewProvider {
 
         if (this.tableView != null) {
             this.tableView.resolveForView(this.view);
+        } else if (this.view) {
+            this.view.webview.html = `
+            <html>
+                <head>
+                </head>
+                <body>
+                    <p style="color: var(--vscode-debugIcon-breakpointDisabledForeground)">
+                        Execute a filter search in Zowe Explorer and select the "Show as table" option to present resources in this view.
+                    </p>
+                </body>
+            </html>`
         }
     }
 }
