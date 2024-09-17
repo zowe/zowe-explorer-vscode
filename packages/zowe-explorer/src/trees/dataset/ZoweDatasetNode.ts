@@ -26,7 +26,6 @@ import {
     ZoweScheme,
     PdsEntry,
     FsDatasetsUtils,
-    DirEntry,
 } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -197,11 +196,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public setProfileToChoice(profile: imperative.IProfileLoaded): void {
-        super.setProfileToChoice(profile);
-        const dsEntry = DatasetFSProvider.instance.lookup(this.resourceUri, true) as DirEntry;
-        if (dsEntry != null) {
-            dsEntry.metadata.profile = profile;
-        }
+        super.setProfileToChoice(profile, DatasetFSProvider.instance);
     }
 
     /**

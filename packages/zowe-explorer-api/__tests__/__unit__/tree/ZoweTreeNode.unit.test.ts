@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import { ZoweTreeNode } from "../../../src/tree/ZoweTreeNode";
 import { IZoweTreeNode } from "../../../src/tree/IZoweTreeNode";
 import * as imperative from "@zowe/imperative";
+import { BaseProvider } from "../../../src";
 
 describe("ZoweTreeNode", () => {
     const makeNode = (
@@ -78,5 +79,22 @@ describe("ZoweTreeNode", () => {
         expect(node.getSession()).toBeUndefined();
         expect(node.getProfile()).toBeUndefined();
         expect(node.getProfileName()).toBeUndefined();
+    });
+
+    it("setProfileToChoice should update profile for associated FSProvider entry", () => {
+        const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined);
+        const fsEntry = {
+            metadata: {
+                profile: { name: "oldProfile" },
+            },
+        };
+        node.setProfileToChoice(
+            { name: "newProfile" } as unknown as imperative.IProfileLoaded,
+            {
+                lookup: jest.fn().mockReturnValue(fsEntry),
+            } as unknown as BaseProvider
+        );
+        expect(node.getProfileName()).toBe("newProfile");
+        expect(fsEntry.metadata.profile.name).toBe("newProfile");
     });
 });

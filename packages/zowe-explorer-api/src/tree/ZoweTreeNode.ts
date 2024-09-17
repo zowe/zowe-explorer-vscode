@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import * as imperative from "@zowe/imperative";
 import { IZoweTreeNode } from "./IZoweTreeNode";
+import type { BaseProvider } from "../fs/BaseProvider";
 
 /**
  * Common implementation of functions and methods associated with the
@@ -99,8 +100,12 @@ export class ZoweTreeNode extends vscode.TreeItem {
      *
      * @param {imperative.IProfileLoaded} The profile you will set the node to use
      */
-    public setProfileToChoice(aProfile: imperative.IProfileLoaded): void {
+    public setProfileToChoice(aProfile: imperative.IProfileLoaded, fsProvider?: BaseProvider): void {
         this.profile = aProfile;
+        const fsEntry = fsProvider?.lookup(this.resourceUri, true);
+        if (fsEntry != null) {
+            fsEntry.metadata.profile = aProfile;
+        }
     }
     /**
      * Sets the session for this node to the one chosen in parameters.
