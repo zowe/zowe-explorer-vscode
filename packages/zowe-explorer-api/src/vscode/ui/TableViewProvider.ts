@@ -48,7 +48,7 @@ export class TableViewProvider implements WebviewViewProvider {
                 </head>
                 <body>
                     <p style="color: var(--vscode-debugIcon-breakpointDisabledForeground)">
-                        Execute a filter search in Zowe Explorer and select the "Show as table" option to present resources in this view.
+                        Right-click on a profile in Zowe Explorer and select the "Show as table" option to present its search results in this view.
                     </p>
                 </body>
             </html>`;
