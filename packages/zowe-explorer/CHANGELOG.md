@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Added placeholder text to the "Zowe Resources" panel to provide clarity when a table is not visible. [#3113](https://github.com/zowe/zowe-explorer-vscode/issues/3113)
+
 ## `3.0.0-next.202409132122`
 
 ### New features and enhancements
