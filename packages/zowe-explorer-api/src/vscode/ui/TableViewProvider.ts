@@ -48,7 +48,7 @@ export class TableViewProvider implements WebviewViewProvider {
      * Retrieve the singleton instance of the TableViewProvider.
      * @returns the TableViewProvider instance used by Zowe Explorer
      */
-public static getInstance(): TableViewProvider {
+    public static getInstance(): TableViewProvider {
         if (!this.instance) {
             this.instance = new TableViewProvider();
         }
