@@ -694,11 +694,10 @@ describe("Profiles Unit Tests - function promptCredentials", () => {
             profile: {
                 user: "test",
                 password: "12345",
-                base64EncodedAuth: "encodedAuth",
             } as imperative.IProfile,
         } as imperative.IProfileLoaded);
         jest.spyOn(Profiles.getInstance(), "updateProfilesArrays").mockImplementation();
-        await expect(Profiles.getInstance().promptCredentials("secure_config_props")).resolves.toEqual(["test", "12345", "encodedAuth"]);
+        await expect(Profiles.getInstance().promptCredentials("secure_config_props")).resolves.toEqual(["test", "12345"]);
     });
 
     it("Tests that promptCredentials catches error and logs it", async () => {

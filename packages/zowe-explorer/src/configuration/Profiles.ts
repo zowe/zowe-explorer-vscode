@@ -108,8 +108,6 @@ export class Profiles extends ProfilesCache {
             try {
                 await Profiles.getInstance().ssoLogin(null, theProfile.name);
                 theProfile = Profiles.getInstance().loadNamedProfile(theProfile.name);
-                // Validate profile
-                profileStatus = await this.getProfileSetting(theProfile);
             } catch (error) {
                 await AuthUtils.errorHandling(error, theProfile.name, error.message);
                 return profileStatus;
@@ -129,14 +127,11 @@ export class Profiles extends ProfilesCache {
             if (values) {
                 theProfile.profile.user = values[0];
                 theProfile.profile.password = values[1];
-
-                // Validate profile
-                profileStatus = await this.getProfileSetting(theProfile);
             }
-        } else {
-            // Profile should have enough information to allow validation
-            profileStatus = await this.getProfileSetting(theProfile);
         }
+
+        // Profile should have enough information to allow validation
+        profileStatus = await this.getProfileSetting(theProfile);
 
         switch (profileStatus.status) {
             case "unverified":
