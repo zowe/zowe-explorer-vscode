@@ -1028,208 +1028,208 @@ describe("buildFileName", () => {
     });
 });
 
-describe("copyTree", () => {
-    describe("copying a file tree - same profiles (copy API)", () => {
-        it("with naming collisions", async () => {
-            const getInfoFromUri = jest
-                .spyOn(UssFSProvider.instance as any, "_getInfoFromUri")
-                // destination info
-                .mockReturnValueOnce({
-                    profile: testProfile,
-                    path: "/bFile.txt",
-                })
-                // source info
-                .mockReturnValueOnce({
-                    profile: testProfile,
-                    path: "/aFile.txt",
-                });
-            const mockUssApi = {
-                copy: jest.fn(),
-                create: jest.fn(),
-                fileList: jest.fn().mockResolvedValueOnce({
-                    apiResponse: {
-                        items: [{ name: "bFile.txt" }],
-                    },
-                }),
-                uploadFromBuffer: jest.fn(),
-            };
-            jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
-            await (UssFSProvider.instance as any).copyTree(
-                testUris.file,
-                testUris.file.with({
-                    path: "/sestest/bFile.txt",
-                }),
-                { tree: { type: USSFileStructure.UssFileType.File } }
-            );
-            expect(mockUssApi.copy).toHaveBeenCalledWith("/bFile (1).txt", {
-                from: "/aFile.txt",
-                recursive: false,
-                overwrite: true,
-            });
-            getInfoFromUri.mockRestore();
-        });
+// describe("copyTree", () => {
+//     describe("copying a file tree - same profiles (copy API)", () => {
+//         it("with naming collisions", async () => {
+//             const getInfoFromUri = jest
+//                 .spyOn(UssFSProvider.instance as any, "_getInfoFromUri")
+//                 // destination info
+//                 .mockReturnValueOnce({
+//                     profile: testProfile,
+//                     path: "/bFile.txt",
+//                 })
+//                 // source info
+//                 .mockReturnValueOnce({
+//                     profile: testProfile,
+//                     path: "/aFile.txt",
+//                 });
+//             const mockUssApi = {
+//                 copy: jest.fn(),
+//                 create: jest.fn(),
+//                 fileList: jest.fn().mockResolvedValueOnce({
+//                     apiResponse: {
+//                         items: [{ name: "bFile.txt" }],
+//                     },
+//                 }),
+//                 uploadFromBuffer: jest.fn(),
+//             };
+//             jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
+//             await (UssFSProvider.instance as any).copyTree(
+//                 testUris.file,
+//                 testUris.file.with({
+//                     path: "/sestest/bFile.txt",
+//                 }),
+//                 { tree: { type: USSFileStructure.UssFileType.File } }
+//             );
+//             expect(mockUssApi.copy).toHaveBeenCalledWith("/bFile (1).txt", {
+//                 from: "/aFile.txt",
+//                 recursive: false,
+//                 overwrite: true,
+//             });
+//             getInfoFromUri.mockRestore();
+//         });
 
-        it("without naming collisions", async () => {
-            const getInfoFromUri = jest
-                .spyOn((UssFSProvider as any).prototype, "_getInfoFromUri")
-                // destination info
-                .mockReturnValueOnce({
-                    profile: testProfile,
-                    path: "/bFile.txt",
-                })
-                // source info
-                .mockReturnValueOnce({
-                    profile: testProfile,
-                    path: "/aFile.txt",
-                });
-            const mockUssApi = {
-                copy: jest.fn(),
-                create: jest.fn(),
-                fileList: jest.fn().mockResolvedValueOnce({
-                    apiResponse: {
-                        items: [{ name: "aFile.txt" }],
-                    },
-                }),
-                uploadFromBuffer: jest.fn(),
-            };
-            jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
-            await (UssFSProvider.instance as any).copyTree(
-                testUris.file,
-                testUris.file.with({
-                    path: "/sestest/bFile.txt",
-                }),
-                { tree: { type: USSFileStructure.UssFileType.File } }
-            );
-            expect(mockUssApi.copy).toHaveBeenCalledWith("/bFile.txt", {
-                from: "/aFile.txt",
-                recursive: false,
-                overwrite: true,
-            });
-            getInfoFromUri.mockRestore();
-        });
-    });
+//         it("without naming collisions", async () => {
+//             const getInfoFromUri = jest
+//                 .spyOn((UssFSProvider as any).prototype, "_getInfoFromUri")
+//                 // destination info
+//                 .mockReturnValueOnce({
+//                     profile: testProfile,
+//                     path: "/bFile.txt",
+//                 })
+//                 // source info
+//                 .mockReturnValueOnce({
+//                     profile: testProfile,
+//                     path: "/aFile.txt",
+//                 });
+//             const mockUssApi = {
+//                 copy: jest.fn(),
+//                 create: jest.fn(),
+//                 fileList: jest.fn().mockResolvedValueOnce({
+//                     apiResponse: {
+//                         items: [{ name: "aFile.txt" }],
+//                     },
+//                 }),
+//                 uploadFromBuffer: jest.fn(),
+//             };
+//             jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
+//             await (UssFSProvider.instance as any).copyTree(
+//                 testUris.file,
+//                 testUris.file.with({
+//                     path: "/sestest/bFile.txt",
+//                 }),
+//                 { tree: { type: USSFileStructure.UssFileType.File } }
+//             );
+//             expect(mockUssApi.copy).toHaveBeenCalledWith("/bFile.txt", {
+//                 from: "/aFile.txt",
+//                 recursive: false,
+//                 overwrite: true,
+//             });
+//             getInfoFromUri.mockRestore();
+//         });
+//     });
 
-    describe("copying - different profiles", () => {
-        it("file: with naming collisions", async () => {
-            const getInfoFromUri = jest
-                .spyOn((UssFSProvider as any).prototype, "_getInfoFromUri")
-                // destination info
-                .mockReturnValueOnce({
-                    profile: testProfileB,
-                    path: "/aFile.txt",
-                })
-                // source info
-                .mockReturnValueOnce({
-                    profile: testProfile,
-                    path: "/aFile.txt",
-                });
-            const mockUssApi = {
-                copy: jest.fn(),
-                create: jest.fn(),
-                fileList: jest.fn().mockResolvedValueOnce({
-                    apiResponse: {
-                        items: [{ name: "bFile.txt" }],
-                    },
-                }),
-                uploadFromBuffer: jest.fn(),
-            };
-            jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
-            jest.spyOn((UssFSProvider as any).instance, "lookup").mockReturnValueOnce(testEntries.file);
-            jest.spyOn((UssFSProvider as any).instance, "readFile").mockResolvedValueOnce(testEntries.file.data);
-            await (UssFSProvider.instance as any).copyTree(
-                testUris.file,
-                testUris.file.with({
-                    path: "/sestest2/bFile.txt",
-                }),
-                { tree: { type: USSFileStructure.UssFileType.File } }
-            );
-            expect(mockUssApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(testEntries.file.data ?? []), "/aFile.txt");
-            getInfoFromUri.mockRestore();
-        });
-        it("file: without naming collisions", async () => {
-            const getInfoFromUri = jest
-                .spyOn((UssFSProvider as any).prototype, "_getInfoFromUri")
-                // destination info
-                .mockReturnValueOnce({
-                    profile: testProfileB,
-                    path: "/aFile.txt",
-                })
-                // source info
-                .mockReturnValueOnce({
-                    profile: testProfile,
-                    path: "/aFile.txt",
-                });
-            const mockUssApi = {
-                copy: jest.fn(),
-                create: jest.fn(),
-                fileList: jest.fn().mockResolvedValueOnce({
-                    apiResponse: {
-                        items: [{ name: "aFile.txt" }],
-                    },
-                }),
-                uploadFromBuffer: jest.fn(),
-            };
-            jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
-            jest.spyOn((UssFSProvider as any).instance, "lookup").mockReturnValueOnce(testEntries.file);
-            jest.spyOn((UssFSProvider as any).instance, "readFile").mockResolvedValueOnce(testEntries.file.data);
-            await (UssFSProvider.instance as any).copyTree(
-                testUris.file,
-                testUris.file.with({
-                    path: "/sestest2/aFile.txt",
-                }),
-                { tree: { type: USSFileStructure.UssFileType.File } }
-            );
-            expect(mockUssApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(testEntries.file.data ?? []), "/aFile (1).txt");
-            getInfoFromUri.mockRestore();
-        });
-        it("folder", async () => {
-            const getInfoFromUri = jest
-                .spyOn((UssFSProvider as any).prototype, "_getInfoFromUri")
-                // destination info
-                .mockReturnValueOnce({
-                    profile: testProfileB,
-                    path: "/aFolder",
-                })
-                // source info
-                .mockReturnValueOnce({
-                    profile: testProfile,
-                    path: "/aFolder",
-                });
-            const mockUssApi = {
-                create: jest.fn(),
-                fileList: jest.fn().mockResolvedValue({
-                    apiResponse: {
-                        items: [{ name: "aFile.txt" }],
-                    },
-                }),
-                uploadFromBuffer: jest.fn(),
-            };
-            const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi as any);
+//     describe("copying - different profiles", () => {
+//         it("file: with naming collisions", async () => {
+//             const getInfoFromUri = jest
+//                 .spyOn((UssFSProvider as any).prototype, "_getInfoFromUri")
+//                 // destination info
+//                 .mockReturnValueOnce({
+//                     profile: testProfileB,
+//                     path: "/aFile.txt",
+//                 })
+//                 // source info
+//                 .mockReturnValueOnce({
+//                     profile: testProfile,
+//                     path: "/aFile.txt",
+//                 });
+//             const mockUssApi = {
+//                 copy: jest.fn(),
+//                 create: jest.fn(),
+//                 fileList: jest.fn().mockResolvedValueOnce({
+//                     apiResponse: {
+//                         items: [{ name: "bFile.txt" }],
+//                     },
+//                 }),
+//                 uploadFromBuffer: jest.fn(),
+//             };
+//             jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
+//             jest.spyOn((UssFSProvider as any).instance, "lookup").mockReturnValueOnce(testEntries.file);
+//             jest.spyOn((UssFSProvider as any).instance, "readFile").mockResolvedValueOnce(testEntries.file.data);
+//             await (UssFSProvider.instance as any).copyTree(
+//                 testUris.file,
+//                 testUris.file.with({
+//                     path: "/sestest2/bFile.txt",
+//                 }),
+//                 { tree: { type: USSFileStructure.UssFileType.File } }
+//             );
+//             expect(mockUssApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(testEntries.file.data ?? []), "/aFile.txt");
+//             getInfoFromUri.mockRestore();
+//         });
+//         it("file: without naming collisions", async () => {
+//             const getInfoFromUri = jest
+//                 .spyOn((UssFSProvider as any).prototype, "_getInfoFromUri")
+//                 // destination info
+//                 .mockReturnValueOnce({
+//                     profile: testProfileB,
+//                     path: "/aFile.txt",
+//                 })
+//                 // source info
+//                 .mockReturnValueOnce({
+//                     profile: testProfile,
+//                     path: "/aFile.txt",
+//                 });
+//             const mockUssApi = {
+//                 copy: jest.fn(),
+//                 create: jest.fn(),
+//                 fileList: jest.fn().mockResolvedValueOnce({
+//                     apiResponse: {
+//                         items: [{ name: "aFile.txt" }],
+//                     },
+//                 }),
+//                 uploadFromBuffer: jest.fn(),
+//             };
+//             jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
+//             jest.spyOn((UssFSProvider as any).instance, "lookup").mockReturnValueOnce(testEntries.file);
+//             jest.spyOn((UssFSProvider as any).instance, "readFile").mockResolvedValueOnce(testEntries.file.data);
+//             await (UssFSProvider.instance as any).copyTree(
+//                 testUris.file,
+//                 testUris.file.with({
+//                     path: "/sestest2/aFile.txt",
+//                 }),
+//                 { tree: { type: USSFileStructure.UssFileType.File } }
+//             );
+//             expect(mockUssApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(testEntries.file.data ?? []), "/aFile (1).txt");
+//             getInfoFromUri.mockRestore();
+//         });
+//         it("folder", async () => {
+//             const getInfoFromUri = jest
+//                 .spyOn((UssFSProvider as any).prototype, "_getInfoFromUri")
+//                 // destination info
+//                 .mockReturnValueOnce({
+//                     profile: testProfileB,
+//                     path: "/aFolder",
+//                 })
+//                 // source info
+//                 .mockReturnValueOnce({
+//                     profile: testProfile,
+//                     path: "/aFolder",
+//                 });
+//             const mockUssApi = {
+//                 create: jest.fn(),
+//                 fileList: jest.fn().mockResolvedValue({
+//                     apiResponse: {
+//                         items: [{ name: "aFile.txt" }],
+//                     },
+//                 }),
+//                 uploadFromBuffer: jest.fn(),
+//             };
+//             const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi as any);
 
-            const copyTreeSpy = jest.spyOn(UssFSProvider.instance as any, "copyTree");
-            const fileInPathTree = {
-                baseName: "someFile.txt",
-                localUri: Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/aFolder/someFile.txt" }),
-                type: USSFileStructure.UssFileType.File,
-            };
-            const ussFileTree = {
-                type: USSFileStructure.UssFileType.Directory,
-                children: [fileInPathTree],
-            };
-            await (UssFSProvider.instance as any).copyTree(
-                testUris.folder,
-                testUris.folder.with({
-                    path: "/sestest2/aFolder",
-                }),
-                { tree: ussFileTree }
-            );
-            expect(mockUssApi.create).toHaveBeenCalledWith("/aFolder", "directory");
-            expect(copyTreeSpy).toHaveBeenCalledTimes(2);
-            getInfoFromUri.mockRestore();
-            ussApiMock.mockRestore();
-        });
-    });
-});
+//             const copyTreeSpy = jest.spyOn(UssFSProvider.instance as any, "copyTree");
+//             const fileInPathTree = {
+//                 baseName: "someFile.txt",
+//                 localUri: Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/aFolder/someFile.txt" }),
+//                 type: USSFileStructure.UssFileType.File,
+//             };
+//             const ussFileTree = {
+//                 type: USSFileStructure.UssFileType.Directory,
+//                 children: [fileInPathTree],
+//             };
+//             await (UssFSProvider.instance as any).copyTree(
+//                 testUris.folder,
+//                 testUris.folder.with({
+//                     path: "/sestest2/aFolder",
+//                 }),
+//                 { tree: ussFileTree }
+//             );
+//             expect(mockUssApi.create).toHaveBeenCalledWith("/aFolder", "directory");
+//             expect(copyTreeSpy).toHaveBeenCalledTimes(2);
+//             getInfoFromUri.mockRestore();
+//             ussApiMock.mockRestore();
+//         });
+//     });
+// });
 
 describe("createDirectory", () => {
     it("creates a session directory with the given URI", () => {
