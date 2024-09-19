@@ -73,7 +73,8 @@
         {
           "type": "webview",
           "id": "zowe-resources",
-          "name": "%zowe.resources.name%"
+          "name": "%zowe.resources.name%",
+          "when": "zowe.vscode-extension-for-zowe.showZoweResources"
         }
       ],
       "zowezosconsole": [
