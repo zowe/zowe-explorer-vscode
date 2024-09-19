@@ -47,7 +47,10 @@ export class DsEntryMetadata implements EntryMetadata {
         this.path = metadata.path;
     }
 
-    private extensionRemovedFromPath(): string {
+    /**
+     * @returns the data set's file system path without the extension
+     */
+    public extensionRemovedFromPath(): string {
         for (const ext of [".c", ".jcl", ".cbl", ".cpy", ".inc", ".pli", ".sh", ".rexx", ".xml", ".asm", ".log"]) {
             if (this.path.endsWith(ext)) {
                 return this.path.replace(ext, "");
