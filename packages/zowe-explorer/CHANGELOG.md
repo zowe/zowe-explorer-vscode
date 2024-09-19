@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- The "Zowe Resources" panel is now hidden by default until Zowe Explorer reveals it to display a table or other data. [#3113](https://github.com/zowe/zowe-explorer-vscode/issues/3113)
+
 ## `3.0.0-next.202409132122`
 
 ### New features and enhancements
