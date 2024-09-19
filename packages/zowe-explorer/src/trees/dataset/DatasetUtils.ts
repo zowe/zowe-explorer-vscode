@@ -72,7 +72,7 @@ export class DatasetUtils {
     }
 
     /**
-     * Get the language ID of a Data Set for use with `vscode.languages.setTextDocumentLanguage`
+     * Get the file extension for a Data Set (or data set member) based on its name or its PDS name.
      */
     public static getExtension(label: string): string | null {
         const limit = 5;
