@@ -9,38 +9,39 @@
  *
  */
 
-import { Disposable, FilePermission, FileSystemError, FileType, languages, TextDocument, TextEditor, Uri } from "vscode";
+import { Disposable, FilePermission, FileSystemError, FileType, TextEditor, Uri } from "vscode";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
-import { DirEntry, DsEntry, FileEntry, FilterEntry, FsAbstractUtils, Gui, PdsEntry, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { DirEntry, DsEntry, DsEntryMetadata, FileEntry, FilterEntry, FsAbstractUtils, Gui, PdsEntry, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
-import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 const dayjs = require("dayjs");
 
 const testProfile = createIProfile();
 const testEntries = {
     ps: {
         ...new DsEntry("USER.DATA.PS", false),
-        metadata: {
+        metadata: new DsEntryMetadata({
             profile: testProfile,
             path: "/USER.DATA.PS",
-        },
+        }),
         etag: "OLDETAG",
+        isMember: false,
     } as DsEntry,
     pds: {
         ...new PdsEntry("USER.DATA.PDS"),
-        metadata: {
+        metadata: new DsEntryMetadata({
             profile: testProfile,
             path: "/USER.DATA.PDS",
-        },
+        }),
     } as PdsEntry,
     pdsMember: {
         ...new DsEntry("MEMBER1", true),
-        metadata: {
+        metadata: new DsEntryMetadata({
             profile: testProfile,
             path: "/USER.DATA.PDS/MEMBER1",
-        },
+        }),
+        isMember: true,
     } as DsEntry,
     session: {
         ...new FilterEntry("sestest"),
@@ -757,7 +758,7 @@ describe("fetchDataset", () => {
                 mvsApiMock.mockRestore();
             });
 
-            it("existing URI - PS", async () => {
+            it("existing URI", async () => {
                 const fakePs = Object.assign(Object.create(Object.getPrototypeOf(testEntries.ps)), testEntries.ps);
                 const lookupMock = jest.spyOn(DatasetFSProvider.instance, "lookup").mockReturnValue(fakePs);
                 const writeFileSpy = jest.spyOn(DatasetFSProvider.instance as any, "writeFile");
@@ -893,7 +894,7 @@ describe("rename", () => {
     it("renames a PS", async () => {
         const oldPs = { ...testEntries.ps };
         const mockMvsApi = {
-            renameDataSetMember: jest.fn(),
+            renameDataSet: jest.fn(),
         };
         const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
         const _lookupMock = jest
@@ -903,7 +904,7 @@ describe("rename", () => {
             .spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory")
             .mockReturnValueOnce({ ...testEntries.session });
         await DatasetFSProvider.instance.rename(testUris.ps, testUris.ps.with({ path: "/USER.DATA.PS2" }), { overwrite: true });
-        expect(mockMvsApi.renameDataSetMember).toHaveBeenCalledWith("", "USER.DATA.PS", "USER.DATA.PS2");
+        expect(mockMvsApi.renameDataSet).toHaveBeenCalledWith("USER.DATA.PS", "USER.DATA.PS2");
         _lookupMock.mockRestore();
         mvsApiMock.mockRestore();
         _lookupParentDirectoryMock.mockRestore();
@@ -958,74 +959,5 @@ describe("rename", () => {
         _lookupMock.mockRestore();
         mvsApiMock.mockRestore();
         _lookupParentDirectoryMock.mockRestore();
-    });
-});
-
-describe("onDidOpenTextDocument", () => {
-    const setTextDocLanguage = jest.spyOn(languages, "setTextDocumentLanguage");
-
-    afterEach(() => {
-        setTextDocLanguage.mockClear();
-    });
-
-    it("handles ZoweScheme.DS documents", async () => {
-        const dsUri = Uri.from({
-            path: "/profile/USER.WONDROUS.C/AMAZING",
-            scheme: ZoweScheme.DS,
-        });
-        const doc = {
-            uri: dsUri,
-            languageId: undefined,
-        } as unknown as TextDocument;
-        await DatasetFSProvider.onDidOpenTextDocument(doc);
-        expect(setTextDocLanguage).toHaveBeenCalledWith(doc, "c");
-    });
-
-    it("returns early if the language ID could not be identified", async () => {
-        const dsUri = Uri.from({
-            path: "/profile/TEST.DS/AMAZING",
-            scheme: ZoweScheme.DS,
-        });
-        const doc = {
-            uri: dsUri,
-            languageId: undefined,
-        } as unknown as TextDocument;
-        await DatasetFSProvider.onDidOpenTextDocument(doc);
-        expect(setTextDocLanguage).not.toHaveBeenCalled();
-    });
-
-    it("returns early if the scheme is not ZoweScheme.DS", async () => {
-        const fileUri = Uri.from({
-            path: "/var/www/AMAZING.txt",
-            scheme: "file",
-        });
-        const doc = {
-            uri: fileUri,
-            languageId: "plaintext",
-        } as unknown as TextDocument;
-        await DatasetFSProvider.onDidOpenTextDocument(doc);
-        expect(setTextDocLanguage).not.toHaveBeenCalled();
-        expect(doc.languageId).toBe("plaintext");
-    });
-
-    it("handles an error when setting the language ID", async () => {
-        setTextDocLanguage.mockImplementationOnce(() => {
-            throw new Error("Not available");
-        });
-        const dsUri = Uri.from({
-            path: "/profile/TEST.C.DS/MISSING",
-            scheme: ZoweScheme.DS,
-        });
-        const doc = {
-            fileName: "MISSING",
-            uri: dsUri,
-            languageId: "rust",
-        } as unknown as TextDocument;
-
-        const warnSpy = jest.spyOn(ZoweLogger, "warn");
-        await DatasetFSProvider.onDidOpenTextDocument(doc);
-        expect(setTextDocLanguage).toHaveBeenCalled();
-        expect(warnSpy).toHaveBeenCalledWith("Could not set document language for MISSING - tried languageId 'c'");
-        expect(doc.languageId).toBe("rust");
     });
 });

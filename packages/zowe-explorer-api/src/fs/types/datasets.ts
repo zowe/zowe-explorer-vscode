@@ -47,8 +47,18 @@ export class DsEntryMetadata implements EntryMetadata {
         this.path = metadata.path;
     }
 
+    private extensionRemovedFromPath(): string {
+        for (const ext of [".c", ".jcl", ".cobol", ".cpy", ".inc", ".pli", ".sh", ".rexx", ".xml", ".asm", ".log"]) {
+            if (this.path.endsWith(ext)) {
+                return this.path.replace(ext, "");
+            }
+        }
+
+        return this.path;
+    }
+
     public get dsName(): string {
-        const segments = this.path.split("/").filter(Boolean);
+        const segments = this.extensionRemovedFromPath().split("/").filter(Boolean);
         return segments[1] ? `${segments[0]}(${segments[1]})` : segments[0];
     }
 }

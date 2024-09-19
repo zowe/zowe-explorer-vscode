@@ -66,46 +66,51 @@ export class DatasetUtils {
         return Constants.MEMBER_NAME_REGEX_CHECK.test(member);
     }
 
+    public static withExtension(label: string): string {
+        const extension = this.getExtension(label);
+        return extension ? label.concat(extension) : label;
+    }
+
     /**
      * Get the language ID of a Data Set for use with `vscode.languages.setTextDocumentLanguage`
      */
-    public static getLanguageId(label: string): string | null {
+    public static getExtension(label: string): string | null {
         const limit = 5;
         const bracket = label.indexOf("(");
         const split = bracket > -1 ? label.substring(0, bracket).split(".", limit) : label.split(".", limit);
         for (let i = split.length - 1; i > 0; i--) {
             if (split[i] === "C") {
-                return "c";
+                return ".c";
             }
             if (["JCL", "JCLLIB", "CNTL", "PROC", "PROCLIB"].includes(split[i])) {
-                return "jcl";
+                return ".jcl";
             }
             if (["COBOL", "CBL", "COB", "SCBL"].includes(split[i])) {
-                return "cobol";
+                return ".cobol";
             }
             if (["COPYBOOK", "COPY", "CPY", "COBCOPY"].includes(split[i])) {
-                return "copybook";
+                return ".cpy";
             }
             if (["INC", "INCLUDE", "PLINC"].includes(split[i])) {
-                return "inc";
+                return ".inc";
             }
             if (["PLI", "PL1", "PLX", "PCX"].includes(split[i])) {
-                return "pli";
+                return ".pli";
             }
             if (["SH", "SHELL"].includes(split[i])) {
-                return "shellscript";
+                return ".sh";
             }
             if (["REXX", "REXEC", "EXEC"].includes(split[i])) {
-                return "rexx";
+                return ".rexx";
             }
             if (split[i] === "XML") {
-                return "xml";
+                return ".xml";
             }
             if (split[i] === "ASM" || split[i].indexOf("ASSEMBL") > -1) {
-                return "asm";
+                return ".asm";
             }
             if (split[i] === "LOG" || split[i].indexOf("SPFLOG") > -1) {
-                return "log";
+                return ".log";
             }
         }
         return null;
