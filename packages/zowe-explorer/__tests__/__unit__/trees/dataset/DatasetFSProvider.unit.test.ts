@@ -11,7 +11,18 @@
 
 import { Disposable, FilePermission, FileSystemError, FileType, TextEditor, Uri } from "vscode";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
-import { DirEntry, DsEntry, DsEntryMetadata, FileEntry, FilterEntry, FsAbstractUtils, Gui, PdsEntry, ZoweScheme } from "@zowe/zowe-explorer-api";
+import {
+    DirEntry,
+    DsEntry,
+    DsEntryMetadata,
+    FileEntry,
+    FilterEntry,
+    FsAbstractUtils,
+    FsDatasetsUtils,
+    Gui,
+    PdsEntry,
+    ZoweScheme,
+} from "@zowe/zowe-explorer-api";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
@@ -854,6 +865,26 @@ describe("delete", () => {
 
         expect(fakePds.entries.has(fakePdsMember.name)).toBe(false);
         mvsApiMock.mockRestore();
+    });
+
+    it("successfully deletes a PDS", async () => {
+        const fakePds = { ...testEntries.pds };
+        const mockMvsApi = {
+            deleteDataSet: jest.fn(),
+        };
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
+        const _lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValueOnce(fakePds);
+        const _fireSoonMock = jest.spyOn(DatasetFSProvider.instance as any, "_fireSoon").mockImplementation();
+        const isPdsEntry = jest.spyOn(FsDatasetsUtils, "isPdsEntry").mockReturnValueOnce(true);
+        jest.spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce({ ...testEntries.session });
+
+        await DatasetFSProvider.instance.delete(testUris.pds, { recursive: false });
+        expect(mockMvsApi.deleteDataSet).toHaveBeenCalledWith(fakePds.name, { responseTimeout: undefined });
+        expect(_lookupMock).toHaveBeenCalledWith(testUris.pds, false);
+        expect(_fireSoonMock).toHaveBeenCalled();
+
+        mvsApiMock.mockRestore();
+        isPdsEntry.mockRestore();
     });
 
     it("throws an error if it could not delete an entry", async () => {
