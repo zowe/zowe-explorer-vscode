@@ -633,7 +633,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
         const fileList = apiResponse.apiResponse?.items;
 
-        // Build the name of the file/folder to copy by resolving any potential conflicts
+        // Build the name of the destination file/folder, handling any potential name collisions
         const fileName = this.buildFileName(fileList, path.basename(sourceInfo.path));
         const outputPath = path.posix.join(destInfo.path, fileName);
 
