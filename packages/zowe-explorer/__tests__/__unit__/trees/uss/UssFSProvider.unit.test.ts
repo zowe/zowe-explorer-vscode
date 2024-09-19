@@ -1047,6 +1047,7 @@ describe("copyTree", () => {
 
         return {
             profile: createIProfile(),
+            profile2: { ...createIProfile(), name: "sestest2" },
             getInfoFromUri,
             ussApi,
             apiFuncs: {
@@ -1199,6 +1200,39 @@ describe("copyTree", () => {
                 recursive: true,
                 overwrite: true,
             });
+        });
+    });
+    describe("different profiles", () => {
+        it("copies a folder into a destination folder - collision", async () => {
+            const blockMocks = getBlockMocks();
+            const sourceUri = Uri.from({
+                scheme: ZoweScheme.USS,
+                path: "/sestest/folderA/innerFolder",
+            });
+            const destUri = Uri.from({
+                scheme: ZoweScheme.USS,
+                path: "/sestest2/folderB",
+            });
+            blockMocks.getInfoFromUri
+                .mockReturnValueOnce({
+                    profile: blockMocks.profile,
+                    path: "/folderB",
+                })
+                .mockReturnValueOnce({
+                    profile: blockMocks.profile,
+                    path: "/folderA/innerFolder",
+                });
+            blockMocks.apiFuncs.fileList.mockReturnValueOnce({ apiResponse: { items: [{ name: "innerFolder" }] } });
+            await (UssFSProvider.instance as any).copyTree(sourceUri, destUri, {
+                overwrite: true,
+                tree: {
+                    localUri: sourceUri,
+                    ussPath: "/folderA/innerFolder",
+                    sessionName: "lpar.zosmf",
+                    type: USSFileStructure.UssFileType.Directory,
+                },
+            });
+            expect(blockMocks.apiFuncs.create).toHaveBeenCalledWith("/folderB/innerFolder (1)", "directory");
         });
     });
 });
