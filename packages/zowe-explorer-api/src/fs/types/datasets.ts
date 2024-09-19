@@ -48,7 +48,7 @@ export class DsEntryMetadata implements EntryMetadata {
     }
 
     private extensionRemovedFromPath(): string {
-        for (const ext of [".c", ".jcl", ".cobol", ".cpy", ".inc", ".pli", ".sh", ".rexx", ".xml", ".asm", ".log"]) {
+        for (const ext of [".c", ".jcl", ".cbl", ".cpy", ".inc", ".pli", ".sh", ".rexx", ".xml", ".asm", ".log"]) {
             if (this.path.endsWith(ext)) {
                 return this.path.replace(ext, "");
             }

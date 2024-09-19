@@ -547,12 +547,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         if (FsDatasetsUtils.isPdsEntry(parent)) {
             // PDS member
             fullName = (entry as DsEntry).metadata.dsName;
+        } else if (FsDatasetsUtils.isPdsEntry(entry)) {
+            fullName = entry.name;
         } else {
-            if (FsDatasetsUtils.isPdsEntry(entry)) {
-                fullName = entry.name;
-            } else {
-                fullName = entry.metadata.dsName;
-            }
+            fullName = entry.metadata.dsName;
         }
 
         try {

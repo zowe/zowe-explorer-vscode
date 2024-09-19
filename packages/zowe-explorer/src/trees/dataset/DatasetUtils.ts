@@ -86,7 +86,7 @@ export class DatasetUtils {
                 return ".jcl";
             }
             if (["COBOL", "CBL", "COB", "SCBL"].includes(split[i])) {
-                return ".cobol";
+                return ".cbl";
             }
             if (["COPYBOOK", "COPY", "CPY", "COBCOPY"].includes(split[i])) {
                 return ".cpy";
