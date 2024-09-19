@@ -152,7 +152,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         continue;
                     } else {
                         // PS or migrated
-                        name = DatasetUtils.withExtension(ds.dsname as string);
+                        const extension = DatasetUtils.getExtension(ds.dsname);
+                        name = extension ? (ds.dsname as string).concat(extension) : ds.dsname;
                         tempEntry = new DsEntry(name, false);
                     }
                     tempEntry.metadata = new DsEntryMetadata({

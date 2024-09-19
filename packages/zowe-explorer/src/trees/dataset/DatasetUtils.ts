@@ -66,11 +66,6 @@ export class DatasetUtils {
         return Constants.MEMBER_NAME_REGEX_CHECK.test(member);
     }
 
-    public static withExtension(label: string): string {
-        const extension = this.getExtension(label);
-        return extension ? label.concat(extension) : label;
-    }
-
     /**
      * Get the file extension for a Data Set (or data set member) based on its name or its PDS name.
      */
