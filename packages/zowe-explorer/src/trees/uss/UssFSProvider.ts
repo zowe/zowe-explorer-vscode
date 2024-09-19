@@ -620,9 +620,20 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const hasCopyApi = api.copy != null;
 
+        // Get the up-to-date list of files in the destination directory
         const apiResponse = await api.fileList(path.posix.join(destInfo.path));
+        if (!apiResponse.success) {
+            throw vscode.FileSystemError.Unavailable(
+                vscode.l10n.t({
+                    message: "Error fetching destination {0} for paste action: {1}",
+                    args: [destInfo.path, apiResponse.errorMessage ?? vscode.l10n.t("No error details given")],
+                    comment: ["USS path", "Error message"],
+                })
+            );
+        }
         const fileList = apiResponse.apiResponse?.items;
 
+        // Build the name of the file/folder to copy by resolving any potential conflicts
         const fileName = this.buildFileName(fileList, path.basename(sourceInfo.path));
         const outputPath = path.posix.join(destInfo.path, fileName);
 
@@ -649,11 +660,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 }
             }
         } else {
-            const fileEntry = this.lookup(source, true);
-            if (fileEntry == null) {
-                return;
-            }
-
+            const fileEntry = this.lookup(source);
             if (!fileEntry.wasAccessed) {
                 // must fetch contents of file first before pasting in new path
                 await this.readFile(source);

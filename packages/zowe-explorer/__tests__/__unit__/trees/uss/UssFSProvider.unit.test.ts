@@ -1058,6 +1058,24 @@ describe("copyTree", () => {
             },
         };
     };
+    it("throws error if file list for destination path was unsuccessful", async () => {
+        const blockMocks = getBlockMocks();
+        const sourceUri = Uri.from({
+            scheme: ZoweScheme.USS,
+            path: "/sestest/folderA/file",
+        });
+        const destUri = Uri.from({
+            scheme: ZoweScheme.USS,
+            path: "/sestest/folderB",
+        });
+        blockMocks.apiFuncs.fileList.mockReturnValueOnce({
+            success: false,
+            errorMessage: "Unknown server-side error",
+        });
+        await expect((UssFSProvider.instance as any).copyTree(sourceUri, destUri)).rejects.toThrow(
+            "Error fetching destination /folderB for paste action: Unknown server-side error"
+        );
+    });
     describe("same profiles", () => {
         it("copies a file into a destination folder - no collisions", async () => {
             const blockMocks = getBlockMocks(true);
@@ -1078,7 +1096,7 @@ describe("copyTree", () => {
                     profile: blockMocks.profile,
                     path: "/folderA/file",
                 });
-            blockMocks.apiFuncs.fileList.mockReturnValueOnce({ apiResponse: { items: [] } });
+            blockMocks.apiFuncs.fileList.mockResolvedValueOnce({ success: true, apiResponse: { items: [] } });
             await (UssFSProvider.instance as any).copyTree(sourceUri, destUri, {
                 overwrite: true,
                 tree: {
@@ -1114,7 +1132,7 @@ describe("copyTree", () => {
                     profile: blockMocks.profile,
                     path: "/folderA/file",
                 });
-            blockMocks.apiFuncs.fileList.mockReturnValueOnce({ apiResponse: { items: [{ name: "file" }] } });
+            blockMocks.apiFuncs.fileList.mockResolvedValueOnce({ success: true, apiResponse: { items: [{ name: "file" }] } });
             await (UssFSProvider.instance as any).copyTree(sourceUri, destUri, {
                 overwrite: true,
                 tree: {
@@ -1150,7 +1168,7 @@ describe("copyTree", () => {
                     profile: blockMocks.profile,
                     path: "/folderA/innerFolder",
                 });
-            blockMocks.apiFuncs.fileList.mockReturnValueOnce({ apiResponse: { items: [] } });
+            blockMocks.apiFuncs.fileList.mockResolvedValueOnce({ success: true, apiResponse: { items: [] } });
             await (UssFSProvider.instance as any).copyTree(sourceUri, destUri, {
                 overwrite: true,
                 tree: {
@@ -1185,7 +1203,7 @@ describe("copyTree", () => {
                     profile: blockMocks.profile,
                     path: "/folderA/innerFolder",
                 });
-            blockMocks.apiFuncs.fileList.mockReturnValueOnce({ apiResponse: { items: [{ name: "innerFolder" }] } });
+            blockMocks.apiFuncs.fileList.mockResolvedValueOnce({ success: true, apiResponse: { items: [{ name: "innerFolder" }] } });
             await (UssFSProvider.instance as any).copyTree(sourceUri, destUri, {
                 overwrite: true,
                 tree: {
@@ -1203,6 +1221,55 @@ describe("copyTree", () => {
         });
     });
     describe("different profiles", () => {
+        it("copies a file into a destination folder - collision", async () => {
+            const blockMocks = getBlockMocks();
+            const sourceUri = Uri.from({
+                scheme: ZoweScheme.USS,
+                path: "/sestest/folderA/file",
+            });
+            const destUri = Uri.from({
+                scheme: ZoweScheme.USS,
+                path: "/sestest2/folderB",
+            });
+            blockMocks.getInfoFromUri
+                .mockReturnValueOnce({
+                    profile: blockMocks.profile2,
+                    path: "/folderB",
+                })
+                .mockReturnValueOnce({
+                    profile: blockMocks.profile,
+                    path: "/folderA/file",
+                });
+            blockMocks.apiFuncs.fileList.mockResolvedValueOnce({ success: true, apiResponse: { items: [{ name: "file" }] } });
+            const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValue({
+                name: "file",
+                type: FileType.File,
+                metadata: {
+                    path: "/sestest/folderA/file",
+                    profile: blockMocks.profile,
+                },
+                wasAccessed: false,
+                data: new Uint8Array(),
+                ctime: 0,
+                mtime: 0,
+                size: 0,
+            });
+            const readFileMock = jest.spyOn(UssFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+            await (UssFSProvider.instance as any).copyTree(sourceUri, destUri, {
+                overwrite: true,
+                tree: {
+                    localUri: sourceUri,
+                    ussPath: "/folderA/file",
+                    baseName: "file",
+                    sessionName: "sestest",
+                    type: USSFileStructure.UssFileType.File,
+                },
+            });
+            expect(lookupMock).toHaveBeenCalledWith(sourceUri);
+            expect(readFileMock).toHaveBeenCalledWith(sourceUri);
+            lookupMock.mockRestore();
+            readFileMock.mockRestore();
+        });
         it("copies a folder into a destination folder - collision", async () => {
             const blockMocks = getBlockMocks();
             const sourceUri = Uri.from({
@@ -1215,14 +1282,14 @@ describe("copyTree", () => {
             });
             blockMocks.getInfoFromUri
                 .mockReturnValueOnce({
-                    profile: blockMocks.profile,
+                    profile: blockMocks.profile2,
                     path: "/folderB",
                 })
                 .mockReturnValueOnce({
                     profile: blockMocks.profile,
                     path: "/folderA/innerFolder",
                 });
-            blockMocks.apiFuncs.fileList.mockReturnValueOnce({ apiResponse: { items: [{ name: "innerFolder" }] } });
+            blockMocks.apiFuncs.fileList.mockResolvedValueOnce({ success: true, apiResponse: { items: [{ name: "innerFolder" }] } });
             await (UssFSProvider.instance as any).copyTree(sourceUri, destUri, {
                 overwrite: true,
                 tree: {
@@ -1233,6 +1300,37 @@ describe("copyTree", () => {
                 },
             });
             expect(blockMocks.apiFuncs.create).toHaveBeenCalledWith("/folderB/innerFolder (1)", "directory");
+        });
+        it("copies a folder into a destination folder - no collision", async () => {
+            const blockMocks = getBlockMocks();
+            const sourceUri = Uri.from({
+                scheme: ZoweScheme.USS,
+                path: "/sestest/folderA/innerFolder",
+            });
+            const destUri = Uri.from({
+                scheme: ZoweScheme.USS,
+                path: "/sestest2/folderB",
+            });
+            blockMocks.getInfoFromUri
+                .mockReturnValueOnce({
+                    profile: blockMocks.profile2,
+                    path: "/folderB",
+                })
+                .mockReturnValueOnce({
+                    profile: blockMocks.profile,
+                    path: "/folderA/innerFolder",
+                });
+            blockMocks.apiFuncs.fileList.mockResolvedValueOnce({ success: true, apiResponse: { items: [] } });
+            await (UssFSProvider.instance as any).copyTree(sourceUri, destUri, {
+                overwrite: true,
+                tree: {
+                    localUri: sourceUri,
+                    ussPath: "/folderA/innerFolder",
+                    sessionName: "sestest",
+                    type: USSFileStructure.UssFileType.Directory,
+                },
+            });
+            expect(blockMocks.apiFuncs.create).toHaveBeenCalledWith("/folderB/innerFolder", "directory");
         });
     });
 });
