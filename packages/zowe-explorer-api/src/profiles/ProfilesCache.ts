@@ -155,7 +155,7 @@ export class ProfilesCache {
         for (const type of allTypes) {
             const tmpAllProfiles: imperative.IProfileLoaded[] = [];
             // Step 1: Get all profiles for each registered type
-            const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc.length !== 0);
+            const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc?.length > 0);
             if (profilesForType && profilesForType.length > 0) {
                 for (const prof of profilesForType) {
                     // Step 2: Merge args for each profile
@@ -322,14 +322,11 @@ export class ProfilesCache {
         const mProfileInfo = await this.getProfileInfo();
         const baseProfileAttrs = mProfileInfo.getDefaultProfile("base");
         const config = mProfileInfo.getTeamConfig();
-        if (
-            profileName?.includes(".") &&
-            (baseProfileAttrs == null || !config.api.secure.securePropsForProfile(baseProfileAttrs.profName).includes("tokenValue"))
-        ) {
+        if (profileName?.includes(".") && (baseProfileAttrs == null || config.api.profiles.get(baseProfileAttrs.profName).tokenType == null)) {
             // Retrieve parent typeless profile as base profile if:
             // (1) The active profile name is nested (contains a period) AND
             // (2) No default base profile was found OR
-            //     Default base profile does not have tokenValue in secure array
+            //     Default base profile does not have tokenType defined
             const parentProfile = this.getParentProfileForToken(profileName, config);
             return this.getProfileLoaded(parentProfile, "base", config.api.profiles.get(parentProfile));
         } else if (baseProfileAttrs == null) {

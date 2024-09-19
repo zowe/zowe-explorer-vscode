@@ -201,8 +201,8 @@ describe("Table.View", () => {
             globalMocks.updateWebviewMock.mockResolvedValueOnce(true);
             const cols = [
                 { field: "apple", valueFormatter: (data: { value: Table.ContentTypes }) => `${data.value.toString()} apples` },
-                { field: "banana", comparator: (valueA, valueB, nodeA, nodeB, isDescending) => -1, colSpan: (params) => 2 },
-                { field: "orange", rowSpan: (params) => 2 },
+                { field: "banana", comparator: (_valueA, _valueB, _nodeA, _nodeB, _isDescending) => -1, colSpan: (_params) => 2 },
+                { field: "orange", rowSpan: (_params) => 2 },
             ];
             await expect(view.setColumns(cols)).resolves.toBe(true);
             expect((view as any).data.columns).toStrictEqual(
@@ -352,7 +352,7 @@ describe("Table.View", () => {
                             command: "multi-action",
                             callback: {
                                 typ: "multi-row",
-                                fn: (_view: Table.View, row: Record<number, Table.RowData>) => {
+                                fn: (_view: Table.View, _row: Record<number, Table.RowData>) => {
                                     multiCallbackMock();
                                 },
                             },
@@ -364,7 +364,7 @@ describe("Table.View", () => {
                             command: "zero-action",
                             callback: {
                                 typ: "single-row",
-                                fn: (_view: Table.View, row: Table.RowInfo) => {
+                                fn: (_view: Table.View, _row: Table.RowInfo) => {
                                     zeroCallbackMock();
                                 },
                             },
@@ -428,12 +428,12 @@ describe("Table.View", () => {
         it("sets the columns on the internal data structure and calls updateWebview", async () => {
             const globalMocks = createGlobalMocks();
             const mockCols = [
-                { field: "name", sort: "desc", colSpan: (params) => 2, rowSpan: (params) => 2 },
+                { field: "name", sort: "desc", colSpan: (_params) => 2, rowSpan: (_params) => 2 },
                 {
                     field: "address",
                     sort: "asc",
-                    comparator: (valueA, valueB, nodeA, nodeB, isDescending) => 1,
-                    valueFormatter: (data: { value }) => `Located at ${data.value.toString()}`,
+                    comparator: (_valueA, _valueB, _nodeA, _nodeB, _isDescending) => 1,
+                    valueFormatter: (data: { value }) => `Located at ${(data.value as string).toString()}`,
                 },
             ] as Table.ColumnOpts[];
             const data = { title: "Table w/ cols", columns: [], rows: [] };

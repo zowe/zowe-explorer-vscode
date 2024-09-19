@@ -14,6 +14,11 @@ import { ZosConsoleViewProvider } from "../../../src/zosconsole/ZosConsolePanel"
 import { Profiles } from "../../../src/configuration/Profiles";
 import * as vscode from "vscode";
 
+jest.mock("@zowe/zowe-explorer-api", () => ({
+    ...jest.requireActual("@zowe/zowe-explorer-api"),
+    HTMLTemplate: jest.requireActual("../../../../zowe-explorer-api/src/vscode/ui/utils/HTMLTemplate"),
+}));
+
 describe("ZosConsoleViewProvider", () => {
     function createGlobalMocks(): any {
         const newMocks = {
@@ -42,7 +47,7 @@ describe("ZosConsoleViewProvider", () => {
             const globalMocks = createGlobalMocks();
             const myconsole = new ZosConsoleViewProvider({} as any);
             myconsole.resolveWebviewView(globalMocks.testWebView, {} as any, { isCancellationRequested: false } as any);
-            expect(globalMocks.testWebView.webview.onDidReceiveMessage).toBeCalled();
+            expect(globalMocks.testWebView.webview.onDidReceiveMessage).toHaveBeenCalled();
         });
     });
 });

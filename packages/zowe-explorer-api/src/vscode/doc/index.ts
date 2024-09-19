@@ -9,4 +9,5 @@
  *
  */
 
+export * from "./BaseProfileAuth";
 export * from "./PromptCredentials";

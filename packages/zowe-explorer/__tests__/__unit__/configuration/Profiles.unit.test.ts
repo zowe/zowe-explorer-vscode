@@ -1210,7 +1210,7 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
             getTokenTypeName: () => imperative.SessConstants.TOKEN_TYPE_APIML,
             login: jest.fn(),
         } as never);
-        const loginBaseProfMock = jest.spyOn(ZoweVsCodeExtension, "loginWithBaseProfile").mockRejectedValueOnce(new Error("test error."));
+        const loginBaseProfMock = jest.spyOn(ZoweVsCodeExtension, "ssoLogin").mockRejectedValueOnce(new Error("test error."));
         jest.spyOn(Profiles.getInstance() as any, "loginCredentialPrompt").mockReturnValue(["fake", "12345"]);
         await expect(Profiles.getInstance().ssoLogin(testNode, "fake")).resolves.not.toThrow();
         expect(ZoweLogger.error).toHaveBeenCalled();
@@ -1309,7 +1309,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             getTokenTypeName: () => "apimlAuthenticationToken",
         } as never);
 
-        jest.spyOn(ZoweVsCodeExtension, "loginWithBaseProfile").mockResolvedValue(true);
+        jest.spyOn(ZoweVsCodeExtension, "ssoLogin").mockResolvedValue(true);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
         expect(Gui.showMessage).toHaveBeenCalled();
         expect(testNode.profile.profile.tokenType).toBe(modifiedTestNode.profile.profile.tokenType);
@@ -1368,7 +1368,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             getTokenTypeName: () => "apimlAuthenticationToken",
         } as never);
 
-        jest.spyOn(ZoweVsCodeExtension, "loginWithBaseProfile").mockResolvedValue(false);
+        jest.spyOn(ZoweVsCodeExtension, "ssoLogin").mockResolvedValue(false);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
         expect(Gui.errorMessage).toHaveBeenCalled();
         expect(testNode.profile.profile.tokenType).toBe(modifiedTestNode.profile.profile.tokenType);

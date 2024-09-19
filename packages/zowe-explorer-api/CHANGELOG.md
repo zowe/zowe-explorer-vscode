@@ -6,9 +6,13 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added the `BaseProfileAuthOptions` interface to define base profile authentication options for SSO login and logout. [#3076](https://github.com/zowe/zowe-explorer-vscode/pull/3076)
+- Deprecated the methods `ZoweVsCodeExtension.loginWithBaseProfile` and `ZoweVsCodeExtension.logoutWithBaseProfile`. Use `ZoweVsCodeExtension.ssoLogin` and `ZoweVsCodeExtension.ssoLogout` instead, which use the `BaseProfileAuthOptions` interface and allow you to choose whether the token value in the base profile should have precedence in case there are conflicts. [#3076](https://github.com/zowe/zowe-explorer-vscode/pull/3076)
+
 ### Bug fixes
 
 - Updated the `TableViewProvider.setTableView` function to show the Zowe Resources panel if a table is provided. If `null` is passed, the Zowe Resources panel will be hidden. [#3113](https://github.com/zowe/zowe-explorer-vscode/issues/3113)
+- Fixed behavior of logout action when token is defined in both base profile and parent profile. [#3076](https://github.com/zowe/zowe-explorer-vscode/issues/3076)
 
 ## `3.0.0-next.202409132122`
 
@@ -128,6 +132,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - **Breaking:** Consolidated WebView API options into a single object (`WebViewOpts` type), both for developer convenience and to support future options.
 - Enhanced the `ZoweVsCodeExtension.loginWithBaseProfile` and `ZoweVsCodeExtension.logoutWithBaseProfile` methods to store SSO token in parent profile when nested profiles are in use. [#2264](https://github.com/zowe/zowe-explorer-vscode/issues/2264)
 - **Next Breaking:** Changed return type of `ZoweVsCodeExtension.logoutWithBaseProfile` method from `void` to `boolean` to indicate whether logout was successful.
+- **Breaking:** Changed behavior of the `ProfilesCache.fetchBaseProfile` method so that if a nested profile name is specified (e.g. "lpar.zosmf"), then its parent profile is returned unless token is already stored in the base profile.
 - Renamed the `_lookup` function to `lookup` in the `BaseProvider` class and updated its access to public, allowing extenders to look up resources outside of the provider implementations. The `_lookup` function is still accessible, but now deprecated in favor of the public `lookup` function. [#3040](https://github.com/zowe/zowe-explorer-vscode/pull/3040)
 - **Breaking:** Removed the `MemberEntry` filesystem class, in favor of using the `DsEntry` class with `isMember` set to `true`.
 - Changed `TableViewProvider.setTableView` function to be asynchronous for more optimized data updates.

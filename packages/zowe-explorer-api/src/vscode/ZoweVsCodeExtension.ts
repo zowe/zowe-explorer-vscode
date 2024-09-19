@@ -17,6 +17,7 @@ import * as imperative from "@zowe/imperative";
 import { Gui } from "../globals/Gui";
 import { PromptCredentialsOptions } from "./doc/PromptCredentials";
 import { Types } from "../Types";
+import { BaseProfileAuthOptions } from "./doc";
 
 /**
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
@@ -111,7 +112,8 @@ export class ZoweVsCodeExtension {
      * Trigger a login operation with the merged contents between the service profile and the base profile.
      *  If the connection details (host:port) do not match (service vs base), the token will be stored in the service profile.
      *  If there is no API registered for the profile type, this method defaults the login behavior to that of the APIML.
-     * @param serviceProfile Profile to be used for login pursposes (either the name of the IProfileLoaded instance)
+     * @deprecated Use `ZoweVsCodeExtension.ssoLogin` instead
+     * @param serviceProfile Profile to be used for login purposes (either the name of the IProfileLoaded instance)
      * @param loginTokenType The tokenType value for compatibility purposes
      * @param node The node for compatibility purposes
      * @param zeRegister The ZoweExplorerApiRegister instance for compatibility purposes
@@ -124,17 +126,33 @@ export class ZoweVsCodeExtension {
         zeRegister?: Types.IApiRegisterClient, // ZoweExplorerApiRegister
         zeProfiles?: ProfilesCache // Profiles extends ProfilesCache
     ): Promise<boolean> {
-        const cache: ProfilesCache = zeProfiles ?? ZoweVsCodeExtension.profilesCache;
-        if (typeof serviceProfile === "string") {
-            serviceProfile = await ZoweVsCodeExtension.getServiceProfileForAuthPurposes(cache, serviceProfile);
-        }
+        return this.ssoLogin({ serviceProfile, defaultTokenType: loginTokenType, profileNode: node, zeRegister, zeProfiles });
+    }
+
+    /**
+     * Trigger a login operation with the merged contents between the service profile and the base profile.
+     *  If the connection details (host:port) do not match (service vs base), the token will be stored in the service profile.
+     *  If there is no API registered for the profile type, this method defaults the login behavior to that of the APIML.
+     * @param {BaseProfileAuthOptions} opts Object defining options for base profile authentication
+     */
+    public static async ssoLogin(opts: BaseProfileAuthOptions): Promise<boolean> {
+        const cache: ProfilesCache = opts.zeProfiles ?? ZoweVsCodeExtension.profilesCache;
+        const serviceProfile =
+            typeof opts.serviceProfile === "string"
+                ? await ZoweVsCodeExtension.getServiceProfileForAuthPurposes(cache, opts.serviceProfile)
+                : opts.serviceProfile;
         const baseProfile = await cache.fetchBaseProfile(serviceProfile.name);
         if (baseProfile == null) {
             Gui.errorMessage(`Login failed: No base profile found to store SSO token for profile "${serviceProfile.name}"`);
             return false;
         }
+        const primaryProfile = opts.preferBaseToken ? baseProfile : serviceProfile;
+        const secondaryProfile = opts.preferBaseToken ? serviceProfile : baseProfile;
         const tokenType =
-            serviceProfile.profile.tokenType ?? baseProfile.profile.tokenType ?? loginTokenType ?? imperative.SessConstants.TOKEN_TYPE_APIML;
+            primaryProfile.profile.tokenType ??
+            secondaryProfile.profile.tokenType ??
+            opts.defaultTokenType ??
+            imperative.SessConstants.TOKEN_TYPE_APIML;
         const updSession = new imperative.Session({
             hostname: serviceProfile.profile.host,
             port: serviceProfile.profile.port,
@@ -173,7 +191,7 @@ export class ZoweVsCodeExtension {
             return false;
         }
 
-        const loginToken = await (zeRegister?.getCommonApi(serviceProfile).login ?? Login.apimlLogin)(updSession);
+        const loginToken = await (opts.zeRegister?.getCommonApi(serviceProfile).login ?? Login.apimlLogin)(updSession);
         const updBaseProfile: imperative.IProfile = {
             tokenType: updSession.ISession.tokenType ?? tokenType,
             tokenValue: loginToken,
@@ -196,15 +214,8 @@ export class ZoweVsCodeExtension {
         }
 
         await cache.updateBaseProfileFileLogin(profileToUpdate, updBaseProfile, !connOk);
-        const baseIndex = cache.allProfiles.findIndex((profile) => profile.name === profileToUpdate.name);
-        cache.allProfiles[baseIndex] = { ...profileToUpdate, profile: { ...profileToUpdate.profile, ...updBaseProfile } };
-
-        if (node) {
-            node.setProfileToChoice({
-                ...node.getProfile(),
-                profile: { ...node.getProfile().profile, ...updBaseProfile },
-            });
-        }
+        serviceProfile.profile = { ...serviceProfile.profile, ...updBaseProfile };
+        await this.updateProfileInCache({ ...opts, serviceProfile });
         return true;
     }
 
@@ -212,7 +223,8 @@ export class ZoweVsCodeExtension {
      * Trigger a logout operation with the merged contents between the service profile and the base profile.
      *  If the connection details (host:port) do not match (service vs base), the token will be removed from the service profile.
      *  If there is no API registered for the profile type, this method defaults the logout behavior to that of the APIML.
-     * @param serviceProfile Profile to be used for logout pursposes (either the name of the IProfileLoaded instance)
+     * @deprecated Use `ZoweVsCodeExtension.ssoLogout` instead
+     * @param serviceProfile Profile to be used for logout purposes (either the name of the IProfileLoaded instance)
      * @param zeRegister The ZoweExplorerApiRegister instance for compatibility purposes
      * @param zeProfiles The Zowe Explorer "Profiles.ts" instance for compatibility purposes
      */
@@ -221,37 +233,69 @@ export class ZoweVsCodeExtension {
         zeRegister?: Types.IApiRegisterClient, // ZoweExplorerApiRegister
         zeProfiles?: ProfilesCache // Profiles extends ProfilesCache
     ): Promise<boolean> {
-        const cache: ProfilesCache = zeProfiles ?? ZoweVsCodeExtension.profilesCache;
-        if (typeof serviceProfile === "string") {
-            serviceProfile = await ZoweVsCodeExtension.getServiceProfileForAuthPurposes(cache, serviceProfile);
-        }
-        const baseProfile = await cache.fetchBaseProfile(serviceProfile.name);
-        if (baseProfile) {
-            const tokenType =
-                serviceProfile.profile.tokenType ??
-                baseProfile.profile.tokenType ??
-                zeRegister?.getCommonApi(serviceProfile).getTokenTypeName() ??
-                imperative.SessConstants.TOKEN_TYPE_APIML;
-            const updSession = new imperative.Session({
-                hostname: serviceProfile.profile.host,
-                port: serviceProfile.profile.port,
-                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
-                tokenType: tokenType,
-                tokenValue: serviceProfile.profile.tokenValue ?? baseProfile.profile.tokenValue,
-                type: imperative.SessConstants.AUTH_TYPE_TOKEN,
-            });
-            await (zeRegister?.getCommonApi(serviceProfile).logout ?? Logout.apimlLogout)(updSession);
+        return this.ssoLogout({ serviceProfile, zeRegister, zeProfiles });
+    }
 
-            // If active profile is nested (e.g. lpar.zosmf), then update service profile since base profile may be typeless
-            const connOk =
-                serviceProfile.profile.host === baseProfile.profile.host &&
-                serviceProfile.profile.port === baseProfile.profile.port &&
-                !serviceProfile.name.startsWith(baseProfile.name + ".");
-            await cache.updateBaseProfileFileLogout(connOk ? baseProfile : serviceProfile);
-            return true;
-        } else {
+    /**
+     * Trigger a logout operation with the merged contents between the service profile and the base profile.
+     *  If the connection details (host:port) do not match (service vs base), the token will be removed from the service profile.
+     *  If there is no API registered for the profile type, this method defaults the logout behavior to that of the APIML.
+     * @param {BaseProfileAuthOptions} opts Object defining options for base profile authentication
+     */
+    public static async ssoLogout(opts: BaseProfileAuthOptions): Promise<boolean> {
+        const cache: ProfilesCache = opts.zeProfiles ?? ZoweVsCodeExtension.profilesCache;
+        const serviceProfile =
+            typeof opts.serviceProfile === "string"
+                ? await ZoweVsCodeExtension.getServiceProfileForAuthPurposes(cache, opts.serviceProfile)
+                : opts.serviceProfile;
+
+        const baseProfile = await cache.fetchBaseProfile(serviceProfile.name);
+        if (!baseProfile) {
             Gui.errorMessage(`Logout failed: No base profile found to remove SSO token for profile "${serviceProfile.name}"`);
             return false;
+        }
+        const primaryProfile = opts.preferBaseToken ? baseProfile : serviceProfile;
+        const secondaryProfile = opts.preferBaseToken ? serviceProfile : baseProfile;
+        const tokenType =
+            primaryProfile.profile.tokenType ??
+            secondaryProfile.profile.tokenType ??
+            opts.defaultTokenType ??
+            imperative.SessConstants.TOKEN_TYPE_APIML;
+        const updSession = new imperative.Session({
+            hostname: serviceProfile.profile.host,
+            port: serviceProfile.profile.port,
+            rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
+            tokenType: tokenType,
+            tokenValue: primaryProfile.profile.tokenValue ?? secondaryProfile.profile.tokenValue,
+            type: imperative.SessConstants.AUTH_TYPE_TOKEN,
+        });
+        await (opts.zeRegister?.getCommonApi(serviceProfile).logout ?? Logout.apimlLogout)(updSession);
+
+        // If active profile is nested (e.g. lpar.zosmf), then update service profile since base profile may be typeless
+        const connOk =
+            serviceProfile.profile.host === baseProfile.profile.host &&
+            serviceProfile.profile.port === baseProfile.profile.port &&
+            !serviceProfile.name.startsWith(baseProfile.name + ".");
+        await cache.updateBaseProfileFileLogout(connOk ? baseProfile : serviceProfile);
+        serviceProfile.profile = { ...serviceProfile.profile, tokenType: undefined, tokenValue: undefined };
+        await this.updateProfileInCache({ ...opts, serviceProfile });
+        return true;
+    }
+
+    private static async updateProfileInCache(opts: BaseProfileAuthOptions & { serviceProfile: imperative.IProfileLoaded }): Promise<void> {
+        const cache: ProfilesCache = opts.zeProfiles ?? ZoweVsCodeExtension.profilesCache;
+        if ((await cache.getProfileInfo()).getTeamConfig().properties.autoStore !== false) {
+            await cache.refresh();
+        } else {
+            // Note: It should be expected that nested profiles within this service profile will have their credentials updated.
+            const profIndex = cache.allProfiles.findIndex((profile) => profile.name === opts.serviceProfile.name);
+            cache.allProfiles[profIndex] = { ...cache.allProfiles[profIndex], profile: opts.serviceProfile.profile };
+        }
+        if (opts.profileNode) {
+            opts.profileNode.setProfileToChoice({
+                ...opts.profileNode.getProfile(),
+                profile: { ...opts.profileNode.getProfile().profile, ...opts.serviceProfile.profile },
+            });
         }
     }
 
