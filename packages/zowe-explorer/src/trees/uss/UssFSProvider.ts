@@ -620,11 +620,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const hasCopyApi = api.copy != null;
 
-        const apiResponse = await api.fileList(path.posix.join(destInfo.path, ".."));
+        const apiResponse = await api.fileList(path.posix.join(destInfo.path));
         const fileList = apiResponse.apiResponse?.items;
 
-        const fileName = this.buildFileName(fileList, path.basename(destInfo.path));
-        const outputPath = path.posix.join(destInfo.path, "..", fileName);
+        const fileName = this.buildFileName(fileList, path.basename(sourceInfo.path));
+        const outputPath = path.posix.join(destInfo.path, fileName);
 
         if (hasCopyApi && sourceInfo.profile.profile === destInfo.profile.profile) {
             await api.copy(outputPath, {
