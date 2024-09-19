@@ -1,6 +1,6 @@
 module.exports = {
     branches: [
-        { 
+        {
             name: "main",
             channel: "latest",
             level: "minor"
