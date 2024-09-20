@@ -146,9 +146,6 @@ export class ProfilesCache {
     public async refresh(apiRegister?: IRegisterClient): Promise<void> {
         const allProfiles: imperative.IProfileLoaded[] = [];
         const mProfileInfo = await this.getProfileInfo();
-        if (!mProfileInfo.getTeamConfig().exists) {
-            return;
-        }
         const allTypes = this.getAllProfileTypes(apiRegister?.registeredApiTypes() ?? []);
         allTypes.push("ssh");
         allTypes.push("base");
