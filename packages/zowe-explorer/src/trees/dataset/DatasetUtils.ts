@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { Types } from "@zowe/zowe-explorer-api";
+import { DS_EXTENSION_MAP, Types } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../configuration/Constants";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 
@@ -74,38 +74,24 @@ export class DatasetUtils {
         const bracket = label.indexOf("(");
         const split = bracket > -1 ? label.substring(0, bracket).split(".", limit) : label.split(".", limit);
         for (let i = split.length - 1; i > 0; i--) {
-            if (split[i] === "C") {
-                return ".c";
-            }
-            if (["JCL", "JCLLIB", "CNTL", "PROC", "PROCLIB"].includes(split[i])) {
-                return ".jcl";
-            }
-            if (["COBOL", "CBL", "COB", "SCBL"].includes(split[i])) {
-                return ".cbl";
-            }
-            if (["COPYBOOK", "COPY", "CPY", "COBCOPY"].includes(split[i])) {
-                return ".cpy";
-            }
-            if (["INC", "INCLUDE", "PLINC"].includes(split[i])) {
-                return ".inc";
-            }
-            if (["PLI", "PL1", "PLX", "PCX"].includes(split[i])) {
-                return ".pli";
-            }
-            if (["SH", "SHELL"].includes(split[i])) {
-                return ".sh";
-            }
-            if (["REXX", "REXEC", "EXEC"].includes(split[i])) {
-                return ".rexx";
-            }
-            if (split[i] === "XML") {
-                return ".xml";
-            }
-            if (split[i] === "ASM" || split[i].indexOf("ASSEMBL") > -1) {
-                return ".asm";
-            }
-            if (split[i] === "LOG" || split[i].indexOf("SPFLOG") > -1) {
-                return ".log";
+            for (const [ext, matches] of DS_EXTENSION_MAP.entries()) {
+                switch (ext) {
+                    case ".asm":
+                        if (split[i] === matches[0] || split[i].indexOf("ASSEMBL") > -1) {
+                            return ext;
+                        }
+                        break;
+                    case ".log":
+                        if (split[i] === matches[0] || split[i].indexOf("SPFLOG") > -1) {
+                            return ext;
+                        }
+                        break;
+                    default:
+                        if (matches.includes(split[i])) {
+                            return ext;
+                        }
+                        break;
+                }
             }
         }
         return null;

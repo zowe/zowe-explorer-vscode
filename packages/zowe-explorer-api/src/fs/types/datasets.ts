@@ -17,6 +17,20 @@ interface DsEntryProps {
     stats: Types.DatasetStats;
 }
 
+export const DS_EXTENSION_MAP: Map<string, string[]> = new Map([
+    [".c", ["C"]],
+    [".jcl", ["JCL", "JCLLIB", "CNTL", "PROC", "PROCLIB"]],
+    [".cbl", ["COBOL", "CBL", "COB", "SCBL"]],
+    [".cpy", ["COPYBOOK", "COPY", "CPY", "COBCOPY"]],
+    [".inc", ["INC", "INCLUDE", "PLINC"]],
+    [".pli", ["PLI", "PL1", "PLX", "PCX"]],
+    [".sh", ["SH", "SHELL"]],
+    [".rexx", ["REXX", "REXEC", "EXEC"]],
+    [".xml", ["XML"]],
+    [".asm", ["ASM", "ASSEMBL"]],
+    [".log", ["LOG", "SPFLOG"]],
+]);
+
 export class DsEntry extends FileEntry implements DsEntryProps {
     public metadata: DsEntryMetadata;
 
@@ -51,7 +65,7 @@ export class DsEntryMetadata implements EntryMetadata {
      * @returns the data set's file system path without the extension
      */
     public extensionRemovedFromPath(): string {
-        for (const ext of [".c", ".jcl", ".cbl", ".cpy", ".inc", ".pli", ".sh", ".rexx", ".xml", ".asm", ".log"]) {
+        for (const ext of DS_EXTENSION_MAP.keys()) {
             if (this.path.endsWith(ext)) {
                 return this.path.replace(ext, "");
             }
