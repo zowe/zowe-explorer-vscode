@@ -11,7 +11,7 @@ module.exports = {
             level: "patch"
         },
         {
-            name: "release/1.*",
+            name: "v1-lts",
             channel: "zowe-v1-lts",
             level: "patch"
         },
