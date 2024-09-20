@@ -271,6 +271,9 @@ describe("ProfilesCache", () => {
             await profCache.refresh(fakeApiRegister as unknown as Types.IApiRegisterClient);
             expect(getTeamConfigMock).not.toHaveBeenCalled();
             expect(getProfileInfoMock).toHaveBeenCalled();
+            expect(profCache.allProfiles).toStrictEqual([]);
+            expect((profCache as any).profilesByType.size).toBe(0);
+            expect((profCache as any).defaultProfileByType.size).toBe(0);
         });
 
         it("should refresh profile data for multiple profile types", async () => {
