@@ -25,7 +25,9 @@ describe("Dataset utils unit tests - function getExtension", () => {
             { name: "TEST.DS.EXEC", extension: ".rexx" },
             { name: "TEST.DS.XML", extension: ".xml" },
             { name: "TEST.DS.ASM", extension: ".asm" },
+            { name: "TEST.DS.ASSEMBLY", extension: ".asm" },
             { name: "TEST.DS.LOG", extension: ".log" },
+            { name: "TEST.DS.SPFLOGS", extension: ".log" },
         ];
         for (const pair of pairs) {
             expect(DatasetUtils.getExtension(pair.name)).toBe(pair.extension);
