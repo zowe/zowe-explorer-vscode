@@ -6,7 +6,7 @@ module.exports = {
             level: "minor"
         },
         {
-            name: "release/2.*",
+            name: "v2-lts",
             channel: "zowe-v2-lts",
             level: "patch"
         },
