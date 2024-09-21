@@ -17,7 +17,7 @@ interface DsEntryProps {
     stats: Types.DatasetStats;
 }
 
-export const DS_EXTENSION_MAP: Map<string, string[]> = new Map([
+export const DS_EXTENSION_MAP: Map<string, (string | RegExp)[]> = new Map([
     [".c", ["C"]],
     [".jcl", ["JCL", "JCLLIB", "CNTL", "PROC", "PROCLIB"]],
     [".cbl", ["COBOL", "CBL", "COB", "SCBL"]],
@@ -27,8 +27,8 @@ export const DS_EXTENSION_MAP: Map<string, string[]> = new Map([
     [".sh", ["SH", "SHELL"]],
     [".rexx", ["REXX", "REXEC", "EXEC"]],
     [".xml", ["XML"]],
-    [".asm", ["ASM", "ASSEMBL"]],
-    [".log", ["LOG", "SPFLOG"]],
+    [".asm", ["ASM", /ASSEMBL/]],
+    [".log", ["LOG", /SPFLOG/]],
 ]);
 
 export class DsEntry extends FileEntry implements DsEntryProps {

@@ -75,22 +75,14 @@ export class DatasetUtils {
         const split = bracket > -1 ? label.substring(0, bracket).split(".", limit) : label.split(".", limit);
         for (let i = split.length - 1; i > 0; i--) {
             for (const [ext, matches] of DS_EXTENSION_MAP.entries()) {
-                switch (ext) {
-                    case ".asm":
-                        if (split[i] === matches[0] || split[i].indexOf("ASSEMBL") > -1) {
+                for (const match of matches) {
+                    if (match instanceof RegExp) {
+                        if (match.test(split[i])) {
                             return ext;
                         }
-                        break;
-                    case ".log":
-                        if (split[i] === matches[0] || split[i].indexOf("SPFLOG") > -1) {
-                            return ext;
-                        }
-                        break;
-                    default:
-                        if (matches.includes(split[i])) {
-                            return ext;
-                        }
-                        break;
+                    } else if (match.includes(split[i])) {
+                        return ext;
+                    }
                 }
             }
         }
