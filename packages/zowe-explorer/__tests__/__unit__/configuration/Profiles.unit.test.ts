@@ -25,7 +25,6 @@ import {
     createTeamConfigMock,
     createUnsecureTeamConfigMock,
     createMockNode,
-    createGetConfigMock,
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager } from "../../__mocks__/mockCreators/profiles";
@@ -456,7 +455,6 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
 });
 
 describe("Profiles Unit Tests - Function createZoweSchema", () => {
-    const fakeLogger = { debug: jest.fn() };
     function createBlockMocks(globalMocks) {
         const newMocks = {
             session: createISessionWithoutCredentials(),
