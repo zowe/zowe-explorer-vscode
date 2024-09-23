@@ -4,6 +4,8 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### New features and enhancements
 
+- Generate NOTICE file for package.
+
 ### Bug fixes
 
 ## `3.0.0-next.202409132122`

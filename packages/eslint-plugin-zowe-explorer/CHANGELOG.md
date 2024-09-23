@@ -4,6 +4,8 @@ All notable changes to the "eslint-plugin-zowe-explorer" package will be documen
 
 ### New features and enhancements
 
+- Generate NOTICE file for package.
+
 ### Bug fixes
 
 ## `3.0.0-next.202409132122`
