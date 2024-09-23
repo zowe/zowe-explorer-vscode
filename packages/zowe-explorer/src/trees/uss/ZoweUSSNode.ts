@@ -235,33 +235,32 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.children = [];
         }
 
+        const existingItems: Record<string, ZoweUSSNode> = {};
+        for (const element of this.children as ZoweUSSNode[]) {
+            existingItems[`${element.parentPath}/${element.label.toString()}`] = element;
+        }
         const responseNodes: IZoweUSSTreeNode[] = [];
         for (const item of response.apiResponse.items) {
             // ".", "..", and "..." have already been filtered out
-
-            const existing = this.children.find(
-                // Ensure both parent path and short label match.
-                // (Can't use mParent fullPath since that is already updated with new value by this point in getChildren.)
-                (element: ZoweUSSNode) => element.parentPath === this.fullPath && element.label.toString() === item.name
-            );
+            let ussNode = existingItems[`${this.fullPath}/${item.name as string}`];
 
             // The child node already exists. Use that node for the list instead, and update the file attributes in case they've changed
-            if (existing) {
-                existing.setAttributes({
+            if (ussNode != null) {
+                ussNode.setAttributes({
                     gid: item.gid,
                     uid: item.uid,
                     group: item.group,
                     perms: item.mode,
                     owner: item.user,
                 });
-                responseNodes.push(existing);
-                existing.onUpdateEmitter.fire(existing);
+                responseNodes.push(ussNode);
+                ussNode.onUpdateEmitter.fire(ussNode);
                 continue;
             }
 
             const isDir = item.mode.startsWith("d");
             const collapseState = isDir ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
-            const temp = new ZoweUSSNode({
+            ussNode = new ZoweUSSNode({
                 label: item.name,
                 collapsibleState: collapseState,
                 parentNode: this,
@@ -271,28 +270,28 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             });
             if (isDir) {
                 // Create an entry for the USS folder if it doesn't exist.
-                if (!UssFSProvider.instance.exists(temp.resourceUri)) {
-                    await vscode.workspace.fs.createDirectory(temp.resourceUri);
+                if (!UssFSProvider.instance.exists(ussNode.resourceUri)) {
+                    await vscode.workspace.fs.createDirectory(ussNode.resourceUri);
                 }
             } else {
                 // Create an entry for the USS file if it doesn't exist.
-                if (!UssFSProvider.instance.exists(temp.resourceUri)) {
-                    await vscode.workspace.fs.writeFile(temp.resourceUri, new Uint8Array());
+                if (!UssFSProvider.instance.exists(ussNode.resourceUri)) {
+                    await vscode.workspace.fs.writeFile(ussNode.resourceUri, new Uint8Array());
                 }
-                temp.command = {
+                ussNode.command = {
                     command: "vscode.open",
                     title: vscode.l10n.t("Open"),
-                    arguments: [temp.resourceUri],
+                    arguments: [ussNode.resourceUri],
                 };
             }
-            temp.setAttributes({
+            ussNode.setAttributes({
                 gid: item.gid,
                 uid: item.uid,
                 group: item.group,
                 perms: item.mode,
                 owner: item.user,
             });
-            responseNodes.push(temp);
+            responseNodes.push(ussNode);
         }
 
         const nodesToAdd = responseNodes.filter((c) => !this.children.includes(c));
