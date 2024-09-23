@@ -48,16 +48,8 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     private serviceProf: imperative.IProfileLoaded = undefined;
     private unixCmdMsgs = {
         opCancelledMsg: vscode.l10n.t("Operation Cancelled"),
-        issueCmdNotSupportedMsg: vscode.l10n.t({
-            message: "Issuing commands is not supported for this profile type, {0}.",
-            args: [this.serviceProf?.type],
-            comment: ["Profile type"],
-        }),
-        issueUnixCmdNotSupportedMsg: vscode.l10n.t({
-            message: "Issuing UNIX commands is not supported for this profile type, {0}.",
-            args: [this.serviceProf?.type],
-            comment: ["Profile type"],
-        }),
+        issueCmdNotSupportedMsg: vscode.l10n.t("Issuing commands is not supported for this profile type, {0}.", [this.serviceProf?.type]),
+        issueUnixCmdNotSupportedMsg: vscode.l10n.t("Issuing UNIX commands is not supported for this profile type, {0}.", [this.serviceProf?.type]),
         sshSessionErrorMsg: vscode.l10n.t("Error preparring SSH connection for issueing UNIX commands, please check SSH profile for correctness."),
         sshProfNotFoundMsg: vscode.l10n.t("No SSH profile found. Please create an SSH profile."),
         sshProfMissingInfoMsg: vscode.l10n.t("SSH profile missing connection details. Please update."),
@@ -98,13 +90,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             }
             if (!ZoweExplorerApiRegister.getCommandApi(this.serviceProf).issueUnixCommand) {
                 ZoweLogger.error(this.unixCmdMsgs.issueUnixCmdNotSupportedMsg);
-                Gui.errorMessage(
-                    vscode.l10n.t({
-                        message: "Issuing UNIX commands is not supported for this profile type, {0}.",
-                        args: [this.serviceProf?.type],
-                        comment: ["Profile type"],
-                    })
-                );
+                Gui.errorMessage(vscode.l10n.t("Issuing UNIX commands is not supported for this profile type, {0}.", [this.serviceProf?.type]));
                 this.serviceProf = undefined;
                 return;
             }
@@ -157,13 +143,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         } catch (error) {
             if (error.toString().includes("non-existing")) {
                 ZoweLogger.error(error);
-                Gui.errorMessage(
-                    vscode.l10n.t({
-                        message: "Not implemented yet for profile of type: {0}",
-                        args: [this.serviceProf.type],
-                        comment: ["Profile type"],
-                    })
-                );
+                Gui.errorMessage(vscode.l10n.t("Not implemented yet for profile of type: {0}", [this.serviceProf.type]));
             } else {
                 await AuthUtils.errorHandling(error, this.serviceProf.name);
             }
@@ -304,16 +284,8 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             const items: vscode.QuickPickItem[] = this.history.getSearchHistory().map((element) => new FilterItem({ text: element }));
             const quickpick = Gui.createQuickPick();
             quickpick.placeholder = alwaysEdit
-                ? vscode.l10n.t({
-                      message: "Select a Unix command to run against {0} (An option to edit will follow)",
-                      args: [cwd],
-                      comment: ["Current work directory"],
-                  })
-                : vscode.l10n.t({
-                      message: "Select a Unix command to run immediately against {0}",
-                      args: [cwd],
-                      comment: ["Current work directory"],
-                  });
+                ? vscode.l10n.t("Select a Unix command to run against {0} (An option to edit will follow)", [cwd])
+                : vscode.l10n.t("Select a Unix command to run immediately against {0}", [cwd]);
 
             quickpick.items = [createPick, ...items];
             quickpick.ignoreFocusOut = true;

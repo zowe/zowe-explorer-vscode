@@ -262,12 +262,10 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             if (doc.fileName === currentFilePath || docIsChild === true) {
                 if (doc.isDirty === true) {
                     Gui.errorMessage(
-                        vscode.l10n.t({
-                            message:
-                                "Unable to rename {0} because you have unsaved changes in this {1}. Please save your work before renaming the {1}.",
-                            args: [originalNode.fullPath, nodeType],
-                            comment: ["Node path", "Node type"],
-                        }),
+                        vscode.l10n.t(
+                            "Unable to rename {0} because you have unsaved changes in this {1}. Please save your work before renaming the {1}.",
+                            [originalNode.fullPath, nodeType]
+                        ),
                         { vsCodeOpts: { modal: true } }
                     );
                     return;
@@ -276,11 +274,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         }
         const loadedNodes = await this.getAllLoadedItems();
         const options: vscode.InputBoxOptions = {
-            prompt: vscode.l10n.t({
-                message: "Enter a new name for the {0}",
-                args: [nodeType],
-                comment: ["Node type"],
-            }),
+            prompt: vscode.l10n.t("Enter a new name for the {0}", [nodeType]),
             value: originalNode.label.toString().replace(/^\[.+\]:\s/, ""),
             ignoreFocusOut: true,
             validateInput: (value) => this.checkDuplicateLabel(parentPath + value, loadedNodes),
@@ -349,11 +343,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         for (const node of nodesToCheck) {
             const nodeType = SharedContext.isFolder(node) ? "folder" : "file";
             if (newFullPath === node.fullPath.trim()) {
-                return vscode.l10n.t({
-                    message: "A {0} already exists with this name. Please choose a different name.",
-                    args: [nodeType],
-                    comment: ["Node type"],
-                });
+                return vscode.l10n.t("A {0} already exists with this name. Please choose a different name.", [nodeType]);
             }
         }
         return null;
@@ -642,11 +632,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         // If user selected the "Remove profile from Favorites option", confirm they are okay with deleting all favorited items for that profile.
         let cancelled = false;
         if (userSelected) {
-            const checkConfirmation = vscode.l10n.t({
-                message: "This will remove all favorited USS items for profile {0}. Continue?",
-                args: [profileName],
-                comment: ["Profile name"],
-            });
+            const checkConfirmation = vscode.l10n.t("This will remove all favorited USS items for profile {0}. Continue?", [profileName]);
             const continueRemove = vscode.l10n.t("Continue");
             const selection = await Gui.warningMessage(checkConfirmation, {
                 items: [continueRemove],
@@ -968,13 +954,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         let profile: imperative.IProfileLoaded;
         let session: imperative.Session;
         this.log = log;
-        ZoweLogger.debug(
-            vscode.l10n.t({
-                message: "Loading profile: {0} for USS favorites",
-                args: [profileName],
-                comment: ["Profile name"],
-            })
-        );
+        ZoweLogger.debug(vscode.l10n.t("Loading profile: {0} for USS favorites", [profileName]));
         // Load profile for parent profile node in this.mFavorites array
         if (!parentNode.getProfile() || !parentNode.getSession()) {
             // If no profile/session yet, then add session and profile to parent profile node in this.mFavorites array:
@@ -998,13 +978,12 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 }
             } catch (error) {
                 ZoweLogger.error(error);
-                const errMessage: string = vscode.l10n.t({
-                    message: `Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: {0}.
+                const errMessage: string = vscode.l10n.t(
+                    `Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: {0}.
                      To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's USS view.
                       Would you like to do this now? {1}`,
-                    args: [profileName, SharedUtils.getAppName()],
-                    comment: ["Profile name", "Application name"],
-                });
+                    [profileName, SharedUtils.getAppName()]
+                );
                 const btnLabelRemove = vscode.l10n.t("initializeUSSFavorites.error.buttonRemove", "Remove");
                 Gui.errorMessage(errMessage, {
                     items: [btnLabelRemove],

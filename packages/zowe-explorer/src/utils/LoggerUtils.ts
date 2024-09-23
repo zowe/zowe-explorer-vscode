@@ -30,20 +30,8 @@ export class LoggerUtils {
 
     private static writeVscLoggerInfo(outputChannel: vscode.OutputChannel, logFileLocation: string, context: vscode.ExtensionContext): void {
         outputChannel.appendLine(`${context.extension.packageJSON.displayName as string} ${context.extension.packageJSON.version as string}`);
-        outputChannel.appendLine(
-            vscode.l10n.t({
-                message: "This log file can be found at {0}",
-                args: [logFileLocation],
-                comment: ["Log file location"],
-            })
-        );
-        outputChannel.appendLine(
-            vscode.l10n.t({
-                message: "Zowe Explorer log level: {0}",
-                args: [ZoweLogger.getLogSetting()],
-                comment: ["Log setting"],
-            })
-        );
+        outputChannel.appendLine(vscode.l10n.t("This log file can be found at {0}", [logFileLocation]));
+        outputChannel.appendLine(vscode.l10n.t("Zowe Explorer log level: {0}", [ZoweLogger.getLogSetting()]));
     }
 
     private static async compareCliLogSetting(): Promise<void> {
@@ -59,13 +47,12 @@ export class LoggerUtils {
 
     private static async updateVscLoggerSetting(cliSetting: string): Promise<void> {
         const updateLoggerButton = vscode.l10n.t("Update");
-        const message = vscode.l10n.t({
-            message: `Zowe Explorer now has a VS Code logger with a default log level of INFO.
+        const message = vscode.l10n.t(
+            `Zowe Explorer now has a VS Code logger with a default log level of INFO.
                 \nIt looks like the Zowe CLI's ZOWE_APP_LOG_LEVEL={0}.
                 \nWould you like Zowe Explorer to update to the the same log level?`,
-            args: [cliSetting],
-            comment: ["CLI setting"],
-        });
+            [cliSetting]
+        );
         await Gui.infoMessage(message, {
             items: [updateLoggerButton],
             vsCodeOpts: { modal: true },

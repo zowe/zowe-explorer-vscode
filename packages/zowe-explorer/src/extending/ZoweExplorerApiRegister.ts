@@ -228,13 +228,7 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
             api.profile = profile;
             return api;
         } else {
-            throw new Error(
-                vscode.l10n.t({
-                    message: "Internal error: Tried to call a non-existing USS API in API register: {0}",
-                    args: [profile.type],
-                    comment: ["Profile type"],
-                })
-            );
+            throw new Error(vscode.l10n.t("Internal error: Tried to call a non-existing USS API in API register: {0}", [profile.type]));
         }
     }
 
@@ -250,13 +244,7 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
             api.profile = profile;
             return api;
         } else {
-            throw new Error(
-                vscode.l10n.t({
-                    message: "Internal error: Tried to call a non-existing MVS API in API register: {0}",
-                    args: [profile.type],
-                    comment: ["Profile type"],
-                })
-            );
+            throw new Error(vscode.l10n.t("Internal error: Tried to call a non-existing MVS API in API register: {0}", [profile.type]));
         }
     }
 
@@ -272,13 +260,7 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
             api.profile = profile;
             return api;
         } else {
-            throw new Error(
-                vscode.l10n.t({
-                    message: "Internal error: Tried to call a non-existing JES API in API register: {0}",
-                    args: [profile.type],
-                    comment: ["Profile type"],
-                })
-            );
+            throw new Error(vscode.l10n.t("Internal error: Tried to call a non-existing JES API in API register: {0}", [profile.type]));
         }
     }
 
@@ -294,13 +276,7 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
             api.profile = profile;
             return api;
         } else {
-            throw new Error(
-                vscode.l10n.t({
-                    message: "Internal error: Tried to call a non-existing Command API in API register: {0}",
-                    args: [profile.type],
-                    comment: ["Profile type"],
-                })
-            );
+            throw new Error(vscode.l10n.t("Internal error: Tried to call a non-existing Command API in API register: {0}", [profile.type]));
         }
     }
 
@@ -323,11 +299,7 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
                     } catch (cmdError) {
                         ZoweLogger.error(cmdError);
                         throw new Error(
-                            vscode.l10n.t({
-                                message: "Internal error: Tried to call a non-existing Common API in API register: {0}",
-                                args: [profile.type],
-                                comment: ["Profile type"],
-                            })
+                            vscode.l10n.t("Internal error: Tried to call a non-existing Common API in API register: {0}", [profile.type])
                         );
                     }
                 }

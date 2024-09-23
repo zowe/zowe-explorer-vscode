@@ -118,13 +118,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
         } catch (error) {
             if (error.toString().includes("non-existing")) {
                 ZoweLogger.error(error);
-                Gui.errorMessage(
-                    vscode.l10n.t({
-                        message: "Not implemented yet for profile of type: {0}",
-                        args: [profile.type],
-                        comment: ["Profile type"],
-                    })
-                );
+                Gui.errorMessage(vscode.l10n.t("Not implemented yet for profile of type: {0}", [profile.type]));
             } else {
                 await AuthUtils.errorHandling(error, profile.name);
             }
@@ -140,16 +134,8 @@ export class MvsCommandHandler extends ZoweCommandProvider {
             const items: vscode.QuickPickItem[] = this.history.getSearchHistory().map((element) => new FilterItem({ text: element }));
             const quickpick = Gui.createQuickPick();
             quickpick.placeholder = alwaysEdit
-                ? vscode.l10n.t({
-                      message: "Select an MVS command to run against {0} (An option to edit will follow)",
-                      args: [hostname],
-                      comment: ["Host name"],
-                  })
-                : vscode.l10n.t({
-                      message: "Select an MVS command to run immediately against {0}",
-                      args: [hostname],
-                      comment: ["Host name"],
-                  });
+                ? vscode.l10n.t("Select an MVS command to run against {0} (An option to edit will follow)", [hostname])
+                : vscode.l10n.t("Select an MVS command to run immediately against {0}", [hostname]);
 
             quickpick.items = [createPick, ...items];
             quickpick.ignoreFocusOut = true;

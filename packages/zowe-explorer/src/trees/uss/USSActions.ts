@@ -47,16 +47,8 @@ export class USSActions {
         let filePath = "";
         if (SharedContext.isSession(node)) {
             const filePathOptions: vscode.InputBoxOptions = {
-                placeHolder: vscode.l10n.t({
-                    message: "{0} location",
-                    args: [nodeType],
-                    comment: ["Node type"],
-                }),
-                prompt: vscode.l10n.t({
-                    message: "Choose a location to create the {0}",
-                    args: [nodeType],
-                    comment: ["Node type"],
-                }),
+                placeHolder: vscode.l10n.t("{0} location", [nodeType]),
+                prompt: vscode.l10n.t("Choose a location to create the {0}", [nodeType]),
                 value: node.tooltip as string,
             };
             filePath = await Gui.showInputBox(filePathOptions);
@@ -252,13 +244,10 @@ export class USSActions {
         }, "");
 
         const deleteButton = vscode.l10n.t("Delete");
-        const message = vscode.l10n.t({
-            message:
-                // eslint-disable-next-line max-len
-                "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
-            args: [fileNames.toString()],
-            comment: ["File names"],
-        });
+        const message = vscode.l10n.t(
+            "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
+            [fileNames.toString()]
+        );
         let cancelled = false;
         await Gui.warningMessage(message, {
             items: [deleteButton],
@@ -406,13 +395,7 @@ export class USSActions {
     public static async copyRelativePath(node: IZoweUSSTreeNode): Promise<void> {
         const sesNode = node.getSessionNode();
         if (!node.fullPath) {
-            ZoweLogger.warn(
-                vscode.l10n.t({
-                    message: "copyName was called on USS node {0}, but its fullPath is invalid.",
-                    args: [node.label as string],
-                    comment: "USS node label",
-                })
-            );
+            ZoweLogger.warn(vscode.l10n.t("copyName was called on USS node {0}, but its fullPath is invalid.", [node.label as string]));
             return;
         }
 

@@ -401,13 +401,7 @@ export class Profiles extends ProfilesCache {
             const filePath = currentProfile.profLoc.osLoc[0];
             await this.openConfigFile(filePath);
         } else if (chosenProfile) {
-            ZoweLogger.info(
-                vscode.l10n.t({
-                    message: `The profile {0} has been added to the {1} tree.`,
-                    args: [chosenProfile, treeType],
-                    comment: ["chosen profile", "tree type"],
-                })
-            );
+            ZoweLogger.info(vscode.l10n.t(`The profile {0} has been added to the {1} tree.`, [chosenProfile, treeType]));
             await zoweFileProvider.addSession({
                 sessionName: chosenProfile,
                 addToAllTrees: await Profiles.handleChangeForAllTrees(chosenProfile, true),
@@ -558,19 +552,11 @@ export class Profiles extends ProfilesCache {
         const profilename = typeof profile === "string" ? profile : profile.name;
         const userInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: vscode.l10n.t(`User Name`),
-            prompt: vscode.l10n.t({
-                message: "Enter the user name for the {0} connection. Leave blank to not store.",
-                args: [profilename],
-                comment: ["Profile name"],
-            }),
+            prompt: vscode.l10n.t("Enter the user name for the {0} connection. Leave blank to not store.", [profilename]),
         };
         const passwordInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: vscode.l10n.t(`Password`),
-            prompt: vscode.l10n.t({
-                message: "Enter the password for the {0} connection. Leave blank to not store.",
-                args: [profilename],
-                comment: ["Profile name"],
-            }),
+            prompt: vscode.l10n.t("Enter the password for the {0} connection. Leave blank to not store.", [profilename]),
         };
 
         let mProfileInfo: imperative.ProfileInfo;
@@ -684,23 +670,13 @@ export class Profiles extends ProfilesCache {
                     profileStatus = await Gui.withProgress(
                         {
                             location: vscode.ProgressLocation.Notification,
-                            title: vscode.l10n.t({
-                                message: `Validating {0} Profile.`,
-                                args: [theProfile.name],
-                                comment: [`The profile name`],
-                            }),
+                            title: vscode.l10n.t(`Validating {0} Profile.`, [theProfile.name]),
                             cancellable: true,
                         },
                         async (progress, token) => {
                             token.onCancellationRequested(() => {
                                 // will be returned as undefined
-                                Gui.showMessage(
-                                    vscode.l10n.t({
-                                        message: `Validating {0} was cancelled.`,
-                                        args: [theProfile.name],
-                                        comment: [`The profile name`],
-                                    })
-                                );
+                                Gui.showMessage(vscode.l10n.t(`Validating {0} was cancelled.`, [theProfile.name]));
                             });
                             return getSessStatus.getStatus(theProfile, theProfile.type);
                         }
@@ -734,13 +710,7 @@ export class Profiles extends ProfilesCache {
                         break;
                 }
             } catch (error) {
-                ZoweLogger.info(
-                    vscode.l10n.t({
-                        message: `Profile validation failed for {0}.`,
-                        args: [theProfile.name],
-                        comment: [`The profile name`],
-                    })
-                );
+                ZoweLogger.info(vscode.l10n.t(`Profile validation failed for {0}.`, [theProfile.name]));
                 await AuthUtils.errorHandling(error, theProfile.name);
                 filteredProfile = {
                     status: "inactive",
@@ -773,13 +743,7 @@ export class Profiles extends ProfilesCache {
             loginTokenType = await zeInstance.getCommonApi(serviceProfile).getTokenTypeName();
         } catch (error) {
             ZoweLogger.warn(error);
-            Gui.showMessage(
-                vscode.l10n.t({
-                    message: `Error getting supported tokenType value for profile {0}`,
-                    args: [serviceProfile.name],
-                    comment: [`Service profile name`],
-                })
-            );
+            Gui.showMessage(vscode.l10n.t(`Error getting supported tokenType value for profile {0}`, [serviceProfile.name]));
             return;
         }
         try {
@@ -797,23 +761,13 @@ export class Profiles extends ProfilesCache {
                 });
             }
             if (loginOk) {
-                Gui.showMessage(
-                    vscode.l10n.t({
-                        message: "Login to authentication service was successful for {0}.",
-                        args: [serviceProfile.name],
-                        comment: ["Service profile name"],
-                    })
-                );
+                Gui.showMessage(vscode.l10n.t("Login to authentication service was successful for {0}.", [serviceProfile.name]));
                 await Profiles.getInstance().refresh(zeInstance);
             } else {
                 Gui.showMessage(this.profilesOpCancelled);
             }
         } catch (err) {
-            const message = vscode.l10n.t({
-                message: `Unable to log in with {0}. {1}`,
-                args: [serviceProfile.name, err?.message],
-                comment: [`Service profile name`, `Error message`],
-            });
+            const message = vscode.l10n.t(`Unable to log in with {0}. {1}`, [serviceProfile.name, err?.message]);
             ZoweLogger.error(message);
             Gui.errorMessage(message);
             return;
@@ -1041,21 +995,11 @@ export class Profiles extends ProfilesCache {
                 });
             }
             if (logoutOk) {
-                Gui.showMessage(
-                    vscode.l10n.t({
-                        message: "Logout from authentication service was successful for {0}.",
-                        args: [serviceProfile.name],
-                        comment: ["Service profile name"],
-                    })
-                );
+                Gui.showMessage(vscode.l10n.t("Logout from authentication service was successful for {0}.", [serviceProfile.name]));
                 await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
             }
         } catch (error) {
-            const message = vscode.l10n.t({
-                message: "Unable to log out with {0}. {1}",
-                args: [serviceProfile.name, error?.message],
-                comment: ["Service profile name", "Error message"],
-            });
+            const message = vscode.l10n.t("Unable to log out with {0}. {1}", [serviceProfile.name, error?.message]);
             ZoweLogger.error(message);
             Gui.errorMessage(message);
         }
@@ -1111,13 +1055,7 @@ export class Profiles extends ProfilesCache {
                 profile: { ...node.getProfile().profile, ...session },
             });
         }
-        Gui.showMessage(
-            vscode.l10n.t({
-                message: "Login to authentication service was successful for {0}.",
-                args: [serviceProfile.name],
-                comment: ["Service profile name"],
-            })
-        );
+        Gui.showMessage(vscode.l10n.t("Login to authentication service was successful for {0}.", [serviceProfile.name]));
         return true;
     }
 
@@ -1154,13 +1092,10 @@ export class Profiles extends ProfilesCache {
             return null;
         }
         const createButton = vscode.l10n.t("Create New");
-        const message = vscode.l10n.t({
-            message:
-                `A Team Configuration File already exists in this location\n{0}\n` +
-                `Continuing may alter the existing file, would you like to proceed?`,
-            args: [foundLayer.path],
-            comment: ["File path"],
-        });
+        const message = vscode.l10n.t(
+            `A Team Configuration File already exists in this location\n{0}\n` + `Continuing may alter the existing file, would you like to proceed?`,
+            [foundLayer.path]
+        );
         const response = await Gui.infoMessage(message, { items: [createButton], vsCodeOpts: { modal: true } });
         if (response) {
             return path.basename(foundLayer.path);

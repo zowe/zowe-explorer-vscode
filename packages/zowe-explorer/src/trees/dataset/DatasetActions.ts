@@ -355,13 +355,7 @@ export class DatasetActions {
             profile = node.getProfile();
             likeDSName = node.label.toString().replace(/\[.*\]: /g, "");
         }
-        ZoweLogger.info(
-            vscode.l10n.t({
-                message: "Allocating data set like {0}.",
-                args: [likeDSName],
-                comment: ["Like Data Set name"],
-            })
-        );
+        ZoweLogger.info(vscode.l10n.t("Allocating data set like {0}.", [likeDSName]));
 
         // Get new data set name
         const options: vscode.InputBoxOptions = {
@@ -403,13 +397,7 @@ export class DatasetActions {
         const newNode = (await currSession.getChildren()).find((child) => child.label.toString() === newDSName.toUpperCase());
         await datasetProvider.getTreeView().reveal(currSession, { select: true, focus: true });
         datasetProvider.getTreeView().reveal(newNode, { select: true, focus: true });
-        ZoweLogger.info(
-            vscode.l10n.t({
-                message: "{0} was created like {1}.",
-                args: [newDSName, likeDSName],
-                comment: ["New Data Set name", "Like Data Set name"],
-            })
-        );
+        ZoweLogger.info(vscode.l10n.t("{0} was created like {1}.", [newDSName, likeDSName]));
     }
 
     public static async uploadDialog(node: ZoweDatasetNode, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
@@ -562,20 +550,13 @@ export class DatasetActions {
         });
 
         // Confirm that the user really wants to delete
-        ZoweLogger.debug(
-            vscode.l10n.t({
-                message: "Deleting data set(s): {0}",
-                args: [nodesToDelete.join(",")],
-                comment: ["Data Sets to delete"],
-            })
-        );
+        ZoweLogger.debug(vscode.l10n.t("Deleting data set(s): {0}", [nodesToDelete.join(",")]));
         const deleteButton = vscode.l10n.t("Delete");
-        const message = vscode.l10n.t({
-            // eslint-disable-next-line max-len
-            message: `Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}`,
-            args: [nodesToDelete.length, nodesToDelete.toString().replace(/(,)/g, "\n")],
-            comment: ["Data Sets to delete length", "Data Sets to delete"],
-        });
+        const message = vscode.l10n.t(
+            "Are you sure you want to delete the following {0} item(s)?\n" +
+                "This will permanently remove these data sets and/or members from your system.\n\n{1}",
+            [nodesToDelete.length, nodesToDelete.toString().replace(/(,)/g, "\n")]
+        );
         await Gui.warningMessage(message, {
             items: [deleteButton],
             vsCodeOpts: { modal: true },
@@ -626,13 +607,7 @@ export class DatasetActions {
         }
         if (nodesDeleted.length > 0) {
             nodesDeleted.sort((a, b) => a.localeCompare(b));
-            Gui.showMessage(
-                vscode.l10n.t({
-                    message: "The following {0} item(s) were deleted: {1}",
-                    args: [nodesDeleted.length, nodesDeleted.toString().trim()],
-                    comment: ["Data Sets deleted length", "Data Sets deleted"],
-                })
-            );
+            Gui.showMessage(vscode.l10n.t("The following {0} item(s) were deleted: {1}", [nodesDeleted.length, nodesDeleted.toString().trim()]));
         }
 
         // refresh Tree View & favorites
@@ -658,13 +633,7 @@ export class DatasetActions {
             },
         };
         const name = (await Gui.showInputBox(options))?.toUpperCase();
-        ZoweLogger.debug(
-            vscode.l10n.t({
-                message: "Creating new data set member {0}",
-                args: [name],
-                comment: ["Data Set member name"],
-            })
-        );
+        ZoweLogger.debug(vscode.l10n.t("Creating new data set member {0}", [name]));
         if (name) {
             const label = parent.label as string;
             const profile = parent.getProfile();
@@ -838,13 +807,7 @@ export class DatasetActions {
         await datasetProvider.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             const label = node.label as string;
-            ZoweLogger.debug(
-                vscode.l10n.t({
-                    message: "Showing attributes for {0}.",
-                    args: [label],
-                    comment: ["Label"],
-                })
-            );
+            ZoweLogger.debug(vscode.l10n.t("Showing attributes for {0}.", [label]));
             let attributes: any;
             try {
                 const nodeProfile = node.getProfile();
@@ -868,13 +831,7 @@ export class DatasetActions {
                     });
                 }
                 if (attributes.length === 0) {
-                    throw new Error(
-                        vscode.l10n.t({
-                            message: "No matching names found for query: {0}",
-                            args: [label],
-                            comment: ["Label"],
-                        })
-                    );
+                    throw new Error(vscode.l10n.t("No matching names found for query: {0}", [label]));
                 }
             } catch (err) {
                 if (err instanceof Error) {
@@ -937,13 +894,7 @@ export class DatasetActions {
             await vscode.window.showTextDocument(file, { preview: false });
         }
         const doc = vscode.window.activeTextEditor.document;
-        ZoweLogger.debug(
-            vscode.l10n.t({
-                message: "Submitting as JCL in document {0}",
-                args: [doc.fileName],
-                comment: ["Document file name"],
-            })
-        );
+        ZoweLogger.debug(vscode.l10n.t("Submitting as JCL in document {0}", [doc.fileName]));
 
         // prompts for job submit confirmation when submitting local JCL from editor/palette
         // no node passed in, ownsJob is true because local file is always owned by userID, passes in local file name
@@ -996,20 +947,8 @@ export class DatasetActions {
                 const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJcl(doc.getText());
                 const args = [sessProfileName, job.jobid];
                 const setJobCmd = `command:zowe.jobs.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
-                Gui.showMessage(
-                    vscode.l10n.t({
-                        message: "Job submitted {0}",
-                        args: [`[${job.jobid}](${setJobCmd})`],
-                        comment: ["Job ID and set job command"],
-                    })
-                );
-                ZoweLogger.info(
-                    vscode.l10n.t({
-                        message: "Job submitted {0} using profile {1}.",
-                        args: [job.jobid, sessProfileName],
-                        comment: ["Job ID", "Profile name"],
-                    })
-                );
+                Gui.showMessage(vscode.l10n.t("Job submitted {0}", [`[${job.jobid}](${setJobCmd})`]));
+                ZoweLogger.info(vscode.l10n.t("Job submitted {0} using profile {1}.", [job.jobid, sessProfileName]));
             } catch (error) {
                 if (error instanceof Error) {
                     await AuthUtils.errorHandling(error, sessProfileName, vscode.l10n.t("Job submission failed."));
@@ -1033,17 +972,10 @@ export class DatasetActions {
         const jclName = typeof nodeOrFileName === "string" ? path.basename(nodeOrFileName) : nodeOrFileName.getLabel().toString();
 
         const showConfirmationDialog = async (): Promise<boolean> => {
-            const selection = await Gui.warningMessage(
-                vscode.l10n.t({
-                    message: "Are you sure you want to submit the following job?\n\n{0}",
-                    args: [jclName],
-                    comment: ["JCL name"],
-                }),
-                {
-                    items: [{ title: "Submit" }],
-                    vsCodeOpts: { modal: true },
-                }
-            );
+            const selection = await Gui.warningMessage(vscode.l10n.t("Are you sure you want to submit the following job?\n\n{0}", [jclName]), {
+                items: [{ title: "Submit" }],
+                vsCodeOpts: { modal: true },
+            });
             return selection != null && selection?.title === "Submit";
         };
 
@@ -1119,20 +1051,8 @@ export class DatasetActions {
                 const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJob(label);
                 const args = [sesName, job.jobid];
                 const setJobCmd = `command:zowe.jobs.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
-                Gui.showMessage(
-                    vscode.l10n.t({
-                        message: "Job submitted {0}",
-                        args: [`[${job.jobid}](${setJobCmd})`],
-                        comment: ["Job ID and set job command"],
-                    })
-                );
-                ZoweLogger.info(
-                    vscode.l10n.t({
-                        message: "Job submitted {0} using profile {1}.",
-                        args: [job.jobid, sesName],
-                        comment: ["Job ID", "Session name"],
-                    })
-                );
+                Gui.showMessage(vscode.l10n.t("Job submitted {0}", [`[${job.jobid}](${setJobCmd})`]));
+                ZoweLogger.info(vscode.l10n.t("Job submitted {0} using profile {1}.", [job.jobid, sesName]));
             } catch (error) {
                 if (error instanceof Error) {
                     await AuthUtils.errorHandling(error, sesName, vscode.l10n.t("Job submission failed."));
@@ -1177,20 +1097,8 @@ export class DatasetActions {
             }
         } catch (err) {
             if (err?.message.includes(vscode.l10n.t("not found"))) {
-                ZoweLogger.error(
-                    vscode.l10n.t({
-                        message: "Error encountered when deleting data set. {0}",
-                        args: [JSON.stringify(err)],
-                        comment: ["Stringified JSON error"],
-                    })
-                );
-                Gui.showMessage(
-                    vscode.l10n.t({
-                        message: "Unable to find file {0}",
-                        args: [label],
-                        comment: ["Label"],
-                    })
-                );
+                ZoweLogger.error(vscode.l10n.t("Error encountered when deleting data set. {0}", [JSON.stringify(err)]));
+                Gui.showMessage(vscode.l10n.t("Unable to find file {0}", [label]));
             } else {
                 await AuthUtils.errorHandling(err, node.getProfileName());
             }
@@ -1261,20 +1169,8 @@ export class DatasetActions {
             statusMsg.dispose();
         } catch (err) {
             if (err.message.includes(vscode.l10n.t("not found"))) {
-                ZoweLogger.error(
-                    vscode.l10n.t({
-                        message: "Error encountered when refreshing data set view. {0}",
-                        args: [JSON.stringify(err)],
-                        comment: ["Stringified JSON error"],
-                    })
-                );
-                Gui.showMessage(
-                    vscode.l10n.t({
-                        message: "Unable to find file {0}",
-                        args: [label],
-                        comment: ["Label"],
-                    })
-                );
+                ZoweLogger.error(vscode.l10n.t("Error encountered when refreshing data set view. {0}", [JSON.stringify(err)]));
+                Gui.showMessage(vscode.l10n.t("Unable to find file {0}", [label]));
             } else {
                 await AuthUtils.errorHandling(err, node.getProfileName());
             }
@@ -1320,13 +1216,7 @@ export class DatasetActions {
                 Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
                 return;
             }
-            ZoweLogger.debug(
-                vscode.l10n.t({
-                    message: "Prompted for a data set pattern, recieved {0}.",
-                    args: [pattern],
-                    comment: ["Data Set pattern"],
-                })
-            );
+            ZoweLogger.debug(vscode.l10n.t("Prompted for a data set pattern, recieved {0}.", [pattern]));
         } else {
             // executing search from saved search in favorites
             pattern = node.label.toString().substring(node.label.toString().indexOf(":") + 2);
@@ -1401,13 +1291,7 @@ export class DatasetActions {
             const { dataSetName } = DatasetUtils.getNodeLabels(node);
             try {
                 const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
-                Gui.showMessage(
-                    vscode.l10n.t({
-                        message: "Migration of data set {0} requested.",
-                        args: [dataSetName],
-                        comment: ["Data Set name"],
-                    })
-                );
+                Gui.showMessage(vscode.l10n.t("Migration of data set {0} requested.", [dataSetName]));
                 node.contextValue = Constants.DS_MIGRATED_FILE_CONTEXT;
                 node.setIcon(IconGenerator.getIconByNode(node).path);
                 datasetProvider.refresh();
@@ -1435,13 +1319,7 @@ export class DatasetActions {
             const { dataSetName } = DatasetUtils.getNodeLabels(node);
             try {
                 const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
-                Gui.showMessage(
-                    vscode.l10n.t({
-                        message: "Recall of data set {0} requested.",
-                        args: [dataSetName],
-                        comment: ["Data Set name"],
-                    })
-                );
+                Gui.showMessage(vscode.l10n.t("Recall of data set {0} requested.", [dataSetName]));
                 if (node.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
                     node.contextValue = Constants.DS_PDS_CONTEXT;
                 } else {

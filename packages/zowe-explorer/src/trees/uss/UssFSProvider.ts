@@ -519,13 +519,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         try {
             await ZoweExplorerApiRegister.getUssApi(entry.metadata.profile).rename(entry.metadata.path, newPath);
         } catch (err) {
-            await Gui.errorMessage(
-                vscode.l10n.t({
-                    message: "Renaming {0} failed due to API error: {1}",
-                    args: [entry.metadata.path, err.message],
-                    comment: ["File path", "Error message"],
-                })
-            );
+            await Gui.errorMessage(vscode.l10n.t("Renaming {0} failed due to API error: {1}", [entry.metadata.path, err.message]));
             return;
         }
 
@@ -555,13 +549,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 entryToDelete instanceof UssDirectory
             );
         } catch (err) {
-            await Gui.errorMessage(
-                vscode.l10n.t({
-                    message: "Deleting {0} failed due to API error: {1}",
-                    args: [entryToDelete.metadata.path, err.message],
-                    comment: ["File name", "Error message"],
-                })
-            );
+            await Gui.errorMessage(vscode.l10n.t("Deleting {0} failed due to API error: {1}", [entryToDelete.metadata.path, err.message]));
             return;
         }
 

@@ -412,13 +412,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         let profile: imperative.IProfileLoaded;
         let session: imperative.Session;
         this.log = log;
-        ZoweLogger.debug(
-            vscode.l10n.t({
-                message: "Loading profile: {0} for jobs favorites",
-                args: [profileName],
-                comment: ["Profile name"],
-            })
-        );
+        ZoweLogger.debug(vscode.l10n.t("Loading profile: {0} for jobs favorites", [profileName]));
         // Load profile for parent profile node in this.mFavorites array
         if (!parentNode.getProfile() || !parentNode.getSession()) {
             try {
@@ -439,13 +433,12 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                     ];
                 }
             } catch (error) {
-                const errMessage: string = vscode.l10n.t({
-                    message: `Error: You have Zowe Job favorites that refer to a non-existent CLI profile named: {0}.
+                const errMessage: string = vscode.l10n.t(
+                    `Error: You have Zowe Job favorites that refer to a non-existent CLI profile named: {0}.
                          To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.
                           Would you like to do this now? {1}`,
-                    args: [profileName, SharedUtils.getAppName()],
-                    comment: ["Profile name", "Application name"],
-                });
+                    [profileName, SharedUtils.getAppName()]
+                );
                 // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
                 ZoweLogger.error(errMessage + error.toString());
                 const btnLabelRemove = vscode.l10n.t("Remove");
@@ -593,11 +586,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         // If user selected the "Remove profile from Favorites option", confirm they are okay with deleting all favorited items for that profile.
         let cancelled = false;
         if (userSelected) {
-            const checkConfirmation = vscode.l10n.t({
-                message: "This will remove all favorited Jobs items for profile {0}. Continue?",
-                args: [profileName],
-                comment: ["Profile name"],
-            });
+            const checkConfirmation = vscode.l10n.t("This will remove all favorited Jobs items for profile {0}. Continue?", [profileName]);
             const continueRemove = vscode.l10n.t("Continue");
             const selection = await Gui.warningMessage(checkConfirmation, {
                 items: [continueRemove],
@@ -1024,11 +1013,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     private async showPollOptions(uri: vscode.Uri): Promise<number> {
         const pollValue = SettingsConfig.getDirectValue<number>("zowe.jobs.pollInterval");
         const intervalInput = await Gui.showInputBox({
-            title: vscode.l10n.t({
-                message: "Poll interval (in ms) for: {0}",
-                args: [path.posix.basename(uri.path)],
-                comment: ["URI path"],
-            }),
+            title: vscode.l10n.t("Poll interval (in ms) for: {0}", [path.posix.basename(uri.path)]),
             value: pollValue.toString(),
             validateInput: (value: string) => this.validatePollInterval(value),
         });
@@ -1068,11 +1053,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             msInterval: pollInterval,
             request: async () => {
                 const statusMsg = Gui.setStatusBarMessage(
-                    vscode.l10n.t({
-                        message: `$(sync~spin) Polling: {0}...`,
-                        args: [path.posix.basename(node.resourceUri.path)],
-                        comment: ["Unique Spool name"],
-                    }),
+                    vscode.l10n.t(`$(sync~spin) Polling: {0}...`, [path.posix.basename(node.resourceUri.path)]),
                     Constants.STATUS_BAR_TIMEOUT_MS
                 );
                 await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
@@ -1101,13 +1082,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      */
     public updateFilterForJob(job: IZoweJobTreeNode, newFilter: string | null): void {
         job.filter = newFilter;
-        job.description = newFilter
-            ? vscode.l10n.t({
-                  message: "Filter: {0}",
-                  args: [newFilter],
-                  comment: ["The new filter"],
-              })
-            : null;
+        job.description = newFilter ? vscode.l10n.t("Filter: {0}", [newFilter]) : null;
         this.nodeDataChanged(job);
         if (newFilter === null) {
             job["children"] = job["actualJobs"];
@@ -1130,14 +1105,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         if (userDismissed || selection === clearFilterOpt) {
             if (selection === clearFilterOpt) {
                 this.updateFilterForJob(job, null);
-                Gui.setStatusBarMessage(
-                    vscode.l10n.t({
-                        message: "$(check) Filter cleared for {0}",
-                        args: [job.label as string],
-                        comment: ["Job label"],
-                    }),
-                    Constants.MS_PER_SEC * 4
-                );
+                Gui.setStatusBarMessage(vscode.l10n.t("$(check) Filter cleared for {0}", [job.label as string]), Constants.MS_PER_SEC * 4);
             }
             return;
         }
@@ -1161,14 +1129,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             );
             SharedTreeProviders.job.refresh();
             this.updateFilterForJob(job, query);
-            Gui.setStatusBarMessage(
-                vscode.l10n.t({
-                    message: "$(check) Filter updated for {0}",
-                    args: [job.label as string],
-                    comment: ["Job label"],
-                }),
-                Constants.MS_PER_SEC * 4
-            );
+            Gui.setStatusBarMessage(vscode.l10n.t("$(check) Filter updated for {0}", [job.label as string]), Constants.MS_PER_SEC * 4);
         });
         job.children = actual_jobs;
         this.nodeDataChanged(job);

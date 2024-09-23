@@ -330,11 +330,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         temp.command = { command: "vscode.open", title: "", arguments: [temp.resourceUri] };
                     } else {
                         temp.errorDetails = new imperative.ImperativeError({
-                            msg: vscode.l10n.t({
-                                message: "Cannot access member with control characters in the name: {0}",
-                                args: [item.member],
-                                comment: ["Data Set member"],
-                            }),
+                            msg: vscode.l10n.t("Cannot access member with control characters in the name: {0}", [item.member]),
                         });
                     }
 

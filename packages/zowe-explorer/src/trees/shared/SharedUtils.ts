@@ -148,9 +148,7 @@ export class SharedUtils {
 
     public static parseFavorites(lines: string[]): Definitions.FavoriteData[] {
         const invalidFavoriteWarning = (line: string): void =>
-            ZoweLogger.warn(
-                vscode.l10n.t({ message: "Failed to parse a saved favorite. Attempted to parse: {0}", args: [line], comment: ["Plaintext line"] })
-            );
+            ZoweLogger.warn(vscode.l10n.t("Failed to parse a saved favorite. Attempted to parse: {0}", [line]));
 
         return lines
             .map((line) => {
@@ -202,11 +200,7 @@ export class SharedUtils {
         if (profile.profile?.encoding != null) {
             items.splice(0, 0, {
                 label: profile.profile?.encoding,
-                description: vscode.l10n.t({
-                    message: "From profile {0}",
-                    args: [profile.name],
-                    comment: ["Profile name"],
-                }),
+                description: vscode.l10n.t("From profile {0}", [profile.name]),
             });
         }
         if (taggedEncoding != null) {
@@ -238,18 +232,8 @@ export class SharedUtils {
 
         let response = (
             await Gui.showQuickPick(items, {
-                title: vscode.l10n.t({
-                    message: "Choose encoding for {0}",
-                    args: [node.label as string],
-                    comment: ["Node label"],
-                }),
-                placeHolder:
-                    currentEncoding &&
-                    vscode.l10n.t({
-                        message: "Current encoding is {0}",
-                        args: [currentEncoding],
-                        comment: ["Encoding name"],
-                    }),
+                title: vscode.l10n.t("Choose encoding for {0}", [node.label as string]),
+                placeHolder: currentEncoding && vscode.l10n.t("Current encoding is {0}", [currentEncoding]),
             })
         )?.label;
         let encoding: ZosEncoding;
@@ -262,11 +246,7 @@ export class SharedUtils {
                 break;
             case otherItem.label:
                 response = await Gui.showInputBox({
-                    title: vscode.l10n.t({
-                        message: "Choose encoding for {0}",
-                        args: [node.label as string],
-                        comment: ["Node label"],
-                    }),
+                    title: vscode.l10n.t("Choose encoding for {0}", [node.label as string]),
                     placeHolder: vscode.l10n.t("Enter a codepage (e.g., 1047, IBM-1047)"),
                 });
                 if (response != null) {

@@ -201,11 +201,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
                 // Only show an error if we failed to update the on-disk schema.
                 if (err.code === "EACCES" || err.code === "EPERM") {
                     Gui.errorMessage(
-                        vscode.l10n.t({
-                            message: "Failed to update Zowe schema: insufficient permissions or read-only file. {0}",
-                            args: [err.message ?? ""],
-                            comment: ["Error message"],
-                        })
+                        vscode.l10n.t("Failed to update Zowe schema: insufficient permissions or read-only file. {0}", [err.message ?? ""])
                     );
                 }
             }

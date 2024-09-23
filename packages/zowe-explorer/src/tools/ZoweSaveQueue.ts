@@ -57,11 +57,7 @@ export class ZoweSaveQueue {
         } catch (err) {
             ZoweLogger.error(err);
             await Gui.errorMessage(
-                vscode.l10n.t({
-                    message: "Failed to upload changes for {0}: {1}",
-                    args: [this.buildFileHyperlink(nextRequest.savedFile), err.message],
-                    comment: ["Build file hyperlink", "Error message"],
-                })
+                vscode.l10n.t("Failed to upload changes for {0}: {1}", [this.buildFileHyperlink(nextRequest.savedFile), err.message])
             );
         }
     }

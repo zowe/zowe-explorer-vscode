@@ -117,13 +117,7 @@ export class ProfilesUtils {
      */
     public static async setupCustomCredentialManager(credentialManagerMap: imperative.ICredentialManagerNameMap): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("ProfilesUtils.setupCustomCredentialManager called.");
-        ZoweLogger.info(
-            vscode.l10n.t({
-                message: "Custom credential manager {0} found, attempting to activate.",
-                args: [credentialManagerMap.credMgrDisplayName],
-                comment: ["Credential manager display name"],
-            })
-        );
+        ZoweLogger.info(vscode.l10n.t("Custom credential manager {0} found, attempting to activate.", [credentialManagerMap.credMgrDisplayName]));
         const customCredentialManagerExtension =
             credentialManagerMap.credMgrZEName && vscode.extensions.getExtension(credentialManagerMap.credMgrZEName);
         const credentialManager = await ProfilesUtils.activateCredentialManagerOverride(customCredentialManagerExtension);
@@ -216,11 +210,7 @@ export class ProfilesUtils {
             }
         });
         if (credentialManager) {
-            const header = vscode.l10n.t({
-                message: `Custom credential manager {0} found`,
-                args: [credentialManager.credMgrDisplayName],
-                comment: ["Credential manager display name"],
-            });
+            const header = vscode.l10n.t(`Custom credential manager {0} found`, [credentialManager.credMgrDisplayName]);
 
             const message = vscode.l10n.t("Do you wish to use this credential manager instead?");
             const optionYes = vscode.l10n.t("Yes");
@@ -256,11 +246,9 @@ export class ProfilesUtils {
      */
     public static async promptAndHandleMissingCredentialManager(credentialManager: imperative.ICredentialManagerNameMap): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.promptAndHandleMissingCredentialManager called.");
-        const header = vscode.l10n.t({
-            message: "Plugin of name '{0}' was defined for custom credential management on imperative.json file.",
-            args: [credentialManager.credMgrDisplayName],
-            comment: ["Credential manager display name"],
-        });
+        const header = vscode.l10n.t("Plugin of name '{0}' was defined for custom credential management on imperative.json file.", [
+            credentialManager.credMgrDisplayName,
+        ]);
         const installMessage = vscode.l10n.t("Please install associated VS Code extension for custom credential manager or revert to default.");
         const revertToDefaultButton = vscode.l10n.t("Use Default");
         const installButton = vscode.l10n.t("Install");
@@ -403,11 +391,7 @@ export class ProfilesUtils {
         const creds = await Constants.PROFILES_CACHE.promptCredentials(profile, true);
 
         if (creds != null) {
-            const successMsg = vscode.l10n.t({
-                message: "Credentials for {0} were successfully updated",
-                args: [typeof profile === "string" ? profile : profile.name],
-                comment: ["Profile name"],
-            });
+            const successMsg = vscode.l10n.t("Credentials for {0} were successfully updated", [typeof profile === "string" ? profile : profile.name]);
             ZoweLogger.info(successMsg);
             Gui.showMessage(successMsg);
         }
@@ -428,13 +412,7 @@ export class ProfilesUtils {
         // set global variable of security value to existing override
         // this will later get reverted to default in getProfilesInfo.ts if user chooses to
         ProfilesUtils.updateCredentialManagerSetting(ProfilesUtils.getCredentialManagerOverride());
-        ZoweLogger.info(
-            vscode.l10n.t({
-                message: "Zowe home directory is located at {0}",
-                args: [zoweDir],
-                comment: ["Zowe directory path"],
-            })
-        );
+        ZoweLogger.info(vscode.l10n.t("Zowe home directory is located at {0}", [zoweDir]));
     }
 
     public static writeOverridesFile(): void {
@@ -451,20 +429,10 @@ export class ProfilesUtils {
         if (fileContent) {
             try {
                 settings = JSON.parse(fileContent);
-                ZoweLogger.debug(
-                    vscode.l10n.t({
-                        message: "Reading imperative.json Credential Manager.\n {0}",
-                        args: [fileContent],
-                        comment: ["File content"],
-                    })
-                );
+                ZoweLogger.debug(vscode.l10n.t("Reading imperative.json Credential Manager.\n {0}", [fileContent]));
             } catch (err) {
                 if (err instanceof Error) {
-                    const errorMsg = vscode.l10n.t({
-                        message: "Failed to parse JSON file {0}. Will try to re-create the file.",
-                        args: [settingsFile],
-                        comment: ["Settings file"],
-                    });
+                    const errorMsg = vscode.l10n.t("Failed to parse JSON file {0}. Will try to re-create the file.", [settingsFile]);
                     ZoweLogger.error(errorMsg);
                     ZoweLogger.debug(fileContent.toString());
                     settings = { ...defaultImperativeJson };
@@ -484,13 +452,7 @@ export class ProfilesUtils {
             settings = { ...defaultImperativeJson };
         }
         const newData = JSON.stringify(settings, null, 2);
-        ZoweLogger.debug(
-            vscode.l10n.t({
-                message: "Updating imperative.json Credential Manager to {0}.\n{1}",
-                args: [this.PROFILE_SECURITY, newData],
-                comment: ["Default credential override setting", "New credential override setting"],
-            })
-        );
+        ZoweLogger.debug(vscode.l10n.t("Updating imperative.json Credential Manager to {0}.\n{1}", [this.PROFILE_SECURITY, newData]));
         return fs.writeFileSync(settingsFile, newData, {
             encoding: "utf-8",
             flag: "w",
@@ -503,13 +465,7 @@ export class ProfilesUtils {
             ProfilesUtils.initializeZoweFolder();
         } catch (err) {
             ZoweLogger.error(err);
-            Gui.errorMessage(
-                vscode.l10n.t({
-                    message: "Failed to initialize Zowe folder: {0}",
-                    args: [err.message],
-                    comment: ["Error message"],
-                })
-            );
+            Gui.errorMessage(vscode.l10n.t("Failed to initialize Zowe folder: {0}", [err.message]));
         }
 
         try {

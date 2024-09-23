@@ -713,7 +713,6 @@
   "Uploading to data set": "",
   "No data sets selected for deletion, cancelling...": "",
   "Deleting data set(s): {0}": "",
-  "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}": "",
   "Deleting items": "",
   "The following {0} item(s) were deleted: {1}": "",
   "Name of Member": "",

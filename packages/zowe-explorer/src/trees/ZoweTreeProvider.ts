@@ -234,12 +234,10 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
             }
 
             await AuthUtils.errorHandling(
-                vscode.l10n.t({
-                    message:
-                        "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
-                    args: [profile.name],
-                    comment: ["Profile name"],
-                })
+                vscode.l10n.t(
+                    "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
+                    [profile.name]
+                )
             );
         } else if (profileStatus.status === "active") {
             if (

@@ -451,24 +451,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         } catch (err) {
             ZoweLogger.error(err);
             if (err instanceof Error) {
-                Gui.errorMessage(
-                    vscode.l10n.t({
-                        message: "Unable to delete node: {0}",
-                        args: [err.message],
-                        comment: ["Error message"],
-                    })
-                );
+                Gui.errorMessage(vscode.l10n.t("Unable to delete node: {0}", [err.message]));
             }
             throw err;
         }
 
-        Gui.showMessage(
-            vscode.l10n.t({
-                message: "The item {0} has been deleted.",
-                args: [this.label.toString()],
-                comment: ["Label"],
-            })
-        );
+        Gui.showMessage(vscode.l10n.t("The item {0} has been deleted.", [this.label.toString()]));
 
         // Remove node from the USS Favorites tree
         await ussFileProvider.removeFavorite(this);
@@ -597,13 +585,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         } catch (err) {
             if (err instanceof Error && err.message.includes(vscode.l10n.t("not found"))) {
                 ZoweLogger.warn(err.toString());
-                Gui.showMessage(
-                    vscode.l10n.t({
-                        message: "Unable to find file: {0}",
-                        args: [err.message],
-                        comment: ["Error message"],
-                    })
-                );
+                Gui.showMessage(vscode.l10n.t("Unable to find file: {0}", [err.message]));
             } else {
                 await AuthUtils.errorHandling(err, this.getProfileName());
             }

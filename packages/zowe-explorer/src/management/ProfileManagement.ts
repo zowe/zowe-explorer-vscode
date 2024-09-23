@@ -213,21 +213,9 @@ export class ProfileManagement {
 
     private static getQpPlaceholders(profile: imperative.IProfileLoaded): { basicAuth: string; tokenAuth: string; chooseAuth: string } {
         return {
-            basicAuth: vscode.l10n.t({
-                message: "Profile {0} is using basic authentication. Choose a profile action.",
-                args: [profile.name],
-                comment: ["Profile name"],
-            }),
-            tokenAuth: vscode.l10n.t({
-                message: "Profile {0} is using token authentication. Choose a profile action.",
-                args: [profile.name],
-                comment: ["Profile name"],
-            }),
-            chooseAuth: vscode.l10n.t({
-                message: "Profile {0} doesn't specify an authentication method. Choose a profile action.",
-                args: [profile.name],
-                comment: ["Profile name"],
-            }),
+            basicAuth: vscode.l10n.t("Profile {0} is using basic authentication. Choose a profile action.", [profile.name]),
+            tokenAuth: vscode.l10n.t("Profile {0} is using token authentication. Choose a profile action.", [profile.name]),
+            chooseAuth: vscode.l10n.t("Profile {0} doesn't specify an authentication method. Choose a profile action.", [profile.name]),
         };
     }
 

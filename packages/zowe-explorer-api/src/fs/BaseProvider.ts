@@ -51,14 +51,7 @@ export class BaseProvider {
             return;
         }
         await vscode.workspace.fs.writeFile(uri.with({ query: "forceUpload=true" }), fsEntry.data);
-        Gui.setStatusBarMessage(
-            vscode.l10n.t({
-                message: "$(check) Overwrite applied for {0}",
-                args: [fsEntry.name],
-                comment: "File name",
-            }),
-            this.FS_PROVIDER_UI_TIMEOUT
-        );
+        Gui.setStatusBarMessage(vscode.l10n.t("$(check) Overwrite applied for {0}", [fsEntry.name]), this.FS_PROVIDER_UI_TIMEOUT);
         fsEntry.conflictData = null;
         vscode.commands.executeCommand("workbench.action.closeActiveEditor");
     }
@@ -79,14 +72,7 @@ export class BaseProvider {
         if (!isDataEqual) {
             await vscode.workspace.fs.writeFile(uri.with({ query: "forceUpload=true" }), fsEntry.conflictData.contents);
         }
-        Gui.setStatusBarMessage(
-            vscode.l10n.t({
-                message: "$(discard) Used remote content for {0}",
-                args: [fsEntry.name],
-                comment: "File name",
-            }),
-            this.FS_PROVIDER_UI_TIMEOUT
-        );
+        Gui.setStatusBarMessage(vscode.l10n.t("$(discard) Used remote content for {0}", [fsEntry.name]), this.FS_PROVIDER_UI_TIMEOUT);
         fsEntry.conflictData = null;
         vscode.commands.executeCommand("workbench.action.closeActiveEditor");
     }

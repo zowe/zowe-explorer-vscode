@@ -575,13 +575,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 responseTimeout: entry.metadata.profile.profile?.responseTimeout,
             });
         } catch (err) {
-            await Gui.errorMessage(
-                vscode.l10n.t({
-                    message: "Deleting {0} failed due to API error: {1}",
-                    args: [entry.metadata.path, err.message],
-                    comment: ["File path", "Error message"],
-                })
-            );
+            await Gui.errorMessage(vscode.l10n.t("Deleting {0} failed due to API error: {1}", [entry.metadata.path, err.message]));
             return;
         }
 
@@ -611,13 +605,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).renameDataSetMember(pdsName, oldName, newName);
             }
         } catch (err) {
-            await Gui.errorMessage(
-                vscode.l10n.t({
-                    message: "Renaming {0} failed due to API error: {1}",
-                    args: [oldName, err.message],
-                    comment: ["File name", "Error message"],
-                })
-            );
+            await Gui.errorMessage(vscode.l10n.t("Renaming {0} failed due to API error: {1}", [oldName, err.message]));
             return;
         }
 

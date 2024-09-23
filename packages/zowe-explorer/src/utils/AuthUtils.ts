@@ -45,19 +45,14 @@ export class AuthUtils {
                 httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
                 imperativeError.message.includes("All configured authentication methods failed")
             ) {
-                const errMsg = vscode.l10n.t({
-                    message:
-                        "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
-                    args: [label],
-                    comment: ["Label"],
-                });
-                const errToken = vscode.l10n.t({
-                    message:
-                        // eslint-disable-next-line max-len
-                        "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
-                    args: [label],
-                    comment: ["Label"],
-                });
+                const errMsg = vscode.l10n.t(
+                    "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
+                    [label]
+                );
+                const errToken = vscode.l10n.t(
+                    "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
+                    [label]
+                );
                 if (label.includes("[")) {
                     label = label.substring(0, label.indexOf(" [")).trim();
                 }
