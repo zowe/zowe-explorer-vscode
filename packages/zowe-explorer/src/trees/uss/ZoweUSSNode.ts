@@ -536,7 +536,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      *
      * @param {IZoweTreeNode} node
      */
-    public async openUSS(download: boolean, _previewFile: boolean, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
+    public async openUSS(forceDownload: boolean, _previewFile: boolean, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.openUSS called.");
         const errorMsg = vscode.l10n.t("openUSS() called from invalid node.");
         switch (true) {
@@ -557,12 +557,19 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             try {
-                // Add document name to recently-opened files
-                ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
-                ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
-                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Downloading USS file..."));
-                await this.initializeFileOpening(download ? this.resourceUri.with({ query: "redownload=true" }) : this.resourceUri);
-                statusMsg.dispose();
+                if (forceDownload) {
+                    // if the encoding has changed, fetch the contents with the new encoding
+                    await UssFSProvider.instance.fetchFileAtUri(this.resourceUri);
+                    await vscode.commands.executeCommand("vscode.open", this.resourceUri);
+                    await UssFSProvider.revertFileInEditor();
+                } else {
+                    await vscode.commands.executeCommand("vscode.open", this.resourceUri);
+                }
+                if (ussFileProvider) {
+                    // Add document name to recently-opened files
+                    ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
+                    ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
+                }
             } catch (err) {
                 await AuthUtils.errorHandling(err, this.getProfileName());
                 throw err;
@@ -607,30 +614,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             } else {
                 await AuthUtils.errorHandling(err, this.getProfileName());
             }
-        }
-    }
-
-    public async initializeFileOpening(uri?: vscode.Uri): Promise<void> {
-        ZoweLogger.trace("ZoweUSSNode.initializeFileOpening called.");
-        if (uri == null) {
-            ZoweLogger.trace("ZoweUSSNode.initializeFileOpening called with invalid URI, exiting...");
-            return;
-        }
-
-        const urlQuery = new URLSearchParams(uri.query);
-        try {
-            if (urlQuery.has("redownload")) {
-                // if the encoding has changed, fetch the contents with the new encoding
-                await UssFSProvider.instance.fetchFileAtUri(uri);
-                await vscode.commands.executeCommand("vscode.open", uri.with({ query: "" }));
-                await UssFSProvider.revertFileInEditor();
-            } else {
-                await vscode.commands.executeCommand("vscode.open", uri);
-            }
-
-            this.downloaded = true;
-        } catch (err) {
-            ZoweLogger.warn(err);
         }
     }
 

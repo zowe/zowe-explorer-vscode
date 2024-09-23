@@ -1522,7 +1522,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     }
 
     public async openWithEncoding(node: IZoweDatasetTreeNode, encoding?: ZosEncoding): Promise<void> {
-        encoding = encoding ?? (await SharedUtils.promptForEncoding(node));
+        encoding ??= await SharedUtils.promptForEncoding(node);
         if (encoding !== undefined) {
             if (!(await FsAbstractUtils.confirmForUnsavedDoc(node.resourceUri))) {
                 return;
