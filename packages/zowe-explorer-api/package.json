@@ -59,7 +59,9 @@
     "fresh-clone": "pnpm clean && (rimraf node_modules || true)",
     "license": "node ../../scripts/updateLicenses.js",
     "package": "pnpm build && pnpm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz",
-    "copy-secrets": "copyfiles -f ../../node_modules/@zowe/secrets-for-zowe-sdk/prebuilds/*.node ./prebuilds"
+    "copy-secrets": "copyfiles -f ../../node_modules/@zowe/secrets-for-zowe-sdk/prebuilds/*.node ./prebuilds",
+    "update-notices": "npx @houdiniproject/noticeme -u",
+    "verify-notices": "npx @houdiniproject/noticeme"
   },
   "jest": {
     "moduleFileExtensions": [

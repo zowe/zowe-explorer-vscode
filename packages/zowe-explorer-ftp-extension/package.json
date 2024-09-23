@@ -46,7 +46,9 @@
     "fresh-clone": "pnpm clean && (rimraf node_modules || true)",
     "vscode:prepublish": "webpack --mode production",
     "license": "node ../../scripts/updateLicenses.js",
-    "package": "vsce package --no-dependencies && node ../../scripts/mv-pack.js zowe-explorer-ftp-extension vsix"
+    "package": "vsce package --no-dependencies && node ../../scripts/mv-pack.js zowe-explorer-ftp-extension vsix",
+    "update-notices": "npx @houdiniproject/noticeme -u",
+    "verify-notices": "npx @houdiniproject/noticeme"
   },
   "engines": {
     "vscode": "^1.79.0"

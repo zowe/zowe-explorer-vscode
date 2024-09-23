@@ -19,7 +19,9 @@
     "lint:html": "echo \"eslint-plugin: nothing to lint.\"",
     "madge": "echo \"eslint-plugin: nothing for madge.\"",
     "pretty": "echo \"eslint-plugin: nothing to pretty.\"",
-    "package": "echo \"eslint-plugin: nothing to package.\""
+    "package": "echo \"eslint-plugin: nothing to package.\"",
+    "update-notices": "npx @houdiniproject/noticeme -u",
+    "verify-notices": "npx @houdiniproject/noticeme"
   },
   "devDependencies": {
     "requireindex": "^1.1.0",
