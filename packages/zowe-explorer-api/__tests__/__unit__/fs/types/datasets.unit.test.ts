@@ -51,4 +51,23 @@ describe("DsEntryMetadata", () => {
         });
         expect(pdsEntryMeta.dsName).toBe("TEST.PDS(MEMBER)");
     });
+
+    describe("extensionRemovedFromPath", () => {
+        it("returns a path without its extension", () => {
+            const fakeProfile: any = { name: "testProfile" };
+            const entryMeta = new DsEntryMetadata({
+                profile: fakeProfile,
+                path: "/testProfile/TEST.COBOL.DS.cbl",
+            });
+            expect((entryMeta as any).extensionRemovedFromPath()).toBe("/testProfile/TEST.COBOL.DS");
+        });
+        it("returns a path as-is if no extension is detected", () => {
+            const fakeProfile: any = { name: "testProfile" };
+            const entryMeta = new DsEntryMetadata({
+                profile: fakeProfile,
+                path: "/testProfile/TEST.SOME.DS",
+            });
+            expect((entryMeta as any).extensionRemovedFromPath()).toBe("/testProfile/TEST.SOME.DS");
+        });
+    });
 });
