@@ -8,6 +8,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Added the `BaseProfileAuthOptions` interface to define base profile authentication options for SSO login and logout. [#3076](https://github.com/zowe/zowe-explorer-vscode/pull/3076)
 - Deprecated the methods `ZoweVsCodeExtension.loginWithBaseProfile` and `ZoweVsCodeExtension.logoutWithBaseProfile`. Use `ZoweVsCodeExtension.ssoLogin` and `ZoweVsCodeExtension.ssoLogout` instead, which use the `BaseProfileAuthOptions` interface and allow you to choose whether the token value in the base profile should have precedence in case there are conflicts. [#3076](https://github.com/zowe/zowe-explorer-vscode/pull/3076)
+- Fixed bug in `ProfilesCache` class where old profiles were still accessible after deleting a Team configuration file. [#3124](https://github.com/zowe/zowe-explorer-vscode/issues/3124)
 - Added `extensionRemovedFromPath` private function to the `DsEntry` class to allow removing the extension from a data set before making API calls. [#3121](https://github.com/zowe/zowe-explorer-vscode/issues/3121)
 
 ### Bug fixes
