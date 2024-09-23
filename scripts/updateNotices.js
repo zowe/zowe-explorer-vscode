@@ -8,8 +8,8 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+
 const fs = require('fs');
-const os = require('os')
 
 const header = fs.readFileSync("../../scripts/NOTICE_HEADER", "utf-8")
 const noticesFileData = fs.readFileSync("./NOTICE");
