@@ -72,19 +72,11 @@ export class JobTableView {
 
     private static buildTitle(profileNode: IZoweJobTreeNode): string {
         if (profileNode.searchId) {
-            return l10n.t({
-                message: `Jobs with ID: {0}`,
-                args: [profileNode.searchId],
-                comment: ["Job Search ID"],
-            });
+            return l10n.t(`Jobs with ID: {0}`, [profileNode.searchId]);
         }
 
         if (profileNode.owner && profileNode.prefix && profileNode.status) {
-            return l10n.t({
-                message: `Jobs: {0} | {1} | {2}`,
-                args: [profileNode.owner, profileNode.prefix, profileNode.status],
-                comment: ["Job Owner", "Job Prefix", "Job Status"],
-            });
+            return l10n.t(`Jobs: {0} | {1} | {2}`, [profileNode.owner, profileNode.prefix, profileNode.status]);
         }
 
         return l10n.t("Jobs");

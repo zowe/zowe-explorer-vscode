@@ -73,7 +73,7 @@ describe("diffOverwrite", () => {
             fsEntry.data
         );
         blockMocks.writeFileMock.mockClear();
-        expect(statusBarMsgMock.mock.calls[0][0]).toBe("$(check) Overwrite applied for file.txt");
+        expect(statusBarMsgMock.mock.calls[0][0]).toBe("$(check) Overwrite applied for {0}");
         expect(fsEntry.conflictData).toBeNull();
     });
 
@@ -121,7 +121,7 @@ describe("diffUseRemote", () => {
             conflictArr
         );
         blockMocks.writeFileMock.mockClear();
-        expect(statusBarMsgMock.mock.calls[0][0]).toBe("$(check) Overwrite applied for file.txt");
+        expect(statusBarMsgMock.mock.calls[0][0]).toBe("$(check) Overwrite applied for {0}");
         expect(fsEntry.conflictData).toBeNull();
         expect(executeCommandMock).toHaveBeenCalledWith("workbench.action.closeActiveEditor");
     });
@@ -145,7 +145,7 @@ describe("diffUseRemote", () => {
 
         expect(blockMocks.lookupAsFileMock).toHaveBeenCalled();
         expect(blockMocks.writeFileMock).not.toHaveBeenCalled();
-        expect(statusBarMsgMock.mock.calls[0][0]).toBe("$(check) Overwrite applied for file.txt");
+        expect(statusBarMsgMock.mock.calls[0][0]).toBe("$(check) Overwrite applied for {0}");
         expect(fsEntry.conflictData).toBeNull();
         expect(executeCommandMock).toHaveBeenCalledWith("workbench.action.closeActiveEditor");
     });

@@ -865,22 +865,13 @@ export interface Memento {
 }
 
 export namespace l10n {
-    export function t(
-        options:
-            | {
-                  message: string;
-                  args?: Array<string | number | boolean> | Record<string, any>;
-                  comment?: string | string[];
-              }
-            | string
-    ): string {
-        if (typeof options === "string") {
-            return options;
+    export function t(message: string, args?: string[]): string {
+        if (args && Array.isArray(args) && args.length) {
+            args.forEach((arg, i) => {
+                message = message.replace(`{${i}}`, arg);
+            });
         }
-        options.args?.forEach((arg: string, i: number) => {
-            options.message = options.message.replace(`{${i}}`, arg);
-        });
-        return options.message;
+        return message;
     }
 }
 
