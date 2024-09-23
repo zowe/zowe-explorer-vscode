@@ -127,11 +127,14 @@ export class Profiles extends ProfilesCache {
             if (values) {
                 theProfile.profile.user = values[0];
                 theProfile.profile.password = values[1];
-            }
-        }
 
-        // Profile should have enough information to allow validation
-        profileStatus = await this.getProfileSetting(theProfile);
+                // Validate profile
+                profileStatus = await this.getProfileSetting(theProfile);
+            }
+        } else {
+            // Profile should have enough information to allow validation
+            profileStatus = await this.getProfileSetting(theProfile);
+        }
 
         switch (profileStatus.status) {
             case "unverified":
@@ -660,7 +663,7 @@ export class Profiles extends ProfilesCache {
         ZoweLogger.trace("Profiles.validateProfiles called.");
         let filteredProfile: Validation.IValidationProfile;
         let profileStatus;
-        const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
+        const getSessStatus = ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
 
         // Check if the profile is already validated as active
         const desiredProfile = this.profilesForValidation.find((profile) => profile.name === theProfile.name && profile.status === "active");

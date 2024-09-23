@@ -82,5 +82,6 @@ Then(/the user will be prompted for (.*) credentials/, async function (authType:
 });
 Then("the profile node will be marked as inactive", async function () {
     await browser.waitUntil(() => this.profileNode.isExpanded());
-    console.log(this.profileNode);
+    // await expect(this.profileNode.elem.getAttribute());
+    console.log(this.profileNode.elem$(".custom-view-tree-node-item-icon"));
 });
