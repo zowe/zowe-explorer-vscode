@@ -4,6 +4,16 @@ exports[`ZoweUSSNode Unit Tests - Initialization of class Checks that the ZoweUS
 ZoweUSSNode {
   "children": [],
   "collapsibleState": 0,
+  "command": {
+    "arguments": [
+      Uri {
+        "path": "/sestest/testDir/testFile",
+        "scheme": "zowe-uss",
+      },
+    ],
+    "command": "vscode.open",
+    "title": "",
+  },
   "contextValue": "textFile",
   "dirty": true,
   "downloadedInternal": false,

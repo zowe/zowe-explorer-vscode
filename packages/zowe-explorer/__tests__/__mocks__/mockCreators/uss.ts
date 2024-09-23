@@ -99,7 +99,7 @@ export function createFavoriteUSSNode(session, profile) {
     });
     const ussNodeF = new ZoweUSSNode({
         label: "usstest",
-        collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+        collapsibleState: vscode.TreeItemCollapsibleState.None,
         parentNode,
         session,
         profile,

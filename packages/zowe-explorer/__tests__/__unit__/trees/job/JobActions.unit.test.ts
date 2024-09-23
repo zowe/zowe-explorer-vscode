@@ -10,6 +10,7 @@
  */
 
 import * as vscode from "vscode";
+import * as zosconsole from "@zowe/zos-console-for-zowe-sdk";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import { Gui, IZoweJobTreeNode, Sorting, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
@@ -95,6 +96,8 @@ function createGlobalMocks() {
     Object.defineProperty(Gui, "showOpenDialog", { value: jest.fn(), configurable: true });
     Object.defineProperty(LocalFileManagement, "getDefaultUri", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showWarningMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosconsole, "IssueCommand", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosconsole.IssueCommand, "issue", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showOpenDialog", { value: jest.fn(), configurable: true });
     Object.defineProperty(zosjobs.CancelJobs, "cancelJobForJob", { value: jest.fn(), configurable: true });
     Object.defineProperty(zosjobs.GetJobs, "getJclForJob", { value: jest.fn(), configurable: true });
@@ -200,7 +203,7 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
             job: blockMocks.iJob,
         });
 
-        jest.spyOn(blockMocks.commandApi, "issueMvsCommand").mockResolvedValueOnce({
+        mocked(zosconsole.IssueCommand.issue).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
@@ -217,7 +220,7 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
             session: blockMocks.session,
             profile: blockMocks.imperativeProfile,
         });
-        jest.spyOn(blockMocks.commandApi, "issueMvsCommand").mockResolvedValueOnce({
+        mocked(zosconsole.IssueCommand.issue).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
@@ -239,7 +242,7 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
         });
 
         mocked(vscode.window.showInputBox).mockResolvedValue("modify");
-        jest.spyOn(blockMocks.commandApi, "issueMvsCommand").mockResolvedValueOnce({
+        mocked(zosconsole.IssueCommand.issue).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
@@ -257,7 +260,7 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
             profile: blockMocks.imperativeProfile,
         });
         mocked(vscode.window.showInputBox).mockResolvedValue("modify");
-        jest.spyOn(blockMocks.commandApi, "issueMvsCommand").mockResolvedValueOnce({
+        mocked(zosconsole.IssueCommand.issue).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",

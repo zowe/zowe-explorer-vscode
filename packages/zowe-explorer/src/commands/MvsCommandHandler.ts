@@ -206,7 +206,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                         title: vscode.l10n.t("MVS command submitted."),
                     },
                     () => {
-                        return ZoweExplorerApiRegister.getCommandApi(profile).issueMvsCommand(command);
+                        return ZoweExplorerApiRegister.getCommandApi(profile).issueMvsCommand(command, profile.profile?.consoleName);
                     }
                 );
                 if (submitResponse.success) {
