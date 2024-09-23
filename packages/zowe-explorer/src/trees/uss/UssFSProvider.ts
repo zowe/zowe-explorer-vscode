@@ -14,6 +14,7 @@ import * as vscode from "vscode";
 import {
     BaseProvider,
     BufferBuilder,
+    ErrorCorrelator,
     FsAbstractUtils,
     imperative,
     Gui,
@@ -23,6 +24,7 @@ import {
     ZosEncoding,
     ZoweScheme,
     UriFsInfo,
+    ZoweExplorerApiType,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { USSFileStructure } from "./USSFileStructure";
@@ -391,6 +393,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             });
         } catch (err) {
             statusMsg.dispose();
+            if (err instanceof imperative.ImperativeError) {
+                await ErrorCorrelator.getInstance().translateAndDisplayError(ZoweExplorerApiType.Uss, entry.metadata.profile.type, err.message);
+            }
             throw err;
         }
 
