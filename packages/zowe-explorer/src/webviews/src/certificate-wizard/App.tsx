@@ -7,6 +7,7 @@ import {
   VSCodeDataGridRow,
   VSCodeDivider,
 } from "@vscode/webview-ui-toolkit/react";
+import { isSecureOrigin } from "../utils";
 
 const vscodeApi = acquireVsCodeApi();
 
@@ -17,13 +18,7 @@ export function App() {
   useEffect(() => {
     window.addEventListener("message", (event) => {
       // Prevent users from sending data into webview outside of extension/webview context
-      const eventUrl = new URL(event.origin);
-      const isWebUser =
-        (eventUrl.protocol === document.location.protocol && eventUrl.hostname === document.location.hostname) ||
-        eventUrl.hostname.endsWith(".github.dev");
-      const isLocalVSCodeUser = eventUrl.protocol === "vscode-webview:";
-
-      if (!isWebUser && !isLocalVSCodeUser) {
+      if (!isSecureOrigin(event.origin)) {
         return;
       }
 

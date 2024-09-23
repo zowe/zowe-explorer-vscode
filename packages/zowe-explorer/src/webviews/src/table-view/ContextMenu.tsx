@@ -81,7 +81,7 @@ export const useContextMenu = (contextMenu: ContextMenuProps) => {
     callback: cellMenu,
     component: open ? (
       <ControlledMenu
-        state={open ? "open" : "closed"}
+        state="open"
         anchorPoint={anchor}
         direction="right"
         onClose={() => {

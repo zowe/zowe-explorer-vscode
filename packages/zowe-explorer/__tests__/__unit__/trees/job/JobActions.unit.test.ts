@@ -10,7 +10,6 @@
  */
 
 import * as vscode from "vscode";
-import * as zosconsole from "@zowe/zos-console-for-zowe-sdk";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import { Gui, IZoweJobTreeNode, Sorting, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
