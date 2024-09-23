@@ -182,7 +182,6 @@ export class DatasetInit {
                 await datasetProvider.onDidChangeConfiguration(e);
             })
         );
-        context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(DatasetFSProvider.onDidOpenTextDocument));
 
         SharedInit.initSubscribers(context, datasetProvider);
         return datasetProvider;
