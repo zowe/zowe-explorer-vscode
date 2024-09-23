@@ -233,9 +233,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
          * - Look into pre-fetching a directory level below the one given
          * - Should we support symlinks and can we use z/OSMF "report" option?
          */
-        let dir: UssDirectory = null;
         try {
-            dir = this._lookupAsDirectory(uri, false) as UssDirectory;
+            this._lookupAsDirectory(uri, false) as UssDirectory;
         } catch (err) {
             // Errors unrelated to the filesystem cannot be handled here
             if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
@@ -244,7 +243,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         // check to see if contents have updated on the remote system before returning its children.
-        dir = (await this.remoteLookupForResource(uri)) as UssDirectory;
+        const dir = (await this.remoteLookupForResource(uri)) as UssDirectory;
 
         return Array.from(dir.entries.entries()).map((e: [string, UssDirectory | UssFile]) => [e[0], e[1].type]);
     }
