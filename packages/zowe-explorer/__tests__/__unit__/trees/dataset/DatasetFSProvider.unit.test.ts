@@ -159,20 +159,6 @@ describe("readDirectory", () => {
     describe("PDS entry", () => {
         it("calls allMembers to fetch the members of a PDS", async () => {
             const mockPdsEntry = { ...testEntries.pds, metadata: { ...testEntries.pds.metadata } };
-            const mockMvsApi = {
-                dataSet: jest.fn().mockResolvedValueOnce({
-                    success: true,
-                    apiResponse: {
-                        items: [{ dsorg: "PO" }],
-                    },
-                }),
-                allMembers: jest.fn().mockResolvedValueOnce({
-                    success: true,
-                    apiResponse: {
-                        items: [{ member: "MEMB1" }, { member: "MEMB2" }, { member: "MEMB3" }, { member: "MEMB4" }],
-                    },
-                }),
-            };
             const getInfoForUriMock = jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
                 isRoot: false,
                 slashAfterProfilePos: testUris.pds.path.indexOf("/", 1),
