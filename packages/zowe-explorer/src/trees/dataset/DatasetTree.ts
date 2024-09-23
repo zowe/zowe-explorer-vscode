@@ -308,7 +308,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 if (!DatasetFSProvider.instance.exists(node.resourceUri)) {
                     vscode.workspace.fs.writeFile(node.resourceUri, new Uint8Array());
                 }
-                node.command = { command: "vscode.open", title: "", arguments: [node.resourceUri] };
             }
             node.contextValue = SharedContext.asFavorite(node);
             const icon = IconGenerator.getIconByNode(node);
@@ -539,7 +538,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             temp.contextValue = SharedContext.asFavorite(temp);
             temp.resourceUri = node.resourceUri;
             if (SharedContext.isFavoriteDs(temp)) {
-                temp.command = { command: "vscode.open", title: "", arguments: [temp.resourceUri] };
+                temp.command = node.command;
             }
 
             const icon = IconGenerator.getIconByNode(temp);
@@ -1186,7 +1185,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             node.resourceUri = newUri;
             node.label = afterMemberName;
             node.tooltip = afterMemberName;
-            node.command = { command: "vscode.open", title: "", arguments: [node.resourceUri] };
+            node.command.arguments = [node.resourceUri];
             const otherParent = this.findEquivalentNode(
                 node.getParent() as IZoweDatasetTreeNode,
                 SharedContext.isFavorite(node.getParent()) || SharedContext.isFavoriteDescendant(node)

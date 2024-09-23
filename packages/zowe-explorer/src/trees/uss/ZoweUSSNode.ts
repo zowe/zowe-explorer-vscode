@@ -112,6 +112,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             });
             if (isSession) {
                 UssFSProvider.instance.createDirectory(this.resourceUri);
+            } else if (this.collapsibleState === vscode.TreeItemCollapsibleState.None) {
+                this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
             }
 
             if (opts.encoding != null) {
@@ -278,11 +280,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 if (!UssFSProvider.instance.exists(ussNode.resourceUri)) {
                     await vscode.workspace.fs.writeFile(ussNode.resourceUri, new Uint8Array());
                 }
-                ussNode.command = {
-                    command: "vscode.open",
-                    title: vscode.l10n.t("Open"),
-                    arguments: [ussNode.resourceUri],
-                };
             }
             ussNode.setAttributes({
                 gid: item.gid,
@@ -362,11 +359,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.label = path.posix.basename(this.fullPath);
         this.tooltip = USSUtils.injectAdditionalDataToTooltip(this, childPath);
         if (!SharedContext.isUssDirectory(this)) {
-            this.command = {
-                command: "vscode.open",
-                title: vscode.l10n.t("Open"),
-                arguments: [this.resourceUri],
-            };
+            this.command.arguments = [this.resourceUri];
             return;
         }
 

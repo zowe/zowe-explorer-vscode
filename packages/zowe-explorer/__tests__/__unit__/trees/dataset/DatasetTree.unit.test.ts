@@ -348,7 +348,149 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         expect(favoriteSessionNode).toMatchObject(children[0]);
         expect(blockMocks.datasetSessionNode).toMatchObject(children[1]);
     });
+    it("Checking function for session node", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
 
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        blockMocks.datasetSessionNode.pattern = "test";
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.mSessionNodes[1].dirty = true;
+        const sampleChildren: ZoweDatasetNode[] = [
+            new ZoweDatasetNode({
+                label: "BRTVS99",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: testTree.mSessionNodes[1],
+                profile: blockMocks.imperativeProfile,
+            }),
+            new ZoweDatasetNode({
+                label: "BRTVS99.CA10",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: testTree.mSessionNodes[1],
+                profile: blockMocks.imperativeProfile,
+                contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
+            }),
+            new ZoweDatasetNode({
+                label: "BRTVS99.CA11.SPFTEMP0.CNTL",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testTree.mSessionNodes[1],
+                profile: blockMocks.imperativeProfile,
+            }),
+            new ZoweDatasetNode({
+                label: "BRTVS99.DDIR",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testTree.mSessionNodes[1],
+                profile: blockMocks.imperativeProfile,
+            }),
+            new ZoweDatasetNode({
+                label: "BRTVS99.VS1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: testTree.mSessionNodes[1],
+                profile: blockMocks.imperativeProfile,
+                contextOverride: Constants.VSAM_CONTEXT,
+            }),
+        ];
+        jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(testTree);
+
+        const children = await testTree.getChildren(testTree.mSessionNodes[1]);
+        expect(children.map((c) => c.label)).toEqual(sampleChildren.map((c) => c.label));
+        expect(children).toEqual(sampleChildren);
+    });
+    it("Checking function for session node with an imperative error", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const testError = new imperative.ImperativeError({ msg: "test" });
+        const spyOnDataSetsMatchingPattern = jest.spyOn(zosfiles.List, "dataSetsMatchingPattern");
+        spyOnDataSetsMatchingPattern.mockResolvedValueOnce({
+            success: true,
+            commandResponse: null,
+            apiResponse: [
+                { dsname: "HLQ.USER", dsorg: "PS" },
+                { dsname: "HLQ.USER.IMP.ERROR", error: testError },
+                { dsname: "HLQ.USER.MIGRAT", dsorg: "PS", migr: "YES" },
+            ],
+        });
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        blockMocks.datasetSessionNode.pattern = "test";
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.mSessionNodes[1].dirty = true;
+        const nodeOk = new ZoweDatasetNode({
+            label: "HLQ.USER",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            profile: blockMocks.imperativeProfile,
+        });
+        const nodeImpError = new ZoweDatasetNode({
+            label: "HLQ.USER.IMP.ERROR",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            profile: blockMocks.imperativeProfile,
+            contextOverride: Constants.DS_FILE_ERROR_CONTEXT,
+        });
+        nodeImpError.command = { command: "zowe.placeholderCommand", title: "" };
+        nodeImpError.errorDetails = testError;
+        const nodeMigrated = new ZoweDatasetNode({
+            label: "HLQ.USER.MIGRAT",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            profile: blockMocks.imperativeProfile,
+            contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
+        });
+        const sampleChildren: ZoweDatasetNode[] = [nodeOk, nodeImpError, nodeMigrated];
+        jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(testTree);
+
+        const children = await testTree.getChildren(testTree.mSessionNodes[1]);
+        expect(children.map((c) => c.label)).toEqual(sampleChildren.map((c) => c.label));
+        expect(children).toEqual(sampleChildren);
+        spyOnDataSetsMatchingPattern.mockRestore();
+    });
+    it("Checking that we fallback to old dataSet API if newer dataSetsMatchingPattern does not exist", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const mockMvsApi = ZoweExplorerApiRegister.getMvsApi(blockMocks.profile);
+        mockMvsApi.dataSetsMatchingPattern = null;
+        const getMvsApiMock = jest.fn();
+        getMvsApiMock.mockReturnValue(mockMvsApi);
+        ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
+
+        const spyOnDataSetsMatchingPattern = jest.spyOn(zosfiles.List, "dataSetsMatchingPattern");
+        const spyOnDataSet = jest.spyOn(zosfiles.List, "dataSet");
+        spyOnDataSet.mockResolvedValueOnce({
+            success: true,
+            commandResponse: null,
+            apiResponse: {
+                items: [{ dsname: "HLQ.USER", dsorg: "PS" }],
+            },
+        });
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
+        blockMocks.datasetSessionNode.pattern = "test";
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.mSessionNodes[1].dirty = true;
+        const sampleChildren: ZoweDatasetNode[] = [
+            new ZoweDatasetNode({
+                label: "HLQ.USER",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: testTree.mSessionNodes[1],
+                profile: blockMocks.imperativeProfile,
+            }),
+        ];
+
+        const children = await testTree.getChildren(testTree.mSessionNodes[1]);
+        expect(children.map((c) => c.label)).toEqual(sampleChildren.map((c) => c.label));
+        expect(children).toEqual(sampleChildren);
+        expect(spyOnDataSet).toHaveBeenCalled();
+        expect(spyOnDataSetsMatchingPattern).not.toHaveBeenCalled();
+        spyOnDataSet.mockRestore();
+        spyOnDataSetsMatchingPattern.mockRestore();
+    });
     it("Checking function for favorite node", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();

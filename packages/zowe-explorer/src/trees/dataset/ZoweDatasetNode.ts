@@ -117,22 +117,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     path: `/${sessionLabel}/${this.label as string}`,
                 });
                 if (this.contextValue === Constants.DS_DS_CONTEXT) {
-                    this.command = {
-                        command: "vscode.open",
-                        title: "",
-                        arguments: [this.resourceUri],
-                    };
+                    this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
                 }
             } else if (this.contextValue === Constants.DS_MEMBER_CONTEXT) {
                 this.resourceUri = vscode.Uri.from({
                     scheme: ZoweScheme.DS,
                     path: `/${sessionLabel}/${this.getParent().label as string}/${this.label as string}`,
                 });
-                this.command = {
-                    command: "vscode.open",
-                    title: "",
-                    arguments: [this.resourceUri],
-                };
+                this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
             } else {
                 this.resourceUri = null;
             }
@@ -315,7 +307,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         encoding: cachedEncoding,
                         profile: cachedProfile,
                     });
-                    dsNode.command = { command: "vscode.open", title: "", arguments: [dsNode.resourceUri] };
                     elementChildren[dsNode.label.toString()] = dsNode;
                 } else if (item.member) {
                     // Creates a ZoweDatasetNode for a PDS member
@@ -327,7 +318,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         encoding: cachedEncoding,
                         profile: cachedProfile,
                     });
-                    dsNode.command = { command: "vscode.open", title: "", arguments: [dsNode.resourceUri] };
 
                     // get user and last modified date for sorting, if available
                     elementChildren[dsNode.label.toString()] = dsNode;
@@ -344,11 +334,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         if (!DatasetFSProvider.instance.exists(dsNode.resourceUri)) {
                             await vscode.workspace.fs.writeFile(dsNode.resourceUri, new Uint8Array());
                         }
-                        dsNode.command = {
-                            command: "vscode.open",
-                            title: vscode.l10n.t("Open"),
-                            arguments: [dsNode.resourceUri],
-                        };
                     }
                     dsNode.updateStats(item);
                 }
