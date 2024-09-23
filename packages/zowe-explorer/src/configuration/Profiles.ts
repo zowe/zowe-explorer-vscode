@@ -497,7 +497,7 @@ export class Profiles extends ProfilesCache {
 
             // Build new config and merge with existing layer
             const impConfig: Partial<imperative.IImperativeConfig> = {
-                profiles: [...this.getCoreProfileTypes(), ProfileConstants.BaseProfile],
+                profiles: [...this.getCoreProfileTypes(), ...this.getConfigArray(), ProfileConstants.BaseProfile],
                 baseProfile: ProfileConstants.BaseProfile,
             };
             const newConfig: imperative.IConfig = await imperative.ConfigBuilder.build(impConfig, global, opts);
