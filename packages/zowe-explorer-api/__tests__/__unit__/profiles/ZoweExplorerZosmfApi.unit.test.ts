@@ -617,7 +617,7 @@ describe("ZosmfJesApi", () => {
 
 describe("ZosmfCommandApi", () => {
     const SshSessionobj = new zosuss.SshSession(mISshSession);
-    const commandApis: ITestApi<ZoweExplorerZosmf.JesApi>[] = [
+    const commandApis: ITestApi<ZoweExplorerZosmf.CommandApi>[] = [
         {
             name: "issueTsoCommandWithParms",
             spy: jest.spyOn(zostso.IssueTso, "issueTsoCommand"),
@@ -626,8 +626,9 @@ describe("ZosmfCommandApi", () => {
         },
         {
             name: "issueMvsCommand",
-            spy: jest.spyOn(zosconsole.IssueCommand, "issueSimple"),
-            args: ["command"],
+            spy: jest.spyOn(zosconsole.IssueCommand, "issue"),
+            args: ["command", "defcn"],
+            transform: (args) => [{ command: args[0], consoleName: args[1], processResponses: true }],
         },
     ];
     commandApis.forEach((commandApi) => {

@@ -42,6 +42,7 @@ export class Constants {
     public static readonly DS_MEMBER_BINARY_CONTEXT = "memberBinary";
     public static readonly DS_MIGRATED_FILE_CONTEXT = "migr";
     public static readonly DS_FILE_ERROR_CONTEXT = "fileError";
+    public static readonly DS_FILE_ERROR_MEMBER_CONTEXT = "fileError_member";
     public static readonly USS_SESSION_CONTEXT = "ussSession";
     public static readonly USS_DIR_CONTEXT = "directory";
     public static readonly USS_FAV_DIR_CONTEXT = "directory_fav";
