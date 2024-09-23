@@ -247,43 +247,45 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
 
             // Loops through all the returned dataset members and creates nodes for them
+            const existingItems: Record<string, ZoweDatasetNode> = {};
+            for (const element of this.children) {
+                existingItems[element.label.toString()] = element;
+            }
             for (const item of response.apiResponse.items ?? response.apiResponse) {
-                const dsEntry = item.dsname ?? item.member;
-                const existing = this.children.find((element) => element.label.toString() === dsEntry);
-                let temp = existing;
-                if (existing) {
-                    elementChildren[existing.label.toString()] = existing;
+                let dsNode = existingItems[item.dsname ?? item.member];
+                if (dsNode != null) {
+                    elementChildren[dsNode.label.toString()] = dsNode;
                     // Creates a ZoweDatasetNode for a PDS
                 } else if (item.dsorg === "PO" || item.dsorg === "PO-E") {
-                    temp = new ZoweDatasetNode({
+                    dsNode = new ZoweDatasetNode({
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                         parentNode: this,
                         profile: cachedProfile,
                     });
-                    elementChildren[temp.label.toString()] = temp;
+                    elementChildren[dsNode.label.toString()] = dsNode;
                     // Creates a ZoweDatasetNode for a dataset with imperative errors
                 } else if (item.error instanceof imperative.ImperativeError) {
-                    temp = new ZoweDatasetNode({
+                    dsNode = new ZoweDatasetNode({
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
                         contextOverride: Constants.DS_FILE_ERROR_CONTEXT,
                         profile: cachedProfile,
                     });
-                    temp.command = { command: "zowe.placeholderCommand", title: "" };
-                    temp.errorDetails = item.error; // Save imperative error to avoid extra z/OS requests
-                    elementChildren[temp.label.toString()] = temp;
+                    dsNode.command = { command: "zowe.placeholderCommand", title: "" };
+                    dsNode.errorDetails = item.error; // Save imperative error to avoid extra z/OS requests
+                    elementChildren[dsNode.label.toString()] = dsNode;
                     // Creates a ZoweDatasetNode for a migrated dataset
                 } else if (item.migr && item.migr.toUpperCase() === "YES") {
-                    temp = new ZoweDatasetNode({
+                    dsNode = new ZoweDatasetNode({
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
                         contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
                         profile: cachedProfile,
                     });
-                    elementChildren[temp.label.toString()] = temp;
+                    elementChildren[dsNode.label.toString()] = dsNode;
                     // Creates a ZoweDatasetNode for a VSAM file
                 } else if (item.dsorg === "VS") {
                     let altLabel = item.dsname;
@@ -306,53 +308,49 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 } else if (SharedContext.isSession(this)) {
                     // Creates a ZoweDatasetNode for a PS
                     const cachedEncoding = this.getEncodingInMap(item.dsname);
-                    temp = new ZoweDatasetNode({
+                    dsNode = new ZoweDatasetNode({
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
                         encoding: cachedEncoding,
                         profile: cachedProfile,
                     });
-                    temp.command = { command: "vscode.open", title: "", arguments: [temp.resourceUri] };
-                    elementChildren[temp.label.toString()] = temp;
+                    dsNode.command = { command: "vscode.open", title: "", arguments: [dsNode.resourceUri] };
+                    elementChildren[dsNode.label.toString()] = dsNode;
                 } else if (item.member) {
                     // Creates a ZoweDatasetNode for a PDS member
                     const cachedEncoding = this.getEncodingInMap(`${item.dsname as string}(${item.member as string})`);
-                    temp = new ZoweDatasetNode({
+                    dsNode = new ZoweDatasetNode({
                         label: item.member,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
                         encoding: cachedEncoding,
                         profile: cachedProfile,
                     });
-                    temp.command = { command: "vscode.open", title: "", arguments: [temp.resourceUri] };
+                    dsNode.command = { command: "vscode.open", title: "", arguments: [dsNode.resourceUri] };
 
                     // get user and last modified date for sorting, if available
-                    elementChildren[temp.label.toString()] = temp;
+                    elementChildren[dsNode.label.toString()] = dsNode;
                 }
 
-                if (temp == null) {
-                    continue;
-                }
-
-                if (temp.resourceUri) {
-                    if (temp.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
+                if (dsNode?.resourceUri != null) {
+                    if (dsNode.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
                         // Create an entry for the PDS if it doesn't exist.
-                        if (!DatasetFSProvider.instance.exists(temp.resourceUri)) {
-                            await vscode.workspace.fs.createDirectory(temp.resourceUri);
+                        if (!DatasetFSProvider.instance.exists(dsNode.resourceUri)) {
+                            await vscode.workspace.fs.createDirectory(dsNode.resourceUri);
                         }
                     } else {
                         // Create an entry for the data set if it doesn't exist.
-                        if (!DatasetFSProvider.instance.exists(temp.resourceUri)) {
-                            await vscode.workspace.fs.writeFile(temp.resourceUri, new Uint8Array());
+                        if (!DatasetFSProvider.instance.exists(dsNode.resourceUri)) {
+                            await vscode.workspace.fs.writeFile(dsNode.resourceUri, new Uint8Array());
                         }
-                        temp.command = {
+                        dsNode.command = {
                             command: "vscode.open",
                             title: vscode.l10n.t("Open"),
-                            arguments: [temp.resourceUri],
+                            arguments: [dsNode.resourceUri],
                         };
                     }
-                    temp.updateStats(item);
+                    dsNode.updateStats(item);
                 }
             }
 
@@ -362,18 +360,18 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 response.apiResponse.items.length < response.apiResponse.returnedRows
             ) {
                 const invalidMemberCount = response.apiResponse.returnedRows - response.apiResponse.items.length;
-                const temp = new ZoweDatasetNode({
+                const dsNode = new ZoweDatasetNode({
                     label: `${invalidMemberCount} members with errors`,
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
                     parentNode: this,
                     contextOverride: Constants.DS_FILE_ERROR_MEMBER_CONTEXT,
                     profile: this.getProfile(),
                 });
-                temp.command = { command: "zowe.placeholderCommand", title: "" };
-                temp.errorDetails = new imperative.ImperativeError({
+                dsNode.command = { command: "zowe.placeholderCommand", title: "" };
+                dsNode.errorDetails = new imperative.ImperativeError({
                     msg: vscode.l10n.t("{0} members failed to load due to invalid name errors for {1}", invalidMemberCount, this.label as string),
                 });
-                elementChildren[temp.label.toString()] = temp;
+                elementChildren[dsNode.label.toString()] = dsNode;
             }
         }
 
