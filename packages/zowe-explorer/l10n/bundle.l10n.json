@@ -195,20 +195,8 @@
   "Display in Tree": "Display in Tree",
   "Cancel": "Cancel",
   "Download": "Download",
-  "Jobs with ID: {0}/Job Search ID": {
-    "message": "Jobs with ID: {0}",
-    "comment": [
-      "Job Search ID"
-    ]
-  },
-  "Jobs: {0} | {1} | {2}/Job OwnerJob PrefixJob Status": {
-    "message": "Jobs: {0} | {1} | {2}",
-    "comment": [
-      "Job Owner",
-      "Job Prefix",
-      "Job Status"
-    ]
-  },
+  "Jobs with ID: {0}": "Jobs with ID: {0}",
+  "Jobs: {0} | {1} | {2}": "Jobs: {0} | {1} | {2}",
   "Jobs": "Jobs",
   "Name": "Name",
   "Class": "Class",
