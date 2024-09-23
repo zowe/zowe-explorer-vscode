@@ -287,8 +287,7 @@ This software depends on external packages and source code.
 The applicable license information is listed below:
 
 ---
-
-\*\* rewire; version 6.0.0 -- https://github.com/jhnns/rewire
+** rewire; version 6.0.0 -- https://github.com/jhnns/rewire
 Copyright (c) 2012 Johannes Ewald
 
 Copyright (c) 2012 Johannes Ewald
@@ -310,9 +309,10 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
----
 
-\*\* requireindex; version 1.2.0 -- https://github.com/stephenhandley/requireindex
+------
+
+** requireindex; version 1.2.0 -- https://github.com/stephenhandley/requireindex
 
 MIT License
 
