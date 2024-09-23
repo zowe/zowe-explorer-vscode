@@ -61,9 +61,7 @@ export class MockedProperty {
             return;
         }
 
-        const isValFn = typeof value === "function";
-
-        if (isValFn || (typeof descriptor?.value === "function" && value == null)) {
+        if (typeof value === "function") {
             // wrap provided function around a Jest function, if needed
             this.#val = jest.isMockFunction(value) ? value : jest.fn().mockImplementation(value);
         } else {
