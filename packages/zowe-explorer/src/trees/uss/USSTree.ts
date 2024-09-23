@@ -327,11 +327,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
 
                 // only reassign a command for renamed file nodes
                 if (!SharedContext.isUssDirectory(originalNode)) {
-                    originalNode.command = {
-                        command: "vscode.open",
-                        title: vscode.l10n.t("Open"),
-                        arguments: [originalNode.resourceUri],
-                    };
+                    originalNode.command.arguments = [originalNode.resourceUri];
                 }
                 this.mOnDidChangeTreeData.fire();
                 this.updateFavorites();
@@ -568,7 +564,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             temp.resourceUri = node.resourceUri;
             temp.contextValue = SharedContext.asFavorite(temp);
             if (SharedContext.isFavoriteTextOrBinary(temp)) {
-                temp.command = { command: "vscode.open", title: "Open", arguments: [temp.resourceUri] };
+                temp.command = node.command;
             }
         }
         const icon = IconGenerator.getIconByNode(temp);
@@ -934,11 +930,6 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     }
                     await vscode.workspace.fs.writeFile(node.resourceUri, new Uint8Array());
                 }
-                node.command = {
-                    command: "vscode.open",
-                    title: vscode.l10n.t("Open"),
-                    arguments: [node.resourceUri],
-                };
                 if (!UssFSProvider.instance.exists(node.resourceUri)) {
                     const parentUri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, "..") });
                     if (!UssFSProvider.instance.exists(parentUri)) {

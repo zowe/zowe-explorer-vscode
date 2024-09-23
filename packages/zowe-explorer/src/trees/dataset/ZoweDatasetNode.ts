@@ -120,11 +120,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 if (this.contextValue === Constants.DS_DS_CONTEXT) {
                     const extension = DatasetUtils.getExtension(this.label as string);
                     this.resourceUri = this.resourceUri.with({ path: `${this.resourceUri.path}${extension ?? ""}` });
-                    this.command = {
-                        command: "vscode.open",
-                        title: "",
-                        arguments: [this.resourceUri],
-                    };
+                    this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
                 }
             } else if (this.contextValue === Constants.DS_MEMBER_CONTEXT) {
                 const extension = DatasetUtils.getExtension(this.getParent().label as string);
@@ -132,11 +128,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     scheme: ZoweScheme.DS,
                     path: `/${sessionLabel}/${this.getParent().label as string}/${this.label as string}${extension ?? ""}`,
                 });
-                this.command = {
-                    command: "vscode.open",
-                    title: "",
-                    arguments: [this.resourceUri],
-                };
+                this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
             } else {
                 this.resourceUri = null;
             }
@@ -251,42 +243,45 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
 
             // Loops through all the returned dataset members and creates nodes for them
+            const existingItems: Record<string, ZoweDatasetNode> = {};
+            for (const element of this.children) {
+                existingItems[element.label.toString()] = element;
+            }
             for (const item of response.apiResponse.items ?? response.apiResponse) {
-                const dsEntry = item.dsname ?? item.member;
-                const existing = this.children.find((element) => element.label.toString() === dsEntry);
-                let temp = existing;
-                if (existing) {
-                    elementChildren[existing.label.toString()] = existing;
+                let dsNode = existingItems[item.dsname ?? item.member];
+                if (dsNode != null) {
+                    elementChildren[dsNode.label.toString()] = dsNode;
                     // Creates a ZoweDatasetNode for a PDS
                 } else if (item.dsorg === "PO" || item.dsorg === "PO-E") {
-                    temp = new ZoweDatasetNode({
+                    dsNode = new ZoweDatasetNode({
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                         parentNode: this,
                         profile: cachedProfile,
                     });
-                    elementChildren[temp.label.toString()] = temp;
+                    elementChildren[dsNode.label.toString()] = dsNode;
                     // Creates a ZoweDatasetNode for a dataset with imperative errors
                 } else if (item.error instanceof imperative.ImperativeError) {
-                    temp = new ZoweDatasetNode({
+                    dsNode = new ZoweDatasetNode({
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
                         contextOverride: Constants.DS_FILE_ERROR_CONTEXT,
                         profile: cachedProfile,
                     });
-                    temp.errorDetails = item.error; // Save imperative error to avoid extra z/OS requests
-                    elementChildren[temp.label.toString()] = temp;
+                    dsNode.command = { command: "zowe.placeholderCommand", title: "" };
+                    dsNode.errorDetails = item.error; // Save imperative error to avoid extra z/OS requests
+                    elementChildren[dsNode.label.toString()] = dsNode;
                     // Creates a ZoweDatasetNode for a migrated dataset
                 } else if (item.migr && item.migr.toUpperCase() === "YES") {
-                    temp = new ZoweDatasetNode({
+                    dsNode = new ZoweDatasetNode({
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
                         contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
                         profile: cachedProfile,
                     });
-                    elementChildren[temp.label.toString()] = temp;
+                    elementChildren[dsNode.label.toString()] = dsNode;
                     // Creates a ZoweDatasetNode for a VSAM file
                 } else if (item.dsorg === "VS") {
                     let altLabel = item.dsname;
@@ -309,66 +304,63 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 } else if (SharedContext.isSession(this)) {
                     // Creates a ZoweDatasetNode for a PS
                     const cachedEncoding = this.getEncodingInMap(item.dsname);
-                    temp = new ZoweDatasetNode({
+                    dsNode = new ZoweDatasetNode({
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
                         encoding: cachedEncoding,
                         profile: cachedProfile,
                     });
-                    temp.command = { command: "vscode.open", title: "", arguments: [temp.resourceUri] };
-                    elementChildren[temp.label.toString()] = temp;
+                    elementChildren[dsNode.label.toString()] = dsNode;
                 } else if (item.member) {
                     // Creates a ZoweDatasetNode for a PDS member
-                    const memberInvalid = item.member.includes("\ufffd");
                     const cachedEncoding = this.getEncodingInMap(`${item.dsname as string}(${item.member as string})`);
-                    temp = new ZoweDatasetNode({
+                    dsNode = new ZoweDatasetNode({
                         label: item.member,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
-                        contextOverride: memberInvalid ? Constants.DS_FILE_ERROR_CONTEXT : undefined,
                         encoding: cachedEncoding,
                         profile: cachedProfile,
                     });
-                    if (!memberInvalid) {
-                        temp.command = { command: "vscode.open", title: "", arguments: [temp.resourceUri] };
-                    } else {
-                        temp.errorDetails = new imperative.ImperativeError({
-                            msg: vscode.l10n.t({
-                                message: "Cannot access member with control characters in the name: {0}",
-                                args: [item.member],
-                                comment: ["Data Set member"],
-                            }),
-                        });
-                    }
 
                     // get user and last modified date for sorting, if available
-                    elementChildren[temp.label.toString()] = temp;
+                    elementChildren[dsNode.label.toString()] = dsNode;
                 }
 
-                if (temp == null) {
-                    continue;
-                }
-
-                if (temp.resourceUri) {
-                    if (temp.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
+                if (dsNode?.resourceUri != null) {
+                    if (dsNode.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
                         // Create an entry for the PDS if it doesn't exist.
-                        if (!DatasetFSProvider.instance.exists(temp.resourceUri)) {
-                            await vscode.workspace.fs.createDirectory(temp.resourceUri);
+                        if (!DatasetFSProvider.instance.exists(dsNode.resourceUri)) {
+                            await vscode.workspace.fs.createDirectory(dsNode.resourceUri);
                         }
                     } else {
                         // Create an entry for the data set if it doesn't exist.
-                        if (!DatasetFSProvider.instance.exists(temp.resourceUri)) {
-                            await vscode.workspace.fs.writeFile(temp.resourceUri, new Uint8Array());
+                        if (!DatasetFSProvider.instance.exists(dsNode.resourceUri)) {
+                            await vscode.workspace.fs.writeFile(dsNode.resourceUri, new Uint8Array());
                         }
-                        temp.command = {
-                            command: "vscode.open",
-                            title: vscode.l10n.t("Open"),
-                            arguments: [temp.resourceUri],
-                        };
                     }
-                    temp.updateStats(item);
+                    dsNode.updateStats(item);
                 }
+            }
+
+            if (
+                response.apiResponse.items &&
+                response.apiResponse.returnedRows &&
+                response.apiResponse.items.length < response.apiResponse.returnedRows
+            ) {
+                const invalidMemberCount = response.apiResponse.returnedRows - response.apiResponse.items.length;
+                const dsNode = new ZoweDatasetNode({
+                    label: `${invalidMemberCount} members with errors`,
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    parentNode: this,
+                    contextOverride: Constants.DS_FILE_ERROR_MEMBER_CONTEXT,
+                    profile: this.getProfile(),
+                });
+                dsNode.command = { command: "zowe.placeholderCommand", title: "" };
+                dsNode.errorDetails = new imperative.ImperativeError({
+                    msg: vscode.l10n.t("{0} members failed to load due to invalid name errors for {1}", invalidMemberCount, this.label as string),
+                });
+                elementChildren[dsNode.label.toString()] = dsNode;
             }
         }
 
@@ -422,74 +414,79 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @param method The sorting method to use
      * @returns A function that sorts 2 nodes based on the given sorting method
      */
-    public static sortBy(sort: Sorting.NodeSort): (a: IZoweDatasetTreeNode, b: IZoweDatasetTreeNode) => number {
+    public static sortBy(sort: Sorting.NodeSort): (a: ZoweDatasetNode, b: ZoweDatasetNode) => number {
         return (a, b): number => {
             const aParent = a.getParent();
             if (aParent == null || !SharedContext.isPds(aParent)) {
-                return (a.label as string) < (b.label as string) ? -1 : 1;
+                return a.compareByName(b);
+            } else if (a.contextValue === Constants.DS_FILE_ERROR_MEMBER_CONTEXT || b.contextValue === Constants.DS_FILE_ERROR_MEMBER_CONTEXT) {
+                // Keep invalid member node at bottom ("N members with errors")
+                return a.contextValue === Constants.DS_FILE_ERROR_MEMBER_CONTEXT ? 1 : -1;
             }
 
-            const sortLessThan = sort.direction == Sorting.SortDirection.Ascending ? -1 : 1;
-            const sortGreaterThan = sortLessThan * -1;
-
-            const sortByName = (nodeA: IZoweDatasetTreeNode, nodeB: IZoweDatasetTreeNode): number =>
-                (nodeA.label as string) < (nodeB.label as string) ? sortLessThan : sortGreaterThan;
-
-            const aStats = a.getStats();
-            const bStats = b.getStats();
-
-            if (!aStats && !bStats) {
-                return sortByName(a, b);
-            }
-
-            function sortByDate(aDate: Date, bDate: Date): number {
-                const dateA = dayjs(aDate ?? null);
-                const dateB = dayjs(bDate ?? null);
-
-                const aValid = dateA.isValid();
-                const bValid = dateB.isValid();
-
-                a.description = aValid ? dateA.format("YYYY/MM/DD") : undefined;
-                b.description = bValid ? dateB.format("YYYY/MM/DD") : undefined;
-
-                if (!aValid) {
-                    return sortGreaterThan;
-                }
-
-                if (!bValid) {
-                    return sortLessThan;
-                }
-
-                if (dateA.isSame(dateB, "second")) {
-                    return sortByName(a, b);
-                }
-                return dateA.isBefore(dateB, "second") ? sortLessThan : sortGreaterThan;
+            const sortDirection = sort.direction == Sorting.SortDirection.Ascending ? 1 : -1;
+            if (!a.getStats() && !b.getStats()) {
+                return a.compareByName(b, sortDirection);
             }
 
             switch (sort.method) {
-                case Sorting.DatasetSortOpts.DateCreated: {
-                    return sortByDate(aStats?.createdDate, bStats?.createdDate);
-                }
-                case Sorting.DatasetSortOpts.LastModified: {
-                    return sortByDate(aStats?.modifiedDate, bStats?.modifiedDate);
-                }
-                case Sorting.DatasetSortOpts.UserId: {
-                    const userA = aStats?.user ?? "";
-                    const userB = bStats?.user ?? "";
-
-                    a.description = userA;
-                    b.description = userB;
-
-                    if (userA === userB) {
-                        return sortByName(a, b);
-                    }
-                    return userA < userB ? sortLessThan : sortGreaterThan;
-                }
-                default: {
-                    return sortByName(a, b);
-                }
+                case Sorting.DatasetSortOpts.DateCreated:
+                    return a.compareByDateStat(b, "createdDate", sortDirection);
+                case Sorting.DatasetSortOpts.LastModified:
+                    return a.compareByDateStat(b, "modifiedDate", sortDirection);
+                case Sorting.DatasetSortOpts.UserId:
+                    return a.compareByStat(b, "user", sortDirection);
+                default:
+                    return a.compareByName(b, sortDirection);
             }
         };
+    }
+
+    private compareByName(otherNode: IZoweDatasetTreeNode, sortDirection = 1): number {
+        return (this.label as string).localeCompare(otherNode.label as string) * sortDirection;
+    }
+
+    private compareByStat(otherNode: IZoweDatasetTreeNode, statName: keyof Types.DatasetStats, sortDirection = 1): number {
+        const valueA = (this.getStats()?.[statName] as string) ?? "";
+        const valueB = (otherNode.getStats()?.[statName] as string) ?? "";
+
+        this.description = valueA;
+        otherNode.description = valueB;
+
+        if (!valueA && !valueB) {
+            return this.compareByName(otherNode, sortDirection);
+        } else if (!valueA) {
+            return 1;
+        } else if (!valueB) {
+            return -1;
+        }
+
+        return (valueA.localeCompare(valueB) || this.compareByName(otherNode)) * sortDirection;
+    }
+
+    private compareByDateStat(otherNode: IZoweDatasetTreeNode, statName: "createdDate" | "modifiedDate", sortDirection = 1): number {
+        const dateA = dayjs(this.getStats()?.[statName] ?? null);
+        const dateB = dayjs(otherNode.getStats()?.[statName] ?? null);
+
+        const aValid = dateA.isValid();
+        const bValid = dateB.isValid();
+
+        this.description = aValid ? dateA.format("YYYY/MM/DD") : undefined;
+        otherNode.description = bValid ? dateB.format("YYYY/MM/DD") : undefined;
+
+        if (!aValid && !bValid) {
+            return this.compareByName(otherNode, sortDirection);
+        } else if (!aValid) {
+            return 1;
+        } else if (!bValid) {
+            return -1;
+        }
+
+        if (dateA.isSame(dateB, "second")) {
+            return this.compareByName(otherNode, sortDirection);
+        }
+
+        return dateA.isBefore(dateB, "second") ? -sortDirection : sortDirection;
     }
 
     /**
