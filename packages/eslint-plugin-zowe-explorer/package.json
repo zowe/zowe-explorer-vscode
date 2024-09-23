@@ -20,8 +20,7 @@
     "madge": "echo \"eslint-plugin: nothing for madge.\"",
     "pretty": "echo \"eslint-plugin: nothing to pretty.\"",
     "package": "echo \"eslint-plugin: nothing to package.\"",
-    "update-notices": "npx @houdiniproject/noticeme -u",
-    "verify-notices": "npx @houdiniproject/noticeme"
+    "update-notices": "npx @houdiniproject/noticeme -u"
   },
   "devDependencies": {
     "requireindex": "^1.1.0",

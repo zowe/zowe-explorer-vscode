@@ -1811,8 +1811,7 @@
     "createDemoNodes": "tsx ./scripts/createDemoNodes.ts",
     "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src && node ./scripts/generatePoeditorJson.js",
     "copy-secrets": "tsx ./scripts/getSecretsPrebuilds.ts",
-    "update-notices": "npx @houdiniproject/noticeme -u",
-    "verify-notices": "npx @houdiniproject/noticeme"
+    "update-notices": "npx @houdiniproject/noticeme -u"
   },
   "engines": {
     "vscode": "^1.79.0"

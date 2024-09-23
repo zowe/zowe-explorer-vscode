@@ -76,7 +76,6 @@
     "package": "pnpm -r --sequential package",
     "preinstall": "npx only-allow pnpm",
     "update-sdks": "pnpm -r update \"@zowe/*@next\" \"!@zowe/zowe-explorer-api\" \"!@zowe/zos-ftp-for-zowe-cli\"",
-    "update-notices": "pnpm -r update-notices",
-    "verify-notices": "pnpm -r verify-notices"
+    "update-notices": "pnpm -r update-notices"
   }
 }
