@@ -14,6 +14,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Updated the `TableViewProvider.setTableView` function to show the Zowe Resources panel if a table is provided. If `null` is passed, the Zowe Resources panel will be hidden. [#3113](https://github.com/zowe/zowe-explorer-vscode/issues/3113)
 - Fixed behavior of logout action when token is defined in both base profile and parent profile. [#3076](https://github.com/zowe/zowe-explorer-vscode/issues/3076)
+- Fixed issue with object based parameter being passed to VS Code's localization API.
 
 ## `3.0.0-next.202409132122`
 
