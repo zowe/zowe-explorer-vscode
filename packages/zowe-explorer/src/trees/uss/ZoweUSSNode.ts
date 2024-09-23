@@ -112,6 +112,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             });
             if (isSession) {
                 UssFSProvider.instance.createDirectory(this.resourceUri);
+            } else if (this.collapsibleState === vscode.TreeItemCollapsibleState.None) {
+                this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
             }
 
             if (opts.encoding != null) {
@@ -235,33 +237,32 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.children = [];
         }
 
+        const existingItems: Record<string, ZoweUSSNode> = {};
+        for (const element of this.children as ZoweUSSNode[]) {
+            existingItems[`${element.parentPath}/${element.label.toString()}`] = element;
+        }
         const responseNodes: IZoweUSSTreeNode[] = [];
         for (const item of response.apiResponse.items) {
             // ".", "..", and "..." have already been filtered out
-
-            const existing = this.children.find(
-                // Ensure both parent path and short label match.
-                // (Can't use mParent fullPath since that is already updated with new value by this point in getChildren.)
-                (element: ZoweUSSNode) => element.parentPath === this.fullPath && element.label.toString() === item.name
-            );
+            let ussNode = existingItems[`${this.fullPath}/${item.name as string}`];
 
             // The child node already exists. Use that node for the list instead, and update the file attributes in case they've changed
-            if (existing) {
-                existing.setAttributes({
+            if (ussNode != null) {
+                ussNode.setAttributes({
                     gid: item.gid,
                     uid: item.uid,
                     group: item.group,
                     perms: item.mode,
                     owner: item.user,
                 });
-                responseNodes.push(existing);
-                existing.onUpdateEmitter.fire(existing);
+                responseNodes.push(ussNode);
+                ussNode.onUpdateEmitter.fire(ussNode);
                 continue;
             }
 
             const isDir = item.mode.startsWith("d");
             const collapseState = isDir ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
-            const temp = new ZoweUSSNode({
+            ussNode = new ZoweUSSNode({
                 label: item.name,
                 collapsibleState: collapseState,
                 parentNode: this,
@@ -271,28 +272,23 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             });
             if (isDir) {
                 // Create an entry for the USS folder if it doesn't exist.
-                if (!UssFSProvider.instance.exists(temp.resourceUri)) {
-                    await vscode.workspace.fs.createDirectory(temp.resourceUri);
+                if (!UssFSProvider.instance.exists(ussNode.resourceUri)) {
+                    await vscode.workspace.fs.createDirectory(ussNode.resourceUri);
                 }
             } else {
                 // Create an entry for the USS file if it doesn't exist.
-                if (!UssFSProvider.instance.exists(temp.resourceUri)) {
-                    await vscode.workspace.fs.writeFile(temp.resourceUri, new Uint8Array());
+                if (!UssFSProvider.instance.exists(ussNode.resourceUri)) {
+                    await vscode.workspace.fs.writeFile(ussNode.resourceUri, new Uint8Array());
                 }
-                temp.command = {
-                    command: "vscode.open",
-                    title: vscode.l10n.t("Open"),
-                    arguments: [temp.resourceUri],
-                };
             }
-            temp.setAttributes({
+            ussNode.setAttributes({
                 gid: item.gid,
                 uid: item.uid,
                 group: item.group,
                 perms: item.mode,
                 owner: item.user,
             });
-            responseNodes.push(temp);
+            responseNodes.push(ussNode);
         }
 
         const nodesToAdd = responseNodes.filter((c) => !this.children.includes(c));
@@ -363,11 +359,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.label = path.posix.basename(this.fullPath);
         this.tooltip = USSUtils.injectAdditionalDataToTooltip(this, childPath);
         if (!SharedContext.isUssDirectory(this)) {
-            this.command = {
-                command: "vscode.open",
-                title: vscode.l10n.t("Open"),
-                arguments: [this.resourceUri],
-            };
+            this.command.arguments = [this.resourceUri];
             return;
         }
 
@@ -536,7 +528,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      *
      * @param {IZoweTreeNode} node
      */
-    public async openUSS(download: boolean, _previewFile: boolean, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
+    public async openUSS(forceDownload: boolean, _previewFile: boolean, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.openUSS called.");
         const errorMsg = vscode.l10n.t("openUSS() called from invalid node.");
         switch (true) {
@@ -557,12 +549,19 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             try {
-                // Add document name to recently-opened files
-                ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
-                ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
-                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Downloading USS file..."));
-                await this.initializeFileOpening(download ? this.resourceUri.with({ query: "redownload=true" }) : this.resourceUri);
-                statusMsg.dispose();
+                if (forceDownload) {
+                    // if the encoding has changed, fetch the contents with the new encoding
+                    await UssFSProvider.instance.fetchFileAtUri(this.resourceUri);
+                    await vscode.commands.executeCommand("vscode.open", this.resourceUri);
+                    await UssFSProvider.revertFileInEditor();
+                } else {
+                    await vscode.commands.executeCommand("vscode.open", this.resourceUri);
+                }
+                if (ussFileProvider) {
+                    // Add document name to recently-opened files
+                    ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
+                    ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
+                }
             } catch (err) {
                 await AuthUtils.errorHandling(err, this.getProfileName());
                 throw err;
@@ -607,30 +606,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             } else {
                 await AuthUtils.errorHandling(err, this.getProfileName());
             }
-        }
-    }
-
-    public async initializeFileOpening(uri?: vscode.Uri): Promise<void> {
-        ZoweLogger.trace("ZoweUSSNode.initializeFileOpening called.");
-        if (uri == null) {
-            ZoweLogger.trace("ZoweUSSNode.initializeFileOpening called with invalid URI, exiting...");
-            return;
-        }
-
-        const urlQuery = new URLSearchParams(uri.query);
-        try {
-            if (urlQuery.has("redownload")) {
-                // if the encoding has changed, fetch the contents with the new encoding
-                await UssFSProvider.instance.fetchFileAtUri(uri);
-                await vscode.commands.executeCommand("vscode.open", uri.with({ query: "" }));
-                await UssFSProvider.revertFileInEditor();
-            } else {
-                await vscode.commands.executeCommand("vscode.open", uri);
-            }
-
-            this.downloaded = true;
-        } catch (err) {
-            ZoweLogger.warn(err);
         }
     }
 
