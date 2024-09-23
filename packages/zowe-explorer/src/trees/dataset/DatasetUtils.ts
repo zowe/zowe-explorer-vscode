@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { Types } from "@zowe/zowe-explorer-api";
+import { DS_EXTENSION_MAP, Types } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../configuration/Constants";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 
@@ -67,45 +67,23 @@ export class DatasetUtils {
     }
 
     /**
-     * Get the language ID of a Data Set for use with `vscode.languages.setTextDocumentLanguage`
+     * Get the file extension for a Data Set (or data set member) based on its name or its PDS name.
      */
-    public static getLanguageId(label: string): string | null {
+    public static getExtension(label: string): string | null {
         const limit = 5;
         const bracket = label.indexOf("(");
         const split = bracket > -1 ? label.substring(0, bracket).split(".", limit) : label.split(".", limit);
         for (let i = split.length - 1; i > 0; i--) {
-            if (split[i] === "C") {
-                return "c";
-            }
-            if (["JCL", "JCLLIB", "CNTL", "PROC", "PROCLIB"].includes(split[i])) {
-                return "jcl";
-            }
-            if (["COBOL", "CBL", "COB", "SCBL"].includes(split[i])) {
-                return "cobol";
-            }
-            if (["COPYBOOK", "COPY", "CPY", "COBCOPY"].includes(split[i])) {
-                return "copybook";
-            }
-            if (["INC", "INCLUDE", "PLINC"].includes(split[i])) {
-                return "inc";
-            }
-            if (["PLI", "PL1", "PLX", "PCX"].includes(split[i])) {
-                return "pli";
-            }
-            if (["SH", "SHELL"].includes(split[i])) {
-                return "shellscript";
-            }
-            if (["REXX", "REXEC", "EXEC"].includes(split[i])) {
-                return "rexx";
-            }
-            if (split[i] === "XML") {
-                return "xml";
-            }
-            if (split[i] === "ASM" || split[i].indexOf("ASSEMBL") > -1) {
-                return "asm";
-            }
-            if (split[i] === "LOG" || split[i].indexOf("SPFLOG") > -1) {
-                return "log";
+            for (const [ext, matches] of DS_EXTENSION_MAP.entries()) {
+                for (const match of matches) {
+                    if (match instanceof RegExp) {
+                        if (match.test(split[i])) {
+                            return ext;
+                        }
+                    } else if (match.includes(split[i])) {
+                        return ext;
+                    }
+                }
             }
         }
         return null;

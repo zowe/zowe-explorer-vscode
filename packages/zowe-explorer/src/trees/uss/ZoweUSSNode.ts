@@ -630,8 +630,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (!uss.api.fileList || (!hasCopy && !hasUploadFromBuffer)) {
             throw new Error(vscode.l10n.t("Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found."));
         }
+        const localUri = vscode.Uri.from({
+            scheme: ZoweScheme.USS,
+            path: uss.tree.localUri.path,
+            query: `tree=${encodeURIComponent(JSON.stringify(uss.tree))}`,
+        });
 
-        await UssFSProvider.instance.copy(uss.tree.localUri.with({ query: `tree=${encodeURIComponent(JSON.stringify(uss.tree))}` }), destUri, {
+        await UssFSProvider.instance.copy(localUri, destUri, {
             overwrite: true,
         });
     }

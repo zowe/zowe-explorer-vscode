@@ -39,6 +39,7 @@ import { AuthUtils } from "../../utils/AuthUtils";
 import type { Definitions } from "../../configuration/Definitions";
 import type { DatasetTree } from "./DatasetTree";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
+import { DatasetUtils } from "./DatasetUtils";
 
 /**
  * A type of TreeItem used to represent sessions and data sets
@@ -117,12 +118,15 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     path: `/${sessionLabel}/${this.label as string}`,
                 });
                 if (this.contextValue === Constants.DS_DS_CONTEXT) {
+                    const extension = DatasetUtils.getExtension(this.label as string);
+                    this.resourceUri = this.resourceUri.with({ path: `${this.resourceUri.path}${extension ?? ""}` });
                     this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
                 }
             } else if (this.contextValue === Constants.DS_MEMBER_CONTEXT) {
+                const extension = DatasetUtils.getExtension(this.getParent().label as string);
                 this.resourceUri = vscode.Uri.from({
                     scheme: ZoweScheme.DS,
-                    path: `/${sessionLabel}/${this.getParent().label as string}/${this.label as string}`,
+                    path: `/${sessionLabel}/${this.getParent().label as string}/${this.label as string}${extension ?? ""}`,
                 });
                 this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
             } else {

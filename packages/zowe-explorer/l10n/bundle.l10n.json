@@ -188,6 +188,14 @@
       "Error message"
     ]
   },
+  "No error details given": "No error details given",
+  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
+    "message": "Error fetching destination {0} for paste action: {1}",
+    "comment": [
+      "USS path",
+      "Error message"
+    ]
+  },
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
     "comment": [
