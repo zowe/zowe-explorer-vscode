@@ -39,6 +39,7 @@ import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProv
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { JobInit } from "../../../../src/trees/job/JobInit";
 import { Definitions } from "../../../../src/configuration/Definitions";
+import { constants } from "buffer";
 
 jest.mock("@zowe/zos-jobs-for-zowe-sdk");
 jest.mock("vscode");
@@ -409,6 +410,35 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
         );
 
         expect(favChildNodeForProfile).toEqual(node);
+    });
+
+    it("To check job label under favorites is valid", async () => {
+        await createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testTree = new JobTree();
+
+        const favProfileNode = new ZoweJobNode({
+            label: "testProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.jobFavoritesNode,
+        });
+        favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
+        const node = new ZoweJobNode({
+            label: "testJob(JOB123)",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfileNode,
+            job: new MockJobDetail("testJob(JOB123)"),
+        });
+        node.contextValue = Constants.JOBS_JOB_CONTEXT + Constants.FAV_SUFFIX;
+        node.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [node] };
+        const targetIcon = IconGenerator.getIconByNode(node);
+        if (targetIcon) {
+            node.iconPath = targetIcon.path;
+        }
+
+        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("testJob(JOB123)", Constants.JOBS_JOB_CONTEXT, favProfileNode);
+
+        expect(favChildNodeForProfile.label).toEqual("testJob(JOB123)");
     });
 });
 
