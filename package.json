@@ -58,7 +58,9 @@
     "webpack-cli": "^5.1.4"
   },
   "pnpm": {
-    "overrides": {}
+    "overrides": {
+      "ws": "^8.17.1"
+    }
   },
   "scripts": {
     "clean": "pnpm -r clean",
