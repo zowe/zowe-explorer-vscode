@@ -105,9 +105,7 @@ export class ProfilesCache {
         if ((await this.getProfileInfo()).getTeamConfig().properties.autoStore) {
             await this.refresh(zeRegister);
         } else {
-            // TODO For loginWithBaseProfile, when autoStore=false is it correct to update service profile here instead of base?
-            // zFernand0: Yes, it is fine to update the service profile in the cache to avoid impacting other in memory credentials.
-            // Note: It should be expected that nested profiles within this service profile will have their credentials updated.
+            // Note: When autoStore is disabled, nested profiles within this service profile may not have their credentials updated.
             const profIndex = this.allProfiles.findIndex((profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name);
             this.allProfiles[profIndex].profile = profileLoaded.profile;
             const defaultProf = this.defaultProfileByType.get(profileLoaded.type);

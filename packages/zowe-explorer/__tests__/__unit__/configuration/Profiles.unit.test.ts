@@ -1040,13 +1040,14 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         environmentSetup(globalMocks);
         setupProfilesCheck(globalMocks);
         jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
-        jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValueOnce(["sestest", "12345"]);
+        const promptCredentialsSpy = jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValueOnce(["sestest", "12345"]);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
+        expect(promptCredentialsSpy).toHaveBeenCalledTimes(1);
     });
     it("should show as unverified in status of profile", async () => {
         const globalMocks = createGlobalMocks();
-        environmentSetup(globalMocks);
         setupProfilesCheck(globalMocks);
+        jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "unverified", name: "sestest" });
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
     });
     it("should show as inactive in status of profile", async () => {
