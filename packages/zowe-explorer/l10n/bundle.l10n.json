@@ -145,7 +145,6 @@
   "Profile auth error": "Profile auth error",
   "Profile is not authenticated, please log in to continue": "Profile is not authenticated, please log in to continue",
   "Retrieving response from uss-file-list": "Retrieving response from uss-file-list",
-  "Open": "Open",
   "Delete action was cancelled.": "Delete action was cancelled.",
   "Unable to delete node: {0}/Error message": {
     "message": "Unable to delete node: {0}",
@@ -160,7 +159,6 @@
     ]
   },
   "openUSS() called from invalid node.": "openUSS() called from invalid node.",
-  "$(sync~spin) Downloading USS file...": "$(sync~spin) Downloading USS file...",
   "refreshUSS() called from invalid node.": "refreshUSS() called from invalid node.",
   "not found": "not found",
   "Unable to find file: {0}/Error message": {
@@ -187,6 +185,14 @@
     "message": "Deleting {0} failed due to API error: {1}",
     "comment": [
       "File name",
+      "Error message"
+    ]
+  },
+  "No error details given": "No error details given",
+  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
+    "message": "Error fetching destination {0} for paste action: {1}",
+    "comment": [
+      "USS path",
       "Error message"
     ]
   },
@@ -528,12 +534,7 @@
   },
   "Use the search button to display data sets": "Use the search button to display data sets",
   "The response from Zowe CLI was not successful": "The response from Zowe CLI was not successful",
-  "Cannot access member with control characters in the name: {0}/Data Set member": {
-    "message": "Cannot access member with control characters in the name: {0}",
-    "comment": [
-      "Data Set member"
-    ]
-  },
+  "{0} members failed to load due to invalid name errors for {1}": "{0} members failed to load due to invalid name errors for {1}",
   "No data sets found": "No data sets found",
   "Cannot download, item invalid.": "Cannot download, item invalid.",
   "$(case-sensitive) Name (default)": "$(case-sensitive) Name (default)",

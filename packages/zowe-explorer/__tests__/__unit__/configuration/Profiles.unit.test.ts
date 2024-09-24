@@ -673,6 +673,27 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         spyLayers.mockClear();
         spyZoweConfigError.mockClear();
     });
+
+    it("Test that createZoweSchema will include the extender profiles on config creation", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const spyQuickPick = jest.spyOn(Gui, "showQuickPick");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory");
+        const spyLayers = jest.spyOn(Profiles.getInstance() as any, "checkExistingConfig").mockReturnValueOnce("zowe");
+        jest.spyOn(Profiles.getInstance(), "getConfigArray").mockReturnValue([
+            {
+                type: "extenderprofiletype",
+                schema: undefined as any,
+            },
+        ]);
+        const spyConfigBuilder = jest.spyOn(imperative.ConfigBuilder, "build");
+        await Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree);
+        const expected = [{ type: "zosmf" }, { type: "tso" }, undefined, { type: "extenderprofiletype", schema: undefined }, undefined];
+
+        expect(spyConfigBuilder.mock.calls[0][0].profiles).toEqual(expected);
+        spyQuickPick.mockClear();
+        spyLayers.mockClear();
+    });
 });
 
 describe("Profiles Unit Tests - function getProfileIcon", () => {

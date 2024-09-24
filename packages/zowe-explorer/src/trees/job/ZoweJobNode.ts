@@ -193,15 +193,6 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                         name: spoolNode.uniqueName,
                         spool,
                     });
-                    const icon = IconGenerator.getIconByNode(spoolNode);
-                    if (icon) {
-                        spoolNode.iconPath = icon.path;
-                    }
-                    spoolNode.command = {
-                        command: "vscode.open",
-                        title: "",
-                        arguments: [spoolNode.resourceUri],
-                    };
                     elementChildren[newLabel] = spoolNode;
                 }
             });
@@ -426,8 +417,9 @@ export class ZoweSpoolNode extends ZoweJobNode {
                   })
                 : undefined;
         this.spool = opts.spool;
-        const icon = IconGenerator.getIconByNode(this);
+        this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
 
+        const icon = IconGenerator.getIconByNode(this);
         if (icon) {
             this.iconPath = icon.path;
         }

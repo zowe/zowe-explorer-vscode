@@ -9,7 +9,7 @@
  *
  */
 
-import { EventEmitter, ExtensionContext, WebviewView } from "vscode";
+import { commands, EventEmitter, ExtensionContext, WebviewView } from "vscode";
 import { TableBuilder, TableViewProvider } from "../../../../src/vscode/ui";
 
 describe("TableViewProvider", () => {
@@ -45,8 +45,10 @@ describe("TableViewProvider", () => {
                     { apple: 9, banana: 10, orange: 11 },
                 ])
                 .build();
+            const executeCommandMock = jest.spyOn(commands, "executeCommand").mockImplementation();
             await TableViewProvider.getInstance().setTableView(tableOne);
             expect((TableViewProvider.getInstance() as any).tableView).toBe(tableOne);
+            expect(executeCommandMock).toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", true);
 
             const disposeSpy = jest.spyOn(tableOne, "dispose");
 
@@ -55,6 +57,14 @@ describe("TableViewProvider", () => {
             await TableViewProvider.getInstance().setTableView(tableTwo);
             expect((TableViewProvider.getInstance() as any).tableView).toBe(tableTwo);
             expect(disposeSpy).toHaveBeenCalled();
+            executeCommandMock.mockRestore();
+        });
+        it("sets the table to null", async () => {
+            const executeCommandMock = jest.spyOn(commands, "executeCommand").mockImplementation();
+            await TableViewProvider.getInstance().setTableView(null);
+            expect((TableViewProvider.getInstance() as any).tableView).toBe(null);
+            expect(executeCommandMock).toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", false);
+            executeCommandMock.mockRestore();
         });
     });
 

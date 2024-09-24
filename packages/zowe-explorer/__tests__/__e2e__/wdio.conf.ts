@@ -102,6 +102,7 @@ export const config: Options.Testrunner = {
                 // optional VS Code settings
                 userSettings: {
                     "editor.fontSize": 14,
+                    "extensions.ignoreRecommendations": true,
                 },
             },
         },

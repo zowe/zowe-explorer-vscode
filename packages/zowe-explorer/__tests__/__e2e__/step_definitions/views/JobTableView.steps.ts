@@ -38,6 +38,10 @@ Given("a user who has the jobs table view opened", async function () {
 });
 
 When("the user clicks on the Gear icon in the table view", async function () {
+    // clear all notifications to avoid overlapping elements
+    await browser.executeWorkbench((vscode) => vscode.commands.executeCommand("notifications.clearAll"));
+
+    // shift Selenium focus into webview
     await this.tableView.open();
     const colsBtn = await browser.$("#colsToggleBtn");
     await colsBtn.waitForClickable();
