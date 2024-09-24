@@ -349,6 +349,10 @@ describe("ProfilesUtils unit tests", () => {
                 inspect: jest.fn(),
                 update: jest.fn(),
             });
+            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
+                configurable: true,
+                get: () => true,
+            });
             const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
             const getValueMock = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
             const setValueMock = jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
@@ -361,6 +365,7 @@ describe("ProfilesUtils unit tests", () => {
             getConfigurationMock.mockRestore();
             getValueMock.mockRestore();
             setValueMock.mockRestore();
+            onlyV1ProfsExistMock[Symbol.dispose]();
 
             profInfoSpy.mockRestore();
         });

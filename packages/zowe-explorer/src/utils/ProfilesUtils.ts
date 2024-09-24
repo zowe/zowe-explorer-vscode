@@ -349,7 +349,7 @@ export class ProfilesUtils {
             // VS Code registers our updated TreeView IDs. Otherwise, VS Code's "Refresh Extensions" option will break v3 init.
             const ussPersistentSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent");
             const upgradingFromV1 = ZoweLocalStorage.getValue<Definitions.V1MigrationStatus>(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
-            if (ussPersistentSettings != null && upgradingFromV1 == null) {
+            if (ussPersistentSettings != null && upgradingFromV1 == null && imperative.ProfileInfo.onlyV1ProfilesExist) {
                 ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.JustMigrated);
                 await vscode.commands.executeCommand("workbench.action.reloadWindow");
             }
