@@ -8,6 +8,7 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 - Update Zowe SDKs to `8.0.0` for technical currency.
 - Update z/OS FTP Plug-in for Zowe CLI dependency to `3.0.0`.
+- Removed popup notification of successful registration with Zowe Explorer and log the success instead. [#2862](https://github.com/zowe/zowe-explorer-vscode/issues/2862)
 
 ## `3.0.0-next.202409132122`
 

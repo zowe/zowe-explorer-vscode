@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  ws: ^8.17.1
+
 importers:
 
   .:
@@ -10069,7 +10072,7 @@ packages:
       cross-fetch: 4.0.0
       debug: 4.3.4(supports-color@8.1.1)
       devtools-protocol: 0.0.1232444
-      ws: 8.16.0
+      ws: 8.18.0
     transitivePeerDependencies:
       - bufferutil
       - encoding
@@ -12364,19 +12367,6 @@ packages:
     dependencies:
       imurmurhash: 0.1.4
       signal-exit: 3.0.7
-    dev: true
-
-  /ws@8.16.0:
-    resolution: {integrity: sha512-HS0c//TP7Ina87TfiPUz1rQzMhHrl/SG2guqRcTOIUYD2q8uhUdNHZYJUaQ8aTGPzCh+c6oawMKW35nFl1dxyQ==}
-    engines: {node: '>=10.0.0'}
-    peerDependencies:
-      bufferutil: ^4.0.1
-      utf-8-validate: '>=5.0.2'
-    peerDependenciesMeta:
-      bufferutil:
-        optional: true
-      utf-8-validate:
-        optional: true
     dev: true
 
   /ws@8.18.0:
