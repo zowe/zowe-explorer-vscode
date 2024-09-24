@@ -6,7 +6,7 @@ Scenario: Prompt for missing <authType> credentials
     And the user has a profile in their Data Sets tree
     When a user clicks search button for the profile
     Then the user will be prompted for <authType> credentials
-    And the profile node will be marked as inactive
+    And the profile node icon will be marked as inactive
 
     Examples:
       | authType |

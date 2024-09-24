@@ -23,10 +23,14 @@ AfterAll(() => {
     fs.rmSync(USER_CONFIG_FILE, { force: true });
 });
 When(/a user who has profile with (.*) auth in team config/, function (authType: string) {
+    // We need to copy from Global Config until Imperative API is fixed
+    // See https://github.com/zowe/zowe-cli/issues/2273
     this.authType = authType;
+    const tempCfg = JSON.parse(fs.readFileSync(USER_CONFIG_FILE.replace(".user", ""), "utf-8"));
     const testConfig = {
         $schema: "./zowe.schema.json",
         profiles: {
+            ...tempCfg.profiles,
             [`zosmf_${authType}`]: {
                 type: "zosmf",
                 properties: {},
@@ -34,6 +38,7 @@ When(/a user who has profile with (.*) auth in team config/, function (authType:
             },
         },
         defaults: {
+            ...tempCfg.defaults,
             zosmf: `zosmf_${authType}`,
         },
     };
@@ -41,16 +46,6 @@ When(/a user who has profile with (.*) auth in team config/, function (authType:
         testConfig.profiles.zosmf_basic.secure.push("user", "password");
     } else if (authType === "token") {
         testConfig.profiles.zosmf_token.secure.push("tokenValue");
-        // } else if (authType === "token-base") {
-        //     testConfig.profiles.base = {
-        //         type: "base",
-        //         properties: {
-        //             host: "localhost",
-        //             rejectUnauthorized: false,
-        //         },
-        //         secure: ["tokenValue"],
-        //     };
-        //     (testConfig.defaults as any).base = "base";
     }
     fs.writeFileSync(USER_CONFIG_FILE, JSON.stringify(testConfig, null, 2));
 });
@@ -80,8 +75,9 @@ Then(/the user will be prompted for (.*) credentials/, async function (authType:
     }
     await browser.keys(Key.Escape);
 });
-Then("the profile node will be marked as inactive", async function () {
-    await browser.waitUntil(() => this.profileNode.isExpanded());
-    // await expect(this.profileNode.elem.getAttribute());
-    console.log(this.profileNode.elem$(".custom-view-tree-node-item-icon"));
+Then("the profile node icon will be marked as inactive", async function () {
+    await browser.waitUntil((): Promise<boolean> => this.profileNode.isExpanded());
+    const iconElement = await this.profileNode.elem.$(".custom-view-tree-node-item-icon");
+    const iconPath = (await iconElement.getCSSProperty("background-image")).value;
+    await expect(iconPath).toContain("folder-root-disconnected-closed.svg");
 });

@@ -103,7 +103,7 @@ export class Profiles extends ProfilesCache {
         if (usingTokenAuth && !theProfile.profile.tokenType) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(
-                (profile) => profile.status === "unverified" && profile.name !== theProfile.name
+                (profile) => !(profile.name === theProfile.name && profile.status !== "unverified")
             );
             try {
                 await Profiles.getInstance().ssoLogin(null, theProfile.name);
@@ -115,7 +115,7 @@ export class Profiles extends ProfilesCache {
         } else if (!usingTokenAuth && (!theProfile.profile.user || !theProfile.profile.password)) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(
-                (profile) => profile.status === "unverified" && profile.name !== theProfile.name
+                (profile) => !(profile.name === theProfile.name && profile.status !== "unverified")
             );
             let values: string[];
             try {
@@ -127,14 +127,11 @@ export class Profiles extends ProfilesCache {
             if (values) {
                 theProfile.profile.user = values[0];
                 theProfile.profile.password = values[1];
-
-                // Validate profile
-                profileStatus = await this.getProfileSetting(theProfile);
             }
-        } else {
-            // Profile should have enough information to allow validation
-            profileStatus = await this.getProfileSetting(theProfile);
         }
+
+        // Profile should have enough information to allow validation
+        profileStatus = await this.getProfileSetting(theProfile);
 
         switch (profileStatus.status) {
             case "unverified":
