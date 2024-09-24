@@ -31,6 +31,9 @@ When(/a user who has profile with (.*) auth in team config/, function (authType:
         $schema: "./zowe.schema.json",
         profiles: {
             ...tempCfg.profiles,
+            zosmf1: {
+                type: null, // Disable default global zosmf profile
+            },
             [`zosmf_${authType}`]: {
                 type: "zosmf",
                 properties: {},
