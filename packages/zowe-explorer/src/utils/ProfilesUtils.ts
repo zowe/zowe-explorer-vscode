@@ -373,6 +373,27 @@ export class ProfilesUtils {
         }
     }
 
+    /**
+     * Displays a notification if a user does not have any Zowe client configurations.
+     *
+     * This aims to help direct new Zowe Explorer users to create a new team configuration.
+     */
+    public static async promptUserWithNoConfigs(): Promise<void> {
+        const profInfo = await ProfilesUtils.getProfileInfo();
+        if (!profInfo.getTeamConfig().exists && !imperative.ProfileInfo.onlyV1ProfilesExist) {
+            Gui.showMessage(
+                vscode.l10n.t("No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration."),
+                {
+                    items: [vscode.l10n.t("Create New")],
+                }
+            ).then(async (selection) => {
+                if (selection === vscode.l10n.t("Create New")) {
+                    await vscode.commands.executeCommand("zowe.ds.addSession");
+                }
+            });
+        }
+    }
+
     public static async promptCredentials(node: IZoweTreeNode): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.promptCredentials called.");
         const mProfileInfo = await Constants.PROFILES_CACHE.getProfileInfo();

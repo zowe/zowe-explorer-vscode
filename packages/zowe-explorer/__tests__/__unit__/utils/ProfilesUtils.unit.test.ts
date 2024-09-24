@@ -1236,4 +1236,82 @@ describe("ProfilesUtils unit tests", () => {
             blockMocks.getValueMock.mockRestore();
         });
     });
+
+    describe("promptUserWithNoConfigs", () => {
+        it("prompts the user if they don't have any Zowe client configs", async () => {
+            const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
+                getTeamConfig: () => ({ exists: false }),
+            } as any);
+            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
+                configurable: true,
+                get: () => false,
+            });
+            const showMessageSpy = jest.spyOn(Gui, "showMessage");
+            await ProfilesUtils.promptUserWithNoConfigs();
+            expect(showMessageSpy).toHaveBeenCalledWith(
+                "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.",
+                { items: ["Create New"] }
+            );
+            expect(profInfoMock).toHaveBeenCalled();
+            profInfoMock.mockRestore();
+            onlyV1ProfsExistMock[Symbol.dispose]();
+        });
+        it("executes zowe.ds.addSession if the user selects 'Create New' in the prompt", async () => {
+            const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
+                getTeamConfig: () => ({ exists: false }),
+            } as any);
+            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
+                configurable: true,
+                get: () => false,
+            });
+            const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValue("Create New");
+            const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+            await ProfilesUtils.promptUserWithNoConfigs();
+            expect(showMessageSpy).toHaveBeenCalledWith(
+                "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.",
+                { items: ["Create New"] }
+            );
+            expect(profInfoMock).toHaveBeenCalled();
+            expect(executeCommandMock).toHaveBeenCalledWith("zowe.ds.addSession");
+            executeCommandMock.mockRestore();
+            profInfoMock.mockRestore();
+            onlyV1ProfsExistMock[Symbol.dispose]();
+        });
+        it("does not prompt the user if they have a Zowe team config", async () => {
+            const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
+                getTeamConfig: () => ({ exists: true }),
+            } as any);
+            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
+                configurable: true,
+                get: () => false,
+            });
+            const showMessageSpy = jest.spyOn(Gui, "showMessage");
+            await ProfilesUtils.promptUserWithNoConfigs();
+            expect(showMessageSpy).not.toHaveBeenCalledWith(
+                "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.",
+                { items: ["Create New"] }
+            );
+            expect(profInfoMock).toHaveBeenCalled();
+            profInfoMock.mockRestore();
+            onlyV1ProfsExistMock[Symbol.dispose]();
+        });
+        it("does not prompt the user if they have v1 profiles", async () => {
+            const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
+                getTeamConfig: () => ({ exists: false }),
+            } as any);
+            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
+                configurable: true,
+                get: () => true,
+            });
+            const showMessageSpy = jest.spyOn(Gui, "showMessage");
+            await ProfilesUtils.promptUserWithNoConfigs();
+            expect(showMessageSpy).not.toHaveBeenCalledWith(
+                "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.",
+                { items: ["Create New"] }
+            );
+            expect(profInfoMock).toHaveBeenCalled();
+            profInfoMock.mockRestore();
+            onlyV1ProfsExistMock[Symbol.dispose]();
+        });
+    });
 });

@@ -57,7 +57,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     await SharedInit.watchForZoweButtonClick();
 
     await ProfilesUtils.handleV1MigrationStatus();
-
+    await ProfilesUtils.promptUserWithNoConfigs();
     return ZoweExplorerApiRegister.getInstance();
 }
 /**
