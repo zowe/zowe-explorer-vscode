@@ -40,6 +40,7 @@ export namespace Sorting {
     export enum JobSortOpts {
         Id,
         DateSubmitted,
+        DateCompleted,
         Name,
         ReturnCode,
     }
