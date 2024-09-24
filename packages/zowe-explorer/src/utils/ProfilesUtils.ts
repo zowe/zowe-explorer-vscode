@@ -350,7 +350,7 @@ export class ProfilesUtils {
             const ussPersistentSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent");
             const upgradingFromV1 = ZoweLocalStorage.getValue<Definitions.V1MigrationStatus>(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
             if (ussPersistentSettings != null && upgradingFromV1 == null && imperative.ProfileInfo.onlyV1ProfilesExist) {
-                ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.JustMigrated);
+                await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.JustMigrated);
                 await vscode.commands.executeCommand("workbench.action.reloadWindow");
             }
             if (imperative.ProfileInfo.onlyV1ProfilesExist) {
@@ -359,7 +359,7 @@ export class ProfilesUtils {
         }
     }
 
-    public static handleV1MigrationStatus(): void {
+    public static async handleV1MigrationStatus(): Promise<void> {
         const migrationStatus = ZoweLocalStorage.getValue<Definitions.V1MigrationStatus>(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
         if (migrationStatus == null) {
             // If there is no v1 migration status, return.
@@ -369,9 +369,8 @@ export class ProfilesUtils {
         // Open the "Add Session" quick pick if the user selected "Create New" in the v1 migration prompt.
         if (migrationStatus === Definitions.V1MigrationStatus.CreateConfigSelected) {
             vscode.commands.executeCommand("zowe.ds.addSession", SharedTreeProviders.ds);
+            await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.JustMigrated);
         }
-
-        ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, undefined);
     }
 
     public static async promptCredentials(node: IZoweTreeNode): Promise<void> {
@@ -537,7 +536,7 @@ export class ProfilesUtils {
         switch (selection) {
             case createButton: {
                 ZoweLogger.info("Create new team configuration chosen.");
-                ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.CreateConfigSelected);
+                await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.CreateConfigSelected);
                 break;
             }
             case convertButton: {
