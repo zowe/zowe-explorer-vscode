@@ -287,6 +287,7 @@ This software depends on external packages and source code.
 The applicable license information is listed below:
 
 ---
+
 ** @zowe/core-for-zowe-sdk; version 8.0.0-next.202408301809 -- https://github.com/zowe/zowe-cli/tree/master/packages/core#readme
 Copyright Contributors to the Zowe Project.
 ** @zowe/secrets-for-zowe-sdk; version 8.0.0-next.202408301809 -- https://github.com/zowe/zowe-cli/tree/master/packages/secrets#readme
@@ -295,6 +296,14 @@ Copyright Contributors to the Zowe Project.
 Copyright Contributors to the Zowe Project.
 ** @zowe/zos-jobs-for-zowe-sdk; version 8.0.0-next.202408301809 -- https://github.com/zowe/zowe-cli/tree/master/packages/zosjobs#readme
 ** @zowe/zosmf-for-zowe-sdk; version 8.0.0-next.202408301809 -- https://github.com/zowe/zowe-cli/tree/master/packages/zosmf#readme
+Copyright Contributors to the Zowe Project.
+** @zowe/zos-tso-for-zowe-sdk; version 8.0.0-next.202408301809 -- https://github.com/zowe/zowe-cli/tree/master/packages/zostso#readme
+Copyright Contributors to the Zowe Project.
+** @zowe/zos-uss-for-zowe-sdk; version 8.0.0-next.202408301809 -- https://github.com/zowe/zowe-cli/tree/master/packages/zosuss#readme
+Copyright Contributors to the Zowe Project.
+** @zowe/zos-console-for-zowe-sdk; version 8.0.0-next.202408301809 -- https://github.com/zowe/zowe-cli/tree/master/packages/zosconsole#readme
+Copyright Contributors to the Zowe Project.
+\*\* @zowe/imperative; version 8.0.0-next.202408301809 -- https://github.com/zowe/zowe-cli/tree/master/packages/imperative#readme
 Copyright Contributors to the Zowe Project.
 
 Eclipse Public License - v 2.0
@@ -307,18 +316,18 @@ Eclipse Public License - v 2.0
 
 "Contribution" means:
 
-  a) in the case of the initial Contributor, the initial content
-     Distributed under this Agreement, and
+a) in the case of the initial Contributor, the initial content
+Distributed under this Agreement, and
 
-  b) in the case of each subsequent Contributor:
-     i) changes to the Program, and
-     ii) additions to the Program;
-  where such changes and/or additions to the Program originate from
-  and are Distributed by that particular Contributor. A Contribution
-  "originates" from a Contributor if it was added to the Program by
-  such Contributor itself or anyone acting on such Contributor's behalf.
-  Contributions do not include changes or additions to the Program that
-  are not Modified Works.
+b) in the case of each subsequent Contributor:
+i) changes to the Program, and
+ii) additions to the Program;
+where such changes and/or additions to the Program originate from
+and are Distributed by that particular Contributor. A Contribution
+"originates" from a Contributor if it was added to the Program by
+such Contributor itself or anyone acting on such Contributor's behalf.
+Contributions do not include changes or additions to the Program that
+are not Modified Works.
 
 "Contributor" means any person or entity that Distributes the Program.
 
@@ -360,66 +369,66 @@ Contributor.
 
 2. GRANT OF RIGHTS
 
-  a) Subject to the terms of this Agreement, each Contributor hereby
-  grants Recipient a non-exclusive, worldwide, royalty-free copyright
-  license to reproduce, prepare Derivative Works of, publicly display,
-  publicly perform, Distribute and sublicense the Contribution of such
-  Contributor, if any, and such Derivative Works.
+a) Subject to the terms of this Agreement, each Contributor hereby
+grants Recipient a non-exclusive, worldwide, royalty-free copyright
+license to reproduce, prepare Derivative Works of, publicly display,
+publicly perform, Distribute and sublicense the Contribution of such
+Contributor, if any, and such Derivative Works.
 
-  b) Subject to the terms of this Agreement, each Contributor hereby
-  grants Recipient a non-exclusive, worldwide, royalty-free patent
-  license under Licensed Patents to make, use, sell, offer to sell,
-  import and otherwise transfer the Contribution of such Contributor,
-  if any, in Source Code or other form. This patent license shall
-  apply to the combination of the Contribution and the Program if, at
-  the time the Contribution is added by the Contributor, such addition
-  of the Contribution causes such combination to be covered by the
-  Licensed Patents. The patent license shall not apply to any other
-  combinations which include the Contribution. No hardware per se is
-  licensed hereunder.
+b) Subject to the terms of this Agreement, each Contributor hereby
+grants Recipient a non-exclusive, worldwide, royalty-free patent
+license under Licensed Patents to make, use, sell, offer to sell,
+import and otherwise transfer the Contribution of such Contributor,
+if any, in Source Code or other form. This patent license shall
+apply to the combination of the Contribution and the Program if, at
+the time the Contribution is added by the Contributor, such addition
+of the Contribution causes such combination to be covered by the
+Licensed Patents. The patent license shall not apply to any other
+combinations which include the Contribution. No hardware per se is
+licensed hereunder.
 
-  c) Recipient understands that although each Contributor grants the
-  licenses to its Contributions set forth herein, no assurances are
-  provided by any Contributor that the Program does not infringe the
-  patent or other intellectual property rights of any other entity.
-  Each Contributor disclaims any liability to Recipient for claims
-  brought by any other entity based on infringement of intellectual
-  property rights or otherwise. As a condition to exercising the
-  rights and licenses granted hereunder, each Recipient hereby
-  assumes sole responsibility to secure any other intellectual
-  property rights needed, if any. For example, if a third party
-  patent license is required to allow Recipient to Distribute the
-  Program, it is Recipient's responsibility to acquire that license
-  before distributing the Program.
+c) Recipient understands that although each Contributor grants the
+licenses to its Contributions set forth herein, no assurances are
+provided by any Contributor that the Program does not infringe the
+patent or other intellectual property rights of any other entity.
+Each Contributor disclaims any liability to Recipient for claims
+brought by any other entity based on infringement of intellectual
+property rights or otherwise. As a condition to exercising the
+rights and licenses granted hereunder, each Recipient hereby
+assumes sole responsibility to secure any other intellectual
+property rights needed, if any. For example, if a third party
+patent license is required to allow Recipient to Distribute the
+Program, it is Recipient's responsibility to acquire that license
+before distributing the Program.
 
-  d) Each Contributor represents that to its knowledge it has
-  sufficient copyright rights in its Contribution, if any, to grant
-  the copyright license set forth in this Agreement.
+d) Each Contributor represents that to its knowledge it has
+sufficient copyright rights in its Contribution, if any, to grant
+the copyright license set forth in this Agreement.
 
-  e) Notwithstanding the terms of any Secondary License, no
-  Contributor makes additional grants to any Recipient (other than
-  those set forth in this Agreement) as a result of such Recipient's
-  receipt of the Program under the terms of a Secondary License
-  (if permitted under the terms of Section 3).
+e) Notwithstanding the terms of any Secondary License, no
+Contributor makes additional grants to any Recipient (other than
+those set forth in this Agreement) as a result of such Recipient's
+receipt of the Program under the terms of a Secondary License
+(if permitted under the terms of Section 3).
 
 3. REQUIREMENTS
 
 3.1 If a Contributor Distributes the Program in any form, then:
 
-  a) the Program must also be made available as Source Code, in
-  accordance with section 3.2, and the Contributor must accompany
-  the Program with a statement that the Source Code for the Program
-  is available under this Agreement, and informs Recipients how to
-  obtain it in a reasonable manner on or through a medium customarily
-  used for software exchange; and
+a) the Program must also be made available as Source Code, in
+accordance with section 3.2, and the Contributor must accompany
+the Program with a statement that the Source Code for the Program
+is available under this Agreement, and informs Recipients how to
+obtain it in a reasonable manner on or through a medium customarily
+used for software exchange; and
 
-  b) the Contributor may Distribute the Program under a license
-  different than this Agreement, provided that such license:
-     i) effectively disclaims on behalf of all other Contributors all
-     warranties and conditions, express and implied, including
-     warranties or conditions of title and non-infringement, and
-     implied warranties or conditions of merchantability and fitness
-     for a particular purpose;
+b) the Contributor may Distribute the Program under a license
+different than this Agreement, provided that such license:
+i) effectively disclaims on behalf of all other Contributors all
+warranties and conditions, express and implied, including
+warranties or conditions of title and non-infringement, and
+implied warranties or conditions of merchantability and fitness
+for a particular purpose;
 
      ii) effectively excludes on behalf of all other Contributors all
      liability for damages, including direct, indirect, special,
@@ -434,15 +443,15 @@ Contributor.
 
 3.2 When the Program is Distributed as Source Code:
 
-  a) it must be made available under this Agreement, or if the
-  Program (i) is combined with other material in a separate file or
-  files made available under a Secondary License, and (ii) the initial
-  Contributor attached to the Source Code the notice described in
-  Exhibit A of this Agreement, then the Program may be made available
-  under the terms of such Secondary Licenses, and
+a) it must be made available under this Agreement, or if the
+Program (i) is combined with other material in a separate file or
+files made available under a Secondary License, and (ii) the initial
+Contributor attached to the Source Code the notice described in
+Exhibit A of this Agreement, then the Program may be made available
+under the terms of such Secondary Licenses, and
 
-  b) a copy of this Agreement must be included with each copy of
-  the Program.
+b) a copy of this Agreement must be included with each copy of
+the Program.
 
 3.3 Contributors may not remove or alter any copyright, patent,
 trademark, attribution notices, disclaimers of warranty, or limitations
@@ -560,25 +569,24 @@ No third-party beneficiary rights are created under this Agreement.
 
 Exhibit A - Form of Secondary Licenses Notice
 
-"This Source Code may also be made available under the following 
-Secondary Licenses when the conditions for such availability set forth 
+"This Source Code may also be made available under the following
+Secondary Licenses when the conditions for such availability set forth
 in the Eclipse Public License, v. 2.0 are satisfied: {name license(s),
 version(s), and exceptions or additional permissions here}."
 
-  Simply including a copy of this Agreement, including this Exhibit A
-  is not sufficient to license the Source Code under Secondary Licenses.
+Simply including a copy of this Agreement, including this Exhibit A
+is not sufficient to license the Source Code under Secondary Licenses.
 
-  If it is not possible or desirable to put the notice in a particular
-  file, then You may include the notice in a location (such as a LICENSE
-  file in a relevant directory) where a recipient would be likely to
-  look for such a notice.
+If it is not possible or desirable to put the notice in a particular
+file, then You may include the notice in a location (such as a LICENSE
+file in a relevant directory) where a recipient would be likely to
+look for such a notice.
 
-  You may add additional accurate notices of copyright ownership.
+You may add additional accurate notices of copyright ownership.
 
+---
 
-------
-
-** semver; version 7.6.2 -- https://github.com/npm/node-semver#readme
+\*\* semver; version 7.6.2 -- https://github.com/npm/node-semver#readme
 Copyright Isaac Z. Schlueter
 Copyright (c) Isaac Z. Schlueter and Contributors
 
@@ -598,10 +606,9 @@ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+---
 
-------
-
-** deep-object-diff; version 1.1.9 -- https://github.com/mattphillips/deep-object-diff#readme
+\*\* deep-object-diff; version 1.1.9 -- https://github.com/mattphillips/deep-object-diff#readme
 Copyright (c) 2016-present Matt Phillips
 
 MIT License
@@ -626,10 +633,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+---
 
-------
-
-** copyfiles; version 2.4.1 -- https://github.com/calvinmetcalf/copyfiles#readme
+\*\* copyfiles; version 2.4.1 -- https://github.com/calvinmetcalf/copyfiles#readme
 Copyright (c) 2014-2018 Calvin Metcalf
 
 # Copyright (c) 2014-2018 Calvin Metcalf
@@ -652,10 +658,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.**
 
+---
 
-------
-
-** mustache; version 4.2.0 -- https://github.com/janl/mustache.js
+\*\* mustache; version 4.2.0 -- https://github.com/janl/mustache.js
 Copyright 2004-2012
 (c) 2010 Jan Lehnardt
 Copyright (c) 2010 Jan Lehnardt
@@ -675,14 +680,13 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-
-------
+---
 
 ** @types/mustache; version 4.2.5 -- https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/mustache
 Copyright (c) Microsoft Corporation
 ** @types/semver; version 7.5.8 -- https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/semver
 Copyright (c) Microsoft Corporation
-** @types/vscode; version 1.89.0 -- https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/vscode
+\*\* @types/vscode; version 1.89.0 -- https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/vscode
 Copyright (c) Microsoft Corporation
 
 MIT License
