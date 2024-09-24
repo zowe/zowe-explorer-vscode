@@ -574,6 +574,7 @@
   "Retrieving response from zowe.GetJobs": "",
   "$(list-ordered) Job ID (default)": "",
   "$(calendar) Date Submitted": "",
+  "$(calendar) Date Completed": "",
   "$(case-sensitive) Job Name": "",
   "$(symbol-numeric) Return Code": "",
   "$(fold) Sort Direction": "",
