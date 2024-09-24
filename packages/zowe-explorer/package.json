@@ -112,11 +112,6 @@
         "when": "focusedView == zowe.uss.explorer"
       },
       {
-        "command": "zowe.extRefresh",
-        "key": "ctrl+alt+z",
-        "mac": "cmd+alt+z"
-      },
-      {
         "command": "zowe.editHistory",
         "key": "ctrl+alt+y",
         "mac": "cmd+alt+y"
@@ -167,15 +162,6 @@
         "command": "zowe.profileManagement",
         "title": "%zowe.profileManagement%",
         "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.extRefresh",
-        "title": "%zowe.extRefresh%",
-        "category": "Zowe Explorer",
-        "icon": {
-          "light": "./resources/light/refresh.svg",
-          "dark": "./resources/dark/refresh.svg"
-        }
       },
       {
         "command": "zowe.editHistory",
