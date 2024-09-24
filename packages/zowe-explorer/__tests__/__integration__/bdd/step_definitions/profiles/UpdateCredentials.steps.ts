@@ -23,7 +23,7 @@ AfterAll(() => {
     fs.rmSync(USER_CONFIG_FILE, { force: true });
 });
 When(/a user who has profile with (.*) auth in team config/, function (authType: string) {
-    // We need to copy from Global Config until Imperative API is fixed
+    // TODO: We need to copy from Global Config until Imperative API is fixed
     // See https://github.com/zowe/zowe-cli/issues/2273
     this.authType = authType;
     const tempCfg = JSON.parse(fs.readFileSync(USER_CONFIG_FILE.replace(".user", ""), "utf-8"));

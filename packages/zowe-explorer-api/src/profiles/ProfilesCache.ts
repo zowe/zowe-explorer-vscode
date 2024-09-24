@@ -113,12 +113,7 @@ export class ProfilesCache {
                 this.defaultProfileByType.set(profileLoaded.type, profileLoaded);
             }
         }
-        if (profileNode) {
-            profileNode.setProfileToChoice({
-                ...profileNode.getProfile(),
-                profile: { ...profileNode.getProfile().profile, ...profileLoaded.profile },
-            });
-        }
+        profileNode?.setProfileToChoice(profileLoaded);
     }
 
     /**

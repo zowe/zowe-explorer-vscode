@@ -70,7 +70,7 @@ export class ZoweVsCodeExtension {
         options: PromptCredentialsOptions.ComplexOptions,
         apiRegister: Types.IApiRegisterClient
     ): Promise<imperative.IProfileLoaded> {
-        const cache = this.profilesCache;
+        const cache = options.zeProfiles ?? ZoweVsCodeExtension.profilesCache;
         const profInfo = await cache.getProfileInfo();
         const setSecure = options.secure ?? profInfo.isSecured();
 

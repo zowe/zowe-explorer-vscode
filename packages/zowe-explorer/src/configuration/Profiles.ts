@@ -100,7 +100,8 @@ export class Profiles extends ProfilesCache {
             return profileStatus;
         }
 
-        if (usingTokenAuth && !theProfile.profile.tokenType) {
+        if (usingTokenAuth && !theProfile.profile.tokenValue) {
+            ZoweLogger.debug(`Profile ${theProfile.name} is using token auth, prompting for missing credentials`);
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(
                 (profile) => !(profile.name === theProfile.name && profile.status !== "unverified")
@@ -113,6 +114,7 @@ export class Profiles extends ProfilesCache {
                 return profileStatus;
             }
         } else if (!usingTokenAuth && (!theProfile.profile.user || !theProfile.profile.password)) {
+            ZoweLogger.debug(`Profile ${theProfile.name} is using basic auth, prompting for missing credentials`);
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(
                 (profile) => !(profile.name === theProfile.name && profile.status !== "unverified")
@@ -585,6 +587,7 @@ export class Profiles extends ProfilesCache {
                 secure: mProfileInfo.isSecured(),
                 userInputBoxOptions,
                 passwordInputBoxOptions,
+                zeProfiles: this,
             },
             ZoweExplorerApiRegister.getInstance()
         );
@@ -765,7 +768,7 @@ export class Profiles extends ProfilesCache {
 
         const zeInstance = ZoweExplorerApiRegister.getInstance();
         try {
-            loginTokenType = await zeInstance.getCommonApi(serviceProfile).getTokenTypeName();
+            loginTokenType = zeInstance.getCommonApi(serviceProfile).getTokenTypeName();
         } catch (error) {
             ZoweLogger.warn(error);
             Gui.showMessage(
