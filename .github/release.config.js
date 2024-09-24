@@ -6,17 +6,17 @@ module.exports = {
             level: "minor"
         },
         {
-            name: "release/2.*",
+            name: "v2-lts",
             channel: "zowe-v2-lts",
             level: "patch"
         },
         {
-            name: "release/3.*",
-            channel: "latest",
+            name: "v1-lts",
+            channel: "zowe-v1-lts",
             level: "patch"
         },
         {
-            name: "next",
+            name: "release/3.*",
             prerelease: true,
         }
     ],
