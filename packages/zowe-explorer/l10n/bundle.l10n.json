@@ -916,8 +916,6 @@
   },
   "Reload Window": "Reload Window",
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.",
-  "Token auth error": "Token auth error",
-  "Profile was found using token auth, please log in to continue.": "Profile was found using token auth, please log in to continue.",
   "Choose \"Create new...\" to define or select a profile to add to the DATA SETS Explorer": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS Explorer",
   "Choose \"Create new...\" to define or select a profile to add to the JOBS Explorer": "Choose \"Create new...\" to define or select a profile to add to the JOBS Explorer",
   "Choose \"Create new...\" to define or select a profile to add to the USS Explorer": "Choose \"Create new...\" to define or select a profile to add to the USS Explorer",
