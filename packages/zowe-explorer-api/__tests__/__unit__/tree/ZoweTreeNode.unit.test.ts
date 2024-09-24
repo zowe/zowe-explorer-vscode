@@ -81,6 +81,17 @@ describe("ZoweTreeNode", () => {
         expect(node.getProfileName()).toBeUndefined();
     });
 
+    it("setProfileToChoice should update properties on existing profile object", () => {
+        const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined, undefined, {
+            name: "oldProfile",
+            profile: { host: "example.com" },
+        });
+        node.setProfileToChoice({ name: "newProfile", profile: { host: "example.com", port: 443 } } as unknown as imperative.IProfileLoaded);
+        // Profile name should not change but properties should
+        expect(node.getProfileName()).toBe("oldProfile");
+        expect(node.getProfile().profile?.port).toBeDefined();
+    });
+
     it("setProfileToChoice should update profile for associated FSProvider entry", () => {
         const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined);
         const fsEntry = {
