@@ -32,4 +32,5 @@ packages/zowe-explorer/__tests__/__integration__/ci
 !packages/zowe-explorer/__tests__/__integration__/ci/zowe.config.json
 package.nls.*.json
 bundle.l10n.*.json
+bundle.l10n.json.template
 zedc/target
