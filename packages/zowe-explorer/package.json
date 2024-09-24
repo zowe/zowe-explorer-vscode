@@ -1810,7 +1810,8 @@
     "createTestProfileData": "tsx ./scripts/createTestProfileData.ts",
     "createDemoNodes": "tsx ./scripts/createDemoNodes.ts",
     "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src && node ./scripts/generatePoeditorJson.js",
-    "copy-secrets": "tsx ./scripts/getSecretsPrebuilds.ts"
+    "copy-secrets": "tsx ./scripts/getSecretsPrebuilds.ts",
+    "strip-l10n": "node ./scripts/stripL10nComments.js"
   },
   "engines": {
     "vscode": "^1.79.0"
