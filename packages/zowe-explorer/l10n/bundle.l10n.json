@@ -41,6 +41,8 @@
   "Install": "Install",
   "Reload": "Reload",
   "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.": "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.",
+  "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.": "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.",
+  "Create New": "Create New",
   "\"Update Credentials\" operation not supported when \"autoStore\" is false": "\"Update Credentials\" operation not supported when \"autoStore\" is false",
   "Connection Name": "Connection Name",
   "Enter a name for the connection.": "Enter a name for the connection.",
@@ -85,7 +87,6 @@
   },
   "Zowe Profiles initialized successfully.": "Zowe Profiles initialized successfully.",
   "Convert Existing Profiles": "Convert Existing Profiles",
-  "Create New": "Create New",
   "Operation cancelled": "Operation cancelled",
   "Tree Item is not a Zowe Explorer item.": "Tree Item is not a Zowe Explorer item.",
   "Zowe Explorer": "Zowe Explorer",
@@ -170,32 +171,6 @@
   "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.": "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.",
   "Uploading USS files...": "Uploading USS files...",
   "Error uploading files": "Error uploading files",
-  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
-  "Could not list USS files: Empty path provided in URI": "Could not list USS files: Empty path provided in URI",
-  "Profile does not exist for this file.": "Profile does not exist for this file.",
-  "$(sync~spin) Saving USS file...": "$(sync~spin) Saving USS file...",
-  "Renaming {0} failed due to API error: {1}/File pathError message": {
-    "message": "Renaming {0} failed due to API error: {1}",
-    "comment": [
-      "File path",
-      "Error message"
-    ]
-  },
-  "Deleting {0} failed due to API error: {1}/File nameError message": {
-    "message": "Deleting {0} failed due to API error: {1}",
-    "comment": [
-      "File name",
-      "Error message"
-    ]
-  },
-  "No error details given": "No error details given",
-  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
-    "message": "Error fetching destination {0} for paste action: {1}",
-    "comment": [
-      "USS path",
-      "Error message"
-    ]
-  },
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
     "comment": [
@@ -266,6 +241,32 @@
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "$(sync~spin) Pulling from Mainframe...": "$(sync~spin) Pulling from Mainframe...",
+  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
+  "Could not list USS files: Empty path provided in URI": "Could not list USS files: Empty path provided in URI",
+  "Profile does not exist for this file.": "Profile does not exist for this file.",
+  "$(sync~spin) Saving USS file...": "$(sync~spin) Saving USS file...",
+  "Renaming {0} failed due to API error: {1}/File pathError message": {
+    "message": "Renaming {0} failed due to API error: {1}",
+    "comment": [
+      "File path",
+      "Error message"
+    ]
+  },
+  "Deleting {0} failed due to API error: {1}/File nameError message": {
+    "message": "Deleting {0} failed due to API error: {1}",
+    "comment": [
+      "File name",
+      "Error message"
+    ]
+  },
+  "No error details given": "No error details given",
+  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
+    "message": "Error fetching destination {0} for paste action: {1}",
+    "comment": [
+      "USS path",
+      "Error message"
+    ]
+  },
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
