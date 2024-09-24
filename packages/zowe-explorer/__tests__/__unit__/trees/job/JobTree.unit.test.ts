@@ -39,7 +39,6 @@ import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProv
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { JobInit } from "../../../../src/trees/job/JobInit";
 import { Definitions } from "../../../../src/configuration/Definitions";
-import { constants } from "buffer";
 
 jest.mock("@zowe/zos-jobs-for-zowe-sdk");
 jest.mock("vscode");
