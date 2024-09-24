@@ -14,7 +14,7 @@ Join our [Slack channel](https://slack.openmainframeproject.org/) to connect wit
 Client-side prerequisites for development:
 
 - Install [Node.js](https://nodejs.org/en/download/) v16.0 or later.
-- Install [PNPM](https://pnpm.io/installation).
+- Install [PNPM 8](https://pnpm.io/installation).
 
 Host-side prerequisites for connection:
 
