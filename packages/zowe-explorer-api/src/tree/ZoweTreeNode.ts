@@ -101,7 +101,12 @@ export class ZoweTreeNode extends vscode.TreeItem {
      * @param {imperative.IProfileLoaded} The profile you will set the node to use
      */
     public setProfileToChoice(aProfile: imperative.IProfileLoaded, fsProvider?: BaseProvider): void {
-        this.profile = aProfile;
+        if (this.profile == null) {
+            this.profile = aProfile;
+        } else {
+            // Don't reassign profile, we want to keep object reference shared across nodes
+            this.profile.profile = aProfile.profile;
+        }
         const fsEntry = fsProvider?.lookup(this.resourceUri, true);
         if (fsEntry != null) {
             fsEntry.metadata.profile = aProfile;
