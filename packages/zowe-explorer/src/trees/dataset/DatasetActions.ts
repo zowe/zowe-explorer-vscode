@@ -1812,7 +1812,7 @@ export class DatasetActions {
         await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: vscode.l10n.t("Searching for {0}", searchString),
+                title: vscode.l10n.t("Searching for \"{0}\"", searchString),
                 cancellable: true,
             },
             async (progress, token) => {
@@ -1866,6 +1866,7 @@ export class DatasetActions {
                     name,
                     line: match.line as number,
                     column: match.column as number,
+                    position: (match.line as number).toString() + ":" + (match.column as number).toString(), 
                     contents: match.contents,
                     uri,
                     searchString
@@ -1884,7 +1885,7 @@ export class DatasetActions {
         }
 
         const table = new TableBuilder(context)
-        .title(vscode.l10n.t("Search Results for {0}", searchString))
+        .title(vscode.l10n.t("Search Results for \"{0}\"", searchString))
         .options(
             {
                 autoSizeStrategy: { type: "fitCellContents" },
@@ -1904,13 +1905,8 @@ export class DatasetActions {
                     sort: "asc",
                 } as Table.ColumnOpts,
                 {
-                    field: "line",
-                    headerName: vscode.l10n.t("Line"),
-                    filter: false
-                },
-                {
-                    field: "column",
-                    headerName: vscode.l10n.t("Column"),
+                    field: "position",
+                    headerName: vscode.l10n.t("Position"),
                     filter: false
                 },
                 {
