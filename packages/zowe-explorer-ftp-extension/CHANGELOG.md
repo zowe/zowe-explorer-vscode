@@ -2,21 +2,13 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
 
 - Removed popup notification of successful registration with Zowe Explorer and log the success instead. [#2862](https://github.com/zowe/zowe-explorer-vscode/issues/2862)
 
 ## `3.0.0-next.202409132122`
 
-### New features and enhancements
-
-### Bug fixes
-
 ## `3.0.0-next.202409091409`
-
-### New features and enhancements
 
 ### Bug fixes
 
