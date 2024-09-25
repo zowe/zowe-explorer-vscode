@@ -11,11 +11,13 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Fixed bug in `ProfilesCache` class where old profiles were still accessible after deleting a Team configuration file. [#3124](https://github.com/zowe/zowe-explorer-vscode/issues/3124)
 - Added `extensionRemovedFromPath` private function to the `DsEntry` class to allow removing the extension from a data set before making API calls. [#3121](https://github.com/zowe/zowe-explorer-vscode/issues/3121)
 - Generate NOTICE file for package.
+- Deprecated the method `ProfilesCache.updateProfilesArrays`. Use `ProfilesCache.updateCachedProfile` instead, which handles updating credentials cached in memory when `autoStore` is false. [#3120](https://github.com/zowe/zowe-explorer-vscode/issues/3120)
 
 ### Bug fixes
 
 - Updated the `TableViewProvider.setTableView` function to show the Zowe Resources panel if a table is provided. If `null` is passed, the Zowe Resources panel will be hidden. [#3113](https://github.com/zowe/zowe-explorer-vscode/issues/3113)
 - Fixed behavior of logout action when token is defined in both base profile and parent profile. [#3076](https://github.com/zowe/zowe-explorer-vscode/issues/3076)
+- Fixed profile cached by `FileSystemProvider` not refreshing on password change. [#3120](https://github.com/zowe/zowe-explorer-vscode/issues/3120)
 
 ## `3.0.0-next.202409132122`
 

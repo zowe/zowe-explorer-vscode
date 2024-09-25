@@ -44,7 +44,7 @@ async function registerFtpApis(): Promise<boolean> {
         await zoweExplorerApi.getExplorerExtenderApi().initForZowe(pType, schema);
         await zoweExplorerApi.getExplorerExtenderApi().reloadProfiles(pType);
 
-        await Gui.showMessage("Zowe Explorer was modified for FTP support.", { logger: globals.LOGGER });
+        globals.LOGGER.logImperativeMessage("Zowe Explorer was modified for FTP support.", MessageSeverity.INFO);
 
         return true;
     }

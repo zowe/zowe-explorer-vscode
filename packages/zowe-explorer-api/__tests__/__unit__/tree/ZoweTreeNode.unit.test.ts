@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import { ZoweTreeNode } from "../../../src/tree/ZoweTreeNode";
 import { IZoweTreeNode } from "../../../src/tree/IZoweTreeNode";
 import * as imperative from "@zowe/imperative";
+import { BaseProvider } from "../../../src";
 
 describe("ZoweTreeNode", () => {
     const makeNode = (
@@ -78,5 +79,33 @@ describe("ZoweTreeNode", () => {
         expect(node.getSession()).toBeUndefined();
         expect(node.getProfile()).toBeUndefined();
         expect(node.getProfileName()).toBeUndefined();
+    });
+
+    it("setProfileToChoice should update properties on existing profile object", () => {
+        const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined, undefined, {
+            name: "oldProfile",
+            profile: { host: "example.com" },
+        });
+        node.setProfileToChoice({ name: "newProfile", profile: { host: "example.com", port: 443 } } as unknown as imperative.IProfileLoaded);
+        // Profile name should not change but properties should
+        expect(node.getProfileName()).toBe("oldProfile");
+        expect(node.getProfile().profile?.port).toBeDefined();
+    });
+
+    it("setProfileToChoice should update profile for associated FSProvider entry", () => {
+        const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined);
+        const fsEntry = {
+            metadata: {
+                profile: { name: "oldProfile" },
+            },
+        };
+        node.setProfileToChoice(
+            { name: "newProfile" } as unknown as imperative.IProfileLoaded,
+            {
+                lookup: jest.fn().mockReturnValue(fsEntry),
+            } as unknown as BaseProvider
+        );
+        expect(node.getProfileName()).toBe("newProfile");
+        expect(fsEntry.metadata.profile.name).toBe("newProfile");
     });
 });

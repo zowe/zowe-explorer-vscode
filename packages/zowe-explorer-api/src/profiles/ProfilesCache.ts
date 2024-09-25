@@ -16,6 +16,7 @@ import { Validation } from "./Validation";
 import { ZosmfProfile } from "@zowe/zosmf-for-zowe-sdk";
 import { ZosTsoProfile } from "@zowe/zos-tso-for-zowe-sdk";
 import { ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
+import { Types } from "../Types";
 
 export class ProfilesCache {
     public profilesForValidation: Validation.IValidationProfile[] = [];
@@ -79,9 +80,8 @@ export class ProfilesCache {
 
     /**
      * Updates profile in allProfiles array and if default updates defaultProfileByType
-     *
+     * @deprecated Use `updateCachedProfile` instead
      * @param {string} profileLoaded
-     *
      * @returns {void}
      */
     public updateProfilesArrays(profileLoaded: imperative.IProfileLoaded): void {
@@ -95,6 +95,25 @@ export class ProfilesCache {
         if (defaultProf?.name === profileLoaded?.name) {
             this.defaultProfileByType.set(profileLoaded?.type, profileLoaded);
         }
+    }
+
+    public async updateCachedProfile(
+        profileLoaded: imperative.IProfileLoaded,
+        profileNode?: Types.IZoweNodeType,
+        zeRegister?: Types.IApiRegisterClient
+    ): Promise<void> {
+        if ((await this.getProfileInfo()).getTeamConfig().properties.autoStore) {
+            await this.refresh(zeRegister);
+        } else {
+            // Note: When autoStore is disabled, nested profiles within this service profile may not have their credentials updated.
+            const profIndex = this.allProfiles.findIndex((profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name);
+            this.allProfiles[profIndex].profile = profileLoaded.profile;
+            const defaultProf = this.defaultProfileByType.get(profileLoaded.type);
+            if (defaultProf != null && defaultProf.name === profileLoaded.name) {
+                this.defaultProfileByType.set(profileLoaded.type, profileLoaded);
+            }
+        }
+        profileNode?.setProfileToChoice(profileLoaded);
     }
 
     /**
@@ -319,11 +338,14 @@ export class ProfilesCache {
         const mProfileInfo = await this.getProfileInfo();
         const baseProfileAttrs = mProfileInfo.getDefaultProfile("base");
         const config = mProfileInfo.getTeamConfig();
-        if (profileName?.includes(".") && (baseProfileAttrs == null || config.api.profiles.get(baseProfileAttrs.profName).tokenType == null)) {
+        if (
+            profileName?.includes(".") &&
+            (baseProfileAttrs == null || !config.api.secure.securePropsForProfile(baseProfileAttrs.profName).includes("tokenValue"))
+        ) {
             // Retrieve parent typeless profile as base profile if:
             // (1) The active profile name is nested (contains a period) AND
             // (2) No default base profile was found OR
-            //     Default base profile does not have tokenType defined
+            //     Default base profile does not have tokenValue in secure array
             const parentProfile = this.getParentProfileForToken(profileName, config);
             return this.getProfileLoaded(parentProfile, "base", config.api.profiles.get(parentProfile));
         } else if (baseProfileAttrs == null) {

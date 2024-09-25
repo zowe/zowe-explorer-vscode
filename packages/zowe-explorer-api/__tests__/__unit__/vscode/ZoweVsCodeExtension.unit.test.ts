@@ -145,6 +145,7 @@ describe("ZoweVsCodeExtension", () => {
                 mProfileSchemaCache: new Map(),
                 readProfilesFromDisk: jest.fn(),
             });
+            testCache.allProfiles = [serviceProfile, baseProfile];
             jest.spyOn(testCache, "getProfileInfo").mockResolvedValue(testProfInfo);
 
             return {
@@ -338,6 +339,9 @@ describe("ZoweVsCodeExtension", () => {
                 };
 
                 const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+                await ZoweVsCodeExtension.profilesCache.refresh({
+                    registeredApiTypes: jest.fn().mockReturnValue(["service"]),
+                } as unknown as Types.IApiRegisterClient);
                 await ZoweVsCodeExtension.ssoLogin({ serviceProfile: "lpar.service" });
 
                 const testSession = new imperative.Session(JSON.parse(JSON.stringify(blockMocks.expectedSession.ISession)));
@@ -541,9 +545,6 @@ describe("ZoweVsCodeExtension", () => {
 
             jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
             const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
-            await ZoweVsCodeExtension.profilesCache.refresh({
-                registeredApiTypes: jest.fn().mockReturnValue(["service"]),
-            } as unknown as Types.IApiRegisterClient);
             const didLogin = await ZoweVsCodeExtension.ssoLogin({
                 serviceProfile: serviceProfileLoaded,
                 defaultTokenType: "apimlAuthenticationToken",
@@ -633,6 +634,9 @@ describe("ZoweVsCodeExtension", () => {
 
             const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["abc", "def"]);
             const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+            await ZoweVsCodeExtension.profilesCache.refresh({
+                registeredApiTypes: jest.fn().mockReturnValue(["service"]),
+            } as unknown as Types.IApiRegisterClient);
             const didLogin = await ZoweVsCodeExtension.ssoLogin({
                 serviceProfile: serviceProfileLoaded,
                 defaultTokenType: "apimlAuthenticationToken",
@@ -686,6 +690,7 @@ describe("ZoweVsCodeExtension", () => {
                     updateProperty: mockUpdateProperty,
                 }),
                 refresh: jest.fn(),
+                updateCachedProfile: jest.fn(),
             });
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
@@ -711,6 +716,7 @@ describe("ZoweVsCodeExtension", () => {
                     updateProperty: mockUpdateProperty,
                 }),
                 refresh: jest.fn(),
+                updateCachedProfile: jest.fn(),
             });
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
@@ -739,6 +745,7 @@ describe("ZoweVsCodeExtension", () => {
                     updateProperty: mockUpdateProperty,
                 }),
                 refresh: jest.fn(),
+                updateCachedProfile: jest.fn(),
             });
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("yes");
@@ -765,6 +772,7 @@ describe("ZoweVsCodeExtension", () => {
                     updateProperty: mockUpdateProperty,
                 }),
                 refresh: jest.fn(),
+                updateCachedProfile: jest.fn(),
             });
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             jest.spyOn(Gui, "showMessage").mockResolvedValueOnce(undefined);

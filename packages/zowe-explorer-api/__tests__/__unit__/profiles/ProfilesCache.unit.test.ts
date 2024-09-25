@@ -87,11 +87,12 @@ function createProfInfoMock(profiles: Partial<imperative.IProfileLoaded>[]): imp
     const teamConfigApi: Partial<imperative.Config> = {
         api: {
             profiles: {
-                get: jest.fn().mockReturnValue({}),
+                get: jest.fn(),
                 getProfilePathFromName: jest.fn().mockImplementation((x) => x),
             },
             secure: {
                 secureFields: jest.fn().mockReturnValue([]),
+                securePropsForProfile: jest.fn().mockReturnValue([]),
             },
         } as any,
         exists: true,
@@ -223,7 +224,37 @@ describe("ProfilesCache", () => {
         profCache.allProfiles = [lpar1Profile as imperative.IProfileLoaded];
         (profCache as any).defaultProfileByType = new Map([["zosmf", { ...profCache.allProfiles[0] }]]);
         expect(profCache.allProfiles[0].profile).toMatchObject(lpar1Profile.profile);
+        // eslint-disable-next-line deprecation/deprecation
         profCache.updateProfilesArrays({
+            ...lpar1Profile,
+            profile: lpar2Profile.profile,
+        } as imperative.IProfileLoaded);
+        expect(profCache.allProfiles[0].profile).toMatchObject(lpar2Profile.profile);
+        expect((profCache as any).defaultProfileByType.get("zosmf").profile).toMatchObject(lpar2Profile.profile);
+    });
+
+    it("updateCachedProfile should refresh all profiles when autoStore is true", async () => {
+        const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+        jest.spyOn(profCache, "getProfileInfo").mockResolvedValueOnce({
+            getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: true } }),
+        } as unknown as imperative.ProfileInfo);
+        const refreshSpy = jest.spyOn(profCache, "refresh").mockImplementation();
+        await profCache.updateCachedProfile({
+            ...lpar1Profile,
+            profile: lpar2Profile.profile,
+        } as imperative.IProfileLoaded);
+        expect(refreshSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("updateCachedProfile should update cached profile when autoStore is false", async () => {
+        const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+        profCache.allProfiles = [lpar1Profile as imperative.IProfileLoaded];
+        (profCache as any).defaultProfileByType = new Map([["zosmf", { ...profCache.allProfiles[0] }]]);
+        expect(profCache.allProfiles[0].profile).toMatchObject(lpar1Profile.profile);
+        jest.spyOn(profCache, "getProfileInfo").mockResolvedValueOnce({
+            getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: false } }),
+        } as unknown as imperative.ProfileInfo);
+        await profCache.updateCachedProfile({
             ...lpar1Profile,
             profile: lpar2Profile.profile,
         } as imperative.IProfileLoaded);
@@ -566,18 +597,18 @@ describe("ProfilesCache", () => {
         expect(profile).toMatchObject({ name: "lpar1", type: "base" });
     });
 
-    it("fetchBaseProfile should return typeless profile if base profile does not contain token type", async () => {
+    it("fetchBaseProfile should return typeless profile if base profile does not contain token value", async () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
         jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([baseProfile]));
         const profile = await profCache.fetchBaseProfile("lpar1.zosmf");
         expect(profile).toMatchObject({ name: "lpar1", type: "base" });
     });
 
-    it("fetchBaseProfile should return base profile if it contains token type", async () => {
+    it("fetchBaseProfile should return base profile if it contains token value", async () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
         const profInfoMock = createProfInfoMock([baseProfile]);
         jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(profInfoMock);
-        mocked(profInfoMock.getTeamConfig().api.profiles.get).mockReturnValueOnce({ tokenType: imperative.SessConstants.TOKEN_TYPE_JWT });
+        mocked(profInfoMock.getTeamConfig().api.secure.securePropsForProfile).mockReturnValue(["tokenValue"]);
         const profile = await profCache.fetchBaseProfile("lpar1.zosmf");
         expect(profile).toMatchObject(baseProfile);
     });
