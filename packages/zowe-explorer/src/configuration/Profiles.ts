@@ -821,10 +821,11 @@ export class Profiles extends ProfilesCache {
         const profInfo = await this.getProfileInfo();
         const configApi = profInfo.getTeamConfig();
         const profAttrs = await this.getProfileFromConfig(profileName);
-        if (loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken")) {
-            configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, []);
-        } else {
-            configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, ["tokenValue"]);
+        if (profAttrs.profLoc.jsonLoc) {
+            configApi.set(
+                `${profAttrs.profLoc.jsonLoc}.secure`,
+                loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken") ? [] : ["tokenValue"]
+            );
         }
         configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "user")?.argLoc.jsonLoc);
         configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "password")?.argLoc.jsonLoc);
@@ -834,20 +835,15 @@ export class Profiles extends ProfilesCache {
     public async tokenAuthClearSecureArray(profileName?: string, loginTokenType?: string): Promise<void> {
         const profInfo = await this.getProfileInfo();
         const configApi = profInfo.getTeamConfig();
-        if (loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken")) {
-            const profAttrs = await this.getProfileFromConfig("base");
-            configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, []);
+        const usingApimlToken = loginTokenType?.startsWith("apimlAuthenticationToken");
+        const profAttrs = await this.getProfileFromConfig(usingApimlToken ? "base" : profileName);
+        if (profAttrs?.profLoc.jsonLoc) {
+            configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, usingApimlToken ? [] : ["user", "password"]);
             configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc);
             configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenValue")?.argLoc.jsonLoc);
             configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenExpiration")?.argLoc.jsonLoc);
-        } else {
-            const profAttrs = await this.getProfileFromConfig(profileName);
-            configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, ["user", "password"]);
-            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc);
-            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenValue")?.argLoc.jsonLoc);
-            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenExpiration")?.argLoc.jsonLoc);
+            await configApi.save();
         }
-        await configApi.save();
     }
 
     public async handleSwitchAuthentication(node: Types.IZoweNodeType): Promise<void> {
