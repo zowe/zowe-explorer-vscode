@@ -16,9 +16,25 @@ import { Gui } from "../globals";
 type ErrorMatch = string | RegExp;
 
 interface ErrorCorrelation {
+    /**
+     * An optional error code returned from the server.
+     * @type {string}
+     */
     errorCode?: string;
+    /**
+     * One or more patterns to check for within the error message.
+     * @type {ErrorMatch | ErrorMatch[]}
+     */
     matches: ErrorMatch | ErrorMatch[];
-    details: string;
+    /**
+     * Human-readable, brief summary of the error that was encountered.
+     * @type {string}
+     */
+    summary: string;
+    /**
+     * Troubleshooting tips for end users that encounter the given error.
+     * @type {string[]}
+     */
     tips?: string[];
 }
 
@@ -56,7 +72,7 @@ export class ErrorCorrelator extends Singleton {
                     {
                         errorCode: "403",
                         matches: [/Client is not authorized for file access\.$/],
-                        details: "Insufficient write permissions for this data set. The data set may be read-only or locked.",
+                        summary: "Insufficient write permissions for this data set. The data set may be read-only or locked.",
                         tips: [],
                     },
                 ],
@@ -64,7 +80,7 @@ export class ErrorCorrelator extends Singleton {
                     {
                         errorCode: "403",
                         matches: [/Client is not authorized for file access\.$/],
-                        details: "Insufficient write permissions for this file. The file may be read-only or locked.",
+                        summary: "Insufficient write permissions for this file. The file may be read-only or locked.",
                         tips: [],
                     },
                 ],
@@ -84,7 +100,7 @@ export class ErrorCorrelator extends Singleton {
         for (const apiError of [...this.errorMatches.get(profileType)[api], ...(this.errorMatches.get(profileType)[ZoweExplorerApiType.All] ?? [])]) {
             for (const match of Array.isArray(apiError.matches) ? apiError.matches : [apiError.matches]) {
                 if (errorDetails.match(match)) {
-                    return new NetworkError(apiError.details, { errorCode: apiError.errorCode, fullError: errorDetails, tips: apiError?.tips });
+                    return new NetworkError(apiError.summary, { errorCode: apiError.errorCode, fullError: errorDetails, tips: apiError?.tips });
                 }
             }
         }
