@@ -530,7 +530,7 @@ export class Profiles extends ProfilesCache {
             switch (choice) {
                 case "project":
                     for (const file of existingLayers) {
-                        if (file.user) {
+                        if (!file.path.includes(FileManagement.getZoweDir())) {
                             await this.openConfigFile(file.path);
                         }
                     }
@@ -538,7 +538,7 @@ export class Profiles extends ProfilesCache {
                     break;
                 case "global":
                     for (const file of existingLayers) {
-                        if (file.global) {
+                        if (file.path.includes(FileManagement.getZoweDir())) {
                             await this.openConfigFile(file.path);
                         }
                     }
