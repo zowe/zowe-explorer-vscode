@@ -18,6 +18,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where copying and pasting a file/folder in the USS tree would fail abruptly, displaying an error. [#3128](https://github.com/zowe/zowe-explorer-vscode/issues/3128)
 - Removal of broken VSC command to `Zowe Explorer: Refresh Zowe Explorer`, use VS Code's `Extensions: Refresh` command instead. [#3100](https://github.com/zowe/zowe-explorer-vscode/issues/3100)
 - Fixed issue where Zowe Explorer would reload the VS Code window during initialization when no config files are present. [#3147](https://github.com/zowe/zowe-explorer-vscode/issues/3147)
+- Fixed issue where obsolete credentials persisted for PDS member nodes in Data Sets tree. [#3112](https://github.com/zowe/zowe-explorer-vscode/issues/3112)
+- Fixed issue where Search operation did not prompt for credentials if profile contains expired token. [#2259](https://github.com/zowe/zowe-explorer-vscode/issues/2259)
+- Fixed issue where inactive status was not displayed for profiles loaded from Global Config. [#3134](https://github.com/zowe/zowe-explorer-vscode/issues/3134)
 
 ## `3.0.0-next.202409132122`
 

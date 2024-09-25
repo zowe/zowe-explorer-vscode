@@ -55,7 +55,7 @@ function createGlobalMocks() {
 
 describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
     it("Checks that concatChildNodes returns the proper array of children", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const rootNode = new ZoweUSSNode({
             label: "root",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -84,17 +84,17 @@ describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
 
 describe("syncSessionNode shared util function", () => {
     const serviceProfile = {
-        name: "test",
+        name: "sestest",
         profile: {},
         type: "zosmf",
         message: "",
-        failNotFound: true,
+        failNotFound: false,
     };
 
     const sessionNode = createDatasetSessionNode(undefined, serviceProfile);
 
     it("should update a session and a profile in the provided node", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         // given
         Object.defineProperty(globalMocks.mockProfilesCache, "loadNamedProfile", {
             value: jest.fn().mockReturnValue(createIProfile()),
