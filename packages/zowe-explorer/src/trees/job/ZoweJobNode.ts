@@ -276,6 +276,10 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         return this.children;
     }
 
+    public setProfileToChoice(profile: imperative.IProfileLoaded): void {
+        super.setProfileToChoice(profile, JobFSProvider.instance);
+    }
+
     public static sortJobs(sortOpts: Sorting.NodeSort): (x: IZoweJobTreeNode, y: IZoweJobTreeNode) => number {
         return (x, y) => {
             const sortLessThan = sortOpts.direction == Sorting.SortDirection.Ascending ? -1 : 1;

@@ -90,31 +90,34 @@ export class Profiles extends ProfilesCache {
 
     public async checkCurrentProfile(theProfile: imperative.IProfileLoaded): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
-        let profileStatus: Validation.IValidationProfile;
+        let profileStatus: Validation.IValidationProfile = { name: theProfile.name, status: "unverified" };
         let usingTokenAuth: boolean;
         try {
             usingTokenAuth = await AuthUtils.isUsingTokenAuth(theProfile.name);
         } catch (err) {
             ZoweLogger.error(err);
             ZoweExplorerExtender.showZoweConfigError(err.message);
-            return { name: theProfile.name, status: "unverified" };
-        }
-
-        if (usingTokenAuth && !theProfile.profile.tokenType) {
-            const error = new imperative.ImperativeError({
-                msg: vscode.l10n.t(`Token auth error`),
-                additionalDetails: vscode.l10n.t(`Profile was found using token auth, please log in to continue.`),
-                errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
-            });
-            await AuthUtils.errorHandling(error, theProfile.name, error.message);
-            profileStatus = { name: theProfile.name, status: "unverified" };
             return profileStatus;
         }
 
-        if (!usingTokenAuth && (!theProfile.profile.user || !theProfile.profile.password)) {
+        if (usingTokenAuth && !theProfile.profile.tokenValue) {
+            ZoweLogger.debug(`Profile ${theProfile.name} is using token auth, prompting for missing credentials`);
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(
-                (profile) => profile.status === "unverified" && profile.name !== theProfile.name
+                (profile) => !(profile.name === theProfile.name && profile.status !== "unverified")
+            );
+            try {
+                await Profiles.getInstance().ssoLogin(null, theProfile.name);
+                theProfile = Profiles.getInstance().loadNamedProfile(theProfile.name);
+            } catch (error) {
+                await AuthUtils.errorHandling(error, theProfile.name, error.message);
+                return profileStatus;
+            }
+        } else if (!usingTokenAuth && (!theProfile.profile.user || !theProfile.profile.password)) {
+            ZoweLogger.debug(`Profile ${theProfile.name} is using basic auth, prompting for missing credentials`);
+            // The profile will need to be reactivated, so remove it from profilesForValidation
+            this.profilesForValidation = this.profilesForValidation.filter(
+                (profile) => !(profile.name === theProfile.name && profile.status !== "unverified")
             );
             let values: string[];
             try {
@@ -126,17 +129,12 @@ export class Profiles extends ProfilesCache {
             if (values) {
                 theProfile.profile.user = values[0];
                 theProfile.profile.password = values[1];
-                theProfile.profile.base64EncodedAuth = values[2];
-
-                // Validate profile
-                profileStatus = await this.getProfileSetting(theProfile);
-            } else {
-                profileStatus = { name: theProfile.name, status: "unverified" };
             }
-        } else {
-            // Profile should have enough information to allow validation
-            profileStatus = await this.getProfileSetting(theProfile);
         }
+
+        // Profile should have enough information to allow validation
+        profileStatus = await this.getProfileSetting(theProfile);
+
         switch (profileStatus.status) {
             case "unverified":
                 this.validProfile = Validation.ValidationType.UNVERIFIED;
@@ -589,6 +587,7 @@ export class Profiles extends ProfilesCache {
                 secure: mProfileInfo.isSecured(),
                 userInputBoxOptions,
                 passwordInputBoxOptions,
+                zeProfiles: this,
             },
             ZoweExplorerApiRegister.getInstance()
         );
@@ -597,8 +596,7 @@ export class Profiles extends ProfilesCache {
             return; // See https://github.com/zowe/zowe-explorer-vscode/issues/1827
         }
 
-        const returnValue: string[] = [promptInfo.profile.user, promptInfo.profile.password, promptInfo.profile.base64EncodedAuth];
-        this.updateProfilesArrays(promptInfo);
+        const returnValue: string[] = [promptInfo.profile.user, promptInfo.profile.password];
 
         // If secure credentials are enabled, the config file won't change after updating existing credentials
         // (as the "secure" fields are already set). Fire the event emitter to notify extenders of the change.
@@ -665,7 +663,7 @@ export class Profiles extends ProfilesCache {
         ZoweLogger.trace("Profiles.validateProfiles called.");
         let filteredProfile: Validation.IValidationProfile;
         let profileStatus;
-        const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
+        const getSessStatus = ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
 
         // Check if the profile is already validated as active
         const desiredProfile = this.profilesForValidation.find((profile) => profile.name === theProfile.name && profile.status === "active");
@@ -770,7 +768,7 @@ export class Profiles extends ProfilesCache {
 
         const zeInstance = ZoweExplorerApiRegister.getInstance();
         try {
-            loginTokenType = await zeInstance.getCommonApi(serviceProfile).getTokenTypeName();
+            loginTokenType = zeInstance.getCommonApi(serviceProfile).getTokenTypeName();
         } catch (error) {
             ZoweLogger.warn(error);
             Gui.showMessage(
@@ -804,7 +802,6 @@ export class Profiles extends ProfilesCache {
                         comment: ["Service profile name"],
                     })
                 );
-                await Profiles.getInstance().refresh(zeInstance);
             } else {
                 Gui.showMessage(this.profilesOpCancelled);
             }
@@ -1029,6 +1026,7 @@ export class Profiles extends ProfilesCache {
                 !serviceProfile.profile.tokenType?.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)
             ) {
                 await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(node.getSession());
+                await Profiles.getInstance().updateCachedProfile(serviceProfile, node);
             } else {
                 const zeRegister = ZoweExplorerApiRegister.getInstance();
                 logoutOk = await ZoweVsCodeExtension.ssoLogout({
@@ -1048,7 +1046,6 @@ export class Profiles extends ProfilesCache {
                         comment: ["Service profile name"],
                     })
                 );
-                await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
             }
         } catch (error) {
             const message = vscode.l10n.t({
@@ -1103,21 +1100,7 @@ export class Profiles extends ProfilesCache {
         session.ISession.user = creds[0];
         session.ISession.password = creds[1];
         await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(session);
-        const profIndex = this.allProfiles.findIndex((profile) => profile.name === serviceProfile.name);
-        this.allProfiles[profIndex] = { ...serviceProfile, profile: { ...serviceProfile, ...session } };
-        if (node) {
-            node.setProfileToChoice({
-                ...node.getProfile(),
-                profile: { ...node.getProfile().profile, ...session },
-            });
-        }
-        Gui.showMessage(
-            vscode.l10n.t({
-                message: "Login to authentication service was successful for {0}.",
-                args: [serviceProfile.name],
-                comment: ["Service profile name"],
-            })
-        );
+        await Profiles.getInstance().updateCachedProfile(serviceProfile, node);
         return true;
     }
 

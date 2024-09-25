@@ -70,7 +70,7 @@ export class ZoweVsCodeExtension {
         options: PromptCredentialsOptions.ComplexOptions,
         apiRegister: Types.IApiRegisterClient
     ): Promise<imperative.IProfileLoaded> {
-        const cache = this.profilesCache;
+        const cache = options.zeProfiles ?? ZoweVsCodeExtension.profilesCache;
         const profInfo = await cache.getProfileInfo();
         const setSecure = options.secure ?? profInfo.isSecured();
 
@@ -101,7 +101,7 @@ export class ZoweVsCodeExtension {
                 await profInfo.updateProperty({ ...upd, property: "user", value: creds[0], setSecure });
                 await profInfo.updateProperty({ ...upd, property: "password", value: creds[1], setSecure });
             }
-            await cache.refresh(apiRegister);
+            await cache.updateCachedProfile(loadProfile, undefined, apiRegister);
 
             return loadProfile;
         }
@@ -215,7 +215,7 @@ export class ZoweVsCodeExtension {
 
         await cache.updateBaseProfileFileLogin(profileToUpdate, updBaseProfile, !connOk);
         serviceProfile.profile = { ...serviceProfile.profile, ...updBaseProfile };
-        await this.updateProfileInCache({ ...opts, serviceProfile });
+        await cache.updateCachedProfile(serviceProfile, opts.profileNode);
         return true;
     }
 
@@ -278,25 +278,8 @@ export class ZoweVsCodeExtension {
             !serviceProfile.name.startsWith(baseProfile.name + ".");
         await cache.updateBaseProfileFileLogout(connOk ? baseProfile : serviceProfile);
         serviceProfile.profile = { ...serviceProfile.profile, tokenType: undefined, tokenValue: undefined };
-        await this.updateProfileInCache({ ...opts, serviceProfile });
+        await cache.updateCachedProfile(serviceProfile, opts.profileNode);
         return true;
-    }
-
-    private static async updateProfileInCache(opts: BaseProfileAuthOptions & { serviceProfile: imperative.IProfileLoaded }): Promise<void> {
-        const cache: ProfilesCache = opts.zeProfiles ?? ZoweVsCodeExtension.profilesCache;
-        if ((await cache.getProfileInfo()).getTeamConfig().properties.autoStore !== false) {
-            await cache.refresh();
-        } else {
-            // Note: It should be expected that nested profiles within this service profile will have their credentials updated.
-            const profIndex = cache.allProfiles.findIndex((profile) => profile.name === opts.serviceProfile.name);
-            cache.allProfiles[profIndex] = { ...cache.allProfiles[profIndex], profile: opts.serviceProfile.profile };
-        }
-        if (opts.profileNode) {
-            opts.profileNode.setProfileToChoice({
-                ...opts.profileNode.getProfile(),
-                profile: { ...opts.profileNode.getProfile().profile, ...opts.serviceProfile.profile },
-            });
-        }
     }
 
     /**

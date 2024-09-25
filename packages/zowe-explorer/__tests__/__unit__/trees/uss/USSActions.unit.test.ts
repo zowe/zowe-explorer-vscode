@@ -426,13 +426,11 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         Object.defineProperty(vscode.window, "withProgress", {
             value: jest.fn().mockImplementation((progLocation, callback) => {
                 const progress = {
-                    report: (_message) => {
-                        return;
-                    },
+                    report: jest.fn(),
                 };
                 const token = {
                     isCancellationRequested: false,
-                    onCancellationRequested: undefined,
+                    onCancellationRequested: jest.fn(),
                 };
                 return callback(progress, token);
             }),
