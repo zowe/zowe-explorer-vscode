@@ -2187,6 +2187,8 @@ describe("Profiles Unit Tests - function basicAuthClearSecureArray", () => {
         expect(teamCfgMock.delete).toHaveBeenCalledWith(mergeArgsMock.knownArgs[1].argLoc.jsonLoc);
         expect(teamCfgMock.set).toHaveBeenCalledWith(`${profAttrsMock.profLoc.jsonLoc}.secure`, ["tokenValue"]);
         expect(teamCfgMock.save).toHaveBeenCalled();
+        getProfileInfoMock.mockRestore();
+        getProfileFromConfigMock.mockRestore();
     });
     it("calls Config APIs when profLoc.jsonLoc is valid, loginTokenType provided", async () => {
         const teamCfgMock = {
@@ -2230,6 +2232,8 @@ describe("Profiles Unit Tests - function basicAuthClearSecureArray", () => {
         expect(teamCfgMock.delete).toHaveBeenCalledWith(mergeArgsMock.knownArgs[1].argLoc.jsonLoc);
         expect(teamCfgMock.set).toHaveBeenCalledWith(`${profAttrsMock.profLoc.jsonLoc}.secure`, []);
         expect(teamCfgMock.save).toHaveBeenCalled();
+        getProfileInfoMock.mockRestore();
+        getProfileFromConfigMock.mockRestore();
     });
 
     it("does not call Config.set when profLoc.jsonLoc is invalid", async () => {
@@ -2271,7 +2275,9 @@ describe("Profiles Unit Tests - function basicAuthClearSecureArray", () => {
         await Profiles.getInstance().basicAuthClearSecureArray("example_profile");
         expect(teamCfgMock.delete).toHaveBeenCalledWith(mergeArgsMock.knownArgs[0].argLoc.jsonLoc);
         expect(teamCfgMock.delete).toHaveBeenCalledWith(mergeArgsMock.knownArgs[1].argLoc.jsonLoc);
-        expect(teamCfgMock.set).not.toHaveBeenCalledWith(`${profAttrsMock.profLoc.jsonLoc}.secure`, ["tokenValue"]);
+        expect(teamCfgMock.set).not.toHaveBeenCalled();
         expect(teamCfgMock.save).toHaveBeenCalled();
+        getProfileInfoMock.mockRestore();
+        getProfileFromConfigMock.mockRestore();
     });
 });
