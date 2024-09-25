@@ -837,6 +837,8 @@ export class Profiles extends ProfilesCache {
         const configApi = profInfo.getTeamConfig();
         const usingApimlToken = loginTokenType?.startsWith("apimlAuthenticationToken");
         const profAttrs = await this.getProfileFromConfig(usingApimlToken ? "base" : profileName);
+        // For users with nested profiles, we should only update the profile if a base config or a regular profile matching profileName exists.
+        // Otherwise, we want to keep `tokenValue` in the secure array of the parent profile to avoid disconnecting child profiles
         if (profAttrs?.profLoc.jsonLoc) {
             configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, usingApimlToken ? [] : ["user", "password"]);
             configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc);
