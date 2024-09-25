@@ -4,9 +4,9 @@ on:
   push:
     branches:
       - main
-      - maintenance
-      - next
       - v1-lts
+      - v2-lts
+      - release/3.*
     paths:
       - .github/release.config.js
       - .github/workflows/deployment.yml
