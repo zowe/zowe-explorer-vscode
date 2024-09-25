@@ -50,14 +50,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     );
     SharedInit.registerCommonCommands(context, providers);
     SharedInit.registerZosConsoleView(context);
-    SharedInit.registerRefreshCommand(context, activate, deactivate);
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
 
     SharedInit.watchConfigProfile(context);
     await SharedInit.watchForZoweButtonClick();
 
-    ProfilesUtils.handleV1MigrationStatus();
-
+    await ProfilesUtils.handleV1MigrationStatus();
+    await ProfilesUtils.promptUserWithNoConfigs();
     return ZoweExplorerApiRegister.getInstance();
 }
 /**

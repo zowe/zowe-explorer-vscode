@@ -191,6 +191,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return dsEntry.stats;
     }
 
+    public setProfileToChoice(profile: imperative.IProfileLoaded): void {
+        super.setProfileToChoice(profile, DatasetFSProvider.instance);
+    }
+
     /**
      * Retrieves child nodes of this ZoweDatasetNode
      *

@@ -27,8 +27,8 @@ export class ZoweLocalStorage {
         return ZoweLocalStorage.storage.get<T>(key, defaultValue);
     }
 
-    public static setValue<T>(key: Definitions.LocalStorageKey | PersistenceSchemaEnum, value: T): void {
+    public static setValue<T>(key: Definitions.LocalStorageKey | PersistenceSchemaEnum, value: T): Thenable<void> {
         ZoweLogger.trace("ZoweLocalStorage.setValue called.");
-        ZoweLocalStorage.storage.update(key, value);
+        return ZoweLocalStorage.storage.update(key, value);
     }
 }

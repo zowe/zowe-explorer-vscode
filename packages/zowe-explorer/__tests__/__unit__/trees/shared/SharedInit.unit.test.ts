@@ -18,7 +18,6 @@ import { Constants } from "../../../../src/configuration/Constants";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { SharedActions } from "../../../../src/trees/shared/SharedActions";
 import { LocalFileManagement } from "../../../../src/management/LocalFileManagement";
-import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { SharedInit } from "../../../../src/trees/shared/SharedInit";
 import { TsoCommandHandler } from "../../../../src/commands/TsoCommandHandler";
@@ -318,44 +317,6 @@ describe("Test src/shared/extension", () => {
         });
 
         processSubscriptions(commands, test);
-    });
-    describe("registerRefreshCommand", () => {
-        const context: any = { subscriptions: [] };
-        const activate = jest.fn();
-        const deactivate = jest.fn();
-        const dispose = jest.fn();
-        let extRefreshCallback;
-        const spyExecuteCommand = jest.fn();
-
-        beforeAll(() => {
-            Object.defineProperty(vscode.commands, "registerCommand", {
-                value: (_: string, fun: () => void) => {
-                    extRefreshCallback = fun;
-                    return { dispose };
-                },
-            });
-            Object.defineProperty(vscode.commands, "executeCommand", { value: spyExecuteCommand });
-            SharedInit.registerRefreshCommand(context, activate, deactivate);
-        });
-
-        beforeEach(() => {
-            jest.clearAllMocks();
-        });
-
-        afterAll(() => {
-            jest.restoreAllMocks();
-        });
-
-        it("Test assuming we are unable to dispose of the subscription", async () => {
-            const testError = new Error("test");
-            dispose.mockRejectedValue(testError);
-            await extRefreshCallback();
-            expect(spyExecuteCommand).not.toHaveBeenCalled();
-            expect(deactivate).toHaveBeenCalled();
-            expect(ZoweLogger.error).toHaveBeenCalledWith(testError);
-            expect(dispose).toHaveBeenCalled();
-            expect(activate).toHaveBeenCalled();
-        });
     });
 
     describe("watchConfigProfile", () => {
