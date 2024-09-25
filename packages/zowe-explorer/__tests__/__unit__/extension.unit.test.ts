@@ -94,6 +94,7 @@ async function createGlobalMocks() {
                 getZoweDir: jest.fn(),
             };
         }),
+        mockPromptUserWithNoConfigs: jest.fn(),
         mockUpdateCredMgrSetting: jest.fn(),
         mockWriteOverridesFile: jest.fn(),
         mockProfCacheProfileInfo: createInstanceOfProfileInfo(),
@@ -358,6 +359,10 @@ async function createGlobalMocks() {
     Object.defineProperty(ZoweExplorerExtender, "showZoweConfigError", { value: jest.fn(), configurable: true });
     Object.defineProperty(imperative, "ProfileInfo", {
         get: globalMocks.mockImperativeProfileInfo,
+        configurable: true,
+    });
+    Object.defineProperty(ProfilesUtils, "promptUserWithNoConfigs", {
+        value: globalMocks.mockPromptUserWithNoConfigs,
         configurable: true,
     });
 
