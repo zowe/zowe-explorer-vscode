@@ -28,7 +28,7 @@ import {
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager } from "../../__mocks__/mockCreators/profiles";
-import { imperative, Gui, ZoweTreeNode, ZoweVsCodeExtension, IZoweTree, IZoweTreeNode, Validation } from "@zowe/zowe-explorer-api";
+import { imperative, Gui, ZoweTreeNode, ZoweVsCodeExtension, IZoweTree, IZoweTreeNode, Validation, FileManagement } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
@@ -403,6 +403,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
 
         const spyQuickPick = jest.spyOn(Gui, "showQuickPick");
         spyQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory" as any);
+        jest.spyOn(FileManagement, "getZoweDir").mockReturnValue("file://globalPath/.zowe");
         const spyOpenFile = jest.spyOn(globalMocks.mockProfileInstance, "openConfigFile");
         await Profiles.getInstance().editZoweConfigFile();
         expect(spyQuickPick).toHaveBeenCalled();
