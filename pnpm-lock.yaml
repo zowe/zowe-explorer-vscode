@@ -142,19 +142,19 @@ importers:
         specifier: ^0.0.35
         version: 0.0.35
       '@zowe/core-for-zowe-sdk':
-        specifier: 8.0.0
+        specifier: ^8.0.0
         version: 8.0.0(@zowe/imperative@8.0.0)
       '@zowe/secrets-for-zowe-sdk':
-        specifier: 8.0.0
+        specifier: ^8.0.0
         version: 8.0.0
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: 8.0.0
+        specifier: ^8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: 8.0.0
+        specifier: ^8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       '@zowe/zosmf-for-zowe-sdk':
-        specifier: 8.0.0
+        specifier: ^8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       '@zowe/zowe-explorer-api':
         specifier: 3.0.0-next-SNAPSHOT
@@ -251,31 +251,31 @@ importers:
         specifier: ^1.53.2
         version: 1.89.0
       '@zowe/core-for-zowe-sdk':
-        specifier: 8.0.0
+        specifier: ^8.0.0
         version: 8.0.0(@zowe/imperative@8.0.0)
       '@zowe/imperative':
-        specifier: 8.0.0
+        specifier: ^8.0.0
         version: 8.0.0
       '@zowe/secrets-for-zowe-sdk':
-        specifier: 8.0.0
+        specifier: ^8.0.0
         version: 8.0.0
       '@zowe/zos-console-for-zowe-sdk':
-        specifier: 8.0.0
+        specifier: ^8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: 8.0.0
+        specifier: ^8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: 8.0.0
+        specifier: ^8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       '@zowe/zos-tso-for-zowe-sdk':
-        specifier: 8.0.0
+        specifier: ^8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       '@zowe/zos-uss-for-zowe-sdk':
-        specifier: 8.0.0
+        specifier: ^8.0.0
         version: 8.0.0(@zowe/imperative@8.0.0)
       '@zowe/zosmf-for-zowe-sdk':
-        specifier: 8.0.0
+        specifier: ^8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       deep-object-diff:
         specifier: ^1.1.9
@@ -300,13 +300,13 @@ importers:
   packages/zowe-explorer-ftp-extension:
     dependencies:
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: 8.0.0
+        specifier: ^8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       '@zowe/zos-ftp-for-zowe-cli':
-        specifier: 3.0.0
+        specifier: ^3.0.0
         version: 3.0.0(@zowe/imperative@8.0.0)
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: 8.0.0
+        specifier: ^8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       '@zowe/zowe-explorer-api':
         specifier: 3.0.0-next-SNAPSHOT
@@ -450,7 +450,7 @@ packages:
       '@azure/core-util': 1.9.0
       '@azure/logger': 1.1.2
       http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.4
+      https-proxy-agent: 7.0.5
       tslib: 2.6.2
     transitivePeerDependencies:
       - supports-color
@@ -6714,7 +6714,7 @@ packages:
     dependencies:
       foreground-child: 3.1.1
       jackspeak: 2.3.6
-      minimatch: 9.0.4
+      minimatch: 9.0.5
       minipass: 7.1.1
       path-scurry: 1.11.1
     dev: true
@@ -6784,7 +6784,7 @@ packages:
       fs.realpath: 1.0.0
       inflight: 1.0.6
       inherits: 2.0.4
-      minimatch: 5.0.1
+      minimatch: 5.1.6
       once: 1.4.0
     dev: true
 
@@ -6987,7 +6987,7 @@ packages:
     resolution: {integrity: sha512-puUZAUKT5m8Zzvs72XWy3HtvVbTWljRE66cP60bxJzAqf2DgICo7lYTY2IHUmLnNpjYvw5bvmoHvPc0QO2a62w==}
     engines: {node: ^16.14.0 || >=18.0.0}
     dependencies:
-      lru-cache: 10.4.0
+      lru-cache: 10.4.3
 
   /hpagent@1.2.0:
     resolution: {integrity: sha512-A91dYTeIB6NoXG+PxTQpCCDDnfHsW9kc06Lvpu1TEe9gnd6ZFeiBoRO9JvzEv6xK7EX97/dUE8g/vBMTqTS3CA==}
@@ -7067,6 +7067,7 @@ packages:
       debug: 4.3.6
     transitivePeerDependencies:
       - supports-color
+    dev: false
 
   /https-proxy-agent@7.0.5:
     resolution: {integrity: sha512-1e4Wqeblerz+tMKPIq2EMGiiWW1dIjZOksyHWSUm1rmuvw/how9hBHZ38lAGj5ID4Ik6EdkOw7NmWPy6LAwalw==}
@@ -8581,13 +8582,8 @@ packages:
     resolution: {integrity: sha512-9hp3Vp2/hFQUiIwKo8XCeFVnrg8Pk3TYNPIR7tJADKi5YfcF7vEaK7avFHTlSy3kOKYaJQaalfEo6YuXdceBOQ==}
     engines: {node: 14 || >=16.14}
 
-  /lru-cache@10.4.0:
-    resolution: {integrity: sha512-bfJaPTuEiTYBu+ulDaeQ0F+uLmlfFkMgXj4cbwfuMSjgObGMzb55FMMbDvbRU0fAHZ4sLGkz2mKwcMg8Dvm8Ww==}
-    engines: {node: '>=18'}
-
   /lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
-    dev: false
 
   /lru-cache@11.0.1:
     resolution: {integrity: sha512-CgeuL5uom6j/ZVrg7G/+1IXqRY8JXX4Hghfy5YE0EhoYQWvndP1kufu58cmZLNIDKnRhZrXfdS9urVWx98AipQ==}
@@ -8864,13 +8860,6 @@ packages:
 
   /minimatch@9.0.3:
     resolution: {integrity: sha512-RHiac9mvaRw0x3AYRgDC1CxAP7HTcNrrECeA8YYJeWnpo+2Q5CegtZjaotWTWxDG3UeGA1coE05iH1mPjT/2mg==}
-    engines: {node: '>=16 || 14 >=14.17'}
-    dependencies:
-      brace-expansion: 2.0.1
-    dev: true
-
-  /minimatch@9.0.4:
-    resolution: {integrity: sha512-KqWh+VchfxcMNRAJjj2tnsSJdNbHsVgnkBhTNrW7AjVo6OvLtxw8zfT9oLw1JSohlFzJ8jCoTgaoXvJ+kHt6fw==}
     engines: {node: '>=16 || 14 >=14.17'}
     dependencies:
       brace-expansion: 2.0.1
@@ -11783,7 +11772,7 @@ packages:
       browserslist: '>= 4.21.0'
     dependencies:
       browserslist: 4.23.0
-      escalade: 3.1.2
+      escalade: 3.2.0
       picocolors: 1.1.0
     dev: true
 
