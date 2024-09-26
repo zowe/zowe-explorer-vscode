@@ -41,12 +41,13 @@ interface ErrorCorrelation {
 interface NetworkErrorInfo {
     errorCode?: string;
     fullError?: string;
+    summary: string;
     tips?: string[];
 }
 
 export class NetworkError extends ImperativeError {
-    public constructor(msg: string, public info?: NetworkErrorInfo) {
-        super({ msg });
+    public constructor(public info: NetworkErrorInfo) {
+        super({ msg: info.summary });
     }
 }
 
@@ -94,18 +95,23 @@ export class ErrorCorrelator extends Singleton {
 
     public correlateError(api: ZoweExplorerApiType, profileType: string, errorDetails: string): NetworkError {
         if (!this.errorMatches.has(profileType)) {
-            return new NetworkError(errorDetails);
+            return new NetworkError({ summary: errorDetails });
         }
 
         for (const apiError of [...this.errorMatches.get(profileType)[api], ...(this.errorMatches.get(profileType)[ZoweExplorerApiType.All] ?? [])]) {
             for (const match of Array.isArray(apiError.matches) ? apiError.matches : [apiError.matches]) {
                 if (errorDetails.match(match)) {
-                    return new NetworkError(apiError.summary, { errorCode: apiError.errorCode, fullError: errorDetails, tips: apiError?.tips });
+                    return new NetworkError({
+                        errorCode: apiError.errorCode,
+                        fullError: errorDetails,
+                        summary: apiError.summary,
+                        tips: apiError?.tips,
+                    });
                 }
             }
         }
 
-        return new NetworkError(errorDetails);
+        return new NetworkError({ summary: errorDetails });
     }
 
     public async translateAndDisplayError(api: ZoweExplorerApiType, profileType: string, errorDetails: string): Promise<string> {
@@ -115,7 +121,9 @@ export class ErrorCorrelator extends Singleton {
         });
 
         if (userSelection === "More info" && error.info?.fullError) {
-            Gui.errorMessage(error.info.fullError);
+            return Gui.errorMessage(error.info.fullError, {
+                items: ["Troubleshoot"],
+            });
         }
 
         return userSelection;
