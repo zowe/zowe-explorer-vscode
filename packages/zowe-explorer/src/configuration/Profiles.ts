@@ -824,7 +824,7 @@ export class Profiles extends ProfilesCache {
         if (profAttrs.profLoc.jsonLoc) {
             configApi.set(
                 `${profAttrs.profLoc.jsonLoc}.secure`,
-                loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken") ? [] : ["tokenValue"]
+                loginTokenType?.startsWith("apimlAuthenticationToken") ? [] : ["tokenValue"]
             );
         }
         configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "user")?.argLoc.jsonLoc);
