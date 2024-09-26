@@ -321,17 +321,17 @@ export class SharedInit {
             });
         });
 
-        try {
-            const zoweWatcher = imperative.EventOperator.getWatcher().subscribeUser(imperative.ZoweUserEvents.ON_VAULT_CHANGED, async () => {
-                ZoweLogger.info(vscode.l10n.t("Changes in the credential vault detected, refreshing Zowe Explorer."));
-                await ProfilesUtils.readConfigFromDisk();
-                await SharedActions.refreshAll();
-                ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter.fire(Validation.EventType.UPDATE);
-            });
-            context.subscriptions.push(new vscode.Disposable(zoweWatcher.close.bind(zoweWatcher)));
-        } catch (err) {
-            Gui.errorMessage("Unable to watch for vault changes. " + JSON.stringify(err));
-        }
+        // try {
+        //     const zoweWatcher = imperative.EventOperator.getWatcher().subscribeUser(imperative.ZoweUserEvents.ON_VAULT_CHANGED, async () => {
+        //         ZoweLogger.info(vscode.l10n.t("Changes in the credential vault detected, refreshing Zowe Explorer."));
+        //         await ProfilesUtils.readConfigFromDisk();
+        //         await SharedActions.refreshAll();
+        //         ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter.fire(Validation.EventType.UPDATE);
+        //     });
+        //     context.subscriptions.push(new vscode.Disposable(zoweWatcher.close.bind(zoweWatcher)));
+        // } catch (err) {
+        //     Gui.errorMessage("Unable to watch for vault changes. " + JSON.stringify(err));
+        // }
 
         try {
             const zoweWatcher = imperative.EventOperator.getWatcher().subscribeShared(
