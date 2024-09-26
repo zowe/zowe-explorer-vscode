@@ -111,6 +111,9 @@ export class ZoweTreeNode extends vscode.TreeItem {
         if (fsEntry != null) {
             fsEntry.metadata.profile = aProfile;
         }
+        for (const child of this.children) {
+            (child as unknown as ZoweTreeNode).setProfileToChoice(aProfile, fsProvider);
+        }
     }
     /**
      * Sets the session for this node to the one chosen in parameters.
