@@ -46,7 +46,7 @@
     "typescript": "^5.1.3"
   },
   "peerDependencies": {
-    "@zowe/zos-files-for-zowe-sdk": ">=8.0.0-next.0 <8.0.0",
-    "@zowe/zos-uss-for-zowe-sdk": ">=8.0.0-next.0 <8.0.0"
+    "@zowe/zos-files-for-zowe-sdk": "^8.0.0",
+    "@zowe/zos-uss-for-zowe-sdk": "^8.0.0"
   }
 }
