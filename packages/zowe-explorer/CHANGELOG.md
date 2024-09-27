@@ -66,6 +66,24 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Changed ZoweExplorerExtender.initForZowe `profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]` to a required argument to address issues seen after registration of profile type when not passed. [#2575](https://github.com/zowe/vscode-extension-for-zowe/issues/2575)
 - Resolved `TypeError: Cannot read properties of undefined (reading 'direction')` error for favorited items. [#3067](https://github.com/zowe/zowe-explorer-vscode/pull/3067)
 
+## `3.0.0-next.202409251932`
+
+### New features and enhancements
+
+- Users can now follow a prompt to create a new Zowe client configuration. The prompt displays when VS Code is opened with Zowe Explorer installed, but the user does not have any Zowe client configurations. [#3148](https://github.com/zowe/zowe-explorer-vscode/pull/3148)
+
+### Bug fixes
+
+- The "Zowe Resources" panel is now hidden by default until Zowe Explorer reveals it to display a table or other data. [#3113](https://github.com/zowe/zowe-explorer-vscode/issues/3113)
+- Fixed behavior of logout action when token is defined in both base profile and parent profile. [#3076](https://github.com/zowe/zowe-explorer-vscode/issues/3076)
+- Fixed bug that displayed obsolete profiles in the Zowe Explorer tree views after the associated team configuration file was deleted. [#3124](https://github.com/zowe/zowe-explorer-vscode/issues/3124)
+- Removal of broken VSC command to `Zowe Explorer: Refresh Zowe Explorer`, use VS Code's `Extensions: Refresh` command instead. [#3100](https://github.com/zowe/zowe-explorer-vscode/issues/3100)
+- Update Zowe SDKs to `8.0.0` for technical currency. [#3146](https://github.com/zowe/zowe-explorer-vscode/issues/3146)
+- Fixed issue where Zowe Explorer would reload the VS Code window during initialization when no config files are present. [#3147](https://github.com/zowe/zowe-explorer-vscode/issues/3147)
+- Fixed issue where obsolete credentials persisted for PDS member nodes in Data Sets tree. [#3112](https://github.com/zowe/zowe-explorer-vscode/issues/3112)
+- Fixed issue where Search operation did not prompt for credentials if profile contains expired token. [#2259](https://github.com/zowe/zowe-explorer-vscode/issues/2259)
+- Fixed issue where inactive status was not displayed for profiles loaded from Global Config. [#3134](https://github.com/zowe/zowe-explorer-vscode/issues/3134)
+
 ## `3.0.0-next.202409132122`
 
 ### New features and enhancements

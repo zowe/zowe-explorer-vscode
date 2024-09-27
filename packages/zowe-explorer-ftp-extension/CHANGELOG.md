@@ -28,15 +28,15 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 - Fixed ECONNRESET error when trying to upload or create an empty data set member. [#2350](https://github.com/zowe/vscode-extension-for-zowe/issues/2350)
 - Updated additional dependencies for technical currency purposes.
 
-## `3.0.0-next.202409132122`
-
-### New features and enhancements
+## `3.0.0-next.202409251932`
 
 ### Bug fixes
 
-## `3.0.0-next.202409091409`
+- Removed popup notification of successful registration with Zowe Explorer and log the success instead. [#2862](https://github.com/zowe/zowe-explorer-vscode/issues/2862)
 
-### New features and enhancements
+## `3.0.0-next.202409132122`
+
+## `3.0.0-next.202409091409`
 
 ### Bug fixes
 

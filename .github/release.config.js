@@ -17,6 +17,7 @@ module.exports = {
         },
         {
             name: "release/3.*",
+            channel: "next",
             prerelease: true,
         }
     ],
