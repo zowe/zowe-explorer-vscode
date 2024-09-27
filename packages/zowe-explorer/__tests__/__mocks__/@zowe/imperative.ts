@@ -17,7 +17,9 @@ import * as os from "os";
 import * as path from "path";
 const log4js = require("log4js");
 
-export class EventProcessor {}
+export class EventProcessor {
+    public emitZoweEvent(eventName: string): void {}
+}
 
 /**
  * Constants used for REST client, etc.

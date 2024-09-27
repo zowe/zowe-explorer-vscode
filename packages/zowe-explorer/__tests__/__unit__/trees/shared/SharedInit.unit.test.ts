@@ -30,6 +30,7 @@ import { Gui, imperative, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
+import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
@@ -408,7 +409,7 @@ describe("Test src/shared/extension", () => {
             const spyRefreshAll = jest.spyOn(SharedActions, "refreshAll").mockImplementation(jest.fn());
 
             // Setup watchers
-            await SharedInit.watchConfigProfile(context);
+            SharedInit.watchConfigProfile(context);
 
             expect(spyWatcher).toHaveBeenCalled();
             expect(spyGuiError).not.toHaveBeenCalled();
@@ -435,13 +436,46 @@ describe("Test src/shared/extension", () => {
             });
             const spyGuiError = jest.spyOn(Gui, "errorMessage");
 
-            await SharedInit.watchConfigProfile(context);
+            SharedInit.watchConfigProfile(context);
 
             expect(spyWatcher).toHaveBeenCalled();
             expect(spyGuiError.mock.calls[0][0]).toContain("vault changes");
             expect(spyGuiError.mock.calls[0][0]).toContain(testError);
             expect(spyGuiError.mock.calls[1][0]).toContain("credential manager changes");
             expect(spyGuiError.mock.calls[1][0]).toContain(testError);
+        });
+
+        it("should replace the function signature for EventProcessor.emitZoweEvent to set Constant.IGNORE_VAULT_CHANGE", async () => {
+            const emitZoweEventOverride = jest.fn();
+            const emitZoweEventMock = new MockedProperty(imperative.EventProcessor.prototype, "emitZoweEvent", {
+                set: emitZoweEventOverride,
+                configurable: true,
+            });
+            SharedInit.watchConfigProfile(context);
+            expect(emitZoweEventOverride).toHaveBeenCalled();
+            emitZoweEventMock[Symbol.dispose]();
+        });
+
+        it("should replace the function signature for EventProcessor.emitZoweEvent to set Constant.IGNORE_VAULT_CHANGE", async () => {
+            const emitZoweEventOverride = jest.fn();
+            const emitZoweEventMock = new MockedProperty(imperative.EventProcessor.prototype, "emitZoweEvent", {
+                set: emitZoweEventOverride,
+                configurable: true,
+            });
+            SharedInit.watchConfigProfile(context);
+            expect(emitZoweEventOverride).toHaveBeenCalled();
+            emitZoweEventMock[Symbol.dispose]();
+        });
+
+        it("should subscribe to the ON_VAULT_CHANGED event using EventProcessor.subscribeUser", async () => {
+            const subscribeUser = jest.fn();
+            const getWatcherMock = jest.spyOn(imperative.EventOperator, "getWatcher").mockReturnValue({
+                subscribeUser,
+            } as any);
+
+            SharedInit.watchConfigProfile(context);
+            expect(getWatcherMock).toHaveBeenCalled();
+            expect(subscribeUser).toHaveBeenCalledWith(imperative.ZoweUserEvents.ON_VAULT_CHANGED, SharedInit.onVaultChanged);
         });
     });
 
@@ -516,6 +550,35 @@ describe("Test src/shared/extension", () => {
             await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo);
             expect(remoteLookupDsSpy).not.toHaveBeenCalled();
             expect(remoteLookupUssSpy).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("emitZoweEventHook", () => {
+        it("sets Constants.IGNORE_VAULT_CHANGE to true if emitZoweEvent is called and calls the original function", () => {
+            const originalEmitZoweEvent = new MockedProperty(SharedInit, "originalEmitZoweEvent", undefined, jest.fn());
+            SharedInit.emitZoweEventHook(imperative.ZoweUserEvents.ON_VAULT_CHANGED);
+            expect(Constants.IGNORE_VAULT_CHANGE).toBe(true);
+            expect(originalEmitZoweEvent.mock).toHaveBeenCalled();
+            originalEmitZoweEvent[Symbol.dispose]();
+        });
+    });
+    describe("onVaultChanged", () => {
+        it("resets Constants.IGNORE_VAULT_CHANGE if it is true and returns early", async () => {
+            const infoSpy = jest.spyOn(ZoweLogger, "info");
+            Constants.IGNORE_VAULT_CHANGE = true;
+            await SharedInit.onVaultChanged();
+            expect(Constants.IGNORE_VAULT_CHANGE).toBe(false);
+            expect(infoSpy).not.toHaveBeenCalled();
+        });
+
+        it("calls SharedActions.refreshAll and ProfilesUtils.readConfigFromDisk on vault change", async () => {
+            const loggerInfo = jest.spyOn(ZoweLogger, "info").mockImplementation();
+            const readCfgFromDisk = jest.spyOn(profUtils.ProfilesUtils, "readConfigFromDisk").mockImplementation();
+            const refreshAll = jest.spyOn(SharedActions, "refreshAll").mockImplementation();
+            await SharedInit.onVaultChanged();
+            expect(loggerInfo).toHaveBeenCalledWith("Changes in the credential vault detected, refreshing Zowe Explorer.");
+            expect(readCfgFromDisk).toHaveBeenCalled();
+            expect(refreshAll).toHaveBeenCalled();
         });
     });
 });

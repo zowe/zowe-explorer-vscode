@@ -48,6 +48,8 @@ import { CertificateWizard } from "../../utils/CertificateWizard";
 import { ZosConsoleViewProvider } from "../../zosconsole/ZosConsolePanel";
 
 export class SharedInit {
+    private static originalEmitZoweEvent: typeof imperative.EventProcessor.prototype.emitEvent;
+
     public static registerCommonCommands(context: vscode.ExtensionContext, providers: Definitions.IZoweProviders): void {
         ZoweLogger.trace("shared.init.registerCommonCommands called.");
 
@@ -284,6 +286,24 @@ export class SharedInit {
         }
     }
 
+    public static emitZoweEventHook(this: void, eventName: string): void {
+        if (eventName === imperative.ZoweUserEvents.ON_VAULT_CHANGED) {
+            Constants.IGNORE_VAULT_CHANGE = true;
+        }
+        SharedInit.originalEmitZoweEvent.call(this, eventName);
+    }
+
+    public static async onVaultChanged(this: void): Promise<void> {
+        if (Constants.IGNORE_VAULT_CHANGE) {
+            Constants.IGNORE_VAULT_CHANGE = false;
+            return;
+        }
+        ZoweLogger.info(vscode.l10n.t("Changes in the credential vault detected, refreshing Zowe Explorer."));
+        await ProfilesUtils.readConfigFromDisk();
+        await SharedActions.refreshAll();
+        ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter.fire(Validation.EventType.UPDATE);
+    }
+
     public static watchConfigProfile(context: vscode.ExtensionContext): void {
         ZoweLogger.trace("shared.init.watchConfigProfile called.");
         const watchers: vscode.FileSystemWatcher[] = [];
@@ -322,25 +342,15 @@ export class SharedInit {
         });
 
         try {
-            // TODO Workaround to skip ON_VAULT_CHANGED events triggered by ZE and not by external app
-            // Remove this hack once https://github.com/zowe/zowe-cli/issues/2279 is implemented
-            const oldEmitZoweEvent = (imperative.EventProcessor.prototype as any).emitZoweEvent;
-            (imperative.EventProcessor.prototype as any).emitZoweEvent = function (eventName: string): void {
-                if (eventName === imperative.ZoweUserEvents.ON_VAULT_CHANGED) {
-                    Constants.IGNORE_VAULT_CHANGE = true;
-                }
-                oldEmitZoweEvent.call(this, eventName);
-            };
-            const zoweWatcher = imperative.EventOperator.getWatcher().subscribeUser(imperative.ZoweUserEvents.ON_VAULT_CHANGED, async () => {
-                if (Constants.IGNORE_VAULT_CHANGE) {
-                    Constants.IGNORE_VAULT_CHANGE = false;
-                    return;
-                }
-                ZoweLogger.info(vscode.l10n.t("Changes in the credential vault detected, refreshing Zowe Explorer."));
-                await ProfilesUtils.readConfigFromDisk();
-                await SharedActions.refreshAll();
-                ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter.fire(Validation.EventType.UPDATE);
-            });
+            // Workaround to skip ON_VAULT_CHANGED events triggered by ZE and not by external app
+            // TODO: Remove this hack once https://github.com/zowe/zowe-cli/issues/2279 is implemented
+            SharedInit.originalEmitZoweEvent = (imperative.EventProcessor.prototype as any).emitZoweEvent;
+            (imperative.EventProcessor.prototype as any).emitZoweEvent = SharedInit.emitZoweEventHook.bind(imperative.EventProcessor.prototype);
+
+            const zoweWatcher = imperative.EventOperator.getWatcher().subscribeUser(
+                imperative.ZoweUserEvents.ON_VAULT_CHANGED,
+                SharedInit.onVaultChanged
+            );
             context.subscriptions.push(new vscode.Disposable(zoweWatcher.close.bind(zoweWatcher)));
         } catch (err) {
             Gui.errorMessage("Unable to watch for vault changes. " + JSON.stringify(err));
