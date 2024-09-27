@@ -10,6 +10,7 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 - Updated Zowe Explorer API dependency to `3.0.0` for Zowe v3 support and addressed breaking changes. Check the [list](https://github.com/zowe/vscode-extension-for-zowe/tree/next/docs/early-access/v3/Extenders.md) of APIs that were removed.
 - Updated VS Code engine support to `1.79.0` and higher.
 - Updated VS Code activation event to `onStartupFinished`. [#1910](https://github.com/zowe/vscode-extension-for-zowe/issues/1910)
+- Removal of Zowe v1 profile support. [#2072](https://github.com/zowe/vscode-extension-for-zowe/issues/2072)
 - Migrated to new package manager PNPM from Yarn.
 - Migrated to webpack v5 [#2214](https://github.com/zowe/vscode-extension-for-zowe/issues/2214)
 - Added `madge` support to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
