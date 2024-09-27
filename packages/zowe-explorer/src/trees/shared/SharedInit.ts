@@ -321,17 +321,30 @@ export class SharedInit {
             });
         });
 
-        // try {
-        //     const zoweWatcher = imperative.EventOperator.getWatcher().subscribeUser(imperative.ZoweUserEvents.ON_VAULT_CHANGED, async () => {
-        //         ZoweLogger.info(vscode.l10n.t("Changes in the credential vault detected, refreshing Zowe Explorer."));
-        //         await ProfilesUtils.readConfigFromDisk();
-        //         await SharedActions.refreshAll();
-        //         ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter.fire(Validation.EventType.UPDATE);
-        //     });
-        //     context.subscriptions.push(new vscode.Disposable(zoweWatcher.close.bind(zoweWatcher)));
-        // } catch (err) {
-        //     Gui.errorMessage("Unable to watch for vault changes. " + JSON.stringify(err));
-        // }
+        try {
+            // TODO Workaround to skip ON_VAULT_CHANGED events triggered by ZE and not by external app
+            // Remove this hack once https://github.com/zowe/zowe-cli/issues/2279 is implemented
+            const oldEmitZoweEvent = (imperative.EventProcessor.prototype as any).emitZoweEvent;
+            (imperative.EventProcessor.prototype as any).emitZoweEvent = function (eventName: string): void {
+                if (eventName === imperative.ZoweUserEvents.ON_VAULT_CHANGED) {
+                    Constants.IGNORE_VAULT_CHANGE = true;
+                }
+                oldEmitZoweEvent.call(this, eventName);
+            };
+            const zoweWatcher = imperative.EventOperator.getWatcher().subscribeUser(imperative.ZoweUserEvents.ON_VAULT_CHANGED, async () => {
+                if (Constants.IGNORE_VAULT_CHANGE) {
+                    Constants.IGNORE_VAULT_CHANGE = false;
+                    return;
+                }
+                ZoweLogger.info(vscode.l10n.t("Changes in the credential vault detected, refreshing Zowe Explorer."));
+                await ProfilesUtils.readConfigFromDisk();
+                await SharedActions.refreshAll();
+                ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter.fire(Validation.EventType.UPDATE);
+            });
+            context.subscriptions.push(new vscode.Disposable(zoweWatcher.close.bind(zoweWatcher)));
+        } catch (err) {
+            Gui.errorMessage("Unable to watch for vault changes. " + JSON.stringify(err));
+        }
 
         try {
             const zoweWatcher = imperative.EventOperator.getWatcher().subscribeShared(
