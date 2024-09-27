@@ -394,17 +394,19 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         } catch (err) {
             statusMsg.dispose();
             if (err instanceof imperative.ImperativeError) {
+                ZoweLogger.error(err.message);
                 const userSelection = await ErrorCorrelator.getInstance().translateAndDisplayError(
                     ZoweExplorerApiType.Uss,
                     entry.metadata.profile.type,
-                    err.message
+                    err.message,
+                    { allowRetry: true, stackTrace: err.stack }
                 );
 
                 switch (userSelection) {
                     case "Retry":
-                        break;
-                    case "Troubleshoot":
-                        break;
+                        return this.uploadEntry(entry, content, options);
+                    default:
+                        throw err;
                 }
             }
             throw err;
