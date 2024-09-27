@@ -13,8 +13,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Migrate package manager from Yarn to PNPM.
 - Migrated to webpack v5 [#2214](https://github.com/zowe/vscode-extension-for-zowe/issues/2214)
 - Migrated from `@zowe/cli` dependency package to individual Zowe `8.0.0` SDK packages for Zowe v3 support. [#2719](https://github.com/zowe/vscode-extension-for-zowe/issues/2719)
-- Updated Zowe Explorer API dependency to `3.0.0` for Zowe v3 support. Check the [list](https://github.com/zowe/vscode-extension-for-zowe/tree/next/docs/early-access/v3/Extenders.md) of APIs that were removed.
-- Removed deprecated methods, conoslidated VS Code commands, and . . Check the [list](https://github.com/zowe/vscode-extension-for-zowe/tree/next/docs/early-access/v3/Extenders.md) of APIs that were removed.
+- Updated Zowe Explorer API dependency to `3.0.0` for Zowe v3 support. Check the [list](https://github.com/zowe/zowe-explorer-vscode/wiki/v3-Changes-for-Users-and-Extenders) of APIs that were removed.
+- Removed deprecated methods, conoslidated VS Code commands, and . . Check the [list](https://github.com/zowe/zowe-explorer-vscode/wiki/v3-Changes-for-Users-and-Extenders) of APIs that were removed.
 - Added `madge` support to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Migrated from `i18n` standard to `l10n`. [#2253](https://github.com/zowe/vscode-extension-for-zowe/issues/2253)
 - Replaced `lodash` dependency with `es-toolkit` to reduce webview bundle size and add technical currency. [#3060](https://github.com/zowe/zowe-explorer-vscode/pull/3060)

@@ -7,7 +7,7 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 - Renamed extension to `IBM z/OS FTP for Zowe Explorer`. [#2990](https://github.com/zowe/zowe-explorer-vscode/issues/2990)
 - Updated the FTP plugin dependency to `3.0.0` for Zowe v3 support. [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783).
 - Updated from `@zowe/cli` package dependency to individual Zowe `8.0.0` SDK packages for Zowe v3 support. [#2719](https://github.com/zowe/vscode-extension-for-zowe/issues/2719)
-- Updated Zowe Explorer API dependency to `3.0.0` for Zowe v3 support and addressed breaking changes. Check the [list](https://github.com/zowe/vscode-extension-for-zowe/tree/next/docs/early-access/v3/Extenders.md) of APIs that were removed.
+- Updated Zowe Explorer API dependency to `3.0.0` for Zowe v3 support and addressed breaking changes. Check the [list](https://github.com/zowe/zowe-explorer-vscode/wiki/v3-Changes-for-Users-and-Extenders) of APIs that were removed.
 - Updated VS Code engine support to `1.79.0` and higher.
 - Updated VS Code activation event to `onStartupFinished`. [#1910](https://github.com/zowe/vscode-extension-for-zowe/issues/1910)
 - Removal of Zowe v1 profile support. [#2072](https://github.com/zowe/vscode-extension-for-zowe/issues/2072)
