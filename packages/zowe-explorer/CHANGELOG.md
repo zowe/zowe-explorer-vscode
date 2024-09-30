@@ -8,21 +8,21 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Support VS Code engine 1.79.0 and higher.
 - Updated activation event to `onStartupFinished`. [#1910](https://github.com/zowe/vscode-extension-for-zowe/issues/1910)
-- Removal of Zowe v1 profile support. [#2072](https://github.com/zowe/vscode-extension-for-zowe/issues/2072)
+- Removal of Zowe V1 profile support. [#2072](https://github.com/zowe/vscode-extension-for-zowe/issues/2072)
 - Removal of Theia support. [#2647](https://github.com/zowe/vscode-extension-for-zowe/issues/2647)
 - Migrate package manager from Yarn to PNPM.
-- Migrated to webpack v5 [#2214](https://github.com/zowe/vscode-extension-for-zowe/issues/2214)
-- Migrated from `@zowe/cli` dependency package to individual Zowe `8.0.0` SDK packages for Zowe v3 support. [#2719](https://github.com/zowe/vscode-extension-for-zowe/issues/2719)
-- Updated Zowe Explorer API dependency to `3.0.0` for Zowe v3 support. Check the [list](https://github.com/zowe/zowe-explorer-vscode/wiki/v3-Changes-for-Users-and-Extenders) of APIs that were removed.
-- Removed deprecated methods, conoslidated VS Code commands, and . . Check the [list](https://github.com/zowe/zowe-explorer-vscode/wiki/v3-Changes-for-Users-and-Extenders) of APIs that were removed.
+- Migrated to webpack V5 [#2214](https://github.com/zowe/vscode-extension-for-zowe/issues/2214)
+- Migrated from `@zowe/cli` dependency package to individual Zowe `8.0.0` SDK packages for Zowe V3 support. [#2719](https://github.com/zowe/vscode-extension-for-zowe/issues/2719)
+- Updated Zowe Explorer API dependency to `3.0.0` for Zowe V3 support. Check the [list](https://github.com/zowe/zowe-explorer-vscode/wiki/v3-Changes-for-Users-and-Extenders) of APIs that were removed.
+- Removed deprecated methods and conoslidated VS Code commands. Check the [list](https://github.com/zowe/zowe-explorer-vscode/wiki/v3-Changes-for-Users-and-Extenders) of APIs that were removed.
 - Added `madge` support to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Migrated from `i18n` standard to `l10n`. [#2253](https://github.com/zowe/vscode-extension-for-zowe/issues/2253)
 - Replaced `lodash` dependency with `es-toolkit` to reduce webview bundle size and add technical currency. [#3060](https://github.com/zowe/zowe-explorer-vscode/pull/3060)
 - Replaced `ts-loader` with `esbuild-loader` to improve build speed for developers. [#2909](https://github.com/zowe/zowe-explorer-vscode/pull/2909)
 - Minimized activation function for Zowe Explorer to load only necessary items on activation. [#1985](https://github.com/zowe/vscode-extension-for-zowe/issues/1985)
-- **Breaking:** Zowe Explorer no longer uses a temporary directory for storing Data Sets and USS files. All settings related to the temporary downloads folder have been removed. In order to access resources stored by Zowe Explorer v3, refer to the [FileSystemProvider documentation](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider) for information on how to build and access resource URIs. Extenders can detect changes to resources using the `onResourceChanged` function in the `ZoweExplorerApiRegister` class. [#2951](https://github.com/zowe/zowe-explorer-vscode/issues/2951)
+- **Breaking:** Zowe Explorer no longer uses a temporary directory for storing Data Sets and USS files. All settings related to the temporary downloads folder have been removed. In order to access resources stored by Zowe Explorer V3, refer to the [FileSystemProvider documentation](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider) for information on how to build and access resource URIs. Extenders can detect changes to resources using the `onResourceChanged` function in the `ZoweExplorerApiRegister` class. [#2951](https://github.com/zowe/zowe-explorer-vscode/issues/2951)
 - **Breaking** Moved data set templates out of data set history settings into new setting "zowe.ds.templates". [#2345](https://github.com/zowe/zowe-explorer-vscode/issues/2345)
-- Added UI migration steps on startup for users with v1 profiles to either convert existing v1 profiles to team configuration file or create a new team configuration file. [#2284](https://github.com/zowe/vscode-extension-for-zowe/issues/2284)
+- Added UI migration steps on startup for users with V1 profiles to either convert existing V1 profiles to team configuration file or create a new team configuration file. [#2284](https://github.com/zowe/vscode-extension-for-zowe/issues/2284)
 - Added support for Local Storage settings for persistent settings in Zowe Explorer [#2208](https://github.com/zowe/vscode-extension-for-zowe/issues/2208)
 - Grouped Common methods into Singleton classes. [#2109](https://github.com/zowe/zowe-explorer-vscode/issues/2109)
 - **New** Extender registration APIs

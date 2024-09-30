@@ -6,9 +6,9 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
-- Removal of v1 profile support. [#2072](https://github.com/zowe/vscode-extension-for-zowe/issues/2072)
+- Removal of V1 profile support. [#2072](https://github.com/zowe/vscode-extension-for-zowe/issues/2072)
 - Removal of deprecated APIs. Check the [list](https://github.com/zowe/zowe-explorer-vscode/wiki/v3-Changes-for-Users-and-Extenders) of APIs that were removed.
-- Migrated from `@zowe/cli` dependency package to individual Zowe `8.0.0` SDK packages for Zowe v3 support. [#2719](https://github.com/zowe/vscode-extension-for-zowe/issues/2719)
+- Migrated from `@zowe/cli` dependency package to individual Zowe `8.0.0` SDK packages for Zowe V3 support. [#2719](https://github.com/zowe/vscode-extension-for-zowe/issues/2719)
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Removed `handlebars` dependency in favor of `mustache` for technical currency purposes. [#2975](https://github.com/zowe/zowe-explorer-vscode/pull/2975)
 - Migrated to new package manager PNPM from Yarn.
