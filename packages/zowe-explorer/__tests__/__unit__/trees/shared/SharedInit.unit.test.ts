@@ -556,7 +556,7 @@ describe("Test src/shared/extension", () => {
     describe("emitZoweEventHook", () => {
         it("sets Constants.IGNORE_VAULT_CHANGE to true if emitZoweEvent is called and calls the original function", () => {
             const originalEmitZoweEvent = new MockedProperty(SharedInit, "originalEmitZoweEvent", undefined, jest.fn());
-            SharedInit.emitZoweEventHook(imperative.ZoweUserEvents.ON_VAULT_CHANGED);
+            SharedInit.emitZoweEventHook({} as any, imperative.ZoweUserEvents.ON_VAULT_CHANGED);
             expect(Constants.IGNORE_VAULT_CHANGE).toBe(true);
             expect(originalEmitZoweEvent.mock).toHaveBeenCalled();
             originalEmitZoweEvent[Symbol.dispose]();
