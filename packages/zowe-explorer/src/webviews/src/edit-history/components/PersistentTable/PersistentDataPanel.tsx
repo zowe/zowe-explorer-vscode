@@ -19,12 +19,14 @@ import PersistentToolBar from "../PersistentToolBar/PersistentToolBar";
 import PersistentTableData from "./PersistentTableData";
 import PersistentDataGridHeaders from "./PersistentDataGridHeaders";
 import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
+// import * as l10n from "@vscode/l10n";
 
 export default function PersistentDataPanel({ type }: Readonly<{ type: Readonly<string> }>): JSXInternal.Element {
   const [data, setData] = useState<{ [type: string]: { [property: string]: string[] } }>({ ds: {}, uss: {}, jobs: {} });
   const [selection, setSelection] = useState<{ [type: string]: string }>({ [type]: "search" });
   const [persistentProp, setPersistentProp] = useState<string[]>([]);
   const [selectedItems, setSelectedItems] = useState({});
+  // const [localization, setLocalization] = useState(null);
 
   const selectedItemsMemo = useMemo(
     () => ({
@@ -43,7 +45,6 @@ export default function PersistentDataPanel({ type }: Readonly<{ type: Readonly<
         type,
       },
     });
-
     const newSelectedItems: { [key: string]: boolean } = { ...selectedItemsMemo.val };
     Object.keys(newSelectedItems).forEach((item) => {
       newSelectedItems[item] = false;
@@ -56,7 +57,13 @@ export default function PersistentDataPanel({ type }: Readonly<{ type: Readonly<
       if (!isSecureOrigin(event.origin)) {
         return;
       }
-
+      // if (event.data.command === "GET_LOCALIZATION") {
+      //   const { contents } = event.data;
+      //   l10n.config({
+      //     contents: contents,
+      //   });
+      //   setLocalization(contents);
+      // }
       setData(event.data);
 
       if ("selection" in event.data) {
@@ -65,6 +72,7 @@ export default function PersistentDataPanel({ type }: Readonly<{ type: Readonly<
         }));
       }
     });
+    // PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "GET_LOCALIZATION" });
   }, []);
 
   useEffect(() => {

@@ -17,6 +17,7 @@ import { Profiles } from "../configuration/Profiles";
 import { randomUUID } from "crypto";
 import { Definitions } from "../configuration/Definitions";
 import Mustache = require("mustache");
+import * as fs from "fs";
 
 /**
  * @deprecated
@@ -81,6 +82,24 @@ export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
                         profile: profile,
                         result: await this.runOperCmd(text, profile),
                     });
+                    break;
+                case "GET_LOCALIZATION":
+                    {
+                        const filePath = vscode.l10n.uri?.fsPath + "";
+                        fs.readFile(filePath, "utf8", (err, data) => {
+                            if (err) {
+                                // File doesn't exist, fallback to English strings
+                                return;
+                            }
+                            if (!webviewView) {
+                                return;
+                            }
+                            webviewView.webview.postMessage({
+                                type: "GET_LOCALIZATION",
+                                contents: data,
+                            });
+                        });
+                    }
                     return;
             }
         });
