@@ -300,13 +300,13 @@ importers:
   packages/zowe-explorer-ftp-extension:
     dependencies:
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: ^8.0.0
+        specifier: 8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       '@zowe/zos-ftp-for-zowe-cli':
-        specifier: ^3.0.0
+        specifier: 3.0.0
         version: 3.0.0(@zowe/imperative@8.0.0)
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: ^8.0.0
+        specifier: 8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       '@zowe/zowe-explorer-api':
         specifier: 3.0.0-SNAPSHOT
