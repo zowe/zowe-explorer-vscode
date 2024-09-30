@@ -13,8 +13,8 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 - Removal of Zowe V1 profile support. [#2072](https://github.com/zowe/vscode-extension-for-zowe/issues/2072)
 - Migrated to new package manager PNPM from Yarn.
 - Migrated to webpack V5 [#2214](https://github.com/zowe/vscode-extension-for-zowe/issues/2214)
-- Added `madge` support to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
-- Replaced `ts-loader` with `esbuild-loader` to improve build speed for developers. [#2909](https://github.com/zowe/zowe-explorer-vscode/pull/2909)
+- Added `madge` dependency for support to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
+- Replaced `ts-loader` dependency with `esbuild-loader` to improve build speed for developers. [#2909](https://github.com/zowe/zowe-explorer-vscode/pull/2909)
 - Added support for streams to the `getContents` and `putContents` functions (`FtpMvsApi` and `FtpUssApi` interfaces) with the following API: `uploadFromBuffer`.
 - Removed pop-up notification of successful registration with Zowe Explorer and log the success message. [#2862](https://github.com/zowe/zowe-explorer-vscode/issues/2862)
 - **Breaking:** updated the `FtpMvsApi.putContents` function to throw an error when an e-tag conflict is found to establish consistency with the `FtpUssApi.putContents` function which has always thrown an error for this scenario.
