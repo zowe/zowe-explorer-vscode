@@ -31,7 +31,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue where switching from token-based authentication to user/password would cause an error for nested profiles. [#3142](https://github.com/zowe/zowe-explorer-vscode/issues/3142)
 - Fixed issue seen editing team configuration when global and project level team configuration exists. [#3125](https://github.com/zowe/zowe-explorer-vscode/issues/3125)
 
-
 ## `3.0.0-next.202409132122`
 
 ### New features and enhancements
