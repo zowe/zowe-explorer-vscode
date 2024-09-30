@@ -25,7 +25,9 @@ import { Gui } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
+import * as fs from "fs";
 
+jest.mock("fs");
 async function initializeHistoryViewMock(blockMocks: any, globalMocks: any): Promise<SharedHistoryView> {
     return new SharedHistoryView(
         {
@@ -277,6 +279,22 @@ describe("HistoryView Unit Tests", () => {
             });
             expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search" });
             expect(resetEncodingHistorySpy).toHaveBeenCalledTimes(2);
+        });
+
+        it("should handle the case where 'GET_LOCALIZATION' is the command sent", async () => {
+            const globalMocks = await createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const spyReadFile = jest.fn((path, encoding, callback) => {
+                callback(null, "file contents");
+            });
+            Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
+            const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
+            const postMessageSpy = jest.spyOn(historyView.panel.webview, "postMessage");
+            await historyView["onDidReceiveMessage"]({ command: "GET_LOCALIZATION" });
+            expect(postMessageSpy).toHaveBeenCalledWith({
+                command: "GET_LOCALIZATION",
+                contents: "file contents",
+            });
         });
     });
 

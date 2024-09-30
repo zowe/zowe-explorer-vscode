@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Localization of strings within the webviews. [#2983](https://github.com/zowe/zowe-explorer-vscode/issues/2983)
+
 ### Bug fixes
 
 ## `3.0.0-next.202409251932`

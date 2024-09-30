@@ -19,7 +19,9 @@ import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { MainframeInteraction } from "../../../../../zowe-explorer-api/src/extend";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
+import * as fs from "fs";
 
+jest.mock("fs");
 describe("AttributeView unit tests", () => {
     let view: USSAttributeView;
     const context = { extensionPath: "some/fake/ext/path" } as unknown as vscode.ExtensionContext;
@@ -123,6 +125,18 @@ describe("AttributeView unit tests", () => {
         expect(getAttributesMock).toHaveBeenCalled();
         expect(view.panel.webview.postMessage).toHaveBeenCalledWith({
             updated: false,
+        });
+    });
+
+    it("handles GET_LOCALIZATION command", async () => {
+        const spyReadFile = jest.fn((path, encoding, callback) => {
+            callback(null, "file contents");
+        });
+        Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
+        await (view as any).onDidReceiveMessage({ command: "GET_LOCALIZATION" });
+        expect(view.panel.webview.postMessage).toHaveBeenCalledWith({
+            command: "GET_LOCALIZATION",
+            contents: "file contents",
         });
     });
 });
