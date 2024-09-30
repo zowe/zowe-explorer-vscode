@@ -286,11 +286,11 @@ export class SharedInit {
         }
     }
 
-    public static emitZoweEventHook(this: void, eventName: string): void {
+    public static emitZoweEventHook(this: void, processor: imperative.EventProcessor, eventName: string): void {
         if (eventName === imperative.ZoweUserEvents.ON_VAULT_CHANGED) {
             Constants.IGNORE_VAULT_CHANGE = true;
         }
-        SharedInit.originalEmitZoweEvent.call(this, eventName);
+        SharedInit.originalEmitZoweEvent.call(processor, eventName);
     }
 
     public static async onVaultChanged(this: void): Promise<void> {
@@ -345,7 +345,9 @@ export class SharedInit {
             // Workaround to skip ON_VAULT_CHANGED events triggered by ZE and not by external app
             // TODO: Remove this hack once https://github.com/zowe/zowe-cli/issues/2279 is implemented
             SharedInit.originalEmitZoweEvent = (imperative.EventProcessor.prototype as any).emitZoweEvent;
-            (imperative.EventProcessor.prototype as any).emitZoweEvent = SharedInit.emitZoweEventHook.bind(imperative.EventProcessor.prototype);
+            (imperative.EventProcessor.prototype as any).emitZoweEvent = function (eventName: string): void {
+                SharedInit.emitZoweEventHook(this, eventName);
+            };
 
             const zoweWatcher = imperative.EventOperator.getWatcher().subscribeUser(
                 imperative.ZoweUserEvents.ON_VAULT_CHANGED,
