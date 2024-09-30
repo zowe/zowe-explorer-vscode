@@ -10,45 +10,54 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Removal of deprecated APIs. Check the [list](https://github.com/zowe/zowe-explorer-vscode/wiki/v3-Changes-for-Users-and-Extenders) of APIs that were removed.
 - Migrated from `@zowe/cli` dependency package to individual Zowe `8.0.0` SDK packages for Zowe v3 support. [#2719](https://github.com/zowe/vscode-extension-for-zowe/issues/2719)
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
+- Removed `handlebars` dependency in favor of `mustache` for technical currency purposes. [#2975](https://github.com/zowe/zowe-explorer-vscode/pull/2975)
 - Migrated to new package manager PNPM from Yarn.
-- Added the `BaseProfileAuthOptions` interface to define base profile authentication options for SSO login and logout. [#3076](https://github.com/zowe/zowe-explorer-vscode/pull/3076)
-- Deprecated the methods `ZoweVsCodeExtension.loginWithBaseProfile` and `ZoweVsCodeExtension.logoutWithBaseProfile`. Use `ZoweVsCodeExtension.ssoLogin` and `ZoweVsCodeExtension.ssoLogout` instead, which use the `BaseProfileAuthOptions` interface and allow you to choose whether the token value in the base profile should have precedence in case there are conflicts. [#3076](https://github.com/zowe/zowe-explorer-vscode/pull/3076)
-- Added `extensionRemovedFromPath` private function to the `DsEntry` class to allow removing the extension from a data set before making API calls. [#3121](https://github.com/zowe/zowe-explorer-vscode/issues/3121)
-- Deprecated the method `ProfilesCache.updateProfilesArrays`. Use `ProfilesCache.updateCachedProfile` instead, which handles updating credentials cached in memory when `autoStore` is false. [#3120](https://github.com/zowe/zowe-explorer-vscode/issues/3120)
-- Added optional `patternMatches` property to the `IZoweDatasetTreeNode` interface to cache pattern matches from an applied filter search. [#1164](https://github.com/zowe/zowe-explorer-vscode/issues/1164)
-- Deprecated the following properties on Zowe tree interfaces in favor of setters and getters to incentivize encapsulation: [#2026](https://github.com/zowe/zowe-explorer-vscode/issues/2026)
-  - `binary` property on the `IZoweDatasetTreeNode` interface - use the `getEncoding` and `setEncoding` functions instead.
-  - `encodingMap` property on the `IZoweDatasetTreeNode` and `IZoweUSSTreeNode` interfaces - use the `getEncodingInMap` and `updateEncodingInMap` functions instead.
-  - `stats` property on the `IZoweDatasetTreeNode` interface - use the `getStats` and `setStats` functions instead.
-  - `encoding` property on the `IZoweDatasetTreeNode` and `IZoweUSSTreeNode` interfaces - use the `getEncoding` and `setEncoding` functions instead.
-  - `shortLabel` property on the `IZoweUSSTreeNode` interface - use the `getBaseName` function instead.
-  - `attributes` property on the `IZoweUSSTreeNode` interface - use the `getAttributes` and `setAttributes` functions instead.
-- **Breaking:** Added return type of `Promise<void>` to `IZoweTree.addDsTemplate`. [#2345](https://github.com/zowe/vscode-extension-for-zowe/pull/2345)
-- **Breaking:** Added return type of `Promise<void>` to `MainframeInteractions.ICommon.logout`. [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783)
 - Grouped Common methods into Singleton classes. [#2109](https://github.com/zowe/zowe-explorer-vscode/issues/2109)
-- **Breaking:** Removed deprecated methods: [#2238](https://github.com/zowe/zowe-explorer-vscode/issues/2238)
-  - `refreshAndReopen` function on the `IZoweTreeNode` interface - use the `reopen` function instead.
-  - `copyUssFile` function on the `IZoweTreeNode` interface - use the `pasteUssTree` function instead.
-  - `ZoweVsCodeExtension.showVsCodeMessage` - use `Gui.showMessage` instead.
-  - `ZoweVsCodeExtension.inputBox` - use `Gui.showInputBox` instead.
-  - `ZoweVsCodeExtension.promptCredentials` - use `ZoweVsCodeExtension.updateCredentials` instead.
-- **Breaking:** Removed unused property `profileManagerByType` which used the V1-profile class `CLIProfileManager`. [#3057](https://github.com/zowe/zowe-explorer-vscode/issues/3057)
-- **Breaking:** Added return type of `Promise<void>` to the following `IZoweTree` methods: [#2238](https://github.com/zowe/zowe-explorer-vscode/issues/2238)
-  - addFavorite
-  - removeFavorite
-  - removeFavProfile
-  - ssoLogin
-  - ssoLogout
+- Implemented support for building, exposing and displaying table views within Zowe Explorer. Tables can be customized and exposed using the helper facilities (`TableBuilder` and `TableMediator`) for an extender's specific use case. For more information on how to configure and show tables, please refer to the [wiki article on Table Views](https://github.com/zowe/zowe-explorer-vscode/wiki/Table-Views). [#2258](https://github.com/zowe/zowe-explorer-vscode/issues/2258)
+- Enhanced the `ZoweVsCodeExtension.loginWithBaseProfile` and `ZoweVsCodeExtension.logoutWithBaseProfile` methods to store SSO token in parent profile when nested profiles are in use. [#2264](https://github.com/zowe/zowe-explorer-vscode/issues/2264)
+- Added new `getJobsByParameters` API is meant to replace `getJobsByOwnerAndPrefix`, and it adds new capabilities such as querying by status and limiting the amount of returned jobs.
+- Added the `BaseProfileAuthOptions` interface to define base profile authentication options for SSO login and logout. [#3076](https://github.com/zowe/zowe-explorer-vscode/pull/3076)
+- Added `extensionRemovedFromPath` private function to the `DsEntry` class to allow removing the extension from a data set before making API calls. [#3121](https://github.com/zowe/zowe-explorer-vscode/issues/3121)
+- Added optional `patternMatches` property to the `IZoweDatasetTreeNode` interface to cache pattern matches from an applied filter search. [#1164](https://github.com/zowe/zowe-explorer-vscode/issues/1164)
 - Added an optional function `openWithEncoding` to the `IZoweTree` interface to open file using encoding specified by user. [#2931](https://github.com/zowe/zowe-explorer-vscode/pull/2931)
-- Deprecated the `openFiles` property on `IZoweTree` interface - in v3 open files are tracked by the `FileSystemProvider` instead. [#2947](https://github.com/zowe/zowe-explorer-vscode/pull/2947)
-- **Breaking:** Changed the parameters of the `addSession` method on the `IZoweTree` interface since they were all optional. It now receives an object of type `AddSessionOpts`. [#2947](https://github.com/zowe/zowe-explorer-vscode/pull/2947)
-- **Breaking:** Removed the redundant `zoweFileProvider` parameter from `editSession` method on the `IZoweTree` interface. [#2947](https://github.com/zowe/zowe-explorer-vscode/pull/2947)
-- Updated the `ProfilesCache.getProfiles` method to return empty list instead of undefined when there are no profiles. [#2947](https://github.com/zowe/zowe-explorer-vscode/pull/2947)
 - Added PEM certificate support as an authentication method for logging into the API ML. [#2621](https://github.com/zowe/zowe-explorer-vscode/issues/2621)
-- Deprecated the `getUSSDocumentFilePath` function on the `IZoweTreeNode` interface as Zowe Explorer no longer uses the local file system for storing USS files. **No replacement is planned**; please access data from tree nodes using their [resource URIs](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#operations-for-extenders) instead. [#2968](https://github.com/zowe/zowe-explorer-vscode/pull/2968)
-- **Breaking:** Changed `ProfilesCache.convertV1ProfToConfig` method to be a static method that requires `ProfileInfo` instance as a parameter.
 - Added the `onVaultUpdate` VSCode event to notify extenders when credentials are updated on the OS vault by other applications. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
 - Added the `onCredMgrsUpdate` VSCode event to notify extenders when the local PC's credential manager has been updated by other applications. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
+- Added `Commands` value to the `PersistenceSchemaEnum` enum for storing MVS, TSO, and USS command history. [#2788](https://github.com/zowe/zowe-explorer-vscode/issues/2788)
+- Added the `getEncoding` optional function to the `IZoweDatasetTreeNode` and `IZoweUSSTreeNode` interfaces. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
+- Added an optional function `nodeDataChanged` to the `IZoweTree` interface to signal an event when a tree node needs updated. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
+- Added the optional `vscode.DragAndDropController` interface to the `IZoweTree` interface to allow Zowe tree views to support drag and drop. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
+- Added a `ZoweScheme` enum to expose the core FileSystemProvider schemes for USS files, data sets and jobs. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
+- Added optional function `move` to the `MainframeInteraction.IUss` interface to move USS folders/files from one path to another. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
+- Added the `buildUniqueSpoolName` function to build spool names for Zowe resource URIs and VS Code editor tabs. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
+- Added the `isNodeInEditor` function to determine whether a tree node is open in the editor. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
+- Added Created Date to `stats` optional variable for storing dataset stats [#2565](https://github.com/zowe/vscode-extension-for-zowe/pull/2565)
+- Added Date created to DatasetSortOpts enum [#2565](https://github.com/zowe/vscode-extension-for-zowe/pull/2565)
+- Added new `ProfilesCache.convertV1ProfToConfig` API endpoint for extenders migrating from v1 profiles to team configuration files. [#2284](https://github.com/zowe/vscode-extension-for-zowe/issues/2284)
+- Added new APIs for Issue UNIX Command. [#1326](https://github.com/zowe/vscode-extension-for-zowe/issues/1326)
+- Updated the `ProfilesCache.getProfiles` method to return empty list instead of undefined when there are no profiles. [#2947](https://github.com/zowe/zowe-explorer-vscode/pull/2947)
+- Updated the `TableViewProvider.setTableView` function to show the Zowe Resources panel if a table is provided. If `null` is passed, the Zowe Resources panel will be hidden. [#3113](https://github.com/zowe/zowe-explorer-vscode/issues/3113)
+- Updated `Table.Conditional` and `Table.Callback` types to support multi-row callbacks.
+- Renamed the `_lookup` function to `lookup` in the `BaseProvider` class and updated its access to public, allowing extenders to look up resources outside of the provider implementations. The `_lookup` function is still accessible, but now deprecated in favor of the public `lookup` function. [#3040](https://github.com/zowe/zowe-explorer-vscode/pull/3040)
+- Changed the type for the options parameter in the `getContents` function (`MainframeInteraction.IUss` and `MainframeInteraction.IMvs` interfaces) from `zosfiles.IDownloadOptions` to `zosfiles.IDownloadSingleOptions`. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
+  - The type was changed to match the function's intended behavior (to get the contents of a **single** resource).
+- Changed `TableViewProvider.setTableView` function to be asynchronous for more optimized data updates.
+- Changed IApiExplorerExtenders.initForZowe `profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]` to a required argument to address issues seen after registration of profile type when not passed. [#2575](https://github.com/zowe/vscode-extension-for-zowe/issues/2575)
+- **Breaking:** Removed `ProfilesCache.getSchema()`, `ProfilesCache.getCliProfileManager()`, `ProfilesCache.saveProfile()` & `ProfilesCache.deleteProfileOnDisk()` v1 Profiles manipulation endpoints.
+- **Breaking:** Removed `ZoweTreeNode.binary`, `ZoweTreeNode.binaryFiles`, and `ZoweTreeNode.shortLabel`. These properties are not applicable for all tree nodes and should be defined in subclasses of `ZoweTreeNode` if necessary.
+- **Breaking:** Removed the following properties/methods:
+  - `IZoweUSSTreeNode.binaryFiles` -> `IZoweUSSTreeNode.encodingMap`
+  - `IZoweUSSTreeNode.mProfileName` -> `IZoweUSSTreeNode.getProfileName()`
+  - `IZoweUSSTreeNode.setBinary()` -> `IZoweUSSTreeNode.setEncoding()`
+- **Breaking:** Added the following **required** API: `uploadFromBuffer` [#2738](https://github.com/zowe/vscode-extension-for-zowe/pull/2738)
+  - For v3, this API will be used for saving data sets and USS files instead of `putContent(s)`. Extenders must implement this API to continue supporting Zowe Explorer save operations.
+- **Breaking:** Removed the `encoding` property from the `IZoweUSSTreeNode` interface in favor of the new `getEncoding` function. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
+- **Breaking:** Removed string as a return type of the `uploadFromBuffer` method, since the z/OSMF API has been fixed to return a response object that includes an etag. [#2785](https://github.com/zowe/zowe-explorer-vscode/issues/2785)
+- **Breaking:** Marked `getJobsByParameters` as a required function for the `MainframeInteraction.IJes` interface. [#2764](https://github.com/zowe/vscode-extension-for-zowe/pull/2764)
+- **Breaking:** Removed the `MemberEntry` filesystem class, in favor of using the `DsEntry` class with `isMember` set to `true`.
+- **Breaking:** Changed return type of `ZoweVsCodeExtension.logoutWithBaseProfile` method from `void` to `boolean` to indicate whether logout was successful.
+- **Breaking:** Changed behavior of the `ProfilesCache.fetchBaseProfile` method so that if a nested profile name is specified (e.g. "lpar.zosmf"), then its parent profile is returned unless token is already stored in the base profile.
+- **Breaking:** Consolidated WebView API options into a single object (`WebViewOpts` type), both for developer convenience and to support future options.
 - **Breaking:** Updated most function signatures for exported programmatic interfaces. Changes make developing with the Zowe Explorer API more efficient for extenders by showing which properties they can expect when calling our APIs. [#2952](https://github.com/zowe/zowe-explorer-vscode/issues/2952)
   - Updated `IApiExplorerExtender.ts`, see changes below:
     - Allowed `reloadProfiles` and `initForZowe` to be synchronous methods (non-breaking)
@@ -105,66 +114,54 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
       - `renameUSSNode`
       - `reopen`
       - `saveSearch`
-- Implemented support for building, exposing and displaying table views within Zowe Explorer. Tables can be customized and exposed using the helper facilities (`TableBuilder` and `TableMediator`) for an extender's specific use case. For more information on how to configure and show tables, please refer to the [wiki article on Table Views](https://github.com/zowe/zowe-explorer-vscode/wiki/Table-Views). [#2258](https://github.com/zowe/zowe-explorer-vscode/issues/2258)
-- **Breaking:** Consolidated WebView API options into a single object (`WebViewOpts` type), both for developer convenience and to support future options.
-- Enhanced the `ZoweVsCodeExtension.loginWithBaseProfile` and `ZoweVsCodeExtension.logoutWithBaseProfile` methods to store SSO token in parent profile when nested profiles are in use. [#2264](https://github.com/zowe/zowe-explorer-vscode/issues/2264)
-- **Breaking:** Changed return type of `ZoweVsCodeExtension.logoutWithBaseProfile` method from `void` to `boolean` to indicate whether logout was successful.
-- **Breaking:** Changed behavior of the `ProfilesCache.fetchBaseProfile` method so that if a nested profile name is specified (e.g. "lpar.zosmf"), then its parent profile is returned unless token is already stored in the base profile.
-- Renamed the `_lookup` function to `lookup` in the `BaseProvider` class and updated its access to public, allowing extenders to look up resources outside of the provider implementations. The `_lookup` function is still accessible, but now deprecated in favor of the public `lookup` function. [#3040](https://github.com/zowe/zowe-explorer-vscode/pull/3040)
-- **Breaking:** Removed the `MemberEntry` filesystem class, in favor of using the `DsEntry` class with `isMember` set to `true`.
-- Changed `TableViewProvider.setTableView` function to be asynchronous for more optimized data updates.
-- Updated `Table.Conditional` and `Table.Callback` types to support multi-row callbacks.
-- **Breaking:** Marked `getJobsByParameters` as a required function for the `MainframeInteraction.IJes` interface. [#2764](https://github.com/zowe/vscode-extension-for-zowe/pull/2764)
-  - The new `getJobsByParameters` API is meant to replace `getJobsByOwnerAndPrefix`, and it adds new capabilities such as querying by status and limiting the amount of returned jobs.
-- **Breaking:** Removed string as a return type of the `uploadFromBuffer` method, since the z/OSMF API has been fixed to return a response object that includes an etag. [#2785](https://github.com/zowe/zowe-explorer-vscode/issues/2785)
-- Added `Commands` value to the `PersistenceSchemaEnum` enum for storing MVS, TSO, and USS command history. [#2788](https://github.com/zowe/zowe-explorer-vscode/issues/2788)
-- Changed the type for the options parameter in the `getContents` function (`MainframeInteraction.IUss` and `MainframeInteraction.IMvs` interfaces) from `zosfiles.IDownloadOptions` to `zosfiles.IDownloadSingleOptions`. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
-  - The type was changed to match the function's intended behavior (to get the contents of a **single** resource).
-- Added the `getEncoding` optional function to the `IZoweDatasetTreeNode` and `IZoweUSSTreeNode` interfaces. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
-  - **Breaking:** Removed the `encoding` property from the `IZoweUSSTreeNode` interface in favor of the new `getEncoding` function. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
-- Added an optional function `nodeDataChanged` to the `IZoweTree` interface to signal an event when a tree node needs updated. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
-- Added the optional `vscode.DragAndDropController` interface to the `IZoweTree` interface to allow Zowe tree views to support drag and drop. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
-- Added a `ZoweScheme` enum to expose the core FileSystemProvider schemes for USS files, data sets and jobs. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
-- Added optional function `move` to the `MainframeInteraction.IUss` interface to move USS folders/files from one path to another. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
-- Added the `buildUniqueSpoolName` function to build spool names for Zowe resource URIs and VS Code editor tabs. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
-- Added the `isNodeInEditor` function to determine whether a tree node is open in the editor. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
-- Add Created Date to `stats` optional variable for storing dataset stats [#2565](https://github.com/zowe/vscode-extension-for-zowe/pull/2565)
-- Add Date created to DatasetSortOpts enum [#2565](https://github.com/zowe/vscode-extension-for-zowe/pull/2565)
-- **Breaking:** Added the following **required** API: `uploadFromBuffer` [#2738](https://github.com/zowe/vscode-extension-for-zowe/pull/2738)
-  - For v3, this API will be used for saving data sets and USS files instead of `putContent(s)`. Extenders must implement this API to continue supporting Zowe Explorer save operations.
-- **Breaking:** Removed the following properties/methods:
-  - `IZoweUSSTreeNode.binaryFiles` -> `IZoweUSSTreeNode.encodingMap`
-  - `IZoweUSSTreeNode.mProfileName` -> `IZoweUSSTreeNode.getProfileName()`
-  - `IZoweUSSTreeNode.setBinary()` -> `IZoweUSSTreeNode.setEncoding()`
-- **Breaking:** Removed `ZoweTreeNode.binary`, `ZoweTreeNode.binaryFiles`, and `ZoweTreeNode.shortLabel`. These properties are not applicable for all tree nodes and should be defined in subclasses of `ZoweTreeNode` if necessary.
-- **Breaking:** Removed `ProfilesCache.getSchema()`, `ProfilesCache.getCliProfileManager()`, `ProfilesCache.saveProfile()` & `ProfilesCache.deleteProfileOnDisk()` v1 Profiles manipulation endpoints.
-- Added new ProfilesCache.convertV1ProfToConfig() API endpoint for extenders migrating from v1 profiles to team configuration files. [#2284](https://github.com/zowe/vscode-extension-for-zowe/issues/2284)
-- Grouped common methods into singleton classes [#2109](https://github.com/zowe/vscode-extension-for-zowe/issues/2109)
-- Added new APIs for Issue UNIX Command. [#1326](https://github.com/zowe/vscode-extension-for-zowe/issues/1326)
+- **Breaking:** Changed `ProfilesCache.convertV1ProfToConfig` method to be a static method that requires `ProfileInfo` instance as a parameter.
+- **Breaking:** Changed the parameters of the `addSession` method on the `IZoweTree` interface since they were all optional. It now receives an object of type `AddSessionOpts`. [#2947](https://github.com/zowe/zowe-explorer-vscode/pull/2947)
+- **Breaking:** Removed the redundant `zoweFileProvider` parameter from `editSession` method on the `IZoweTree` interface. [#2947](https://github.com/zowe/zowe-explorer-vscode/pull/2947)
+- **Breaking:** Removed deprecated methods: [#2238](https://github.com/zowe/zowe-explorer-vscode/issues/2238)
+  - `refreshAndReopen` function on the `IZoweTreeNode` interface - use the `reopen` function instead.
+  - `copyUssFile` function on the `IZoweTreeNode` interface - use the `pasteUssTree` function instead.
+  - `ZoweVsCodeExtension.showVsCodeMessage` - use `Gui.showMessage` instead.
+  - `ZoweVsCodeExtension.inputBox` - use `Gui.showInputBox` instead.
+  - `ZoweVsCodeExtension.promptCredentials` - use `ZoweVsCodeExtension.updateCredentials` instead.
+- **Breaking:** Removed unused property `profileManagerByType` which used the V1-profile class `CLIProfileManager`. [#3057](https://github.com/zowe/zowe-explorer-vscode/issues/3057)
+- **Breaking:** Added return type of `Promise<void>` to the following `IZoweTree` methods: [#2238](https://github.com/zowe/zowe-explorer-vscode/issues/2238)
+  - addFavorite
+  - removeFavorite
+  - removeFavProfile
+  - ssoLogin
+  - ssoLogout
+- Deprecated the following properties on Zowe tree interfaces in favor of setters and getters to incentivize encapsulation: [#2026](https://github.com/zowe/zowe-explorer-vscode/issues/2026)
+  - `binary` property on the `IZoweDatasetTreeNode` interface - use the `getEncoding` and `setEncoding` functions instead.
+  - `encodingMap` property on the `IZoweDatasetTreeNode` and `IZoweUSSTreeNode` interfaces - use the `getEncodingInMap` and `updateEncodingInMap` functions instead.
+  - `stats` property on the `IZoweDatasetTreeNode` interface - use the `getStats` and `setStats` functions instead.
+  - `encoding` property on the `IZoweDatasetTreeNode` and `IZoweUSSTreeNode` interfaces - use the `getEncoding` and `setEncoding` functions instead.
+  - `shortLabel` property on the `IZoweUSSTreeNode` interface - use the `getBaseName` function instead.
+  - `attributes` property on the `IZoweUSSTreeNode` interface - use the `getAttributes` and `setAttributes` functions instead.
+- **Breaking:** Added return type of `Promise<void>` to `IZoweTree.addDsTemplate`. [#2345](https://github.com/zowe/vscode-extension-for-zowe/pull/2345)
+- **Breaking:** Added return type of `Promise<void>` to `MainframeInteractions.ICommon.logout`. [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783)
+- **Breaking:** ProfilesCache.getProfileInfo no longer accepts any parameters. [#2744](https://github.com/zowe/vscode-extension-for-zowe/pull/2744)
+- **Breaking:** issueUnixCommand API now takes sshSession as a optional parameter. [#2866](https://github.com/zowe/zowe-explorer-vscode/pull/2866)
+- Deprecated the `openFiles` property on `IZoweTree` interface - in v3 open files are tracked by the `FileSystemProvider` instead. [#2947](https://github.com/zowe/zowe-explorer-vscode/pull/2947)
+- Deprecated the `getUSSDocumentFilePath` function on the `IZoweTreeNode` interface as Zowe Explorer no longer uses the local file system for storing USS files. **No replacement is planned**; please access data from tree nodes using their [resource URIs](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#operations-for-extenders) instead. [#2968](https://github.com/zowe/zowe-explorer-vscode/pull/2968)
+- Deprecated the method `ProfilesCache.updateProfilesArrays`. Use `ProfilesCache.updateCachedProfile` instead, which handles updating credentials cached in memory when `autoStore` is false. [#3120](https://github.com/zowe/zowe-explorer-vscode/issues/3120)
+- Deprecated the methods `ZoweVsCodeExtension.loginWithBaseProfile` and `ZoweVsCodeExtension.logoutWithBaseProfile`. Use `ZoweVsCodeExtension.ssoLogin` and `ZoweVsCodeExtension.ssoLogout` instead, which use the `BaseProfileAuthOptions` interface and allow you to choose whether the token value in the base profile should have precedence in case there are conflicts. [#3076](https://github.com/zowe/zowe-explorer-vscode/pull/3076)
 
 ### Bug fixes
 
-- Updated the `TableViewProvider.setTableView` function to show the Zowe Resources panel if a table is provided. If `null` is passed, the Zowe Resources panel will be hidden. [#3113](https://github.com/zowe/zowe-explorer-vscode/issues/3113)
 - Fixed behavior of logout action when token is defined in both base profile and parent profile. [#3076](https://github.com/zowe/zowe-explorer-vscode/issues/3076)
 - Fixed profile cached by `FileSystemProvider` not refreshing on password change. [#3120](https://github.com/zowe/zowe-explorer-vscode/issues/3120)
-- Fix extender's ability to fetch profile information from ProfilesCache for SSH profile types.
+- Fixed extender's ability to fetch profile information from ProfilesCache for SSH profile types.
 - Fixed an issue where the `onProfilesUpdate` event did not fire after secure credentials were updated. [#2822](https://github.com/zowe/zowe-explorer-vscode/issues/2822)
 - Fixed an issue where `ProfilesCache` may return missing or incorrect profile values when multiple extensions call it during activation. [#2831](https://github.com/zowe/zowe-explorer-vscode/issues/2831)
-- Removed `handlebars` dependency in favor of `mustache` for technical currency purposes. [#2975](https://github.com/zowe/zowe-explorer-vscode/pull/2975)
 - Fixed an issue where the `ZoweVsCodeExtension.updateCredentials` method could remove credentials from session when input prompt was cancelled. [#3009](https://github.com/zowe/zowe-explorer-vscode/pull/3009)
 - Fixed an issue where the loaded configuration could be overridden when extenders retrieved the Zowe home directory. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
 - Fixed an issue where remote lookup functionality caused the local side of a conflict to be overwritten with the remote contents. [#3085](https://github.com/zowe/zowe-explorer-vscode/pull/3085)
 - Fixed an issue where the `ProfilesCache` class would retain old service profiles, even if they were removed from the team config. [#2395](https://github.com/zowe/zowe-explorer-vscode/issues/2395)
-- **Breaking:** issueUnixCommand API now takes sshSession as a optional parameter. [#2866](https://github.com/zowe/zowe-explorer-vscode/pull/2866)
 - Fixed issue where `zosmf` profiles did not respect the `protocol` property. [#2703](https://github.com/zowe/vscode-extension-for-zowe/issues/2703)
-- **Breaking:** ProfilesCache.getProfileInfo no longer accepts any parameters. [#2744](https://github.com/zowe/vscode-extension-for-zowe/pull/2744)
 - Fix to restore accessibility to all profiles when default profile has APIML token authentication. [#2111](https://github.com/zowe/vscode-extension-for-zowe/issues/2111)
-- Fix login and logout operations when APIML dynamic tokens are enabled. [#2692](https://github.com/zowe/vscode-extension-for-zowe/pull/2692)
-- Changed IApiExplorerExtenders.initForZowe `profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]` to a required argument to address issues seen after registration of profile type when not passed. [#2575](https://github.com/zowe/vscode-extension-for-zowe/issues/2575)
-- fixed export of api `onProfilesUpdate`.
+- Fixed login and logout operations when APIML dynamic tokens are enabled. [#2692](https://github.com/zowe/vscode-extension-for-zowe/pull/2692)
+- Fixed export of api `onProfilesUpdate`.
 - Fixed bug in `ProfilesCache` class where old profiles were still accessible after deleting a Team configuration file. [#3124](https://github.com/zowe/zowe-explorer-vscode/issues/3124)
-
-### Bug fixes
 
 ## `3.0.0-next.202409251932`
 
