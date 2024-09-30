@@ -130,6 +130,10 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
   - removeFavProfile
   - ssoLogin
   - ssoLogout
+- **Breaking:** Added return type of `Promise<void>` to `IZoweTree.addDsTemplate`. [#2345](https://github.com/zowe/vscode-extension-for-zowe/pull/2345)
+- **Breaking:** Added return type of `Promise<void>` to `MainframeInteractions.ICommon.logout`. [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783)
+- **Breaking:** ProfilesCache.getProfileInfo no longer accepts any parameters. [#2744](https://github.com/zowe/vscode-extension-for-zowe/pull/2744)
+- **Breaking:** issueUnixCommand API now takes sshSession as a optional parameter. [#2866](https://github.com/zowe/zowe-explorer-vscode/pull/2866)
 - Deprecated the following properties on Zowe tree interfaces in favor of setters and getters to incentivize encapsulation: [#2026](https://github.com/zowe/zowe-explorer-vscode/issues/2026)
   - `binary` property on the `IZoweDatasetTreeNode` interface - use the `getEncoding` and `setEncoding` functions instead.
   - `encodingMap` property on the `IZoweDatasetTreeNode` and `IZoweUSSTreeNode` interfaces - use the `getEncodingInMap` and `updateEncodingInMap` functions instead.
@@ -137,10 +141,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
   - `encoding` property on the `IZoweDatasetTreeNode` and `IZoweUSSTreeNode` interfaces - use the `getEncoding` and `setEncoding` functions instead.
   - `shortLabel` property on the `IZoweUSSTreeNode` interface - use the `getBaseName` function instead.
   - `attributes` property on the `IZoweUSSTreeNode` interface - use the `getAttributes` and `setAttributes` functions instead.
-- **Breaking:** Added return type of `Promise<void>` to `IZoweTree.addDsTemplate`. [#2345](https://github.com/zowe/vscode-extension-for-zowe/pull/2345)
-- **Breaking:** Added return type of `Promise<void>` to `MainframeInteractions.ICommon.logout`. [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783)
-- **Breaking:** ProfilesCache.getProfileInfo no longer accepts any parameters. [#2744](https://github.com/zowe/vscode-extension-for-zowe/pull/2744)
-- **Breaking:** issueUnixCommand API now takes sshSession as a optional parameter. [#2866](https://github.com/zowe/zowe-explorer-vscode/pull/2866)
 - Deprecated the `openFiles` property on `IZoweTree` interface - in v3 open files are tracked by the `FileSystemProvider` instead. [#2947](https://github.com/zowe/zowe-explorer-vscode/pull/2947)
 - Deprecated the `getUSSDocumentFilePath` function on the `IZoweTreeNode` interface as Zowe Explorer no longer uses the local file system for storing USS files. **No replacement is planned**; please access data from tree nodes using their [resource URIs](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#operations-for-extenders) instead. [#2968](https://github.com/zowe/zowe-explorer-vscode/pull/2968)
 - Deprecated the method `ProfilesCache.updateProfilesArrays`. Use `ProfilesCache.updateCachedProfile` instead, which handles updating credentials cached in memory when `autoStore` is false. [#3120](https://github.com/zowe/zowe-explorer-vscode/issues/3120)
