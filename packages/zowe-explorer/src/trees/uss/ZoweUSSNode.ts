@@ -205,35 +205,26 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         // Get the list of files/folders at the given USS path and handle any errors
+        const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         let response: zosfiles.IZosFilesResponse;
-        const sessNode = this.getSessionNode();
-        let nodeProfile;
-        try {
-            const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-            if (!ZoweExplorerApiRegister.getUssApi(cachedProfile).getSession(cachedProfile)) {
-                throw new imperative.ImperativeError({
-                    msg: vscode.l10n.t("Profile auth error"),
-                    additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
-                    errorCode: `${imperative.RestConstants.HTTP_STATUS_401 as number}`,
-                });
-            }
-            nodeProfile = cachedProfile;
-            if (SharedContext.isSession(this)) {
-                response = await UssFSProvider.instance.listFiles(
-                    nodeProfile,
-                    SharedContext.isFavorite(this)
-                        ? this.resourceUri
-                        : this.resourceUri.with({
-                              path: path.posix.join(this.resourceUri.path, this.fullPath),
-                          })
-                );
-            } else {
-                response = await UssFSProvider.instance.listFiles(nodeProfile, this.resourceUri);
-            }
-        } catch (err) {
-            await AuthUtils.errorHandling(err, this.label.toString(), vscode.l10n.t("Retrieving response from uss-file-list"));
-            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), sessNode);
-            return this.children;
+        if (!ZoweExplorerApiRegister.getUssApi(cachedProfile).getSession(cachedProfile)) {
+            throw new imperative.ImperativeError({
+                msg: vscode.l10n.t("Profile auth error"),
+                additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
+                errorCode: `${imperative.RestConstants.HTTP_STATUS_401 as number}`,
+            });
+        }
+        if (SharedContext.isSession(this)) {
+            response = await UssFSProvider.instance.listFiles(
+                cachedProfile,
+                SharedContext.isFavorite(this)
+                    ? this.resourceUri
+                    : this.resourceUri.with({
+                          path: path.posix.join(this.resourceUri.path, this.fullPath),
+                      })
+            );
+        } else {
+            response = await UssFSProvider.instance.listFiles(cachedProfile, this.resourceUri);
         }
 
         // If search path has changed, invalidate all children
@@ -271,7 +262,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 collapsibleState: collapseState,
                 parentNode: this,
                 parentPath: this.fullPath,
-                profile: nodeProfile,
+                profile: cachedProfile,
                 encoding: isDir ? undefined : await this.getEncodingInMap(`${this.fullPath}/${item.name as string}`),
             });
             if (isDir) {

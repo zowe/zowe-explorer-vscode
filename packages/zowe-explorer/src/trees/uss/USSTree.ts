@@ -462,7 +462,14 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 const favsForProfile = await this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
             }
-            return element.getChildren();
+            try {
+                return await element.getChildren();
+            } catch (error) {
+                await AuthUtils.errorHandling(error, element.getProfileName(), vscode.l10n.t("Retrieving response from uss-list"));
+                AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), element.getSessionNode());
+                element.dirty = false;
+                return element.children;
+            }
         }
         return this.mSessionNodes;
     }
@@ -676,9 +683,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      */
     public async getAllLoadedItems(): Promise<IZoweUSSTreeNode[]> {
         ZoweLogger.trace("USSTree.getAllLoadedItems called.");
-        if (this.log) {
-            ZoweLogger.debug(vscode.l10n.t("Prompting the user to choose a member from the filtered list"));
-        }
+        ZoweLogger.debug(vscode.l10n.t("Prompting the user to choose a member from the filtered list"));
         const loadedNodes: IZoweUSSTreeNode[] = [];
         const sessions = await this.getChildren();
 
@@ -984,7 +989,6 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                         parentPath: parentNode.fullPath,
                     });
                     infoNode.contextValue = Constants.INFORMATION_CONTEXT;
-                    infoNode.iconPath = undefined;
                     return [infoNode];
                 }
             } catch (error) {

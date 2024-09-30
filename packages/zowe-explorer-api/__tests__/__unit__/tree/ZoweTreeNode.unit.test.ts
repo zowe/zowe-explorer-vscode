@@ -94,6 +94,7 @@ describe("ZoweTreeNode", () => {
 
     it("setProfileToChoice should update profile for associated FSProvider entry", () => {
         const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined);
+        node.resourceUri = vscode.Uri.file(__dirname);
         const fsEntry = {
             metadata: {
                 profile: { name: "oldProfile" },

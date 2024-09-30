@@ -151,8 +151,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             try {
                 response = await element.getChildren();
             } catch (error) {
-                await AuthUtils.errorHandling(error, String(element.label));
-                return [];
+                await AuthUtils.errorHandling(error, element.label.toString(), vscode.l10n.t("Retrieving response from ds-list"));
+                AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getMvsApi(profile), element.getSessionNode());
+                element.dirty = false;
+                return element.children;
             }
 
             const finalResponse: IZoweDatasetTreeNode[] = [];
@@ -169,16 +171,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 item.contextValue = SharedContext.withProfile(item);
             }
 
-            if (finalResponse.length === 0) {
-                return (element.children = [
-                    new ZoweDatasetNode({
-                        label: vscode.l10n.t("No data sets found"),
-                        collapsibleState: vscode.TreeItemCollapsibleState.None,
-                        parentNode: element,
-                        contextOverride: Constants.INFORMATION_CONTEXT,
-                    }),
-                ]);
-            }
             return finalResponse;
         }
         return this.mSessionNodes;
@@ -1032,12 +1024,12 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         pattern = choice.label;
                     }
                 }
-                const options2: vscode.InputBoxOptions = {
+                const options: vscode.InputBoxOptions = {
                     prompt: vscode.l10n.t("Search Data Sets: use a comma to separate multiple patterns"),
                     value: pattern,
                 };
                 // get user input
-                pattern = await Gui.showInputBox(options2);
+                pattern = await Gui.showInputBox(options);
                 if (!pattern) {
                     Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
                     return;
@@ -1055,7 +1047,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 }
             }
             // looking for members in pattern
-            node.children = [];
             node.dirty = true;
             AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getMvsApi(profile), sessionNode);
 
@@ -1088,6 +1079,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             sessionNode.resourceUri = sessionNode.resourceUri.with({ query: `pattern=${pattern}` });
         }
         await TreeViewUtils.expandNode(sessionNode, this);
+        this.refresh();
     }
 
     public checkFilterPattern(dsName: string, itemName: string): boolean {

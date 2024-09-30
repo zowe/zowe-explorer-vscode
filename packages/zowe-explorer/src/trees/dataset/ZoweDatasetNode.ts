@@ -102,13 +102,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         if (this.label !== vscode.l10n.t("Favorites")) {
             const sessionLabel = opts.profile?.name ?? SharedUtils.getSessionLabel(this);
-            if (this.getParent() == null || this.getParent().label === vscode.l10n.t("Favorites")) {
-                this.resourceUri = vscode.Uri.from({
-                    scheme: ZoweScheme.DS,
-                    path: `/${sessionLabel}/`,
-                });
-                DatasetFSProvider.instance.createDirectory(this.resourceUri);
-            } else if (
+            if (
                 this.contextValue === Constants.DS_DS_CONTEXT ||
                 this.contextValue === Constants.DS_PDS_CONTEXT ||
                 this.contextValue === Constants.DS_MIGRATED_FILE_CONTEXT
@@ -130,7 +124,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 });
                 this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
             } else {
-                this.resourceUri = null;
+                this.resourceUri = vscode.Uri.from({
+                    scheme: ZoweScheme.DS,
+                    path: `/${sessionLabel}/`,
+                });
+                if (this.getParent() == null || this.getParent().label === vscode.l10n.t("Favorites")) {
+                    DatasetFSProvider.instance.createDirectory(this.resourceUri);
+                }
             }
 
             if (opts.encoding != null) {
@@ -232,9 +232,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         const responses = await this.getDatasets(cachedProfile);
-        if (responses.length === 0) {
-            return;
-        }
 
         // push nodes to an object with property names to avoid duplicates
         const elementChildren: { [k: string]: ZoweDatasetNode } = {};
@@ -243,7 +240,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             // The dataSetsMatchingPattern API may return success=false and apiResponse=[] when no data sets found
             if (!response.success && !(Array.isArray(response.apiResponse) && response.apiResponse.length === 0)) {
                 await AuthUtils.errorHandling(vscode.l10n.t("The response from Zowe CLI was not successful"));
-                return;
+                return this.children;
             }
 
             // Loops through all the returned dataset members and creates nodes for them

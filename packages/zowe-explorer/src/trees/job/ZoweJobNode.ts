@@ -22,7 +22,6 @@ import { IconGenerator } from "../../icons/IconGenerator";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedUtils } from "../shared/SharedUtils";
-import { AuthUtils } from "../../utils/AuthUtils";
 import type { Definitions } from "../../configuration/Definitions";
 
 export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
@@ -158,7 +157,6 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                     parentNode: this,
                     profile: this.getProfile(),
                 });
-                noSpoolNode.iconPath = undefined;
                 return [noSpoolNode];
             }
             spools.forEach((spool) => {
@@ -210,7 +208,6 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                     profile: this.getProfile(),
                 });
                 noJobsNode.contextValue = Constants.INFORMATION_CONTEXT;
-                noJobsNode.iconPath = undefined;
                 noJobsNode.command = {
                     command: "zowe.placeholderCommand",
                     title: "Placeholder",
@@ -375,44 +372,38 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         ZoweLogger.trace("ZoweJobNode.getJobs called.");
         let jobsInternal: zosjobs.IJob[] = [];
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-        try {
-            if (this.searchId.length > 0) {
-                jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJob(searchId));
-            } else {
-                if (!ZoweExplorerApiRegister.getJesApi(cachedProfile).getSession(cachedProfile)) {
-                    throw new imperative.ImperativeError({
-                        msg: vscode.l10n.t("Profile auth error"),
-                        additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
-                        errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
-                    });
-                }
-                jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
-                    owner,
-                    prefix,
-                    status,
-                    execData: true,
+        if (this.searchId.length > 0) {
+            jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJob(searchId));
+        } else {
+            if (!ZoweExplorerApiRegister.getJesApi(cachedProfile).getSession(cachedProfile)) {
+                throw new imperative.ImperativeError({
+                    msg: vscode.l10n.t("Profile auth error"),
+                    additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
+                    errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
                 });
-
-                /**
-                 *    Note: Temporary fix
-                 *    This current fix is necessary since in certain instances the Zowe
-                 *    Explorer JES API returns duplicate jobs. The following reduce function
-                 *    filters only the unique jobs present by comparing the ids of these returned
-                 *    jobs.
-                 */
-                jobsInternal = jobsInternal.reduce((acc: zosjobs.IJob[], current) => {
-                    const duplicateJobExists = acc.find((job) => job.jobid === current.jobid);
-                    if (!duplicateJobExists) {
-                        return acc.concat([current]);
-                    } else {
-                        return acc;
-                    }
-                }, []);
             }
-        } catch (error) {
-            ZoweLogger.trace("Error getting jobs from Rest API.");
-            await AuthUtils.errorHandling(error, cachedProfile.name, vscode.l10n.t("Retrieving response from zowe.GetJobs"));
-            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode());
+            jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
+                owner,
+                prefix,
+                status,
+                execData: true,
+            });
+
+            /**
+             *    Note: Temporary fix
+             *    This current fix is necessary since in certain instances the Zowe
+             *    Explorer JES API returns duplicate jobs. The following reduce function
+             *    filters only the unique jobs present by comparing the ids of these returned
+             *    jobs.
+             */
+            jobsInternal = jobsInternal.reduce((acc: zosjobs.IJob[], current) => {
+                const duplicateJobExists = acc.find((job) => job.jobid === current.jobid);
+                if (!duplicateJobExists) {
+                    return acc.concat([current]);
+                } else {
+                    return acc;
+                }
+            }, []);
         }
         return jobsInternal;
     }
