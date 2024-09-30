@@ -41,7 +41,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added the capability for extenders to contribute new profile types to the Zowe schema during extender activation. [#2508](https://github.com/zowe/vscode-extension-for-zowe/issues/2508)
 - Added a new command feature, Issue UNIX Commands available in the VS Code command pallete or via right-click action in the USS treeview. [#1326](https://github.com/zowe/vscode-extension-for-zowe/issues/1326)
 - Added enhancement to compare 2 files from MVS and/or UNIX System Services views via right click actions, with option to compare in Read-Only mode too.
-- Added a prompt to create a new Zowe client configuration for environment that does not have any Zowe client configurations. [#3148](https://github.com/zowe/zowe-explorer-vscode/pull/3148)
+- Added a prompt to create a new Zowe client configuration for an environment that does not have any Zowe client configurations. [#3148](https://github.com/zowe/zowe-explorer-vscode/pull/3148)
 - Implemented support for favoriting a data set search that contains member wildcards. [#1164](https://github.com/zowe/zowe-explorer-vscode/issues/1164)
 - Changed default base profile naming scheme in newly generated configuration files to prevent name and property conflicts between Global and Project profiles [#2682](https://github.com/zowe/zowe-explorer-vscode/issues/2682)
 - Renamed `isHomeProfile` context helper function to `isGlobalProfile` for clarity. [#2026](https://github.com/zowe/zowe-explorer-vscode/issues/2026)
