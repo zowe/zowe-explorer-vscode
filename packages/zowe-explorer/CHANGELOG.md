@@ -65,6 +65,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Adjusted order of 'Manage Profile' and 'Edit History' in the jobs tree's context menu to match the other trees. [#2670](https://github.com/zowe/vscode-extension-for-zowe/issues/2670)
 - Changed ZoweExplorerExtender.initForZowe `profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]` to a required argument to address issues seen after registration of profile type when not passed. [#2575](https://github.com/zowe/vscode-extension-for-zowe/issues/2575)
 - Resolved `TypeError: Cannot read properties of undefined (reading 'direction')` error for favorited items. [#3067](https://github.com/zowe/zowe-explorer-vscode/pull/3067)
+- Fixed issue where switching from token-based authentication to user/password would cause an error for nested profiles. [#3142](https://github.com/zowe/zowe-explorer-vscode/issues/3142)
 
 ## `3.0.0-next.202409251932`
 
@@ -86,7 +87,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue where obsolete credentials persisted for PDS member nodes in Data Sets tree. [#3112](https://github.com/zowe/zowe-explorer-vscode/issues/3112)
 - Fixed issue where Search operation did not prompt for credentials if profile contains expired token. [#2259](https://github.com/zowe/zowe-explorer-vscode/issues/2259)
 - Fixed issue where inactive status was not displayed for profiles loaded from Global Config. [#3134](https://github.com/zowe/zowe-explorer-vscode/issues/3134)
-- Fixed issue where switching from token-based authentication to user/password would cause an error for nested profiles. [#3142](https://github.com/zowe/zowe-explorer-vscode/issues/3142)
 
 ## `3.0.0-next.202409132122`
 
