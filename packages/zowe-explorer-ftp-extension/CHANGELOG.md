@@ -6,6 +6,9 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
+- Update Zowe SDKs to `8.0.0` for technical currency.
+- Update z/OS FTP Plug-in for Zowe CLI dependency to `3.0.0`.
+
 ## `3.0.0-next.202409251932`
 
 ### Bug fixes
