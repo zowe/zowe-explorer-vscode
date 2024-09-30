@@ -20,7 +20,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added `extensionRemovedFromPath` private function to the `DsEntry` class to allow removing the extension from a data set before making API calls. [#3121](https://github.com/zowe/zowe-explorer-vscode/issues/3121)
 - Added optional `patternMatches` property to the `IZoweDatasetTreeNode` interface to cache pattern matches from an applied filter search. [#1164](https://github.com/zowe/zowe-explorer-vscode/issues/1164)
 - Added an optional function `openWithEncoding` to the `IZoweTree` interface to open file using encoding specified by user. [#2931](https://github.com/zowe/zowe-explorer-vscode/pull/2931)
-- Added PEM certificate support as an authentication method for logging into the API ML. [#2621](https://github.com/zowe/zowe-explorer-vscode/issues/2621)
 - Added the `onVaultUpdate` VSCode event to notify extenders when credentials are updated on the OS vault by other applications. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
 - Added the `onCredMgrsUpdate` VSCode event to notify extenders when the local PC's credential manager has been updated by other applications. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
 - Added `Commands` value to the `PersistenceSchemaEnum` enum for storing MVS, TSO, and USS command history. [#2788](https://github.com/zowe/zowe-explorer-vscode/issues/2788)
@@ -151,15 +150,9 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Fixed behavior of logout action when token is defined in both base profile and parent profile. [#3076](https://github.com/zowe/zowe-explorer-vscode/issues/3076)
 - Fixed profile cached by `FileSystemProvider` not refreshing on password change. [#3120](https://github.com/zowe/zowe-explorer-vscode/issues/3120)
 - Fixed extender's ability to fetch profile information from ProfilesCache for SSH profile types.
-- Fixed an issue where the `onProfilesUpdate` event did not fire after secure credentials were updated. [#2822](https://github.com/zowe/zowe-explorer-vscode/issues/2822)
-- Fixed an issue where `ProfilesCache` may return missing or incorrect profile values when multiple extensions call it during activation. [#2831](https://github.com/zowe/zowe-explorer-vscode/issues/2831)
 - Fixed an issue where the `ZoweVsCodeExtension.updateCredentials` method could remove credentials from session when input prompt was cancelled. [#3009](https://github.com/zowe/zowe-explorer-vscode/pull/3009)
 - Fixed an issue where the loaded configuration could be overridden when extenders retrieved the Zowe home directory. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
 - Fixed an issue where remote lookup functionality caused the local side of a conflict to be overwritten with the remote contents. [#3085](https://github.com/zowe/zowe-explorer-vscode/pull/3085)
-- Fixed an issue where the `ProfilesCache` class would retain old service profiles, even if they were removed from the team config. [#2395](https://github.com/zowe/zowe-explorer-vscode/issues/2395)
-- Fixed issue where `zosmf` profiles did not respect the `protocol` property. [#2703](https://github.com/zowe/vscode-extension-for-zowe/issues/2703)
-- Fix to restore accessibility to all profiles when default profile has APIML token authentication. [#2111](https://github.com/zowe/vscode-extension-for-zowe/issues/2111)
-- Fixed login and logout operations when APIML dynamic tokens are enabled. [#2692](https://github.com/zowe/vscode-extension-for-zowe/pull/2692)
 - Fixed export of api `onProfilesUpdate`.
 - Fixed bug in `ProfilesCache` class where old profiles were still accessible after deleting a Team configuration file. [#3124](https://github.com/zowe/zowe-explorer-vscode/issues/3124)
 
