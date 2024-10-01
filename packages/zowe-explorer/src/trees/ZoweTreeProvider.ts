@@ -131,6 +131,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         if (isOpen) {
             this.mOnDidChangeTreeData.fire(element);
         } else {
+            // Don't mark as dirty when expanded to avoid duplicate refresh
             element.dirty = true;
         }
     }

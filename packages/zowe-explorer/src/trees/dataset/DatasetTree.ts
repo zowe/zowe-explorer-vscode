@@ -1514,10 +1514,4 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             await node.openDs(true, false, this);
         }
     }
-
-    public async errorHandling(node: IZoweDatasetTreeNode, error: Error): Promise<void> {
-        await AuthUtils.errorHandling(error, node.getProfileName(), vscode.l10n.t("Retrieving response from ds-list"));
-        AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getMvsApi(profile), node.getSessionNode());
-        node.dirty = false;
-    }
 }

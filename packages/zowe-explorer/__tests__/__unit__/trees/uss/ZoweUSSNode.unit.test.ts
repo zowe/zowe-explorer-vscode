@@ -842,27 +842,24 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         expect(blockMocks.rootNode.getChildren()).rejects.toEqual(Error("Invalid node"));
     });
 
-    it(
-        "Tests that when zowe.List. causes an error on the zowe call, " + "node.getChildren() throws an error and the catch block is reached",
-        async () => {
-            const globalMocks = createGlobalMocks();
-            const blockMocks = createBlockMocks(globalMocks);
+    it("Tests that when List.fileList throws an error, node.getChildren() throws an error and the catch block is reached", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
 
-            blockMocks.childNode.contextValue = Constants.USS_SESSION_CONTEXT;
-            blockMocks.childNode.fullPath = "Throw Error";
-            blockMocks.childNode.dirty = true;
-            blockMocks.childNode.profile = globalMocks.profileOne;
-            jest.spyOn(UssFSProvider.instance, "listFiles").mockImplementation(() => {
-                throw new Error("Throwing an error to check error handling for unit tests!");
-            });
+        blockMocks.childNode.contextValue = Constants.USS_SESSION_CONTEXT;
+        blockMocks.childNode.fullPath = "Throw Error";
+        blockMocks.childNode.dirty = true;
+        blockMocks.childNode.profile = globalMocks.profileOne;
+        jest.spyOn(UssFSProvider.instance, "listFiles").mockImplementation(() => {
+            throw new Error("Throwing an error to check error handling for unit tests!");
+        });
 
-            await blockMocks.childNode.getChildren();
-            expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
-            expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual(
-                "Retrieving response from uss-list Error: Throwing an error to check error handling for unit tests!"
-            );
-        }
-    );
+        await blockMocks.childNode.getChildren();
+        expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
+        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual(
+            "Retrieving response from USS list API Error: Throwing an error to check error handling for unit tests!"
+        );
+    });
 
     it("Tests that when passing a globalMocks.session node that is not dirty the node.getChildren() method is exited early", async () => {
         const globalMocks = createGlobalMocks();

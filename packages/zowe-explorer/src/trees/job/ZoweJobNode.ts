@@ -145,12 +145,13 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             const spools = await this.getSpoolFiles(this.job);
             if (!spools.length) {
                 const noSpoolNode = new ZoweSpoolNode({
-                    label: vscode.l10n.t("There are no JES spool messages to display"),
+                    label: vscode.l10n.t("No spool files found"),
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
                     parentNode: this,
                     profile: this.getProfile(),
+                    contextOverride: Constants.INFORMATION_CONTEXT,
                 });
-                return [noSpoolNode];
+                return (this.children = [noSpoolNode]);
             }
             spools.forEach((spool) => {
                 const procstep = spool.procstep ? spool.procstep : undefined;
@@ -201,7 +202,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                     profile: this.getProfile(),
                     contextOverride: Constants.INFORMATION_CONTEXT,
                 });
-                return [noJobsNode];
+                return (this.children = [noJobsNode]);
             }
             jobs.forEach((job) => {
                 let nodeTitle: string;
@@ -359,9 +360,9 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
 
     private async getJobs(owner: string, prefix: string, searchId: string, status: string): Promise<zosjobs.IJob[]> {
         ZoweLogger.trace("ZoweJobNode.getJobs called.");
+        const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         let jobsInternal: zosjobs.IJob[] = [];
         try {
-            const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
             if (this.searchId.length > 0) {
                 jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJob(searchId));
             } else {
@@ -405,9 +406,9 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
 
     private async getSpoolFiles(job: zosjobs.IJob = this.job): Promise<zosjobs.IJobFile[]> {
         ZoweLogger.trace("ZoweJobNode.getSpoolFiles called.");
+        const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         let spools: zosjobs.IJobFile[] = [];
         try {
-            const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
             spools = (await ZoweExplorerApiRegister.getJesApi(cachedProfile).getSpoolFiles(job.jobname, job.jobid)) ?? [];
             // filter out all the objects which do not seem to be correct Job File Document types
             // see an issue #845 for the details

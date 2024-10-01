@@ -125,7 +125,7 @@ describe("ZoweDatasetNode Unit Tests", () => {
     /*************************************************************************************************************
      * Checks that returning an unsuccessful response results in an error being thrown and caught
      *************************************************************************************************************/
-    it("Checks that when List.dataSet/allMembers() returns an empty response, " + "it returns a label of 'No data sets found'", async () => {
+    it("Checks that when List.dataSet/allMembers() throws an error, it returns a label of 'No data sets found'", async () => {
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -139,8 +139,37 @@ describe("ZoweDatasetNode Unit Tests", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             session,
             profile: profileOne,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
         });
-        rootNode.contextValue = Constants.DS_SESSION_CONTEXT;
+        rootNode.dirty = true;
+        const subNode = new ZoweDatasetNode({
+            label: "Response Fail",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: rootNode,
+            profile: profileOne,
+        });
+        jest.spyOn(zosfiles.List, "allMembers").mockRejectedValueOnce(new Error(subNode.label as string));
+        subNode.dirty = true;
+        const response = await subNode.getChildren();
+        expect(response[0].label).toBe("No data sets found");
+    });
+
+    it("Checks that when List.dataSet/allMembers() returns an empty response, it returns a label of 'No data sets found'", async () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+                };
+            }),
+        });
+        // Creating a rootNode
+        const rootNode = new ZoweDatasetNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+        });
         rootNode.dirty = true;
         const subNode = new ZoweDatasetNode({
             label: "Response Fail",

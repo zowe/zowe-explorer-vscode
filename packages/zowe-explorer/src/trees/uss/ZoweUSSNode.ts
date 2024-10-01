@@ -206,7 +206,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         const response = await this.getUssFiles(cachedProfile);
         if (!response.success) {
-            return [];
+            return this.children;
         }
 
         // If search path has changed, invalidate all children
@@ -245,7 +245,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 parentNode: this,
                 parentPath: this.fullPath,
                 profile: cachedProfile,
-                encoding: isDir ? undefined : await this.getEncodingInMap(`${this.fullPath}/${item.name as string}`),
+                encoding: isDir ? undefined : this.getEncodingInMap(`${this.fullPath}/${item.name as string}`),
             });
             if (isDir) {
                 // Create an entry for the USS folder if it doesn't exist.
