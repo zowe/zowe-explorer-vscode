@@ -22,6 +22,7 @@ import { IconGenerator } from "../../icons/IconGenerator";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedUtils } from "../shared/SharedUtils";
+import { AuthUtils } from "../../utils/AuthUtils";
 import type { Definitions } from "../../configuration/Definitions";
 
 export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
@@ -102,6 +103,8 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             if (this.getParent()?.label !== vscode.l10n.t("Favorites") && !SharedContext.isFavorite(this)) {
                 this.id = this.label as string;
             }
+        } else if (this.contextValue === Constants.INFORMATION_CONTEXT) {
+            this.command = { command: "zowe.placeholderCommand", title: "Placeholder" };
         } else if (this.job != null) {
             this.resourceUri = vscode.Uri.from({
                 scheme: ZoweScheme.Jobs,
@@ -129,10 +132,6 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 profile: thisSessionNode.getProfile(),
                 contextOverride: Constants.INFORMATION_CONTEXT,
             });
-            placeholder.command = {
-                command: "zowe.placeholderCommand",
-                title: "Placeholder",
-            };
             return [placeholder];
         }
 
@@ -143,13 +142,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         const elementChildren: Record<string, IZoweJobTreeNode> = {};
         if (SharedContext.isJob(this)) {
             // Fetch spool files under job node
-            const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-            const spools: zosjobs.IJobFile[] = (
-                (await ZoweExplorerApiRegister.getJesApi(cachedProfile).getSpoolFiles(this.job.jobname, this.job.jobid)) ?? []
-            )
-                // filter out all the objects which do not seem to be correct Job File Document types
-                // see an issue #845 for the details
-                .filter((item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined));
+            const spools = await this.getSpoolFiles(this.job);
             if (!spools.length) {
                 const noSpoolNode = new ZoweSpoolNode({
                     label: vscode.l10n.t("There are no JES spool messages to display"),
@@ -206,12 +199,8 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
                     parentNode: this,
                     profile: this.getProfile(),
+                    contextOverride: Constants.INFORMATION_CONTEXT,
                 });
-                noJobsNode.contextValue = Constants.INFORMATION_CONTEXT;
-                noJobsNode.command = {
-                    command: "zowe.placeholderCommand",
-                    title: "Placeholder",
-                };
                 return [noJobsNode];
             }
             jobs.forEach((job) => {
@@ -371,41 +360,64 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
     private async getJobs(owner: string, prefix: string, searchId: string, status: string): Promise<zosjobs.IJob[]> {
         ZoweLogger.trace("ZoweJobNode.getJobs called.");
         let jobsInternal: zosjobs.IJob[] = [];
-        const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-        if (this.searchId.length > 0) {
-            jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJob(searchId));
-        } else {
-            if (!ZoweExplorerApiRegister.getJesApi(cachedProfile).getSession(cachedProfile)) {
-                throw new imperative.ImperativeError({
-                    msg: vscode.l10n.t("Profile auth error"),
-                    additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
-                    errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
-                });
-            }
-            jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
-                owner,
-                prefix,
-                status,
-                execData: true,
-            });
-
-            /**
-             *    Note: Temporary fix
-             *    This current fix is necessary since in certain instances the Zowe
-             *    Explorer JES API returns duplicate jobs. The following reduce function
-             *    filters only the unique jobs present by comparing the ids of these returned
-             *    jobs.
-             */
-            jobsInternal = jobsInternal.reduce((acc: zosjobs.IJob[], current) => {
-                const duplicateJobExists = acc.find((job) => job.jobid === current.jobid);
-                if (!duplicateJobExists) {
-                    return acc.concat([current]);
-                } else {
-                    return acc;
+        try {
+            const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+            if (this.searchId.length > 0) {
+                jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJob(searchId));
+            } else {
+                if (!ZoweExplorerApiRegister.getJesApi(cachedProfile).getSession(cachedProfile)) {
+                    throw new imperative.ImperativeError({
+                        msg: vscode.l10n.t("Profile auth error"),
+                        additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
+                        errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
+                    });
                 }
-            }, []);
+                jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
+                    owner,
+                    prefix,
+                    status,
+                    execData: true,
+                });
+
+                /**
+                 *    Note: Temporary fix
+                 *    This current fix is necessary since in certain instances the Zowe
+                 *    Explorer JES API returns duplicate jobs. The following reduce function
+                 *    filters only the unique jobs present by comparing the ids of these returned
+                 *    jobs.
+                 */
+                jobsInternal = jobsInternal.reduce((acc: zosjobs.IJob[], current) => {
+                    const duplicateJobExists = acc.find((job) => job.jobid === current.jobid);
+                    if (!duplicateJobExists) {
+                        return acc.concat([current]);
+                    } else {
+                        return acc;
+                    }
+                }, []);
+            }
+        } catch (error) {
+            await AuthUtils.errorHandling(error, this.getProfileName(), vscode.l10n.t("Retrieving response from JES list API"));
+            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode());
+            this.dirty = false;
         }
         return jobsInternal;
+    }
+
+    private async getSpoolFiles(job: zosjobs.IJob = this.job): Promise<zosjobs.IJobFile[]> {
+        ZoweLogger.trace("ZoweJobNode.getSpoolFiles called.");
+        let spools: zosjobs.IJobFile[] = [];
+        try {
+            const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+            spools = (await ZoweExplorerApiRegister.getJesApi(cachedProfile).getSpoolFiles(job.jobname, job.jobid)) ?? [];
+            // filter out all the objects which do not seem to be correct Job File Document types
+            // see an issue #845 for the details
+            spools = spools.filter((item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined));
+        } catch (error) {
+            await AuthUtils.errorHandling(error, this.getProfileName(), vscode.l10n.t("Retrieving response from JES list API"));
+            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode());
+            this.dirty = false;
+        }
+        return spools;
     }
 }
 

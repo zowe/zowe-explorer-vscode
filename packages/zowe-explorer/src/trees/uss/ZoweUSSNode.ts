@@ -112,6 +112,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             });
             if (isSession) {
                 UssFSProvider.instance.createDirectory(this.resourceUri);
+            } else if (this.contextValue === Constants.INFORMATION_CONTEXT) {
+                this.command = { command: "zowe.placeholderCommand", title: "Placeholder" };
             } else if (this.collapsibleState === vscode.TreeItemCollapsibleState.None) {
                 this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
             }
@@ -185,10 +187,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 parentNode: this,
                 contextOverride: Constants.INFORMATION_CONTEXT,
             });
-            placeholder.command = {
-                command: "zowe.placeholderCommand",
-                title: "Placeholder",
-            };
             return [placeholder];
         }
 
@@ -206,25 +204,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         // Get the list of files/folders at the given USS path and handle any errors
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-        let response: zosfiles.IZosFilesResponse;
-        if (!ZoweExplorerApiRegister.getUssApi(cachedProfile).getSession(cachedProfile)) {
-            throw new imperative.ImperativeError({
-                msg: vscode.l10n.t("Profile auth error"),
-                additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
-                errorCode: `${imperative.RestConstants.HTTP_STATUS_401 as number}`,
-            });
-        }
-        if (SharedContext.isSession(this)) {
-            response = await UssFSProvider.instance.listFiles(
-                cachedProfile,
-                SharedContext.isFavorite(this)
-                    ? this.resourceUri
-                    : this.resourceUri.with({
-                          path: path.posix.join(this.resourceUri.path, this.fullPath),
-                      })
-            );
-        } else {
-            response = await UssFSProvider.instance.listFiles(cachedProfile, this.resourceUri);
+        const response = await this.getUssFiles(cachedProfile);
+        if (!response.success) {
+            return [];
         }
 
         // If search path has changed, invalidate all children
@@ -673,6 +655,35 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
         } catch (error) {
             await AuthUtils.errorHandling(error, this.label.toString(), vscode.l10n.t("Error uploading files"));
+        }
+    }
+
+    private async getUssFiles(profile: imperative.IProfileLoaded): Promise<zosfiles.IZosFilesResponse> {
+        try {
+            if (!ZoweExplorerApiRegister.getUssApi(profile).getSession(profile)) {
+                throw new imperative.ImperativeError({
+                    msg: vscode.l10n.t("Profile auth error"),
+                    additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
+                    errorCode: `${imperative.RestConstants.HTTP_STATUS_401 as number}`,
+                });
+            }
+            if (SharedContext.isSession(this)) {
+                return await UssFSProvider.instance.listFiles(
+                    profile,
+                    SharedContext.isFavorite(this)
+                        ? this.resourceUri
+                        : this.resourceUri.with({
+                              path: path.posix.join(this.resourceUri.path, this.fullPath),
+                          })
+                );
+            } else {
+                return await UssFSProvider.instance.listFiles(profile, this.resourceUri);
+            }
+        } catch (error) {
+            await AuthUtils.errorHandling(error, this.getProfileName(), vscode.l10n.t("Retrieving response from USS list API"));
+            AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getUssApi(prof), this.getSessionNode());
+            this.dirty = false;
+            return { success: false, commandResponse: null };
         }
     }
 }

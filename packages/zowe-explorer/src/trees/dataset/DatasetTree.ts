@@ -147,15 +147,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (element.contextValue && element.contextValue === Constants.FAV_PROFILE_CONTEXT) {
                 return this.loadProfilesForFavorites(this.log, element);
             }
-            let response: IZoweDatasetTreeNode[] = [];
-            try {
-                response = await element.getChildren();
-            } catch (error) {
-                await AuthUtils.errorHandling(error, element.label.toString(), vscode.l10n.t("Retrieving response from ds-list"));
-                AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getMvsApi(profile), element.getSessionNode());
-                element.dirty = false;
-                return element.children;
-            }
+            const response = await element.getChildren();
 
             const finalResponse: IZoweDatasetTreeNode[] = [];
             for (const item of response) {
@@ -1521,5 +1513,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             node.setEncoding(encoding);
             await node.openDs(true, false, this);
         }
+    }
+
+    public async errorHandling(node: IZoweDatasetTreeNode, error: Error): Promise<void> {
+        await AuthUtils.errorHandling(error, node.getProfileName(), vscode.l10n.t("Retrieving response from ds-list"));
+        AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getMvsApi(profile), node.getSessionNode());
+        node.dirty = false;
     }
 }

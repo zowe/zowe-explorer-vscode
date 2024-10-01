@@ -143,9 +143,6 @@
   "Favorites": "Favorites",
   "Use the search button to list USS files": "Use the search button to list USS files",
   "Invalid node": "Invalid node",
-  "Profile auth error": "Profile auth error",
-  "Profile is not authenticated, please log in to continue": "Profile is not authenticated, please log in to continue",
-  "Retrieving response from uss-file-list": "Retrieving response from uss-file-list",
   "Delete action was cancelled.": "Delete action was cancelled.",
   "Unable to delete node: {0}/Error message": {
     "message": "Unable to delete node: {0}",
@@ -171,6 +168,9 @@
   "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.": "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.",
   "Uploading USS files...": "Uploading USS files...",
   "Error uploading files": "Error uploading files",
+  "Profile auth error": "Profile auth error",
+  "Profile is not authenticated, please log in to continue": "Profile is not authenticated, please log in to continue",
+  "Retrieving response from USS list API": "Retrieving response from USS list API",
   "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
   "Could not list USS files: Empty path provided in URI": "Could not list USS files: Empty path provided in URI",
   "Profile does not exist for this file.": "Profile does not exist for this file.",
@@ -352,7 +352,7 @@
   "Use the search button to display jobs": "Use the search button to display jobs",
   "There are no JES spool messages to display": "There are no JES spool messages to display",
   "No jobs found": "No jobs found",
-  "Retrieving response from zowe.GetJobs": "Retrieving response from zowe.GetJobs",
+  "Retrieving response from JES list API": "Retrieving response from JES list API",
   "$(list-ordered) Job ID (default)": "$(list-ordered) Job ID (default)",
   "$(calendar) Date Submitted": "$(calendar) Date Submitted",
   "$(calendar) Date Completed": "$(calendar) Date Completed",
@@ -425,6 +425,7 @@
       "Job label"
     ]
   },
+  "Retrieving response from jobs-list": "Retrieving response from jobs-list",
   "Get JCL": "Get JCL",
   "Display in Tree": "Display in Tree",
   "Cancel": "Cancel",
@@ -538,6 +539,7 @@
   "The response from Zowe CLI was not successful": "The response from Zowe CLI was not successful",
   "{0} members failed to load due to invalid name errors for {1}": "{0} members failed to load due to invalid name errors for {1}",
   "No data sets found": "No data sets found",
+  "Retrieving response from MVS list API": "Retrieving response from MVS list API",
   "Cannot download, item invalid.": "Cannot download, item invalid.",
   "$(case-sensitive) Name (default)": "$(case-sensitive) Name (default)",
   "$(calendar) Date Created": "$(calendar) Date Created",
@@ -637,6 +639,7 @@
       "Node label"
     ]
   },
+  "Retrieving response from ds-list": "Retrieving response from ds-list",
   "Getting data set templates.": "Getting data set templates.",
   "Resetting data set templates array.": "Resetting data set templates array.",
   "Updating data set templates.": "Updating data set templates.",
@@ -799,12 +802,6 @@
     "message": "Error encountered when refreshing data set view. {0}",
     "comment": [
       "Stringified JSON error"
-    ]
-  },
-  "Prompted for a data set pattern, recieved {0}./Data Set pattern": {
-    "message": "Prompted for a data set pattern, recieved {0}.",
-    "comment": [
-      "Data Set pattern"
     ]
   },
   "Cannot perform the copy operation as the data sets selected have different types": "Cannot perform the copy operation as the data sets selected have different types",

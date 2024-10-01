@@ -130,6 +130,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 });
                 if (this.getParent() == null || this.getParent().label === vscode.l10n.t("Favorites")) {
                     DatasetFSProvider.instance.createDirectory(this.resourceUri);
+                } else if (this.contextValue === Constants.INFORMATION_CONTEXT) {
+                    this.command = { command: "zowe.placeholderCommand", title: "Placeholder" };
                 }
             }
 
@@ -208,12 +210,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: this,
                 contextOverride: Constants.INFORMATION_CONTEXT,
-                profile: null,
+                profile: this.getProfile(),
             });
-            placeholder.command = {
-                command: "zowe.placeholderCommand",
-                title: "Placeholder",
-            };
             return [placeholder];
         }
         if (SharedContext.isDocument(this) || SharedContext.isInformation(this)) {
@@ -240,7 +238,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             // The dataSetsMatchingPattern API may return success=false and apiResponse=[] when no data sets found
             if (!response.success && !(Array.isArray(response.apiResponse) && response.apiResponse.length === 0)) {
                 await AuthUtils.errorHandling(vscode.l10n.t("The response from Zowe CLI was not successful"));
-                return this.children;
+                return [];
             }
 
             // Loops through all the returned dataset members and creates nodes for them
@@ -373,10 +371,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 parentNode: this,
                 contextOverride: Constants.INFORMATION_CONTEXT,
             });
-            placeholder.command = {
-                command: "zowe.placeholderCommand",
-                title: "Placeholder",
-            };
             this.children = [placeholder];
         } else {
             const newChildren = Object.keys(elementChildren)
@@ -542,7 +536,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             attributes: true,
             responseTimeout: profile.profile.responseTimeout,
         };
-        if (SharedContext.isSession(this) || SharedContext.isFavoriteSearch(this)) {
+        const isSession = SharedContext.isSession(this) || SharedContext.isFavoriteSearch(this);
+        if (isSession) {
             const fullPattern = SharedContext.isFavoriteSearch(this) ? (this.label as string) : this.pattern;
             const dsTree = SharedTreeProviders.ds as DatasetTree;
             this.patternMatches = dsTree.extractPatterns(fullPattern);
@@ -554,38 +549,46 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
                 this.tooltip = this.pattern = dsPattern.toUpperCase();
             }
+        }
 
-            const dsPatterns = [
-                ...new Set(
-                    this.pattern
-                        .toUpperCase()
-                        .split(",")
-                        .map((p) => p.trim())
-                ),
-            ];
-            const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
-            if (!mvsApi.getSession(profile)) {
-                throw new imperative.ImperativeError({
-                    msg: vscode.l10n.t("Profile auth error"),
-                    additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
-                    errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
-                });
-            }
-            if (mvsApi.dataSetsMatchingPattern) {
-                responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
-            } else {
-                for (const dsp of dsPatterns) {
-                    responses.push(await mvsApi.dataSet(dsp));
+        try {
+            if (isSession) {
+                const dsPatterns = [
+                    ...new Set(
+                        this.pattern
+                            .toUpperCase()
+                            .split(",")
+                            .map((p) => p.trim())
+                    ),
+                ];
+                const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
+                if (!mvsApi.getSession(profile)) {
+                    throw new imperative.ImperativeError({
+                        msg: vscode.l10n.t("Profile auth error"),
+                        additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
+                        errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
+                    });
                 }
-            }
-        } else if (this.memberPattern) {
-            this.memberPattern = this.memberPattern.toUpperCase();
-            for (const memPattern of this.memberPattern.split(",")) {
-                options.pattern = memPattern;
+                if (mvsApi.dataSetsMatchingPattern) {
+                    responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
+                } else {
+                    for (const dsp of dsPatterns) {
+                        responses.push(await mvsApi.dataSet(dsp));
+                    }
+                }
+            } else if (this.memberPattern) {
+                this.memberPattern = this.memberPattern.toUpperCase();
+                for (const memPattern of this.memberPattern.split(",")) {
+                    options.pattern = memPattern;
+                    responses.push(await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(this.label as string, options));
+                }
+            } else {
                 responses.push(await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(this.label as string, options));
             }
-        } else {
-            responses.push(await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(this.label as string, options));
+        } catch (error) {
+            await AuthUtils.errorHandling(error, this.label.toString(), vscode.l10n.t("Retrieving response from MVS list API"));
+            AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode());
+            this.dirty = false;
         }
         return responses;
     }

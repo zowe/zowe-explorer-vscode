@@ -462,14 +462,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 const favsForProfile = await this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
             }
-            try {
-                return await element.getChildren();
-            } catch (error) {
-                await AuthUtils.errorHandling(error, element.getProfileName(), vscode.l10n.t("Retrieving response from uss-list"));
-                AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), element.getSessionNode());
-                element.dirty = false;
-                return element.children;
-            }
+            return element.getChildren();
         }
         return this.mSessionNodes;
     }
@@ -987,8 +980,8 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode,
                         parentPath: parentNode.fullPath,
+                        contextOverride: Constants.INFORMATION_CONTEXT,
                     });
-                    infoNode.contextValue = Constants.INFORMATION_CONTEXT;
                     return [infoNode];
                 }
             } catch (error) {

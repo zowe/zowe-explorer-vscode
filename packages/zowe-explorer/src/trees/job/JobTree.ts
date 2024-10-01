@@ -174,14 +174,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             if (element.contextValue && element.contextValue === Constants.FAV_PROFILE_CONTEXT) {
                 return this.loadProfilesForFavorites(this.log, element);
             }
-            try {
-                return await element.getChildren();
-            } catch (error) {
-                await AuthUtils.errorHandling(error, element.getProfileName(), vscode.l10n.t("Retrieving response from jobs-list"));
-                AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), element.getSessionNode());
-                element.dirty = false;
-                return element.children;
-            }
+            return element.getChildren();
         }
         return this.mSessionNodes;
     }

@@ -8,7 +8,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
-- Fixed issue where 401 error could occur when opening PDS members after updating credentials. [#3150](https://github.com/zowe/zowe-explorer-vscode/issues/3150)
+- Fixed an issue where a 401 error could occur when opening PDS members after updating credentials. [#3150](https://github.com/zowe/zowe-explorer-vscode/issues/3150)
 
 ## `3.0.0-next.202409251932`
 
