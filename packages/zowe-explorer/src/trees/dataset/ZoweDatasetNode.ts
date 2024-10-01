@@ -212,7 +212,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 contextOverride: Constants.INFORMATION_CONTEXT,
                 profile: this.getProfile(),
             });
-            return [placeholder];
+            return (this.children = [placeholder]);
         }
         if (SharedContext.isDocument(this) || SharedContext.isInformation(this)) {
             return [];

@@ -330,9 +330,9 @@ describe("ZoweDatasetNode Unit Tests", () => {
             parentNode: sessionNode,
             session,
             profile: profileOne,
+            contextOverride: Constants.DS_PDS_CONTEXT,
         });
         pds.dirty = true;
-        pds.contextValue = Constants.DS_PDS_CONTEXT;
         const allMembers = jest.fn().mockReturnValueOnce({
             success: true,
             apiResponse: {
@@ -349,6 +349,48 @@ describe("ZoweDatasetNode Unit Tests", () => {
         expect(pdsChildren[0].contextValue).toEqual(Constants.DS_MEMBER_CONTEXT);
         expect(pdsChildren[1].label).toEqual("2 members with errors");
         expect(pdsChildren[1].contextValue).toEqual(Constants.DS_FILE_ERROR_MEMBER_CONTEXT);
+        getSessionNodeSpy.mockRestore();
+        getStatsMock.mockRestore();
+    });
+    it("Testing what happens when response has multiple members and member pattern is set", async () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+                };
+            }),
+        });
+
+        const getStatsMock = jest.spyOn(ZoweDatasetNode.prototype, "getStats").mockImplementation();
+
+        const sessionNode = createDatasetSessionNode(session, profileOne);
+        const getSessionNodeSpy = jest.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
+        // Creating a rootNode
+        const pds = new ZoweDatasetNode({
+            label: "[root]: something",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+        pds.dirty = true;
+        pds.memberPattern = "MEM*";
+        const allMembers = jest.fn().mockReturnValueOnce({
+            success: true,
+            apiResponse: {
+                items: [{ member: "MEMBER1" }],
+                returnedRows: 1,
+            },
+        });
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
+        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+        Object.defineProperty(zosfiles.List, "allMembers", { value: allMembers });
+        const pdsChildren = await pds.getChildren();
+        expect(pdsChildren[0].label).toEqual("MEMBER1");
+        expect(pdsChildren[0].contextValue).toEqual(Constants.DS_MEMBER_CONTEXT);
+        expect(allMembers).toHaveBeenCalledWith(expect.any(imperative.Session), pds.label, expect.objectContaining({ pattern: pds.memberPattern }));
         getSessionNodeSpy.mockRestore();
         getStatsMock.mockRestore();
     });

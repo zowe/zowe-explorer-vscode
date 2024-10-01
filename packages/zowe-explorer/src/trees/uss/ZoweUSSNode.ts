@@ -187,7 +187,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 parentNode: this,
                 contextOverride: Constants.INFORMATION_CONTEXT,
             });
-            return [placeholder];
+            return (this.children = [placeholder]);
         }
 
         if (!this.dirty) {
