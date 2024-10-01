@@ -495,8 +495,8 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 session,
                 profile,
+                contextOverride: Constants.USS_SESSION_CONTEXT,
             });
-            node.contextValue = Constants.USS_SESSION_CONTEXT;
             await this.refreshHomeProfileContext(node);
             const icon = IconGenerator.getIconByNode(node);
             if (icon) {
