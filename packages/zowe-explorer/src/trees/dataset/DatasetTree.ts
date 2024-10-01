@@ -987,7 +987,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
     public async datasetFilterPrompt(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("DatasetTree.datasetFilterPrompt called.");
-        ZoweLogger.debug(vscode.l10n.t("Prompting the user for a data set pattern"));
         let pattern: string;
         await this.checkCurrentProfile(node);
         const sessionNode = node;
@@ -995,6 +994,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             if (SharedContext.isSessionNotFav(node)) {
                 if (this.mHistory.getSearchHistory().length > 0) {
+                    ZoweLogger.debug(vscode.l10n.t("Prompting the user for a data set pattern"));
                     const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
                     const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
                     const quickpick = Gui.createQuickPick();

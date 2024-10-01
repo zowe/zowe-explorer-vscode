@@ -119,23 +119,19 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
      * @returns {Promise<IZoweJobTreeNode[]>}
      */
     public async getChildren(): Promise<IZoweJobTreeNode[]> {
-        const thisSessionNode = this.getSessionNode();
-        ZoweLogger.trace(`ZoweJobNode.getChildren called for ${String(thisSessionNode.label)}.`);
-        if (this?.filter !== undefined) {
-            return this.children;
-        }
+        ZoweLogger.trace(`ZoweJobNode.getChildren called for ${this.label as string}.`);
         if (SharedContext.isSession(this) && !this.filtered && !SharedContext.isFavorite(this)) {
             const placeholder = new ZoweJobNode({
                 label: vscode.l10n.t("Use the search button to display jobs"),
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: this,
-                profile: thisSessionNode.getProfile(),
+                profile: this.getProfile(),
                 contextOverride: Constants.INFORMATION_CONTEXT,
             });
             return [placeholder];
         }
 
-        if (!this.dirty) {
+        if (!this.dirty || this.filter !== undefined) {
             return this.children;
         }
 

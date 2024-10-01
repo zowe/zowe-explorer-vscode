@@ -203,7 +203,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @returns {Promise<ZoweDatasetNode[]>}
      */
     public async getChildren(): Promise<ZoweDatasetNode[]> {
-        ZoweLogger.trace("ZoweDatasetNode.getChildren called.");
+        ZoweLogger.trace(`ZoweDatasetNode.getChildren called for ${this.label as string}.`);
         if (!this.pattern && SharedContext.isSessionNotFav(this)) {
             const placeholder = new ZoweDatasetNode({
                 label: vscode.l10n.t("Use the search button to display data sets"),

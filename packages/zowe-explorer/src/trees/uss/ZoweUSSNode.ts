@@ -179,7 +179,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @returns {Promise<IZoweUSSTreeNode[]>}
      */
     public async getChildren(): Promise<IZoweUSSTreeNode[]> {
-        ZoweLogger.trace("ZoweUSSNode.getChildren called.");
+        ZoweLogger.trace(`ZoweUSSNode.getChildren called for ${this.label as string}.`);
         if ((!this.fullPath && SharedContext.isSession(this)) || SharedContext.isDocument(this)) {
             const placeholder = new ZoweUSSNode({
                 label: vscode.l10n.t("Use the search button to list USS files"),
