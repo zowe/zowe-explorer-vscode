@@ -717,8 +717,8 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             let remotepath: string;
             if (SharedContext.isSessionNotFav(node)) {
+                ZoweLogger.debug(vscode.l10n.t("Prompting the user for a USS path"));
                 if (this.mHistory.getSearchHistory().length > 0) {
-                    ZoweLogger.debug(vscode.l10n.t("Prompting the user for a USS path"));
                     const createPick = new FilterDescriptor(USSTree.defaultDialogText);
                     const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
                     const quickpick = Gui.createQuickPick();

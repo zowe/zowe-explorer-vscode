@@ -822,10 +822,7 @@ export class Profiles extends ProfilesCache {
         const configApi = profInfo.getTeamConfig();
         const profAttrs = await this.getProfileFromConfig(profileName);
         if (profAttrs.profLoc.jsonLoc) {
-            configApi.set(
-                `${profAttrs.profLoc.jsonLoc}.secure`,
-                loginTokenType?.startsWith("apimlAuthenticationToken") ? [] : ["tokenValue"]
-            );
+            configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, loginTokenType?.startsWith("apimlAuthenticationToken") ? [] : ["tokenValue"]);
         }
         configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "user")?.argLoc.jsonLoc);
         configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "password")?.argLoc.jsonLoc);

@@ -993,8 +993,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             if (SharedContext.isSessionNotFav(node)) {
+                ZoweLogger.debug(vscode.l10n.t("Prompting the user for a data set pattern"));
                 if (this.mHistory.getSearchHistory().length > 0) {
-                    ZoweLogger.debug(vscode.l10n.t("Prompting the user for a data set pattern"));
                     const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
                     const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
                     const quickpick = Gui.createQuickPick();
