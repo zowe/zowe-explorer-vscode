@@ -1,5 +1,6 @@
 import { VSCodeDivider, VSCodeTextArea } from "@vscode/webview-ui-toolkit/react";
 import { NetworkError } from "@zowe/zowe-explorer-api";
+import { TipList } from "./TipList";
 
 export type ErrorInfoProps = {
   error: NetworkError;
@@ -8,19 +9,6 @@ export type ErrorInfoProps = {
 
 export const isNetworkError = (val: any): val is NetworkError => {
   return val?.["info"] != null && val.info["summary"] != null;
-};
-
-const TipList = ({ tips }: { tips: string[] }) => {
-  return (
-    <div>
-      <h2>Tips</h2>
-      <ul>
-        {tips.map((tip) => (
-          <li>{tip}</li>
-        ))}
-      </ul>
-    </div>
-  );
 };
 
 export const ErrorInfo = ({ error, stackTrace }: ErrorInfoProps) => {
@@ -38,7 +26,7 @@ export const ErrorInfo = ({ error, stackTrace }: ErrorInfoProps) => {
         {error.info.summary}
       </p>
       <VSCodeTextArea value={stackTrace ?? error.info.fullError} resize="vertical" rows={10} style={{ height: "fit-content", width: "100%" }}>
-        Full error message
+        <strong>Full error message:</strong>
       </VSCodeTextArea>
       <VSCodeDivider />
       {error.info.tips ? <TipList tips={error.info.tips} /> : null}
@@ -46,8 +34,12 @@ export const ErrorInfo = ({ error, stackTrace }: ErrorInfoProps) => {
       <h2>Additional resources</h2>
       <ul>
         <li>
-          <a href="https://openmainframeproject.slack.com/">Open Mainframe Project Slack</a>
+          <a href="https://github.com/zowe/zowe-explorer-vscode/">GitHub</a>
         </li>
+        <li>
+          <a href="https://openmainframeproject.slack.com/">Slack: Open Mainframe Project</a>
+        </li>
+        <br />
         <li>
           <a href="https://docs.zowe.org">Zowe Docs</a>
         </li>
