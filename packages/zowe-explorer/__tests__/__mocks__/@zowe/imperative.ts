@@ -21,6 +21,13 @@ export class EventProcessor {
     public emitZoweEvent(eventName: string): void {}
 }
 
+export enum ProfLocType {
+    OLD_PROFILE = 0, // an old-school profile
+    TEAM_CONFIG = 1, // a team configuration
+    ENV = 2, // an environment variable
+    DEFAULT = 3,
+}
+
 /**
  * Constants used for REST client, etc.
  * @export
