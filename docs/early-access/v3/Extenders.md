@@ -1,99 +1,148 @@
-# Version 3.0.0 Changes Affecting Zowe Explorer Extenders
+# Version 3.0.0 Changes Affecting Zowe Explorer Users and Extenders
 
-## No longer supported
+- [Changes affecting all](#changes-affecting-all)
+- [Changes affecting Users](#changes-affecting-users)
+- [Changes affecting Extenders](#changes-affecting-extenders)
+
+## Changes affecting all
+
+### No longer supported
 
 - Removed support for v1 Profiles
 - Updated supported VS Code engine to 1.79.0
 - Drop support for Theia IDE
+- **Zowe Explorer no longer uses a temporary directory for storing Data Sets and USS files. All settings related to the temporary downloads folder have been removed.** In order to access resources stored by Zowe Explorer v3, refer to the [FileSystemProvider documentation](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider) for information on how to build and access resource URIs. Extenders can detect changes to resources using the `onResourceChanged` function in the `ZoweExplorerApiRegister` class.
 - Moved Data Set Templates, formerly in `zowe.ds.history` that has moved to internal storage. With the request to have data set templates shareable via workspace it will now migrate existing to `zowe.ds.templates` when other history items are moved.
 - Deprecated the `getUSSDocumentFilePath` function on the `IZoweTreeNode` interface as Zowe Explorer no longer uses the local file system for storing USS files. **No replacement is planned**; please access data from tree nodes using their [resource URIs](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#operations-for-extenders) instead.
-- **Zowe Explorer no longer uses a temporary directory for storing Data Sets and USS files. All settings related to the temporary downloads folder have been removed.** In order to access resources stored by Zowe Explorer v3, refer to the [FileSystemProvider documentation](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider) for information on how to build and access resource URIs. Extenders can detect changes to resources using the `onResourceChanged` function in the `ZoweExplorerApiRegister` class.
 
-## Removal of deprecated APIs from Extensibility API for Zowe Explorer
+## Changes affecting Users
 
-- Logger type `MessageSeverityEnum` removed in favor of `MessageSeverity`.
-- `IUss.putContents` removed in favor of `IUss.putContent`.
-- `IJes.getJobsByOwnerAndPrefix` removed in favor of `IJes.getJobsByParameters`.
-- `ICommand.issueTsoCommand` removed in favor of `ICommand.issueTsoCommandWithParms`.
-- `ZoweVsCodeExtension.showVsCodeMessage` removed in favor of `Gui.showMessage`.
-- `ZoweVsCodeExtension.inputBox` removed in favor of `Gui.showInputBox`.
-- `ZoweVsCodeExtension.promptCredentials` removed in favor of `ZoweVsCodeExtension.updateCredentials`.
-- Changed ZoweExplorerExtender.initForZowe `profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]` to a required argument
-- Changed IApiExplorerExtenders.initForZowe `profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]` to a required argument
-- Changed `ICommon`, `IMvs`, `IUss`, `IJes` interfaces to be grouped in `MainframeInteraction` namespace.
-- Renamed `WebviewOptions` interface to `GuiWebviewOptions` and moved to `GuiOptions` namespace.
-- Moved `GuiMessageOptions` interface to `GuiOptions` namespace.
-- Moved all types to the `Types` interface, these types include:
-  - IZoweNodeType
-  - IZoweUSSNodeType
-  - `NodeInteraction` renamed to `ZoweNodeInteraction`
-  - IApiRegisterClient
-  - WebviewUris
-  - FileAttributes
-  - PollRequest
-  - DatasetStats
-  - KeytarModule
-  - DataSetAllocTemplate
-  - Appender
-  - LogJsConfig
-- Moved `MessageSeverity` enum to it's own class.
-- Moved `IUrlValidator`, `IProfileValidation`, `IValidationSetting`, `ValidProfileEnum` and `EvenTypes` to `Validation` namespace.
-- Moved `getZoweDir` and `getFullPath` to `FileManagement` class.
-- Renamed `IUrlValidator` to `IValidationUrl`.
-- Renamed `IProfileValidation` to `IValidationProfile`.
-- Renamed `ValidProfileEnum` to `ValidationType`.
-- Wrapped `ZosmfApiCommon`, `ZosmfUssApi`, `ZosmfMvsApi`, `ZosmfJesApi` and `ZosmfCommandApi` inside `ZoweExplorerZosmf` namespace.
-- Renamed `ZosmfApiCommon` to `CommonApi`.
-- Renamed `ZosmfUssApi` to `UssApi`.
-- Renamed `ZosmfMvsApi` to `MvsApi`.
-- Renamed `ZosmfJesApi` to `JesApi`.
-- Renamed `ZosmfCommandApi` to `CommandApi`.
-- Renamed `ZoweExplorerTreeApi` to `IZoweExplorerTreeApi`.
-- Moved `NodeAction` enum to its own class `ZoweTreeNodeActions`.
-- Renamed `NodeAction` enum to `ZoweTreeNodeActions`.
-- Wrapped all content sorting related content to be contained in `Sorting` namespace, such as:
-  - DataSetSortOpts
-  - SortDirection
-  - DatasetFilterOpts
-  - DatasetFilter
-  - NodeSort
-  - JobSortOpts
-- Renamed `files` class to `FileManagement`.
-- Renamed `IPromptCredentials` into `PromptCredentials`.
-- Wrapped `IPromptCredentialsCommonOptions`, `IPromptCredentialsOptions` and `IPromptUserPassOptions` in `PromptCredentialsOptions` namespace.
-- Renamed `IPromptCredentialsCommonOptions` to `CommonOptions`.
-- Renamed `IPromptcredentialsOptions` to `ComplexOptions`.
-- Renamed `IPromptUserPassOptions` to `UserPassOptions`.
-- Removed `ProfilesCache.getSchema()`, `ProfilesCache.getCliProfileManager()`, `ProfilesCache.saveProfile()` & `ProfilesCache.deleteProfileOnDisk()` v1 Profiles manipulation endpoints.
-- `refreshAndReopen` function on the `IZoweTreeNode` interface - use the `reopen` function instead.
-- `copyUssFile` function on the `IZoweTreeNode` interface - use the `pasteUssTree` function instead.
+### New functionality
 
-## Removed or renamed VS Code commands
+- Added support to issue Unix commands with Zowe zosmf and ssh profiles working together in Zowe Explorer for VS Code.
+- Added support to compare files in the MVS and USS treeviews and across the two treeviews.
+- Added option to convert v1 Profiles in use to team configuration file.
+- Added support for `consoleName` property in z/OSMF profiles when issuing MVS commands.
+- Added PEM certificate support as an authentication method for logging into the API ML.
+- Added support for logging in to multiple API ML instances per team config file.
+- Added remote lookup functionality for Data Sets and USS, allowing Zowe Explorer to locate and resolve mainframe resources on demand.
+- Added change detection in the Data Sets and USS filesystems, so that changes on the mainframe will be reflected in opened editors for Data Sets and USS files.
+- Added a "Show as Table" option for profile nodes in the Jobs tree, displaying lists of jobs in a tabular view. Jobs can be filtered and sorted within this view, and users can select jobs to cancel, delete or download.
+- Updated default base profile naming scheme in newly generated configuration files to prevent name and property conflicts between Global and Project profiles.
 
-- `zowe.jobs.zosJobsOpenSpool` - use `vscode.open` with a spool URI instead
-- `zowe.ds.ZoweNode.openPS` - use `vscode.open` with a data set URI instead
-- `zowe.uss.ZoweUSSNode.open` - use `vscode.open` with a USS URI instead
-- `zowe.ds.addFavorite`, `zowe.uss.addFavorite`, `zowe.jobs.addFavorite` - use `zowe.addFavorite` instead
-- `zowe.ds.disableValidation`, `zowe.uss.disableValidation`, `zowe.jobs.disableValidation` - use `zowe.disableValidation` instead
-- `zowe.ds.deleteProfile`, `zowe.uss.deleteProfile`, `zowe.jobs.deleteProfile`, `zowe.cmd.deleteProfile` - use `zowe.deleteProfile` instead
-- `zowe.ds.editSession`, `zowe.uss.editSession`, `zowe.jobs.editSession` - use `zowe.editSession` instead
-- `zowe.ds.enableValidation`, `zowe.uss.enableValidation`, `zowe.jobs.enableValidation` - use `zowe.enableValidation` instead
-- `zowe.ds.openWithEncoding`, `zowe.uss.openWithEncoding` - use `zowe.openWithEncoding` instead
-- `zowe.ds.removeFavorite`, `zowe.uss.removeFavorite`, `zowe.jobs.removeFavorite` - use `zowe.removeFavorite` instead
-- `zowe.ds.removeFavProfile`, `zowe.uss.removeFavProfile`, `zowe.jobs.removeFavProfile` - use `zowe.removeFavProfile` instead
-- `zowe.ds.removeSavedSearch`, `zowe.uss.removeSavedSearch`, `zowe.jobs.removeSearchFavorite` - use `zowe.removeFavorite` instead
-- `zowe.ds.removeSession`, `zowe.uss.removeSession`, `zowe.jobs.removeSession` - use `zowe.removeSession` instead
-- `zowe.ds.saveSearch`, `zowe.uss.saveSearch`, `zowe.jobs.saveSearch` - use `zowe.saveSearch` instead
-- `zowe.ds.ssoLogin`, `zowe.uss.ssoLogin`, `zowe.jobs.ssoLogin` - use `zowe.ssoLogin` instead
-- `zowe.ds.ssoLogout`, `zowe.uss.ssoLogout`, `zowe.jobs.ssoLogout` - use `zowe.ssoLogout` instead
+## Changes affecting Extenders
 
-## New APIs Added
+### Removed or renamed VS Code commands
 
-- `ICommand.issueUnixCommand` added for issuing Unix Commands
-- Optional `ICommand.sshProfileRequired` API returning a boolean value for extenders that would like to use the ssh profile for issuing UNIX commands via Zowe Explorer.
-- `ProfilesCache.convertV1ProfToConfig()` added for migrating v1 profiles to a global team configuration file.
-- Marked `getJobsByParameters` as a required function for the `MainframeInteraction.IJes` interface.
-- Added the `uploadFromBuffer` required function to the `MainframeInteraction.IMvs` and `MainframeInteraction.IUss` interfaces. This function will be used in v3 to upload contents of data sets and USS files to the mainframe.
-- Added optional function `move` to the `MainframeInteraction.IUss` interface to move USS folders/files from one path to another.
-- Added the `buildUniqueSpoolName` function to build spool names for Zowe resource URIs and VS Code editor tabs.
-- Added the `isNodeInEditor` function to determine whether a tree node's resource URI is open in the editor.
+| What Changed                              | In V2                                                                                                  | Use in V3                |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------ |
+| Open spool file                           | `zowe.jobs.zosJobsOpenSpool`                                                                           | `vscode.open` with URI   |
+| Open data set file                        | `zowe.ds.ZoweNode.openPS`                                                                              | `vscode.open` with URI   |
+| Open unix file                            | `zowe.uss.ZoweUSSNode.open`                                                                            | `vscode.open` with URI   |
+| Add favorite to treeview                  | `zowe.ds.addFavorite`, `zowe.uss.addFavorite`, `zowe.jobs.addFavorite`                                 | `zowe.addFavorite`       |
+| Remove favorite from treeview             | `zowe.ds.removeFavorite`, `zowe.uss.removeFavorite`, `zowe.jobs.removeFavorite`                        | `zowe.removeFavorite`    |
+| Remove favorited profile from treeview    | `zowe.ds.removeFavProfile`, `zowe.uss.removeFavProfile`, `zowe.jobs.removeFavProfile`                  | `zowe.removeFavProfile`  |
+| Favorite search filter                    | `zowe.ds.saveSearch`, `zowe.uss.saveSearch`, `zowe.jobs.saveSearch`                                    | `zowe.saveSearch`        |
+| Remove saved search filter from favorites | `zowe.ds.removeSavedSearch`, `zowe.uss.removeSavedSearch`, `zowe.jobs.removeSearchFavorite`            | `zowe.removeFavorite`    |
+| Disable profile validation                | `zowe.ds.disableValidation`, `zowe.uss.disableValidation`, `zowe.jobs.disableValidation`               | `zowe.disableValidation` |
+| Enable profile validation                 | `zowe.ds.enableValidation`, `zowe.uss.enableValidation`, `zowe.jobs.enableValidation`                  | `zowe.enableValidation`  |
+| Delete profile                            | `zowe.ds.deleteProfile`, `zowe.uss.deleteProfile`, `zowe.jobs.deleteProfile`, `zowe.cmd.deleteProfile` | `zowe.deleteProfile`     |
+| Edit session                              | `zowe.ds.editSession`, `zowe.uss.editSession`, `zowe.jobs.editSession`                                 | `zowe.editSession`       |
+| Remove session from treeview              | `zowe.ds.removeSession`, `zowe.uss.removeSession`, `zowe.jobs.removeSession`                           | `zowe.removeSession`     |
+| Open file with encoding                   | `zowe.ds.openWithEncoding`, `zowe.uss.openWithEncoding`                                                | `zowe.openWithEncoding`  |
+| Profile login                             | `zowe.ds.ssoLogin`, `zowe.uss.ssoLogin`, `zowe.jobs.ssoLogin`                                          | `zowe.ssoLogin`          |
+| Profile logout                            | `zowe.ds.ssoLogout`, `zowe.uss.ssoLogout`, `zowe.jobs.ssoLogout`                                       | `zowe.ssoLogout`         |
+
+### Removal and changes to APIs from Extensibility API for Zowe Explorer
+
+| What Changed                                                     | In V2                                                                                                                                                                                                               | Use in V3                                                                                       |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Updated Logger type and moved to it's own class                  | `MessageSeverityEnum`                                                                                                                                                                                               | `MessageSeverity`                                                                               |
+| Removal of deprecated                                            | `IUss.putContents`                                                                                                                                                                                                  | `IUss.putContent`                                                                               |
+| Removal of deprecated                                            | `IJes.getJobsByOwnerAndPrefix`                                                                                                                                                                                      | `IJes.getJobsByParameters`                                                                      |
+| Removal of deprecated                                            | `ICommand.issueTsoCommand`                                                                                                                                                                                          | `ICommand.issueTsoCommandWithParms`                                                             |
+| Removal of deprecated                                            | `ZoweVsCodeExtension.showVsCodeMessage`                                                                                                                                                                             | `Gui.showMessage`                                                                               |
+| Removal of deprecated                                            | `ZoweVsCodeExtension.inputBox`                                                                                                                                                                                      | `Gui.showInputBox`                                                                              |
+| Removal of deprecated                                            | `ZoweVsCodeExtension.promptCredentials`                                                                                                                                                                             | `ZoweVsCodeExtension.updateCredentials`                                                         |
+| Removed                                                          | filesystem class `MemberEntry`                                                                                                                                                                                      | `DsEntry.isMember`: true                                                                        |
+| Renamed                                                          | `NodeInteraction`                                                                                                                                                                                                   | `ZoweNodeInteraction`                                                                           |
+| Renamed                                                          | `IUrlValidator`                                                                                                                                                                                                     | `IValidationUrl`                                                                                |
+| Renamed                                                          | `IProfileValidation`                                                                                                                                                                                                | `IValidationProfile`                                                                            |
+| Renamed                                                          | `ValidProfileEnum`                                                                                                                                                                                                  | `ValidationType`                                                                                |
+| Renamed                                                          | `ZosmfApiCommon`                                                                                                                                                                                                    | `CommonApi`                                                                                     |
+| Renamed                                                          | `ZosmfUssApi`                                                                                                                                                                                                       | `UssApi`                                                                                        |
+| Renamed                                                          | `ZosmfMvsApi`                                                                                                                                                                                                       | `MvsApi`                                                                                        |
+| Renamed                                                          | `ZosmfJesApi`                                                                                                                                                                                                       | `JesApi`                                                                                        |
+| Renamed                                                          | `ZosmfCommandApi`                                                                                                                                                                                                   | `CommandApi`                                                                                    |
+| Renamed                                                          | `ZoweExplorerTreeApi`                                                                                                                                                                                               | `IZoweExplorerTreeApi`                                                                          |
+| Renamed                                                          | `files` class                                                                                                                                                                                                       | `FileManagement`                                                                                |
+| Renamed                                                          | `IPromptCredentials`                                                                                                                                                                                                | `PromptCredentials`                                                                             |
+| Renamed                                                          | `IPromptCredentialsCommonOptions`                                                                                                                                                                                   | `CommonOptions`                                                                                 |
+| Renamed                                                          | `IPromptcredentialsOptions`                                                                                                                                                                                         | `ComplexOptions`                                                                                |
+| Renamed                                                          | `IPromptUserPassOptions`                                                                                                                                                                                            | `UserPassOptions`                                                                               |
+| Renamed                                                          | `BaseProvider._lookup` (depracated)                                                                                                                                                                                 | `BaseProvider.lookup`                                                                           |
+| Moved and renamed enum to its own class                          | `NodeAction`                                                                                                                                                                                                        | `ZoweTreeNodeActions`                                                                           |
+| Moved                                                            | `getZoweDir`, `getFullPath`                                                                                                                                                                                         | `FileManagement` class                                                                          |
+| Changed interfaces to be in namespace                            | `ICommon`, `IMvs`, `IUss`, `IJes`, `ICommand`                                                                                                                                                                       | under `MainframeInteraction`                                                                    |
+| Changed interfaces to be in namespace                            | `WebviewOptions`                                                                                                                                                                                                    | `GuiOptions.GuiWebviewOptions`                                                                  |
+| Changed interfaces to be in namespace                            | `GuiMessageOptions`                                                                                                                                                                                                 | `GuiOptions.GuiMessageOptions`                                                                  |
+| Changed interfaces to be in namespace                            | `IUrlValidator`, `IProfileValidation`, `IValidationSetting`, `ValidProfileEnum`, `EvenTypes`                                                                                                                        | under `Validation`                                                                              |
+| Changed interfaces to be in namespace                            | `IZoweNodeType`, `IZoweUSSNodeType`, `ZoweNodeInteraction`, `IApiRegisterClient`, `WebviewUris`, `FileAttributes`, `PollRequest`, `DatasetStats`, `KeytarModule`, `DataSetAllocTemplate`, `Appender`, `LogJsConfig` | under `Types`                                                                                   |
+| Changed interfaces to be in namespace                            | `DataSetSortOpts`, `SortDirection`, `DatasetFilterOpts`, `DatasetFilter`, `NodeSort`, `JobSortOpts`                                                                                                                 | under `Sorting`                                                                                 |
+| Changed interfaces to be in namespace                            | `CommonApi`, `UssApi`, `MvsApi`, `JesApi`, `CommandApi`                                                                                                                                                             | under `ZoweExplorerZosmf`                                                                       |
+| Changed interfaces to be in namespace                            | `IPromptCredentialsCommonOptions`, `IPromptCredentialsOptions`, `IPromptUserPassOptions`                                                                                                                            | under `PromptCredentialsOptions`                                                                |
+| Changed in `IZoweTree`                                           | n/a                                                                                                                                                                                                                 | `openWithEncoding` optional                                                                     |
+| Changed in `IZoweTree.editSession`                               | `zoweFileProvider`                                                                                                                                                                                                  | removed                                                                                         |
+| Changed in `IZoweTree.addSession`                                | all parameters optional                                                                                                                                                                                             | requires `AddSessionOpts` object                                                                |
+| Changed in `IZoweTreeNode`                                       | `refreshAndReopen`                                                                                                                                                                                                  | `reopen`                                                                                        |
+| Changed in `IZoweTreeNode`                                       | `copyUssFile`                                                                                                                                                                                                       | `pasteUssTree`                                                                                  |
+| Changed in `IZoweTreeNode`                                       | `stats`                                                                                                                                                                                                             | `getStats` & `setStats`                                                                         |
+| Changed in `IZoweDatasetTreeNode`                                | `binary`                                                                                                                                                                                                            | `getEncoding` & `setEncoding`                                                                   |
+| Changed in `IZoweDatasetTreeNode` and `IZoweUSSTreeNode`         | `encodingMap`                                                                                                                                                                                                       | `getEncodingInMap` & `updateEncodingInMap`                                                      |
+| Changed in `IZoweUSSTreeNode`                                    | `shortLabel`                                                                                                                                                                                                        | `getBaseName`                                                                                   |
+| Changed in `IZoweUSSTreeNode`                                    | `attributes`                                                                                                                                                                                                        | `getAttributes` & `setAttributes`                                                               |
+| Changed in `IZoweDatasetTreeNode` and `IZoweUSSTreeNode`         | `encoding`                                                                                                                                                                                                          | `getEncoding` & `setEncoding`                                                                   |
+| Changed in `ZoweExplorerExtender.initForZowe`                    | `profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]` not required                                                                                                                             | now a required argument                                                                         |
+| Changed in `IApiExplorerExtenders.initForZowe`                   | `profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]` not required                                                                                                                             | now a required argument and synchronous method                                                  |
+| Changed in `MainframeInteraction`                                | `getStatus`                                                                                                                                                                                                         | optional parm `profileType` type string                                                         |
+| Changed in `MainframeInteraction.IJes`                           | `getJobsByParameters` not required                                                                                                                                                                                  | now a required API                                                                              |
+| Changed in `ProfilesCache.getProfile`                            | return `undefined` if no profiles                                                                                                                                                                                   | return `[]` if no profiles                                                                      |
+| Removed v1 profile manipulation APIs                             | `ProfilesCache.getSchema`, `ProfilesCache.getCliProfileManager`, `ProfilesCache.saveProfile`, `ProfilesCache.deleteProfileOnDisk`                                                                                   | n/a                                                                                             |
+| Changed Return types `IZoweTree.addDsTemplate`                   | n/a                                                                                                                                                                                                                 | `Promise<void>`                                                                                 |
+| Changed Return types `IZoweTree.flipState`                       | Promise                                                                                                                                                                                                             | syncronous                                                                                      |
+| Changed Return types `IZoweTree.setItem`                         | Promise                                                                                                                                                                                                             | syncronous                                                                                      |
+| Changed Return types `IZoweTree.addSearchHistory`                | Promise                                                                                                                                                                                                             | syncronous                                                                                      |
+| Changed Return types `IZoweTree.deleteSession`                   | Promise                                                                                                                                                                                                             | syncronous                                                                                      |
+| Changed Return types `IZoweTree.addFileHistory`                  | Promise                                                                                                                                                                                                             | syncronous                                                                                      |
+| Changed Return types `IZoweTree.removeFileHistory`               | Promise                                                                                                                                                                                                             | syncronous                                                                                      |
+| Changed Return types `MainframeInteractions.ICommon.logout`      | n/a                                                                                                                                                                                                                 | `Promise<void>`                                                                                 |
+| Changed Return types `IZoweTree.addFavorite`                     | n/a                                                                                                                                                                                                                 | `Promise<void>`                                                                                 |
+| Changed Return types `IZoweTree.removeFavorite`                  | n/a                                                                                                                                                                                                                 | `Promise<void>`                                                                                 |
+| Changed Return types `IZoweTree.removeFavProfile`                | n/a                                                                                                                                                                                                                 | `Promise<void>`                                                                                 |
+| Changed Return types `IZoweTree.ssoLogin`                        | n/a                                                                                                                                                                                                                 | `Promise<void>`                                                                                 |
+| Changed Return types `IZoweTree.ssoLogout`                       | n/a                                                                                                                                                                                                                 | `Promise<void>`                                                                                 |
+| Changed Return types `IZoweTree.checkCurrentProfile`             | n/a                                                                                                                                                                                                                 | `Validation.IValidationProfile` or `Promise<Validation.IValidationProfile>`                     |
+| Changed Return types `IZoweTree.getSearchHistory`                | n/a                                                                                                                                                                                                                 | `string[]`                                                                                      |
+| Changed Return types `IZoweTree.getAllLoadedItems`               | n/a                                                                                                                                                                                                                 | `IZoweTreeNode[]` or `Promise<IZoweTreeNode[]>`                                                 |
+| Changed Return types `IZoweTree.getFileHistory`                  | n/a                                                                                                                                                                                                                 | `string[]`                                                                                      |
+| Changed Return types `IZoweTree.createFilterString`              | n/a                                                                                                                                                                                                                 | `string`                                                                                        |
+| Changed Return types `IZoweTreeNode.rename`                      | n/a                                                                                                                                                                                                                 | `Promise<IZosFilesResponse>`                                                                    |
+| Changed Return types `ZoweVsCodeExtension.logoutWithBaseProfile` | `void`                                                                                                                                                                                                              | `boolean`                                                                                       |
+| Depracated                                                       | `IZoweTree.openFiles`                                                                                                                                                                                               | open files are tracked by the `FileSystemProvider`                                              |
+| Depracated                                                       | `IZoweTreeNode.getUSSDocumentFilePath`                                                                                                                                                                              | No replacement is planned; please access data from tree nodes using their resource URIs instead |
+
+### New APIs
+
+| What's new                                                                                                                                     | API                                                                                      |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Issue UNIX commands                                                                                                                            | `ICommand.issueUnixCommand`                                                              |
+| Boolean value used if SSH profile required for issuing UNIX commands with Zowe Explorer                                                        | `ICommand.sshProfileRequired` optional                                                   |
+| Migrate v1 profiles to global team configuration file                                                                                          | `ProfilesCache.convertV1ProfToConfig`                                                    |
+| New required API in `MainframeInteraction.IMvs` and `MainframeInteraction.IUss` to upload contents of data sets and USS files to the mainframe | `uploadFromBuffer`                                                                       |
+| Move USS folders/files from one path to another in `MainframeInteraction.IUss`                                                                 | `move`                                                                                   |
+| Build spool names for Zowe resource URIs and VS Code editor tabs                                                                               | `buildUniqueSpoolName`                                                                   |
+| Determine if tree node's resource URI is open in VS Code editor                                                                                | `isNodeInEditor`                                                                         |
+| Added VS Code event to notify OS vault credential updates made                                                                                 | `IRegisterClient.onVaultUpdate`                                                          |
+| Added VS Code event to notify PC's credential manager updates made                                                                             | `IRegisterClient.onCredMgrsUpdate`                                                       |
+| Added support for building, exposing and displaying table views within Zowe Explorer                                                           | `TableBuilder` & `TableMediator`                                                         |
+| Support to store SSO token in parent profile when nested profiles are in use                                                                   | `ZoweVsCodeExtension.loginWithBaseProfile` & `ZoweVsCodeExtension.logoutWithBaseProfile` |

@@ -142,19 +142,19 @@ importers:
         specifier: ^0.0.35
         version: 0.0.35
       '@zowe/core-for-zowe-sdk':
-        specifier: ^8.0.0
+        specifier: 8.0.0
         version: 8.0.0(@zowe/imperative@8.0.0)
       '@zowe/secrets-for-zowe-sdk':
-        specifier: ^8.0.0
+        specifier: 8.0.0
         version: 8.0.0
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: ^8.0.0
+        specifier: 8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: ^8.0.0
+        specifier: 8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       '@zowe/zosmf-for-zowe-sdk':
-        specifier: ^8.0.0
+        specifier: 8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       '@zowe/zowe-explorer-api':
         specifier: 3.0.0-SNAPSHOT
@@ -251,31 +251,31 @@ importers:
         specifier: ^1.53.2
         version: 1.89.0
       '@zowe/core-for-zowe-sdk':
-        specifier: ^8.0.0
+        specifier: 8.0.0
         version: 8.0.0(@zowe/imperative@8.0.0)
       '@zowe/imperative':
-        specifier: ^8.0.0
+        specifier: 8.0.0
         version: 8.0.0
       '@zowe/secrets-for-zowe-sdk':
-        specifier: ^8.0.0
+        specifier: 8.0.0
         version: 8.0.0
       '@zowe/zos-console-for-zowe-sdk':
-        specifier: ^8.0.0
+        specifier: 8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: ^8.0.0
+        specifier: 8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: ^8.0.0
+        specifier: 8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       '@zowe/zos-tso-for-zowe-sdk':
-        specifier: ^8.0.0
+        specifier: 8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       '@zowe/zos-uss-for-zowe-sdk':
-        specifier: ^8.0.0
+        specifier: 8.0.0
         version: 8.0.0(@zowe/imperative@8.0.0)
       '@zowe/zosmf-for-zowe-sdk':
-        specifier: ^8.0.0
+        specifier: 8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       deep-object-diff:
         specifier: ^1.1.9
@@ -300,13 +300,13 @@ importers:
   packages/zowe-explorer-ftp-extension:
     dependencies:
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: ^8.0.0
+        specifier: 8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       '@zowe/zos-ftp-for-zowe-cli':
-        specifier: ^3.0.0
+        specifier: 3.0.0
         version: 3.0.0(@zowe/imperative@8.0.0)
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: ^8.0.0
+        specifier: 8.0.0
         version: 8.0.0(@zowe/core-for-zowe-sdk@8.0.0)(@zowe/imperative@8.0.0)
       '@zowe/zowe-explorer-api':
         specifier: 3.0.0-SNAPSHOT
@@ -5108,6 +5108,7 @@ packages:
 
   /defaults@1.0.4:
     resolution: {integrity: sha512-eFuaLoy/Rxalv2kr+lqMlUnrDWV+3j4pljOIJgLIhI058IQfWJ7vXhyEIHu+HtC738klGALYxOKDO0bQP3tg8A==}
+    requiresBuild: true
     dependencies:
       clone: 1.0.4
     dev: true
