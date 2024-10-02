@@ -9,6 +9,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Fix issue where the Zowe Explorer VS Code command `Refresh Zowe Explorer` failed catastrophically. [#3100](https://github.com/zowe/zowe-explorer-vscode/issues/3100)
+- Fixed an issue where the `ProfilesUtils.getProfileInfo` function returned a new `ProfileInfo` instance that did not respect the `ZOWE_CLI_HOME` environment variable and workspace paths. [#3168](https://github.com/zowe/zowe-explorer-vscode/issues/3168)
 
 ## `2.18.0`
 

@@ -1077,4 +1077,15 @@ describe("ProfilesUtils unit tests", () => {
             );
         });
     });
+
+    describe("setupDefaultCredentialManager", () => {
+        it("calls readProfilesFromDisk with homeDir and projectDir", async () => {
+            const readProfilesFromDiskMock = jest.spyOn(zowe.imperative.ProfileInfo.prototype, "readProfilesFromDisk").mockImplementation();
+            await profUtils.ProfilesUtils.setupDefaultCredentialManager();
+            expect(readProfilesFromDiskMock).toHaveBeenCalledWith({
+                homeDir: zowe.getZoweDir(),
+                projectDir: vscode.workspace.workspaceFolders?.[0].uri.fsPath,
+            });
+        });
+    });
 });

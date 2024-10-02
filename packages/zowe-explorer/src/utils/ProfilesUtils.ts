@@ -371,8 +371,12 @@ export class ProfilesUtils {
             const profileInfo = new imperative.ProfileInfo("zowe", {
                 credMgrOverride: defaultCredentialManager,
             });
+            const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
             // Trigger initialize() function of credential manager to throw an error early if failed to load
-            await profileInfo.readProfilesFromDisk();
+            await profileInfo.readProfilesFromDisk({
+                homeDir: getZoweDir(),
+                projectDir: workspaceFolder ? getFullPath(workspaceFolder) : undefined,
+            });
             return profileInfo;
         } catch (err) {
             if (err instanceof imperative.ProfInfoErr && err.errorCode === imperative.ProfInfoErr.LOAD_CRED_MGR_FAILED) {
