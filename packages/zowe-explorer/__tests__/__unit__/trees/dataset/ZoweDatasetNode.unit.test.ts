@@ -206,13 +206,8 @@ describe("ZoweDatasetNode Unit Tests", () => {
             label: "Use the search button to display data sets",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: rootNode,
-            profile: profileOne,
             contextOverride: Constants.INFORMATION_CONTEXT,
         });
-        infoChild.command = {
-            command: "zowe.placeholderCommand",
-            title: "Placeholder",
-        };
         rootNode.dirty = false;
         expect(await rootNode.getChildren()).toEqual([infoChild]);
     });
@@ -233,13 +228,8 @@ describe("ZoweDatasetNode Unit Tests", () => {
             label: "Use the search button to display data sets",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: rootNode,
-            profile: profileOne,
             contextOverride: Constants.INFORMATION_CONTEXT,
         });
-        infoChild.command = {
-            command: "zowe.placeholderCommand",
-            title: "Placeholder",
-        };
         expect(await rootNode.getChildren()).toEqual([infoChild]);
     });
 

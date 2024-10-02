@@ -831,7 +831,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         setAttrsMock.mockRestore();
     });
 
-    it("Tests that error is thrown when node label is blank", async () => {
+    it("Tests that error is thrown when node label is blank", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
@@ -861,7 +861,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         );
     });
 
-    it("Tests that when passing a globalMocks.session node that is not dirty the node.getChildren() method is exited early", async () => {
+    it("Tests that when passing a session node that is not dirty the node.getChildren() method is exited early", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
@@ -870,6 +870,21 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         blockMocks.rootNode.fullPath = "/some/path";
 
         expect(await blockMocks.rootNode.getChildren()).toEqual([]);
+    });
+
+    it("Tests that when passing a session node without path the node.getChildren() method is exited early", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        blockMocks.rootNode.contextValue = Constants.USS_SESSION_CONTEXT;
+        const expectedNode = new ZoweUSSNode({
+            label: "Use the search button to list USS files",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.rootNode,
+            contextOverride: Constants.INFORMATION_CONTEXT,
+        });
+
+        expect(await blockMocks.rootNode.getChildren()).toEqual([expectedNode]);
     });
 });
 

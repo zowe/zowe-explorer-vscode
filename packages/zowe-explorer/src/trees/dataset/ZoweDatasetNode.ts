@@ -210,7 +210,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: this,
                 contextOverride: Constants.INFORMATION_CONTEXT,
-                profile: this.getProfile(),
             });
             return (this.children = [placeholder]);
         }

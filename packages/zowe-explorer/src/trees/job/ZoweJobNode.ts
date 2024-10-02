@@ -125,7 +125,6 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 label: vscode.l10n.t("Use the search button to display jobs"),
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: this,
-                profile: this.getProfile(),
                 contextOverride: Constants.INFORMATION_CONTEXT,
             });
             return [placeholder];

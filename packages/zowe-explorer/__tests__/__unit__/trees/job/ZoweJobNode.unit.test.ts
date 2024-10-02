@@ -416,19 +416,14 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         expect(spoolFiles[0].owner).toEqual("*");
     });
 
-    it("should return a new job if not owner and is a session", async () => {
+    it("should return placeholder node if session node expanded without search params", async () => {
         const globalMocks = await createGlobalMocks();
         const expectedJob = new ZoweJobNode({
             label: "Use the search button to display jobs",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: globalMocks.testJobNode,
-            profile: globalMocks.testProfile,
             contextOverride: Constants.INFORMATION_CONTEXT,
         });
-        expectedJob.command = {
-            command: "zowe.placeholderCommand",
-            title: "Placeholder",
-        };
 
         globalMocks.testJobNode._owner = null;
         jest.spyOn(SharedContext, "isSession").mockReturnValueOnce(true);
