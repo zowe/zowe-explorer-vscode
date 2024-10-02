@@ -8,6 +8,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where Zowe Explorer displayed a "No Zowe client configurations" prompt when a project, user-level config exists but no global config was present. [#3168](https://github.com/zowe/zowe-explorer-vscode/issues/3168)
+- Fixed an issue where `ProfilesUtils.getProfileInfo` returned a new `ProfileInfo` instance that did not respect the home directory or workspace paths. [#3168](https://github.com/zowe/zowe-explorer-vscode/issues/3168)
+
 ## `3.0.0`
 
 ### New features and enhancements
