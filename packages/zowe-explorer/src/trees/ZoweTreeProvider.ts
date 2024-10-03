@@ -314,30 +314,34 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
     protected async checkJwtTokenForProfile(profileName: string): Promise<void> {
         const profInfo = await Profiles.getInstance().getProfileInfo();
         const profAttrs = profInfo.getAllProfiles().find((prof) => prof.profName === profileName);
-        const secureProps = profInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true }).knownArgs;
-        const tokenValueProp = secureProps.find((arg) => arg.argName === "tokenValue" && arg.argValue != null);
-        const tokenTypeProp = secureProps.find((arg) => arg.argName === "tokenType");
+        const knownProps = profInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true }).knownArgs;
+        const tokenValueProp = knownProps.find((arg) => arg.argName === "tokenValue" && arg.argValue != null);
 
-        // Cannot decode LTPA2 tokens without private key
-        if (tokenTypeProp.argValue == "LtpaToken2") {
+        // Ignore if tokenValue is not a prop
+        if (tokenValueProp == null) {
             return;
         }
 
-        if (tokenValueProp) {
-            const fullToken = tokenValueProp.argValue.toString();
-            const [_header, payload, ..._rest] = fullToken.split(".");
-            try {
-                const decodedPayload = Buffer.from(payload, "base64url").toString("utf8");
-                const payloadJson = JSON.parse(decodedPayload);
-                if ("exp" in payloadJson) {
-                    const expireDate = dayjs.unix(payloadJson["exp"]);
-                    if (expireDate.isBefore(dayjs())) {
-                        await AuthUtils.promptUserForTokenLogin(profileName);
-                    }
+        const tokenTypeProp = knownProps.find((arg) => arg.argName === "tokenType");
+        // Cannot decode LTPA tokens without private key
+        if (tokenTypeProp?.argValue == "LtpaToken2") {
+            return;
+        }
+
+        const fullToken = tokenValueProp.argValue.toString();
+        // JWT format: [header].[payload].[signature]
+        const tokenParts = fullToken.split(".");
+        try {
+            const decodedPayload = Buffer.from(tokenParts[1], "base64url").toString("utf8");
+            const payloadJson = JSON.parse(decodedPayload);
+            if ("exp" in payloadJson) {
+                const expireDate = dayjs.unix(payloadJson.exp);
+                if (expireDate.isBefore(dayjs())) {
+                    await AuthUtils.promptUserForTokenLogin(profileName);
                 }
-            } catch (err) {
-                return;
             }
+        } catch (err) {
+            return;
         }
     }
 
