@@ -677,12 +677,12 @@ describe("Tree Provider Unit Tests - function checkJwtTokenForProfile", () => {
         const jsonParseSpy = jest.spyOn(JSON, "parse").mockReturnValue({
             exp: 1000000000,
         });
-        const promptUserForTokenLogin = jest.spyOn(AuthUtils, "promptUserForTokenLogin").mockImplementation();
+        const promptUserForSsoLogin = jest.spyOn(AuthUtils, "promptUserForSsoLogin").mockImplementation();
         blockMocks.mergeArgsForProfile.mockReturnValue({
             knownArgs: [{ argName: "tokenValue", argValue: "FAKE_HEADER.FAKE_PAYLOAD.FAKE_SIGNATURE" }],
         });
         await (ZoweTreeProvider as any).checkJwtTokenForProfile("zosmf");
         expect(jsonParseSpy).toHaveBeenCalled();
-        expect(promptUserForTokenLogin).toHaveBeenCalled();
+        expect(promptUserForSsoLogin).toHaveBeenCalled();
     });
 });

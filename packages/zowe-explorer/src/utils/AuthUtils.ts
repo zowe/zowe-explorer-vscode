@@ -60,7 +60,7 @@ export class AuthUtils {
                     const isTokenAuth = await AuthUtils.isUsingTokenAuth(label);
 
                     if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
-                        AuthUtils.promptUserForTokenLogin(label);
+                        AuthUtils.promptUserForSsoLogin(label);
                         return;
                     }
                 }
@@ -94,14 +94,16 @@ export class AuthUtils {
      * Prompts user to log in to authentication service.
      * @param profileName The name of the profile used to log in
      */
-    public static promptUserForTokenLogin(profileName: string): Thenable<void> {
-        const errToken = vscode.l10n.t({
-            message: "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
-            args: [profileName],
-            comment: ["Profile name"],
-        });
-        const message = vscode.l10n.t("Log in to Authentication Service");
-        return Gui.showMessage(errToken, { items: [message], vsCodeOpts: { modal: true } }).then(async (selection) => {
+    public static promptUserForSsoLogin(profileName: string): Thenable<void> {
+        return Gui.showMessage(
+            vscode.l10n.t({
+                message:
+                    "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
+                args: [profileName],
+                comment: ["Profile name"],
+            }),
+            { items: [vscode.l10n.t("Log in to Authentication Service")], vsCodeOpts: { modal: true } }
+        ).then(async (selection) => {
             if (selection) {
                 await Constants.PROFILES_CACHE.ssoLogin(null, profileName);
             }

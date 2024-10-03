@@ -337,7 +337,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
             if ("exp" in payloadJson) {
                 const expireDate = dayjs.unix(payloadJson.exp);
                 if (expireDate.isBefore(dayjs())) {
-                    await AuthUtils.promptUserForTokenLogin(profileName);
+                    await AuthUtils.promptUserForSsoLogin(profileName);
                 }
             }
         } catch (err) {
