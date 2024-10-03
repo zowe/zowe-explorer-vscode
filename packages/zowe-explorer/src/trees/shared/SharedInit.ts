@@ -50,28 +50,6 @@ import { ZosConsoleViewProvider } from "../../zosconsole/ZosConsolePanel";
 import { TroubleshootError } from "../../utils/TroubleshootError";
 
 export class SharedInit {
-    public static registerRefreshCommand(
-        context: vscode.ExtensionContext,
-        activate: (_context: vscode.ExtensionContext) => Promise<ZoweExplorerApiRegister>,
-        deactivate: () => Promise<void>
-    ): void {
-        ZoweLogger.trace("shared.init.registerRefreshCommand called.");
-        // set a command to silently reload extension
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.extRefresh", async () => {
-                await deactivate();
-                for (const sub of context.subscriptions) {
-                    try {
-                        await sub.dispose();
-                    } catch (e) {
-                        ZoweLogger.error(e);
-                    }
-                }
-                await activate(context);
-            })
-        );
-    }
-
     public static registerCommonCommands(context: vscode.ExtensionContext, providers: Definitions.IZoweProviders): void {
         ZoweLogger.trace("shared.init.registerCommonCommands called.");
 

@@ -107,7 +107,7 @@ export class Icon {
         id: IconUtils.IconId.home,
         type: IconUtils.IconHierarchyType.base,
         path: Icon.getIconPathInResources("home.svg"),
-        check: (node) => SharedContext.isGlobalProfile(node),
+        check: (node) => SharedContext.isGlobalProfile(node) && !SharedContext.isSessionInactive(node),
     };
 
     public static migrated: IconUtils.IIconItem = {

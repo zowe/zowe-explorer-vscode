@@ -29,9 +29,6 @@
   "zowe.profileManagement": {
     "Manage Profile": ""
   },
-  "zowe.extRefresh": {
-    "Refresh Zowe Explorer": ""
-  },
   "zowe.editHistory": {
     "Edit History": ""
   },
@@ -440,6 +437,8 @@
   "Install": "",
   "Reload": "",
   "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.": "",
+  "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.": "",
+  "Create New": "",
   "\"Update Credentials\" operation not supported when \"autoStore\" is false": "",
   "Connection Name": "",
   "Enter a name for the connection.": "",
@@ -453,7 +452,6 @@
   "Failed to initialize Zowe folder: {0}": "",
   "Zowe Profiles initialized successfully.": "",
   "Convert Existing Profiles": "",
-  "Create New": "",
   "Operation cancelled": "",
   "Tree Item is not a Zowe Explorer item.": "",
   "Zowe Explorer": "",
@@ -577,6 +575,7 @@
   "Retrieving response from zowe.GetJobs": "",
   "$(list-ordered) Job ID (default)": "",
   "$(calendar) Date Submitted": "",
+  "$(calendar) Date Completed": "",
   "$(case-sensitive) Job Name": "",
   "$(symbol-numeric) Return Code": "",
   "$(fold) Sort Direction": "",
@@ -791,8 +790,6 @@
   "Internal error: Tried to call a non-existing Common API in API register: {0}": "",
   "Reload Window": "",
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "",
-  "Token auth error": "",
-  "Profile was found using token auth, please log in to continue.": "",
   "Choose \"Create new...\" to define or select a profile to add to the DATA SETS Explorer": "",
   "Choose \"Create new...\" to define or select a profile to add to the JOBS Explorer": "",
   "Choose \"Create new...\" to define or select a profile to add to the USS Explorer": "",

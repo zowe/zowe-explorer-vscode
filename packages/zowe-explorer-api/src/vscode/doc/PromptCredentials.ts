@@ -11,6 +11,7 @@
 
 import * as imperative from "@zowe/imperative";
 import { InputBoxOptions, OpenDialogOptions } from "vscode";
+import { ProfilesCache } from "../../profiles";
 
 export namespace PromptCredentialsOptions {
     export interface CommonOptions {
@@ -24,6 +25,7 @@ export namespace PromptCredentialsOptions {
         sessionName?: string;
         sessionType?: string;
         secure?: boolean;
+        zeProfiles?: ProfilesCache;
     }
 
     export interface UserPassOptions extends CommonOptions {
