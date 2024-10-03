@@ -332,8 +332,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         // JWT format: [header].[payload].[signature]
         const tokenParts = fullToken.split(".");
         try {
-            const decodedPayload = Buffer.from(tokenParts[1], "base64url").toString("utf8");
-            const payloadJson = JSON.parse(decodedPayload);
+            const payloadJson = JSON.parse(Buffer.from(tokenParts[1], "base64url").toString("utf8"));
             if ("exp" in payloadJson) {
                 const expireDate = dayjs.unix(payloadJson.exp);
                 if (expireDate.isBefore(dayjs())) {
