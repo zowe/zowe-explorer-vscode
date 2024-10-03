@@ -520,7 +520,16 @@ export class Profiles extends ProfilesCache {
 
     public async editZoweConfigFile(): Promise<void> {
         ZoweLogger.trace("Profiles.editZoweConfigFile called.");
-        const existingLayers = await this.getConfigLayers();
+        const configLayers = await this.getConfigLayers();
+        const uniquePaths = new Set();
+        const existingLayers = configLayers.filter((layer) => {
+            const normalized = path.normalize(layer.path);
+            if (!uniquePaths.has(normalized)) {
+                uniquePaths.add(normalized);
+                return true;
+            }
+            return false;
+        });
         if (existingLayers.length === 1) {
             await this.openConfigFile(existingLayers[0].path);
             Gui.showMessage(this.manualEditMsg);
@@ -530,7 +539,7 @@ export class Profiles extends ProfilesCache {
             switch (choice) {
                 case "project":
                     for (const file of existingLayers) {
-                        if (file.user) {
+                        if (!file.global) {
                             await this.openConfigFile(file.path);
                         }
                     }
@@ -822,10 +831,7 @@ export class Profiles extends ProfilesCache {
         const configApi = profInfo.getTeamConfig();
         const profAttrs = await this.getProfileFromConfig(profileName);
         if (profAttrs.profLoc.jsonLoc) {
-            configApi.set(
-                `${profAttrs.profLoc.jsonLoc}.secure`,
-                loginTokenType?.startsWith("apimlAuthenticationToken") ? [] : ["tokenValue"]
-            );
+            configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, loginTokenType?.startsWith("apimlAuthenticationToken") ? [] : ["tokenValue"]);
         }
         configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "user")?.argLoc.jsonLoc);
         configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "password")?.argLoc.jsonLoc);
@@ -1059,7 +1065,7 @@ export class Profiles extends ProfilesCache {
     public async openConfigFile(filePath: string): Promise<void> {
         ZoweLogger.trace("Profiles.openConfigFile called.");
         const document = await vscode.workspace.openTextDocument(filePath);
-        await Gui.showTextDocument(document);
+        await Gui.showTextDocument(document, { preview: false });
     }
 
     /**
