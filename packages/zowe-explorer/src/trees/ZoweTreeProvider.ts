@@ -265,7 +265,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
                 Profiles.getInstance().validProfile = Validation.ValidationType.UNVERIFIED;
             }
         }
-        await this.checkJwtTokenForProfile(node.getProfileName());
+        await ZoweTreeProvider.checkJwtTokenForProfile(node.getProfileName());
         this.refresh();
         return profileStatus;
     }
@@ -311,7 +311,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
      *
      * @param profileName The name of the profile to check the JWT token for
      */
-    protected async checkJwtTokenForProfile(profileName: string): Promise<void> {
+    protected static async checkJwtTokenForProfile(profileName: string): Promise<void> {
         const profInfo = await Profiles.getInstance().getProfileInfo();
         const profAttrs = profInfo.getAllProfiles().find((prof) => prof.profName === profileName);
         const knownProps = profInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true }).knownArgs;
