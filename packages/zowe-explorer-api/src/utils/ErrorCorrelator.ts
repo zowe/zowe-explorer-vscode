@@ -162,7 +162,7 @@ export class ErrorCorrelator extends Singleton {
      * @param allowRetry Whether to allow retrying the action
      * @returns The user selection ("Retry" [if enabled] or "Troubleshoot")
      */
-    public async translateAndDisplayError(
+    public async displayError(
         api: ZoweExplorerApiType,
         profileType: string,
         errorDetails: string,
