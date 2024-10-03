@@ -96,9 +96,7 @@ export class AuthUtils {
      */
     public static promptUserForTokenLogin(profileName: string): Thenable<void> {
         const errToken = vscode.l10n.t({
-            message:
-                // eslint-disable-next-line max-len
-                "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
+            message: "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
             args: [profileName],
             comment: ["Profile name"],
         });
