@@ -547,7 +547,7 @@ export class Profiles extends ProfilesCache {
                     break;
                 case "global":
                     for (const file of existingLayers) {
-                        if (file.path.includes(FileManagement.getZoweDir())) {
+                        if (file.global) {
                             await this.openConfigFile(file.path);
                         }
                     }
