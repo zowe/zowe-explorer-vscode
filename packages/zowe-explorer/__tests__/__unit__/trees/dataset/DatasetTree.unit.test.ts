@@ -1520,7 +1520,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             qpPlaceholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
             mockEnableValidationContext: jest.fn(),
             testTree: new DatasetTree(),
-            checkJwtTokenForProfile: jest.spyOn(ZoweTreeProvider.prototype as any, "checkJwtTokenForProfile").mockImplementation(),
+            checkJwtTokenForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtTokenForProfile").mockImplementationOnce(() => {}),
         };
 
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
