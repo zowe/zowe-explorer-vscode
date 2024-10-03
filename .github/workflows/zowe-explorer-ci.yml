@@ -50,6 +50,7 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           env_vars: OS,NODE
+          version: v0.7.3 # Workaround for https://github.com/codecov/codecov-action/issues/1549
 
       - name: Package VSIX
         if: matrix.os == 'ubuntu-latest' && matrix.node-version == '16.x'
