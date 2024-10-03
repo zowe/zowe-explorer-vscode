@@ -24,7 +24,6 @@ coverage/
 v8-compile-cache-0/
 dist/
 prebuilds/
-samples/**/pnpm-lock.yaml
 packages/zowe-explorer/**/.wdio-vscode-service
 packages/zowe-explorer/__tests__/**/.zowe
 packages/zowe-explorer/__tests__/**/.env
