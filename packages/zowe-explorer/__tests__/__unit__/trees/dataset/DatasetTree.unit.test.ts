@@ -53,6 +53,7 @@ import { ZoweScheme } from "../../../../../zowe-explorer-api/src/fs/types/abstra
 import { Sorting } from "../../../../../zowe-explorer-api/src/tree";
 import { IconUtils } from "../../../../src/icons/IconUtils";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
+import { ZoweTreeProvider } from "../../../../src/trees/ZoweTreeProvider";
 
 jest.mock("fs");
 jest.mock("util");
@@ -1519,6 +1520,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             qpPlaceholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
             mockEnableValidationContext: jest.fn(),
             testTree: new DatasetTree(),
+            checkJwtTokenForProfile: jest.spyOn(ZoweTreeProvider.prototype as any, "checkJwtTokenForProfile").mockImplementation(),
         };
 
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);

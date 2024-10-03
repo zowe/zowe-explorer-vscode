@@ -306,6 +306,7 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
             testIJob: createIJobObject(),
             testJobsProvider: await JobInit.createJobsTree(imperative.Logger.getAppLogger()),
             jobNode: null,
+            checkJwtTokenForProfile: jest.spyOn(ZoweTreeProvider.prototype as any, "checkJwtTokenForProfile").mockImplementation(),
         };
 
         newMocks.jobNode = new ZoweJobNode({
