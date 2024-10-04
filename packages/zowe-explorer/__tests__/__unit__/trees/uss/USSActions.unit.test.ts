@@ -193,6 +193,22 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         return newMocks;
     }
 
+    it("should prompt the user for a location if one is not set on the node", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("/u/myuser/");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("folderName");
+        const refreshAllMock = jest.spyOn(SharedActions, "refreshAll").mockImplementation();
+        const createApiMock = jest.spyOn(blockMocks.ussApi, "create").mockImplementation();
+        blockMocks.ussNode.getParent().fullPath = "";
+
+        await USSActions.createUSSNode(blockMocks.ussNode.getParent(), blockMocks.testUSSTree, "directory");
+        expect(createApiMock).toHaveBeenCalledWith("/u/myuser/folderName", "directory");
+        expect(refreshAllMock).toHaveBeenCalled();
+        createApiMock.mockRestore();
+    });
+
     it("Tests if createUSSNode is executed successfully with Unverified profile", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
