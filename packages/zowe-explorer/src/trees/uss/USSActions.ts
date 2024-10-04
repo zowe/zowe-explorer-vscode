@@ -70,7 +70,7 @@ export class USSActions {
         const name = await Gui.showInputBox(nameOptions);
         if (name && filePath) {
             try {
-                filePath = `${filePath}/${name}`;
+                filePath = path.posix.join(filePath, name);
                 const uri = node.resourceUri.with({
                     path: isTopLevel ? path.posix.join(node.resourceUri.path, filePath) : path.posix.join(node.resourceUri.path, name),
                 });
