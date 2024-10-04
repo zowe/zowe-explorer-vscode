@@ -36,12 +36,7 @@ export class USSActions {
      * @param {ussTree} ussFileProvider - Current ussTree used to populate the TreeView
      * @returns {Promise<void>}
      */
-    public static async createUSSNode(
-        node: IZoweUSSTreeNode,
-        ussFileProvider: Types.IZoweUSSTreeType,
-        nodeType: string,
-        isTopLevel?: boolean
-    ): Promise<void> {
+    public static async createUSSNode(node: IZoweUSSTreeNode, ussFileProvider: Types.IZoweUSSTreeType, nodeType: string): Promise<void> {
         ZoweLogger.trace("uss.actions.createUSSNode called.");
         await ussFileProvider.checkCurrentProfile(node);
         let filePath = "";
@@ -69,6 +64,7 @@ export class USSActions {
             return;
         }
 
+        const isTopLevel = SharedContext.isSession(node);
         const nameOptions: vscode.InputBoxOptions = {
             placeHolder: vscode.l10n.t("Name of file or directory"),
         };
@@ -77,9 +73,7 @@ export class USSActions {
             try {
                 filePath = `${filePath}/${name}`;
                 const uri = node.resourceUri.with({
-                    path: SharedContext.isSession(node)
-                        ? path.posix.join(node.resourceUri.path, filePath)
-                        : path.posix.join(node.resourceUri.path, name),
+                    path: isTopLevel ? path.posix.join(node.resourceUri.path, filePath) : path.posix.join(node.resourceUri.path, name),
                 });
                 await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
                 if (nodeType === "file") {
@@ -92,6 +86,7 @@ export class USSActions {
                 } else {
                     ussFileProvider.refreshElement(node);
                 }
+
                 const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name) as ZoweUSSNode);
                 await ussFileProvider.getTreeView().reveal(node, { select: true, focus: true });
                 ussFileProvider.getTreeView().reveal(newNode, { select: true, focus: true });
