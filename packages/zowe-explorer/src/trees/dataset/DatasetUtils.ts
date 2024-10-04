@@ -75,14 +75,8 @@ export class DatasetUtils {
         const split = bracket > -1 ? label.substring(0, bracket).split(".", limit) : label.split(".", limit);
         for (let i = split.length - 1; i > 0; i--) {
             for (const [ext, matches] of DS_EXTENSION_MAP.entries()) {
-                for (const match of matches) {
-                    if (match instanceof RegExp) {
-                        if (match.test(split[i])) {
-                            return ext;
-                        }
-                    } else if (match === split[i]) {
-                        return ext;
-                    }
+                if (matches.some((match) => (match instanceof RegExp ? match.test(split[i]) : match === split[i]))) {
+                    return ext;
                 }
             }
         }
