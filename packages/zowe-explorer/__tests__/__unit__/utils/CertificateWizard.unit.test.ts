@@ -109,7 +109,7 @@ describe("CertificateWizard", () => {
         const spyReadFile = jest.fn((path, encoding, callback) => {
             callback(null, "file contents");
         });
-        Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
+        Object.defineProperty(fs, "readFile", { value: spyReadFile });
         const certWizard = new CertificateWizard(context, {
             cert: "/a/b/cert.pem",
             certKey: "/a/b/cert.key.pem",

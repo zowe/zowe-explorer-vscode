@@ -132,7 +132,7 @@ describe("AttributeView unit tests", () => {
         const spyReadFile = jest.fn((path, encoding, callback) => {
             callback(null, "file contents");
         });
-        Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
+        Object.defineProperty(fs, "readFile", { value: spyReadFile });
         await (view as any).onDidReceiveMessage({ command: "GET_LOCALIZATION" });
         expect(view.panel.webview.postMessage).toHaveBeenCalledWith({
             command: "GET_LOCALIZATION",

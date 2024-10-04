@@ -287,7 +287,7 @@ describe("HistoryView Unit Tests", () => {
             const spyReadFile = jest.fn((path, encoding, callback) => {
                 callback(null, "file contents");
             });
-            Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
+            Object.defineProperty(fs, "readFile", { value: spyReadFile });
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
             const postMessageSpy = jest.spyOn(historyView.panel.webview, "postMessage");
             await historyView["onDidReceiveMessage"]({ command: "GET_LOCALIZATION" });
