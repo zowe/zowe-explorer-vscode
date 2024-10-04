@@ -9,6 +9,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Fixed an issue where opening sequential data sets within favorited searches resulted in an error. [#3163](https://github.com/zowe/zowe-explorer-vscode/pull/3163)
+- Fixed an issue where automatic file extension detection identified file types incorrectly. [#3181](https://github.com/zowe/zowe-explorer-vscode/pull/3181)
 
 ## `3.0.0`
 

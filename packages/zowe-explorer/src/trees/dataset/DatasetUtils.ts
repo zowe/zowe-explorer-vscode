@@ -80,7 +80,7 @@ export class DatasetUtils {
                         if (match.test(split[i])) {
                             return ext;
                         }
-                    } else if (match.includes(split[i])) {
+                    } else if (match === split[i]) {
                         return ext;
                     }
                 }
