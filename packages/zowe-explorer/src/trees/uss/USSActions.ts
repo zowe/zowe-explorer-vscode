@@ -45,7 +45,7 @@ export class USSActions {
         ZoweLogger.trace("uss.actions.createUSSNode called.");
         await ussFileProvider.checkCurrentProfile(node);
         let filePath = "";
-        if (SharedContext.isSession(node)) {
+        if (SharedContext.isSession(node) && node.fullPath?.length === 0) {
             const filePathOptions: vscode.InputBoxOptions = {
                 placeHolder: vscode.l10n.t({
                     message: "{0} location",
@@ -60,9 +60,15 @@ export class USSActions {
                 value: node.tooltip as string,
             };
             filePath = await Gui.showInputBox(filePathOptions);
+            node.fullPath = filePath;
         } else {
             filePath = node.fullPath;
         }
+
+        if (filePath == null || filePath.length === 0) {
+            return;
+        }
+
         const nameOptions: vscode.InputBoxOptions = {
             placeHolder: vscode.l10n.t("Name of file or directory"),
         };
@@ -70,7 +76,11 @@ export class USSActions {
         if (name && filePath) {
             try {
                 filePath = `${filePath}/${name}`;
-                const uri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, name) });
+                const uri = node.resourceUri.with({
+                    path: SharedContext.isSession(node)
+                        ? path.posix.join(node.resourceUri.path, filePath)
+                        : path.posix.join(node.resourceUri.path, name),
+                });
                 await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
                 if (nodeType === "file") {
                     await vscode.workspace.fs.writeFile(uri, new Uint8Array());
