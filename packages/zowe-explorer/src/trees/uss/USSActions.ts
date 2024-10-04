@@ -13,13 +13,12 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { Gui, imperative, Validation, IZoweUSSTreeNode, Types } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweUSSTreeNode, Types } from "@zowe/zowe-explorer-api";
 import { isBinaryFileSync } from "isbinaryfile";
 import { USSAttributeView } from "./USSAttributeView";
 import { USSFileStructure } from "./USSFileStructure";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { Constants } from "../../configuration/Constants";
-import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { LocalFileManagement } from "../../management/LocalFileManagement";
 import { ZoweLogger } from "../../tools/ZoweLogger";
@@ -119,24 +118,6 @@ export class USSActions {
             ussFileProvider.refreshElement(node);
         } catch (err) {
             await AuthUtils.errorHandling(err, node.getProfileName());
-        }
-    }
-
-    public static async createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
-        ZoweLogger.trace("uss.actions.createUSSNodeDialog called.");
-        await ussFileProvider.checkCurrentProfile(node);
-        if (
-            Profiles.getInstance().validProfile === Validation.ValidationType.VALID ||
-            Profiles.getInstance().validProfile === Validation.ValidationType.UNVERIFIED
-        ) {
-            const quickPickOptions: vscode.QuickPickOptions = {
-                placeHolder: `What would you like to create at ${node.fullPath}?`,
-                ignoreFocusOut: true,
-                canPickMany: false,
-            };
-            const type = await Gui.showQuickPick([Constants.USS_DIR_CONTEXT, "File"], quickPickOptions);
-            const isTopLevel = true;
-            return USSActions.createUSSNode(node, ussFileProvider, type, isTopLevel);
         }
     }
 

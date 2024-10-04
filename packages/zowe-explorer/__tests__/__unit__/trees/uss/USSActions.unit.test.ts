@@ -174,7 +174,7 @@ function createGlobalMocks() {
     return globalMocks;
 }
 
-describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
+describe("USS Action Unit Tests - Function createUSSNode", () => {
     function createBlockMocks(globalMocks) {
         const newMocks = {
             testUSSTree: null,
