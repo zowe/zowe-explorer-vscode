@@ -205,6 +205,32 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         expect(refreshActions.refreshAll).not.toHaveBeenCalled();
     });
 
+    it("returns early if a location was never provided", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+        const createApiMock = jest.spyOn(blockMocks.ussApi, "create").mockImplementation();
+        blockMocks.ussNode.getParent().fullPath = "";
+
+        await ussNodeActions.createUSSNode(blockMocks.ussNode.getParent(), blockMocks.testUSSTree, "directory");
+        expect(createApiMock).not.toHaveBeenCalled();
+        createApiMock.mockRestore();
+    });
+
+    it("handles trailing slashes in the location", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("/u/myuser/aDir/");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("testFile.txt");
+        const createApiMock = jest.spyOn(blockMocks.ussApi, "create").mockImplementation();
+
+        await ussNodeActions.createUSSNode(blockMocks.ussNode.getParent(), blockMocks.testUSSTree, "file");
+        expect(createApiMock).toHaveBeenCalledWith("/u/myuser/aDir/testFile.txt", "file");
+        createApiMock.mockRestore();
+    });
+
     it("Tests that createUSSNode does not execute if node name was not entered", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);

@@ -64,13 +64,18 @@ export async function createUSSNode(
     } else {
         filePath = node.fullPath;
     }
+
+    if (filePath == null || filePath?.length === 0) {
+        return;
+    }
+
     const nameOptions: vscode.InputBoxOptions = {
         placeHolder: localize("createUSSNode.name", "Name of file or directory"),
     };
     const name = await Gui.showInputBox(nameOptions);
     if (name && filePath) {
         try {
-            filePath = `${filePath}/${name}`;
+            filePath = path.posix.join(filePath, name);
             await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
             if (isTopLevel) {
                 await refreshAll(ussFileProvider);
