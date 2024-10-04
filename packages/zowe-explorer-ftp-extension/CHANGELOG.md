@@ -1,5 +1,11 @@
 # Change Log
 
+## TBD Release
+
+### Bug fixes
+
+- Update dependencies for technical currency purposes. [#3176](https://github.com/zowe/zowe-explorer-vscode/pull/3176)
+
 ## `1.22.8`
 
 ### Bug fixes
