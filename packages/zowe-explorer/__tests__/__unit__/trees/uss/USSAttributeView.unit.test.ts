@@ -132,11 +132,30 @@ describe("AttributeView unit tests", () => {
         const spyReadFile = jest.fn((path, encoding, callback) => {
             callback(null, "file contents");
         });
-        Object.defineProperty(fs, "readFile", { value: spyReadFile });
+        Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
         await (view as any).onDidReceiveMessage({ command: "GET_LOCALIZATION" });
         expect(view.panel.webview.postMessage).toHaveBeenCalledWith({
             command: "GET_LOCALIZATION",
             contents: "file contents",
         });
+    });
+
+    it("if this.panel doesn't exist in GET_LOCALIZATION", async () => {
+        const spyReadFile = jest.fn((path, encoding, callback) => {
+            callback(null, "file contents");
+        });
+        Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
+        view.panel = undefined as any;
+        await (view as any).onDidReceiveMessage({ command: "GET_LOCALIZATION" });
+        expect(view.panel).toBeUndefined();
+    });
+
+    it("if read file throwing an error in GET_LOCALIZATION", async () => {
+        const spyReadFile = jest.fn((path, encoding, callback) => {
+            callback("error", "file contents");
+        });
+        Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
+        await (view as any).onDidReceiveMessage({ command: "GET_LOCALIZATION" });
+        expect(spyReadFile).toHaveBeenCalledTimes(1);
     });
 });

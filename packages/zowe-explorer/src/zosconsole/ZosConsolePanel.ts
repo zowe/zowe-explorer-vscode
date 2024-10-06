@@ -91,9 +91,6 @@ export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
                                 // File doesn't exist, fallback to English strings
                                 return;
                             }
-                            if (!webviewView) {
-                                return;
-                            }
                             webviewView.webview.postMessage({
                                 type: "GET_LOCALIZATION",
                                 contents: data,

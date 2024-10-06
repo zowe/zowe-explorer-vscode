@@ -55,12 +55,14 @@ export default function PersistentDataPanel({ type }: Readonly<{ type: Readonly<
       if (!isSecureOrigin(event.origin)) {
         return;
       }
-      setData(event.data);
+      if (event.data.command === "ready") {
+        setData(event.data);
 
-      if ("selection" in event.data) {
-        setSelection(() => ({
-          [type]: event.data.selection[type],
-        }));
+        if ("selection" in event.data) {
+          setSelection(() => ({
+            [type]: event.data.selection[type],
+          }));
+        }
       }
     });
   }, []);

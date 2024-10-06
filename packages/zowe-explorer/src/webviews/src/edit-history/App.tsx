@@ -21,7 +21,6 @@ import * as l10n from "@vscode/l10n";
 export function App(): JSXInternal.Element {
   const [timestamp, setTimestamp] = useState<Date | undefined>();
   const [currentTab, setCurrentTab] = useState<{ [key: string]: string }>({});
-  const [localization, setLocalization] = useState<string | undefined>("");
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
@@ -33,18 +32,19 @@ export function App(): JSXInternal.Element {
         l10n.config({
           contents: contents,
         });
-        setLocalization(contents);
       }
-      if ("tab" in event.data) {
-        setCurrentTab(() => ({
-          tab: event.data.tab,
-        }));
+      if (event.data.command === "ready") {
+        if ("tab" in event.data) {
+          setCurrentTab(() => ({
+            tab: event.data.tab,
+          }));
+        }
       }
       setTimestamp(new Date());
     });
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "GET_LOCALIZATION" });
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "ready" });
-  }, [localization]);
+  }, []);
 
   return (
     <div>

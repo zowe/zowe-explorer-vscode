@@ -109,7 +109,7 @@ describe("CertificateWizard", () => {
         const spyReadFile = jest.fn((path, encoding, callback) => {
             callback(null, "file contents");
         });
-        Object.defineProperty(fs, "readFile", { value: spyReadFile });
+        Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
         const certWizard = new CertificateWizard(context, {
             cert: "/a/b/cert.pem",
             certKey: "/a/b/cert.key.pem",
@@ -120,5 +120,36 @@ describe("CertificateWizard", () => {
         });
         (certWizard as any).data = "file contents";
         expect(postMessageMock).toHaveBeenCalledWith({ command: "GET_LOCALIZATION", contents: (certWizard as any).data });
+    });
+
+    it("if this.panel doesn't exist in GET_LOCALIZATION", async () => {
+        const spyReadFile = jest.fn((path, encoding, callback) => {
+            callback(null, "file contents");
+        });
+        Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
+        const certWizard = new CertificateWizard(context, {
+            cert: "/a/b/cert.pem",
+            certKey: "/a/b/cert.key.pem",
+        });
+        certWizard.panel = undefined as any;
+        (certWizard as any).onDidReceiveMessage({
+            command: "GET_LOCALIZATION",
+        });
+        expect(certWizard.panel).toBeUndefined();
+    });
+
+    it("if read file throwing an error in GET_LOCALIZATION", async () => {
+        const spyReadFile = jest.fn((path, encoding, callback) => {
+            callback("error", "file contents");
+        });
+        Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
+        const certWizard = new CertificateWizard(context, {
+            cert: "/a/b/cert.pem",
+            certKey: "/a/b/cert.key.pem",
+        });
+        (certWizard as any).onDidReceiveMessage({
+            command: "GET_LOCALIZATION",
+        });
+        expect(spyReadFile).toHaveBeenCalledTimes(1);
     });
 });

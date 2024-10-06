@@ -69,7 +69,10 @@ function createGlobalMocks(): any {
         },
         configurable: true,
     });
-
+    const spyReadFile = jest.fn((path, encoding, callback) => {
+        callback(null, "file contents");
+    });
+    Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
     return globalMocks;
 }
 
@@ -284,10 +287,6 @@ describe("HistoryView Unit Tests", () => {
         it("should handle the case where 'GET_LOCALIZATION' is the command sent", async () => {
             const globalMocks = await createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
-            const spyReadFile = jest.fn((path, encoding, callback) => {
-                callback(null, "file contents");
-            });
-            Object.defineProperty(fs, "readFile", { value: spyReadFile });
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
             const postMessageSpy = jest.spyOn(historyView.panel.webview, "postMessage");
             await historyView["onDidReceiveMessage"]({ command: "GET_LOCALIZATION" });
@@ -295,6 +294,27 @@ describe("HistoryView Unit Tests", () => {
                 command: "GET_LOCALIZATION",
                 contents: "file contents",
             });
+        });
+
+        it("if this.panel doesn't exist in GET_LOCALIZATION", async () => {
+            const globalMocks = await createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
+            historyView.panel = undefined as any;
+            await historyView["onDidReceiveMessage"]({ command: "GET_LOCALIZATION" });
+            expect(historyView.panel).toBeUndefined();
+        });
+
+        it("if read file throwing an error in GET_LOCALIZATION", async () => {
+            const globalMocks = await createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const spyReadFile = jest.fn((path, encoding, callback) => {
+                callback("error", "file contents");
+            });
+            Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
+            const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
+            await historyView["onDidReceiveMessage"]({ command: "GET_LOCALIZATION" });
+            expect(spyReadFile).toHaveBeenCalledTimes(1);
         });
     });
 
