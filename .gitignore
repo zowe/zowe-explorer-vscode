@@ -3,7 +3,6 @@ out
 lib
 !packages/eslint-plugin-zowe-explorer/**/lib
 logs
-testProfileData.ts
 results
 *.log
 npm-shrinkwrap.json
