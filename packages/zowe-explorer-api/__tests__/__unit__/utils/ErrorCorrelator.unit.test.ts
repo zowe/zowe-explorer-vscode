@@ -27,8 +27,30 @@ describe("addCorrelation", () => {
 });
 
 describe("correlateError", () => {
-    it("correctly correlates an error in the list of error matches", () => {});
-    it("returns a generic NetworkError with the full error details if no matches are found", () => {});
+    it("correctly correlates an error in the list of error matches", () => {
+        expect(
+            ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.Mvs, "zosmf", "Client is not authorized for file access.")
+        ).toStrictEqual(
+            new NetworkError({
+                errorCode: "500",
+                summary: "Insufficient write permissions for this data set. The data set may be read-only or locked.",
+                tips: [
+                    "Check that your user or group has the appropriate permissions for this data set.",
+                    "Ensure that the data set is not opened within a mainframe editor tool.",
+                ],
+            })
+        );
+    });
+    it("returns a generic NetworkError if no matches are available for the given profile type", () => {
+        expect(ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.Mvs, "nonsense", "Some error details")).toStrictEqual(
+            new NetworkError({ summary: "Some error details" })
+        );
+    });
+    it("returns a generic NetworkError with the full error details if no matches are found", () => {
+        expect(
+            ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.Mvs, "zosmf", "A cryptic error with no available match")
+        ).toStrictEqual(new NetworkError({ summary: "A cryptic error with no available match" }));
+    });
 });
 
 describe("displayError", () => {
