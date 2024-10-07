@@ -26,6 +26,9 @@ import {
     ZoweScheme,
     UriFsInfo,
     FileEntry,
+    imperative,
+    ErrorCorrelator,
+    ZoweExplorerApiType,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -440,6 +443,22 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             });
         } catch (err) {
             statusMsg.dispose();
+            if (err instanceof imperative.ImperativeError) {
+                ZoweLogger.error(err.message);
+                const userSelection = await ErrorCorrelator.getInstance().displayError(
+                    ZoweExplorerApiType.Mvs,
+                    entry.metadata.profile.type,
+                    err.message,
+                    { allowRetry: true, stackTrace: err.stack }
+                );
+
+                switch (userSelection) {
+                    case "Retry":
+                        return this.uploadEntry(parent, entry, content, forceUpload);
+                    default:
+                        throw err;
+                }
+            }
             throw err;
         }
         statusMsg.dispose();

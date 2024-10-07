@@ -80,24 +80,50 @@ export class ErrorCorrelator extends Singleton {
                 [ZoweExplorerApiType.Mvs]: [
                     {
                         errorCode: "500",
-                        matches: [/Client is not authorized for file access\.$/],
+                        matches: ["Client is not authorized for file access.", /An I\/O abend was trapped\.(.+?)\n(.+?)__code=0x0913/],
                         summary: "Insufficient write permissions for this data set. The data set may be read-only or locked.",
                         tips: [
                             "Check that your user or group has the appropriate permissions for this data set.",
                             "Ensure that the data set is not opened within a mainframe editor tool.",
                         ],
                     },
+                    {
+                        matches: ["ISPF LMINIT - data set not found."],
+                        summary: "The specified data set cannot be found. Perhaps the data set name or member name was incorrectly specified.",
+                        tips: ["Ensure that the data set and/or member name is correct and try again."],
+                    },
                 ],
                 [ZoweExplorerApiType.Uss]: [
                     {
                         errorCode: "500",
-                        matches: [/Client is not authorized for file access\.$/],
+                        matches: ["Client is not authorized for file access."],
                         summary: "Insufficient write permissions for this file. The file may be read-only or locked.",
                         tips: [
                             "Check that your user or group has the appropriate permissions for this file.",
                             "Ensure that the file is not in use and locked by another process on the mainframe.",
                             "Consider using the Edit Attributes feature with this file to update its permissions.",
                         ],
+                    },
+                    {
+                        matches: ["File not found."],
+                        summary: "The specified UNIX file cannot be found. Perhaps the folder or file path was incorrectly specified.",
+                        tips: ["Ensure that the UNIX folder or file path is correct and try again."],
+                    },
+                ],
+                [ZoweExplorerApiType.Jes]: [
+                    {
+                        matches: ["No job found for reference:"],
+                        summary: "The job modification request specified a job that does not exist.",
+                        tips: [],
+                    },
+                    {
+                        matches: ["Submit input data does not start with a slash"],
+                        summary: "The first character for the submitted job is invalid - expected a slash.",
+                        tips: ["Ensure that the input data set or file contains EBCDIC data"],
+                    },
+                    {
+                        matches: ["Job input was not recognized by system as a job"],
+                        summary: "The job was submitted without a job statement or with unrecognized (non-JCL) content.",
                     },
                 ],
             },
