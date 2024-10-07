@@ -45,16 +45,12 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param {ussTree} ussFileProvider - Current ussTree used to populate the TreeView
  * @returns {Promise<void>}
  */
-export async function createUSSNode(
-    node: IZoweUSSTreeNode,
-    ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
-    nodeType: string,
-    isTopLevel?: boolean
-): Promise<void> {
+export async function createUSSNode(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>, nodeType: string): Promise<void> {
     ZoweLogger.trace("uss.actions.createUSSNode called.");
     await ussFileProvider.checkCurrentProfile(node);
     let filePath = "";
-    if (contextually.isSession(node)) {
+    const isTopLevel = contextually.isSession(node);
+    if (isTopLevel && node.fullPath?.length === 0) {
         const filePathOptions: vscode.InputBoxOptions = {
             placeHolder: localize("createUSSNode.inputBox.placeholder", "{0} location", nodeType),
             prompt: localize("createUSSNode.inputBox.prompt", "Choose a location to create the {0}", nodeType),
