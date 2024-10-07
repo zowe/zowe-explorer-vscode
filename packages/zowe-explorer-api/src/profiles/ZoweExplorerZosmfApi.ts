@@ -382,6 +382,7 @@ export namespace ZoweExplorerZosmf {
      */
     export class CommandApi extends CommonApi implements MainframeInteraction.ICommand {
         public issueTsoCommandWithParms(command: string, parms: zostso.IStartTsoParms): Promise<zostso.IIssueResponse> {
+            // eslint-disable-next-line deprecation/deprecation
             return zostso.IssueTso.issueTsoCommand(this.getSession(), parms.account, command, parms);
         }
 
