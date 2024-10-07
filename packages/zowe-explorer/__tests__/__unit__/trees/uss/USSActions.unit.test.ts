@@ -222,6 +222,23 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         createApiMock.mockRestore();
     });
 
+    it("handles trailing slashes in the location", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("/u/myuser/aDir/");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("testFile.txt");
+        const createApiMock = jest.spyOn(blockMocks.ussApi, "create").mockImplementation();
+        const refreshAllMock = jest.spyOn(SharedActions, "refreshAll").mockImplementation();
+        blockMocks.ussNode.getParent().fullPath = "";
+
+        await USSActions.createUSSNode(blockMocks.ussNode.getParent(), blockMocks.testUSSTree, "file");
+        expect(createApiMock).toHaveBeenCalledWith("/u/myuser/aDir/testFile.txt", "file");
+        expect(refreshAllMock).toHaveBeenCalled();
+        createApiMock.mockRestore();
+        refreshAllMock.mockRestore();
+    });
+
     it("Tests if createUSSNode is executed successfully with Unverified profile", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
