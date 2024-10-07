@@ -169,7 +169,8 @@ export class ErrorCorrelator extends Singleton {
         opts?: { allowRetry?: boolean; stackTrace?: string }
     ): Promise<string | undefined> {
         const error = this.correlateError(api, profileType, errorDetails);
-        const userSelection = await Gui.errorMessage(`${error.mDetails.msg.trim()} (Error Code ${error.info?.errorCode})`, {
+        const errorCodeStr = error.info?.errorCode ? `(Error Code ${error.info.errorCode})` : "";
+        const userSelection = await Gui.errorMessage(`${error.mDetails.msg.trim()} ${errorCodeStr}`.trim(), {
             items: [opts?.allowRetry ? "Retry" : undefined, "More info"].filter(Boolean),
         });
 
