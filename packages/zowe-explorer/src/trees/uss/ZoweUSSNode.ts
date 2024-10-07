@@ -680,9 +680,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 return await UssFSProvider.instance.listFiles(profile, this.resourceUri);
             }
         } catch (error) {
-            await AuthUtils.errorHandling(error, this.getProfileName(), vscode.l10n.t("Retrieving response from USS list API"));
-            AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getUssApi(prof), this.getSessionNode());
-            this.dirty = false;
+            const updated = await AuthUtils.errorHandling(error, this.getProfileName(), vscode.l10n.t("Retrieving response from USS list API"));
+            AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getUssApi(prof), this.getSessionNode(), updated && this);
             return { success: false, commandResponse: null };
         }
     }

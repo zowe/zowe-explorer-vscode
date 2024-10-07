@@ -392,9 +392,8 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 }, []);
             }
         } catch (error) {
-            await AuthUtils.errorHandling(error, this.getProfileName(), vscode.l10n.t("Retrieving response from JES list API"));
-            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode());
-            this.dirty = false;
+            const updated = await AuthUtils.errorHandling(error, this.getProfileName(), vscode.l10n.t("Retrieving response from JES list API"));
+            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode(), updated && this);
         }
         return jobsInternal;
     }
@@ -409,9 +408,8 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             // see an issue #845 for the details
             spools = spools.filter((item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined));
         } catch (error) {
-            await AuthUtils.errorHandling(error, this.getProfileName(), vscode.l10n.t("Retrieving response from JES list API"));
-            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode());
-            this.dirty = false;
+            const updated = await AuthUtils.errorHandling(error, this.getProfileName(), vscode.l10n.t("Retrieving response from JES list API"));
+            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode(), updated && this);
         }
         return spools;
     }

@@ -379,10 +379,10 @@ export class SharedInit {
         const theTreeView = theProvider.getTreeView();
         context.subscriptions.push(theTreeView);
         context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async (e) => SharedInit.setupRemoteWorkspaceFolders(e)));
-        theTreeView.onDidCollapseElement(async (e) => {
+        theTreeView.onDidCollapseElement((e) => {
             theProvider.flipState(e.element, false);
         });
-        theTreeView.onDidExpandElement(async (e) => {
+        theTreeView.onDidExpandElement((e) => {
             theProvider.flipState(e.element, true);
         });
     }
