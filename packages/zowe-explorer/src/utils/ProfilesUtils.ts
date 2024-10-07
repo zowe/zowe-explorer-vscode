@@ -340,7 +340,7 @@ export class ProfilesUtils {
             Constants.SAVED_PROFILE_CONTENTS.clear();
             for (const layer of mProfileInfo.getTeamConfig().layers) {
                 if (layer.exists) {
-                    Constants.SAVED_PROFILE_CONTENTS.set(layer.path, fs.readFileSync(layer.path));
+                    Constants.SAVED_PROFILE_CONTENTS.set(vscode.Uri.file(layer.path).fsPath, fs.readFileSync(layer.path));
                 }
             }
             ZoweLogger.info(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName}"`);

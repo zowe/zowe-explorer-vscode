@@ -46,7 +46,6 @@ import { SharedContext } from "./SharedContext";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { CertificateWizard } from "../../utils/CertificateWizard";
 import { ZosConsoleViewProvider } from "../../zosconsole/ZosConsolePanel";
-import * as path from "path";
 
 export class SharedInit {
     private static originalEmitZoweEvent: typeof imperative.EventProcessor.prototype.emitEvent;
@@ -333,11 +332,10 @@ export class SharedInit {
             watcher.onDidChange(async (uri: vscode.Uri) => {
                 ZoweLogger.info(vscode.l10n.t("Team config file updated."));
                 const newProfileContents = Buffer.from(await vscode.workspace.fs.readFile(uri));
-                const normalizedPath = path.normalize(uri.fsPath);
-                if (Constants.SAVED_PROFILE_CONTENTS.get(normalizedPath)?.equals(newProfileContents)) {
+                if (Constants.SAVED_PROFILE_CONTENTS.get(uri.fsPath)?.equals(newProfileContents)) {
                     return;
                 }
-                Constants.SAVED_PROFILE_CONTENTS.set(normalizedPath, newProfileContents);
+                Constants.SAVED_PROFILE_CONTENTS.set(uri.fsPath, newProfileContents);
                 void SharedActions.refreshAll();
                 ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
             });
