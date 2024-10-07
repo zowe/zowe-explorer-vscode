@@ -61,7 +61,7 @@ export async function createUSSNode(node: IZoweUSSTreeNode, ussFileProvider: IZo
         filePath = node.fullPath;
     }
 
-    if (filePath == null || filePath?.length === 0) {
+    if (filePath == null || filePath.length === 0) {
         return;
     }
 
