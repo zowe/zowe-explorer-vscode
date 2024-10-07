@@ -1793,10 +1793,8 @@
     "fresh-clone": "pnpm clean:bundle && pnpm clean:dependencies",
     "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/",
     "pretty": "prettier --write .",
-    "createTestProfileData": "tsx ./scripts/createTestProfileData.ts",
-    "createDemoNodes": "tsx ./scripts/createDemoNodes.ts",
     "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src && node ./scripts/generatePoeditorJson.js",
-    "copy-secrets": "tsx ./scripts/getSecretsPrebuilds.ts",
+    "copy-secrets": "node ./scripts/getSecretsPrebuilds.js",
     "strip-l10n": "node ./scripts/stripL10nComments.js"
   },
   "engines": {
