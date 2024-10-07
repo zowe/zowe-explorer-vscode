@@ -308,6 +308,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         parentNode: this,
                         encoding: cachedEncoding,
                         profile: cachedProfile,
+                        contextOverride: cachedEncoding?.kind === "binary" ? Constants.DS_DS_BINARY_CONTEXT : Constants.DS_DS_CONTEXT,
                     });
                     elementChildren[dsNode.label.toString()] = dsNode;
                 } else if (item.member) {
