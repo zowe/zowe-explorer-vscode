@@ -11,6 +11,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where opening sequential data sets within favorited searches resulted in an error. [#3163](https://github.com/zowe/zowe-explorer-vscode/pull/3163)
 - Fixed an issue where Zowe Explorer displayed a "No Zowe client configurations" prompt when a project user configuration existed but no global configuration was present. [#3168](https://github.com/zowe/zowe-explorer-vscode/issues/3168)
 - Fixed an issue where the `ProfilesUtils.getProfileInfo` function returned a new `ProfileInfo` instance that ignored the `ZOWE_CLI_HOME` environment variable and workspace paths. [#3168](https://github.com/zowe/zowe-explorer-vscode/issues/3168)
+- Fixed an issue where the location prompt for the `Create Directory` and `Create File` USS features would appear even when a path is already set for the profile or parent folder. [#3183](https://github.com/zowe/zowe-explorer-vscode/pull/3183)
+- Fixed an issue where the `Create Directory` and `Create File` features would continue processing when the first prompt was dismissed, causing an incorrect URI to be generated. [#3183](https://github.com/zowe/zowe-explorer-vscode/pull/3183)
+- Fixed an issue where the `Create Directory` and `Create File` features would incorrectly handle user-specified locations with trailing slashes. [#3183](https://github.com/zowe/zowe-explorer-vscode/pull/3183)
 
 ## `3.0.0`
 
