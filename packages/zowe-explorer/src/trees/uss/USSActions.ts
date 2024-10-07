@@ -39,7 +39,8 @@ export class USSActions {
         ZoweLogger.trace("uss.actions.createUSSNode called.");
         await ussFileProvider.checkCurrentProfile(node);
         let filePath = "";
-        if (SharedContext.isSession(node) && node.fullPath?.length === 0) {
+        const isTopLevel = SharedContext.isSession(node);
+        if (isTopLevel && node.fullPath?.length === 0) {
             const filePathOptions: vscode.InputBoxOptions = {
                 placeHolder: vscode.l10n.t({
                     message: "{0} location",
@@ -63,7 +64,6 @@ export class USSActions {
             return;
         }
 
-        const isTopLevel = SharedContext.isSession(node);
         const nameOptions: vscode.InputBoxOptions = {
             placeHolder: vscode.l10n.t("Name of file or directory"),
         };
