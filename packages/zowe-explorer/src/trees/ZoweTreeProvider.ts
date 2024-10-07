@@ -23,6 +23,7 @@ import { SharedActions } from "./shared/SharedActions";
 import { IconUtils } from "../icons/IconUtils";
 import { AuthUtils } from "../utils/AuthUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import * as dayjs from "dayjs";
 
 export class ZoweTreeProvider<T extends IZoweTreeNode> {
     // Event Emitters used to notify subscribers that the refresh event has fired
@@ -264,6 +265,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
                 Profiles.getInstance().validProfile = Validation.ValidationType.UNVERIFIED;
             }
         }
+        await ZoweTreeProvider.checkJwtTokenForProfile(node.getProfileName());
         this.refresh();
         return profileStatus;
     }
@@ -300,6 +302,46 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
     public async createZoweSession(zoweFileProvider: IZoweTree<Types.IZoweNodeType>): Promise<void> {
         ZoweLogger.trace("ZoweTreeProvider.createZoweSession called.");
         await Profiles.getInstance().createZoweSession(zoweFileProvider);
+    }
+
+    /**
+     * Checks if a JWT token is used for authenticating the given profile name.
+     * If so, it will grab and decode the token to determine its expire date.
+     * If the token has expired, it will prompt the user to log in again.
+     *
+     * @param profileName The name of the profile to check the JWT token for
+     */
+    protected static async checkJwtTokenForProfile(profileName: string): Promise<void> {
+        const profInfo = await Profiles.getInstance().getProfileInfo();
+        const profAttrs = profInfo.getAllProfiles().find((prof) => prof.profName === profileName);
+        const knownProps = profInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true }).knownArgs;
+        const tokenValueProp = knownProps.find((arg) => arg.argName === "tokenValue" && arg.argValue != null);
+
+        // Ignore if tokenValue is not a prop
+        if (tokenValueProp == null) {
+            return;
+        }
+
+        const tokenTypeProp = knownProps.find((arg) => arg.argName === "tokenType");
+        // Cannot decode LTPA tokens without private key
+        if (tokenTypeProp?.argValue == "LtpaToken2") {
+            return;
+        }
+
+        const fullToken = tokenValueProp.argValue.toString();
+        // JWT format: [header].[payload].[signature]
+        const tokenParts = fullToken.split(".");
+        try {
+            const payloadJson = JSON.parse(Buffer.from(tokenParts[1], "base64url").toString("utf8"));
+            if ("exp" in payloadJson) {
+                const expireDate = dayjs.unix(payloadJson.exp);
+                if (expireDate.isBefore(dayjs())) {
+                    await AuthUtils.promptUserForSsoLogin(profileName);
+                }
+            }
+        } catch (err) {
+            return;
+        }
     }
 
     private async loadProfileBySessionName(
