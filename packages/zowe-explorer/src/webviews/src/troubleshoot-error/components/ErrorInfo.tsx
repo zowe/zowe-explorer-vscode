@@ -1,6 +1,7 @@
-import { VSCodeDivider, VSCodeTextArea } from "@vscode/webview-ui-toolkit/react";
+import { VSCodeButton, VSCodeDivider, VSCodeTextArea } from "@vscode/webview-ui-toolkit/react";
 import { NetworkError } from "@zowe/zowe-explorer-api";
 import { TipList } from "./TipList";
+import { useState } from "preact/hooks";
 
 export type ErrorInfoProps = {
   error: NetworkError;
@@ -12,6 +13,7 @@ export const isNetworkError = (val: any): val is NetworkError => {
 };
 
 export const ErrorInfo = ({ error, stackTrace }: ErrorInfoProps) => {
+  const [errorDisplayed, setErrorDisplayed] = useState(false);
   return (
     <div>
       <h2>Error details</h2>
@@ -25,9 +27,32 @@ export const ErrorInfo = ({ error, stackTrace }: ErrorInfoProps) => {
         </span>
         {error.info.summary}
       </p>
-      <VSCodeTextArea value={stackTrace ?? error.info.fullError} resize="vertical" rows={10} style={{ height: "fit-content", width: "100%" }}>
-        <strong>Full error message:</strong>
-      </VSCodeTextArea>
+      <details style={{ marginBottom: "0.5rem" }}>
+        <summary
+          style={{ cursor: "pointer", fontWeight: "bold", display: "flex", alignItems: "center", userSelect: "none" }}
+          onClick={() => setErrorDisplayed((prev) => !prev)}
+        >
+          <span style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+            <span style={{ display: "flex", alignItems: "center" }}>
+              {errorDisplayed ? (
+                <span slot="start" className="codicon codicon-chevron-down" style={{ marginTop: "1px" }}></span>
+              ) : (
+                <span slot="start" className="codicon codicon-chevron-right" style={{ marginTop: "1px" }}></span>
+              )}
+              &nbsp; Full error summary
+            </span>
+            <span>
+              <VSCodeButton appearance="secondary">Copy details</VSCodeButton>
+            </span>
+          </span>
+        </summary>
+        <VSCodeTextArea
+          value={stackTrace ?? error.info.fullError}
+          resize="vertical"
+          rows={10}
+          style={{ height: "fit-content", marginTop: "0.5rem", width: "100%" }}
+        />
+      </details>
       <VSCodeDivider />
       {error.info.tips ? <TipList tips={error.info.tips} /> : null}
       <VSCodeDivider />
