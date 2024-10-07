@@ -3314,7 +3314,6 @@ describe("Dataset Tree Unit Tests - Function applyPatternsToChildren", () => {
         const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
         testTree.applyPatternsToChildren(fakeChildren as any[], [{ dsn: "HLQ.PROD.PDS", member: "A*" }], fakeSessionNode as any);
         expect(SharedContext.isFilterFolder(fakeChildren[0])).toBe(true);
-        expect(fakeSessionNode.dirty).toBe(true);
         withProfileMock.mockRestore();
     });
     it("applies a closed filter folder icon to the PDS if collapsed", () => {

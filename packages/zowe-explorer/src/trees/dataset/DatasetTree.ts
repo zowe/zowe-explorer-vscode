@@ -391,13 +391,13 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         for (const favorite of favsForProfile) {
             // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
             if (favorite.getProfile() && favorite.getSession()) {
-                updatedFavsForProfile.push(favorite as IZoweDatasetTreeNode);
+                updatedFavsForProfile.push(favorite);
                 continue;
             }
             // If no profile/session for favorite node yet, then add session and profile to favorite node:
             favorite.setProfileToChoice(profile);
             favorite.setSessionToChoice(session);
-            updatedFavsForProfile.push(favorite as IZoweDatasetTreeNode);
+            updatedFavsForProfile.push(favorite);
         }
         // This updates the profile node's children in the this.mFavorites array, as well.
         return updatedFavsForProfile;
@@ -559,7 +559,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (matchingNode) {
                 matchingNode.label = afterLabel;
                 matchingNode.tooltip = afterLabel;
-                this.refreshElement(matchingNode as IZoweDatasetTreeNode);
+                this.refreshElement(matchingNode);
             }
         }
     }
@@ -880,10 +880,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 if (session.children) {
                     for (const node of session.children) {
                         if (node.contextValue !== Constants.INFORMATION_CONTEXT) {
-                            loadedItems.push(node as IZoweDatasetTreeNode);
+                            loadedItems.push(node);
                             for (const member of node.children) {
                                 if (member.contextValue !== Constants.INFORMATION_CONTEXT) {
-                                    loadedItems.push(member as IZoweDatasetTreeNode);
+                                    loadedItems.push(member);
                                 }
                             }
                         }
@@ -971,8 +971,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     let setIcon: IconUtils.IIconItem;
                     if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
                         setIcon = IconGenerator.getIconById(IconUtils.IconId.filterFolder);
-                    }
-                    if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
+                    } else if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
                         setIcon = IconGenerator.getIconById(IconUtils.IconId.filterFolderOpen);
                     }
                     if (setIcon) {
@@ -980,7 +979,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     }
                 }
             }
-            sessionNode.dirty = true;
             const icon = IconGenerator.getIconByNode(sessionNode);
             if (icon) {
                 sessionNode.iconPath = icon.path;
@@ -1264,7 +1262,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         }
 
                         c.children.sort(ZoweDatasetNode.sortBy(node.sort));
-                        this.nodeDataChanged(c as IZoweDatasetTreeNode);
+                        this.nodeDataChanged(c);
                     }
                 }
             }
@@ -1377,7 +1375,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (node.children?.length > 0) {
                 // children nodes already exist, sort and repaint to avoid extra refresh
                 for (const c of node.children) {
-                    const asDs = c as IZoweDatasetTreeNode;
+                    const asDs = c;
 
                     // PDS-level filters should have precedence over a session-level filter
                     if (asDs.filter != null) {
@@ -1388,15 +1386,15 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         // If there was an old session-wide filter set: refresh to get any
                         // missing nodes - new filter will be applied
                         if (oldFilter != null) {
-                            this.refreshElement(c as IZoweDatasetTreeNode);
+                            this.refreshElement(c);
                             continue;
                         }
 
                         if (newFilter != null && c.children?.length > 0) {
                             c.children = c.children.filter(ZoweDatasetNode.filterBy(newFilter));
-                            this.nodeDataChanged(c as IZoweDatasetTreeNode);
+                            this.nodeDataChanged(c);
                         } else {
-                            this.refreshElement(c as IZoweDatasetTreeNode);
+                            this.refreshElement(c);
                         }
                     }
                 }

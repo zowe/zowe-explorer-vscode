@@ -689,7 +689,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     const children = nodeToCheck.children;
                     if (children.length !== 0) {
                         for (const child of children) {
-                            await checkForChildren(child as IZoweUSSTreeNode);
+                            await checkForChildren(child);
                         }
                     }
                     loadedNodes.push(nodeToCheck);
@@ -1011,13 +1011,13 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         for (const favorite of favsForProfile) {
             // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
             if (favorite.getProfile() && favorite.getSession()) {
-                updatedFavsForProfile.push(favorite as IZoweUSSTreeNode);
+                updatedFavsForProfile.push(favorite);
                 continue;
             }
             // If no profile/session for favorite node yet, then add session and profile to favorite node:
             favorite.setProfileToChoice(profile);
             favorite.setSessionToChoice(session);
-            updatedFavsForProfile.push(favorite as IZoweUSSTreeNode);
+            updatedFavsForProfile.push(favorite);
         }
         // This updates the profile node's children in the this.mFavorites array, as well.
         return updatedFavsForProfile;
@@ -1118,11 +1118,11 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 }
                 const isFullPathChild: boolean = SharedUtils.checkIfChildPath(node.fullPath, fullPath);
                 if (isFullPathChild) {
-                    return this.findMatchInLoadedChildren(node as IZoweUSSTreeNode, fullPath);
+                    return this.findMatchInLoadedChildren(node, fullPath);
                 }
             }
         }
-        return match as IZoweUSSTreeNode;
+        return match;
     }
 
     public async openWithEncoding(node: IZoweUSSTreeNode, encoding?: ZosEncoding): Promise<void> {
