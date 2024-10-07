@@ -11,7 +11,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fix issue where the Zowe Explorer VS Code command `Refresh Zowe Explorer` failed catastrophically. [#3100](https://github.com/zowe/zowe-explorer-vscode/issues/3100)
 - Fixed an issue where the `ProfilesUtils.getProfileInfo` function returned a new `ProfileInfo` instance that did not respect the `ZOWE_CLI_HOME` environment variable and workspace paths. [#3168](https://github.com/zowe/zowe-explorer-vscode/issues/3168)
 - Fixed an issue where the location prompt for the `Create Directory` and `Create File` USS features would appear even when a path is already set for the profile or parent folder. [#3183](https://github.com/zowe/zowe-explorer-vscode/pull/3183)
-- Fixed an issue where the `Create Directory` and `Create File` features would continue processing when the first prompt was dismissed, causing an incorrect URI to be generated. [#3183](https://github.com/zowe/zowe-explorer-vscode/pull/3183)
+- Fixed an issue where the `Create Directory` and `Create File` features would continue processing when the first prompt was dismissed, causing an incorrect path to be generated. [#3183](https://github.com/zowe/zowe-explorer-vscode/pull/3183)
 - Fixed an issue where the `Create Directory` and `Create File` features would incorrectly handle user-specified locations with trailing slashes. [#3183](https://github.com/zowe/zowe-explorer-vscode/pull/3183)
 
 ## `2.18.0`
