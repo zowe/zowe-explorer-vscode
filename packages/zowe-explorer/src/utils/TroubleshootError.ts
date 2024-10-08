@@ -36,11 +36,8 @@ export class TroubleshootError extends WebView {
             case "copy":
                 await env.clipboard.writeText(
                     this.errorData.error.stack
-                        ? `Error details:\n\n${this.errorData.error.info.fullError}\n\nStack trace:\n${this.errorData.error.stack.replace(
-                              /(.+?)\n/,
-                              ""
-                          )}`
-                        : `Error details:\n\n${this.errorData.error.info.fullError}\n\n(No stack trace available)`
+                        ? `Error details:\n${this.errorData.error.info.fullError}\nStack trace:\n${this.errorData.error.stack.replace(/(.+?)\n/, "")}`
+                        : `Error details:\n${this.errorData.error.info.fullError}`
                 );
                 break;
             default:
