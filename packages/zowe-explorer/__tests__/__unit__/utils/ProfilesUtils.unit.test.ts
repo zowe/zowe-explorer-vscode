@@ -286,7 +286,7 @@ describe("ProfilesUtils unit tests", () => {
             const mockReadProfilesFromDisk = jest.fn();
             const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockReturnValue({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
-                getTeamConfig: () => ({ exists: true }),
+                getTeamConfig: () => ({ exists: true, layers: [] }),
             } as never);
             await expect(ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);

@@ -17,6 +17,10 @@ import * as os from "os";
 import * as path from "path";
 const log4js = require("log4js");
 
+export class EventProcessor {
+    public emitZoweEvent(eventName: string): void {}
+}
+
 export enum ProfLocType {
     OLD_PROFILE = 0, // an old-school profile
     TEAM_CONFIG = 1, // a team configuration
