@@ -250,6 +250,7 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
                         name: globalMocks.testProfile.name,
                         status: "unverified",
                     }),
+                    loadNamedProfile: globalMocks.mockLoadNamedProfile,
                     validProfile: Validation.ValidationType.UNVERIFIED,
                 };
             }),

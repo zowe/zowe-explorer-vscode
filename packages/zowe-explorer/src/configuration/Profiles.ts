@@ -760,7 +760,7 @@ export class Profiles extends ProfilesCache {
         return filteredProfile;
     }
 
-    public async ssoLogin(node?: Types.IZoweNodeType, label?: string): Promise<void> {
+    public async ssoLogin(node?: Types.IZoweNodeType, label?: string): Promise<boolean> {
         ZoweLogger.trace("Profiles.ssoLogin called.");
         let loginTokenType: string;
         let serviceProfile: imperative.IProfileLoaded;
@@ -772,7 +772,7 @@ export class Profiles extends ProfilesCache {
         // This check will handle service profiles that have username and password
         if (AuthUtils.isProfileUsingBasicAuth(serviceProfile)) {
             Gui.showMessage(vscode.l10n.t(`This profile is using basic authentication and does not support token authentication.`));
-            return;
+            return false;
         }
 
         const zeInstance = ZoweExplorerApiRegister.getInstance();
@@ -787,7 +787,7 @@ export class Profiles extends ProfilesCache {
                     comment: [`Service profile name`],
                 })
             );
-            return;
+            return false;
         }
         try {
             let loginOk = false;
@@ -814,6 +814,7 @@ export class Profiles extends ProfilesCache {
             } else {
                 Gui.showMessage(this.profilesOpCancelled);
             }
+            return loginOk;
         } catch (err) {
             const message = vscode.l10n.t({
                 message: `Unable to log in with {0}. {1}`,
@@ -822,7 +823,7 @@ export class Profiles extends ProfilesCache {
             });
             ZoweLogger.error(message);
             Gui.errorMessage(message);
-            return;
+            return false;
         }
     }
 
