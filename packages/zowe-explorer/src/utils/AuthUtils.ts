@@ -130,7 +130,7 @@ export class AuthUtils {
         sessionNode.setProfileToChoice(profile);
         const session = getCommonApi(profile).getSession();
         sessionNode.setSessionToChoice(session);
-        if (nodeToRefresh != null) {
+        if (nodeToRefresh) {
             nodeToRefresh.dirty = true;
             void nodeToRefresh.getChildren().then(() => SharedTreeProviders.getProviderForNode(nodeToRefresh).refreshElement(nodeToRefresh));
         }
