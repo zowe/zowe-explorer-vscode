@@ -21,6 +21,7 @@ import * as globals from "../../../src/globals";
 import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
 import * as tmp from "tmp";
 import { imperative } from "@zowe/zowe-explorer-api";
+import { mocked } from "../../../__mocks__/mockUtils";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
@@ -78,6 +79,7 @@ describe("FtpUssApi", () => {
 
         expect(result.apiResponse.etag).toHaveLength(64);
         expect(UssUtils.downloadFile).toHaveBeenCalledTimes(1);
+        expect(mocked(UssUtils.downloadFile).mock.calls[0][2].localFile).toBe(localFile);
         expect(UssApi.releaseConnection).toHaveBeenCalled();
 
         expect((response._readableState.buffer.head?.data ?? response._readableState.buffer).toString()).toContain("Hello world");
