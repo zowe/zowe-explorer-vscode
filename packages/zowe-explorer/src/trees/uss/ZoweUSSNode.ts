@@ -112,6 +112,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             });
             if (isSession) {
                 UssFSProvider.instance.createDirectory(this.resourceUri);
+            } else if (this.contextValue === Constants.INFORMATION_CONTEXT) {
+                this.command = { command: "zowe.placeholderCommand", title: "Placeholder" };
             } else if (this.collapsibleState === vscode.TreeItemCollapsibleState.None) {
                 this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
             }
@@ -177,7 +179,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @returns {Promise<IZoweUSSTreeNode[]>}
      */
     public async getChildren(): Promise<IZoweUSSTreeNode[]> {
-        ZoweLogger.trace("ZoweUSSNode.getChildren called.");
+        ZoweLogger.trace(`ZoweUSSNode.getChildren called for ${this.label as string}.`);
         if ((!this.fullPath && SharedContext.isSession(this)) || SharedContext.isDocument(this)) {
             const placeholder = new ZoweUSSNode({
                 label: vscode.l10n.t("Use the search button to list USS files"),
@@ -185,11 +187,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 parentNode: this,
                 contextOverride: Constants.INFORMATION_CONTEXT,
             });
-            placeholder.command = {
-                command: "zowe.placeholderCommand",
-                title: "Placeholder",
-            };
-            return [placeholder];
+            return (this.children = [placeholder]);
         }
 
         if (!this.dirty) {
@@ -205,34 +203,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         // Get the list of files/folders at the given USS path and handle any errors
-        let response: zosfiles.IZosFilesResponse;
-        const sessNode = this.getSessionNode();
-        let nodeProfile;
-        try {
-            const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-            if (!ZoweExplorerApiRegister.getUssApi(cachedProfile).getSession(cachedProfile)) {
-                throw new imperative.ImperativeError({
-                    msg: vscode.l10n.t("Profile auth error"),
-                    additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
-                    errorCode: `${imperative.RestConstants.HTTP_STATUS_401 as number}`,
-                });
-            }
-            nodeProfile = cachedProfile;
-            if (SharedContext.isSession(this)) {
-                response = await UssFSProvider.instance.listFiles(
-                    nodeProfile,
-                    SharedContext.isFavorite(this)
-                        ? this.resourceUri
-                        : this.resourceUri.with({
-                              path: path.posix.join(this.resourceUri.path, this.fullPath),
-                          })
-                );
-            } else {
-                response = await UssFSProvider.instance.listFiles(nodeProfile, this.resourceUri);
-            }
-        } catch (err) {
-            await AuthUtils.errorHandling(err, this.label.toString(), vscode.l10n.t("Retrieving response from uss-file-list"));
-            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), sessNode);
+        const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+        const response = await this.getUssFiles(cachedProfile);
+        if (!response.success) {
             return this.children;
         }
 
@@ -271,8 +244,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 collapsibleState: collapseState,
                 parentNode: this,
                 parentPath: this.fullPath,
-                profile: nodeProfile,
-                encoding: isDir ? undefined : await this.getEncodingInMap(`${this.fullPath}/${item.name as string}`),
+                profile: cachedProfile,
+                encoding: isDir ? undefined : this.getEncodingInMap(`${this.fullPath}/${item.name as string}`),
             });
             if (isDir) {
                 // Create an entry for the USS folder if it doesn't exist.
@@ -682,6 +655,34 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
         } catch (error) {
             await AuthUtils.errorHandling(error, this.label.toString(), vscode.l10n.t("Error uploading files"));
+        }
+    }
+
+    private async getUssFiles(profile: imperative.IProfileLoaded): Promise<zosfiles.IZosFilesResponse> {
+        try {
+            if (!ZoweExplorerApiRegister.getUssApi(profile).getSession(profile)) {
+                throw new imperative.ImperativeError({
+                    msg: vscode.l10n.t("Profile auth error"),
+                    additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
+                    errorCode: `${imperative.RestConstants.HTTP_STATUS_401 as number}`,
+                });
+            }
+            if (SharedContext.isSession(this)) {
+                return await UssFSProvider.instance.listFiles(
+                    profile,
+                    SharedContext.isFavorite(this)
+                        ? this.resourceUri
+                        : this.resourceUri.with({
+                              path: path.posix.join(this.resourceUri.path, this.fullPath),
+                          })
+                );
+            } else {
+                return await UssFSProvider.instance.listFiles(profile, this.resourceUri);
+            }
+        } catch (error) {
+            const updated = await AuthUtils.errorHandling(error, this.getProfileName(), vscode.l10n.t("Retrieving response from USS list API"));
+            AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getUssApi(prof), this.getSessionNode(), updated && this);
+            return { success: false, commandResponse: null };
         }
     }
 }
