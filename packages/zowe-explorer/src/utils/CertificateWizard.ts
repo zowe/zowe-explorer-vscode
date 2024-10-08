@@ -12,6 +12,7 @@
 import { Gui, WebView } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { ZoweLogger } from "../tools/ZoweLogger";
+import * as fs from "fs";
 
 export type CertWizardOpts = {
     cert?: string;
@@ -115,6 +116,23 @@ export class CertificateWizard extends WebView {
                 });
                 ZoweLogger.trace(userDismissed);
                 break;
+            case "GET_LOCALIZATION": {
+                const filePath = vscode.l10n.uri?.fsPath + "";
+                fs.readFile(filePath, "utf8", (err, data) => {
+                    if (err) {
+                        // File doesn't exist, fallback to English strings
+                        return;
+                    }
+                    if (!this.panel) {
+                        return;
+                    }
+                    this.panel.webview.postMessage({
+                        command: "GET_LOCALIZATION",
+                        contents: data,
+                    });
+                });
+                break;
+            }
             default:
                 break;
         }

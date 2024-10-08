@@ -10,13 +10,14 @@
  */
 
 import { Gui } from "@zowe/zowe-explorer-api";
+import * as fs from "fs";
 import { CertificateWizard } from "../../../src/utils/CertificateWizard";
 import { ExtensionContext, Uri } from "vscode";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 
+jest.mock("fs");
 describe("CertificateWizard", () => {
     const context = { extensionPath: "some/fake/ext/path" } as unknown as ExtensionContext;
-
     it("handles the promptCert message", async () => {
         const certWizard = new CertificateWizard(context, {
             cert: "/a/b/cert.pem",
@@ -102,5 +103,53 @@ describe("CertificateWizard", () => {
             command: "close",
         });
         expect(traceMock).toHaveBeenCalledWith("User dismissed the certificate wizard.");
+    });
+
+    it("handles the get_localization message", async () => {
+        const spyReadFile = jest.fn((path, encoding, callback) => {
+            callback(null, "file contents");
+        });
+        Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
+        const certWizard = new CertificateWizard(context, {
+            cert: "/a/b/cert.pem",
+            certKey: "/a/b/cert.key.pem",
+        });
+        const postMessageMock = jest.spyOn(certWizard.panel.webview, "postMessage").mockImplementation();
+        (certWizard as any).onDidReceiveMessage({
+            command: "GET_LOCALIZATION",
+        });
+        (certWizard as any).data = "file contents";
+        expect(postMessageMock).toHaveBeenCalledWith({ command: "GET_LOCALIZATION", contents: (certWizard as any).data });
+    });
+
+    it("if this.panel doesn't exist in GET_LOCALIZATION", async () => {
+        const spyReadFile = jest.fn((path, encoding, callback) => {
+            callback(null, "file contents");
+        });
+        Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
+        const certWizard = new CertificateWizard(context, {
+            cert: "/a/b/cert.pem",
+            certKey: "/a/b/cert.key.pem",
+        });
+        certWizard.panel = undefined as any;
+        (certWizard as any).onDidReceiveMessage({
+            command: "GET_LOCALIZATION",
+        });
+        expect(certWizard.panel).toBeUndefined();
+    });
+
+    it("if read file throwing an error in GET_LOCALIZATION", async () => {
+        const spyReadFile = jest.fn((path, encoding, callback) => {
+            callback("error", "file contents");
+        });
+        Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
+        const certWizard = new CertificateWizard(context, {
+            cert: "/a/b/cert.pem",
+            certKey: "/a/b/cert.key.pem",
+        });
+        (certWizard as any).onDidReceiveMessage({
+            command: "GET_LOCALIZATION",
+        });
+        expect(spyReadFile).toHaveBeenCalledTimes(1);
     });
 });

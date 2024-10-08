@@ -13,6 +13,8 @@ import { Types, Gui, MainframeInteraction, IZoweUSSTreeNode, WebView } from "@zo
 import { Disposable, ExtensionContext } from "vscode";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { SharedContext } from "../shared/SharedContext";
+import * as vscode from "vscode";
+import * as fs from "fs";
 
 export class USSAttributeView extends WebView {
     private treeProvider: Types.IZoweUSSTreeType;
@@ -71,6 +73,23 @@ export class USSAttributeView extends WebView {
             case "update-attributes":
                 await this.updateAttributes(message);
                 break;
+            case "GET_LOCALIZATION": {
+                const filePath = vscode.l10n.uri?.fsPath + "";
+                fs.readFile(filePath, "utf8", (err, data) => {
+                    if (err) {
+                        // File doesn't exist, fallback to English strings
+                        return;
+                    }
+                    if (!this.panel) {
+                        return;
+                    }
+                    this.panel.webview.postMessage({
+                        command: "GET_LOCALIZATION",
+                        contents: data,
+                    });
+                });
+                break;
+            }
             default:
                 break;
         }
