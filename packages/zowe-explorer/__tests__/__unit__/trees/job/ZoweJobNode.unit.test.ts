@@ -30,7 +30,7 @@ import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
-import { ZoweJobNode, ZoweSpoolNode } from "../../../../src/trees/job/ZoweJobNode";
+import { ZoweJobNode } from "../../../../src/trees/job/ZoweJobNode";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { JobInit } from "../../../../src/trees/job/JobInit";
@@ -387,20 +387,14 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         expect(spoolFilesAfter[0].label).toEqual("No spool files found");
     });
 
-    it("Tests that getChildren returns a placeholder node if there is error retrieving spool files", async () => {
+    it("Tests that getChildren returns empty list if there is error retrieving spool files", async () => {
         const globalMocks = await createGlobalMocks();
-        const spool = new ZoweSpoolNode({
-            label: "No spool files found",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: globalMocks.testJobNode,
-            contextOverride: Constants.INFORMATION_CONTEXT,
-        });
         jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce({
             getSpoolFiles: jest.fn().mockResolvedValue(new Error("Response Fail")),
         } as any);
         globalMocks.testJobNode.dirty = true;
         const spools = await globalMocks.testJobNode.getChildren();
-        expect(spools[0]).toEqual(spool);
+        expect(spools).toEqual([]);
     });
 
     it("Tests that getChildren returns the spool files if user/owner is not defined", async () => {
@@ -445,14 +439,8 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         expect(jobs[0]).toEqual(job);
     });
 
-    it("should return 'No jobs found' if there is error retrieving jobs", async () => {
+    it("should return empty list if there is error retrieving jobs", async () => {
         const globalMocks = await createGlobalMocks();
-        const job = new ZoweJobNode({
-            label: "No jobs found",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: globalMocks.testJobsProvider.mSessionNodes[1],
-            contextOverride: Constants.INFORMATION_CONTEXT,
-        });
         await globalMocks.testJobsProvider.addSession("fake");
         globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
         globalMocks.mockGetJobsByParameters.mockRejectedValue(new Error("Response Fail"));
@@ -460,7 +448,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
             getSession: jest.fn().mockReturnValue(globalMocks.testSession),
         } as any);
         const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
-        expect(jobs[0]).toEqual(job);
+        expect(jobs).toEqual([]);
     });
 
     it("To check smfid field in Jobs Tree View", async () => {

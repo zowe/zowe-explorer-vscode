@@ -125,7 +125,7 @@ describe("ZoweDatasetNode Unit Tests", () => {
     /*************************************************************************************************************
      * Checks that returning an unsuccessful response results in an error being thrown and caught
      *************************************************************************************************************/
-    it("Checks that when List.dataSet/allMembers() throws an error, it returns a label of 'No data sets found'", async () => {
+    it("Checks that when List.dataSet/allMembers() throws an error, it returns an empty list", async () => {
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -151,7 +151,7 @@ describe("ZoweDatasetNode Unit Tests", () => {
         jest.spyOn(zosfiles.List, "allMembers").mockRejectedValueOnce(new Error(subNode.label as string));
         subNode.dirty = true;
         const response = await subNode.getChildren();
-        expect(response[0].label).toBe("No data sets found");
+        expect(response).toEqual([]);
     });
 
     it("Checks that when List.dataSet/allMembers() returns an empty response, it returns a label of 'No data sets found'", async () => {

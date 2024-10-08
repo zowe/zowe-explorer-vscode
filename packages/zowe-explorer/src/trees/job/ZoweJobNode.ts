@@ -138,7 +138,9 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         if (SharedContext.isJob(this)) {
             // Fetch spool files under job node
             const spools = await this.getSpoolFiles(this.job);
-            if (!spools.length) {
+            if (spools == null) {
+                return this.children;
+            } else if (!spools.length) {
                 const noSpoolNode = new ZoweSpoolNode({
                     label: vscode.l10n.t("No spool files found"),
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -189,7 +191,9 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         } else {
             // Fetch jobs under session node
             const jobs = await this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus);
-            if (jobs.length === 0) {
+            if (jobs == null) {
+                return this.children;
+            } else if (jobs.length === 0) {
                 const noJobsNode = new ZoweJobNode({
                     label: vscode.l10n.t("No jobs found"),
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -353,7 +357,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         return this._searchId;
     }
 
-    private async getJobs(owner: string, prefix: string, searchId: string, status: string): Promise<zosjobs.IJob[]> {
+    private async getJobs(owner: string, prefix: string, searchId: string, status: string): Promise<zosjobs.IJob[] | undefined> {
         ZoweLogger.trace("ZoweJobNode.getJobs called.");
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         let jobsInternal: zosjobs.IJob[] = [];
@@ -394,11 +398,12 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         } catch (error) {
             const updated = await AuthUtils.errorHandling(error, this.getProfileName(), vscode.l10n.t("Retrieving response from JES list API"));
             AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode(), updated && this);
+            return;
         }
         return jobsInternal;
     }
 
-    private async getSpoolFiles(job: zosjobs.IJob = this.job): Promise<zosjobs.IJobFile[]> {
+    private async getSpoolFiles(job: zosjobs.IJob = this.job): Promise<zosjobs.IJobFile[] | undefined> {
         ZoweLogger.trace("ZoweJobNode.getSpoolFiles called.");
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         let spools: zosjobs.IJobFile[] = [];
@@ -410,6 +415,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         } catch (error) {
             const updated = await AuthUtils.errorHandling(error, this.getProfileName(), vscode.l10n.t("Retrieving response from JES list API"));
             AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode(), updated && this);
+            return;
         }
         return spools;
     }

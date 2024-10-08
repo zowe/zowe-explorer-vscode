@@ -229,6 +229,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         const responses = await this.getDatasets(cachedProfile);
+        if (responses == null) {
+            return this.children;
+        }
 
         // push nodes to an object with property names to avoid duplicates
         const elementChildren: { [k: string]: ZoweDatasetNode } = {};
@@ -529,7 +532,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return fileEntry?.etag;
     }
 
-    private async getDatasets(profile: imperative.IProfileLoaded): Promise<zosfiles.IZosFilesResponse[]> {
+    private async getDatasets(profile: imperative.IProfileLoaded): Promise<zosfiles.IZosFilesResponse[] | undefined> {
         ZoweLogger.trace("ZoweDatasetNode.getDatasets called.");
         const responses: zosfiles.IZosFilesResponse[] = [];
         const options: zosfiles.IListOptions = {
@@ -588,6 +591,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         } catch (error) {
             const updated = await AuthUtils.errorHandling(error, this.getProfileName(), vscode.l10n.t("Retrieving response from MVS list API"));
             AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
+            return;
         }
         return responses;
     }
