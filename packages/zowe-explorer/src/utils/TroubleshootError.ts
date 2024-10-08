@@ -10,7 +10,7 @@
  */
 
 import { NetworkError, WebView } from "@zowe/zowe-explorer-api";
-import { ExtensionContext, l10n } from "vscode";
+import { env, ExtensionContext, l10n } from "vscode";
 
 type TroubleshootData = {
     error: NetworkError;
@@ -32,6 +32,19 @@ export class TroubleshootError extends WebView {
         switch (message.command) {
             case "ready":
                 await this.setErrorData(this.errorData);
+                break;
+            case "copy":
+                await env.clipboard.writeText(
+                    this.errorData.error.stack
+                        ? `Error details:\n\n${this.errorData.error.info.fullError}\n\nStack trace:\n${this.errorData.error.stack.replace(
+                              /(.+?)\n/,
+                              ""
+                          )}`
+                        : `Error details:\n\n${this.errorData.error.info.fullError}\n\n(No stack trace available)`
+                );
+                break;
+            default:
+                break;
         }
     }
 

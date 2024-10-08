@@ -2,6 +2,7 @@ import { VSCodeButton, VSCodeDivider, VSCodeTextArea } from "@vscode/webview-ui-
 import { NetworkError } from "@zowe/zowe-explorer-api";
 import { TipList } from "./TipList";
 import { useState } from "preact/hooks";
+import PersistentVSCodeAPI from "../../PersistentVSCodeAPI";
 
 export type ErrorInfoProps = {
   error: NetworkError;
@@ -42,7 +43,17 @@ export const ErrorInfo = ({ error, stackTrace }: ErrorInfoProps) => {
               &nbsp; Full error summary
             </span>
             <span>
-              <VSCodeButton appearance="secondary">Copy details</VSCodeButton>
+              <VSCodeButton
+                appearance="secondary"
+                onClick={(e: MouseEvent) => {
+                  e.stopImmediatePropagation();
+                  PersistentVSCodeAPI.getVSCodeAPI().postMessage({
+                    command: "copy",
+                  });
+                }}
+              >
+                Copy details
+              </VSCodeButton>
             </span>
           </span>
         </summary>
