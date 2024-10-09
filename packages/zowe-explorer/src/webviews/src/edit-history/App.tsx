@@ -10,7 +10,7 @@
  */
 
 import { useEffect, useState } from "preact/hooks";
-import { VSCodeDivider, VSCodePanels, VSCodePanelTab } from "@vscode/webview-ui-toolkit/react";
+import { VSCodeDataGridCell, VSCodeDataGridRow, VSCodeDivider, VSCodePanels, VSCodePanelTab } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
 import { isSecureOrigin } from "../utils";
 import PersistentDataPanel from "./components/PersistentTable/PersistentDataPanel";
@@ -50,9 +50,13 @@ export function App(): JSXInternal.Element {
         <VSCodePanelTab id="jobs-panel-tab">
           <h2>Jobs</h2>
         </VSCodePanelTab>
+        <VSCodePanelTab id="cmds-panel-tab">
+          <h2>Zowe Commands</h2>
+        </VSCodePanelTab>
         <PersistentDataPanel type="ds" />
         <PersistentDataPanel type="uss" />
         <PersistentDataPanel type="jobs" />
+        <PersistentDataPanel type="cmds" />
       </VSCodePanels>
     </div>
   );

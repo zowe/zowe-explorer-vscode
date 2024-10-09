@@ -265,5 +265,6 @@ export class Constants {
         DS: "ds-panel-tab",
         USS: "uss-panel-tab",
         JOBS: "jobs-panel-tab",
+        CMDS: "cmds-panel-tab",
     };
 }

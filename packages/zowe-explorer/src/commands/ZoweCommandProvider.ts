@@ -101,11 +101,11 @@ export abstract class ZoweCommandProvider {
                 );
                 this.outputChannel.appendLine(response);
                 this.outputChannel.show(true);
+                this.history.addSearchHistory(command);
             }
         } catch (error) {
             await AuthUtils.errorHandling(error, profile.name);
         }
-        this.history.addSearchHistory(command);
     }
 
     public async selectNodeProfile(cmdTree: Definitions.Trees): Promise<imperative.IProfileLoaded> {
