@@ -23,6 +23,7 @@ import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { UnixCommandHandler } from "../../../src/commands/UnixCommandHandler";
 import { Constants } from "../../../src/configuration/Constants";
 import { Definitions } from "../../../src/configuration/Definitions";
+import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 
 jest.mock("Session");
 
@@ -32,6 +33,7 @@ describe("UnixCommand Actions Unit Testing", () => {
     const showInformationMessage = jest.fn();
     const showQuickPick = jest.fn();
     const createQuickPick = jest.fn();
+    const createTerminal = jest.fn();
     const getConfiguration = jest.fn();
     const createOutputChannel = jest.fn();
 
@@ -147,6 +149,7 @@ describe("UnixCommand Actions Unit Testing", () => {
     Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
     Object.defineProperty(vscode.window, "createQuickPick", { value: createQuickPick });
+    Object.defineProperty(vscode.window, "createTerminal", { value: createTerminal });
     Object.defineProperty(vscode.window, "createOutputChannel", { value: createOutputChannel });
     Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
     Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
@@ -202,6 +205,10 @@ describe("UnixCommand Actions Unit Testing", () => {
                 openConfigFile: jest.fn(),
             };
         }),
+    });
+
+    beforeEach(() => {
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
     });
 
     afterEach(() => {

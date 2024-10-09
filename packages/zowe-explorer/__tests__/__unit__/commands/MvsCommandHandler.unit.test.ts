@@ -19,6 +19,7 @@ import { ProfileManagement } from "../../../src/management/ProfileManagement";
 import { FilterDescriptor, FilterItem } from "../../../src/management/FilterManagement";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { MvsCommandHandler } from "../../../src/commands/MvsCommandHandler";
+import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 
 jest.mock("Session");
 
@@ -28,6 +29,7 @@ describe("mvsCommandActions unit testing", () => {
     const showInformationMessage = jest.fn();
     const showQuickPick = jest.fn();
     const createQuickPick = jest.fn();
+    const createTerminal = jest.fn();
     const getConfiguration = jest.fn();
     const createOutputChannel = jest.fn();
 
@@ -126,6 +128,7 @@ describe("mvsCommandActions unit testing", () => {
     Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
     Object.defineProperty(vscode.window, "createQuickPick", { value: createQuickPick });
+    Object.defineProperty(vscode.window, "createTerminal", { value: createTerminal });
     Object.defineProperty(vscode.window, "createOutputChannel", { value: createOutputChannel });
     Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
     Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
@@ -136,6 +139,10 @@ describe("mvsCommandActions unit testing", () => {
         update: jest.fn(() => {
             return {};
         }),
+    });
+
+    beforeEach(() => {
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
     });
 
     afterEach(() => {

@@ -18,6 +18,7 @@ import { ProfileManagement } from "../../../src/management/ProfileManagement";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { TsoCommandHandler } from "../../../src/commands/TsoCommandHandler";
+import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 
 jest.mock("Session");
 
@@ -27,6 +28,7 @@ describe("TsoCommandHandler unit testing", () => {
     const showInformationMessage = jest.fn();
     const showQuickPick = jest.fn();
     const createQuickPick = jest.fn();
+    const createTerminal = jest.fn();
     const getConfiguration = jest.fn();
     const createOutputChannel = jest.fn();
 
@@ -119,6 +121,7 @@ describe("TsoCommandHandler unit testing", () => {
     Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
     Object.defineProperty(vscode.window, "createQuickPick", { value: createQuickPick });
+    Object.defineProperty(vscode.window, "createTerminal", { value: createTerminal });
     Object.defineProperty(vscode.window, "createOutputChannel", { value: createOutputChannel });
     Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
     Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
@@ -133,6 +136,10 @@ describe("TsoCommandHandler unit testing", () => {
         update: jest.fn(() => {
             return {};
         }),
+    });
+
+    beforeEach(() => {
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
     });
 
     afterEach(() => {
