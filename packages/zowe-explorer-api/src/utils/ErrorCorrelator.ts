@@ -13,6 +13,7 @@ import { ImperativeError } from "@zowe/imperative";
 import { Singleton } from "./Singleton";
 import { Gui } from "../globals";
 import { commands } from "vscode";
+import Mustache = require("mustache");
 
 /**
  * Error match type (substring of error, or regular expression to match against error text)
@@ -126,6 +127,22 @@ export class ErrorCorrelator extends Singleton {
                         summary: "The job was submitted without a job statement or with unrecognized (non-JCL) content.",
                     },
                 ],
+                [ZoweExplorerApiType.All]: [
+                    {
+                        errorCode: "401",
+                        matches: ["Token is not valid or expired"],
+                        summary:
+                            // eslint-disable-next-line max-len
+                            "Your connection is no longer active for profile {{profileName}}. Please log in to an authentication service to restore the connection.",
+                    },
+                    {
+                        errorCode: "401",
+                        matches: ["Username or password are not valid or expired", "All configured authentication methods failed"],
+                        summary:
+                            // eslint-disable-next-line max-len
+                            "Invalid credentials for profile {{profileName}}. Please ensure the username and password are valid or this may lead to a lock-out.",
+                    },
+                ],
             },
         ],
     ]);
@@ -157,18 +174,21 @@ export class ErrorCorrelator extends Singleton {
      * @param errorDetails The full error details (usually `error.message`)
      * @returns A matching `NetworkError`, or a generic `NetworkError` with the full error details as the summary
      */
-    public correlateError(api: ZoweExplorerApiType, profileType: string, errorDetails: string): NetworkError {
+    public correlateError(api: ZoweExplorerApiType, profileType: string, errorDetails: string, templateArgs?: Record<string, string>): NetworkError {
         if (!this.errorMatches.has(profileType)) {
             return new NetworkError({ summary: errorDetails });
         }
 
-        for (const apiError of [...this.errorMatches.get(profileType)[api], ...(this.errorMatches.get(profileType)[ZoweExplorerApiType.All] ?? [])]) {
+        for (const apiError of [
+            ...this.errorMatches.get(profileType)[api],
+            ...(api === ZoweExplorerApiType.All ? [] : this.errorMatches.get(profileType)[ZoweExplorerApiType.All] ?? []),
+        ]) {
             for (const match of Array.isArray(apiError.matches) ? apiError.matches : [apiError.matches]) {
                 if (errorDetails.match(match)) {
                     return new NetworkError({
                         errorCode: apiError.errorCode,
                         fullError: errorDetails,
-                        summary: apiError.summary,
+                        summary: templateArgs ? Mustache.render(apiError.summary, templateArgs) : apiError.summary,
                         tips: apiError?.tips,
                     });
                 }
