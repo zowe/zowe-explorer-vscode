@@ -11,7 +11,7 @@
 
 import * as util from "util";
 import * as vscode from "vscode";
-import { imperative, Gui, MainframeInteraction, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { imperative, Gui, MainframeInteraction, IZoweTreeNode, ErrorCorrelator, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "../tools/ZoweLogger";
 
@@ -22,7 +22,7 @@ export class AuthUtils {
      * @param {label} - additional information such as profile name, credentials, messageID etc
      * @param {moreInfo} - additional/customized error messages
      *************************************************************************************************************/
-    public static async errorHandling(errorDetails: Error | string, label?: string, moreInfo?: string): Promise<void> {
+    public static async errorHandling(errorDetails: Error | string, label?: string, moreInfo?: string | imperative.IProfileLoaded): Promise<void> {
         // Use util.inspect instead of JSON.stringify to handle circular references
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         ZoweLogger.error(`${errorDetails.toString()}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null }));
@@ -45,18 +45,9 @@ export class AuthUtils {
                 httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
                 imperativeError.message.includes("All configured authentication methods failed")
             ) {
-                const errMsg = vscode.l10n.t({
-                    message:
-                        "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
-                    args: [label],
-                    comment: ["Label"],
-                });
-                const errToken = vscode.l10n.t({
-                    message:
-                        // eslint-disable-next-line max-len
-                        "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
-                    args: [label],
-                    comment: ["Label"],
+                const profile = await Constants.PROFILES_CACHE.loadNamedProfile(label);
+                const correlation = ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.All, profile.type, imperativeError.message, {
+                    profileName: label,
                 });
                 if (label.includes("[")) {
                     label = label.substring(0, label.indexOf(" [")).trim();
@@ -68,7 +59,7 @@ export class AuthUtils {
 
                     if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
                         const message = vscode.l10n.t("Log in to Authentication Service");
-                        Gui.showMessage(errToken, { items: [message] }).then(async (selection) => {
+                        Gui.showMessage(correlation.message, { items: [message] }).then(async (selection) => {
                             if (selection) {
                                 await Constants.PROFILES_CACHE.ssoLogin(null, label);
                             }
@@ -77,7 +68,7 @@ export class AuthUtils {
                     }
                 }
                 const checkCredsButton = vscode.l10n.t("Update Credentials");
-                await Gui.errorMessage(errMsg, {
+                await Gui.errorMessage(correlation.message, {
                     items: [checkCredsButton],
                     vsCodeOpts: { modal: true },
                 }).then(async (selection) => {
@@ -93,13 +84,9 @@ export class AuthUtils {
         if (errorDetails.toString().includes("Could not find profile")) {
             return;
         }
-        if (moreInfo === undefined) {
-            moreInfo = errorDetails.toString().includes("Error") ? "" : "Error: ";
-        } else {
-            moreInfo += " ";
-        }
+
         // Try to keep message readable since VS Code doesn't support newlines in error messages
-        Gui.errorMessage(moreInfo + errorDetails.toString().replace(/\n/g, " | "));
+        Gui.errorMessage(errorDetails.toString().replace(/\n/g, " | "));
     }
 
     /**
