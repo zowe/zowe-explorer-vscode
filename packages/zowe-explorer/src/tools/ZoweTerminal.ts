@@ -16,7 +16,8 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     public static readonly Keys = {
         EMPTY_LINE: `${this.mTermX} `,
         CLEAR_ALL: "\x1b[2J\x1b[3J\x1b[;H",
-        CLEAR_LINE: `\x1b[2K\r${this.mTermX} `,
+        CLEAR_LINE: `\x1b[2K\r`,
+        CTRL_C: "\x03",
         DEL: "\x1b[P",
         ENTER: "\r",
         NEW_LINE: "\r\n",
@@ -30,7 +31,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     public constructor(
         terminalName: string,
         private processCmd: (cmd: string) => Promise<string>,
-        options?: { startup?: string; message?: string; history?: string[] }
+        options?: { startup?: string; message?: string; history?: string[]; formatCommandLine?: (cmd: string) => string }
     ) {
         this.mTerminalName = terminalName;
         this.mMessage = options?.message ?? `Welcome to the ${this.mTerminalName} Terminal!`;
@@ -38,6 +39,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.historyIndex = this.mHistory.length;
         this.command = options?.startup ?? "";
         this.cursorPosition = this.command.length;
+        this.formatCommandLine = options.formatCommandLine;
     }
 
     private mMessage: string;
@@ -52,11 +54,20 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     protected writeLine(text: string) {
         this.write(text);
         this.write(ZoweTerminal.Keys.NEW_LINE);
-        this.write(ZoweTerminal.Keys.EMPTY_LINE);
+        this.writeCmd();
+    }
+    protected clearLine() {
+        this.write(ZoweTerminal.Keys.CLEAR_LINE);
+    }
+    protected writeCmd(cmd?: string) {
+        this.write(this.formatCommandLine ? this.formatCommandLine(cmd ?? this.command) : cmd ?? this.command);
     }
     protected refreshCmd() {
-        this.write(ZoweTerminal.Keys.CLEAR_LINE);
-        this.write(this.command);
+        this.clearLine();
+        this.writeCmd();
+        if (this.command.length !== this.cursorPosition) {
+            this.write(`\x1B[${this.command.length - this.cursorPosition}D`);
+        }
     }
     protected clear() {
         this.write(ZoweTerminal.Keys.CLEAR_ALL);
@@ -64,6 +75,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     }
 
     protected command: string;
+    protected formatCommandLine: (cmd: string) => string;
     protected cursorPosition: number;
 
     public onDidWrite: vscode.Event<string> = this.writeEmitter.event;
@@ -75,7 +87,6 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     public open(initialDimensions: vscode.TerminalDimensions | undefined): void {
         this.writeLine(this.mMessage);
         if (this.command.length > 0) {
-            this.write(this.command);
             this.handleInput(ZoweTerminal.Keys.ENTER);
         }
     }
@@ -85,80 +96,80 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.closeEmitter.fire();
     }
 
+    private navigateHistory(offset: number): void {
+        this.historyIndex = Math.max(0, Math.min(this.mHistory.length, this.historyIndex + offset));
+        this.command = this.mHistory[this.historyIndex] ?? "";
+        this.cursorPosition = this.command.length;
+        this.refreshCmd();
+    }
+
+    private moveCursor(offset: number): void {
+        this.cursorPosition = Math.max(0, Math.min(this.command.length, this.cursorPosition + offset));
+        this.refreshCmd();
+    }
+
     // Handle input from the terminal
     public async handleInput(data: string): Promise<void> {
-        if (data === ZoweTerminal.Keys.UP) {
-            this.historyIndex = Math.max(0, this.historyIndex - 1);
-            this.command = this.mHistory[this.historyIndex] ?? "";
-            this.cursorPosition = this.command.length;
-            this.refreshCmd();
-            return;
-        }
-        if (data === ZoweTerminal.Keys.DOWN) {
-            if (this.historyIndex === this.mHistory.length) {
-                this.command = "";
-            } else {
-                this.historyIndex = Math.min(this.mHistory.length, this.historyIndex + 1);
-                this.command = this.mHistory[this.historyIndex] ?? "";
-            }
-            this.cursorPosition = this.command.length;
-            this.refreshCmd();
-            return;
-        }
-        if (data === ZoweTerminal.Keys.LEFT) {
-            this.cursorPosition = Math.max(0, this.cursorPosition - 1);
-            if (this.cursorPosition > 0) {
-                this.write(ZoweTerminal.Keys.LEFT);
-            }
-            return;
-        }
-        if (data === ZoweTerminal.Keys.RIGHT) {
-            this.cursorPosition = Math.min(this.command.length, this.cursorPosition + 1);
-            if (this.cursorPosition < this.command.length) {
-                this.write(ZoweTerminal.Keys.RIGHT);
-            }
-            return;
-        }
-        if (data === ZoweTerminal.Keys.BACKSPACE) {
-            if (this.command.length === 0) {
-                return;
-            }
-            this.write(ZoweTerminal.Keys.LEFT);
-            this.write(ZoweTerminal.Keys.DEL);
-
-            const tmp = this.command.split("");
-            tmp.splice(this.cursorPosition - 1, 1);
-            this.command = tmp.join("");
-
-            this.cursorPosition = Math.max(0, this.cursorPosition - 1);
-            return;
-        }
-        if (data === ZoweTerminal.Keys.ENTER) {
-            this.write(ZoweTerminal.Keys.NEW_LINE);
-            if (this.command.length === 0) {
-                this.write(ZoweTerminal.Keys.EMPTY_LINE);
-                return;
-            }
-
-            if (this.command[0] === ":") {
-                if (this.command === ":clear") {
-                    this.clear();
-                } else if (this.command === ":exit") {
-                    this.closeEmitter.fire();
+        switch (data) {
+            case ZoweTerminal.Keys.CTRL_C:
+                this.close();
+                break;
+            case ZoweTerminal.Keys.UP:
+                this.navigateHistory(-1);
+                break;
+            case ZoweTerminal.Keys.DOWN:
+                this.navigateHistory(1);
+                break;
+            case ZoweTerminal.Keys.LEFT:
+                this.moveCursor(-1);
+                break;
+            case ZoweTerminal.Keys.RIGHT:
+                this.moveCursor(1);
+                break;
+            case ZoweTerminal.Keys.BACKSPACE: {
+                if (this.command.length === 0 || this.cursorPosition === 0) {
+                    return;
                 }
-            } else {
-                const output = await this.processCmd(this.command);
-                this.writeLine(output.trim().split("\n").join("\r\n"));
-            }
-            this.mHistory.push(this.command);
-            this.historyIndex = this.mHistory.length;
-            this.cursorPosition = 0;
-            this.command = "";
-            return;
-        }
+                this.write(ZoweTerminal.Keys.LEFT);
+                this.write(ZoweTerminal.Keys.DEL);
 
-        this.write(data);
-        this.command += data;
-        this.cursorPosition = Math.min(this.command.length, this.cursorPosition + 1);
+                this.cursorPosition = Math.max(0, this.cursorPosition - 1);
+
+                const tmp = this.command.split("");
+                tmp.splice(this.cursorPosition, 1);
+                this.command = tmp.join("");
+                break;
+            }
+            case ZoweTerminal.Keys.ENTER: {
+                this.write(ZoweTerminal.Keys.NEW_LINE);
+                const cmd = this.command;
+                this.command = "";
+                if (cmd.length === 0) {
+                    this.writeCmd();
+                    return;
+                }
+
+                if (cmd[0] === ":") {
+                    if (cmd === ":clear") {
+                        this.clear();
+                    } else if (cmd === ":exit") {
+                        this.closeEmitter.fire();
+                    }
+                } else {
+                    const output = await this.processCmd(cmd);
+                    this.writeLine(output.trim().split("\n").join("\r\n"));
+                }
+                this.mHistory.push(cmd);
+                this.historyIndex = this.mHistory.length;
+                this.cursorPosition = 0;
+                break;
+            }
+            default: {
+                this.command = this.command.slice(0, Math.max(0, this.cursorPosition)) + data + this.command.slice(this.cursorPosition);
+                this.write(data);
+                this.cursorPosition = Math.min(this.command.length, this.cursorPosition + 1);
+                this.refreshCmd();
+            }
+        }
     }
 }

@@ -60,7 +60,7 @@ export abstract class ZoweCommandProvider {
         }
     }
 
-    public abstract formatCommandLine(command: string): string;
+    public abstract formatCommandLine(command: string, profile: imperative.IProfileLoaded): string;
     public abstract runCommand(profile: imperative.IProfileLoaded, command: string): Promise<string>;
 
     public async issueCommand(profile: imperative.IProfileLoaded, command: string): Promise<void> {
@@ -73,7 +73,7 @@ export abstract class ZoweCommandProvider {
                 this.pseudoTerminal = new ZoweTerminal(
                     this.terminalName,
                     async (command: string): Promise<string> => {
-                        this.history.addSearchHistory(command);
+                        // this.history.addSearchHistory(command);
                         return this.runCommand(profile, command);
                     },
                     {
@@ -84,12 +84,13 @@ export abstract class ZoweCommandProvider {
                         }),
                         history: [...this.history.getSearchHistory()].reverse() ?? [],
                         startup: command,
+                        formatCommandLine: (cmd: string) => this.formatCommandLine(cmd, profile),
                     }
                 );
                 this.terminal = vscode.window.createTerminal({ name: this.terminalName, pty: this.pseudoTerminal });
                 this.terminal.show();
             } else {
-                this.outputChannel.appendLine(this.formatCommandLine(command));
+                this.outputChannel.appendLine(this.formatCommandLine(command, profile));
                 const response = await Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,

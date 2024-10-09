@@ -228,12 +228,13 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         return cmdArgs;
     }
 
-    public formatCommandLine(command: string): string {
-        const user: string = this.nodeProfile.profile.user;
-        if (this.nodeProfile) {
-            return `> ${user}@${this.nodeProfile.name}:${this.sshCwd ?? "~"}$ ${command}`;
+    public formatCommandLine(command: string, profile?: imperative.IProfileLoaded): string {
+        const prof = this.nodeProfile ?? profile;
+        const user: string = prof?.profile.user ?? prof.profile.user;
+        if (prof) {
+            return `> ${user}@${prof.name}:${this.sshCwd ?? "~"} $ ${command}`;
         } else {
-            return `> ${user}:${this.sshCwd ?? "~"}$ ${command}`;
+            return `> ${user}:${this.sshCwd ?? "~"} $ ${command}`;
         }
     }
 
