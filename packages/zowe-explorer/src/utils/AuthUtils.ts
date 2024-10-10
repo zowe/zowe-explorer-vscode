@@ -108,8 +108,8 @@ export class AuthUtils {
         if (errorDetails.toString().includes("Could not find profile")) {
             return false;
         }
-        // Try to keep message readable since VS Code doesn't support newlines in error messages
-        Gui.errorMessage(correlation.message.replace(/\n/g, " | "));
+
+        ErrorCorrelator.getInstance().displayCorrelatedError(correlation);
         return false;
     }
 

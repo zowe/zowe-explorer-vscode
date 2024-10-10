@@ -217,13 +217,7 @@ export class ErrorCorrelator extends Singleton {
      * @param allowRetry Whether to allow retrying the action
      * @returns The user selection ("Retry" [if enabled] or "Troubleshoot")
      */
-    public async displayError(
-        api: ZoweExplorerApiType,
-        profileType: string,
-        errorDetails: string,
-        opts?: { allowRetry?: boolean; stackTrace?: string }
-    ): Promise<string | undefined> {
-        const error = this.correlateError(api, profileType, errorDetails);
+    public async displayCorrelatedError(error: NetworkError, opts?: { allowRetry?: boolean; stackTrace?: string }): Promise<string | undefined> {
         const errorCodeStr = error.info?.errorCode ? `(Error Code ${error.info.errorCode})` : "";
         const userSelection = await Gui.errorMessage(`${error.mDetails.msg.trim()} ${errorCodeStr}`.trim(), {
             items: [opts?.allowRetry ? "Retry" : undefined, "More info"].filter(Boolean),
@@ -249,5 +243,25 @@ export class ErrorCorrelator extends Singleton {
         }
 
         return userSelection;
+    }
+
+    /**
+     * Translates a detailed error message to a user-friendly summary.
+     * Full error details are available through the "More info" dialog option.
+     *
+     * @param api The API type where the error was encountered
+     * @param profileType The profile type in use
+     * @param errorDetails The full error details (usually `error.message`)
+     * @param allowRetry Whether to allow retrying the action
+     * @returns The user selection ("Retry" [if enabled] or "Troubleshoot")
+     */
+    public async displayError(
+        api: ZoweExplorerApiType,
+        profileType: string,
+        errorDetails: string,
+        opts?: { allowRetry?: boolean; stackTrace?: string }
+    ): Promise<string | undefined> {
+        const error = this.correlateError(api, profileType, errorDetails);
+        return this.displayCorrelatedError(error, opts);
     }
 }
