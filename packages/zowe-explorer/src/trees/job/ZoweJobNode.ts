@@ -139,7 +139,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             // Fetch spool files under job node
             const spools = await this.getSpoolFiles(this.job);
             if (spools == null) {
-                return this.children;
+                return [];
             } else if (!spools.length) {
                 const noSpoolNode = new ZoweSpoolNode({
                     label: vscode.l10n.t("No spool files found"),
@@ -192,7 +192,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             // Fetch jobs under session node
             const jobs = await this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus);
             if (jobs == null) {
-                return this.children;
+                return [];
             } else if (jobs.length === 0) {
                 const noJobsNode = new ZoweJobNode({
                     label: vscode.l10n.t("No jobs found"),
