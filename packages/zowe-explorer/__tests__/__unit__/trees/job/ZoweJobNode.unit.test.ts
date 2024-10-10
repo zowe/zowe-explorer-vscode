@@ -30,7 +30,7 @@ import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
-import { ZoweJobNode } from "../../../../src/trees/job/ZoweJobNode";
+import { ZoweJobNode, ZoweSpoolNode } from "../../../../src/trees/job/ZoweJobNode";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { JobInit } from "../../../../src/trees/job/JobInit";
@@ -392,6 +392,15 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce({
             getSpoolFiles: jest.fn().mockResolvedValue(new Error("Response Fail")),
         } as any);
+        // Populate node with children from previous search to ensure they are removed
+        globalMocks.testJobNode.children = [
+            new ZoweSpoolNode({
+                label: "old",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                session: globalMocks.testSession,
+                profile: globalMocks.testProfile,
+            }),
+        ];
         globalMocks.testJobNode.dirty = true;
         const spools = await globalMocks.testJobNode.getChildren();
         expect(spools).toEqual([]);
@@ -442,6 +451,15 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
     it("should return empty list if there is error retrieving jobs", async () => {
         const globalMocks = await createGlobalMocks();
         await globalMocks.testJobsProvider.addSession("fake");
+        // Populate node with children from previous search to ensure they are removed
+        globalMocks.testJobsProvider.mSessionNodes[1].children = [
+            new ZoweJobNode({
+                label: "old",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                session: globalMocks.testSession,
+                profile: globalMocks.testProfile,
+            }),
+        ];
         globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
         globalMocks.mockGetJobsByParameters.mockRejectedValue(new Error("Response Fail"));
         jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce({
