@@ -20,7 +20,7 @@ import Mustache = require("mustache");
  */
 type ErrorMatch = string | RegExp;
 
-interface ErrorCorrelation {
+export interface ErrorCorrelation {
     /**
      * An optional error code returned from the server.
      * @type {string}

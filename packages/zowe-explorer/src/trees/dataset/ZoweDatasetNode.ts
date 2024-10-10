@@ -589,7 +589,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 responses.push(await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(this.label as string, options));
             }
         } catch (error) {
-            const updated = await AuthUtils.errorHandling(error, this.getProfileName(), vscode.l10n.t("Retrieving response from MVS list API"));
+            const updated = await AuthUtils.errorHandling(error, {
+                profile: this.getProfile(),
+                scenario: vscode.l10n.t("Retrieving response from MVS list API"),
+            });
             AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
             return;
         }
@@ -627,7 +630,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     datasetProvider.addFileHistory(`[${this.getProfileName()}]: ${this.label as string}`);
                 }
             } catch (err) {
-                await AuthUtils.errorHandling(err, this.getProfileName());
+                await AuthUtils.errorHandling(err, { profile: this.getProfile() });
                 throw err;
             }
         }

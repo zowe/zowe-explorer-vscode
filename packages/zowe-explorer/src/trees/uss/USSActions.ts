@@ -99,7 +99,7 @@ export class USSActions {
                 }
             } catch (err) {
                 if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, node.getProfileName(), vscode.l10n.t("Unable to create node:"));
+                    await AuthUtils.errorHandling(err, { profile: node.getProfile(), scenario: vscode.l10n.t("Unable to create node:") });
                 }
                 throw err;
             }
@@ -117,7 +117,7 @@ export class USSActions {
             await node.getChildren();
             ussFileProvider.refreshElement(node);
         } catch (err) {
-            await AuthUtils.errorHandling(err, node.getProfileName());
+            await AuthUtils.errorHandling(err, { profile: node.getProfile() });
         }
     }
 
@@ -188,7 +188,7 @@ export class USSActions {
             const ussName = `${node.fullPath}/${localFileName}`;
             await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContent(filePath, ussName, { binary: true });
         } catch (e) {
-            await AuthUtils.errorHandling(e, node.getProfileName());
+            await AuthUtils.errorHandling(e, { profile: node.getProfile() });
         }
     }
 
@@ -213,7 +213,7 @@ export class USSActions {
             }
             await ZoweExplorerApiRegister.getUssApi(prof).putContent(doc.fileName, ussName, options);
         } catch (e) {
-            await AuthUtils.errorHandling(e, node.getProfileName());
+            await AuthUtils.errorHandling(e, { profile: node.getProfile() });
         }
     }
 

@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { Validation, imperative, IZoweTreeNode, Gui } from "@zowe/zowe-explorer-api";
+import { Validation, imperative, IZoweTreeNode, Gui, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import { ZoweCommandProvider } from "./ZoweCommandProvider";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { Profiles } from "../configuration/Profiles";
@@ -126,7 +126,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                     })
                 );
             } else {
-                await AuthUtils.errorHandling(error, profile.name);
+                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Command, profile });
             }
         }
     }
@@ -215,7 +215,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 }
             }
         } catch (error) {
-            await AuthUtils.errorHandling(error, profile.name);
+            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Command, profile });
         }
         this.history.addSearchHistory(command);
     }

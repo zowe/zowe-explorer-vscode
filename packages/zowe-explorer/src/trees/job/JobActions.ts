@@ -54,7 +54,7 @@ export class JobActions {
                 })
             );
         } catch (error) {
-            await AuthUtils.errorHandling(error, job.getProfile().name);
+            await AuthUtils.errorHandling(error, { profile: job.getProfile() });
         }
     }
 
@@ -307,7 +307,7 @@ export class JobActions {
                     vscode.l10n.t("jobActions.modifyCommand.apiNonExisting", "Not implemented yet for profile of type: ") + job.getProfile().type
                 );
             } else {
-                await AuthUtils.errorHandling(error, job.getProfile().name);
+                await AuthUtils.errorHandling(error, { profile: job.getProfile() });
             }
         }
     }
@@ -343,7 +343,7 @@ export class JobActions {
                     })
                 );
             } else {
-                await AuthUtils.errorHandling(error, job.getProfile().name);
+                await AuthUtils.errorHandling(error, { profile: job.getProfile() });
             }
         }
     }

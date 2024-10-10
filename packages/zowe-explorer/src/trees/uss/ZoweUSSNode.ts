@@ -540,7 +540,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
                 }
             } catch (err) {
-                await AuthUtils.errorHandling(err, this.getProfileName());
+                await AuthUtils.errorHandling(err, { profile: this.getProfile() });
                 throw err;
             }
         }
@@ -581,7 +581,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     })
                 );
             } else {
-                await AuthUtils.errorHandling(err, this.getProfileName());
+                await AuthUtils.errorHandling(err, { profile: this.getProfile() });
             }
         }
     }
@@ -654,7 +654,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 );
             }
         } catch (error) {
-            await AuthUtils.errorHandling(error, this.label.toString(), vscode.l10n.t("Error uploading files"));
+            await AuthUtils.errorHandling(error, {
+                profile: this.getProfile(),
+                scenario: vscode.l10n.t("Error uploading files"),
+            });
         }
     }
 
@@ -680,7 +683,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 return await UssFSProvider.instance.listFiles(profile, this.resourceUri);
             }
         } catch (error) {
-            const updated = await AuthUtils.errorHandling(error, this.getProfileName(), vscode.l10n.t("Retrieving response from USS list API"));
+            const updated = await AuthUtils.errorHandling(error, {
+                profile: this.getProfile(),
+                scenario: vscode.l10n.t("Retrieving response from USS list API"),
+            });
             AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getUssApi(prof), this.getSessionNode(), updated && this);
             return { success: false, commandResponse: null };
         }

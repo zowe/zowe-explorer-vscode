@@ -193,7 +193,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 if (err.toString().includes("hostname")) {
                     ZoweLogger.error(err);
                 } else {
-                    await AuthUtils.errorHandling(err, profile.name);
+                    await AuthUtils.errorHandling(err, { profile });
                 }
             }
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
