@@ -160,8 +160,8 @@ export function createJobInfoNode(session: any, profile: imperative.IProfileLoad
         collapsibleState: vscode.TreeItemCollapsibleState.None,
         parentNode: session.getSessionNode(),
         profile,
+        contextOverride: Constants.INFORMATION_CONTEXT,
     });
-    jobNode.contextValue = Constants.INFORMATION_CONTEXT;
     return jobNode;
 }
 

@@ -34,6 +34,6 @@ describe("Dataset utils unit tests - function getExtension", () => {
         }
     });
     it("returns null if no language was detected", () => {
-        expect(DatasetUtils.getExtension("TEST.DS")).toBe(null);
+        expect(DatasetUtils.getExtension("TEST.DS.X")).toBe(null);
     });
 });

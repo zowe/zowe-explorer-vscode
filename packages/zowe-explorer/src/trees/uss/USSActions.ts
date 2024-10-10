@@ -13,13 +13,12 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { Gui, imperative, Validation, IZoweUSSTreeNode, Types } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweUSSTreeNode, Types } from "@zowe/zowe-explorer-api";
 import { isBinaryFileSync } from "isbinaryfile";
 import { USSAttributeView } from "./USSAttributeView";
 import { USSFileStructure } from "./USSFileStructure";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { Constants } from "../../configuration/Constants";
-import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { LocalFileManagement } from "../../management/LocalFileManagement";
 import { ZoweLogger } from "../../tools/ZoweLogger";
@@ -36,16 +35,12 @@ export class USSActions {
      * @param {ussTree} ussFileProvider - Current ussTree used to populate the TreeView
      * @returns {Promise<void>}
      */
-    public static async createUSSNode(
-        node: IZoweUSSTreeNode,
-        ussFileProvider: Types.IZoweUSSTreeType,
-        nodeType: string,
-        isTopLevel?: boolean
-    ): Promise<void> {
+    public static async createUSSNode(node: IZoweUSSTreeNode, ussFileProvider: Types.IZoweUSSTreeType, nodeType: string): Promise<void> {
         ZoweLogger.trace("uss.actions.createUSSNode called.");
         await ussFileProvider.checkCurrentProfile(node);
         let filePath = "";
-        if (SharedContext.isSession(node)) {
+        const isTopLevel = SharedContext.isSession(node);
+        if (isTopLevel && node.fullPath?.length === 0) {
             const filePathOptions: vscode.InputBoxOptions = {
                 placeHolder: vscode.l10n.t({
                     message: "{0} location",
@@ -60,17 +55,25 @@ export class USSActions {
                 value: node.tooltip as string,
             };
             filePath = await Gui.showInputBox(filePathOptions);
+            node.fullPath = filePath;
         } else {
             filePath = node.fullPath;
         }
+
+        if (filePath == null || filePath.length === 0) {
+            return;
+        }
+
         const nameOptions: vscode.InputBoxOptions = {
             placeHolder: vscode.l10n.t("Name of file or directory"),
         };
         const name = await Gui.showInputBox(nameOptions);
         if (name && filePath) {
             try {
-                filePath = `${filePath}/${name}`;
-                const uri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, name) });
+                filePath = path.posix.join(filePath, name);
+                const uri = node.resourceUri.with({
+                    path: isTopLevel ? path.posix.join(node.resourceUri.path, filePath) : path.posix.join(node.resourceUri.path, name),
+                });
                 await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
                 if (nodeType === "file") {
                     await vscode.workspace.fs.writeFile(uri, new Uint8Array());
@@ -82,6 +85,7 @@ export class USSActions {
                 } else {
                     ussFileProvider.refreshElement(node);
                 }
+
                 const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name) as ZoweUSSNode);
                 await ussFileProvider.getTreeView().reveal(node, { select: true, focus: true });
                 ussFileProvider.getTreeView().reveal(newNode, { select: true, focus: true });
@@ -114,24 +118,6 @@ export class USSActions {
             ussFileProvider.refreshElement(node);
         } catch (err) {
             await AuthUtils.errorHandling(err, node.getProfileName());
-        }
-    }
-
-    public static async createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
-        ZoweLogger.trace("uss.actions.createUSSNodeDialog called.");
-        await ussFileProvider.checkCurrentProfile(node);
-        if (
-            Profiles.getInstance().validProfile === Validation.ValidationType.VALID ||
-            Profiles.getInstance().validProfile === Validation.ValidationType.UNVERIFIED
-        ) {
-            const quickPickOptions: vscode.QuickPickOptions = {
-                placeHolder: `What would you like to create at ${node.fullPath}?`,
-                ignoreFocusOut: true,
-                canPickMany: false,
-            };
-            const type = await Gui.showQuickPick([Constants.USS_DIR_CONTEXT, "File"], quickPickOptions);
-            const isTopLevel = true;
-            return USSActions.createUSSNode(node, ussFileProvider, type, isTopLevel);
         }
     }
 

@@ -24,6 +24,7 @@ import { ZoweJobNode } from "../../../../src/trees/job/ZoweJobNode";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
+import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 
 function createGlobalMocks() {
     const newMocks = {
@@ -109,6 +110,30 @@ describe("syncSessionNode shared util function", () => {
         AuthUtils.syncSessionNode(sessionForProfile, sessionNode);
         expect(sessionNode.getSession()).toEqual(expectedSession);
         expect(sessionNode.getProfile()).toEqual(createIProfile());
+    });
+    it("should update session node and refresh tree node if provided", async () => {
+        const globalMocks = createGlobalMocks();
+        // given
+        Object.defineProperty(globalMocks.mockProfilesCache, "loadNamedProfile", {
+            value: jest.fn().mockReturnValue(createIProfile()),
+        });
+        const getChildrenSpy = jest.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
+        const refreshElementMock = jest.fn();
+        jest.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValueOnce({
+            refreshElement: refreshElementMock,
+        } as any);
+        const getSessionMock = jest.fn().mockReturnValue(new imperative.Session({}));
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        const sessionForProfile = (_profile) =>
+            ({
+                getSession: getSessionMock,
+            } as any);
+        // when
+        AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
+        expect(getSessionMock).toHaveBeenCalled();
+        expect(sessionNode.dirty).toBe(true);
+        expect(await getChildrenSpy).toHaveBeenCalled();
+        expect(refreshElementMock).toHaveBeenCalledWith(sessionNode);
     });
     it("should do nothing, if there is no profile from provided node in the file system", () => {
         const profiles = createInstanceOfProfile(serviceProfile);

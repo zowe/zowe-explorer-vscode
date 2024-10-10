@@ -96,7 +96,6 @@ async function createGlobalMocks() {
         mockDeleteJobs: jest.fn(),
         mockShowInputBox: jest.fn(),
         mockDeleteJob: jest.fn(),
-        mockGetJobsByOwnerAndPrefix: jest.fn(),
         mockShowInformationMessage: jest.fn(),
         mockShowWarningMessage: jest.fn(),
         mockLoadNamedProfile: jest.fn(),
@@ -110,7 +109,6 @@ async function createGlobalMocks() {
         testSessionNoCred: createISessionWithoutCredentials(),
         testProfile: createIProfile(),
         testIJob: createIJobObject(),
-        testIJobComplete: createIJobObject(),
         testJobNode: null,
         testSessionNode: null,
         mockIJobFile: createIJobFile(),
@@ -237,7 +235,6 @@ async function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     globalMocks.testSessionNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
-    globalMocks.mockGetJobsByOwnerAndPrefix.mockReturnValue([globalMocks.testIJob, globalMocks.testIJobComplete]);
     globalMocks.mockProfileInstance.editSession = jest.fn(() => globalMocks.testProfile);
     globalMocks.mockGetConfiguration.mockReturnValue({
         persistence: true,

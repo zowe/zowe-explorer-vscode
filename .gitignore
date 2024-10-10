@@ -3,7 +3,6 @@ out
 lib
 !packages/eslint-plugin-zowe-explorer/**/lib
 logs
-testProfileData.ts
 results
 *.log
 npm-shrinkwrap.json
@@ -24,7 +23,6 @@ coverage/
 v8-compile-cache-0/
 dist/
 prebuilds/
-samples/**/pnpm-lock.yaml
 packages/zowe-explorer/**/.wdio-vscode-service
 packages/zowe-explorer/__tests__/**/.zowe
 packages/zowe-explorer/__tests__/**/.env

@@ -84,7 +84,7 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
         const result = this.getDefaultResponse();
         const transferOptions = {
             encoding: options.encoding,
-            localFile: undefined,
+            localFile: options.file,
             transferType: CoreUtils.getBinaryTransferModeOrDefault(options.binary),
         };
         const fileOrStreamSpecified = options.file != null || options.stream != null;

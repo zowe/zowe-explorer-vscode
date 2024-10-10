@@ -10,8 +10,6 @@
     "__tests__/__unit__",
     "__tests__/__integration__/bdd/step_definitions/**/*.ts",
     // Needed for integration tests to work:
-    "__tests__/__integration__/tdd",
-    "resources/testProfileData.example.ts",
-    "resources/testProfileData.ts"
+    "__tests__/__integration__/tdd"
   ]
 }

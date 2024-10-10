@@ -20,6 +20,7 @@ import * as tmp from "tmp";
 import { Gui, imperative } from "@zowe/zowe-explorer-api";
 import * as globals from "../../../src/globals";
 import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
+import { mocked } from "../../../__mocks__/mockUtils";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
@@ -93,6 +94,7 @@ describe("FtpMvsApi", () => {
 
         expect(result.apiResponse.etag).toHaveLength(64);
         expect(DataSetUtils.downloadDataSet).toHaveBeenCalledTimes(1);
+        expect(mocked(DataSetUtils.downloadDataSet).mock.calls[0][2].localFile).toBe(localFile);
         expect(MvsApi.releaseConnection).toHaveBeenCalled();
 
         expect((response._readableState.buffer.head?.data ?? response._readableState.buffer).toString()).toContain("Hello world");

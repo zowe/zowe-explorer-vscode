@@ -64,7 +64,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         const result = this.getDefaultResponse();
         const transferOptions = {
             transferType: CoreUtils.getBinaryTransferModeOrDefault(options.binary),
-            localFile: undefined,
+            localFile: options.file,
             size: 1,
         };
         const fileOrStreamSpecified = options.file != null || options.stream != null;

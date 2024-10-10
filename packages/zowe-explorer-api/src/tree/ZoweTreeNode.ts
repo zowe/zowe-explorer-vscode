@@ -107,9 +107,14 @@ export class ZoweTreeNode extends vscode.TreeItem {
             // Don't reassign profile, we want to keep object reference shared across nodes
             this.profile.profile = aProfile.profile;
         }
-        const fsEntry = fsProvider?.lookup(this.resourceUri, true);
-        if (fsEntry != null) {
-            fsEntry.metadata.profile = aProfile;
+        if (this.resourceUri != null) {
+            const fsEntry = fsProvider?.lookup(this.resourceUri, true);
+            if (fsEntry != null) {
+                fsEntry.metadata.profile = aProfile;
+            }
+        }
+        for (const child of this.children) {
+            (child as unknown as ZoweTreeNode).setProfileToChoice(aProfile, fsProvider);
         }
     }
     /**

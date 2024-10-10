@@ -32,21 +32,6 @@ import { AuthUtils } from "../../utils/AuthUtils";
 import { PollProvider } from "./JobPollProvider";
 import { Definitions } from "../../configuration/Definitions";
 
-/**
- * Creates the Job tree that contains nodes of sessions, jobs and spool items
- *
- * @export
- * @class ZosJobsProvider
- * @implements {vscode.TreeDataProvider}
- */
-export async function createJobsTree(log: imperative.Logger): Promise<JobTree> {
-    ZoweLogger.trace("ZosJobsProvider.createJobsTree called.");
-    const tree = new JobTree();
-    await tree.initializeJobsTree(log);
-    await tree.addSession();
-    return tree;
-}
-
 export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types.IZoweJobTreeType {
     public static readonly JobId = "JobId: ";
     public static readonly Owner = "Owner: ";
@@ -139,7 +124,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @param {IZoweJobTreeNode} node
      */
     public saveSearch(node: IZoweJobTreeNode): void {
-        ZoweLogger.trace("ZosJobsProvider.saveSearch called.");
+        ZoweLogger.trace("JobTree.saveSearch called.");
         node.contextValue = SharedContext.asFavorite(node);
     }
     public saveFile(_document: vscode.TextDocument): void {
@@ -162,7 +147,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @returns {IZoweJobTreeNode[] | Promise<IZoweJobTreeNode[]>}
      */
     public async getChildren(element?: IZoweJobTreeNode | undefined): Promise<IZoweJobTreeNode[]> {
-        ZoweLogger.trace("ZosJobsProvider.getChildren called.");
+        ZoweLogger.trace("JobTree.getChildren called.");
         if (element) {
             // solution for optional credentials. Owner is having error on initialization.
             if (element.owner === "") {
@@ -185,7 +170,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @returns {vscode.TreeView<ZoweJobNode>}
      */
     public getTreeView(): vscode.TreeView<IZoweJobTreeNode> {
-        ZoweLogger.trace("ZosJobsProvider.getTreeView called.");
+        ZoweLogger.trace("JobTree.getTreeView called.");
         return this.treeView;
     }
 
@@ -194,7 +179,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @param profile the profile to add to the tree
      */
     public async addSingleSession(profile: imperative.IProfileLoaded): Promise<void> {
-        ZoweLogger.trace("ZosJobsProvider.addSingleSession called.");
+        ZoweLogger.trace("JobTree.addSingleSession called.");
         if (profile) {
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
@@ -217,8 +202,8 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 session,
                 profile,
+                contextOverride: Constants.JOBS_SESSION_CONTEXT,
             });
-            node.contextValue = Constants.JOBS_SESSION_CONTEXT;
             await this.refreshHomeProfileContext(node);
             const icon = IconGenerator.getIconByNode(node);
             if (icon) {
@@ -231,7 +216,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     }
 
     public async delete(node: IZoweJobTreeNode): Promise<void> {
-        ZoweLogger.trace("ZosJobsProvider.delete called.");
+        ZoweLogger.trace("JobTree.delete called.");
 
         await JobFSProvider.instance.delete(node.resourceUri, { recursive: false, deleteRemote: true });
         const favNode = this.relabelFavoritedJob(node);
@@ -248,7 +233,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @returns {IZoweJobTreeNode | undefined} Returns matching profile node if found. Otherwise, returns undefined.
      */
     public findMatchingProfileInArray(jobsProvider: IZoweJobTreeNode[], profileName: string): IZoweJobTreeNode | undefined {
-        ZoweLogger.trace("ZosJobsProvider.findMatchingProfileInArray called.");
+        ZoweLogger.trace("JobTree.findMatchingProfileInArray called.");
         return jobsProvider.find((treeNode) => treeNode.label === profileName);
     }
 
@@ -257,7 +242,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @param node
      */
     public findFavoritedNode(node: IZoweJobTreeNode): IZoweJobTreeNode {
-        ZoweLogger.trace("ZosJobsProvider.findFavoritedNode called.");
+        ZoweLogger.trace("JobTree.findFavoritedNode called.");
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, node.getProfileName());
         return profileNodeInFavorites?.children.find(
             (temp) => temp.label === node.getLabel().toString() && temp.contextValue.includes(node.contextValue)
@@ -269,7 +254,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @param node
      */
     public findNonFavoritedNode(node: IZoweJobTreeNode): IZoweJobTreeNode {
-        ZoweLogger.trace("ZosJobsProvider.findNonFavoritedNode called.");
+        ZoweLogger.trace("JobTree.findNonFavoritedNode called.");
         const profileName = node.getProfileName();
         const sessionNode = this.mSessionNodes.find((session) => session.label.toString().trim() === profileName);
         return sessionNode?.children.find((temp) => temp.label === node.label);
@@ -280,7 +265,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @param node
      */
     public findEquivalentNode(node: IZoweJobTreeNode, isFavorite: boolean): IZoweJobTreeNode {
-        ZoweLogger.trace("ZosJobsProvider.findEquivalentNode called.");
+        ZoweLogger.trace("JobTree.findEquivalentNode called.");
         return isFavorite ? this.findNonFavoritedNode(node) : this.findFavoritedNode(node);
     }
 
@@ -290,7 +275,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @returns {ZoweJobNode}
      */
     public async createProfileNodeForFavs(profileName: string): Promise<ZoweJobNode | null> {
-        ZoweLogger.trace("ZosJobsProvider.createProfileNodeForFavs called.");
+        ZoweLogger.trace("JobTree.createProfileNodeForFavs called.");
         let favProfileNode: ZoweJobNode;
         try {
             const profile = Profiles.getInstance().loadNamedProfile(profileName);
@@ -334,7 +319,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @param log - Logger
      */
     public async initializeJobsTree(log: imperative.Logger): Promise<void> {
-        ZoweLogger.trace("ZosJobsProvider.initializeJobsTree called.");
+        ZoweLogger.trace("JobTree.initializeJobsTree called.");
         this.log = log;
         ZoweLogger.debug(vscode.l10n.t("Initializing profiles with jobs favorites."));
         const lines: string[] = this.mHistory.readFavorites();
@@ -369,7 +354,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @returns IZoweJobTreeNode
      */
     public initializeFavChildNodeForProfile(label: string, contextValue: string, parentNode: IZoweJobTreeNode): ZoweJobNode {
-        ZoweLogger.trace("ZosJobsProvider.initializeFavChildNodeForProfile called.");
+        ZoweLogger.trace("JobTree.initializeFavChildNodeForProfile called.");
         let favJob: ZoweJobNode;
         if (contextValue.startsWith(Constants.JOBS_JOB_CONTEXT)) {
             favJob = new ZoweJobNode({
@@ -406,7 +391,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @param parentNode
      */
     public async loadProfilesForFavorites(log: imperative.Logger, parentNode: IZoweJobTreeNode): Promise<IZoweJobTreeNode[] | ZoweJobNode[]> {
-        ZoweLogger.trace("ZosJobsProvider.loadProfilesForFavorites called.");
+        ZoweLogger.trace("JobTree.loadProfilesForFavorites called.");
         const profileName = parentNode.label as string;
         const updatedFavsForProfile: IZoweJobTreeNode[] = [];
         let profile: imperative.IProfileLoaded;
@@ -490,7 +475,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @param {IZoweJobTreeNode} node
      */
     public async addFavorite(node: IZoweJobTreeNode): Promise<void> {
-        ZoweLogger.trace("ZosJobsProvider.addFavorite called.");
+        ZoweLogger.trace("JobTree.addFavorite called.");
         let favJob: ZoweJobNode;
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
@@ -544,7 +529,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @param {IZoweJobTreeNode} node
      */
     public async removeFavorite(node: IZoweJobTreeNode): Promise<void> {
-        ZoweLogger.trace("ZosJobsProvider.removeFavorite called.");
+        ZoweLogger.trace("JobTree.removeFavorite called.");
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
@@ -565,7 +550,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     }
 
     public updateFavorites(): void {
-        ZoweLogger.trace("ZosJobsProvider.updateFavorites called.");
+        ZoweLogger.trace("JobTree.updateFavorites called.");
         const favoritesArray = [];
         this.mFavorites.forEach((profileNode) => {
             profileNode.children.forEach((fav) => {
@@ -589,7 +574,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @param userSelected True if the function is being called directly because the user selected to remove the profile from Favorites
      */
     public async removeFavProfile(profileName: string, userSelected: boolean): Promise<void> {
-        ZoweLogger.trace("ZosJobsProvider.removeFavProfile called.");
+        ZoweLogger.trace("JobTree.removeFavProfile called.");
         // If user selected the "Remove profile from Favorites option", confirm they are okay with deleting all favorited items for that profile.
         let cancelled = false;
         if (userSelected) {
@@ -626,17 +611,17 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     }
 
     public removeSearchHistory(name: string): void {
-        ZoweLogger.trace("ZosJobsProvider.removeSearchHistory called.");
+        ZoweLogger.trace("JobTree.removeSearchHistory called.");
         this.mHistory.removeSearchHistory(name);
     }
 
     public removeSession(name: string): void {
-        ZoweLogger.trace("ZosJobsProvider.removeSession called.");
+        ZoweLogger.trace("JobTree.removeSession called.");
         this.mHistory.removeSession(name);
     }
 
     public resetSearchHistory(): void {
-        ZoweLogger.trace("ZosJobsProvider.resetSearchHistory called.");
+        ZoweLogger.trace("JobTree.resetSearchHistory called.");
         this.mHistory.resetSearchHistory();
     }
 
@@ -656,7 +641,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     }
 
     public async getUserJobsMenuChoice(): Promise<FilterItem | undefined> {
-        ZoweLogger.trace("ZosJobsProvider.getUserJobsMenuChoice called.");
+        ZoweLogger.trace("JobTree.getUserJobsMenuChoice called.");
         const items: FilterItem[] = this.mHistory
             .getSearchHistory()
             .map((element) => new FilterItem({ text: element, menuType: Definitions.JobPickerTypes.History }));
@@ -677,7 +662,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     }
 
     public async getUserSearchQueryInput(choice: FilterItem, node: IZoweJobTreeNode): Promise<Definitions.IJobSearchCriteria | undefined> {
-        ZoweLogger.trace("ZosJobsProvider.getUserSearchQueryInput called.");
+        ZoweLogger.trace("JobTree.getUserSearchQueryInput called.");
         if (!choice) {
             return undefined;
         }
@@ -703,7 +688,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     }
 
     public async applyRegularSessionSearchLabel(node: IZoweJobTreeNode): Promise<string | undefined> {
-        ZoweLogger.trace("ZosJobsProvider.applyRegularSessionsSearchLabel called.");
+        ZoweLogger.trace("JobTree.applyRegularSessionsSearchLabel called.");
         const choice = await this.getUserJobsMenuChoice();
         const searchCriteriaObj = await this.getUserSearchQueryInput(choice, node);
 
@@ -721,7 +706,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     }
 
     public async handleSearchByJobId(jobId?: string): Promise<Definitions.IJobSearchCriteria> {
-        ZoweLogger.trace("ZosJobsProvider.handleSearchByJobId called.");
+        ZoweLogger.trace("JobTree.handleSearchByJobId called.");
         const options = {
             prompt: vscode.l10n.t("Enter a job ID"),
             value: jobId,
@@ -740,7 +725,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     }
 
     public parseJobSearchQuery(searchCriteria: string): Definitions.IJobSearchCriteria {
-        ZoweLogger.trace("ZosJobsProvider.parseJobSearchQuery called.");
+        ZoweLogger.trace("JobTree.parseJobSearchQuery called.");
         const searchCriteriaObj: Definitions.IJobSearchCriteria = {
             Owner: undefined,
             Prefix: undefined,
@@ -769,7 +754,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     }
 
     public getPopulatedPickerValues(searchObj: Definitions.IJobSearchCriteria): Definitions.IJobPickerOption[] {
-        ZoweLogger.trace("ZosJobsProvider.getPopulatedPickerValues called.");
+        ZoweLogger.trace("JobTree.getPopulatedPickerValues called.");
         const historyPopulatedItems = this.JOB_PROPERTIES;
         historyPopulatedItems.forEach((prop) => {
             if (prop.key === "owner") {
@@ -786,7 +771,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     }
 
     public async applySavedFavoritesSearchLabel(node): Promise<string> {
-        ZoweLogger.trace("ZosJobsProvider.applySavedFavoritesSearchLabel called.");
+        ZoweLogger.trace("JobTree.applySavedFavoritesSearchLabel called.");
         // executing search from saved search in favorites
         const searchCriteria = node.label as string;
         const session = node.getProfileName();
@@ -808,7 +793,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @returns {Promise<void>}
      */
     public async searchPrompt(node: IZoweJobTreeNode): Promise<void> {
-        ZoweLogger.trace("ZosJobsProvider.searchPrompt called.");
+        ZoweLogger.trace("JobTree.searchPrompt called.");
         await this.checkCurrentProfile(node);
         let searchCriteria: string = "";
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
@@ -847,7 +832,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     }
 
     public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent): Promise<void> {
-        ZoweLogger.trace("ZosJobsProvider.onDidChangeConfiguration called.");
+        ZoweLogger.trace("JobTree.onDidChangeConfiguration called.");
         if (e.affectsConfiguration(JobTree.persistenceSchema)) {
             const setting: any = {
                 ...SettingsConfig.getDirectValue(JobTree.persistenceSchema),
@@ -861,7 +846,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     }
 
     public deleteSession(node: IZoweJobTreeNode, hideFromAllTrees?: boolean): void {
-        ZoweLogger.trace("ZosJobsProvider.deleteSession called.");
+        ZoweLogger.trace("JobTree.deleteSession called.");
         super.deleteSession(node, hideFromAllTrees);
     }
 
@@ -872,7 +857,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @param jobid - A specific jobid search item
      */
     public createSearchLabel(owner: string, prefix: string, jobid: string, status: string): string {
-        ZoweLogger.trace("ZosJobsProvider.createSearchLabel called.");
+        ZoweLogger.trace("JobTree.createSearchLabel called.");
         const alphaNumeric = new RegExp("^w+$");
         if (jobid && !alphaNumeric.exec(jobid.trim())) {
             return JobTree.JobId + jobid.toUpperCase().trim();
@@ -892,12 +877,12 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     }
 
     public addFileHistory(_criteria: string): void {
-        ZoweLogger.trace("ZosJobsProvider.addFileHistory called.");
+        ZoweLogger.trace("JobTree.addFileHistory called.");
         throw new Error("Method not implemented.");
     }
 
     private async setJobStatus(node: IZoweJobTreeNode): Promise<Definitions.IJobStatusOption> {
-        ZoweLogger.trace("ZosJobsProvider.setJobStatus called.");
+        ZoweLogger.trace("JobTree.setJobStatus called.");
         const jobStatusSelection = ZoweExplorerApiRegister.getJesApi(node.getProfile()).getJobsByParameters
             ? Constants.JOB_STATUS
             : Constants.JOB_STATUS_UNSUPPORTED;
@@ -912,7 +897,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         jobProperties: Definitions.IJobPickerOption[],
         node: IZoweJobTreeNode
     ): Promise<Definitions.IJobSearchCriteria | undefined> {
-        ZoweLogger.trace("ZosJobsProvider.handleEditingMultiJobParameters called.");
+        ZoweLogger.trace("JobTree.handleEditingMultiJobParameters called.");
         const editableItems: vscode.QuickPickItem[] = [new FilterItem({ text: JobTree.submitJobQueryLabel, show: true }), Constants.SEPARATORS.BLANK];
         jobProperties.forEach((prop) => {
             if (prop.key === "owner" && !prop.value) {
@@ -949,7 +934,6 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 };
 
                 this.resetJobProperties(jobProperties);
-                await TreeViewUtils.expandNode(node, this);
                 return searchCriteriaObj;
             }
             default: {
@@ -967,7 +951,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         return this.handleEditingMultiJobParameters(jobProperties, node);
     }
     private resetJobProperties(jobProperties: Definitions.IJobPickerOption[]): Definitions.IJobPickerOption[] {
-        ZoweLogger.trace("ZosJobsProvider.resetJobProperties called.");
+        ZoweLogger.trace("JobTree.resetJobProperties called.");
         jobProperties.forEach((prop) => {
             if (prop.key === "owner") {
                 prop.value = "";
@@ -988,7 +972,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @param storedSearch - The original search string
      */
     private applySearchLabelToNode(node: IZoweJobTreeNode, storedSearchObj: Definitions.IJobSearchCriteria): void {
-        ZoweLogger.trace("ZosJobsProvider.applySearchLabelToNode called.");
+        ZoweLogger.trace("JobTree.applySearchLabelToNode called.");
         if (storedSearchObj) {
             node.searchId = storedSearchObj.JobId || "";
             node.owner = storedSearchObj.Owner || "*";
@@ -998,7 +982,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     }
 
     private relabelFavoritedJob(node: IZoweJobTreeNode): IZoweJobTreeNode {
-        ZoweLogger.trace("ZosJobsProvider.relabelFavoritedJob called.");
+        ZoweLogger.trace("JobTree.relabelFavoritedJob called.");
         node.label = node.label.toString().substring(0, node.label.toString().lastIndexOf(")") + 1);
         return node;
     }

@@ -13,7 +13,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as util from "util";
 import * as vscode from "vscode";
-import { Gui, imperative, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { FileManagement, Gui, imperative, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { createAltTypeIProfile, createInstanceOfProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
 import { MockedProperty } from "../../__mocks__/mockUtils";
 import { Constants } from "../../../src/configuration/Constants";
@@ -248,6 +248,7 @@ describe("ProfilesUtils unit tests", () => {
             value: [
                 {
                     uri: {
+                        scheme: "file",
                         fsPath: "./test",
                     },
                 },
@@ -285,7 +286,7 @@ describe("ProfilesUtils unit tests", () => {
             const mockReadProfilesFromDisk = jest.fn();
             const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockReturnValue({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
-                getTeamConfig: () => ({ exists: true }),
+                getTeamConfig: () => ({ exists: true, layers: [] }),
             } as never);
             await expect(ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
@@ -1312,6 +1313,17 @@ describe("ProfilesUtils unit tests", () => {
             expect(profInfoMock).toHaveBeenCalled();
             profInfoMock.mockRestore();
             onlyV1ProfsExistMock[Symbol.dispose]();
+        });
+    });
+
+    describe("setupDefaultCredentialManager", () => {
+        it("calls readProfilesFromDisk with homeDir and projectDir", async () => {
+            const readProfilesFromDiskMock = jest.spyOn(imperative.ProfileInfo.prototype, "readProfilesFromDisk").mockImplementation();
+            await ProfilesUtils.setupDefaultCredentialManager();
+            expect(readProfilesFromDiskMock).toHaveBeenCalledWith({
+                homeDir: FileManagement.getZoweDir(),
+                projectDir: vscode.workspace.workspaceFolders?.[0].uri.fsPath,
+            });
         });
     });
 });
