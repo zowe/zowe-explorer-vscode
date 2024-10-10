@@ -93,7 +93,7 @@ describe("HistoryView Unit Tests", () => {
                 { test: "test" } as any
             );
             expect(historyView["treeProviders"]).toEqual({ test: "test" });
-            expect(historyView["currentSelection"]).toEqual({ ds: "search", uss: "search", jobs: "search" });
+            expect(historyView["currentSelection"]).toEqual({ ds: "search", uss: "search", jobs: "search", cmds: "mvs" });
         });
     });
 
@@ -120,11 +120,13 @@ describe("HistoryView Unit Tests", () => {
                 ds: [],
                 uss: [],
                 jobs: [],
+                cmds: { mvs: [], tso: [], uss: [] },
                 tab: undefined,
                 selection: {
                     ds: "search",
                     jobs: "search",
                     uss: "search",
+                    cmds: "mvs",
                 },
             });
         });
@@ -143,7 +145,7 @@ describe("HistoryView Unit Tests", () => {
             const blockMocks = createBlockMocks(globalMocks);
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
             await historyView["onDidReceiveMessage"]({ command: "update-selection", attrs: { type: "uss", selection: "favorites" } });
-            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "favorites" });
+            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "favorites", cmds: "mvs" });
         });
 
         it("should handle the case where 'add-item' is the command sent", async () => {
@@ -154,7 +156,7 @@ describe("HistoryView Unit Tests", () => {
             const addSearchHistorySpy = jest.spyOn(historyView["treeProviders"].uss, "addSearchHistory");
             jest.spyOn(historyView as any, "refreshView").mockImplementation();
             await historyView["onDidReceiveMessage"]({ command: "add-item", attrs: { type: "uss" } });
-            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search" });
+            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search", cmds: "mvs" });
             expect(addSearchHistorySpy).toHaveBeenCalledWith("test");
         });
 
@@ -168,7 +170,7 @@ describe("HistoryView Unit Tests", () => {
                 command: "remove-item",
                 attrs: { type: "ds", selection: "search", selectedItems: { test: "test1" } },
             });
-            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search" });
+            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search", cmds: "mvs" });
             expect(removeSearchHistorySpy).toHaveBeenCalledWith("test");
         });
 
@@ -182,7 +184,7 @@ describe("HistoryView Unit Tests", () => {
                 command: "remove-item",
                 attrs: { type: "ds", selection: "fileHistory", selectedItems: { test: "test1" } },
             });
-            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search" });
+            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search", cmds: "mvs" });
             expect(removeFileHistorySpy).toHaveBeenCalledWith("test");
         });
 
@@ -196,7 +198,7 @@ describe("HistoryView Unit Tests", () => {
                 command: "remove-item",
                 attrs: { type: "ds", selection: "favorites", selectedItems: { test: "test1" } },
             });
-            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search" });
+            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search", cmds: "mvs" });
             expect(showMessageSpy).toHaveBeenCalledTimes(1);
         });
 
@@ -212,7 +214,7 @@ describe("HistoryView Unit Tests", () => {
                 command: "remove-item",
                 attrs: { type: "uss", selection: "encodingHistory", selectedItems: { test: "test" } },
             });
-            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search" });
+            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search", cmds: "mvs" });
             expect(removeEncodingHistorySpy).toHaveBeenCalledWith("zowe.encodingHistory", []);
         });
 
@@ -228,7 +230,7 @@ describe("HistoryView Unit Tests", () => {
                 command: "clear-all",
                 attrs: { type: "ds", selection: "search" },
             });
-            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search" });
+            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search", cmds: "mvs" });
             expect(resetSearchHistorySpy).toHaveBeenCalledTimes(1);
         });
 
@@ -244,7 +246,7 @@ describe("HistoryView Unit Tests", () => {
                 command: "clear-all",
                 attrs: { type: "ds", selection: "fileHistory" },
             });
-            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search" });
+            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search", cmds: "mvs" });
             expect(resetFileHistorySpy).toHaveBeenCalledTimes(1);
         });
 
@@ -259,7 +261,7 @@ describe("HistoryView Unit Tests", () => {
                 command: "clear-all",
                 attrs: { type: "ds", selection: "favorites" },
             });
-            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search" });
+            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search", cmds: "mvs" });
             expect(showMessageSpy).toHaveBeenCalledTimes(2);
         });
 
@@ -275,7 +277,7 @@ describe("HistoryView Unit Tests", () => {
                 command: "clear-all",
                 attrs: { type: "ds", selection: "encodingHistory" },
             });
-            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search" });
+            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search", cmds: "mvs" });
             expect(resetEncodingHistorySpy).toHaveBeenCalledTimes(2);
         });
     });
