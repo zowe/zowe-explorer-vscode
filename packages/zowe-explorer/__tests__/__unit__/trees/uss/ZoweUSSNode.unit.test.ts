@@ -25,7 +25,7 @@ import {
     createInstanceOfProfile,
     createValidIProfile,
 } from "../../../__mocks__/mockCreators/shared";
-import { createUSSTree } from "../../../__mocks__/mockCreators/uss";
+import { createUSSNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
 import { Constants } from "../../../../src/configuration/Constants";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
@@ -846,6 +846,8 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
+        // Populate node with children from previous search to ensure they are removed
+        blockMocks.childNode.children = [createUSSNode(globalMocks.session, globalMocks.profileOne)];
         blockMocks.childNode.contextValue = Constants.USS_SESSION_CONTEXT;
         blockMocks.childNode.fullPath = "Throw Error";
         blockMocks.childNode.dirty = true;
@@ -854,7 +856,8 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
             throw new Error("Throwing an error to check error handling for unit tests!");
         });
 
-        await blockMocks.childNode.getChildren();
+        const response = await blockMocks.childNode.getChildren();
+        expect(response).toEqual([]);
         expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual(
             "Retrieving response from USS list API Error: Throwing an error to check error handling for unit tests!"

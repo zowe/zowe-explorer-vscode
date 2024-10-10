@@ -149,6 +149,10 @@ describe("ZoweDatasetNode Unit Tests", () => {
             profile: profileOne,
         });
         jest.spyOn(zosfiles.List, "allMembers").mockRejectedValueOnce(new Error(subNode.label as string));
+        // Populate node with children from previous search to ensure they are removed
+        subNode.children = [
+            new ZoweDatasetNode({ label: "old", collapsibleState: vscode.TreeItemCollapsibleState.None, session, profile: profileOne }),
+        ];
         subNode.dirty = true;
         const response = await subNode.getChildren();
         expect(response).toEqual([]);
