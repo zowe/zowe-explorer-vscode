@@ -93,6 +93,15 @@ export class ErrorCorrelator extends Singleton {
                         summary: "The specified data set cannot be found. Perhaps the data set name or member name was incorrectly specified.",
                         tips: ["Ensure that the data set and/or member name is correct and try again."],
                     },
+                    {
+                        matches: ["Qualifiers cannot be longer than 8 characters."],
+                        summary: "The given data set name/pattern {{dsName}} has a qualifier longer than 8 characters.",
+                        tips: [
+                            "Each qualifier in a data set can have at most 8 characters. ".concat(
+                                "Ensure that the given name or pattern has 8 characters or less in each qualifier."
+                            ),
+                        ],
+                    },
                 ],
                 [ZoweExplorerApiType.Uss]: [
                     {

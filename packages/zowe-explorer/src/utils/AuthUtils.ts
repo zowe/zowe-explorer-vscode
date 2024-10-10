@@ -87,6 +87,7 @@ export class AuthUtils {
             typeof errorDetails === "string" ? errorDetails : errorDetails.message,
             {
                 profileName: profile?.name,
+                ...Object.keys(moreInfo).reduce((all, k) => (typeof moreInfo[k] === "string" ? { ...all, [k]: moreInfo[k] } : all), {}),
             }
         );
         if (typeof errorDetails !== "string" && (errorDetails as imperative.ImperativeError)?.mDetails !== undefined) {

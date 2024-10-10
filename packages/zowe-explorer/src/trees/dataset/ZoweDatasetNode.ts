@@ -26,6 +26,7 @@ import {
     ZoweScheme,
     PdsEntry,
     FsDatasetsUtils,
+    ZoweExplorerApiType,
 } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -590,6 +591,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
         } catch (error) {
             const updated = await AuthUtils.errorHandling(error, {
+                apiType: ZoweExplorerApiType.Mvs,
                 profile: this.getProfile(),
                 scenario: vscode.l10n.t("Retrieving response from MVS list API"),
             });
