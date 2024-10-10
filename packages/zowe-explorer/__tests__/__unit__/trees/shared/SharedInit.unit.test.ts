@@ -38,6 +38,11 @@ jest.mock("../../../../src/tools/ZoweLogger");
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
         const executeCommand = { fun: jest.fn() };
+        const cmdProviders = {
+            mvs: {issueMvsCommand: jest.fn()},
+            tso: {issueTsoCommand: jest.fn()},
+            uss: {issueUnixCommand: jest.fn()},
+        };
         const test: ITestContext = {
             context: { subscriptions: [] },
             value: {
@@ -78,7 +83,9 @@ describe("Test src/shared/extension", () => {
             },
             {
                 name: "zowe.editHistory",
-                mock: [{ spy: jest.spyOn(SharedHistoryView, "SharedHistoryView"), arg: [test.context, test.value.providers] }],
+                mock: [
+                    { spy: jest.spyOn(SharedHistoryView, "SharedHistoryView"), arg: [test.context, test.value.providers, cmdProviders] },
+                ],
             },
             {
                 name: "zowe.promptCredentials",
@@ -253,21 +260,21 @@ describe("Test src/shared/extension", () => {
             },
             {
                 name: "zowe.issueTsoCmd:1",
-                mock: [{ spy: jest.spyOn(TsoCommandHandler, "getInstance"), arg: [], ret: { issueTsoCommand: jest.fn() } }],
+                mock: [{ spy: jest.spyOn(TsoCommandHandler, "getInstance"), arg: [], ret: cmdProviders.tso }],
             },
             {
                 name: "zowe.issueTsoCmd:2",
                 parm: [],
-                mock: [{ spy: jest.spyOn(TsoCommandHandler, "getInstance"), arg: [], ret: { issueTsoCommand: jest.fn() } }],
+                mock: [{ spy: jest.spyOn(TsoCommandHandler, "getInstance"), arg: [], ret: cmdProviders.tso }],
             },
             {
                 name: "zowe.issueMvsCmd:1",
-                mock: [{ spy: jest.spyOn(MvsCommandHandler, "getInstance"), arg: [], ret: { issueMvsCommand: jest.fn() } }],
+                mock: [{ spy: jest.spyOn(MvsCommandHandler, "getInstance"), arg: [], ret: cmdProviders.mvs }],
             },
             {
                 name: "zowe.issueMvsCmd:2",
                 parm: [],
-                mock: [{ spy: jest.spyOn(MvsCommandHandler, "getInstance"), arg: [], ret: { issueMvsCommand: jest.fn() } }],
+                mock: [{ spy: jest.spyOn(MvsCommandHandler, "getInstance"), arg: [], ret: cmdProviders.mvs }],
             },
             {
                 name: "zowe.selectForCompare",
@@ -287,12 +294,12 @@ describe("Test src/shared/extension", () => {
             },
             {
                 name: "zowe.issueUnixCmd:1",
-                mock: [{ spy: jest.spyOn(UnixCommandHandler, "getInstance"), arg: [], ret: { issueUnixCommand: jest.fn() } }],
+                mock: [{ spy: jest.spyOn(UnixCommandHandler, "getInstance"), arg: [], ret: cmdProviders.uss }],
             },
             {
                 name: "zowe.issueUnixCmd:2",
                 parm: [],
-                mock: [{ spy: jest.spyOn(UnixCommandHandler, "getInstance"), arg: [], ret: { issueUnixCommand: jest.fn() } }],
+                mock: [{ spy: jest.spyOn(UnixCommandHandler, "getInstance"), arg: [], ret: cmdProviders.uss }],
             },
         ];
 

@@ -45,13 +45,11 @@ export class SharedHistoryView extends WebView {
                     ds: this.getHistoryData("ds"),
                     uss: this.getHistoryData("uss"),
                     jobs: this.getHistoryData("job"),
-                    cmds: [
-                        {
-                            mvs: this.cmdProviders?.mvs.history.getSearchHistory() ?? ["d iplinfo"],
-                            tso: this.cmdProviders?.tso.history.getSearchHistory() ?? ["ex 'fernando.public.cntl(hello)'"],
-                            uss: this.cmdProviders?.uss.history.getSearchHistory() ?? ["pwd"],
-                        },
-                    ],
+                    cmds: {
+                        mvs: this.cmdProviders?.mvs.history.getSearchHistory() ?? [],
+                        tso: this.cmdProviders?.tso.history.getSearchHistory() ?? [],
+                        uss: this.cmdProviders?.uss.history.getSearchHistory() ?? [],
+                    },
                     tab: this.currentTab,
                     selection: this.currentSelection,
                 });
@@ -194,13 +192,11 @@ export class SharedHistoryView extends WebView {
             ds: this.getHistoryData("ds"),
             uss: this.getHistoryData("uss"),
             jobs: this.getHistoryData("job"),
-            cmds: [
-                {
-                    mvs: this.cmdProviders?.mvs.history.getSearchHistory() ?? ["d iplinfo"],
-                    tso: this.cmdProviders?.tso.history.getSearchHistory() ?? ["ex 'fernando.public.cntl(hello)'"],
-                    uss: this.cmdProviders?.uss.history.getSearchHistory() ?? ["pwd"],
-                },
-            ],
+            cmds: {
+                mvs: this.cmdProviders?.mvs.history.getSearchHistory() ?? [],
+                tso: this.cmdProviders?.tso.history.getSearchHistory() ?? [],
+                uss: this.cmdProviders?.uss.history.getSearchHistory() ?? [],
+            },
             tab: this.currentTab,
             selection: this.currentSelection,
         });
