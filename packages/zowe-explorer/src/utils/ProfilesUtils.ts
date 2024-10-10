@@ -187,8 +187,13 @@ export class ProfilesUtils {
             const profileInfo = new imperative.ProfileInfo("zowe", {
                 credMgrOverride: defaultCredentialManager,
             });
+
+            const workspacePath = ZoweVsCodeExtension.workspaceRoot?.uri.fsPath;
             // Trigger initialize() function of credential manager to throw an error early if failed to load
-            await profileInfo.readProfilesFromDisk();
+            await profileInfo.readProfilesFromDisk({
+                homeDir: FileManagement.getZoweDir(),
+                projectDir: workspacePath ? FileManagement.getFullPath(workspacePath) : undefined,
+            });
             return profileInfo;
         } catch (err) {
             if (err instanceof imperative.ProfInfoErr && err.errorCode === imperative.ProfInfoErr.LOAD_CRED_MGR_FAILED) {
@@ -332,7 +337,12 @@ export class ProfilesUtils {
                 Gui.warningMessage(schemaWarning);
                 ZoweLogger.warn(schemaWarning);
             }
-            Constants.CONFIG_PATH = rootPath ? rootPath : FileManagement.getZoweDir();
+            Constants.SAVED_PROFILE_CONTENTS.clear();
+            for (const layer of mProfileInfo.getTeamConfig().layers) {
+                if (layer.exists) {
+                    Constants.SAVED_PROFILE_CONTENTS.set(vscode.Uri.file(layer.path).fsPath, fs.readFileSync(layer.path));
+                }
+            }
             ZoweLogger.info(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName}"`);
             const layers = mProfileInfo.getTeamConfig().layers || [];
             const layerSummary = layers.map(
