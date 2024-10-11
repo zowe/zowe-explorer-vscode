@@ -23,7 +23,6 @@ import { SharedActions } from "./shared/SharedActions";
 import { IconUtils } from "../icons/IconUtils";
 import { AuthUtils } from "../utils/AuthUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
-import * as dayjs from "dayjs";
 
 export class ZoweTreeProvider<T extends IZoweTreeNode> {
     // Event Emitters used to notify subscribers that the refresh event has fired
@@ -313,34 +312,9 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
      */
     protected static async checkJwtTokenForProfile(profileName: string): Promise<void> {
         const profInfo = await Profiles.getInstance().getProfileInfo();
-        const profAttrs = profInfo.getAllProfiles().find((prof) => prof.profName === profileName);
-        const knownProps = profInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true }).knownArgs;
-        const tokenValueProp = knownProps.find((arg) => arg.argName === "tokenValue" && arg.argValue != null);
 
-        // Ignore if tokenValue is not a prop
-        if (tokenValueProp == null) {
-            return;
-        }
-
-        const tokenTypeProp = knownProps.find((arg) => arg.argName === "tokenType");
-        // Cannot decode LTPA tokens without private key
-        if (tokenTypeProp?.argValue == "LtpaToken2") {
-            return;
-        }
-
-        const fullToken = tokenValueProp.argValue.toString();
-        // JWT format: [header].[payload].[signature]
-        const tokenParts = fullToken.split(".");
-        try {
-            const payloadJson = JSON.parse(Buffer.from(tokenParts[1], "base64url").toString("utf8"));
-            if ("exp" in payloadJson) {
-                const expireDate = dayjs.unix(payloadJson.exp);
-                if (expireDate.isBefore(dayjs())) {
-                    await AuthUtils.promptUserForSsoLogin(profileName);
-                }
-            }
-        } catch (err) {
-            return;
+        if (profInfo.hasTokenExpiredForProfile(profileName)) {
+            await AuthUtils.promptUserForSsoLogin(profileName);
         }
     }
 
