@@ -35,7 +35,7 @@ jobs:
           node-version: '18.x'
 
       - name: Install Yarn and Lerna
-        run: npm install -g yarn lerna@6
+        run: npm install -g yarn lerna@6 ovsx@0.9.4
 
       - name: Build Source
         run: yarn
