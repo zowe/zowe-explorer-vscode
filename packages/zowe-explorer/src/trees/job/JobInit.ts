@@ -32,7 +32,7 @@ export class JobInit {
      * @implements {vscode.TreeDataProvider}
      */
     public static async createJobsTree(log: imperative.Logger): Promise<JobTree> {
-        ZoweLogger.trace("ZosJobsProvider.createJobsTree called.");
+        ZoweLogger.trace("JobInit.createJobsTree called.");
         const tree = new JobTree();
         await tree.initializeJobsTree(log);
         await tree.addSession();
@@ -40,7 +40,7 @@ export class JobInit {
     }
 
     public static async initJobsProvider(context: vscode.ExtensionContext): Promise<JobTree> {
-        ZoweLogger.trace("job.init.initJobsProvider called.");
+        ZoweLogger.trace("JobInit.initJobsProvider called.");
         context.subscriptions.push(vscode.workspace.registerFileSystemProvider(ZoweScheme.Jobs, JobFSProvider.instance, { isCaseSensitive: false }));
         const jobsProvider = await JobInit.createJobsTree(ZoweLogger.log);
         if (jobsProvider == null) {

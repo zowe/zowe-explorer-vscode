@@ -4,9 +4,9 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
+
+- Updated the `ZoweTreeNode.setProfileToChoice` function so that it propagates profile changes to its child nodes. [#3150](https://github.com/zowe/zowe-explorer-vscode/issues/3150)
 
 ## `3.0.0`
 

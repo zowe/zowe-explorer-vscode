@@ -68,7 +68,6 @@ export type ConflictData = {
 export interface IFileSystemEntry extends vscode.FileStat {
     name: string;
     metadata: EntryMetadata;
-    type: vscode.FileType;
     wasAccessed: boolean;
     data?: Uint8Array;
 }

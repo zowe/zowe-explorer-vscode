@@ -6,20 +6,24 @@ module.exports = {
             level: "minor"
         },
         {
-            name: "v2-lts",
-            channel: "zowe-v2-lts",
-            level: "patch"
-        },
-        {
             name: "v1-lts",
             channel: "zowe-v1-lts",
             level: "patch"
         },
         {
+            name: "v2-lts",
+            channel: "zowe-v2-lts",
+            level: "patch"
+        },
+        {
             name: "release/3.*",
-            channel: "next",
-            prerelease: true,
+            channel: "latest",
+            level: "patch"
         }
+        // {
+        //     name: "next",
+        //     prerelease: true
+        // }
     ],
     plugins: [
         [
@@ -45,7 +49,7 @@ module.exports = {
             {
                 $cwd: "packages/zowe-explorer-api",
                 aliasTags: {
-                    "latest": ["zowe-v2-lts"],
+                    "latest": ["zowe-v3-lts"],
                 },
                 npmPublish: true,
                 tarballDir: "dist",
