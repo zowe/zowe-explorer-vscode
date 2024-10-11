@@ -23,6 +23,7 @@ import { SharedUtils } from "../shared/SharedUtils";
 
 export class DatasetInit {
     public static async createDatasetTree(log: imperative.Logger): Promise<DatasetTree> {
+        ZoweLogger.trace("DatasetInit.createDatasetTree called.");
         const tree = new DatasetTree();
         await tree.initializeFavorites(log);
         await tree.addSession();
@@ -30,7 +31,7 @@ export class DatasetInit {
     }
 
     public static async initDatasetProvider(context: vscode.ExtensionContext): Promise<DatasetTree> {
-        ZoweLogger.trace("dataset.init.initDatasetProvider called.");
+        ZoweLogger.trace("DatasetInit.initDatasetProvider called.");
         context.subscriptions.push(vscode.workspace.registerFileSystemProvider(ZoweScheme.DS, DatasetFSProvider.instance, { isCaseSensitive: true }));
         const datasetProvider = await DatasetInit.createDatasetTree(ZoweLogger.log);
         if (datasetProvider == null) {

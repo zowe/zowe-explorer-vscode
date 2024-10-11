@@ -30,7 +30,7 @@ import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
-import { ZoweJobNode } from "../../../../src/trees/job/ZoweJobNode";
+import { ZoweJobNode, ZoweSpoolNode } from "../../../../src/trees/job/ZoweJobNode";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { JobInit } from "../../../../src/trees/job/JobInit";
@@ -52,7 +52,7 @@ async function createGlobalMocks() {
         mockDeleteJobs: jest.fn(),
         mockShowInputBox: jest.fn(),
         mockDeleteJob: jest.fn(),
-        mockGetJobsByOwnerAndPrefix: jest.fn(),
+        mockGetJobsByParameters: jest.fn(),
         mockShowInformationMessage: jest.fn(),
         mockLoadNamedProfile: jest.fn(),
         mockCreateQuickPick: jest.fn(),
@@ -114,6 +114,10 @@ async function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(globalMocks.mockGetJobs, "getJob", { value: globalMocks.mockGetJob, configurable: true });
+    Object.defineProperty(globalMocks.mockGetJobs, "getJobsByParameters", {
+        value: globalMocks.mockGetJobsByParameters,
+        configurable: true,
+    });
     Object.defineProperty(zosmf.ZosmfSession, "createSessCfgFromArgs", {
         value: globalMocks.mockCreateSessCfgFromArgs,
         configurable: true,
@@ -174,7 +178,7 @@ async function createGlobalMocks() {
     globalMocks.mockCreateSessCfgFromArgs.mockReturnValue(globalMocks.testSession);
     globalMocks.testSessionNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
-    globalMocks.mockGetJobsByOwnerAndPrefix.mockReturnValue([globalMocks.testIJob, globalMocks.testIJobComplete]);
+    globalMocks.mockGetJobsByParameters.mockReturnValue([globalMocks.testIJob, globalMocks.testIJobComplete]);
     globalMocks.mockProfileInstance.editSession = jest.fn(() => globalMocks.testProfile);
     globalMocks.testJobNode = new ZoweJobNode({
         label: "jobtest",
@@ -298,17 +302,18 @@ describe("ZoweJobNode unit tests - Function onDidConfiguration", () => {
 });
 
 describe("ZoweJobNode unit tests - Function getChildren", () => {
-    xit("Tests that getChildren returns the jobs of the session, when called on the session", async () => {
+    it("Tests that getChildren returns the jobs of the session, when called on the session", async () => {
         const globalMocks = await createGlobalMocks();
 
         await globalMocks.testJobsProvider.addSession("fake");
+        globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
 
         const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
         expect(jobs.length).toBe(2);
         expect(jobs[0].job.jobid).toEqual(globalMocks.testIJob.jobid);
-        expect(jobs[0].tooltip).toEqual("TESTJOB(JOB1234)");
+        expect(jobs[0].tooltip).toEqual("TESTJOB(JOB1234) - ACTIVE");
         expect(jobs[1].job.jobid).toEqual(globalMocks.testIJobComplete.jobid);
-        expect(jobs[1].tooltip).toEqual("TESTJOB(JOB1235) - 0");
+        expect(jobs[1].tooltip).toEqual("TESTJOB(JOB1235) - sampleMember - 0");
     });
 
     it("Tests that getChildren updates existing job nodes with new statuses", async () => {
@@ -379,7 +384,26 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         globalMocks.testJobNode.dirty = true;
         const spoolFilesAfter = await globalMocks.testJobNode.getChildren();
         expect(spoolFilesAfter.length).toBe(1);
-        expect(spoolFilesAfter[0].label).toEqual("There are no JES spool messages to display");
+        expect(spoolFilesAfter[0].label).toEqual("No spool files found");
+    });
+
+    it("Tests that getChildren returns empty list if there is error retrieving spool files", async () => {
+        const globalMocks = await createGlobalMocks();
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce({
+            getSpoolFiles: jest.fn().mockResolvedValue(new Error("Response Fail")),
+        } as any);
+        // Populate node with children from previous search to ensure they are removed
+        globalMocks.testJobNode.children = [
+            new ZoweSpoolNode({
+                label: "old",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                session: globalMocks.testSession,
+                profile: globalMocks.testProfile,
+            }),
+        ];
+        globalMocks.testJobNode.dirty = true;
+        const spools = await globalMocks.testJobNode.getChildren();
+        expect(spools).toEqual([]);
     });
 
     it("Tests that getChildren returns the spool files if user/owner is not defined", async () => {
@@ -395,19 +419,14 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         expect(spoolFiles[0].owner).toEqual("*");
     });
 
-    it("should return a new job if not owner and is a session", async () => {
+    it("should return placeholder node if session node expanded without search params", async () => {
         const globalMocks = await createGlobalMocks();
         const expectedJob = new ZoweJobNode({
             label: "Use the search button to display jobs",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: globalMocks.testJobNode,
-            profile: globalMocks.testProfile,
             contextOverride: Constants.INFORMATION_CONTEXT,
         });
-        expectedJob.command = {
-            command: "zowe.placeholderCommand",
-            title: "Placeholder",
-        };
 
         globalMocks.testJobNode._owner = null;
         jest.spyOn(SharedContext, "isSession").mockReturnValueOnce(true);
@@ -420,18 +439,34 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
             label: "No jobs found",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: globalMocks.testJobsProvider.mSessionNodes[1],
+            contextOverride: Constants.INFORMATION_CONTEXT,
         });
-        job.iconPath = undefined;
-        job.contextValue = "information";
-        job.command = {
-            title: "Placeholder",
-            command: "zowe.placeholderCommand",
-        };
         await globalMocks.testJobsProvider.addSession("fake");
         globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
         jest.spyOn(globalMocks.testJobsProvider.mSessionNodes[1], "getJobs").mockResolvedValue([]);
         const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
         expect(jobs[0]).toEqual(job);
+    });
+
+    it("should return empty list if there is error retrieving jobs", async () => {
+        const globalMocks = await createGlobalMocks();
+        await globalMocks.testJobsProvider.addSession("fake");
+        // Populate node with children from previous search to ensure they are removed
+        globalMocks.testJobsProvider.mSessionNodes[1].children = [
+            new ZoweJobNode({
+                label: "old",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                session: globalMocks.testSession,
+                profile: globalMocks.testProfile,
+            }),
+        ];
+        globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
+        globalMocks.mockGetJobsByParameters.mockRejectedValue(new Error("Response Fail"));
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce({
+            getSession: jest.fn().mockReturnValue(globalMocks.testSession),
+        } as any);
+        const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
+        expect(jobs).toEqual([]);
     });
 
     it("To check smfid field in Jobs Tree View", async () => {

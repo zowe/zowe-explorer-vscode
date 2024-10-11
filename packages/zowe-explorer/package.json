@@ -1793,10 +1793,8 @@
     "fresh-clone": "pnpm clean:bundle && pnpm clean:dependencies",
     "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/",
     "pretty": "prettier --write .",
-    "createTestProfileData": "tsx ./scripts/createTestProfileData.ts",
-    "createDemoNodes": "tsx ./scripts/createDemoNodes.ts",
     "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src && node ./scripts/generatePoeditorJson.js",
-    "copy-secrets": "tsx ./scripts/getSecretsPrebuilds.ts"
+    "copy-secrets": "node ./scripts/getSecretsPrebuilds.js"
   },
   "engines": {
     "vscode": "^1.79.0"
@@ -1829,11 +1827,11 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "@zowe/core-for-zowe-sdk": "8.0.0",
-    "@zowe/secrets-for-zowe-sdk": "8.0.0",
-    "@zowe/zos-files-for-zowe-sdk": "8.0.0",
-    "@zowe/zos-jobs-for-zowe-sdk": "8.0.0",
-    "@zowe/zosmf-for-zowe-sdk": "8.0.0",
+    "@zowe/core-for-zowe-sdk": "^8.1.1",
+    "@zowe/secrets-for-zowe-sdk": "^8.1.0",
+    "@zowe/zos-files-for-zowe-sdk": "^8.1.1",
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.1.1",
+    "@zowe/zosmf-for-zowe-sdk": "^8.1.1",
     "@zowe/zowe-explorer-api": "3.1.0-SNAPSHOT",
     "dayjs": "^1.11.10",
     "fs-extra": "8.0.1",
