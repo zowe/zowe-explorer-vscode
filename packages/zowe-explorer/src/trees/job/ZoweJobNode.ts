@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as path from "path";
-import { FsJobsUtils, imperative, IZoweJobTreeNode, Sorting, ZoweScheme, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { FsJobsUtils, imperative, IZoweJobTreeNode, Sorting, ZoweExplorerApiType, ZoweScheme, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { JobFSProvider } from "./JobFSProvider";
 import { JobUtils } from "./JobUtils";
 import { Constants } from "../../configuration/Constants";
@@ -397,6 +397,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             }
         } catch (error) {
             const updated = await AuthUtils.errorHandling(error, {
+                apiType: ZoweExplorerApiType.Jes,
                 profile: this.getProfile(),
                 scenario: vscode.l10n.t("Retrieving response from JES list API"),
             });
@@ -417,6 +418,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             spools = spools.filter((item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined));
         } catch (error) {
             const updated = await AuthUtils.errorHandling(error, {
+                apiType: ZoweExplorerApiType.Jes,
                 profile: this.getProfile(),
                 scenario: vscode.l10n.t("Retrieving response from JES list API"),
             });

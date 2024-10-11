@@ -240,7 +240,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             // Throws reject if the Zowe command does not throw an error but does not succeed
             // The dataSetsMatchingPattern API may return success=false and apiResponse=[] when no data sets found
             if (!response.success && !(Array.isArray(response.apiResponse) && response.apiResponse.length === 0)) {
-                await AuthUtils.errorHandling(vscode.l10n.t("The response from Zowe CLI was not successful"));
+                await AuthUtils.errorHandling(new imperative.ImperativeError({ msg: response.commandResponse }), {
+                    apiType: ZoweExplorerApiType.Mvs,
+                    profile: cachedProfile,
+                    scenario: vscode.l10n.t("The response from Zowe CLI was not successful"),
+                });
                 return [];
             }
 
@@ -632,7 +636,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     datasetProvider.addFileHistory(`[${this.getProfileName()}]: ${this.label as string}`);
                 }
             } catch (err) {
-                await AuthUtils.errorHandling(err, { profile: this.getProfile() });
+                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: this.getProfile() });
                 throw err;
             }
         }

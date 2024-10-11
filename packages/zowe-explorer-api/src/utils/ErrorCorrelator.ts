@@ -135,6 +135,11 @@ export class ErrorCorrelator extends Singleton {
                         matches: ["Job input was not recognized by system as a job"],
                         summary: "The job was submitted without a job statement or with unrecognized (non-JCL) content.",
                     },
+                    {
+                        errorCode: "400",
+                        matches: ["Value of jobid query parameter is not valid"],
+                        summary: "The given Job ID is invalid. Please verify that the job ID is correct and try again.",
+                    },
                 ],
                 [ZoweExplorerApiType.All]: [
                     {

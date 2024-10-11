@@ -110,7 +110,7 @@ export class Profiles extends ProfilesCache {
                 await Profiles.getInstance().ssoLogin(null, theProfile.name);
                 theProfile = Profiles.getInstance().loadNamedProfile(theProfile.name);
             } catch (error) {
-                await AuthUtils.errorHandling(error, { profile: theProfile.name });
+                await AuthUtils.errorHandling(error, { profile: theProfile });
                 return profileStatus;
             }
         } else if (!usingTokenAuth && (!theProfile.profile.user || !theProfile.profile.password)) {

@@ -25,6 +25,7 @@ import {
     UssDirectory,
     FsAbstractUtils,
     MainframeInteraction,
+    ZoweExplorerApiType,
 } from "@zowe/zowe-explorer-api";
 import { USSUtils } from "./USSUtils";
 import { Constants } from "../../configuration/Constants";
@@ -540,7 +541,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
                 }
             } catch (err) {
-                await AuthUtils.errorHandling(err, { profile: this.getProfile() });
+                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Uss, profile: this.getProfile() });
                 throw err;
             }
         }
@@ -581,7 +582,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     })
                 );
             } else {
-                await AuthUtils.errorHandling(err, { profile: this.getProfile() });
+                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Uss, profile: this.getProfile() });
             }
         }
     }
@@ -655,6 +656,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
         } catch (error) {
             await AuthUtils.errorHandling(error, {
+                apiType: ZoweExplorerApiType.Uss,
                 profile: this.getProfile(),
                 scenario: vscode.l10n.t("Error uploading files"),
             });
@@ -684,6 +686,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
         } catch (error) {
             const updated = await AuthUtils.errorHandling(error, {
+                apiType: ZoweExplorerApiType.Uss,
                 profile: this.getProfile(),
                 scenario: vscode.l10n.t("Retrieving response from USS list API"),
             });
