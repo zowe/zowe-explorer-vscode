@@ -20,7 +20,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where the `Create Directory` and `Create File` features would continue processing when the first prompt was dismissed, causing an incorrect URI to be generated. [#3183](https://github.com/zowe/zowe-explorer-vscode/pull/3183)
 - Fixed an issue where the `Create Directory` and `Create File` features would incorrectly handle user-specified locations with trailing slashes. [#3183](https://github.com/zowe/zowe-explorer-vscode/pull/3183)
 - Fixed an issue where a 401 error could occur when opening PDS members after updating credentials within the same user session. [#3150](https://github.com/zowe/zowe-explorer-vscode/issues/3150)
-- Fixed issue where switching from token-based authentication to user/password would cause an error for nested profiles. [#3142](https://github.com/zowe/zowe-explorer-vscode/issues/3142)
 - Fixed the "Edit Profile" operation to open the correct files when both global and project team configs are present. [#3125](https://github.com/zowe/zowe-explorer-vscode/issues/3125)
 
 ## `3.0.0`
