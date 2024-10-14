@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - maintenance
-      - v1-lts
+      - v2-lts
     paths:
       - .github/release.config.js
       - .github/workflows/deployment.yml
@@ -39,7 +39,7 @@ jobs:
           node-version: '18.x'
 
       - name: Install Yarn and Lerna
-        run: npm install -g yarn lerna@6
+        run: npm install -g yarn lerna@6 ovsx@0.9.4
 
       - name: Build Source
         run: yarn
@@ -66,7 +66,7 @@ jobs:
       - name: Update Changelogs
         if: steps.octorelease.outcome == 'success'
         run: |
-          sed -i '0,/##/s//## TBD Release\n\n### New features and enhancements\n\n### Bug fixes\n\n##/' packages/*/CHANGELOG.md
+          sed -i '0,/##/s//## TBD Release\n\n### Bug fixes\n\n##/' packages/*/CHANGELOG.md
           git add packages/*/CHANGELOG.md
 
       - name: Create Snapshot Version
