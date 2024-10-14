@@ -1795,7 +1795,6 @@
     "pretty": "prettier --write .",
     "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src && node ./scripts/generatePoeditorJson.js",
     "copy-secrets": "node ./scripts/getSecretsPrebuilds.js",
-    "strip-l10n": "node ./scripts/stripL10nComments.js",
     "build:nlsExtract": "pnpm dlx @vscode/l10n-dev export --outDir ./l10n ./src",
     "build:nlsPseudo": "pnpm dlx @vscode/l10n-dev generate-pseudo -o ./l10n/ ./l10n/bundle.l10n.json ./package.nls.json",
     "build:nls": "pnpm run build:nlsExtract && pnpm run build:nlsPseudo"
