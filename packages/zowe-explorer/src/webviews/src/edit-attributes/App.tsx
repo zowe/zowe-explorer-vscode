@@ -27,6 +27,18 @@ export function App() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [timestamp, setTimestamp] = useState<Date | null>();
 
+  const localizedPermissionTypes = [
+    { key: "read", localized: l10n.t("Read") },
+    { key: "write", localized: l10n.t("Write") },
+    { key: "execute", localized: l10n.t("Execute") },
+  ];
+
+  const localizedPermissionGroups = [
+    { key: "user", localized: l10n.t("User") },
+    { key: "group", localized: l10n.t("Group") },
+    { key: "all", localized: l10n.t("All") },
+  ];
+
   const updateButtons = (newAttributes: FileAttributes) => setAllowUpdate(!isEqual(attributes.initial, newAttributes));
 
   const updateFileAttributes = (key: keyof FileAttributes, value: unknown) => {
@@ -200,27 +212,25 @@ export function App() {
             <VSCodeDataGrid style={{ marginTop: "1em" }}>
               <VSCodeDataGridRow>
                 <VSCodeDataGridCell cellType="columnheader" gridColumn="1"></VSCodeDataGridCell>
-                {PERMISSION_TYPES.map((perm, i) => {
-                  const capitalizedPerm = perm.charAt(0).toUpperCase() + perm.slice(1);
+                {localizedPermissionTypes.map(({ key, localized }, i) => {
                   return (
-                    <VSCodeDataGridCell cellType="columnheader" gridColumn={(i + 2).toString()} key={`${perm}-header`}>
-                      {capitalizedPerm}
+                    <VSCodeDataGridCell cellType="columnheader" gridColumn={(i + 2).toString()} key={`${key}-header`}>
+                      {localized}
                     </VSCodeDataGridCell>
                   );
                 })}
               </VSCodeDataGridRow>
-              {PERMISSION_GROUPS.map((group) => {
-                const capitalizedGroup = group.charAt(0).toUpperCase() + group.slice(1);
+              {localizedPermissionGroups.map(({ key, localized }) => {
                 return (
-                  <VSCodeDataGridRow key={`${group}-row`}>
+                  <VSCodeDataGridRow key={`${key}-row`}>
                     <VSCodeDataGridCell cellType="rowheader" gridColumn="1">
-                      {l10n.t("{0}", capitalizedGroup)}
+                      {localized}
                     </VSCodeDataGridCell>
                     {PERMISSION_TYPES.map((perm, i) => (
-                      <VSCodeDataGridCell gridColumn={(i + 2).toString()} key={`${group}-${perm}-checkbox`}>
+                      <VSCodeDataGridCell gridColumn={(i + 2).toString()} key={`${key}-${perm}-checkbox`}>
                         <VSCodeCheckbox
-                          checked={attributes.current!.perms[group][perm]}
-                          onChange={(e: any) => updatePerm(group, perm, e.target.checked)}
+                          checked={attributes.current!.perms[key as keyof FilePermissions][perm]}
+                          onChange={(e: any) => updatePerm(key as keyof FilePermissions, perm, e.target.checked)}
                         />
                       </VSCodeDataGridCell>
                     ))}
