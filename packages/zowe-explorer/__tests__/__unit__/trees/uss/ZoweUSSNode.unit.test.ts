@@ -25,7 +25,7 @@ import {
     createInstanceOfProfile,
     createValidIProfile,
 } from "../../../__mocks__/mockCreators/shared";
-import { createUSSTree } from "../../../__mocks__/mockCreators/uss";
+import { createUSSNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
 import { Constants } from "../../../../src/configuration/Constants";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
@@ -831,7 +831,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         setAttrsMock.mockRestore();
     });
 
-    it("Tests that error is thrown when node label is blank", async () => {
+    it("Tests that error is thrown when node label is blank", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
@@ -842,29 +842,29 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         expect(blockMocks.rootNode.getChildren()).rejects.toEqual(Error("Invalid node"));
     });
 
-    it(
-        "Tests that when zowe.List. causes an error on the zowe call, " + "node.getChildren() throws an error and the catch block is reached",
-        async () => {
-            const globalMocks = createGlobalMocks();
-            const blockMocks = createBlockMocks(globalMocks);
+    it("Tests that when List.fileList throws an error, node.getChildren() throws an error and the catch block is reached", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
 
-            blockMocks.childNode.contextValue = Constants.USS_SESSION_CONTEXT;
-            blockMocks.childNode.fullPath = "Throw Error";
-            blockMocks.childNode.dirty = true;
-            blockMocks.childNode.profile = globalMocks.profileOne;
-            jest.spyOn(UssFSProvider.instance, "listFiles").mockImplementation(() => {
-                throw new Error("Throwing an error to check error handling for unit tests!");
-            });
+        // Populate node with children from previous search to ensure they are removed
+        blockMocks.childNode.children = [createUSSNode(globalMocks.session, globalMocks.profileOne)];
+        blockMocks.childNode.contextValue = Constants.USS_SESSION_CONTEXT;
+        blockMocks.childNode.fullPath = "Throw Error";
+        blockMocks.childNode.dirty = true;
+        blockMocks.childNode.profile = globalMocks.profileOne;
+        jest.spyOn(UssFSProvider.instance, "listFiles").mockImplementation(() => {
+            throw new Error("Throwing an error to check error handling for unit tests!");
+        });
 
-            await blockMocks.childNode.getChildren();
-            expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
-            expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual(
-                "Retrieving response from uss-file-list Error: Throwing an error to check error handling for unit tests!"
-            );
-        }
-    );
+        const response = await blockMocks.childNode.getChildren();
+        expect(response).toEqual([]);
+        expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
+        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual(
+            "Retrieving response from USS list API Error: Throwing an error to check error handling for unit tests!"
+        );
+    });
 
-    it("Tests that when passing a globalMocks.session node that is not dirty the node.getChildren() method is exited early", async () => {
+    it("Tests that when passing a session node that is not dirty the node.getChildren() method is exited early", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
@@ -873,6 +873,21 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         blockMocks.rootNode.fullPath = "/some/path";
 
         expect(await blockMocks.rootNode.getChildren()).toEqual([]);
+    });
+
+    it("Tests that when passing a session node without path the node.getChildren() method is exited early", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        blockMocks.rootNode.contextValue = Constants.USS_SESSION_CONTEXT;
+        const expectedNode = new ZoweUSSNode({
+            label: "Use the search button to list USS files",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.rootNode,
+            contextOverride: Constants.INFORMATION_CONTEXT,
+        });
+
+        expect(await blockMocks.rootNode.getChildren()).toEqual([expectedNode]);
     });
 });
 

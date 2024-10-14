@@ -277,7 +277,7 @@ describe("Tree Provider unit tests, function getTreeItem", () => {
     });
 });
 
-describe("Tree Provider unit tests, function getTreeItem", () => {
+describe("Tree Provider unit tests, function flipState", () => {
     it("Testing that expand tree is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
         const spy = jest.spyOn(ZoweLogger, "trace");
@@ -288,14 +288,17 @@ describe("Tree Provider unit tests, function getTreeItem", () => {
             session: globalMocks.testSession,
         });
         folder.contextValue = Constants.USS_DIR_CONTEXT;
+        folder.dirty = false;
 
         // Testing flipState to open
         await globalMocks.testUSSTree.flipState(folder, true);
         expect(JSON.stringify(folder.iconPath)).toContain("folder-open.svg");
+        expect(folder.dirty).toBe(false);
 
         // Testing flipState to closed
         await globalMocks.testUSSTree.flipState(folder, false);
         expect(JSON.stringify(folder.iconPath)).toContain("folder-closed.svg");
+        expect(folder.dirty).toBe(true);
         expect(spy).toHaveBeenCalled();
         spy.mockClear();
     });

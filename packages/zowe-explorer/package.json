@@ -1794,8 +1794,7 @@
     "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/",
     "pretty": "prettier --write .",
     "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src && node ./scripts/generatePoeditorJson.js",
-    "copy-secrets": "node ./scripts/getSecretsPrebuilds.js",
-    "strip-l10n": "node ./scripts/stripL10nComments.js"
+    "copy-secrets": "node ./scripts/getSecretsPrebuilds.js"
   },
   "engines": {
     "vscode": "^1.79.0"

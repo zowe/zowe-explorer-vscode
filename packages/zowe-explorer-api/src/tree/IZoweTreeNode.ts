@@ -182,6 +182,11 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
     encoding?: string;
 
     /**
+     * Use Dataset-specific tree node for children.
+     */
+    children?: IZoweDatasetTreeNode[];
+
+    /**
      * Retrieves child nodes of this IZoweDatasetTreeNode
      *
      * @returns {Promise<IZoweDatasetTreeNode[]>}
@@ -295,6 +300,11 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * Event that fires whenever an existing node is updated.
      */
     onUpdateEmitter?: vscode.EventEmitter<IZoweUSSTreeNode>;
+
+    /**
+     * Use USS-specific tree node for children.
+     */
+    children?: IZoweUSSTreeNode[];
 
     /**
      * Event that fires whenever an existing node is updated.

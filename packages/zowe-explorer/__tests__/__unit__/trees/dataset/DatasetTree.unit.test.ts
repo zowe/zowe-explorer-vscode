@@ -550,30 +550,6 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
 
         expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
     });
-
-    it("returns 'No data sets found' if there are no children", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const testTree = new DatasetTree();
-        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        const parent = new ZoweDatasetNode({
-            label: "BRTVS99.PUBLIC",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            parentNode: testTree.mSessionNodes[1],
-        });
-        parent.dirty = true;
-        jest.spyOn(parent, "getChildren").mockResolvedValueOnce([]);
-
-        const children = await testTree.getChildren(parent);
-
-        // This function should never return undefined.
-        expect(children).toBeDefined();
-        expect(children).toHaveLength(1);
-        expect(children[0].label).toBe("No data sets found");
-    });
 });
 describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
     function createBlockMocks() {
@@ -3340,7 +3316,6 @@ describe("Dataset Tree Unit Tests - Function applyPatternsToChildren", () => {
         const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
         testTree.applyPatternsToChildren(fakeChildren as any[], [{ dsn: "HLQ.PROD.PDS", member: "A*" }], fakeSessionNode as any);
         expect(SharedContext.isFilterFolder(fakeChildren[0])).toBe(true);
-        expect(fakeSessionNode.dirty).toBe(true);
         withProfileMock.mockRestore();
     });
     it("applies a closed filter folder icon to the PDS if collapsed", () => {

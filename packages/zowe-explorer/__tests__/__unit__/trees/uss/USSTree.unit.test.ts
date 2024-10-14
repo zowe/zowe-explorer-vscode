@@ -1688,6 +1688,7 @@ describe("USSTree Unit Tests - Function crossLparMove", () => {
                 profile: ussDirNode.getProfile(),
             }),
         ];
+        ussDirNode.dirty = false;
 
         const deleteMock = jest.spyOn(UssFSProvider.instance, "delete").mockResolvedValue(undefined);
         const readFileMock = jest.spyOn(UssFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
