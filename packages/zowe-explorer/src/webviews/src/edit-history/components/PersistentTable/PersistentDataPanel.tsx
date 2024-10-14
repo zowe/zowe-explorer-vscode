@@ -55,7 +55,7 @@ export default function PersistentDataPanel({ type }: Readonly<{ type: Readonly<
       if (!isSecureOrigin(event.origin)) {
         return;
       }
-      if (event.data.command === "ready") {
+      if (event.data.ds && event.data.uss && event.data.jobs) {
         setData(event.data);
 
         if ("selection" in event.data) {
