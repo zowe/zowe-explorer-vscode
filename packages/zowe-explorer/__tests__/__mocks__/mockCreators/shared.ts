@@ -407,6 +407,7 @@ export function createInstanceOfProfileInfo() {
                 profLoc: { locType: 0, osLoc: ["location"], jsonLoc: "jsonLoc" },
             },
         ],
+        hasTokenExpiredForProfile: jest.fn(),
         updateProperty: jest.fn(),
         updateKnownProperty: jest.fn(),
         createSession: jest.fn(),

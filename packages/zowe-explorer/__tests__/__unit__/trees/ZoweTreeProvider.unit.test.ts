@@ -641,9 +641,11 @@ describe("Tree Provider Unit Tests - function checkJwtTokenForProfile", () => {
                 },
             },
         ]);
+        const hasTokenExpiredForProfile = jest.fn();
         const mergeArgsForProfile = jest.fn();
         const profilesGetInstance = jest.spyOn(Profiles, "getInstance").mockReturnValue({
             getProfileInfo: jest.fn().mockResolvedValue({
+                hasTokenExpiredForProfile,
                 getAllProfiles,
                 mergeArgsForProfile,
             } as any),
@@ -651,38 +653,26 @@ describe("Tree Provider Unit Tests - function checkJwtTokenForProfile", () => {
 
         return {
             getAllProfiles,
+            hasTokenExpiredForProfile,
             mergeArgsForProfile,
             profilesGetInstance,
         };
     }
 
-    it("returns early if the profile uses LTPA for token type", async () => {
+    it("returns early if the profile's token has not expired", async () => {
         const blockMocks = getBlockMocks();
-        const jsonParseSpy = jest.spyOn(JSON, "parse");
+        blockMocks.hasTokenExpiredForProfile.mockReturnValueOnce(false);
         blockMocks.mergeArgsForProfile.mockReturnValue({ knownArgs: [{ argName: "tokenType", argValue: "LtpaToken2" }] });
         await (ZoweTreeProvider as any).checkJwtTokenForProfile("zosmf");
-        expect(jsonParseSpy).not.toHaveBeenCalled();
-    });
-
-    it("returns early if no tokenValue is present", async () => {
-        const blockMocks = getBlockMocks();
-        const jsonParseSpy = jest.spyOn(JSON, "parse");
-        blockMocks.mergeArgsForProfile.mockReturnValue({ knownArgs: [{ argName: "tokenType", argValue: "apimlAuthenticationToken" }] });
-        await (ZoweTreeProvider as any).checkJwtTokenForProfile("zosmf");
-        expect(jsonParseSpy).not.toHaveBeenCalled();
+        expect(blockMocks.hasTokenExpiredForProfile).toHaveBeenCalledWith("zosmf");
     });
 
     it("prompts the user to log in if a JWT token is present and has expired", async () => {
         const blockMocks = getBlockMocks();
-        const jsonParseSpy = jest.spyOn(JSON, "parse").mockReturnValue({
-            exp: 1000000000,
-        });
+        blockMocks.hasTokenExpiredForProfile.mockReturnValueOnce(true);
         const promptUserForSsoLogin = jest.spyOn(AuthUtils, "promptUserForSsoLogin").mockImplementation();
-        blockMocks.mergeArgsForProfile.mockReturnValue({
-            knownArgs: [{ argName: "tokenValue", argValue: "FAKE_HEADER.FAKE_PAYLOAD.FAKE_SIGNATURE" }],
-        });
         await (ZoweTreeProvider as any).checkJwtTokenForProfile("zosmf");
-        expect(jsonParseSpy).toHaveBeenCalled();
+        expect(blockMocks.hasTokenExpiredForProfile).toHaveBeenCalledWith("zosmf");
         expect(promptUserForSsoLogin).toHaveBeenCalled();
     });
 });
