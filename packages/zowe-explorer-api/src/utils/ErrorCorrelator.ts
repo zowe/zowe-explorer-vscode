@@ -194,7 +194,7 @@ export class ErrorCorrelator extends Singleton {
         }
 
         for (const apiError of [
-            ...this.errorMatches.get(profileType)[api],
+            ...(this.errorMatches.get(profileType)?.[api] ?? []),
             ...(api === ZoweExplorerApiType.All ? [] : this.errorMatches.get(profileType)[ZoweExplorerApiType.All] ?? []),
         ]) {
             for (const match of Array.isArray(apiError.matches) ? apiError.matches : [apiError.matches]) {

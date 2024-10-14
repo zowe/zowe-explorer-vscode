@@ -856,9 +856,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
 
         await blockMocks.childNode.getChildren();
         expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
-        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual(
-            "Retrieving response from USS list API Error: Throwing an error to check error handling for unit tests!"
-        );
+        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual("Throwing an error to check error handling for unit tests!");
     });
 
     it("Tests that when passing a session node that is not dirty the node.getChildren() method is exited early", async () => {

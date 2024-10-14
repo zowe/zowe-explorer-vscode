@@ -891,13 +891,14 @@ describe("Profiles Unit Tests - function validateProfile", () => {
             throw testError;
         });
         const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling");
-        await Profiles.getInstance().validateProfiles({
+        const profile = {
             name: "test1",
             message: "",
             type: "",
             failNotFound: false,
-        });
-        expect(errorHandlingSpy).toHaveBeenCalledWith(testError, "test1");
+        };
+        await Profiles.getInstance().validateProfiles(profile);
+        expect(errorHandlingSpy).toHaveBeenCalledWith(testError, { profile });
     });
     it("should return an object with profile validation status of 'unverified' from session status if validated profiles doesn't exist", async () => {
         createBlockMocks();

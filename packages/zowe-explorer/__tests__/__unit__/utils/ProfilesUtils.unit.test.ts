@@ -91,12 +91,11 @@ describe("ProfilesUtils unit tests", () => {
         it("should log error details", async () => {
             createBlockMocks();
             const errorDetails = new Error("i haz error");
-            const label = "test";
-            const moreInfo = "Task failed successfully";
-            await AuthUtils.errorHandling(errorDetails, label, moreInfo);
-            expect(Gui.errorMessage).toHaveBeenCalledWith(moreInfo + ` Error: ${errorDetails.message}`);
+            const scenario = "Task failed successfully";
+            await AuthUtils.errorHandling(errorDetails, { scenario });
+            expect(Gui.errorMessage).toHaveBeenCalledWith(errorDetails.message, { items: ["More info"] });
             expect(ZoweLogger.error).toHaveBeenCalledWith(
-                `${errorDetails.toString()}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null })
+                `${errorDetails.toString()}\n` + util.inspect({ errorDetails, moreInfo: { scenario } }, { depth: null })
             );
         });
 
@@ -108,13 +107,12 @@ describe("ProfilesUtils unit tests", () => {
                 msg: "Circular reference",
                 causeErrors: errorJson,
             });
-            const label = "test";
-            const moreInfo = "Task failed successfully";
-            await AuthUtils.errorHandling(errorDetails, label, moreInfo as unknown as string);
+            const scenario = "Task failed successfully";
+            await AuthUtils.errorHandling(errorDetails, { scenario });
             // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-            expect(Gui.errorMessage).toHaveBeenCalledWith((`${moreInfo} ` + errorDetails) as any);
+            expect(Gui.errorMessage).toHaveBeenCalledWith(errorDetails.message, { items: ["More info"] });
             expect(ZoweLogger.error).toHaveBeenCalledWith(
-                `Error: ${errorDetails.message}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null })
+                `Error: ${errorDetails.message}\n` + util.inspect({ errorDetails, moreInfo: { scenario } }, { depth: null })
             );
         });
 
@@ -123,9 +121,8 @@ describe("ProfilesUtils unit tests", () => {
                 msg: "Invalid hostname",
                 errorCode: 404 as unknown as string,
             });
-            const label = "test";
-            const moreInfo = "Task failed successfully";
-            const spyOpenConfigFile = jest.fn();
+            const scenario = "Task failed successfully";
+            const openConfigForMissingHostnameMock = jest.spyOn(AuthUtils, "openConfigForMissingHostname");
             Object.defineProperty(Constants, "PROFILES_CACHE", {
                 value: {
                     getProfileInfo: () => ({
@@ -139,12 +136,12 @@ describe("ProfilesUtils unit tests", () => {
                             },
                         ],
                     }),
-                    openConfigFile: spyOpenConfigFile,
+                    openConfigFile: jest.fn(),
                 },
                 configurable: true,
             });
-            await AuthUtils.errorHandling(errorDetails, label, moreInfo);
-            expect(spyOpenConfigFile).toHaveBeenCalledTimes(1);
+            await AuthUtils.errorHandling(errorDetails, { scenario });
+            expect(openConfigForMissingHostnameMock).toHaveBeenCalled();
         });
 
         it("should handle error for invalid credentials and prompt for authentication", async () => {
@@ -153,21 +150,21 @@ describe("ProfilesUtils unit tests", () => {
                 errorCode: 401 as unknown as string,
                 additionalDetails: "Authentication is not valid or expired.",
             });
-            const label = "test";
-            const moreInfo = "Task failed successfully";
+            const scenario = "Task failed successfully";
             const showMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(() => Promise.resolve("Update Credentials"));
             const promptCredsSpy = jest.fn();
+            const profile = { type: "zosmf" } as any;
             Object.defineProperty(Constants, "PROFILES_CACHE", {
                 value: {
                     promptCredentials: promptCredsSpy,
                     getProfileInfo: profileInfoMock,
-                    getLoadedProfConfig: () => ({ type: "zosmf" }),
+                    getLoadedProfConfig: () => profile,
                     getDefaultProfile: () => ({}),
                     getSecurePropsForProfile: () => [],
                 },
                 configurable: true,
             });
-            await AuthUtils.errorHandling(errorDetails, label, moreInfo);
+            await AuthUtils.errorHandling(errorDetails, { profile, scenario });
             expect(showMessageSpy).toHaveBeenCalledTimes(1);
             expect(promptCredsSpy).toHaveBeenCalledTimes(1);
             showMessageSpy.mockClear();
@@ -176,25 +173,25 @@ describe("ProfilesUtils unit tests", () => {
         it("should handle token error and proceed to login", async () => {
             const errorDetails = new imperative.ImperativeError({
                 msg: "Invalid credentials",
-                errorCode: 401 as unknown as string,
+                errorCode: "401",
                 additionalDetails: "Token is not valid or expired.",
             });
-            const label = "test";
-            const moreInfo = "Task failed successfully";
+            const scenario = "Task failed successfully";
             const showErrorSpy = jest.spyOn(Gui, "errorMessage");
             const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation(() => Promise.resolve("selection"));
             const ssoLoginSpy = jest.fn();
+            const profile = { type: "zosmf" } as any;
             Object.defineProperty(Constants, "PROFILES_CACHE", {
                 value: {
                     getProfileInfo: profileInfoMock,
-                    getLoadedProfConfig: () => ({ type: "zosmf" }),
+                    getLoadedProfConfig: () => profile,
                     getDefaultProfile: () => ({}),
                     getSecurePropsForProfile: () => ["tokenValue"],
                     ssoLogin: ssoLoginSpy,
                 },
                 configurable: true,
             });
-            await AuthUtils.errorHandling(errorDetails, label, moreInfo);
+            await AuthUtils.errorHandling(errorDetails, { profile, scenario });
             expect(showMessageSpy).toHaveBeenCalledTimes(1);
             expect(ssoLoginSpy).toHaveBeenCalledTimes(1);
             expect(showErrorSpy).not.toHaveBeenCalled();
@@ -205,10 +202,9 @@ describe("ProfilesUtils unit tests", () => {
         it("should handle credential error and no selection made for update", async () => {
             const errorDetails = new imperative.ImperativeError({
                 msg: "Invalid credentials",
-                errorCode: String(401),
-                additionalDetails: "Authentication failed.",
+                errorCode: "401",
+                additionalDetails: "All configured authentication methods failed",
             });
-            const label = "test";
             const moreInfo = "Task failed successfully";
             Object.defineProperty(vscode, "env", {
                 value: {
@@ -219,20 +215,21 @@ describe("ProfilesUtils unit tests", () => {
             const showErrorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
             const showMsgSpy = jest.spyOn(Gui, "showMessage");
             const promptCredentialsSpy = jest.fn();
+            const profile = { type: "zosmf" } as any;
             Object.defineProperty(Constants, "PROFILES_CACHE", {
                 value: {
                     promptCredentials: promptCredentialsSpy,
                     getProfileInfo: profileInfoMock,
-                    getLoadedProfConfig: () => ({ type: "zosmf" }),
+                    getLoadedProfConfig: () => profile,
                     getDefaultProfile: () => ({}),
                     getSecurePropsForProfile: () => [],
                 },
                 configurable: true,
             });
-            await AuthUtils.errorHandling(errorDetails, label, moreInfo);
+            await AuthUtils.errorHandling(errorDetails, { profile, scenario: moreInfo });
             expect(showErrorSpy).toHaveBeenCalledTimes(1);
             expect(promptCredentialsSpy).not.toHaveBeenCalled();
-            expect(showMsgSpy).toHaveBeenCalledWith("Operation Cancelled");
+            expect(showMsgSpy).not.toHaveBeenCalledWith("Operation Cancelled");
             showErrorSpy.mockClear();
             showMsgSpy.mockClear();
             promptCredentialsSpy.mockClear();
@@ -680,7 +677,7 @@ describe("ProfilesUtils unit tests", () => {
             await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
             expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
             expect(readConfigFromDiskSpy).toHaveBeenCalledTimes(1);
-            expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining(testError.message));
+            expect(Gui.errorMessage).toHaveBeenCalledWith(testError.message, { items: ["More info"] });
         });
 
         it("should handle JSON parse error thrown on read config from disk", async () => {

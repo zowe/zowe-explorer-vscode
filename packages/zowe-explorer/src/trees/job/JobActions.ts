@@ -137,7 +137,7 @@ export class JobActions {
             try {
                 await jobsProvider.addSession({ sessionName: sessionName.trim() });
             } catch (error) {
-                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Jes, profile: sessionNode.getProfile() });
+                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Jes, profile: sessionName });
                 return;
             }
             sessionNode = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label.toString().trim() === sessionName.trim());
@@ -145,7 +145,7 @@ export class JobActions {
         try {
             jobsProvider.refreshElement(sessionNode);
         } catch (error) {
-            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Jes, profile: sessionNode.getProfile() });
+            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Jes, profile: sessionName });
             return;
         }
         sessionNode.searchId = jobId;

@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { ProfilesCache, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { ProfilesCache, ZoweExplorerApiType, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { createIProfile, createISession } from "../../__mocks__/mockCreators/shared";
 import { ZoweCommandProvider } from "../../../src/commands/ZoweCommandProvider";
 import { Profiles } from "../../../src/configuration/Profiles";
@@ -85,7 +85,8 @@ describe("ZoweCommandProvider Unit Tests - function checkCurrentProfile", () => 
         expect(errorHandlingSpy).toHaveBeenCalledWith(
             "Profile Name " +
                 globalMocks.testProfile.name +
-                " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
+                " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
+            { apiType: ZoweExplorerApiType.Command, profile: globalMocks.testProfile }
         );
     });
 });
