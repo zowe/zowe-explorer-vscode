@@ -71,14 +71,15 @@ export enum ZoweExplorerApiType {
     All = "all",
 }
 
-export type ApiErrors = Partial<Record<ZoweExplorerApiType, ErrorCorrelation[]>>;
+export type ErrorsForApiType = Map<ZoweExplorerApiType, ApiErrors>;
+export type ApiErrors = Record<string, ErrorCorrelation[]>;
 
 export class ErrorCorrelator extends Singleton {
-    private errorMatches: Map<string, ApiErrors> = new Map([
+    private errorMatches: ErrorsForApiType = new Map([
         [
-            "zosmf",
+            ZoweExplorerApiType.Mvs,
             {
-                [ZoweExplorerApiType.Mvs]: [
+                zosmf: [
                     {
                         errorCode: "500",
                         matches: ["Client is not authorized for file access.", /An I\/O abend was trapped\.(.+?)\n(.+?)__code=0x0913/],
@@ -103,7 +104,12 @@ export class ErrorCorrelator extends Singleton {
                         ],
                     },
                 ],
-                [ZoweExplorerApiType.Uss]: [
+            },
+        ],
+        [
+            ZoweExplorerApiType.Uss,
+            {
+                zosmf: [
                     {
                         errorCode: "500",
                         matches: ["Client is not authorized for file access."],
@@ -120,7 +126,12 @@ export class ErrorCorrelator extends Singleton {
                         tips: ["Ensure that the UNIX folder or file path is correct and try again."],
                     },
                 ],
-                [ZoweExplorerApiType.Jes]: [
+            },
+        ],
+        [
+            ZoweExplorerApiType.Jes,
+            {
+                zosmf: [
                     {
                         matches: ["No job found for reference:"],
                         summary: "The job modification request specified a job that does not exist.",
@@ -141,7 +152,12 @@ export class ErrorCorrelator extends Singleton {
                         summary: "The given Job ID is invalid. Please verify that the job ID is correct and try again.",
                     },
                 ],
-                [ZoweExplorerApiType.All]: [
+            },
+        ],
+        [
+            ZoweExplorerApiType.All,
+            {
+                any: [
                     {
                         errorCode: "401",
                         matches: ["Token is not valid or expired"],
@@ -173,10 +189,10 @@ export class ErrorCorrelator extends Singleton {
      * @param correlation The correlation info (summary, tips, etc.)
      */
     public addCorrelation(api: ZoweExplorerApiType, profileType: string, correlation: ErrorCorrelation): void {
-        const existingMatches = this.errorMatches.get(profileType);
-        this.errorMatches.set(profileType, {
+        const existingMatches = this.errorMatches.get(api);
+        this.errorMatches.set(api, {
             ...(existingMatches ?? {}),
-            [api]: [...(existingMatches?.[api] ?? []), correlation].filter(Boolean),
+            [profileType]: [...(existingMatches?.[profileType] ?? []), correlation].filter(Boolean),
         });
     }
 
@@ -189,13 +205,14 @@ export class ErrorCorrelator extends Singleton {
      * @returns A matching `NetworkError`, or a generic `NetworkError` with the full error details as the summary
      */
     public correlateError(api: ZoweExplorerApiType, profileType: string, errorDetails: string, templateArgs?: Record<string, string>): NetworkError {
-        if (!this.errorMatches.has(profileType)) {
+        if (!this.errorMatches.has(api)) {
             return new NetworkError({ summary: errorDetails });
         }
 
         for (const apiError of [
-            ...(this.errorMatches.get(profileType)?.[api] ?? []),
-            ...(api === ZoweExplorerApiType.All ? [] : this.errorMatches.get(profileType)[ZoweExplorerApiType.All] ?? []),
+            ...(this.errorMatches.get(api)?.[profileType] ?? []),
+            ...(this.errorMatches.get(api)?.any ?? []),
+            ...this.errorMatches.get(ZoweExplorerApiType.All).any,
         ]) {
             for (const match of Array.isArray(apiError.matches) ? apiError.matches : [apiError.matches]) {
                 if (errorDetails.match(match)) {

@@ -13,7 +13,7 @@ import { ErrorCorrelator, Gui, NetworkError, ZoweExplorerApiType } from "../../.
 import { commands } from "vscode";
 
 describe("addCorrelation", () => {
-    it("adds a correlation for the given API and profile type", () => {
+    it("adds a correlation for the given API and existing profile type", () => {
         const fakeErrorSummary = "Example error summary for the correlator";
         ErrorCorrelator.getInstance().addCorrelation(ZoweExplorerApiType.Mvs, "zosmf", {
             errorCode: "403",
@@ -21,7 +21,19 @@ describe("addCorrelation", () => {
             matches: ["Specific sequence 1234 encountered"],
         });
         expect(
-            (ErrorCorrelator.getInstance() as any).errorMatches.get("zosmf")[ZoweExplorerApiType.Mvs].find((err) => err.summary === fakeErrorSummary)
+            (ErrorCorrelator.getInstance() as any).errorMatches.get(ZoweExplorerApiType.Mvs)["zosmf"].find((err) => err.summary === fakeErrorSummary)
+        ).not.toBe(null);
+    });
+    it("adds a correlation for the given API and new profile type", () => {
+        const fakeErrorSummary = "Example error summary for the correlator";
+        ErrorCorrelator.getInstance().addCorrelation(ZoweExplorerApiType.Mvs, "fake-type", {
+            errorCode: "403",
+            summary: fakeErrorSummary,
+            matches: ["Specific sequence 5678 encountered"],
+        });
+        expect(
+            (ErrorCorrelator.getInstance() as any).errorMatches
+                .get(ZoweExplorerApiType.Mvs)["fake-type"].find((err) => err.summary === fakeErrorSummary)
         ).not.toBe(null);
     });
 });
