@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Zowe Explorer now includes support for the [VS Code display languages](https://code.visualstudio.com/docs/getstarted/locales) French, German, Japanese, Portuguese, and Spanish. Download the respective language pack and switch.
+
 ### Bug fixes
 
 ## `3.0.1`
