@@ -14,6 +14,7 @@ import * as vscode from "vscode";
 import { imperative, Gui, MainframeInteraction, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "../tools/ZoweLogger";
+import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 
 export class AuthUtils {
     /*************************************************************************************************************
@@ -22,7 +23,7 @@ export class AuthUtils {
      * @param {label} - additional information such as profile name, credentials, messageID etc
      * @param {moreInfo} - additional/customized error messages
      *************************************************************************************************************/
-    public static async errorHandling(errorDetails: Error | string, label?: string, moreInfo?: string): Promise<void> {
+    public static async errorHandling(errorDetails: Error | string, label?: string, moreInfo?: string): Promise<boolean> {
         // Use util.inspect instead of JSON.stringify to handle circular references
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         ZoweLogger.error(`${errorDetails.toString()}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null }));
@@ -38,10 +39,13 @@ export class AuthUtils {
                     if (prof.profName === label.trim()) {
                         const filePath = prof.profLoc.osLoc[0];
                         await Constants.PROFILES_CACHE.openConfigFile(filePath);
-                        return;
+                        return false;
                     }
                 }
-            } else if (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401) {
+            } else if (
+                httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
+                imperativeError.message.includes("All configured authentication methods failed")
+            ) {
                 const errMsg = vscode.l10n.t({
                     message:
                         "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
@@ -65,16 +69,16 @@ export class AuthUtils {
 
                     if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
                         const message = vscode.l10n.t("Log in to Authentication Service");
-                        Gui.showMessage(errToken, { items: [message] }).then(async (selection) => {
+                        const success = Gui.showMessage(errToken, { items: [message] }).then(async (selection) => {
                             if (selection) {
-                                await Constants.PROFILES_CACHE.ssoLogin(null, label);
+                                return Constants.PROFILES_CACHE.ssoLogin(null, label);
                             }
                         });
-                        return;
+                        return success;
                     }
                 }
                 const checkCredsButton = vscode.l10n.t("Update Credentials");
-                await Gui.errorMessage(errMsg, {
+                const creds = await Gui.errorMessage(errMsg, {
                     items: [checkCredsButton],
                     vsCodeOpts: { modal: true },
                 }).then(async (selection) => {
@@ -82,13 +86,13 @@ export class AuthUtils {
                         Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
                         return;
                     }
-                    await Constants.PROFILES_CACHE.promptCredentials(label.trim(), true);
+                    return Constants.PROFILES_CACHE.promptCredentials(label.trim(), true);
                 });
-                return;
+                return creds != null ? true : false;
             }
         }
         if (errorDetails.toString().includes("Could not find profile")) {
-            return;
+            return false;
         }
         if (moreInfo === undefined) {
             moreInfo = errorDetails.toString().includes("Error") ? "" : "Error: ";
@@ -97,6 +101,7 @@ export class AuthUtils {
         }
         // Try to keep message readable since VS Code doesn't support newlines in error messages
         Gui.errorMessage(moreInfo + errorDetails.toString().replace(/\n/g, " | "));
+        return false;
     }
 
     /**
@@ -107,7 +112,8 @@ export class AuthUtils {
      */
     public static syncSessionNode(
         getCommonApi: (profile: imperative.IProfileLoaded) => MainframeInteraction.ICommon,
-        sessionNode: IZoweTreeNode
+        sessionNode: IZoweTreeNode,
+        nodeToRefresh?: IZoweTreeNode
     ): void {
         ZoweLogger.trace("ProfilesUtils.syncSessionNode called.");
 
@@ -124,6 +130,10 @@ export class AuthUtils {
         sessionNode.setProfileToChoice(profile);
         const session = getCommonApi(profile).getSession();
         sessionNode.setSessionToChoice(session);
+        if (nodeToRefresh) {
+            nodeToRefresh.dirty = true;
+            void nodeToRefresh.getChildren().then(() => SharedTreeProviders.getProviderForNode(nodeToRefresh).refreshElement(nodeToRefresh));
+        }
     }
 
     /**

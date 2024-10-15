@@ -96,7 +96,6 @@ async function createGlobalMocks() {
         mockDeleteJobs: jest.fn(),
         mockShowInputBox: jest.fn(),
         mockDeleteJob: jest.fn(),
-        mockGetJobsByOwnerAndPrefix: jest.fn(),
         mockShowInformationMessage: jest.fn(),
         mockShowWarningMessage: jest.fn(),
         mockLoadNamedProfile: jest.fn(),
@@ -110,7 +109,6 @@ async function createGlobalMocks() {
         testSessionNoCred: createISessionWithoutCredentials(),
         testProfile: createIProfile(),
         testIJob: createIJobObject(),
-        testIJobComplete: createIJobObject(),
         testJobNode: null,
         testSessionNode: null,
         mockIJobFile: createIJobFile(),
@@ -237,7 +235,6 @@ async function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     globalMocks.testSessionNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
-    globalMocks.mockGetJobsByOwnerAndPrefix.mockReturnValue([globalMocks.testIJob, globalMocks.testIJobComplete]);
     globalMocks.mockProfileInstance.editSession = jest.fn(() => globalMocks.testProfile);
     globalMocks.mockGetConfiguration.mockReturnValue({
         persistence: true,
@@ -409,6 +406,35 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
         );
 
         expect(favChildNodeForProfile).toEqual(node);
+    });
+
+    it("To check job label under favorites is valid", async () => {
+        await createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testTree = new JobTree();
+
+        const favProfileNode = new ZoweJobNode({
+            label: "testProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.jobFavoritesNode,
+        });
+        favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
+        const node = new ZoweJobNode({
+            label: "testJob(JOB123)",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfileNode,
+            job: new MockJobDetail("testJob(JOB123)"),
+        });
+        node.contextValue = Constants.JOBS_JOB_CONTEXT + Constants.FAV_SUFFIX;
+        node.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [node] };
+        const targetIcon = IconGenerator.getIconByNode(node);
+        if (targetIcon) {
+            node.iconPath = targetIcon.path;
+        }
+
+        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("testJob(JOB123)", Constants.JOBS_JOB_CONTEXT, favProfileNode);
+
+        expect(favChildNodeForProfile.label).toEqual("testJob(JOB123)");
     });
 });
 

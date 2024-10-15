@@ -385,11 +385,12 @@ export namespace ZoweExplorerZosmf {
      */
     export class CommandApi extends CommonApi implements MainframeInteraction.ICommand {
         public issueTsoCommandWithParms(command: string, parms: zostso.IStartTsoParms): Promise<zostso.IIssueResponse> {
+            // eslint-disable-next-line deprecation/deprecation
             return zostso.IssueTso.issueTsoCommand(this.getSession(), parms.account, command, parms);
         }
 
-        public issueMvsCommand(command: string): Promise<zosconsole.IConsoleResponse> {
-            return zosconsole.IssueCommand.issueSimple(this.getSession(), command);
+        public issueMvsCommand(command: string, consoleName?: string): Promise<zosconsole.IConsoleResponse> {
+            return zosconsole.IssueCommand.issue(this.getSession(), { command, consoleName, processResponses: true });
         }
 
         public async issueUnixCommand(command: string, cwd: string, sshSession: zosuss.SshSession): Promise<string> {

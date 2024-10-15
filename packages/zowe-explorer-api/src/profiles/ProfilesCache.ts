@@ -16,6 +16,7 @@ import { Validation } from "./Validation";
 import { ZosmfProfile } from "@zowe/zosmf-for-zowe-sdk";
 import { ZosTsoProfile } from "@zowe/zos-tso-for-zowe-sdk";
 import { ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
+import { Types } from "../Types";
 
 export class ProfilesCache {
     public profilesForValidation: Validation.IValidationProfile[] = [];
@@ -79,9 +80,8 @@ export class ProfilesCache {
 
     /**
      * Updates profile in allProfiles array and if default updates defaultProfileByType
-     *
+     * @deprecated Use `updateCachedProfile` instead
      * @param {string} profileLoaded
-     *
      * @returns {void}
      */
     public updateProfilesArrays(profileLoaded: imperative.IProfileLoaded): void {
@@ -95,6 +95,25 @@ export class ProfilesCache {
         if (defaultProf?.name === profileLoaded?.name) {
             this.defaultProfileByType.set(profileLoaded?.type, profileLoaded);
         }
+    }
+
+    public async updateCachedProfile(
+        profileLoaded: imperative.IProfileLoaded,
+        profileNode?: Types.IZoweNodeType,
+        zeRegister?: Types.IApiRegisterClient
+    ): Promise<void> {
+        if ((await this.getProfileInfo()).getTeamConfig().properties.autoStore) {
+            await this.refresh(zeRegister);
+        } else {
+            // Note: When autoStore is disabled, nested profiles within this service profile may not have their credentials updated.
+            const profIndex = this.allProfiles.findIndex((profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name);
+            this.allProfiles[profIndex].profile = profileLoaded.profile;
+            const defaultProf = this.defaultProfileByType.get(profileLoaded.type);
+            if (defaultProf != null && defaultProf.name === profileLoaded.name) {
+                this.defaultProfileByType.set(profileLoaded.type, profileLoaded);
+            }
+        }
+        profileNode?.setProfileToChoice(profileLoaded);
     }
 
     /**
@@ -146,15 +165,13 @@ export class ProfilesCache {
     public async refresh(apiRegister?: IRegisterClient): Promise<void> {
         const allProfiles: imperative.IProfileLoaded[] = [];
         const mProfileInfo = await this.getProfileInfo();
-        if (!mProfileInfo.getTeamConfig().exists) {
-            return;
-        }
         const allTypes = this.getAllProfileTypes(apiRegister?.registeredApiTypes() ?? []);
+        allTypes.push("ssh");
         allTypes.push("base");
         for (const type of allTypes) {
             const tmpAllProfiles: imperative.IProfileLoaded[] = [];
             // Step 1: Get all profiles for each registered type
-            const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc.length !== 0);
+            const profilesForType = mProfileInfo.getAllProfiles(type).filter((temp) => temp.profLoc.osLoc?.length > 0);
             if (profilesForType && profilesForType.length > 0) {
                 for (const prof of profilesForType) {
                     // Step 2: Merge args for each profile

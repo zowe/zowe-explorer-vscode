@@ -11,27 +11,29 @@
 
 import { DatasetUtils } from "../../../../src/trees/dataset/DatasetUtils";
 
-describe("Dataset utils unit tests - function getLanguageId", () => {
-    it("returns the proper language ID", () => {
+describe("Dataset utils unit tests - function getExtension", () => {
+    it("returns the proper file extension", () => {
         const pairs = [
-            { name: "TEST.DS.C", languageId: "c" },
-            { name: "TEST.PDS.C(MEMBER)", languageId: "c" },
-            { name: "TEST.DS.JCL", languageId: "jcl" },
-            { name: "TEST.DS.CBL", languageId: "cobol" },
-            { name: "TEST.PDS.CPY(M1)", languageId: "copybook" },
-            { name: "TEST.DS.INCLUDE", languageId: "inc" },
-            { name: "TEST.DS.PLX", languageId: "pli" },
-            { name: "TEST.DS.SHELL", languageId: "shellscript" },
-            { name: "TEST.DS.EXEC", languageId: "rexx" },
-            { name: "TEST.DS.XML", languageId: "xml" },
-            { name: "TEST.DS.ASM", languageId: "asm" },
-            { name: "TEST.DS.LOG", languageId: "log" },
+            { name: "TEST.DS.C", extension: ".c" },
+            { name: "TEST.PDS.C(MEMBER)", extension: ".c" },
+            { name: "TEST.DS.JCL", extension: ".jcl" },
+            { name: "TEST.DS.CBL", extension: ".cbl" },
+            { name: "TEST.PDS.CPY(M1)", extension: ".cpy" },
+            { name: "TEST.DS.INCLUDE", extension: ".inc" },
+            { name: "TEST.DS.PLX", extension: ".pli" },
+            { name: "TEST.DS.SHELL", extension: ".sh" },
+            { name: "TEST.DS.EXEC", extension: ".rexx" },
+            { name: "TEST.DS.XML", extension: ".xml" },
+            { name: "TEST.DS.ASM", extension: ".asm" },
+            { name: "TEST.DS.ASSEMBLY", extension: ".asm" },
+            { name: "TEST.DS.LOG", extension: ".log" },
+            { name: "TEST.DS.SPFLOGS", extension: ".log" },
         ];
         for (const pair of pairs) {
-            expect(DatasetUtils.getLanguageId(pair.name)).toBe(pair.languageId);
+            expect(DatasetUtils.getExtension(pair.name)).toBe(pair.extension);
         }
     });
-    it("returns null if no language ID was found", () => {
-        expect(DatasetUtils.getLanguageId("TEST.DS")).toBe(null);
+    it("returns null if no language was detected", () => {
+        expect(DatasetUtils.getExtension("TEST.DS.X")).toBe(null);
     });
 });

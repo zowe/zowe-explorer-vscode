@@ -1300,58 +1300,6 @@ export class DatasetActions {
     }
 
     /**
-     * Prompts the user for a pattern, and populates the [TreeView]{@link vscode.TreeView} based on the pattern
-     *
-     * @param {IZoweDatasetTreeNode} node - The session node
-     * @param datasetProvider - Current DatasetTree used to populate the TreeView
-     * @returns {Promise<void>}
-     */
-    // This function does not appear to be called by anything except unit and integration tests.
-    public static async enterPattern(node: IZoweDatasetTreeNode, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
-        ZoweLogger.trace("dataset.actions.enterPattern called.");
-        let pattern: string;
-        if (SharedContext.isSessionNotFav(node)) {
-            // manually entering a search
-            const options: vscode.InputBoxOptions = {
-                prompt: vscode.l10n.t("Search Data Sets: use a comma to separate multiple patterns"),
-                value: node.pattern,
-            };
-            // get user input
-            pattern = await Gui.showInputBox(options);
-            if (!pattern) {
-                Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
-                return;
-            }
-            ZoweLogger.debug(
-                vscode.l10n.t({
-                    message: "Prompted for a data set pattern, recieved {0}.",
-                    args: [pattern],
-                    comment: ["Data Set pattern"],
-                })
-            );
-        } else {
-            // executing search from saved search in favorites
-            pattern = node.label.toString().substring(node.label.toString().indexOf(":") + 2);
-            const sessionName = node.label.toString().substring(node.label.toString().indexOf("[") + 1, node.label.toString().indexOf("]"));
-            await datasetProvider.addSession({ sessionName: sessionName.trim() });
-            node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.label.toString().trim() === sessionName.trim()) as IZoweDatasetTreeNode;
-        }
-
-        // update the treeview with the new pattern
-        // TODO figure out why a label change is needed to refresh the treeview,
-        // instead of changing the collapsible state
-        // change label so the treeview updates
-        node.tooltip = node.pattern = pattern.toUpperCase();
-        node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-        node.dirty = true;
-        const icon = IconGenerator.getIconByNode(node);
-        if (icon) {
-            node.iconPath = icon.path;
-        }
-        datasetProvider.addSearchHistory(node.pattern);
-    }
-
-    /**
      * Copy data sets
      *
      * @export

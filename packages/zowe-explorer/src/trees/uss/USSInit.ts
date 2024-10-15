@@ -27,7 +27,7 @@ export class USSInit {
      * @export
      */
     public static async createUSSTree(log: imperative.Logger): Promise<USSTree> {
-        ZoweLogger.trace("uss.USSTree.createUSSTree called.");
+        ZoweLogger.trace("USSInit.createUSSTree called.");
         const tree = new USSTree();
         await tree.initializeFavorites(log);
         await tree.addSession();
@@ -35,7 +35,7 @@ export class USSInit {
     }
 
     public static async initUSSProvider(context: vscode.ExtensionContext): Promise<USSTree> {
-        ZoweLogger.trace("init.initUSSProvider called.");
+        ZoweLogger.trace("USSInit.initUSSProvider called.");
 
         context.subscriptions.push(vscode.workspace.registerFileSystemProvider(ZoweScheme.USS, UssFSProvider.instance, { isCaseSensitive: true }));
         const ussFileProvider: USSTree = await USSInit.createUSSTree(ZoweLogger.log);

@@ -45,6 +45,7 @@ export function createIJobObject() {
         type: "JOB",
         url: "fake/url",
         "exec-member": "sampleMember",
+        "exec-ended": "2024-03-07T00:04:67:980z",
     };
 }
 
@@ -159,8 +160,8 @@ export function createJobInfoNode(session: any, profile: imperative.IProfileLoad
         collapsibleState: vscode.TreeItemCollapsibleState.None,
         parentNode: session.getSessionNode(),
         profile,
+        contextOverride: Constants.INFORMATION_CONTEXT,
     });
-    jobNode.contextValue = Constants.INFORMATION_CONTEXT;
     return jobNode;
 }
 

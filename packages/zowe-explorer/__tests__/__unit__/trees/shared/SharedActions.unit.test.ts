@@ -61,13 +61,11 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "withProgress", {
         value: jest.fn().mockImplementation((_, callback) => {
             const progress = {
-                report: () => {
-                    return;
-                },
+                report: jest.fn(),
             };
             const token = {
                 isCancellationRequested: false,
-                onCancellationRequested: undefined,
+                onCancellationRequested: jest.fn(),
             };
             return callback(progress, token);
         }),

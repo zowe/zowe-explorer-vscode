@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "3.0.0-next-SNAPSHOT",
+  "version": "3.1.0-SNAPSHOT",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
@@ -73,7 +73,8 @@
         {
           "type": "webview",
           "id": "zowe-resources",
-          "name": "%zowe.resources.name%"
+          "name": "%zowe.resources.name%",
+          "when": "zowe.vscode-extension-for-zowe.showZoweResources"
         }
       ],
       "zowezosconsole": [
@@ -109,11 +110,6 @@
         "command": "zowe.uss.deleteNode",
         "key": "delete",
         "when": "focusedView == zowe.uss.explorer"
-      },
-      {
-        "command": "zowe.extRefresh",
-        "key": "ctrl+alt+z",
-        "mac": "cmd+alt+z"
       },
       {
         "command": "zowe.editHistory",
@@ -166,15 +162,6 @@
         "command": "zowe.profileManagement",
         "title": "%zowe.profileManagement%",
         "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.extRefresh",
-        "title": "%zowe.extRefresh%",
-        "category": "Zowe Explorer",
-        "icon": {
-          "light": "./resources/light/refresh.svg",
-          "dark": "./resources/dark/refresh.svg"
-        }
       },
       {
         "command": "zowe.editHistory",
@@ -1839,10 +1826,8 @@
     "fresh-clone": "pnpm clean:bundle && pnpm clean:dependencies",
     "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/",
     "pretty": "prettier --write .",
-    "createTestProfileData": "tsx ./scripts/createTestProfileData.ts",
-    "createDemoNodes": "tsx ./scripts/createDemoNodes.ts",
     "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src && node ./scripts/generatePoeditorJson.js",
-    "copy-secrets": "tsx ./scripts/getSecretsPrebuilds.ts"
+    "copy-secrets": "node ./scripts/getSecretsPrebuilds.js"
   },
   "engines": {
     "vscode": "^1.79.0"
@@ -1850,43 +1835,37 @@
   "devDependencies": {
     "@cucumber/cucumber": "9.5.1",
     "@napi-rs/cli": "^2.16.1",
-    "@types/chai": "^4.2.6",
-    "@types/chai-as-promised": "^7.1.0",
-    "@types/expect": "^1.20.3",
     "@types/fs-extra": "^7.0.0",
     "@types/promise-queue": "^2.2.0",
     "@types/sinon": "^17.0.3",
-    "@wdio/cli": "^8.36.1",
-    "@wdio/cucumber-framework": "^8.36.1",
-    "@wdio/junit-reporter": "^8.36.1",
-    "@wdio/local-runner": "^8.36.1",
-    "@wdio/mocha-framework": "^8.37.0",
-    "@wdio/spec-reporter": "^8.36.1",
-    "@wdio/types": "^8.36.1",
-    "chai": "^4.1.2",
-    "chai-as-promised": "^7.1.1",
+    "@wdio/cli": "^8.40.5",
+    "@wdio/cucumber-framework": "^8.40.5",
+    "@wdio/junit-reporter": "^8.40.3",
+    "@wdio/local-runner": "^8.40.5",
+    "@wdio/mocha-framework": "^8.40.3",
+    "@wdio/spec-reporter": "^8.40.3",
+    "@wdio/types": "^8.40.3",
     "chalk": "^2.4.1",
-    "eslint-plugin-zowe-explorer": "3.0.0-next-SNAPSHOT",
-    "expect": "^24.8.0",
-    "expect-webdriverio": "^4.13.0",
+    "eslint-plugin-zowe-explorer": "3.1.0-SNAPSHOT",
+    "expect-webdriverio": "^4.15.4",
     "glob": "^7.1.6",
     "jest-silent-reporter": "^0.5.0",
     "log4js": "^6.4.6",
     "markdownlint-cli": "^0.33.0",
-    "sinon": "^16.1.1",
+    "sinon": "^19.0.2",
     "ts-node": "^10.9.2",
-    "wdio-vscode-service": "^6.1.0",
+    "wdio-vscode-service": "^6.1.1",
     "wdio-wait-for": "^3.0.11",
-    "webdriverio": "^8.36.1"
+    "webdriverio": "^8.40.5"
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "@zowe/core-for-zowe-sdk": "8.0.0-next.202408301809",
-    "@zowe/secrets-for-zowe-sdk": "8.0.0-next.202408301809",
-    "@zowe/zos-files-for-zowe-sdk": "8.0.0-next.202408301809",
-    "@zowe/zos-jobs-for-zowe-sdk": "8.0.0-next.202408301809",
-    "@zowe/zosmf-for-zowe-sdk": "8.0.0-next.202408301809",
-    "@zowe/zowe-explorer-api": "3.0.0-next-SNAPSHOT",
+    "@zowe/core-for-zowe-sdk": "^8.1.1",
+    "@zowe/secrets-for-zowe-sdk": "^8.1.0",
+    "@zowe/zos-files-for-zowe-sdk": "^8.1.1",
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.1.1",
+    "@zowe/zosmf-for-zowe-sdk": "^8.1.1",
+    "@zowe/zowe-explorer-api": "3.1.0-SNAPSHOT",
     "dayjs": "^1.11.10",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",

@@ -9,7 +9,7 @@
  *
  */
 
-import { EventEmitter, ExtensionContext, WebviewView } from "vscode";
+import { commands, EventEmitter, ExtensionContext, WebviewView } from "vscode";
 import { TableBuilder, TableViewProvider } from "../../../../src/vscode/ui";
 
 describe("TableViewProvider", () => {
@@ -27,7 +27,7 @@ describe("TableViewProvider", () => {
     });
 
     describe("setTableView", () => {
-        it("sets the table to the given table view", () => {
+        it("sets the table to the given table view", async () => {
             // case 1: table did not previously exist
             const builder = new TableBuilder(fakeExtContext);
 
@@ -45,29 +45,39 @@ describe("TableViewProvider", () => {
                     { apple: 9, banana: 10, orange: 11 },
                 ])
                 .build();
-            TableViewProvider.getInstance().setTableView(tableOne);
+            const executeCommandMock = jest.spyOn(commands, "executeCommand").mockImplementation();
+            await TableViewProvider.getInstance().setTableView(tableOne);
             expect((TableViewProvider.getInstance() as any).tableView).toBe(tableOne);
+            expect(executeCommandMock).toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", true);
 
             const disposeSpy = jest.spyOn(tableOne, "dispose");
 
             // case 2: table previously existed, dispose called on old table
             const tableTwo = builder.options({ pagination: false }).build();
-            TableViewProvider.getInstance().setTableView(tableTwo);
+            await TableViewProvider.getInstance().setTableView(tableTwo);
             expect((TableViewProvider.getInstance() as any).tableView).toBe(tableTwo);
             expect(disposeSpy).toHaveBeenCalled();
+            executeCommandMock.mockRestore();
+        });
+        it("sets the table to null", async () => {
+            const executeCommandMock = jest.spyOn(commands, "executeCommand").mockImplementation();
+            await TableViewProvider.getInstance().setTableView(null);
+            expect((TableViewProvider.getInstance() as any).tableView).toBe(null);
+            expect(executeCommandMock).toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", false);
+            executeCommandMock.mockRestore();
         });
     });
 
     describe("getTableView", () => {
-        beforeEach(() => {
-            TableViewProvider.getInstance().setTableView(null);
+        beforeEach(async () => {
+            await TableViewProvider.getInstance().setTableView(null);
         });
 
         it("returns null if no table view has been provided", () => {
             expect(TableViewProvider.getInstance().getTableView()).toBe(null);
         });
 
-        it("returns a valid table view if one has been provided", () => {
+        it("returns a valid table view if one has been provided", async () => {
             expect(TableViewProvider.getInstance().getTableView()).toBe(null);
             const table = new TableBuilder(fakeExtContext)
                 .isView()
@@ -81,7 +91,7 @@ describe("TableViewProvider", () => {
                     { a: 3, b: 4, c: 5 },
                 ])
                 .build();
-            TableViewProvider.getInstance().setTableView(table);
+            await TableViewProvider.getInstance().setTableView(table);
             expect(TableViewProvider.getInstance().getTableView()).toBe(table);
         });
     });
@@ -89,7 +99,7 @@ describe("TableViewProvider", () => {
     describe("resolveWebviewView", () => {
         it("correctly resolves the view and calls resolveForView on the table", async () => {
             const table = new TableBuilder(fakeExtContext).isView().build();
-            TableViewProvider.getInstance().setTableView(table);
+            await TableViewProvider.getInstance().setTableView(table);
             const resolveForViewSpy = jest.spyOn(table, "resolveForView");
             const fakeView = {
                 onDidDispose: jest.fn(),

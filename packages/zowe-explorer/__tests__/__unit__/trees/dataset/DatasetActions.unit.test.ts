@@ -440,13 +440,11 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
             const progress = {
-                report: (_message) => {
-                    return;
-                },
+                report: jest.fn(),
             };
             const token = {
                 isCancellationRequested: false,
-                onCancellationRequested: undefined,
+                onCancellationRequested: jest.fn(),
             };
             return callback(progress, token);
         });
@@ -870,57 +868,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         deleteSpy.mockClear();
         await expect(DatasetActions.deleteDataset(child, blockMocks.testDatasetTree)).rejects.toThrow("Cannot delete, item invalid.");
         expect(deleteSpy).not.toHaveBeenCalled();
-    });
-});
-
-describe("Dataset Actions Unit Tests - Function enterPattern", () => {
-    afterAll(() => jest.restoreAllMocks());
-
-    it("Checking common dataset filter action", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocksShared();
-        const node = new ZoweDatasetNode({
-            label: "node",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        node.pattern = "TEST";
-        node.contextValue = Constants.DS_SESSION_CONTEXT;
-
-        const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("test");
-        await DatasetActions.enterPattern(node, blockMocks.testDatasetTree);
-
-        expect(mySpy).toHaveBeenCalledWith(
-            expect.objectContaining({
-                prompt: "Search Data Sets: use a comma to separate multiple patterns",
-                value: node.pattern,
-            })
-        );
-        expect(mocked(Gui.showMessage)).not.toHaveBeenCalled();
-    });
-    it("Checking common dataset filter failed attempt", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocksShared();
-        const node = new ZoweDatasetNode({
-            label: "node",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        node.pattern = "TEST";
-        node.contextValue = Constants.DS_SESSION_CONTEXT;
-
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("");
-        await DatasetActions.enterPattern(node, blockMocks.testDatasetTree);
-
-        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("You must enter a pattern.");
-    });
-    it("Checking favorite dataset filter action", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocksShared();
-        const favoriteSample = new ZoweDatasetNode({ label: "[sestest]: HLQ.TEST", collapsibleState: vscode.TreeItemCollapsibleState.None });
-
-        await DatasetActions.enterPattern(favoriteSample, blockMocks.testDatasetTree);
-        expect(blockMocks.testDatasetTree.addSession).toHaveBeenCalledWith({ sessionName: "sestest" });
     });
 });
 

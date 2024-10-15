@@ -70,8 +70,11 @@ export class TableViewProvider implements WebviewViewProvider {
             if (this.view != null) {
                 this.view.webview.html = "";
             }
+            await commands.executeCommand("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", false);
             return;
         }
+
+        await commands.executeCommand("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", true);
 
         if (this.view) {
             this.tableView.resolveForView(this.view);

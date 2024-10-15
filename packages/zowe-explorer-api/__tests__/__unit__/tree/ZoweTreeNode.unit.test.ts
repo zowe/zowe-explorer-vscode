@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import { ZoweTreeNode } from "../../../src/tree/ZoweTreeNode";
 import { IZoweTreeNode } from "../../../src/tree/IZoweTreeNode";
 import * as imperative from "@zowe/imperative";
+import { BaseProvider } from "../../../src";
 
 describe("ZoweTreeNode", () => {
     const makeNode = (
@@ -78,5 +79,53 @@ describe("ZoweTreeNode", () => {
         expect(node.getSession()).toBeUndefined();
         expect(node.getProfile()).toBeUndefined();
         expect(node.getProfileName()).toBeUndefined();
+    });
+
+    it("setProfileToChoice should update properties on existing profile object", () => {
+        const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined, undefined, {
+            name: "oldProfile",
+            profile: { host: "example.com" },
+        });
+        node.setProfileToChoice({ name: "newProfile", profile: { host: "example.com", port: 443 } } as unknown as imperative.IProfileLoaded);
+        // Profile name should not change but properties should
+        expect(node.getProfileName()).toBe("oldProfile");
+        expect(node.getProfile().profile?.port).toBeDefined();
+    });
+
+    it("setProfileToChoice should update profile for associated FSProvider entry", () => {
+        const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined);
+        node.resourceUri = vscode.Uri.file(__dirname);
+        const fsEntry = {
+            metadata: {
+                profile: { name: "oldProfile" },
+            },
+        };
+        node.setProfileToChoice(
+            { name: "newProfile" } as unknown as imperative.IProfileLoaded,
+            {
+                lookup: jest.fn().mockReturnValue(fsEntry),
+            } as unknown as BaseProvider
+        );
+        expect(node.getProfileName()).toBe("newProfile");
+        expect(fsEntry.metadata.profile.name).toBe("newProfile");
+    });
+
+    it("setProfileToChoice should update child nodes with the new profile", () => {
+        const node = makeNode("test", vscode.TreeItemCollapsibleState.Expanded, undefined);
+        const nodeChild = makeNode("child", vscode.TreeItemCollapsibleState.None, undefined);
+        node.children = [nodeChild as any];
+        const setProfileToChoiceChildMock = jest.spyOn(nodeChild, "setProfileToChoice").mockImplementation();
+        const fsEntry = {
+            metadata: {
+                profile: { name: "oldProfile" },
+            },
+        };
+        const mockNewProfile = { name: "newProfile" } as unknown as imperative.IProfileLoaded;
+        const mockProvider = {
+            lookup: jest.fn().mockReturnValue(fsEntry),
+        } as unknown as BaseProvider;
+        node.setProfileToChoice(mockNewProfile, mockProvider);
+        expect(node.getProfileName()).toBe("newProfile");
+        expect(setProfileToChoiceChildMock).toHaveBeenCalledWith(mockNewProfile, mockProvider);
     });
 });

@@ -16,8 +16,7 @@ import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import type { Profiles } from "./Profiles";
 
 export class Constants {
-    public static CONFIG_PATH: string;
-    public static readonly COMMAND_COUNT = 100;
+    public static readonly COMMAND_COUNT = 99;
     public static readonly MAX_SEARCH_HISTORY = 5;
     public static readonly MAX_FILE_HISTORY = 10;
     public static readonly MS_PER_SEC = 1000;
@@ -42,6 +41,7 @@ export class Constants {
     public static readonly DS_MEMBER_BINARY_CONTEXT = "memberBinary";
     public static readonly DS_MIGRATED_FILE_CONTEXT = "migr";
     public static readonly DS_FILE_ERROR_CONTEXT = "fileError";
+    public static readonly DS_FILE_ERROR_MEMBER_CONTEXT = "fileError_member";
     public static readonly USS_SESSION_CONTEXT = "ussSession";
     public static readonly USS_DIR_CONTEXT = "directory";
     public static readonly USS_FAV_DIR_CONTEXT = "directory_fav";
@@ -81,7 +81,8 @@ export class Constants {
     public static DS_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7}(\.[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7})*$/;
     public static MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$]{0,7}$/;
     public static ACTIVATED = false;
-    public static SAVED_PROFILE_CONTENTS = new Uint8Array();
+    public static SAVED_PROFILE_CONTENTS = new Map<string, Buffer>();
+    public static IGNORE_VAULT_CHANGE = false;
     public static readonly JOBS_MAX_PREFIX = 8;
     public static PROFILES_CACHE: Profiles;
     public static readonly WORKSPACE_UTIL_TAB_SWITCH_DELAY = 200;

@@ -47,17 +47,14 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showInformationMessage", { value: newMocks.showInformationMessage, configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: newMocks.openTextDocument, configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.window, "withProgress", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "withProgress", {
         value: jest.fn().mockImplementation((progLocation, callback) => {
             const progress = {
-                report: () => {
-                    return;
-                },
+                report: jest.fn(),
             };
             const token = {
                 isCancellationRequested: false,
-                onCancellationRequested: undefined,
+                onCancellationRequested: jest.fn(),
             };
             return callback(progress, token);
         }),
@@ -179,13 +176,11 @@ describe("mvsNodeActions", () => {
         Object.defineProperty(vscode.window, "withProgress", {
             value: jest.fn().mockImplementation((progLocation, callback) => {
                 const progress = {
-                    report: () => {
-                        return;
-                    },
+                    report: jest.fn(),
                 };
                 const token = {
                     isCancellationRequested: true,
-                    onCancellationRequested: undefined,
+                    onCancellationRequested: jest.fn(),
                 };
                 return callback(progress, token);
             }),

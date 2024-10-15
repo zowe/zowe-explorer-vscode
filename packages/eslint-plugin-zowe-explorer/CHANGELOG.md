@@ -6,6 +6,19 @@ All notable changes to the "eslint-plugin-zowe-explorer" package will be documen
 
 ### Bug fixes
 
+## `3.0.1`
+
+## `3.0.0`
+
+### New features and enhancements
+
+- Added placeholder `madge` script to `package.json` for workspace script to succeed.
+- Migrated to new package manager PNPM from Yarn.
+
+## `3.0.0-next.202409251932`
+
+## `3.0.0-next.202409132122`
+
 ## `3.0.0-next.202409091409`
 
 ## `3.0.0-next.202408301858`

@@ -17,6 +17,20 @@ interface DsEntryProps {
     stats: Types.DatasetStats;
 }
 
+export const DS_EXTENSION_MAP: Map<string, (string | RegExp)[]> = new Map([
+    [".c", ["C"]],
+    [".jcl", ["JCL", "JCLLIB", "CNTL", "PROC", "PROCLIB"]],
+    [".cbl", ["COBOL", "CBL", "COB", "SCBL"]],
+    [".cpy", ["COPYBOOK", "COPY", "CPY", "COBCOPY"]],
+    [".inc", ["INC", "INCLUDE", "PLINC"]],
+    [".pli", ["PLI", "PL1", "PLX", "PCX"]],
+    [".sh", ["SH", "SHELL"]],
+    [".rexx", ["REXX", "REXEC", "EXEC"]],
+    [".xml", ["XML"]],
+    [".asm", ["ASM", /ASSEMBL/]],
+    [".log", ["LOG", /SPFLOG/]],
+]);
+
 export class DsEntry extends FileEntry implements DsEntryProps {
     public metadata: DsEntryMetadata;
 
@@ -47,8 +61,21 @@ export class DsEntryMetadata implements EntryMetadata {
         this.path = metadata.path;
     }
 
+    /**
+     * @returns the data set's file system path without the extension
+     */
+    public extensionRemovedFromPath(): string {
+        for (const ext of DS_EXTENSION_MAP.keys()) {
+            if (this.path.endsWith(ext)) {
+                return this.path.replace(ext, "");
+            }
+        }
+
+        return this.path;
+    }
+
     public get dsName(): string {
-        const segments = this.path.split("/").filter(Boolean);
+        const segments = this.extensionRemovedFromPath().split("/").filter(Boolean);
         return segments[1] ? `${segments[0]}(${segments[1]})` : segments[0];
     }
 }

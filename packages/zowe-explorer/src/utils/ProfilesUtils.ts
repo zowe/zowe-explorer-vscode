@@ -187,8 +187,13 @@ export class ProfilesUtils {
             const profileInfo = new imperative.ProfileInfo("zowe", {
                 credMgrOverride: defaultCredentialManager,
             });
+
+            const workspacePath = ZoweVsCodeExtension.workspaceRoot?.uri.fsPath;
             // Trigger initialize() function of credential manager to throw an error early if failed to load
-            await profileInfo.readProfilesFromDisk();
+            await profileInfo.readProfilesFromDisk({
+                homeDir: FileManagement.getZoweDir(),
+                projectDir: workspacePath ? FileManagement.getFullPath(workspacePath) : undefined,
+            });
             return profileInfo;
         } catch (err) {
             if (err instanceof imperative.ProfInfoErr && err.errorCode === imperative.ProfInfoErr.LOAD_CRED_MGR_FAILED) {
@@ -332,7 +337,12 @@ export class ProfilesUtils {
                 Gui.warningMessage(schemaWarning);
                 ZoweLogger.warn(schemaWarning);
             }
-            Constants.CONFIG_PATH = rootPath ? rootPath : FileManagement.getZoweDir();
+            Constants.SAVED_PROFILE_CONTENTS.clear();
+            for (const layer of mProfileInfo.getTeamConfig().layers) {
+                if (layer.exists) {
+                    Constants.SAVED_PROFILE_CONTENTS.set(vscode.Uri.file(layer.path).fsPath, fs.readFileSync(layer.path));
+                }
+            }
             ZoweLogger.info(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName}"`);
             const layers = mProfileInfo.getTeamConfig().layers || [];
             const layerSummary = layers.map(
@@ -349,8 +359,8 @@ export class ProfilesUtils {
             // VS Code registers our updated TreeView IDs. Otherwise, VS Code's "Refresh Extensions" option will break v3 init.
             const ussPersistentSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent");
             const upgradingFromV1 = ZoweLocalStorage.getValue<Definitions.V1MigrationStatus>(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
-            if (ussPersistentSettings != null && upgradingFromV1 == null) {
-                ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.JustMigrated);
+            if (ussPersistentSettings != null && upgradingFromV1 == null && imperative.ProfileInfo.onlyV1ProfilesExist) {
+                await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.JustMigrated);
                 await vscode.commands.executeCommand("workbench.action.reloadWindow");
             }
             if (imperative.ProfileInfo.onlyV1ProfilesExist) {
@@ -359,7 +369,7 @@ export class ProfilesUtils {
         }
     }
 
-    public static handleV1MigrationStatus(): void {
+    public static async handleV1MigrationStatus(): Promise<void> {
         const migrationStatus = ZoweLocalStorage.getValue<Definitions.V1MigrationStatus>(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
         if (migrationStatus == null) {
             // If there is no v1 migration status, return.
@@ -369,9 +379,29 @@ export class ProfilesUtils {
         // Open the "Add Session" quick pick if the user selected "Create New" in the v1 migration prompt.
         if (migrationStatus === Definitions.V1MigrationStatus.CreateConfigSelected) {
             vscode.commands.executeCommand("zowe.ds.addSession", SharedTreeProviders.ds);
+            await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.JustMigrated);
         }
+    }
 
-        ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, undefined);
+    /**
+     * Displays a notification if a user does not have any Zowe client configurations.
+     *
+     * This aims to help direct new Zowe Explorer users to create a new team configuration.
+     */
+    public static async promptUserWithNoConfigs(): Promise<void> {
+        const profInfo = await ProfilesUtils.getProfileInfo();
+        if (!profInfo.getTeamConfig().exists && !imperative.ProfileInfo.onlyV1ProfilesExist) {
+            Gui.showMessage(
+                vscode.l10n.t("No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration."),
+                {
+                    items: [vscode.l10n.t("Create New")],
+                }
+            ).then(async (selection) => {
+                if (selection === vscode.l10n.t("Create New")) {
+                    await vscode.commands.executeCommand("zowe.ds.addSession");
+                }
+            });
+        }
     }
 
     public static async promptCredentials(node: IZoweTreeNode): Promise<void> {
@@ -537,7 +567,7 @@ export class ProfilesUtils {
         switch (selection) {
             case createButton: {
                 ZoweLogger.info("Create new team configuration chosen.");
-                ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.CreateConfigSelected);
+                await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.CreateConfigSelected);
                 break;
             }
             case convertButton: {

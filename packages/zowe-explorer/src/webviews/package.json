@@ -2,7 +2,7 @@
   "name": "webviews",
   "private": true,
   "type": "module",
-  "version": "3.0.0-next-SNAPSHOT",
+  "version": "3.1.0-SNAPSHOT",
   "main": "index.js",
   "license": "EPL-2.0",
   "scripts": {
@@ -32,7 +32,7 @@
   "devDependencies": {
     "@preact/preset-vite": "^2.5.0",
     "typescript": "^5.3.3",
-    "vite": "^4.5.3",
+    "vite": "^4.5.5",
     "vite-plugin-checker": "^0.6.4",
     "vite-plugin-static-copy": "^0.17.1"
   }

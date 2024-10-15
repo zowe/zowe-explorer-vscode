@@ -327,11 +327,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
 
                 // only reassign a command for renamed file nodes
                 if (!SharedContext.isUssDirectory(originalNode)) {
-                    originalNode.command = {
-                        command: "vscode.open",
-                        title: vscode.l10n.t("Open"),
-                        arguments: [originalNode.resourceUri],
-                    };
+                    originalNode.command.arguments = [originalNode.resourceUri];
                 }
                 this.mOnDidChangeTreeData.fire();
                 this.updateFavorites();
@@ -499,8 +495,8 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 session,
                 profile,
+                contextOverride: Constants.USS_SESSION_CONTEXT,
             });
-            node.contextValue = Constants.USS_SESSION_CONTEXT;
             await this.refreshHomeProfileContext(node);
             const icon = IconGenerator.getIconByNode(node);
             if (icon) {
@@ -568,7 +564,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             temp.resourceUri = node.resourceUri;
             temp.contextValue = SharedContext.asFavorite(temp);
             if (SharedContext.isFavoriteTextOrBinary(temp)) {
-                temp.command = { command: "vscode.open", title: "Open", arguments: [temp.resourceUri] };
+                temp.command = node.command;
             }
         }
         const icon = IconGenerator.getIconByNode(temp);
@@ -680,9 +676,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      */
     public async getAllLoadedItems(): Promise<IZoweUSSTreeNode[]> {
         ZoweLogger.trace("USSTree.getAllLoadedItems called.");
-        if (this.log) {
-            ZoweLogger.debug(vscode.l10n.t("Prompting the user to choose a member from the filtered list"));
-        }
+        ZoweLogger.debug(vscode.l10n.t("Prompting the user to choose a member from the filtered list"));
         const loadedNodes: IZoweUSSTreeNode[] = [];
         const sessions = await this.getChildren();
 
@@ -695,7 +689,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     const children = nodeToCheck.children;
                     if (children.length !== 0) {
                         for (const child of children) {
-                            await checkForChildren(child as IZoweUSSTreeNode);
+                            await checkForChildren(child);
                         }
                     }
                     loadedNodes.push(nodeToCheck);
@@ -719,13 +713,11 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      */
     public async filterPrompt(node: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("USSTree.filterPrompt called.");
-        if (this.log) {
-            ZoweLogger.debug(vscode.l10n.t("Prompting the user for a USS path"));
-        }
         await this.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             let remotepath: string;
             if (SharedContext.isSessionNotFav(node)) {
+                ZoweLogger.debug(vscode.l10n.t("Prompting the user for a USS path"));
                 if (this.mHistory.getSearchHistory().length > 0) {
                     const createPick = new FilterDescriptor(USSTree.defaultDialogText);
                     const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
@@ -934,11 +926,6 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     }
                     await vscode.workspace.fs.writeFile(node.resourceUri, new Uint8Array());
                 }
-                node.command = {
-                    command: "vscode.open",
-                    title: vscode.l10n.t("Open"),
-                    arguments: [node.resourceUri],
-                };
                 if (!UssFSProvider.instance.exists(node.resourceUri)) {
                     const parentUri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, "..") });
                     if (!UssFSProvider.instance.exists(parentUri)) {
@@ -991,9 +978,8 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode,
                         parentPath: parentNode.fullPath,
+                        contextOverride: Constants.INFORMATION_CONTEXT,
                     });
-                    infoNode.contextValue = Constants.INFORMATION_CONTEXT;
-                    infoNode.iconPath = undefined;
                     return [infoNode];
                 }
             } catch (error) {
@@ -1025,13 +1011,13 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         for (const favorite of favsForProfile) {
             // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
             if (favorite.getProfile() && favorite.getSession()) {
-                updatedFavsForProfile.push(favorite as IZoweUSSTreeNode);
+                updatedFavsForProfile.push(favorite);
                 continue;
             }
             // If no profile/session for favorite node yet, then add session and profile to favorite node:
             favorite.setProfileToChoice(profile);
             favorite.setSessionToChoice(session);
-            updatedFavsForProfile.push(favorite as IZoweUSSTreeNode);
+            updatedFavsForProfile.push(favorite);
         }
         // This updates the profile node's children in the this.mFavorites array, as well.
         return updatedFavsForProfile;
@@ -1132,11 +1118,11 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 }
                 const isFullPathChild: boolean = SharedUtils.checkIfChildPath(node.fullPath, fullPath);
                 if (isFullPathChild) {
-                    return this.findMatchInLoadedChildren(node as IZoweUSSTreeNode, fullPath);
+                    return this.findMatchInLoadedChildren(node, fullPath);
                 }
             }
         }
-        return match as IZoweUSSTreeNode;
+        return match;
     }
 
     public async openWithEncoding(node: IZoweUSSTreeNode, encoding?: ZosEncoding): Promise<void> {

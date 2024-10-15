@@ -41,6 +41,8 @@
   "Install": "Install",
   "Reload": "Reload",
   "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.": "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.",
+  "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.": "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.",
+  "Create New": "Create New",
   "\"Update Credentials\" operation not supported when \"autoStore\" is false": "\"Update Credentials\" operation not supported when \"autoStore\" is false",
   "Connection Name": "Connection Name",
   "Enter a name for the connection.": "Enter a name for the connection.",
@@ -85,7 +87,6 @@
   },
   "Zowe Profiles initialized successfully.": "Zowe Profiles initialized successfully.",
   "Convert Existing Profiles": "Convert Existing Profiles",
-  "Create New": "Create New",
   "Operation cancelled": "Operation cancelled",
   "Tree Item is not a Zowe Explorer item.": "Tree Item is not a Zowe Explorer item.",
   "Zowe Explorer": "Zowe Explorer",
@@ -142,10 +143,6 @@
   "Favorites": "Favorites",
   "Use the search button to list USS files": "Use the search button to list USS files",
   "Invalid node": "Invalid node",
-  "Profile auth error": "Profile auth error",
-  "Profile is not authenticated, please log in to continue": "Profile is not authenticated, please log in to continue",
-  "Retrieving response from uss-file-list": "Retrieving response from uss-file-list",
-  "Open": "Open",
   "Delete action was cancelled.": "Delete action was cancelled.",
   "Unable to delete node: {0}/Error message": {
     "message": "Unable to delete node: {0}",
@@ -160,7 +157,6 @@
     ]
   },
   "openUSS() called from invalid node.": "openUSS() called from invalid node.",
-  "$(sync~spin) Downloading USS file...": "$(sync~spin) Downloading USS file...",
   "refreshUSS() called from invalid node.": "refreshUSS() called from invalid node.",
   "not found": "not found",
   "Unable to find file: {0}/Error message": {
@@ -172,6 +168,9 @@
   "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.": "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.",
   "Uploading USS files...": "Uploading USS files...",
   "Error uploading files": "Error uploading files",
+  "Profile auth error": "Profile auth error",
+  "Profile is not authenticated, please log in to continue": "Profile is not authenticated, please log in to continue",
+  "Retrieving response from USS list API": "Retrieving response from USS list API",
   "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
   "Could not list USS files: Empty path provided in URI": "Could not list USS files: Empty path provided in URI",
   "Profile does not exist for this file.": "Profile does not exist for this file.",
@@ -187,6 +186,14 @@
     "message": "Deleting {0} failed due to API error: {1}",
     "comment": [
       "File name",
+      "Error message"
+    ]
+  },
+  "No error details given": "No error details given",
+  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
+    "message": "Error fetching destination {0} for paste action: {1}",
+    "comment": [
+      "USS path",
       "Error message"
     ]
   },
@@ -327,10 +334,10 @@
     ]
   },
   "Enter a codepage (e.g., 1047, IBM-1047)": "Enter a codepage (e.g., 1047, IBM-1047)",
+  "Changes in the credential vault detected, refreshing Zowe Explorer.": "Changes in the credential vault detected, refreshing Zowe Explorer.",
   "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",
   "Team config file deleted, refreshing Zowe Explorer.": "Team config file deleted, refreshing Zowe Explorer.",
   "Team config file updated.": "Team config file updated.",
-  "Changes in the credential vault detected, refreshing Zowe Explorer.": "Changes in the credential vault detected, refreshing Zowe Explorer.",
   "Changes in credential management detected, refreshing Zowe Explorer.": "Changes in credential management detected, refreshing Zowe Explorer.",
   "Zowe Explorer has activated successfully.": "Zowe Explorer has activated successfully.",
   "Type the new pattern to add to history": "Type the new pattern to add to history",
@@ -343,11 +350,12 @@
   "Select a recent member to open": "Select a recent member to open",
   "No recent members found.": "No recent members found.",
   "Use the search button to display jobs": "Use the search button to display jobs",
-  "There are no JES spool messages to display": "There are no JES spool messages to display",
+  "No spool files found": "No spool files found",
   "No jobs found": "No jobs found",
-  "Retrieving response from zowe.GetJobs": "Retrieving response from zowe.GetJobs",
+  "Retrieving response from JES list API": "Retrieving response from JES list API",
   "$(list-ordered) Job ID (default)": "$(list-ordered) Job ID (default)",
   "$(calendar) Date Submitted": "$(calendar) Date Submitted",
+  "$(calendar) Date Completed": "$(calendar) Date Completed",
   "$(case-sensitive) Job Name": "$(case-sensitive) Job Name",
   "$(symbol-numeric) Return Code": "$(symbol-numeric) Return Code",
   "$(fold) Sort Direction": "$(fold) Sort Direction",
@@ -528,13 +536,9 @@
   },
   "Use the search button to display data sets": "Use the search button to display data sets",
   "The response from Zowe CLI was not successful": "The response from Zowe CLI was not successful",
-  "Cannot access member with control characters in the name: {0}/Data Set member": {
-    "message": "Cannot access member with control characters in the name: {0}",
-    "comment": [
-      "Data Set member"
-    ]
-  },
+  "{0} members failed to load due to invalid name errors for {1}": "{0} members failed to load due to invalid name errors for {1}",
   "No data sets found": "No data sets found",
+  "Retrieving response from MVS list API": "Retrieving response from MVS list API",
   "Cannot download, item invalid.": "Cannot download, item invalid.",
   "$(case-sensitive) Name (default)": "$(case-sensitive) Name (default)",
   "$(calendar) Date Created": "$(calendar) Date Created",
@@ -798,12 +802,6 @@
       "Stringified JSON error"
     ]
   },
-  "Prompted for a data set pattern, recieved {0}./Data Set pattern": {
-    "message": "Prompted for a data set pattern, recieved {0}.",
-    "comment": [
-      "Data Set pattern"
-    ]
-  },
   "Cannot perform the copy operation as the data sets selected have different types": "Cannot perform the copy operation as the data sets selected have different types",
   "Migration of data set {0} requested./Data Set name": {
     "message": "Migration of data set {0} requested.",
@@ -826,6 +824,15 @@
   "The physical sequential (PS) data set already exists.\nDo you want to replace it?": "The physical sequential (PS) data set already exists.\nDo you want to replace it?",
   "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?": "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?",
   "Unable to copy data set.": "Unable to copy data set.",
+  "No search pattern applied. Search for a pattern and try again.": "No search pattern applied. Search for a pattern and try again.",
+  "Enter the text to search for.": "Enter the text to search for.",
+  "Searching for \"{0}\"": "Searching for \"{0}\"",
+  "Percent Complete": "Percent Complete",
+  "Open": "Open",
+  "Search Results for \"{0}\"": "Search Results for \"{0}\"",
+  "Data Set Name": "Data Set Name",
+  "Position": "Position",
+  "Contents": "Contents",
   "Failed to upload changes for {0}: {1}/Build file hyperlinkError message": {
     "message": "Failed to upload changes for {0}: {1}",
     "comment": [
@@ -914,8 +921,6 @@
   },
   "Reload Window": "Reload Window",
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.",
-  "Token auth error": "Token auth error",
-  "Profile was found using token auth, please log in to continue.": "Profile was found using token auth, please log in to continue.",
   "Choose \"Create new...\" to define or select a profile to add to the DATA SETS Explorer": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS Explorer",
   "Choose \"Create new...\" to define or select a profile to add to the JOBS Explorer": "Choose \"Create new...\" to define or select a profile to add to the JOBS Explorer",
   "Choose \"Create new...\" to define or select a profile to add to the USS Explorer": "Choose \"Create new...\" to define or select a profile to add to the USS Explorer",

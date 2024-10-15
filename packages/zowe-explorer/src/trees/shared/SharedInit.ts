@@ -48,27 +48,7 @@ import { CertificateWizard } from "../../utils/CertificateWizard";
 import { ZosConsoleViewProvider } from "../../zosconsole/ZosConsolePanel";
 
 export class SharedInit {
-    public static registerRefreshCommand(
-        context: vscode.ExtensionContext,
-        activate: (_context: vscode.ExtensionContext) => Promise<ZoweExplorerApiRegister>,
-        deactivate: () => Promise<void>
-    ): void {
-        ZoweLogger.trace("shared.init.registerRefreshCommand called.");
-        // set a command to silently reload extension
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.extRefresh", async () => {
-                await deactivate();
-                for (const sub of context.subscriptions) {
-                    try {
-                        await sub.dispose();
-                    } catch (e) {
-                        ZoweLogger.error(e);
-                    }
-                }
-                await activate(context);
-            })
-        );
-    }
+    private static originalEmitZoweEvent: typeof imperative.EventProcessor.prototype.emitEvent;
 
     public static registerCommonCommands(context: vscode.ExtensionContext, providers: Definitions.IZoweProviders): void {
         ZoweLogger.trace("shared.init.registerCommonCommands called.");
@@ -306,6 +286,24 @@ export class SharedInit {
         }
     }
 
+    public static emitZoweEventHook(this: void, processor: imperative.EventProcessor, eventName: string): void {
+        if (eventName === imperative.ZoweUserEvents.ON_VAULT_CHANGED) {
+            Constants.IGNORE_VAULT_CHANGE = true;
+        }
+        SharedInit.originalEmitZoweEvent.call(processor, eventName);
+    }
+
+    public static async onVaultChanged(this: void): Promise<void> {
+        if (Constants.IGNORE_VAULT_CHANGE) {
+            Constants.IGNORE_VAULT_CHANGE = false;
+            return;
+        }
+        ZoweLogger.info(vscode.l10n.t("Changes in the credential vault detected, refreshing Zowe Explorer."));
+        await ProfilesUtils.readConfigFromDisk();
+        await SharedActions.refreshAll();
+        ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter.fire(Validation.EventType.UPDATE);
+    }
+
     public static watchConfigProfile(context: vscode.ExtensionContext): void {
         ZoweLogger.trace("shared.init.watchConfigProfile called.");
         const watchers: vscode.FileSystemWatcher[] = [];
@@ -333,23 +331,28 @@ export class SharedInit {
             });
             watcher.onDidChange(async (uri: vscode.Uri) => {
                 ZoweLogger.info(vscode.l10n.t("Team config file updated."));
-                const newProfileContents = await vscode.workspace.fs.readFile(uri);
-                if (newProfileContents.toString() === Constants.SAVED_PROFILE_CONTENTS.toString()) {
+                const newProfileContents = Buffer.from(await vscode.workspace.fs.readFile(uri));
+                if (Constants.SAVED_PROFILE_CONTENTS.get(uri.fsPath)?.equals(newProfileContents)) {
                     return;
                 }
-                Constants.SAVED_PROFILE_CONTENTS = newProfileContents;
+                Constants.SAVED_PROFILE_CONTENTS.set(uri.fsPath, newProfileContents);
                 void SharedActions.refreshAll();
                 ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
             });
         });
 
         try {
-            const zoweWatcher = imperative.EventOperator.getWatcher().subscribeUser(imperative.ZoweUserEvents.ON_VAULT_CHANGED, async () => {
-                ZoweLogger.info(vscode.l10n.t("Changes in the credential vault detected, refreshing Zowe Explorer."));
-                await ProfilesUtils.readConfigFromDisk();
-                await SharedActions.refreshAll();
-                ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter.fire(Validation.EventType.UPDATE);
-            });
+            // Workaround to skip ON_VAULT_CHANGED events triggered by ZE and not by external app
+            // TODO: Remove this hack once https://github.com/zowe/zowe-cli/issues/2279 is implemented
+            SharedInit.originalEmitZoweEvent = (imperative.EventProcessor.prototype as any).emitZoweEvent;
+            (imperative.EventProcessor.prototype as any).emitZoweEvent = function (eventName: string): void {
+                SharedInit.emitZoweEventHook(this, eventName);
+            };
+
+            const zoweWatcher = imperative.EventOperator.getWatcher().subscribeUser(
+                imperative.ZoweUserEvents.ON_VAULT_CHANGED,
+                SharedInit.onVaultChanged
+            );
             context.subscriptions.push(new vscode.Disposable(zoweWatcher.close.bind(zoweWatcher)));
         } catch (err) {
             Gui.errorMessage("Unable to watch for vault changes. " + JSON.stringify(err));
@@ -376,11 +379,11 @@ export class SharedInit {
         const theTreeView = theProvider.getTreeView();
         context.subscriptions.push(theTreeView);
         context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async (e) => SharedInit.setupRemoteWorkspaceFolders(e)));
-        theTreeView.onDidCollapseElement(async (e) => {
-            await theProvider.flipState(e.element, false);
+        theTreeView.onDidCollapseElement((e) => {
+            theProvider.flipState(e.element, false);
         });
-        theTreeView.onDidExpandElement(async (e) => {
-            await theProvider.flipState(e.element, true);
+        theTreeView.onDidExpandElement((e) => {
+            theProvider.flipState(e.element, true);
         });
     }
 
