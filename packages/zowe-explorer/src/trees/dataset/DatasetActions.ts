@@ -1729,23 +1729,12 @@ export class DatasetActions {
     }
 
     public static async search(context: vscode.ExtensionContext, node: IZoweDatasetTreeNode): Promise<void> {
-        
-        let pattern: string;
-        let generateFullUri: boolean = false;
+        const generateFullUri = (SharedContext.isSessionNotFav(node) && node.pattern) || SharedContext.isFavoriteSearch(node);
+        const pattern = SharedContext.isSessionNotFav(node) ? node.pattern : node.label.toString();
 
-        if (SharedContext.isSessionNotFav(node)) {
-            if (node.pattern) {
-                pattern = node.pattern;
-                generateFullUri = true;
-            } else {
-                Gui.errorMessage(vscode.l10n.t("No search pattern applied. Search for a pattern and try again."));
-                return;
-            }
-        } else if (SharedContext.isFavoriteSearch(node)) {
-            pattern = node.label as string;
-            generateFullUri = true;
-        } else if (SharedContext.isPds(node)) {
-            pattern = node.label as string;
+        if (!pattern) {
+            Gui.errorMessage(vscode.l10n.t("No search pattern applied. Search for a pattern and try again."));
+            return;
         }
 
         const searchString = await Gui.showInputBox({prompt: vscode.l10n.t("Enter the text to search for.")}); // Figure out show input box
@@ -1784,9 +1773,21 @@ export class DatasetActions {
                 };
                 
                 try {
-                    response = await mvsApi.searchDataSets({pattern, searchString, progressTask: task});
+                    response = await mvsApi.searchDataSets({
+                        pattern,
+                        searchString,
+                        progressTask: task,
+                        mainframeSearch: false,
+                        continueSearch: DatasetActions.continueSearchPrompt
+                    });
+                    if (response.success === false && response.apiResponse == null) {
+                        await AuthUtils.errorHandling(response.errorMessage, node.getProfileName(), "Error encountered when searching data sets");
+                        return;
+                    }
                 } catch (err) {
                     ZoweLogger.error(err);
+                    await AuthUtils.errorHandling(err);
+                    return;
                 }
             }
         );
@@ -1797,17 +1798,17 @@ export class DatasetActions {
             const dsn = ds.dsn as string;
             const member = ds.member as string;
             for (const match of ds.matchList) {
-                let uri: string;
                 let name: string = dsn;
-                if (!generateFullUri) {
-                    uri = node.resourceUri.path;
-                } else {
-                    uri = node.getSessionNode().resourceUri.path + dsn;
-                }
+                let uri = generateFullUri ? node.getSessionNode().resourceUri.path + dsn : node.resourceUri.path;
 
                 if (member) {
                     uri = uri + "/" + member;
                     name = name + "(" + member + ")";
+                }
+                
+                const extension = DatasetUtils.getExtension(ds.dsn);
+                if (extension != null) {
+                    uri += extension;
                 }
 
                 newMatches.push({
@@ -1820,16 +1821,6 @@ export class DatasetActions {
                     searchString
                 });
             }
-        }
-
-        const open: Table.ActionOpts = {
-            title: vscode.l10n.t("Open"),
-            command: "open",
-            callback: {
-                fn: DatasetActions.openMemberAtLocation,
-                typ: "multi-row",
-            },
-            type: "secondary"
         }
 
         const table = new TableBuilder(context)
@@ -1867,12 +1858,20 @@ export class DatasetActions {
                     hide: true
                 }
             ])
-        .addRowAction("all", open)
+        .addRowAction("all", {
+            title: vscode.l10n.t("Open"),
+            command: "open",
+            callback: {
+                fn: DatasetActions.openSearchAtLocation,
+                typ: "multi-row",
+            },
+            type: "secondary"
+        })
         .build();
         await TableViewProvider.getInstance().setTableView(table);
     }
 
-    private static async openMemberAtLocation(this: void, _view: Table.View, data: Record<number, Table.RowData>): Promise<void> {
+    private static async openSearchAtLocation(this: void, _view: Table.View, data: Record<number, Table.RowData>): Promise<void> {
         const childrenToOpen = Object.values(data);
         if (childrenToOpen.length > 0) {
             for (const child of childrenToOpen) {
@@ -1888,5 +1887,17 @@ export class DatasetActions {
                 });
             }
         }
+    }
+
+    private static async continueSearchPrompt(this: void, dataSets: zosfiles.IDataSet[]): Promise<boolean> {
+        const MAX_DATASETS = 50;
+        if (dataSets.length <= MAX_DATASETS) { return true; }
+
+        const resp = await Gui.infoMessage(
+            vscode.l10n.t("Are you sure you want to search {0} data sets and members?", dataSets.length.toString()),
+            {items: [vscode.l10n.t("Yes"), vscode.l10n.t("No")], vsCodeOpts: { modal: true }}
+        );
+
+        return resp === vscode.l10n.t("Yes");
     }
 }
