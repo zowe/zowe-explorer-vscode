@@ -202,5 +202,7 @@ module.exports = async ({ github, context }) => {
   // Look over existing PRs, grab all PRs with a merge-by date <= 1w from now, and update the issue with the new table
   await scanPRsAndUpdateTable({ github, owner, pullRequests, repo });
   // Notify users for PRs with merge-by dates coming up within 24hrs from now
-  await notifyUsers({ dayJs, github, owner, pullRequests, repo, today });
+  if (context.eventName === "schedule") {
+    await notifyUsers({ dayJs, github, owner, pullRequests, repo, today });
+  }
 }
