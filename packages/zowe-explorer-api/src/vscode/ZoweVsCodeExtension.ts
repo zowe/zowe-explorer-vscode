@@ -282,6 +282,24 @@ export class ZoweVsCodeExtension {
         return true;
     }
 
+    public static async getVsCodeProxySettings(): Promise<{}> {
+        const proxySupport = (await vscode.workspace.getConfiguration("http").get("proxySupport")) || undefined;
+        if (proxySupport !== "on") {
+            return;
+        }
+        const noProxy = (await vscode.workspace.getConfiguration("http").get("noProxy")) || undefined;
+        const strictSsl = (await vscode.workspace.getConfiguration("http").get("proxyStrictSSL")) || undefined;
+        const proxyAuth = (await vscode.workspace.getConfiguration("http").get("proxyAuthorization")) || undefined;
+        const proxy = (await vscode.workspace.getConfiguration("http").get("proxy")) || undefined;
+        return {
+            http_proxy: proxy,
+            https_proxy: proxy,
+            no_proxy: noProxy,
+            proxy_authorization: proxyAuth,
+            proxy_strict_ssl: strictSsl,
+        };
+    }
+
     /**
      * This method is intended to be used for authentication (login, logout) purposes
      *
