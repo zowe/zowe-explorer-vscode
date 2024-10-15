@@ -127,6 +127,15 @@ const notifyUsers = async ({ dayJs, github, owner, pullRequests, repo, today }) 
   });
 
   for (const pr of prsCloseToMergeDate) {
+    const comments = (await github.rest.issues.listComments({ owner, repo, issue_number: pr.number })).data;
+    // Try to find the reminder comment
+    const existingComment = comments?.find((comment) =>
+      comment.user.login === "github-actions[bot]" && comment.body.includes("**Reminder:** This pull request has a merge-by date coming up within the next 24 hours. Please review this PR as soon as possible."));
+
+    if (existingComment != null) {
+      continue;
+    }
+
     // Make a comment on the PR and tag reviewers
     const body = `**Reminder:** This pull request has a merge-by date coming up within the next 24 hours. Please review this PR as soon as possible.\n\n${pr.reviewers.map((r) => `@${r.login}`).join(" ")}`
     await github.rest.issues.createComment({
