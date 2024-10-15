@@ -237,11 +237,11 @@ export class JobActions {
      */
     public static async spoolFilePollEvent(doc: vscode.TextDocument): Promise<void> {
         const statusMsg = Gui.setStatusBarMessage(
-            vscode.l10n.t({
-                message: `$(sync~spin) Polling: {0}...`,
+            `$(sync~spin) ${vscode.l10n.t({
+                message: `Polling: {0}...`,
                 args: [doc.fileName],
                 comment: ["Document file name"],
-            })
+            })}`
         );
         await JobFSProvider.instance.fetchSpoolAtUri(doc.uri);
         statusMsg.dispose();
@@ -499,7 +499,8 @@ export class JobActions {
         if (selection == null) {
             return;
         }
-        if (selection.label === vscode.l10n.t("$(fold) Sort Direction")) {
+        // eslint-disable-next-line no-magic-numbers
+        if (selection.label === JobUtils.JOB_SORT_OPTS[5]) {
             const dir = await Gui.showQuickPick(Constants.SORT_DIRS, {
                 placeHolder: vscode.l10n.t("Select a sorting direction"),
             });
@@ -516,11 +517,11 @@ export class JobActions {
         session.sort.method = JobUtils.JOB_SORT_OPTS.indexOf(selection.label.replace(" $(check)", ""));
         jobsProvider.sortBy(session);
         Gui.setStatusBarMessage(
-            vscode.l10n.t({
-                message: "$(check) Sorting updated for {0}",
+            `$(check) ${vscode.l10n.t({
+                message: "Sorting updated for {0}",
                 args: [session.label as string],
                 comment: ["Session label"],
-            }),
+            })}`,
             Constants.MS_PER_SEC * 4
         );
     }
