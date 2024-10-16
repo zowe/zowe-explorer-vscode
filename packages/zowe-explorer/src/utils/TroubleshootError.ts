@@ -31,7 +31,7 @@ export class TroubleshootError extends WebView {
 
         switch (message.command) {
             case "ready":
-                await this.setErrorData(this.errorData);
+                await this.sendErrorData(this.errorData);
                 break;
             case "copy":
                 await env.clipboard.writeText(
@@ -51,7 +51,7 @@ export class TroubleshootError extends WebView {
      * @param errorData Error and stack trace
      * @returns Whether Zowe Explorer successfully sent the data to the webview
      */
-    public async setErrorData(errorData: TroubleshootData): Promise<boolean> {
+    public async sendErrorData(errorData: TroubleshootData): Promise<boolean> {
         return this.panel.webview.postMessage({
             error: errorData.error,
             stackTrace: errorData.stackTrace,
