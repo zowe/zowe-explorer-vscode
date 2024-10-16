@@ -43,15 +43,12 @@ export interface ErrorCorrelation {
     tips?: string[];
 }
 
-export interface NetworkErrorProps {
-    errorCode?: string;
-    correlation?: ErrorCorrelation;
-    error?: ImperativeError | string;
-}
-
-export interface CorrelateErrorOpts {
-    profileType?: string;
-    templateArgs?: Record<string, string>;
+interface NetworkErrorInfo extends Omit<ErrorCorrelation, "matches"> {
+    /**
+     * The full error details sent by the server.
+     * @type {string}
+     */
+    fullError?: string;
 }
 
 /**
@@ -60,8 +57,8 @@ export interface CorrelateErrorOpts {
  * Used to cache the error info such as tips, the match that was encountered and the full error message.
  */
 export class NetworkError extends ImperativeError {
-    public constructor(public properties: NetworkErrorProps) {
-        super(properties?.error instanceof ImperativeError ? properties.error.mDetails : { msg: properties.error });
+    public constructor(public info: NetworkErrorInfo) {
+        super({ msg: info.summary });
     }
 }
 
@@ -207,14 +204,13 @@ export class ErrorCorrelator extends Singleton {
      * @param errorDetails The full error details (usually `error.message`)
      * @returns A matching `NetworkError`, or a generic `NetworkError` with the full error details as the summary
      */
-    public correlateError(api: ZoweExplorerApiType, error: ImperativeError | string, opts?: CorrelateErrorOpts): NetworkError {
-        const errorDetails = error instanceof ImperativeError ? error.message : error;
+    public correlateError(api: ZoweExplorerApiType, profileType: string, errorDetails: string, templateArgs?: Record<string, string>): NetworkError {
         if (!this.errorMatches.has(api)) {
-            return new NetworkError({ error });
+            return new NetworkError({ summary: errorDetails });
         }
 
         for (const apiError of [
-            ...(opts?.profileType ? this.errorMatches.get(api)?.[opts.profileType] ?? [] : []),
+            ...(this.errorMatches.get(api)?.[profileType] ?? []),
             ...(this.errorMatches.get(api)?.any ?? []),
             ...this.errorMatches.get(ZoweExplorerApiType.All).any,
         ]) {
@@ -222,17 +218,15 @@ export class ErrorCorrelator extends Singleton {
                 if (errorDetails.match(match)) {
                     return new NetworkError({
                         errorCode: apiError.errorCode,
-                        error,
-                        correlation: {
-                            ...apiError,
-                            summary: opts?.templateArgs ? Mustache.render(apiError.summary, opts.templateArgs) : apiError.summary,
-                        },
+                        fullError: errorDetails,
+                        summary: templateArgs ? Mustache.render(apiError.summary, templateArgs) : apiError.summary,
+                        tips: apiError?.tips,
                     });
                 }
             }
         }
 
-        return new NetworkError({ error });
+        return new NetworkError({ summary: errorDetails });
     }
 
     /**
@@ -245,21 +239,18 @@ export class ErrorCorrelator extends Singleton {
      * @param allowRetry Whether to allow retrying the action
      * @returns The user selection ("Retry" [if enabled] or "Troubleshoot")
      */
-    public async displayCorrelatedError(error: NetworkError, opts?: { allowRetry?: boolean }): Promise<string | undefined> {
-        const errorCodeStr = error.properties.errorCode ? `(Error Code ${error.properties.errorCode})` : "";
+    public async displayCorrelatedError(error: NetworkError, opts?: { allowRetry?: boolean; stackTrace?: string }): Promise<string | undefined> {
+        const errorCodeStr = error.info?.errorCode ? `(Error Code ${error.info.errorCode})` : "";
         const userSelection = await Gui.errorMessage(`${error.mDetails.msg.trim()} ${errorCodeStr}`.trim(), {
             items: [opts?.allowRetry ? "Retry" : undefined, "More info"].filter(Boolean),
         });
 
         // If the user selected "More info", show the full error details in a dialog,
         // containing "Show log" and "Troubleshoot" dialog options
-        if (userSelection === "More info" && error.properties?.error) {
-            const secondDialogSelection = await Gui.errorMessage(
-                error.properties.error instanceof ImperativeError ? error.properties.error.message : error.properties.error,
-                {
-                    items: ["Show log", "Troubleshoot"],
-                }
-            );
+        if (userSelection === "More info" && error.info?.fullError) {
+            const secondDialogSelection = await Gui.errorMessage(error.info.fullError, {
+                items: ["Show log", "Troubleshoot"],
+            });
 
             switch (secondDialogSelection) {
                 // Reveal the output channel when the "Show log" option is selected
@@ -267,7 +258,7 @@ export class ErrorCorrelator extends Singleton {
                     return commands.executeCommand("zowe.revealOutputChannel");
                 // Show the troubleshooting webview when the "Troubleshoot" option is selected
                 case "Troubleshoot":
-                    return commands.executeCommand("zowe.troubleshootError", error, error.stack);
+                    return commands.executeCommand("zowe.troubleshootError", error, opts?.stackTrace);
                 default:
                     return;
             }
@@ -288,10 +279,11 @@ export class ErrorCorrelator extends Singleton {
      */
     public async displayError(
         api: ZoweExplorerApiType,
-        errorDetails: string | ImperativeError,
-        opts?: { allowRetry?: boolean; profileType: string; stackTrace?: string }
+        profileType: string,
+        errorDetails: string,
+        opts?: { allowRetry?: boolean; stackTrace?: string }
     ): Promise<string | undefined> {
-        const error = this.correlateError(api, errorDetails, { profileType: opts.profileType });
+        const error = this.correlateError(api, profileType, errorDetails);
         return this.displayCorrelatedError(error, opts);
     }
 }

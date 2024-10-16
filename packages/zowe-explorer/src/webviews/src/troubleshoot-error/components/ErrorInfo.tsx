@@ -20,13 +20,13 @@ export const ErrorInfo = ({ error, stackTrace }: ErrorInfoProps) => {
       <h2>Error details</h2>
       <p>
         <span style={{ fontWeight: "bold" }}>Code: </span>
-        {error.errorCode ?? "Not available"}
+        {error.info.errorCode ?? "Not available"}
       </p>
       <p>
         <span style={{ fontWeight: "bold" }}>
           Description: <br />
         </span>
-        {error.properties.correlation?.summary}
+        {error.info.summary}
       </p>
       <details style={{ marginBottom: "0.5rem" }}>
         <summary
@@ -58,14 +58,14 @@ export const ErrorInfo = ({ error, stackTrace }: ErrorInfoProps) => {
           </span>
         </summary>
         <VSCodeTextArea
-          value={stackTrace ?? error.message}
+          value={stackTrace ?? error.info.fullError}
           resize="vertical"
           rows={10}
           style={{ height: "fit-content", marginTop: "0.5rem", width: "100%" }}
         />
       </details>
       <VSCodeDivider />
-      {error.properties.correlation?.tips ? <TipList tips={error.properties.correlation.tips} /> : null}
+      {error.info.tips ? <TipList tips={error.info.tips} /> : null}
       <VSCodeDivider />
       <h2>Additional resources</h2>
       <ul>
