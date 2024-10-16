@@ -51,7 +51,7 @@ export class AuthUtils {
             if (selection !== checkCredsButton) {
                 return;
             }
-            return Constants.PROFILES_CACHE.promptCredentials(profile.name, true);
+            return Constants.PROFILES_CACHE.promptCredentials(profile, true);
         });
         return creds != null ? true : false;
     }

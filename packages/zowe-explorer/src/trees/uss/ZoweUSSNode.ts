@@ -161,10 +161,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         ussEntry.attributes = { ...ussEntry.attributes, ...attributes };
     }
 
-    public setProfileToChoice(profile: imperative.IProfileLoaded): void {
-        super.setProfileToChoice(profile, UssFSProvider.instance);
-    }
-
     public get onUpdate(): vscode.Event<IZoweUSSTreeNode> {
         return this.onUpdateEmitter.event;
     }
