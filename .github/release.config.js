@@ -1,18 +1,18 @@
 module.exports = {
     branches: [
         {
-            name: "v1-lts",
-            channel: "zowe-v1-lts",
-            level: "patch",
-        },
-        {
             name: "main",
             channel: "latest",
             level: "minor"
         },
         {
-            name: "release/2.*",
+            name: "release/3.*",
             channel: "latest",
+            level: "patch"
+        },
+        {
+            name: "v2-lts",
+            channel: "zowe-v2-lts",
             level: "patch"
         }
         // {
@@ -44,7 +44,7 @@ module.exports = {
             {
                 $cwd: "packages/zowe-explorer-api",
                 aliasTags: {
-                    "latest": ["zowe-v2-lts"],
+                    "latest": ["zowe-v3-lts"],
                 },
                 npmPublish: true,
                 tarballDir: "dist",
