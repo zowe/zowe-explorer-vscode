@@ -45,7 +45,7 @@ export interface ErrorCorrelation {
 
 export interface NetworkErrorProps {
     errorCode?: string;
-    correlation?: ErrorCorrelation;
+    correlation?: Omit<ErrorCorrelation, "matches">;
     error?: ImperativeError | string;
 }
 
@@ -247,9 +247,14 @@ export class ErrorCorrelator extends Singleton {
      */
     public async displayCorrelatedError(error: NetworkError, opts?: { allowRetry?: boolean }): Promise<string | undefined> {
         const errorCodeStr = error.properties.errorCode ? `(Error Code ${error.properties.errorCode})` : "";
-        const userSelection = await Gui.errorMessage(`${error.mDetails.msg.trim()} ${errorCodeStr}`.trim(), {
-            items: [opts?.allowRetry ? "Retry" : undefined, "More info"].filter(Boolean),
-        });
+        const userSelection = await Gui.errorMessage(
+            `${
+                error.properties.correlation ? error.properties.correlation.summary.trim() : error.properties?.error.toString()
+            } ${errorCodeStr}`.trim(),
+            {
+                items: [opts?.allowRetry ? "Retry" : undefined, "More info"].filter(Boolean),
+            }
+        );
 
         // If the user selected "More info", show the full error details in a dialog,
         // containing "Show log" and "Troubleshoot" dialog options
@@ -289,7 +294,7 @@ export class ErrorCorrelator extends Singleton {
     public async displayError(
         api: ZoweExplorerApiType,
         errorDetails: string | ImperativeError,
-        opts?: { allowRetry?: boolean; profileType: string; stackTrace?: string }
+        opts?: { allowRetry?: boolean; profileType?: string; stackTrace?: string }
     ): Promise<string | undefined> {
         const error = this.correlateError(api, errorDetails, { profileType: opts.profileType });
         return this.displayCorrelatedError(error, opts);
