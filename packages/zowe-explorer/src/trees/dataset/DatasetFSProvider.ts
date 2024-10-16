@@ -445,12 +445,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             statusMsg.dispose();
             if (err instanceof imperative.ImperativeError) {
                 ZoweLogger.error(err.message);
-                const userSelection = await ErrorCorrelator.getInstance().displayError(
-                    ZoweExplorerApiType.Mvs,
-                    entry.metadata.profile.type,
-                    err.message,
-                    { allowRetry: true, stackTrace: err.stack }
-                );
+                const userSelection = await ErrorCorrelator.getInstance().displayError(ZoweExplorerApiType.Mvs, err.message, {
+                    allowRetry: true,
+                    profileType: entry.metadata.profile.type,
+                    stackTrace: err.stack,
+                });
 
                 switch (userSelection) {
                     case "Retry":

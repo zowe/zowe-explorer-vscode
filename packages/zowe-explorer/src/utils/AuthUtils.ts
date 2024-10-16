@@ -82,10 +82,9 @@ export class AuthUtils {
         const profile = typeof moreInfo.profile === "string" ? Constants.PROFILES_CACHE.loadNamedProfile(moreInfo.profile) : moreInfo?.profile;
         const correlation = ErrorCorrelator.getInstance().correlateError(
             moreInfo?.apiType ?? ZoweExplorerApiType.All,
-            profile?.type,
             typeof errorDetails === "string" ? errorDetails : errorDetails.message,
             {
-                profileName: profile?.name,
+                profileType: profile?.type,
                 ...Object.keys(moreInfo).reduce((all, k) => (typeof moreInfo[k] === "string" ? { ...all, [k]: moreInfo[k] } : all), {}),
             }
         );
@@ -108,7 +107,7 @@ export class AuthUtils {
             return false;
         }
 
-        ErrorCorrelator.getInstance().displayCorrelatedError(correlation);
+        await ErrorCorrelator.getInstance().displayCorrelatedError(correlation);
         return false;
     }
 

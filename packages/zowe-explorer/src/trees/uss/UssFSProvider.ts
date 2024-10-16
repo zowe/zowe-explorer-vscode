@@ -395,12 +395,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             statusMsg.dispose();
             if (err instanceof imperative.ImperativeError) {
                 ZoweLogger.error(err.message);
-                const userSelection = await ErrorCorrelator.getInstance().displayError(
-                    ZoweExplorerApiType.Uss,
-                    entry.metadata.profile.type,
-                    err.message,
-                    { allowRetry: true, stackTrace: err.stack }
-                );
+                const userSelection = await ErrorCorrelator.getInstance().displayError(ZoweExplorerApiType.Uss, err.message, {
+                    allowRetry: true,
+                    profileType: entry.metadata.profile.type,
+                    stackTrace: err.stack,
+                });
 
                 switch (userSelection) {
                     case "Retry":
