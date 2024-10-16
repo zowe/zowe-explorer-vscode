@@ -55,6 +55,7 @@ describe("correlateError", () => {
                         "Ensure that the data set is not opened within a mainframe editor tool.",
                     ],
                 },
+                errorCode: "500",
                 initialError: "Client is not authorized for file access.",
             })
         );

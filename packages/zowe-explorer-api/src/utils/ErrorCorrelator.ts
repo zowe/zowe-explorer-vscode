@@ -253,8 +253,9 @@ export class ErrorCorrelator extends Singleton {
                         errorCode: apiError.errorCode,
                         initialError: error,
                         correlation: {
-                            ...apiError,
+                            errorCode: apiError.errorCode,
                             summary: opts?.templateArgs ? Mustache.render(apiError.summary, opts.templateArgs) : apiError.summary,
+                            tips: apiError.tips,
                         },
                     });
                 }

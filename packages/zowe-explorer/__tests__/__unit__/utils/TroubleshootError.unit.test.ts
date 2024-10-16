@@ -38,7 +38,7 @@ describe("TroubleshootError", () => {
             const writeTextMock = jest.spyOn(env.clipboard, "writeText").mockImplementation();
             await troubleshootError.onDidReceiveMessage({ command: "copy" });
             expect(writeTextMock).toHaveBeenCalledWith(
-                `Error details:\n${errorData.error.message}\nStack trace:\n${errorData.error.stack.replace(/(.+?)\n/, "")}`
+                `Error details:\n${errorData.error.message}\nStack trace:\n${errorData.error.stack?.replace(/(.+?)\n/, "")}`
             );
         });
 
