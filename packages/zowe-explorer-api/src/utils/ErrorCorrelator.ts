@@ -9,11 +9,11 @@
  *
  */
 
-import { ImperativeError } from "@zowe/imperative";
 import { Singleton } from "./Singleton";
 import { Gui } from "../globals";
 import { commands } from "vscode";
 import Mustache = require("mustache");
+import { ImperativeError } from "@zowe/imperative";
 
 /**
  * Error match type (substring of error, or regular expression to match against error text)
@@ -43,10 +43,10 @@ export interface ErrorCorrelation {
     tips?: string[];
 }
 
-export interface NetworkErrorProps {
+export interface CorrelatedErrorProps {
     errorCode?: string;
     correlation?: Omit<ErrorCorrelation, "matches">;
-    error?: ImperativeError | string;
+    initialError: Error | string;
 }
 
 export interface CorrelateErrorOpts {
@@ -54,14 +54,43 @@ export interface CorrelateErrorOpts {
     templateArgs?: Record<string, string>;
 }
 
+export interface DisplayErrorOpts extends CorrelateErrorOpts {
+    additionalContext?: string;
+    allowRetry?: boolean;
+}
+
+export interface DisplayCorrelatedErrorOpts extends Omit<DisplayErrorOpts, "profileType"> {}
+
 /**
- * Network error wrapper around the `ImperativeError` class.
+ * Representation of the given error as a correlated error (wrapper around the `Error` class).
  *
  * Used to cache the error info such as tips, the match that was encountered and the full error message.
  */
-export class NetworkError extends ImperativeError {
-    public constructor(public properties: NetworkErrorProps) {
-        super(properties?.error instanceof ImperativeError ? properties.error.mDetails : { msg: properties.error });
+export class CorrelatedError {
+    public constructor(public properties: CorrelatedErrorProps) {
+        if (properties.initialError instanceof Error) {
+            // preserve stack from initial error
+        }
+    }
+
+    public get stack(): string | undefined {
+        return this.initial instanceof Error ? this.initial.stack : undefined;
+    }
+
+    public get errorCode(): string | undefined {
+        return this.initial instanceof ImperativeError ? this.initial.errorCode : this.properties.errorCode ?? undefined;
+    }
+
+    public get message(): string {
+        if (this.properties.correlation) {
+            return this.properties.correlation.summary;
+        }
+
+        return this.properties.initialError instanceof Error ? this.properties.initialError.message : this.properties.initialError;
+    }
+
+    public get initial(): Error | string {
+        return this.properties.initialError;
     }
 }
 
@@ -205,12 +234,12 @@ export class ErrorCorrelator extends Singleton {
      * @param api The API type where the error was encountered
      * @param profileType The profile type in use
      * @param errorDetails The full error details (usually `error.message`)
-     * @returns A matching `NetworkError`, or a generic `NetworkError` with the full error details as the summary
+     * @returns A matching `CorrelatedError`, or a generic `CorrelatedError` with the full error details as the summary
      */
-    public correlateError(api: ZoweExplorerApiType, error: ImperativeError | string, opts?: CorrelateErrorOpts): NetworkError {
-        const errorDetails = error instanceof ImperativeError ? error.message : error;
+    public correlateError(api: ZoweExplorerApiType, error: string | Error, opts?: CorrelateErrorOpts): CorrelatedError {
+        const errorDetails = error instanceof Error ? error.message : error;
         if (!this.errorMatches.has(api)) {
-            return new NetworkError({ error });
+            return new CorrelatedError({ initialError: error });
         }
 
         for (const apiError of [
@@ -219,10 +248,10 @@ export class ErrorCorrelator extends Singleton {
             ...this.errorMatches.get(ZoweExplorerApiType.All).any,
         ]) {
             for (const match of Array.isArray(apiError.matches) ? apiError.matches : [apiError.matches]) {
-                if (errorDetails.match(match)) {
-                    return new NetworkError({
+                if (errorDetails.toString().match(match)) {
+                    return new CorrelatedError({
                         errorCode: apiError.errorCode,
-                        error,
+                        initialError: error,
                         correlation: {
                             ...apiError,
                             summary: opts?.templateArgs ? Mustache.render(apiError.summary, opts.templateArgs) : apiError.summary,
@@ -232,7 +261,7 @@ export class ErrorCorrelator extends Singleton {
             }
         }
 
-        return new NetworkError({ error });
+        return new CorrelatedError({ initialError: error });
     }
 
     /**
@@ -245,12 +274,10 @@ export class ErrorCorrelator extends Singleton {
      * @param allowRetry Whether to allow retrying the action
      * @returns The user selection ("Retry" [if enabled] or "Troubleshoot")
      */
-    public async displayCorrelatedError(error: NetworkError, opts?: { allowRetry?: boolean }): Promise<string | undefined> {
-        const errorCodeStr = error.properties.errorCode ? `(Error Code ${error.properties.errorCode})` : "";
+    public async displayCorrelatedError(error: CorrelatedError, opts?: DisplayCorrelatedErrorOpts): Promise<string | undefined> {
+        const errorCodeStr = error.properties.errorCode ? ` (Error Code ${error.properties.errorCode})` : "";
         const userSelection = await Gui.errorMessage(
-            `${
-                error.properties.correlation ? error.properties.correlation.summary.trim() : error.properties?.error.toString()
-            } ${errorCodeStr}`.trim(),
+            `${opts?.additionalContext ? opts.additionalContext + ": " : ""}${error.message}${errorCodeStr}`.trim(),
             {
                 items: [opts?.allowRetry ? "Retry" : undefined, "More info"].filter(Boolean),
             }
@@ -258,13 +285,11 @@ export class ErrorCorrelator extends Singleton {
 
         // If the user selected "More info", show the full error details in a dialog,
         // containing "Show log" and "Troubleshoot" dialog options
-        if (userSelection === "More info" && error.properties?.error) {
-            const secondDialogSelection = await Gui.errorMessage(
-                error.properties.error instanceof ImperativeError ? error.properties.error.message : error.properties.error,
-                {
-                    items: ["Show log", "Troubleshoot"],
-                }
-            );
+        if (userSelection === "More info") {
+            const fullErrorMsg = error.initial instanceof Error ? error.initial.message : error.initial;
+            const secondDialogSelection = await Gui.errorMessage(fullErrorMsg, {
+                items: ["Show log", "Troubleshoot"],
+            });
 
             switch (secondDialogSelection) {
                 // Reveal the output channel when the "Show log" option is selected
@@ -291,12 +316,8 @@ export class ErrorCorrelator extends Singleton {
      * @param allowRetry Whether to allow retrying the action
      * @returns The user selection ("Retry" [if enabled] or "Troubleshoot")
      */
-    public async displayError(
-        api: ZoweExplorerApiType,
-        errorDetails: string | ImperativeError,
-        opts?: { allowRetry?: boolean; profileType?: string; stackTrace?: string }
-    ): Promise<string | undefined> {
-        const error = this.correlateError(api, errorDetails, { profileType: opts.profileType });
-        return this.displayCorrelatedError(error, opts);
+    public async displayError(api: ZoweExplorerApiType, errorDetails: string | Error, opts?: DisplayErrorOpts): Promise<string | undefined> {
+        const error = this.correlateError(api, errorDetails, { profileType: opts?.profileType, templateArgs: opts?.templateArgs });
+        return this.displayCorrelatedError(error, { additionalContext: opts?.additionalContext, allowRetry: opts?.allowRetry });
     }
 }

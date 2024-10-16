@@ -12,7 +12,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { JSXInternal } from "preact/src/jsx";
 import { isSecureOrigin } from "../utils";
-import { ErrorInfo, ErrorInfoProps, isNetworkError } from "./components/ErrorInfo";
+import { ErrorInfo, ErrorInfoProps, isCorrelatedError } from "./components/ErrorInfo";
 import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
 
 export function App(): JSXInternal.Element {
@@ -30,7 +30,7 @@ export function App(): JSXInternal.Element {
 
       const errorInfo = event.data["error"];
 
-      if (isNetworkError(errorInfo)) {
+      if (isCorrelatedError(errorInfo)) {
         setErrorInfo({ error: errorInfo, stackTrace: event.data?.stackTrace });
       }
     });

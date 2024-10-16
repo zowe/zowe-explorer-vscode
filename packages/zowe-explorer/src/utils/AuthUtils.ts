@@ -11,7 +11,7 @@
 
 import * as util from "util";
 import * as vscode from "vscode";
-import { imperative, Gui, MainframeInteraction, IZoweTreeNode, ErrorCorrelator, ZoweExplorerApiType, NetworkError } from "@zowe/zowe-explorer-api";
+import { imperative, Gui, MainframeInteraction, IZoweTreeNode, ErrorCorrelator, ZoweExplorerApiType, CorrelatedError } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
@@ -26,7 +26,7 @@ export interface ErrorContext {
 export class AuthUtils {
     public static async promptForAuthentication(
         imperativeError: imperative.ImperativeError,
-        correlation: NetworkError,
+        correlation: CorrelatedError,
         profile: imperative.IProfileLoaded
     ): Promise<boolean> {
         if (imperativeError.mDetails.additionalDetails) {

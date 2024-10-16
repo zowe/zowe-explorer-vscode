@@ -9,12 +9,12 @@
  *
  */
 
-import { NetworkError, WebView } from "@zowe/zowe-explorer-api";
+import { CorrelatedError, WebView } from "@zowe/zowe-explorer-api";
 import { env, ExtensionContext, l10n } from "vscode";
 import { ZoweLogger } from "../tools/ZoweLogger";
 
 type TroubleshootData = {
-    error: NetworkError;
+    error: CorrelatedError;
     stackTrace?: string;
 };
 

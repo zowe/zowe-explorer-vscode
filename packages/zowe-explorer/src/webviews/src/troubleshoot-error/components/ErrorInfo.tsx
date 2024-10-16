@@ -1,16 +1,16 @@
 import { VSCodeButton, VSCodeDivider, VSCodeTextArea } from "@vscode/webview-ui-toolkit/react";
-import { NetworkError } from "@zowe/zowe-explorer-api";
+import { CorrelatedError } from "@zowe/zowe-explorer-api";
 import { TipList } from "./TipList";
 import { useState } from "preact/hooks";
 import PersistentVSCodeAPI from "../../PersistentVSCodeAPI";
 
 export type ErrorInfoProps = {
-  error: NetworkError;
+  error: CorrelatedError;
   stackTrace?: string;
 };
 
-export const isNetworkError = (val: any): val is NetworkError => {
-  return val?.["info"] != null && val.info["summary"] != null;
+export const isCorrelatedError = (val: any): val is CorrelatedError => {
+  return val?.["properties"] != null && val.properties["initialError"] != null;
 };
 
 export const ErrorInfo = ({ error, stackTrace }: ErrorInfoProps) => {

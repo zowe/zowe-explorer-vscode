@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import {
     FileManagement,
     Gui,
-    NetworkError,
+    CorrelatedError,
     IZoweTree,
     IZoweTreeNode,
     TableViewProvider,
@@ -286,7 +286,7 @@ export class SharedInit {
             context.subscriptions.push(
                 vscode.commands.registerCommand(
                     "zowe.troubleshootError",
-                    (error: NetworkError, stackTrace?: string) => new TroubleshootError(context, { error, stackTrace })
+                    (error: CorrelatedError, stackTrace?: string) => new TroubleshootError(context, { error, stackTrace })
                 )
             );
             context.subscriptions.push(
