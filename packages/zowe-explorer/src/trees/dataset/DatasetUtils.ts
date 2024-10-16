@@ -15,15 +15,16 @@ import { Constants } from "../../configuration/Constants";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 
 export class DatasetUtils {
-    public static DATASET_SORT_OPTS = [
-        vscode.l10n.t("$(case-sensitive) Name (default)"),
-        vscode.l10n.t("$(calendar) Date Created"),
-        vscode.l10n.t("$(calendar) Date Modified"),
-        vscode.l10n.t("$(account) User ID"),
-        vscode.l10n.t("$(fold) Sort Direction"),
+    public static readonly DATASET_SORT_OPTS = [
+        `$(case-sensitive) ${vscode.l10n.t("Name (default)")}`,
+        `$(calendar) ${vscode.l10n.t("Date Created")}`,
+        `$(calendar) ${vscode.l10n.t("Date Modified")}`,
+        `$(account) ${vscode.l10n.t("User ID")}`,
+        `$(fold) ${vscode.l10n.t("Sort Direction")}`,
     ];
 
-    public static DATASET_FILTER_OPTS = [vscode.l10n.t("$(calendar) Date Modified"), vscode.l10n.t("$(account) User ID")];
+    // eslint-disable-next-line no-magic-numbers
+    public static readonly DATASET_FILTER_OPTS = [this.DATASET_SORT_OPTS[2], this.DATASET_SORT_OPTS[3]];
 
     public static getProfileAndDataSetName(node: Types.IZoweNodeType): {
         profileName: string;

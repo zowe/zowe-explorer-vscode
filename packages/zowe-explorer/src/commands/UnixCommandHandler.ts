@@ -43,7 +43,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         return this.instance;
     }
 
-    private static readonly defaultDialogText: string = vscode.l10n.t("$(plus) Create a new Unix command");
+    private static readonly defaultDialogText: string = `$(plus) ${vscode.l10n.t("Create a new Unix command")}`;
     private static instance: UnixCommandHandler;
     private serviceProf: imperative.IProfileLoaded = undefined;
     private unixCmdMsgs = {
@@ -58,7 +58,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             args: [this.serviceProf?.type],
             comment: ["Profile type"],
         }),
-        sshSessionErrorMsg: vscode.l10n.t("Error preparring SSH connection for issueing UNIX commands, please check SSH profile for correctness."),
+        sshSessionErrorMsg: vscode.l10n.t("Error preparing SSH connection for issuing UNIX commands, please check SSH profile for correctness."),
         sshProfNotFoundMsg: vscode.l10n.t("No SSH profile found. Please create an SSH profile."),
         sshProfMissingInfoMsg: vscode.l10n.t("SSH profile missing connection details. Please update."),
         noProfilesAvailableMsg: vscode.l10n.t("No profiles available."),
@@ -117,7 +117,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 // error would be due to missing API, assuming SSH profile not required
                 ZoweLogger.warn(
                     vscode.l10n.t(
-                        "Error checking if SSH profile type required for issueing UNIX commands, setting requirement to false for profile {0}.",
+                        "Error checking if SSH profile type required for issuing UNIX commands, setting requirement to false for profile {0}.",
                         [this.serviceProf?.name]
                     )
                 );
