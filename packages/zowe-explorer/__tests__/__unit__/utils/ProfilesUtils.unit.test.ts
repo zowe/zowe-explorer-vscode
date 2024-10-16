@@ -1040,7 +1040,7 @@ describe("ProfilesUtils unit tests", () => {
                 get: () => true,
             });
 
-            await expect((ProfilesUtils as any).v1ProfileOptions()).resolves.not.toThrow();
+            await expect((ProfilesUtils as any).v1ProfileOptions()).resolves.toBe(ProfilesConvertStatus.ConvertSelected);
             onlyV1ProfsExistMock[Symbol.dispose]();
 
             expect(infoMsgSpy).toHaveBeenCalledTimes(2);
@@ -1062,6 +1062,26 @@ describe("ProfilesUtils unit tests", () => {
                 get: () => true,
             });
             await expect((ProfilesUtils as any).v1ProfileOptions()).resolves.not.toThrow();
+            onlyV1ProfsExistMock[Symbol.dispose]();
+
+            infoMsgSpy.mockRestore();
+            profInfoSpy.mockRestore();
+        });
+
+        it("should prompt user if v1 profiles detected and Create New is selected", async () => {
+            const mockReadProfilesFromDisk = jest.fn();
+            const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
+                readProfilesFromDisk: mockReadProfilesFromDisk,
+                getTeamConfig: jest.fn().mockReturnValue([]),
+                getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
+            } as never);
+            const infoMsgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Create New");
+
+            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
+                configurable: true,
+                get: () => true,
+            });
+            await expect((ProfilesUtils as any).v1ProfileOptions()).resolves.toBe(ProfilesConvertStatus.CreateNewSelected);
             onlyV1ProfsExistMock[Symbol.dispose]();
 
             infoMsgSpy.mockRestore();
