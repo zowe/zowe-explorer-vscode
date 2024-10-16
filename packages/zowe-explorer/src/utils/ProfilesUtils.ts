@@ -376,7 +376,6 @@ export class ProfilesUtils {
         // Open the "Add Session" quick pick if the user selected "Create New" in the v1 migration prompt.
         if (userSelection === ProfilesConvertStatus.CreateNewSelected) {
             vscode.commands.executeCommand("zowe.ds.addSession", SharedTreeProviders.ds);
-            await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.JustMigrated);
         }
     }
 

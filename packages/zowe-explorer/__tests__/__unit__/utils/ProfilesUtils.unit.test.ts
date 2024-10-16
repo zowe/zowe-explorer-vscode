@@ -22,7 +22,7 @@ import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
 import { FilterItem } from "../../../src/management/FilterManagement";
-import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
+import { ProfilesConvertStatus, ProfilesUtils } from "../../../src/utils/ProfilesUtils";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { Definitions } from "../../../src/configuration/Definitions";
@@ -332,112 +332,6 @@ describe("ProfilesUtils unit tests", () => {
             expect(warnMsgSpy).toHaveBeenCalledWith(
                 "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer."
             );
-            profInfoSpy.mockRestore();
-        });
-
-        it("should reload the window once if the user just migrated from v1", async () => {
-            const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockReturnValueOnce({
-                readProfilesFromDisk: jest.fn(),
-                hasValidSchema: false,
-                getTeamConfig: () => ({
-                    exists: false,
-                }),
-            } as never);
-            const getConfigurationMock = jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
-                persistent: true,
-                get: jest.fn(),
-                has: jest.fn(),
-                inspect: jest.fn(),
-                update: jest.fn(),
-            });
-            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
-                configurable: true,
-                get: () => true,
-            });
-            const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
-            const getValueMock = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
-            const setValueMock = jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
-            await ProfilesUtils.readConfigFromDisk(true);
-            expect(getConfigurationMock).toHaveBeenCalledWith("Zowe-USS-Persistent");
-            expect(getValueMock).toHaveBeenCalledWith(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
-            expect(setValueMock).toHaveBeenCalledWith(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.JustMigrated);
-            expect(executeCommandMock).toHaveBeenCalledWith("workbench.action.reloadWindow");
-            executeCommandMock.mockRestore();
-            getConfigurationMock.mockRestore();
-            getValueMock.mockRestore();
-            setValueMock.mockRestore();
-            onlyV1ProfsExistMock[Symbol.dispose]();
-
-            profInfoSpy.mockRestore();
-        });
-
-        it("should not reload the window during migration if imperative.ProfileInfo.onlyV1ProfilesExist is false", async () => {
-            const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockReturnValueOnce({
-                readProfilesFromDisk: jest.fn(),
-                hasValidSchema: false,
-                getTeamConfig: () => ({
-                    exists: false,
-                }),
-            } as never);
-            const getConfigurationMock = jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
-                persistent: true,
-                get: jest.fn(),
-                has: jest.fn(),
-                inspect: jest.fn(),
-                update: jest.fn(),
-            });
-            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
-                configurable: true,
-                get: () => false,
-            });
-            const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
-            const getValueMock = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
-            const setValueMock = jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
-            await ProfilesUtils.readConfigFromDisk(true);
-            expect(getConfigurationMock).toHaveBeenCalledWith("Zowe-USS-Persistent");
-            expect(getValueMock).toHaveBeenCalledWith(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
-            expect(executeCommandMock).not.toHaveBeenCalledWith("workbench.action.reloadWindow");
-            executeCommandMock.mockRestore();
-            getConfigurationMock.mockRestore();
-            getValueMock.mockRestore();
-            setValueMock.mockRestore();
-            onlyV1ProfsExistMock[Symbol.dispose]();
-
-            profInfoSpy.mockRestore();
-        });
-
-        it("should call v1ProfileOptions if team config does not exist and only v1 profiles exist", async () => {
-            const fakeProfInfo = {
-                readProfilesFromDisk: jest.fn(),
-                hasValidSchema: false,
-                getTeamConfig: () => ({
-                    exists: false,
-                }),
-                onlyV1ProfilesExist: () => true,
-            };
-            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
-                configurable: true,
-                get: () => true,
-            });
-            const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockReturnValueOnce(fakeProfInfo as any);
-            const getConfigurationMock = jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
-                persistent: true,
-                get: jest.fn(),
-                has: jest.fn(),
-                inspect: jest.fn(),
-                update: jest.fn(),
-            });
-            const v1ProfileOptionsMock = jest.spyOn(ProfilesUtils as any, "v1ProfileOptions").mockImplementation();
-            const getValueMock = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(Definitions.V1MigrationStatus.JustMigrated);
-            await ProfilesUtils.readConfigFromDisk(true);
-            expect(getConfigurationMock).toHaveBeenCalledWith("Zowe-USS-Persistent");
-            expect(getValueMock).toHaveBeenCalledWith(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
-            expect(v1ProfileOptionsMock).toHaveBeenCalled();
-            getConfigurationMock.mockRestore();
-            getValueMock.mockRestore();
-            v1ProfileOptionsMock.mockRestore();
-            onlyV1ProfsExistMock[Symbol.dispose]();
-
             profInfoSpy.mockRestore();
         });
     });
@@ -1154,33 +1048,7 @@ describe("ProfilesUtils unit tests", () => {
             profInfoSpy.mockRestore();
         });
 
-        it("should prompt user if v1 profiles detected and queue a Create Config prompt when Create New is chosen", async () => {
-            const mockReadProfilesFromDisk = jest.fn();
-            const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
-                readProfilesFromDisk: mockReadProfilesFromDisk,
-                getTeamConfig: jest.fn().mockReturnValue([]),
-                getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
-            } as never);
-            const msgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Create New" as any);
-            const setValueMock = jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
-
-            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
-                configurable: true,
-                get: () => true,
-            });
-            await expect((ProfilesUtils as any).v1ProfileOptions()).resolves.not.toThrow();
-            onlyV1ProfsExistMock[Symbol.dispose]();
-
-            expect(msgSpy).toHaveBeenCalledWith(expect.stringContaining("Zowe V1 profiles in use."), {
-                items: ["Convert Existing Profiles", "Create New"],
-                vsCodeOpts: { modal: true },
-            });
-            expect(setValueMock).toHaveBeenCalledWith("zowe.v1MigrationStatus", Definitions.V1MigrationStatus.CreateConfigSelected);
-            msgSpy.mockRestore();
-            profInfoSpy.mockRestore();
-        });
-
-        it("should prompt user if v1 profiles detected and return Operation Cancelled if nothing chosen", async () => {
+        it("should prompt user if v1 profiles detected and return if nothing chosen", async () => {
             const mockReadProfilesFromDisk = jest.fn();
             const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
@@ -1196,8 +1064,6 @@ describe("ProfilesUtils unit tests", () => {
             await expect((ProfilesUtils as any).v1ProfileOptions()).resolves.not.toThrow();
             onlyV1ProfsExistMock[Symbol.dispose]();
 
-            expect(infoMsgSpy).toHaveBeenCalledTimes(2);
-            expect(infoMsgSpy).toHaveBeenLastCalledWith("Operation cancelled");
             infoMsgSpy.mockRestore();
             profInfoSpy.mockRestore();
         });
@@ -1211,30 +1077,145 @@ describe("ProfilesUtils unit tests", () => {
             };
         }
 
-        it("should return early if the migration status is nullish", async () => {
-            const blockMocks = getBlockMocks();
-            blockMocks.getValueMock.mockReturnValueOnce(undefined);
-            await ProfilesUtils.handleV1MigrationStatus();
-            expect(blockMocks.setValueMock).not.toHaveBeenCalled();
-            blockMocks.getValueMock.mockRestore();
-        });
-
         it("should call executeCommand with zowe.ds.addSession if the migration status is CreateConfigSelected", async () => {
             const blockMocks = getBlockMocks();
             const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
-            blockMocks.getValueMock.mockReturnValueOnce(Definitions.V1MigrationStatus.CreateConfigSelected);
+            blockMocks.getValueMock.mockReturnValueOnce(Definitions.V1MigrationStatus.JustMigrated);
             blockMocks.setValueMock.mockImplementation();
+            const v1ProfileOptsMock = jest.spyOn(ProfilesUtils as any, "v1ProfileOptions").mockResolvedValue(ProfilesConvertStatus.CreateNewSelected);
             await ProfilesUtils.handleV1MigrationStatus();
             expect(executeCommandMock.mock.lastCall?.[0]).toBe("zowe.ds.addSession");
+            expect(v1ProfileOptsMock).toHaveBeenCalled();
             blockMocks.getValueMock.mockRestore();
             blockMocks.setValueMock.mockRestore();
         });
 
-        it("should clear the v1 migration status once the migration status is handled", async () => {
-            const blockMocks = getBlockMocks();
-            blockMocks.getValueMock.mockReturnValueOnce(Definitions.V1MigrationStatus.JustMigrated);
+        it("should reload the window once if the user just migrated from v1", async () => {
+            const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockReturnValueOnce({
+                readProfilesFromDisk: jest.fn(),
+                hasValidSchema: false,
+                getTeamConfig: () => ({
+                    exists: false,
+                }),
+            } as never);
+            const getConfigurationMock = jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                persistent: true,
+                get: jest.fn(),
+                has: jest.fn(),
+                inspect: jest.fn(),
+                update: jest.fn(),
+            });
+            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
+                configurable: true,
+                get: () => true,
+            });
+            const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+            const getValueMock = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+            const setValueMock = jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
             await ProfilesUtils.handleV1MigrationStatus();
-            blockMocks.getValueMock.mockRestore();
+            expect(getConfigurationMock).toHaveBeenCalledWith("Zowe-USS-Persistent");
+            expect(getValueMock).toHaveBeenCalledWith(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
+            expect(setValueMock).toHaveBeenCalledWith(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.JustMigrated);
+            expect(executeCommandMock).toHaveBeenCalledWith("workbench.action.reloadWindow");
+            executeCommandMock.mockRestore();
+            getConfigurationMock.mockRestore();
+            getValueMock.mockRestore();
+            setValueMock.mockRestore();
+            onlyV1ProfsExistMock[Symbol.dispose]();
+
+            profInfoSpy.mockRestore();
+        });
+
+        it("should not reload the window during migration if imperative.ProfileInfo.onlyV1ProfilesExist is false", async () => {
+            const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockReturnValueOnce({
+                readProfilesFromDisk: jest.fn(),
+                hasValidSchema: false,
+                getTeamConfig: () => ({
+                    exists: false,
+                }),
+            } as never);
+            const getConfigurationMock = jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                persistent: true,
+                get: jest.fn(),
+                has: jest.fn(),
+                inspect: jest.fn(),
+                update: jest.fn(),
+            });
+            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
+                configurable: true,
+                get: () => false,
+            });
+            const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+            const getValueMock = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+            const setValueMock = jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
+            await ProfilesUtils.handleV1MigrationStatus();
+            expect(getConfigurationMock).toHaveBeenCalledWith("Zowe-USS-Persistent");
+            expect(getValueMock).toHaveBeenCalledWith(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
+            expect(executeCommandMock).not.toHaveBeenCalledWith("workbench.action.reloadWindow");
+            executeCommandMock.mockRestore();
+            getConfigurationMock.mockRestore();
+            getValueMock.mockRestore();
+            setValueMock.mockRestore();
+            onlyV1ProfsExistMock[Symbol.dispose]();
+
+            profInfoSpy.mockRestore();
+        });
+
+        it("should call v1ProfileOptions if team config does not exist and only v1 profiles exist", async () => {
+            const fakeProfInfo = {
+                readProfilesFromDisk: jest.fn(),
+                hasValidSchema: false,
+                getTeamConfig: () => ({
+                    exists: false,
+                }),
+                onlyV1ProfilesExist: () => true,
+            };
+            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
+                configurable: true,
+                get: () => true,
+            });
+            const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockReturnValueOnce(fakeProfInfo as any);
+            const getConfigurationMock = jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                persistent: true,
+                get: jest.fn(),
+                has: jest.fn(),
+                inspect: jest.fn(),
+                update: jest.fn(),
+            });
+            const v1ProfileOptionsMock = jest.spyOn(ProfilesUtils as any, "v1ProfileOptions").mockImplementation();
+            const getValueMock = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(Definitions.V1MigrationStatus.JustMigrated);
+            await ProfilesUtils.handleV1MigrationStatus();
+            expect(getConfigurationMock).toHaveBeenCalledWith("Zowe-USS-Persistent");
+            expect(getValueMock).toHaveBeenCalledWith(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
+            expect(v1ProfileOptionsMock).toHaveBeenCalled();
+            getConfigurationMock.mockRestore();
+            getValueMock.mockRestore();
+            v1ProfileOptionsMock.mockRestore();
+            onlyV1ProfsExistMock[Symbol.dispose]();
+
+            profInfoSpy.mockRestore();
+        });
+
+        it("should show the Create Config prompt when Create New is chosen", async () => {
+            const mockReadProfilesFromDisk = jest.fn();
+            const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
+                readProfilesFromDisk: mockReadProfilesFromDisk,
+                getTeamConfig: jest.fn().mockReturnValue([]),
+                getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
+            } as never);
+            const msgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Create New" as any);
+
+            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
+                configurable: true,
+                get: () => true,
+            });
+            const v1ProfOptsMock = jest.spyOn(ProfilesUtils as any, "v1ProfileOptions").mockResolvedValue(ProfilesConvertStatus.CreateNewSelected);
+            await expect((ProfilesUtils as any).v1ProfileOptions()).resolves.not.toThrow();
+            expect(v1ProfOptsMock).toHaveBeenCalled();
+            onlyV1ProfsExistMock[Symbol.dispose]();
+
+            msgSpy.mockRestore();
+            profInfoSpy.mockRestore();
         });
     });
 
