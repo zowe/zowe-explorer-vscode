@@ -1,5 +1,11 @@
 {
   "Enter command here...": "Enter command here...",
+  "Page Size:": "Page Size:",
+  "Page": "Page",
+  "No": "No",
+  "item": "item",
+  "s": "s",
+  "selected": "selected",
   "Data Sets": "Data Sets",
   "Unix System Services (USS)": "Unix System Services (USS)",
   "Jobs": "Jobs",
@@ -51,7 +57,6 @@
       "Credential manager display name"
     ]
   },
-  "No": "No",
   "Yes, globally": "Yes, globally",
   "Only for this workspace": "Only for this workspace",
   "Zowe Explorer failed to activate since the default credential manager is not supported in your environment.": "Zowe Explorer failed to activate since the default credential manager is not supported in your environment.",
