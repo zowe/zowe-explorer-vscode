@@ -105,21 +105,6 @@ describe("refreshSpool", () => {
 });
 
 describe("readDirectory", () => {
-    it("throws an error if getJobsByParameters does not exist", async () => {
-        const mockJesApi = {};
-        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
-        const lookupAsDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupAsDirectory").mockReturnValueOnce({
-            ...testEntries.session,
-            filter: { ...testEntries.session.filter, owner: "USER", prefix: "JOB*", status: "*" },
-            entries: new Map(),
-        } as any);
-        await expect(JobFSProvider.instance.readDirectory(testUris.session)).rejects.toThrow(
-            "Failed to fetch jobs: getJobsByParameters is not implemented for this session's JES API."
-        );
-        expect(lookupAsDirMock).toHaveBeenCalledWith(testUris.session, false);
-        jesApiMock.mockRestore();
-    });
-
     it("calls getJobsByParameters to list jobs under a session", async () => {
         const fakeJob2 = { ...createIJobObject(), jobid: "JOB3456" };
         const mockJesApi = {

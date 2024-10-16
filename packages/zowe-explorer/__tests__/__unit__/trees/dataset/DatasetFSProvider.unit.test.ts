@@ -314,23 +314,6 @@ describe("readFile", () => {
         remoteLookupForResourceMock.mockRestore();
     });
 
-    it("throws an error if the entry does not exist and the error is not FileNotFound", async () => {
-        const _lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockImplementationOnce((uri) => {
-            throw FileSystemError.FileIsADirectory(uri as Uri);
-        });
-
-        let err;
-        try {
-            await DatasetFSProvider.instance.readFile(testUris.ps);
-        } catch (error) {
-            err = error;
-            expect(err.code).toBe("FileIsADirectory");
-        }
-        expect(err).toBeDefined();
-        expect(_lookupAsFileMock).toHaveBeenCalledWith(testUris.ps);
-        _lookupAsFileMock.mockRestore();
-    });
-
     it("calls fetchDatasetAtUri if the entry has not yet been accessed", async () => {
         const _lookupAsFileMock = jest
             .spyOn(DatasetFSProvider.instance as any, "_lookupAsFile")
@@ -441,39 +424,6 @@ describe("writeFile", () => {
         });
         expect(psEntry.etag).toBe("NEWETAG");
         expect(psEntry.data).toBe(newContents);
-        mvsApiMock.mockRestore();
-        lookupMock.mockRestore();
-    });
-
-    it("throws an error when there is an error unrelated to etag", async () => {
-        const mockMvsApi = {
-            uploadFromBuffer: jest.fn().mockImplementation(() => {
-                throw new Error("Unknown error on remote system");
-            }),
-        };
-        const disposeMock = jest.fn();
-        const setStatusBarMsg = jest.spyOn(Gui, "setStatusBarMessage").mockReturnValueOnce({ dispose: disposeMock });
-        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
-        const psEntry = { ...testEntries.ps, metadata: testEntries.ps.metadata } as DsEntry;
-        const sessionEntry = { ...testEntries.session };
-        sessionEntry.entries.set("USER.DATA.PS", psEntry);
-        const lookupParentDirMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(sessionEntry);
-        const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValueOnce(psEntry);
-        const newContents = new Uint8Array([3, 6, 9]);
-        await expect(DatasetFSProvider.instance.writeFile(testUris.ps, newContents, { create: false, overwrite: true })).rejects.toThrow(
-            "Unknown error on remote system"
-        );
-
-        expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.ps);
-        expect(setStatusBarMsg).toHaveBeenCalled();
-        expect(mockMvsApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(newContents), testEntries.ps.name, {
-            binary: false,
-            encoding: undefined,
-            etag: testEntries.ps.etag,
-            returnEtag: true,
-        });
-        expect(disposeMock).toHaveBeenCalled();
-        setStatusBarMsg.mockRestore();
         mvsApiMock.mockRestore();
         lookupMock.mockRestore();
     });
@@ -890,7 +840,9 @@ describe("delete", () => {
         expect(mockMvsApi.deleteDataSet).toHaveBeenCalledWith(fakePs.name, { responseTimeout: undefined });
         expect(_lookupMock).toHaveBeenCalledWith(testUris.ps, false);
         expect(_fireSoonMock).toHaveBeenCalled();
-        expect(errorMsgMock).toHaveBeenCalledWith("Deleting /USER.DATA.PS failed due to API error: Data set does not exist on remote");
+        expect(errorMsgMock).toHaveBeenCalledWith("Failed to delete /USER.DATA.PS: Data set does not exist on remote", {
+            items: ["Retry", "More info"],
+        });
         expect(fakeSession.entries.has(fakePs.name)).toBe(true);
         mvsApiMock.mockRestore();
         errorMsgMock.mockRestore();
@@ -972,7 +924,7 @@ describe("rename", () => {
             .mockReturnValueOnce({ ...testEntries.session });
         await DatasetFSProvider.instance.rename(testUris.pds, testUris.pds.with({ path: "/USER.DATA.PDS2" }), { overwrite: true });
         expect(mockMvsApi.renameDataSet).toHaveBeenCalledWith("USER.DATA.PDS", "USER.DATA.PDS2");
-        expect(errMsgSpy).toHaveBeenCalledWith("Renaming USER.DATA.PDS failed due to API error: could not upload data set");
+        expect(errMsgSpy).toHaveBeenCalledWith("Failed to rename USER.DATA.PDS: could not upload data set", { items: ["Retry", "More info"] });
         _lookupMock.mockRestore();
         mvsApiMock.mockRestore();
         _lookupParentDirectoryMock.mockRestore();

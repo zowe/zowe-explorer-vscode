@@ -13,6 +13,7 @@ import { env, ExtensionContext } from "vscode";
 import { TroubleshootError } from "../../../src/utils/TroubleshootError";
 import { CorrelatedError } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
+import { MockedProperty } from "../../__mocks__/mockUtils";
 
 describe("TroubleshootError", () => {
     function getGlobalMocks() {
@@ -20,34 +21,33 @@ describe("TroubleshootError", () => {
             extensionPath: "/a/b/c/zowe-explorer",
             subscriptions: [],
         } as unknown as ExtensionContext;
-        const errorData = {
-            error: new CorrelatedError({ error: "test error" }),
-            stackTrace: "test stack trace",
-        };
-        const troubleshootError = new TroubleshootError(context, errorData);
+        const error = new Error("test error");
+        error.stack = "test stack trace";
+        const correlatedError = new CorrelatedError({ initialError: error });
+        const troubleshootError = new TroubleshootError(context, { error: correlatedError, stackTrace: "test stack trace" });
 
         return {
             context,
-            errorData,
+            error,
+            correlatedError,
             troubleshootError,
         };
     }
     describe("onDidReceiveMessage", () => {
         it("handles copy command for error with stack trace", async () => {
-            const { errorData, troubleshootError } = getGlobalMocks();
+            const { error, troubleshootError } = getGlobalMocks();
             const writeTextMock = jest.spyOn(env.clipboard, "writeText").mockImplementation();
             await troubleshootError.onDidReceiveMessage({ command: "copy" });
-            expect(writeTextMock).toHaveBeenCalledWith(
-                `Error details:\n${errorData.error.message}\nStack trace:\n${errorData.error.stack?.replace(/(.+?)\n/, "")}`
-            );
+            expect(writeTextMock).toHaveBeenCalledWith(`Error details:\n${error.message}\nStack trace:\n${error.stack?.replace(/(.+?)\n/, "")}`);
         });
 
         it("handles copy command for error without stack trace", async () => {
-            const { errorData, troubleshootError } = getGlobalMocks();
-            Object.defineProperty(errorData.error, "stack", { value: undefined });
+            const { error, troubleshootError } = getGlobalMocks();
+            const errorProp = new MockedProperty(error, "stack", { value: undefined });
             const writeTextMock = jest.spyOn(env.clipboard, "writeText").mockImplementation();
             await troubleshootError.onDidReceiveMessage({ command: "copy" });
-            expect(writeTextMock).toHaveBeenCalledWith(`Error details:\n${errorData.error.message}`);
+            expect(writeTextMock).toHaveBeenCalledWith(`Error details:\n${error.message}`);
+            errorProp[Symbol.dispose]();
         });
 
         it("handles ready command", async () => {
@@ -56,6 +56,7 @@ describe("TroubleshootError", () => {
             await troubleshootError.onDidReceiveMessage({ command: "ready" });
             expect(sendErrorDataSpy).toHaveBeenCalledWith(troubleshootError.errorData);
         });
+
         it("handles an unrecognized command", async () => {
             const { troubleshootError } = getGlobalMocks();
             const debugSpy = jest.spyOn(ZoweLogger, "debug");
@@ -66,10 +67,11 @@ describe("TroubleshootError", () => {
 
     describe("sendErrorData", () => {
         it("sends error data to the webview", async () => {
-            const { errorData, troubleshootError } = getGlobalMocks();
+            const { correlatedError, troubleshootError } = getGlobalMocks();
             const postMessageSpy = jest.spyOn(troubleshootError.panel.webview, "postMessage");
-            await troubleshootError.sendErrorData(errorData);
-            expect(postMessageSpy).toHaveBeenCalledWith(errorData);
+            const data = { error: correlatedError, stackTrace: correlatedError.stack };
+            await troubleshootError.sendErrorData(data);
+            expect(postMessageSpy).toHaveBeenCalledWith(data);
         });
     });
 });
