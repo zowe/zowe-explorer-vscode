@@ -1,6 +1,7 @@
 import { env, ExtensionContext } from "vscode";
 import { TroubleshootError } from "../../../src/utils/TroubleshootError";
 import { NetworkError } from "@zowe/zowe-explorer-api";
+import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 
 describe("TroubleshootError", () => {
     function getGlobalMocks() {
@@ -21,7 +22,7 @@ describe("TroubleshootError", () => {
         };
     }
     describe("onDidReceiveMessage", () => {
-        it("handles copy command", async () => {
+        it("handles copy command for error with stack trace", async () => {
             const { errorData, troubleshootError } = getGlobalMocks();
             const writeTextMock = jest.spyOn(env.clipboard, "writeText").mockImplementation();
             await troubleshootError.onDidReceiveMessage({ command: "copy" });
@@ -29,11 +30,26 @@ describe("TroubleshootError", () => {
                 `Error details:\n${errorData.error.message}\nStack trace:\n${errorData.error.stack.replace(/(.+?)\n/, "")}`
             );
         });
+
+        it("handles copy command for error without stack trace", async () => {
+            const { errorData, troubleshootError } = getGlobalMocks();
+            Object.defineProperty(errorData.error, "stack", { value: undefined });
+            const writeTextMock = jest.spyOn(env.clipboard, "writeText").mockImplementation();
+            await troubleshootError.onDidReceiveMessage({ command: "copy" });
+            expect(writeTextMock).toHaveBeenCalledWith(`Error details:\n${errorData.error.message}`);
+        });
+
         it("handles ready command", async () => {
             const { troubleshootError } = getGlobalMocks();
             const sendErrorDataSpy = jest.spyOn(troubleshootError, "sendErrorData");
             await troubleshootError.onDidReceiveMessage({ command: "ready" });
             expect(sendErrorDataSpy).toHaveBeenCalledWith(troubleshootError.errorData);
+        });
+        it("handles an unrecognized command", async () => {
+            const { troubleshootError } = getGlobalMocks();
+            const debugSpy = jest.spyOn(ZoweLogger, "debug");
+            await troubleshootError.onDidReceiveMessage({ command: "unknown" });
+            expect(debugSpy).toHaveBeenCalledWith("[TroubleshootError] Unknown command: unknown");
         });
     });
 

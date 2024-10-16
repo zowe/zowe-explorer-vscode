@@ -11,6 +11,7 @@
 
 import { NetworkError, WebView } from "@zowe/zowe-explorer-api";
 import { env, ExtensionContext, l10n } from "vscode";
+import { ZoweLogger } from "../tools/ZoweLogger";
 
 type TroubleshootData = {
     error: NetworkError;
@@ -41,6 +42,7 @@ export class TroubleshootError extends WebView {
                 );
                 break;
             default:
+                ZoweLogger.debug(`[TroubleshootError] Unknown command: ${message.command as string}`);
                 break;
         }
     }
