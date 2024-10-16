@@ -36,6 +36,7 @@ import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import * as dayjs from "dayjs";
 import { DatasetUtils } from "./DatasetUtils";
+import { AuthUtils } from "../../utils/AuthUtils";
 
 export class DatasetFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: DatasetFSProvider;
@@ -338,13 +339,24 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const bufBuilder = new BufferBuilder();
         const metadata = file.metadata ?? this._getInfoFromUri(uri);
         const profileEncoding = file.encoding ? null : file.metadata.profile.profile?.encoding;
-        const resp = await ZoweExplorerApiRegister.getMvsApi(metadata.profile).getContents(metadata.dsName, {
-            binary: file.encoding?.kind === "binary",
-            encoding: file.encoding?.kind === "other" ? file.encoding.codepage : profileEncoding,
-            responseTimeout: metadata.profile.profile?.responseTimeout,
-            returnEtag: true,
-            stream: bufBuilder,
-        });
+
+        let resp;
+        try {
+            resp = await ZoweExplorerApiRegister.getMvsApi(metadata.profile).getContents(metadata.dsName, {
+                binary: file.encoding?.kind === "binary",
+                encoding: file.encoding?.kind === "other" ? file.encoding.codepage : profileEncoding,
+                responseTimeout: metadata.profile.profile?.responseTimeout,
+                returnEtag: true,
+                stream: bufBuilder,
+            });
+        } catch (err) {
+            const credsUpdated = await AuthUtils.errorHandling(err, {
+                profile: metadata.profile
+            });
+            if (credsUpdated) {
+                return this.fetchDatasetAtUri(uri, options);
+            }
+        }
         const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
 
         if (options?.isConflict) {
@@ -447,9 +459,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 ZoweLogger.error(err.message);
                 const userSelection = await ErrorCorrelator.getInstance().displayError(
                     ZoweExplorerApiType.Mvs,
-                    entry.metadata.profile.type,
                     err.message,
-                    { allowRetry: true, stackTrace: err.stack }
+                    { allowRetry: true, profileType: entry.metadata.profile.type, stackTrace: err.stack }
                 );
 
                 switch (userSelection) {

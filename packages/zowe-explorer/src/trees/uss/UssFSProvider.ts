@@ -397,9 +397,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 ZoweLogger.error(err.message);
                 const userSelection = await ErrorCorrelator.getInstance().displayError(
                     ZoweExplorerApiType.Uss,
-                    entry.metadata.profile.type,
                     err.message,
-                    { allowRetry: true, stackTrace: err.stack }
+                    { allowRetry: true, profileType: entry.metadata.profile.type, stackTrace: err.stack }
                 );
 
                 switch (userSelection) {
