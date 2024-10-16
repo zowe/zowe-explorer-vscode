@@ -10,7 +10,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
-- Fixed an issue where Zowe Explorer prompted the user to convert v1 profiles after making changes to a project config while another instance of Zowe Explorer is opened. [#3246](https://github.com/zowe/zowe-explorer-vscode/pull/3246)
+- Fixed an issue where Zowe Explorer sometimes prompted the user to convert v1 profiles when changes were made to a Team Config after initialization. [#3246](https://github.com/zowe/zowe-explorer-vscode/pull/3246)
 
 ## `3.0.1`
 
