@@ -13,16 +13,16 @@ import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { Sorting } from "@zowe/zowe-explorer-api";
 export class JobUtils {
-    public static JOB_SORT_OPTS = [
-        vscode.l10n.t("$(list-ordered) Job ID (default)"),
-        vscode.l10n.t("$(calendar) Date Submitted"),
-        vscode.l10n.t("$(calendar) Date Completed"),
-        vscode.l10n.t("$(case-sensitive) Job Name"),
-        vscode.l10n.t("$(symbol-numeric) Return Code"),
-        vscode.l10n.t("$(fold) Sort Direction"),
+    public static readonly JOB_SORT_OPTS = [
+        `$(list-ordered) ${vscode.l10n.t("Job ID (default)")}`,
+        `$(calendar) ${vscode.l10n.t("Date Submitted")}`,
+        `$(calendar) ${vscode.l10n.t("Date Completed")}`,
+        `$(case-sensitive) ${vscode.l10n.t("Job Name")}`,
+        `$(symbol-numeric) ${vscode.l10n.t("Return Code")}`,
+        `$(fold) ${vscode.l10n.t("Sort Direction")}`,
     ];
 
-    public static JOB_SORT_KEYS: Record<Sorting.JobSortOpts, keyof (zosjobs.IJob & { "exec-submitted": string; "exec-ended": string })> = {
+    public static readonly JOB_SORT_KEYS: Record<Sorting.JobSortOpts, keyof (zosjobs.IJob & { "exec-submitted": string; "exec-ended": string })> = {
         [Sorting.JobSortOpts.Id]: "jobid",
         [Sorting.JobSortOpts.DateSubmitted]: "exec-submitted",
         [Sorting.JobSortOpts.DateCompleted]: "exec-ended",
@@ -30,5 +30,5 @@ export class JobUtils {
         [Sorting.JobSortOpts.ReturnCode]: "retcode",
     };
 
-    public static JOB_FILTER_OPTS = [vscode.l10n.t("Go to Local Filtering"), vscode.l10n.t("$(clear-all) Clear filter for profile")];
+    public static readonly JOB_FILTER_OPTS = [vscode.l10n.t("Go to Local Filtering"), `$(clear-all) ${vscode.l10n.t("Clear filter for profile")}`];
 }
