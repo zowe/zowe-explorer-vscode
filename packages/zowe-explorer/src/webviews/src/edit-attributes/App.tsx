@@ -11,6 +11,7 @@ import {
   VSCodeTextField,
 } from "@vscode/webview-ui-toolkit/react";
 import { isEqual } from "es-toolkit";
+import * as l10n from "@vscode/l10n";
 import { isSecureOrigin } from "../utils";
 
 const vscodeApi = acquireVsCodeApi();
@@ -25,6 +26,18 @@ export function App() {
   });
   const [isUpdating, setIsUpdating] = useState(false);
   const [timestamp, setTimestamp] = useState<Date | null>();
+
+  const localizedPermissionTypes = [
+    { key: "read", localized: l10n.t("Read") },
+    { key: "write", localized: l10n.t("Write") },
+    { key: "execute", localized: l10n.t("Execute") },
+  ];
+
+  const localizedPermissionGroups = [
+    { key: "user", localized: l10n.t("User") },
+    { key: "group", localized: l10n.t("Group") },
+    { key: "all", localized: l10n.t("All") },
+  ];
 
   const updateButtons = (newAttributes: FileAttributes) => setAllowUpdate(!isEqual(attributes.initial, newAttributes));
 
@@ -66,9 +79,15 @@ export function App() {
       if (!isSecureOrigin(event.origin)) {
         return;
       }
-
       if (!event.data) {
         return;
+      }
+
+      if (event.data.command === "GET_LOCALIZATION") {
+        const { contents } = event.data;
+        l10n.config({
+          contents: contents,
+        });
       }
 
       if ("readonly" in event.data && event.data.readonly) {
@@ -125,6 +144,7 @@ export function App() {
     });
     // signal to extension that webview is ready for data; prevents race condition during initialization
     vscodeApi.postMessage({ command: "ready" });
+    vscodeApi.postMessage({ command: "GET_LOCALIZATION" });
   }, []);
 
   const updatePerm = (group: keyof FilePermissions, perm: keyof PermissionSet, value: boolean) => {
@@ -146,11 +166,16 @@ export function App() {
   return attributes.current ? (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1>File properties</h1>
+        <h1>{l10n.t("File properties")}</h1>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          {timestamp && <p style={{ fontStyle: "italic", marginRight: "1em" }}>Last refreshed: {timestamp.toLocaleString(navigator.language)}</p>}
+          {timestamp && (
+            <p style={{ fontStyle: "italic", marginRight: "1em" }}>
+              {l10n.t("Last refreshed:")} {timestamp.toLocaleString(navigator.language)}
+            </p>
+          )}
           <VSCodeButton appearance="secondary" onClick={() => vscodeApi.postMessage({ command: "refresh" })}>
-            <span style={{ marginRight: "0.5em" }}>⟳</span>Refresh
+            <span style={{ marginRight: "0.5em" }}>⟳</span>
+            {l10n.t("Refresh")}
           </VSCodeButton>
         </div>
       </div>
@@ -165,7 +190,7 @@ export function App() {
             value={attributes.current.tag}
             onInput={(e: any) => updateFileAttributes("tag", e.target.value)}
           >
-            Tag
+            {l10n.t("Tag")}
           </VSCodeTextField>
         </div>
       )}
@@ -173,41 +198,39 @@ export function App() {
         <div style={{ maxWidth: "fit-content" }}>
           <div style={{ display: "flex", marginLeft: "1em" }}>
             <VSCodeTextField value={attributes.current.owner} onInput={(e: any) => updateFileAttributes("owner", e.target.value)}>
-              Owner
+              {l10n.t("Owner")}
             </VSCodeTextField>
             <VSCodeTextField
               style={{ marginLeft: "1em" }}
               onInput={(e: any) => updateFileAttributes("group", e.target.value)}
               value={attributes.current.group}
             >
-              Group
+              {l10n.t("Group")}
             </VSCodeTextField>
           </div>
           {attributes.current.perms ? (
             <VSCodeDataGrid style={{ marginTop: "1em" }}>
               <VSCodeDataGridRow>
                 <VSCodeDataGridCell cellType="columnheader" gridColumn="1"></VSCodeDataGridCell>
-                {PERMISSION_TYPES.map((perm, i) => {
-                  const capitalizedPerm = perm.charAt(0).toUpperCase() + perm.slice(1);
+                {localizedPermissionTypes.map(({ key, localized }, i) => {
                   return (
-                    <VSCodeDataGridCell cellType="columnheader" gridColumn={(i + 2).toString()} key={`${perm}-header`}>
-                      {capitalizedPerm}
+                    <VSCodeDataGridCell cellType="columnheader" gridColumn={(i + 2).toString()} key={`${key}-header`}>
+                      {localized}
                     </VSCodeDataGridCell>
                   );
                 })}
               </VSCodeDataGridRow>
-              {PERMISSION_GROUPS.map((group) => {
-                const capitalizedGroup = group.charAt(0).toUpperCase() + group.slice(1);
+              {localizedPermissionGroups.map(({ key, localized }) => {
                 return (
-                  <VSCodeDataGridRow key={`${group}-row`}>
+                  <VSCodeDataGridRow key={`${key}-row`}>
                     <VSCodeDataGridCell cellType="rowheader" gridColumn="1">
-                      {capitalizedGroup}
+                      {localized}
                     </VSCodeDataGridCell>
                     {PERMISSION_TYPES.map((perm, i) => (
-                      <VSCodeDataGridCell gridColumn={(i + 2).toString()} key={`${group}-${perm}-checkbox`}>
+                      <VSCodeDataGridCell gridColumn={(i + 2).toString()} key={`${key}-${perm}-checkbox`}>
                         <VSCodeCheckbox
-                          checked={attributes.current!.perms[group][perm]}
-                          onChange={(e: any) => updatePerm(group, perm, e.target.checked)}
+                          checked={attributes.current!.perms[key as keyof FilePermissions][perm]}
+                          onChange={(e: any) => updatePerm(key as keyof FilePermissions, perm, e.target.checked)}
                         />
                       </VSCodeDataGridCell>
                     ))}
@@ -223,13 +246,13 @@ export function App() {
                 applyAttributes();
               }}
             >
-              Apply changes
+              {l10n.t("Apply changes")}
             </VSCodeButton>
             {isUpdating && <VSCodeProgressRing style={{ marginLeft: "1em" }} />}
           </div>
           {readonly && (
             <span style={{ marginLeft: "1em", color: "var(--vscode-editorLightBulb-foreground)" }}>
-              The API does not support updating attributes for this {attributes.initial?.directory ?? false ? "directory" : "file"}.
+              {l10n.t("The API does not support updating attributes for this")} {attributes.initial?.directory ?? false ? "directory" : "file"}.
             </span>
           )}
         </div>
@@ -238,11 +261,11 @@ export function App() {
   ) : (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1>File properties</h1>
+        <h1>{l10n.t("File properties")}</h1>
         <VSCodeProgressRing style={{ marginLeft: "1em" }} />
       </div>
       <VSCodeDivider />
-      <p style={{ fontStyle: "italic" }}>Waiting for data from extension...</p>
+      <p style={{ fontStyle: "italic" }}>{l10n.t("Waiting for data from extension...")}</p>
     </div>
   );
 }

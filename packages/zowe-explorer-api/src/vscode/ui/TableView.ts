@@ -14,7 +14,8 @@ import { Event, EventEmitter, ExtensionContext, env } from "vscode";
 import { randomUUID } from "crypto";
 import { diff } from "deep-object-diff";
 import { TableMediator } from "./utils/TableMediator";
-
+import * as vscode from "vscode";
+import * as fs from "fs";
 export namespace Table {
     /* The types of supported content for the table and how they are represented in callback functions. */
     export type ContentTypes = string | number | boolean | string[];
@@ -360,6 +361,20 @@ export namespace Table {
                 case "copy-cell":
                     await env.clipboard.writeText(message.data.cell);
                     return;
+                case "GET_LOCALIZATION": {
+                    const filePath = vscode.l10n.uri?.fsPath + "";
+                    fs.readFile(filePath, "utf8", (err, data) => {
+                        if (err) {
+                            // File doesn't exist, fallback to English strings
+                            return;
+                        }
+                        (this.panel ?? this.view).webview.postMessage({
+                            command: "GET_LOCALIZATION",
+                            contents: data,
+                        });
+                    });
+                    return;
+                }
                 default:
                     break;
             }

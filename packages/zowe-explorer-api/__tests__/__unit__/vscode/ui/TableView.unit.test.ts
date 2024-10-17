@@ -14,7 +14,9 @@ import { Table, TableBuilder, WebView } from "../../../../src";
 import { env, EventEmitter, Uri, window } from "vscode";
 import * as crypto from "crypto";
 import { diff } from "deep-object-diff";
+import * as fs from "fs";
 
+jest.mock("fs");
 function createGlobalMocks() {
     const mockPanel = {
         dispose: jest.fn(),
@@ -23,6 +25,10 @@ function createGlobalMocks() {
     };
     // Mock `vscode.window.createWebviewPanel` to return a usable panel object
     const createWebviewPanelMock = jest.spyOn(window, "createWebviewPanel").mockReturnValueOnce(mockPanel as any);
+    const spyReadFile = jest.fn((path, encoding, callback) => {
+        callback(null, "file contents");
+    });
+    Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
 
     return {
         createWebviewPanelMock,
@@ -270,6 +276,18 @@ describe("Table.View", () => {
                 command: "ready",
             });
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
+            globalMocks.updateWebviewMock.mockRestore();
+        });
+
+        it("should handle the case where 'GET_LOCALIZATION' is the command sent", async () => {
+            const globalMocks = await createGlobalMocks();
+            const view = new Table.View(globalMocks.context as any, false, { title: "Table" } as any);
+            const postMessageSpy = jest.spyOn(view.panel.webview, "postMessage");
+            await view.onMessageReceived({ command: "GET_LOCALIZATION" });
+            expect(postMessageSpy).toHaveBeenCalledWith({
+                command: "GET_LOCALIZATION",
+                contents: "file contents",
+            });
             globalMocks.updateWebviewMock.mockRestore();
         });
 

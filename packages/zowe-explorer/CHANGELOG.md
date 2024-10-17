@@ -6,7 +6,14 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Zowe Explorer now includes support for the [VS Code display languages](https://code.visualstudio.com/docs/getstarted/locales) French, German, Japanese, Portuguese, and Spanish. Download the respective language pack and switch. [#3239](https://github.com/zowe/zowe-explorer-vscode/pull/3239)
+- Localization of strings within the webviews. [#2983](https://github.com/zowe/zowe-explorer-vscode/issues/2983)
+
 ### Bug fixes
+
+- Fixed an issue where the contents of an editor did not update when polling spool content or using the "Pull from Mainframe" action with jobs. [#3249](https://github.com/zowe/zowe-explorer-vscode/pull/3249)
+- Fixed an issue where Zowe Explorer sometimes prompted the user to convert V1 profiles when changes were made to a team configuration after initialization. [#3246](https://github.com/zowe/zowe-explorer-vscode/pull/3246)
+- Fixed an issue where the encoding of a USS file was not automatically detected when opened for the first time. [#3253](https://github.com/zowe/zowe-explorer-vscode/pull/3253)
 
 ## `3.0.1`
 
@@ -20,7 +27,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where the `Create Directory` and `Create File` features would continue processing when the first prompt was dismissed, causing an incorrect URI to be generated. [#3183](https://github.com/zowe/zowe-explorer-vscode/pull/3183)
 - Fixed an issue where the `Create Directory` and `Create File` features would incorrectly handle user-specified locations with trailing slashes. [#3183](https://github.com/zowe/zowe-explorer-vscode/pull/3183)
 - Fixed an issue where a 401 error could occur when opening PDS members after updating credentials within the same user session. [#3150](https://github.com/zowe/zowe-explorer-vscode/issues/3150)
-- Fixed issue where switching from token-based authentication to user/password would cause an error for nested profiles. [#3142](https://github.com/zowe/zowe-explorer-vscode/issues/3142)
 - Fixed the "Edit Profile" operation to open the correct files when both global and project team configs are present. [#3125](https://github.com/zowe/zowe-explorer-vscode/issues/3125)
 
 ## `3.0.0`

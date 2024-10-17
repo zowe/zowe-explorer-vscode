@@ -56,8 +56,11 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         if (!SharedContext.isSpoolFile(node)) {
             return;
         }
-        const statusBarMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching spool file..."));
-        await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
+        const statusBarMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Fetching spool file...")}`);
+        await JobFSProvider.instance.fetchSpoolAtUri(
+            node.resourceUri,
+            vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path)
+        );
         statusBarMsg.dispose();
     }
 
@@ -202,6 +205,8 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
         spoolEntry.data = bufBuilder.read() ?? new Uint8Array();
+        spoolEntry.mtime = Date.now();
+        spoolEntry.size = spoolEntry.data.byteLength;
         if (editor) {
             await this._updateResourceInEditor(uri);
         }
