@@ -72,7 +72,7 @@ export class JobInit {
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.jobs.refreshSpool", async (node) => {
-                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Pulling from Mainframe..."));
+                const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Pulling from Mainframe...")}`);
                 await JobFSProvider.refreshSpool(node);
                 statusMsg.dispose();
             })

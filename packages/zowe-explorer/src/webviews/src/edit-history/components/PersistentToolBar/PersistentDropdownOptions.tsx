@@ -12,28 +12,29 @@
 import { VSCodeDropdown, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
 import { useDataPanelContext } from "../PersistentUtils";
+import * as l10n from "@vscode/l10n";
 
 export default function PersistentDropdownOptions({ handleChange }: Readonly<{ handleChange: Readonly<Function> }>): JSXInternal.Element {
   const dataPanelContext = useDataPanelContext();
 
   const options = [
     <VSCodeOption value="search" key="search">
-      Search History
+      {l10n.t("Search History")}
     </VSCodeOption>,
     <VSCodeOption value="favorites" key="favorites">
-      Favorites
+      {l10n.t("Favorites")}
     </VSCodeOption>,
     <VSCodeOption value="fileHistory" key="fileHistory">
-      File History
+      {l10n.t("File History")}
     </VSCodeOption>,
     <VSCodeOption value="sessions" key="sessions">
-      Sessions
+      {l10n.t("Sessions")}
     </VSCodeOption>,
   ];
 
   const optionsEncodingHistory = [
     <VSCodeOption value="encodingHistory" key="encodingHistory">
-      Encoding History
+      {l10n.t("Encoding History")}
     </VSCodeOption>,
   ].filter((option) => dataPanelContext.type === "uss" || dataPanelContext.type === "ds" || option.props.value !== "encodingHistory");
 

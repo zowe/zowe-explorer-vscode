@@ -1,11 +1,53 @@
 {
+  "Enter command here...": "Enter command here...",
+  "Page Size:": "Page Size:",
+  "Page": "Page",
+  "No": "No",
+  "item": "item",
+  "s": "s",
+  "selected": "selected",
+  "Data Sets": "Data Sets",
+  "Unix System Services (USS)": "Unix System Services (USS)",
+  "Jobs": "Jobs",
+  "DataPanelContext has to be used within <DataPanelContext.Provider>": "DataPanelContext has to be used within <DataPanelContext.Provider>",
   "Refresh": "Refresh",
+  "Search History": "Search History",
+  "Favorites": "Favorites",
+  "File History": "File History",
+  "Sessions": "Sessions",
+  "Encoding History": "Encoding History",
   "Delete Selected": "Delete Selected",
   "Select an item before deleting": "Select an item before deleting",
+  "Delete": "Delete",
   "Clear All": "Clear All",
   "Add New History Item": "Add New History Item",
+  "Add": "Add",
+  "No records found": "No records found",
   "Item": "Item",
   "Select": "Select",
+  "Last refreshed:": "Last refreshed:",
+  "Manage Persistent Properties": "Manage Persistent Properties",
+  "Read": "Read",
+  "Write": "Write",
+  "Execute": "Execute",
+  "User": "User",
+  "Group": "Group",
+  "All": "All",
+  "File properties": "File properties",
+  "Tag": "Tag",
+  "Owner": "Owner",
+  "Apply changes": "Apply changes",
+  "The API does not support updating attributes for this": "The API does not support updating attributes for this",
+  "Waiting for data from extension...": "Waiting for data from extension...",
+  "Log in to Authentication Service": "Log in to Authentication Service",
+  "Select a certificate and certificate key in PEM format:": "Select a certificate and certificate key in PEM format:",
+  "Value": "Value",
+  "Actions": "Actions",
+  "Certificate File": "Certificate File",
+  "Browse": "Browse",
+  "Certificate Key File": "Certificate Key File",
+  "Submit": "Submit",
+  "Cancel": "Cancel",
   "Zowe explorer profiles are being set as unsecured.": "Zowe explorer profiles are being set as unsecured.",
   "Zowe explorer profiles are being set as secured.": "Zowe explorer profiles are being set as secured.",
   "Custom credential manager failed to activate": "Custom credential manager failed to activate",
@@ -15,7 +57,6 @@
       "Credential manager display name"
     ]
   },
-  "No": "No",
   "Yes, globally": "Yes, globally",
   "Only for this workspace": "Only for this workspace",
   "Zowe Explorer failed to activate since the default credential manager is not supported in your environment.": "Zowe Explorer failed to activate since the default credential manager is not supported in your environment.",
@@ -87,7 +128,6 @@
   },
   "Zowe Profiles initialized successfully.": "Zowe Profiles initialized successfully.",
   "Convert Existing Profiles": "Convert Existing Profiles",
-  "Operation cancelled": "Operation cancelled",
   "Tree Item is not a Zowe Explorer item.": "Tree Item is not a Zowe Explorer item.",
   "Zowe Explorer": "Zowe Explorer",
   "Initialized logger for Zowe Explorer": "Initialized logger for Zowe Explorer",
@@ -126,21 +166,19 @@
       "Label"
     ]
   },
-  "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection./Label": {
+  "Update Credentials": "Update Credentials",
+  "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection./Profile name": {
     "message": "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
     "comment": [
-      "Label"
+      "Profile name"
     ]
   },
-  "Log in to Authentication Service": "Log in to Authentication Service",
-  "Update Credentials": "Update Credentials",
   "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct./Profile name": {
     "message": "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
     "comment": [
       "Profile name"
     ]
   },
-  "Favorites": "Favorites",
   "Use the search button to list USS files": "Use the search button to list USS files",
   "Invalid node": "Invalid node",
   "Delete action was cancelled.": "Delete action was cancelled.",
@@ -174,7 +212,7 @@
   "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
   "Could not list USS files: Empty path provided in URI": "Could not list USS files: Empty path provided in URI",
   "Profile does not exist for this file.": "Profile does not exist for this file.",
-  "$(sync~spin) Saving USS file...": "$(sync~spin) Saving USS file...",
+  "Saving USS file...": "Saving USS file...",
   "Renaming {0} failed due to API error: {1}/File pathError message": {
     "message": "Renaming {0} failed due to API error: {1}",
     "comment": [
@@ -210,11 +248,11 @@
     ]
   },
   "Binary": "Binary",
-  "$(plus) Create a new filter": "$(plus) Create a new filter",
+  "Create a new filter": "Create a new filter",
   "Failed to move file {0}: {1}": "Failed to move file {0}: {1}",
   "Confirm": "Confirm",
   "One or more items may be overwritten from this drop operation. Confirm or cancel?": "One or more items may be overwritten from this drop operation. Confirm or cancel?",
-  "$(sync~spin) Moving USS files...": "$(sync~spin) Moving USS files...",
+  "Moving USS files...": "Moving USS files...",
   "Unable to rename {0} because you have unsaved changes in this {1}. Please save your work before renaming the {1}./Node pathNode type": {
     "message": "Unable to rename {0} because you have unsaved changes in this {1}. Please save your work before renaming the {1}.",
     "comment": [
@@ -266,7 +304,7 @@
   },
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
-  "$(sync~spin) Pulling from Mainframe...": "$(sync~spin) Pulling from Mainframe...",
+  "Pulling from Mainframe...": "Pulling from Mainframe...",
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -284,7 +322,6 @@
   "Uploading file to USS tree": "Uploading file to USS tree",
   "Upload action was cancelled.": "Upload action was cancelled.",
   "Uploading USS file": "Uploading USS file",
-  "Delete": "Delete",
   "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}/File names": {
     "message": "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
     "comment": [
@@ -353,21 +390,21 @@
   "No spool files found": "No spool files found",
   "No jobs found": "No jobs found",
   "Retrieving response from JES list API": "Retrieving response from JES list API",
-  "$(list-ordered) Job ID (default)": "$(list-ordered) Job ID (default)",
-  "$(calendar) Date Submitted": "$(calendar) Date Submitted",
-  "$(calendar) Date Completed": "$(calendar) Date Completed",
-  "$(case-sensitive) Job Name": "$(case-sensitive) Job Name",
-  "$(symbol-numeric) Return Code": "$(symbol-numeric) Return Code",
-  "$(fold) Sort Direction": "$(fold) Sort Direction",
+  "Job ID (default)": "Job ID (default)",
+  "Date Submitted": "Date Submitted",
+  "Date Completed": "Date Completed",
+  "Job Name": "Job Name",
+  "Return Code": "Return Code",
+  "Sort Direction": "Sort Direction",
   "Go to Local Filtering": "Go to Local Filtering",
-  "$(clear-all) Clear filter for profile": "$(clear-all) Clear filter for profile",
+  "Clear filter for profile": "Clear filter for profile",
   "Create new...": "Create new...",
-  "$(check) Submit this query": "$(check) Submit this query",
+  "Submit this query": "Submit this query",
   "Enter job owner ID": "Enter job owner ID",
   "Enter job prefix": "Enter job prefix",
   "Enter job status": "Enter job status",
-  "$(plus) Create job search filter": "$(plus) Create job search filter",
-  "$(search) Search by job ID": "$(search) Search by job ID",
+  "Create job search filter": "Create job search filter",
+  "Search by job ID": "Search by job ID",
   "Initializing profiles with jobs favorites.": "Initializing profiles with jobs favorites.",
   "No jobs favorites found.": "No jobs favorites found.",
   "Loading profile: {0} for jobs favorites/Profile name": {
@@ -399,8 +436,8 @@
       "URI path"
     ]
   },
-  "$(sync~spin) Polling: {0}.../Unique Spool name": {
-    "message": "$(sync~spin) Polling: {0}...",
+  "Polling: {0}.../Unique Spool name": {
+    "message": "Polling: {0}...",
     "comment": [
       "Unique Spool name"
     ]
@@ -412,22 +449,21 @@
     ]
   },
   "Set a filter...": "Set a filter...",
-  "$(check) Filter cleared for {0}/Job label": {
-    "message": "$(check) Filter cleared for {0}",
+  "Filter cleared for {0}/Job label": {
+    "message": "Filter cleared for {0}",
     "comment": [
       "Job label"
     ]
   },
   "Enter local filter...": "Enter local filter...",
-  "$(check) Filter updated for {0}/Job label": {
-    "message": "$(check) Filter updated for {0}",
+  "Filter updated for {0}/Job label": {
+    "message": "Filter updated for {0}",
     "comment": [
       "Job label"
     ]
   },
   "Get JCL": "Get JCL",
   "Display in Tree": "Display in Tree",
-  "Cancel": "Cancel",
   "Download": "Download",
   "Jobs with ID: {0}/Job Search ID": {
     "message": "Jobs with ID: {0}",
@@ -443,12 +479,9 @@
       "Job Status"
     ]
   },
-  "Jobs": "Jobs",
   "Name": "Name",
   "Class": "Class",
-  "Owner": "Owner",
   "ID": "ID",
-  "Return Code": "Return Code",
   "Status": "Status",
   "Subsystem": "Subsystem",
   "Type": "Type",
@@ -456,7 +489,7 @@
   "Phase": "Phase",
   "Phase Name": "Phase Name",
   "Error Details": "Error Details",
-  "$(sync~spin) Fetching spool file...": "$(sync~spin) Fetching spool file...",
+  "Fetching spool file...": "Fetching spool file...",
   "Failed to fetch jobs: getJobsByParameters is not implemented for this session's JES API.": "Failed to fetch jobs: getJobsByParameters is not implemented for this session's JES API.",
   "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}/Job name": {
     "message": "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}",
@@ -490,8 +523,8 @@
       "Spool node label"
     ]
   },
-  "$(sync~spin) Polling: {0}.../Document file name": {
-    "message": "$(sync~spin) Polling: {0}...",
+  "Polling: {0}.../Document file name": {
+    "message": "Polling: {0}...",
     "comment": [
       "Document file name"
     ]
@@ -528,8 +561,8 @@
     ]
   },
   "Select a sorting direction": "Select a sorting direction",
-  "$(check) Sorting updated for {0}/Session label": {
-    "message": "$(check) Sorting updated for {0}",
+  "Sorting updated for {0}/Session label": {
+    "message": "Sorting updated for {0}",
     "comment": [
       "Session label"
     ]
@@ -540,11 +573,11 @@
   "No data sets found": "No data sets found",
   "Retrieving response from MVS list API": "Retrieving response from MVS list API",
   "Cannot download, item invalid.": "Cannot download, item invalid.",
-  "$(case-sensitive) Name (default)": "$(case-sensitive) Name (default)",
-  "$(calendar) Date Created": "$(calendar) Date Created",
-  "$(calendar) Date Modified": "$(calendar) Date Modified",
-  "$(account) User ID": "$(account) User ID",
-  "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
+  "Name (default)": "Name (default)",
+  "Date Created": "Date Created",
+  "Date Modified": "Date Modified",
+  "User ID": "User ID",
+  "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
   "Initializing profiles with data set favorites.": "Initializing profiles with data set favorites.",
   "No data set favorites found.": "No data set favorites found.",
   "Error creating data set favorite node: {0} for profile {1}./LabelProfile name": {
@@ -604,8 +637,8 @@
       "Specifier"
     ]
   },
-  "$(check) Sorting updated for {0}/Node label": {
-    "message": "$(check) Sorting updated for {0}",
+  "Sorting updated for {0}/Node label": {
+    "message": "Sorting updated for {0}",
     "comment": [
       "Node label"
     ]
@@ -616,15 +649,15 @@
       "Filter value"
     ]
   },
-  "$(clear-all) Clear filter for PDS": "$(clear-all) Clear filter for PDS",
+  "Clear filter for PDS": "Clear filter for PDS",
   "Set a filter for {0}/Specifier": {
     "message": "Set a filter for {0}",
     "comment": [
       "Specifier"
     ]
   },
-  "$(check) Filter cleared for {0}/Node label": {
-    "message": "$(check) Filter cleared for {0}",
+  "Filter cleared for {0}/Node label": {
+    "message": "Filter cleared for {0}",
     "comment": [
       "Node label"
     ]
@@ -632,8 +665,8 @@
   "Invalid date format specified": "Invalid date format specified",
   "Enter a value to filter by": "Enter a value to filter by",
   "Invalid filter specified": "Invalid filter specified",
-  "$(check) Filter updated for {0}/Node label": {
-    "message": "$(check) Filter updated for {0}",
+  "Filter updated for {0}/Node label": {
+    "message": "Filter updated for {0}",
     "comment": [
       "Node label"
     ]
@@ -646,7 +679,7 @@
   "Choose the setting location to save the data set template...": "Choose the setting location to save the data set template...",
   "Save as User setting": "Save as User setting",
   "Save as Workspace setting": "Save as Workspace setting",
-  "$(sync~spin) Saving data set...": "$(sync~spin) Saving data set...",
+  "Saving data set...": "Saving data set...",
   "Deleting {0} failed due to API error: {1}/File pathError message": {
     "message": "Deleting {0} failed due to API error: {1}",
     "comment": [
@@ -795,7 +828,7 @@
     ]
   },
   "Item invalid.": "Item invalid.",
-  "$(sync~spin) Fetching data set...": "$(sync~spin) Fetching data set...",
+  "Fetching data set...": "Fetching data set...",
   "Error encountered when refreshing data set view. {0}/Stringified JSON error": {
     "message": "Error encountered when refreshing data set view. {0}",
     "comment": [
@@ -832,24 +865,23 @@
     ]
   },
   "Error encountered while activating and initializing logger": "Error encountered while activating and initializing logger",
-  "$(plus) Add Credentials": "$(plus) Add Credentials",
+  "Add Credentials": "Add Credentials",
   "Add username and password for basic authentication": "Add username and password for basic authentication",
-  "$(refresh) Update Credentials": "$(refresh) Update Credentials",
   "Update stored username and password": "Update stored username and password",
-  "$(trash) Delete Profile": "$(trash) Delete Profile",
-  "$(workspace-untrusted) Disable Profile Validation": "$(workspace-untrusted) Disable Profile Validation",
+  "Delete Profile": "Delete Profile",
+  "Disable Profile Validation": "Disable Profile Validation",
   "Disable validation of server check for profile": "Disable validation of server check for profile",
-  "$(workspace-trusted) Enable Profile Validation": "$(workspace-trusted) Enable Profile Validation",
+  "Enable Profile Validation": "Enable Profile Validation",
   "Enable validation of server check for profile": "Enable validation of server check for profile",
-  "$(pencil) Edit Profile": "$(pencil) Edit Profile",
+  "Edit Profile": "Edit Profile",
   "Update profile connection information": "Update profile connection information",
-  "$(eye-closed) Hide Profile": "$(eye-closed) Hide Profile",
+  "Hide Profile": "Hide Profile",
   "Hide profile name from tree view": "Hide profile name from tree view",
-  "$(key) Change the Authentication Method": "$(key) Change the Authentication Method",
+  "Change the Authentication Method": "Change the Authentication Method",
   "Change the authentication method": "Change the authentication method",
-  "$(arrow-right) Log in to authentication service": "$(arrow-right) Log in to authentication service",
+  "Log in to authentication service": "Log in to authentication service",
   "Log in to obtain a new token value": "Log in to obtain a new token value",
-  "$(arrow-left) Log out of authentication service": "$(arrow-left) Log out of authentication service",
+  "Log out of authentication service": "Log out of authentication service",
   "Log out to invalidate and remove stored token value": "Log out to invalidate and remove stored token value",
   "Profile {0} is using basic authentication. Choose a profile action./Profile name": {
     "message": "Profile {0} is using basic authentication. Choose a profile action.",
@@ -1034,7 +1066,7 @@
   "All jobs": "All jobs",
   "Ascending": "Ascending",
   "Descending": "Descending",
-  "$(plus) Create a new Unix command": "$(plus) Create a new Unix command",
+  "Create a new Unix command": "Create a new Unix command",
   "Issuing commands is not supported for this profile type, {0}./Profile type": {
     "message": "Issuing commands is not supported for this profile type, {0}.",
     "comment": [
@@ -1047,14 +1079,14 @@
       "Profile type"
     ]
   },
-  "Error preparring SSH connection for issueing UNIX commands, please check SSH profile for correctness.": "Error preparring SSH connection for issueing UNIX commands, please check SSH profile for correctness.",
+  "Error preparing SSH connection for issuing UNIX commands, please check SSH profile for correctness.": "Error preparing SSH connection for issuing UNIX commands, please check SSH profile for correctness.",
   "No SSH profile found. Please create an SSH profile.": "No SSH profile found. Please create an SSH profile.",
   "SSH profile missing connection details. Please update.": "SSH profile missing connection details. Please update.",
   "No profiles available.": "No profiles available.",
   "Redirecting to Home Directory": "Redirecting to Home Directory",
   "Zowe Unix Command": "Zowe Unix Command",
   "An SSH profile will be used for issuing UNIX commands with the profile {0}.": "An SSH profile will be used for issuing UNIX commands with the profile {0}.",
-  "Error checking if SSH profile type required for issueing UNIX commands, setting requirement to false for profile {0}.": "Error checking if SSH profile type required for issueing UNIX commands, setting requirement to false for profile {0}.",
+  "Error checking if SSH profile type required for issuing UNIX commands, setting requirement to false for profile {0}.": "Error checking if SSH profile type required for issuing UNIX commands, setting requirement to false for profile {0}.",
   "Enter the path of the directory in order to execute the command": "Enter the path of the directory in order to execute the command",
   "Not implemented yet for profile of type: {0}/Profile type": {
     "message": "Not implemented yet for profile of type: {0}",
@@ -1078,7 +1110,7 @@
   },
   "Enter or update the Unix command": "Enter or update the Unix command",
   "Unix command submitted.": "Unix command submitted.",
-  "$(plus) Create a new TSO command": "$(plus) Create a new TSO command",
+  "Create a new TSO command": "Create a new TSO command",
   "Zowe TSO Command": "Zowe TSO Command",
   "Select the Profile to use to submit the TSO command": "Select the Profile to use to submit the TSO command",
   "Profile is invalid": "Profile is invalid",
@@ -1102,7 +1134,7 @@
   "Account Number": "Account Number",
   "Enter the account number for the TSO connection.": "Enter the account number for the TSO connection.",
   "Operation Cancelled.": "Operation Cancelled.",
-  "$(plus) Create a new MVS command": "$(plus) Create a new MVS command",
+  "Create a new MVS command": "Create a new MVS command",
   "Zowe MVS Command": "Zowe MVS Command",
   "Select the Profile to use to submit the command": "Select the Profile to use to submit the command",
   "Select an MVS command to run against {0} (An option to edit will follow)/Host name": {

@@ -266,6 +266,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
                 Profiles.getInstance().validProfile = Validation.ValidationType.UNVERIFIED;
             }
         }
+        await ZoweTreeProvider.checkJwtTokenForProfile(node.getProfileName());
         this.refresh();
         return profileStatus;
     }
@@ -302,6 +303,21 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
     public async createZoweSession(zoweFileProvider: IZoweTree<Types.IZoweNodeType>): Promise<void> {
         ZoweLogger.trace("ZoweTreeProvider.createZoweSession called.");
         await Profiles.getInstance().createZoweSession(zoweFileProvider);
+    }
+
+    /**
+     * Checks if a JWT token is used for authenticating the given profile name.
+     * If so, it will grab and decode the token to determine its expire date.
+     * If the token has expired, it will prompt the user to log in again.
+     *
+     * @param profileName The name of the profile to check the JWT token for
+     */
+    protected static async checkJwtTokenForProfile(profileName: string): Promise<void> {
+        const profInfo = await Profiles.getInstance().getProfileInfo();
+
+        if (profInfo.hasTokenExpiredForProfile(profileName)) {
+            await AuthUtils.promptUserForSsoLogin(profileName);
+        }
     }
 
     private async loadProfileBySessionName(

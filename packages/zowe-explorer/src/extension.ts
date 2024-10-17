@@ -36,6 +36,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     await SharedInit.initZoweLogger(context);
 
     await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
+    await ProfilesUtils.handleV1MigrationStatus();
     await Profiles.createInstance(ZoweLogger.imperativeLogger);
 
     const providers = await SharedTreeProviders.initializeProviders(
@@ -55,7 +56,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     SharedInit.watchConfigProfile(context);
     await SharedInit.watchForZoweButtonClick();
 
-    await ProfilesUtils.handleV1MigrationStatus();
     await ProfilesUtils.promptUserWithNoConfigs();
     return ZoweExplorerApiRegister.getInstance();
 }
