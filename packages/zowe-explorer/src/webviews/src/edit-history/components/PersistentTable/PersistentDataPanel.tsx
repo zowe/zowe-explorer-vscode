@@ -43,7 +43,6 @@ export default function PersistentDataPanel({ type }: Readonly<{ type: Readonly<
         type,
       },
     });
-
     const newSelectedItems: { [key: string]: boolean } = { ...selectedItemsMemo.val };
     Object.keys(newSelectedItems).forEach((item) => {
       newSelectedItems[item] = false;
@@ -56,13 +55,14 @@ export default function PersistentDataPanel({ type }: Readonly<{ type: Readonly<
       if (!isSecureOrigin(event.origin)) {
         return;
       }
+      if (event.data.ds && event.data.uss && event.data.jobs) {
+        setData(event.data);
 
-      setData(event.data);
-
-      if ("selection" in event.data) {
-        setSelection(() => ({
-          [type]: event.data.selection[type],
-        }));
+        if ("selection" in event.data) {
+          setSelection(() => ({
+            [type]: event.data.selection[type],
+          }));
+        }
       }
     });
   }, []);
