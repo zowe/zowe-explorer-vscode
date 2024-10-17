@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import {
     FileManagement,
     Gui,
+    CorrelatedError,
     IZoweTree,
     IZoweTreeNode,
     TableViewProvider,
@@ -46,6 +47,7 @@ import { SharedContext } from "./SharedContext";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { CertificateWizard } from "../../utils/CertificateWizard";
 import { ZosConsoleViewProvider } from "../../zosconsole/ZosConsolePanel";
+import { TroubleshootError } from "../../utils/TroubleshootError";
 
 export class SharedInit {
     private static originalEmitZoweEvent: typeof imperative.EventProcessor.prototype.emitEvent;
@@ -275,6 +277,17 @@ export class SharedInit {
                 vscode.commands.registerCommand("zowe.compareFileStarted", (): boolean => {
                     return LocalFileManagement.fileSelectedToCompare;
                 })
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.revealOutputChannel", (): void => {
+                    ZoweLogger.zeOutputChannel.show();
+                })
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand(
+                    "zowe.troubleshootError",
+                    (error: CorrelatedError, stackTrace?: string) => new TroubleshootError(context, { error, stackTrace })
+                )
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.placeholderCommand", () => {

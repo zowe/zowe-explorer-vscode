@@ -184,7 +184,8 @@ export class ProfilesCache {
                     }
 
                     // Step 3: Update allProfiles list
-                    tmpAllProfiles.push(profileFix);
+                    const existingProfile = this.allProfiles.find((tmpProf) => tmpProf.name === prof.profName && tmpProf.type === prof.profType);
+                    tmpAllProfiles.push(existingProfile ? Object.assign(existingProfile, profileFix) : profileFix);
                 }
                 allProfiles.push(...tmpAllProfiles);
                 this.profilesByType.set(type, tmpAllProfiles);

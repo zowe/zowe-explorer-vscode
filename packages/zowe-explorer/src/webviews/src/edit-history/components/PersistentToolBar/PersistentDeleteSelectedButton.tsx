@@ -1,7 +1,7 @@
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
 import { useDataPanelContext } from "../PersistentUtils";
-import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
+import PersistentVSCodeAPI from "../../../PersistentVSCodeAPI";
 import * as nls from "@vscode/l10n";
 
 export default function PersistentDeleteSelectedButton(): JSXInternal.Element {

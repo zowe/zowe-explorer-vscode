@@ -547,7 +547,7 @@ export class ProfilesUtils {
             ZoweLogger.info(vscode.l10n.t("Zowe Profiles initialized successfully."));
         } catch (err) {
             if (err instanceof imperative.ImperativeError) {
-                await AuthUtils.errorHandling(err, undefined, err.mDetails.causeErrors);
+                await AuthUtils.errorHandling(err, { scenario: err.mDetails.causeErrors });
             } else {
                 ZoweLogger.error(err);
                 errorCallback(err.message);
