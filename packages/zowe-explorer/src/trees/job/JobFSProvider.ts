@@ -57,7 +57,10 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             return;
         }
         const statusBarMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Fetching spool file...")}`);
-        await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
+        await JobFSProvider.instance.fetchSpoolAtUri(
+            node.resourceUri,
+            vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path)
+        );
         statusBarMsg.dispose();
     }
 
