@@ -5,6 +5,7 @@ import { GridApi } from "ag-grid-community";
 import { wrapFn } from "./types";
 import { FocusableItem, Menu, MenuGroup, MenuItem } from "@szhsin/react-menu";
 import "@szhsin/react-menu/dist/index.css";
+import * as l10n from "@vscode/l10n";
 
 interface ActionsProps {
   actions: Table.Action[];
@@ -80,7 +81,8 @@ export const ActionsBar = (props: ActionsProps) => {
       </h3>
       <span style={{ display: "flex", alignItems: "center", marginBottom: "0.25em" }}>
         <p style={{ fontSize: "0.9em", paddingTop: "2px", marginRight: "0.75em" }}>
-          {props.selectionCount === 0 ? "No" : props.selectionCount} item{props.selectionCount > 1 || props.selectionCount === 0 ? "s" : ""} selected
+          {props.selectionCount === 0 ? l10n.t("No") : props.selectionCount} {l10n.t("item")}
+          {props.selectionCount > 1 || props.selectionCount === 0 ? l10n.t("s") : ""} {l10n.t("selected")}
         </p>
         {props.actions
           .filter((action) => (props.itemCount > 1 ? action.callback.typ === "multi-row" : action.callback.typ.endsWith("row")))
