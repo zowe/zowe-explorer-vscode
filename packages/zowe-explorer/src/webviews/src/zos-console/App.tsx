@@ -1,6 +1,7 @@
 import { Dropdown, Option, TextArea, TextField } from "@vscode/webview-ui-toolkit";
 import { VSCodeDropdown, VSCodeTextArea, VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
 import { useEffect, useState } from "preact/hooks";
+import * as l10n from "@vscode/l10n";
 import { isSecureOrigin } from "../utils";
 
 declare const vscode: any;
@@ -11,6 +12,7 @@ declare const vscode: any;
  */
 export function App() {
   const [consoleContent, setConsoleContent] = useState("");
+  const [placeholder, setPlaceholder] = useState("");
   useEffect(() => {
     window.addEventListener("message", (event) => {
       // Prevent users from sending data into webview outside of extension/webview context
@@ -35,10 +37,19 @@ export function App() {
             profileList.appendChild(option);
           }
           break;
+        case "GET_LOCALIZATION": {
+          const { contents } = event.data;
+          l10n.config({
+            contents: contents,
+          });
+          setPlaceholder(l10n.t("Enter command here..."));
+          break;
+        }
       }
     });
     const consoleResponse = document.getElementById("output") as TextArea;
     consoleResponse.control.scrollTop = consoleResponse.control.scrollHeight;
+    vscode.postMessage({ command: "GET_LOCALIZATION" });
   });
 
   const sendCommand = (e: KeyboardEvent) => {
@@ -65,7 +76,7 @@ export function App() {
           id="command-input"
           name="command-input"
           type="text"
-          placeholder="Enter command here..."
+          placeholder={placeholder}
           onKeyDown={sendCommand}
           style={{
             width: "100%",
