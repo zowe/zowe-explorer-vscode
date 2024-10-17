@@ -268,12 +268,6 @@ export class ProfileManagement {
         return quickPickOptions;
     }
     private static async handleDeleteProfiles(node: IZoweTreeNode): Promise<void> {
-        const profInfo = await Profiles.getInstance().getProfileInfo();
-        if (profInfo.getTeamConfig().exists) {
-            const profile = node.getProfile();
-            await Profiles.getInstance().editSession(profile);
-            return;
-        }
         await vscode.commands.executeCommand("zowe.deleteProfile", node);
     }
 

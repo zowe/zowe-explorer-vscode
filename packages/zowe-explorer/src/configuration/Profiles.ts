@@ -655,17 +655,21 @@ export class Profiles extends ProfilesCache {
         }
 
         const deleteLabel = deletedProfile.name;
-
-        let currentProfile: imperative.IProfAttrs;
-        try {
-            currentProfile = await this.getProfileFromConfig(deleteLabel);
-        } catch (err) {
-            ZoweLogger.error(err);
-            ZoweExplorerExtender.showZoweConfigError(err.message);
+        const deleteSuccess = await this.deletePrompt(deletedProfile);
+        if (!deleteSuccess) {
+            Gui.showMessage(this.profilesOpCancelled);
             return;
         }
-        const filePath = currentProfile.profLoc.osLoc[0];
-        await this.openConfigFile(filePath);
+
+        // TODO Delete profile from history, favorites, tree, session list
+
+        // Remove from list of all profiles
+        const index = this.allProfiles.findIndex((deleteItem) => {
+            return deleteItem.name === deletedProfile.name;
+        });
+        if (index >= 0) {
+            this.allProfiles.splice(index, 1);
+        }
     }
 
     public async validateProfiles(theProfile: imperative.IProfileLoaded): Promise<Validation.IValidationProfile> {
@@ -1202,6 +1206,34 @@ export class Profiles extends ProfilesCache {
             }
         }
         return [newUser, newPass];
+    }
+
+    private async deletePrompt(deletedProfile: imperative.IProfileLoaded): Promise<string> {
+        // TODO Prompt for confirmation if the profile is a default or if the profile contains child profiles
+        ZoweLogger.trace("Profiles.deletePrompt called.");
+        const profileName = deletedProfile.name;
+        ZoweLogger.info(vscode.l10n.t("Deleting profile {0}", profileName));
+        const quickPickOptions: vscode.QuickPickOptions = {
+            placeHolder: vscode.l10n.t("Delete {0}? This will permanently remove it from your system.", profileName),
+            ignoreFocusOut: true,
+            canPickMany: false,
+        };
+        // confirm that the user really wants to delete
+        if ((await Gui.showQuickPick([vscode.l10n.t("Delete"), vscode.l10n.t("Cancel")], quickPickOptions)) !== vscode.l10n.t("Delete")) {
+            ZoweLogger.info(vscode.l10n.t("Cancelling deletion of profile {0}", deletedProfile.name));
+            return;
+        }
+
+        try {
+            await this.deleteProfileOnDisk(deletedProfile);
+        } catch (error) {
+            ZoweLogger.error(vscode.l10n.t("Error encountered when deleting profile {0}. {1}", deletedProfile.name, JSON.stringify(error)));
+            await AuthUtils.errorHandling(error, profileName);
+            throw error;
+        }
+
+        Gui.showMessage(vscode.l10n.t("Profile {0} was deleted.", profileName));
+        return profileName;
     }
 
     private async userInfo(input?: string): Promise<string> {

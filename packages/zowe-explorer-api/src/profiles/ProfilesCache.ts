@@ -379,6 +379,13 @@ export class ProfilesCache {
         };
     }
 
+    protected async deleteProfileOnDisk(profileInfo: imperative.IProfileLoaded): Promise<void> {
+        const profInfoApi = await this.getProfileInfo();
+        const configApi = profInfoApi.getTeamConfig();
+        configApi.delete(configApi.api.profiles.getProfilePathFromName(profileInfo.name));
+        await configApi.save();
+    }
+
     public static async convertV1ProfToConfig(
         profileInfo: imperative.ProfileInfo,
         deleteV1Profs: boolean = false
