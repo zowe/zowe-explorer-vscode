@@ -6,5 +6,6 @@
       "private": true
     }
   },
-  "useWorkspaces": true
+  "useWorkspaces": true,
+  "comment": "this is a dummy change."
 }
