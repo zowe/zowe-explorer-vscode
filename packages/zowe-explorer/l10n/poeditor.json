@@ -493,7 +493,6 @@
   "Failed to initialize Zowe folder: {0}": "",
   "Zowe Profiles initialized successfully.": "",
   "Convert Existing Profiles": "",
-  "Operation cancelled": "",
   "Tree Item is not a Zowe Explorer item.": "",
   "Zowe Explorer": "",
   "Initialized logger for Zowe Explorer": "",
