@@ -113,7 +113,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                 }
             }
         } catch (err) {
-            const userResponse = await this._handleError(err, {
+            const { correlation, userResponse } = await this._handleError(err, {
                 allowRetry: true,
                 apiType: ZoweExplorerApiType.Jes,
                 profileType: uriInfo.profile?.type,
@@ -121,6 +121,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             if (userResponse === "Retry") {
                 return this.readDirectory(uri);
             }
+            throw correlation.asError();
         }
 
         for (const entry of fsEntry.entries) {
@@ -227,7 +228,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             try {
                 await this.fetchSpoolAtUri(uri);
             } catch (err) {
-                const userResponse = await this._handleError(err, {
+                const { correlation, userResponse } = await this._handleError(err, {
                     additionalContext: vscode.l10n.t({
                         message: "Failed to get contents for {0}",
                         args: [spoolEntry.name],
@@ -240,6 +241,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                 if (userResponse === "Retry") {
                     return this.readFile(uri);
                 }
+                throw correlation.asError();
             }
             spoolEntry.wasAccessed = true;
         }
@@ -313,7 +315,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             try {
                 await ZoweExplorerApiRegister.getJesApi(profInfo.profile).deleteJob(entry.job.jobname, entry.job.jobid);
             } catch (err) {
-                const userResponse = await this._handleError(err, {
+                const { correlation, userResponse } = await this._handleError(err, {
                     additionalContext: vscode.l10n.t({
                         message: "Failed to delete job {0}",
                         args: [entry.job.jobname],
@@ -326,6 +328,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                 if (userResponse === "Retry") {
                     return this.delete(uri, options);
                 }
+                throw correlation.asError();
             }
         }
         parent.entries.delete(entry.name);

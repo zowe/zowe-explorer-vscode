@@ -837,7 +837,9 @@ describe("rename", () => {
         };
         (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
 
-        await UssFSProvider.instance.rename(testUris.folder, testUris.folder.with({ path: "/sestest/aFolder2" }), { overwrite: true });
+        await expect(
+            UssFSProvider.instance.rename(testUris.folder, testUris.folder.with({ path: "/sestest/aFolder2" }), { overwrite: true })
+        ).rejects.toThrow();
         expect(mockUssApi.rename).toHaveBeenCalledWith("/aFolder", "/aFolder2");
         expect(folderEntry.metadata.path).toBe("/aFolder");
         expect(sessionEntry.entries.has("aFolder2")).toBe(false);
@@ -882,7 +884,7 @@ describe("delete", () => {
             delete: deleteMock,
         } as any);
         const handleErrorMock = jest.spyOn((BaseProvider as any).prototype, "_handleError");
-        await UssFSProvider.instance.delete(testUris.file, { recursive: false });
+        await expect(UssFSProvider.instance.delete(testUris.file, { recursive: false })).rejects.toThrow();
         expect(getDelInfoMock).toHaveBeenCalledWith(testUris.file);
         expect(deleteMock).toHaveBeenCalledWith(testEntries.file.metadata.path, false);
         expect(handleErrorMock).toHaveBeenCalledWith(exampleError, {

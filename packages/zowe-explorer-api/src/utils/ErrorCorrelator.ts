@@ -61,24 +61,29 @@ export interface DisplayErrorOpts extends CorrelateErrorOpts {
 
 export interface DisplayCorrelatedErrorOpts extends Omit<DisplayErrorOpts, "profileType"> {}
 
+export interface HandledErrorInfo {
+    correlation: CorrelatedError;
+    userResponse: string | undefined;
+}
+
 /**
  * Representation of the given error as a correlated error (wrapper around the `Error` class).
  *
  * Used to cache the error info such as tips, the match that was encountered and the full error message.
  */
 export class CorrelatedError {
+    public errorCode?: string;
+
     public constructor(public properties: CorrelatedErrorProps) {
         if (properties.initialError instanceof Error) {
             // preserve stack from initial error
         }
+
+        this.errorCode = this.initial instanceof ImperativeError ? this.initial.errorCode : this.properties.errorCode;
     }
 
     public get stack(): string | undefined {
         return this.initial instanceof Error ? this.initial.stack : undefined;
-    }
-
-    public get errorCode(): string | undefined {
-        return this.initial instanceof ImperativeError ? this.initial.errorCode : this.properties.errorCode ?? undefined;
     }
 
     public get message(): string {
@@ -91,6 +96,16 @@ export class CorrelatedError {
 
     public get initial(): Error | string {
         return this.properties.initialError;
+    }
+
+    public asError(): Error {
+        const err = new Error(this.message);
+        err.stack = this.stack;
+        return err;
+    }
+
+    public toString(): string {
+        return this.message;
     }
 }
 
@@ -317,8 +332,11 @@ export class ErrorCorrelator extends Singleton {
      * @param allowRetry Whether to allow retrying the action
      * @returns The user selection ("Retry" [if enabled] or "Troubleshoot")
      */
-    public async displayError(api: ZoweExplorerApiType, errorDetails: string | Error, opts?: DisplayErrorOpts): Promise<string | undefined> {
+    public async displayError(api: ZoweExplorerApiType, errorDetails: string | Error, opts?: DisplayErrorOpts): Promise<HandledErrorInfo> {
         const error = this.correlateError(api, errorDetails, { profileType: opts?.profileType, templateArgs: opts?.templateArgs });
-        return this.displayCorrelatedError(error, { additionalContext: opts?.additionalContext, allowRetry: opts?.allowRetry });
+        return {
+            correlation: error,
+            userResponse: await this.displayCorrelatedError(error, { additionalContext: opts?.additionalContext, allowRetry: opts?.allowRetry }),
+        };
     }
 }

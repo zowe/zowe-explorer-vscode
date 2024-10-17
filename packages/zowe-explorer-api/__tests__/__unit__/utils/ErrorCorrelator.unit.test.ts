@@ -127,20 +127,20 @@ describe("displayError", () => {
 });
 
 describe("displayCorrelatedError", () => {
-    it("returns 'Retry' whenever the user selects 'Retry'", async () => {
+    it("returns 'Retry' for the userResponse whenever the user selects 'Retry'", async () => {
         const error = new CorrelatedError({
             correlation: { summary: "Summary of network error" },
             initialError: "This is the full error message",
         });
         const correlateErrorMock = jest.spyOn(ErrorCorrelator.getInstance(), "correlateError").mockReturnValueOnce(error);
         const errorMessageMock = jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("Retry");
-        const userResponse = await ErrorCorrelator.getInstance().displayError(ZoweExplorerApiType.Mvs, "This is the full error message", {
+        const handledErrorInfo = await ErrorCorrelator.getInstance().displayError(ZoweExplorerApiType.Mvs, "This is the full error message", {
             additionalContext: "Some additional context",
             allowRetry: true,
             profileType: "zosmf",
         });
         expect(correlateErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.Mvs, "This is the full error message", { profileType: "zosmf" });
         expect(errorMessageMock).toHaveBeenCalledWith("Some additional context: Summary of network error", { items: ["Retry", "More info"] });
-        expect(userResponse).toBe("Retry");
+        expect(handledErrorInfo.userResponse).toBe("Retry");
     });
 });

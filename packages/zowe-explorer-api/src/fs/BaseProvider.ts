@@ -15,7 +15,7 @@ import * as path from "path";
 import { FsAbstractUtils } from "./utils";
 import { Gui } from "../globals/Gui";
 import { ZosEncoding } from "../tree";
-import { ErrorCorrelator, ZoweExplorerApiType } from "../utils/ErrorCorrelator";
+import { ErrorCorrelator, HandledErrorInfo, ZoweExplorerApiType } from "../utils/ErrorCorrelator";
 
 export interface HandleErrorOpts {
     allowRetry?: boolean;
@@ -426,7 +426,7 @@ export class BaseProvider {
         return entry;
     }
 
-    protected async _handleError(err: Error, opts?: HandleErrorOpts): Promise<string> {
+    protected async _handleError(err: Error, opts?: HandleErrorOpts): Promise<HandledErrorInfo> {
         return ErrorCorrelator.getInstance().displayError(opts?.apiType ?? ZoweExplorerApiType.All, err, {
             additionalContext: opts?.additionalContext,
             allowRetry: opts?.allowRetry ?? false,

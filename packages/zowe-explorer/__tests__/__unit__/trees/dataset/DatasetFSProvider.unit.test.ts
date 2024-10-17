@@ -827,6 +827,7 @@ describe("delete", () => {
         const fakePs = { ...testEntries.ps };
         const fakeSession = { ...testEntries.session, entries: new Map() };
         fakeSession.entries.set("USER.DATA.PS", fakePs);
+
         const mockMvsApi = {
             deleteDataSet: jest.fn().mockRejectedValueOnce(new Error("Data set does not exist on remote")),
         };
@@ -836,7 +837,7 @@ describe("delete", () => {
         const errorMsgMock = jest.spyOn(Gui, "errorMessage").mockImplementation();
         jest.spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(fakeSession);
 
-        await DatasetFSProvider.instance.delete(testUris.ps, { recursive: false });
+        await expect(DatasetFSProvider.instance.delete(testUris.ps, { recursive: false })).rejects.toThrow();
         expect(mockMvsApi.deleteDataSet).toHaveBeenCalledWith(fakePs.name, { responseTimeout: undefined });
         expect(_lookupMock).toHaveBeenCalledWith(testUris.ps, false);
         expect(_fireSoonMock).toHaveBeenCalled();
@@ -922,7 +923,9 @@ describe("rename", () => {
         const _lookupParentDirectoryMock = jest
             .spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory")
             .mockReturnValueOnce({ ...testEntries.session });
-        await DatasetFSProvider.instance.rename(testUris.pds, testUris.pds.with({ path: "/USER.DATA.PDS2" }), { overwrite: true });
+        await expect(
+            DatasetFSProvider.instance.rename(testUris.pds, testUris.pds.with({ path: "/USER.DATA.PDS2" }), { overwrite: true })
+        ).rejects.toThrow();
         expect(mockMvsApi.renameDataSet).toHaveBeenCalledWith("USER.DATA.PDS", "USER.DATA.PDS2");
         expect(errMsgSpy).toHaveBeenCalledWith("Failed to rename USER.DATA.PDS: could not upload data set", { items: ["Retry", "More info"] });
         _lookupMock.mockRestore();
