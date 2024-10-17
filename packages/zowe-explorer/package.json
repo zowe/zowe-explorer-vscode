@@ -1768,7 +1768,7 @@
     ]
   },
   "scripts": {
-    "build": "pnpm copy-secrets && pnpm clean:bundle && pnpm license  && pnpm build:nls && webpack --mode development && pnpm madge",
+    "build": "pnpm copy-secrets && pnpm clean:bundle && pnpm license && pnpm build:nls && webpack --mode development && pnpm madge",
     "test": "pnpm test:unit",
     "test:e2e": "cd __tests__/__e2e__/ && wdio run ./wdio.conf.ts",
     "test:integration": "cd __tests__/__integration__/bdd && wdio run ./wdio.conf.ts",
