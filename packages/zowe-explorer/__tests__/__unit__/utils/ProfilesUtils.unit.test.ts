@@ -1033,6 +1033,8 @@ describe("ProfilesUtils unit tests", () => {
                     { name: null, type: "zosmf", error: "failed" as any },
                 ],
             } as any);
+            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(Definitions.V1MigrationStatus.JustMigrated);
+            jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
             Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn().mockReturnValue({}), configurable: true });
             Object.defineProperty(Gui, "showTextDocument", { value: jest.fn(), configurable: true });
             const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
@@ -1070,6 +1072,13 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should prompt user if v1 profiles detected and Create New is selected", async () => {
             const mockReadProfilesFromDisk = jest.fn();
+            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                persistent: true,
+                get: jest.fn(),
+                has: jest.fn(),
+                inspect: jest.fn(),
+                update: jest.fn(),
+            });
             const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
                 getTeamConfig: jest.fn().mockReturnValue([]),
@@ -1077,6 +1086,8 @@ describe("ProfilesUtils unit tests", () => {
             } as never);
             const infoMsgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Create New");
 
+            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(Definitions.V1MigrationStatus.JustMigrated);
+            jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
             const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
                 configurable: true,
                 get: () => true,
@@ -1102,12 +1113,17 @@ describe("ProfilesUtils unit tests", () => {
             const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
             blockMocks.getValueMock.mockReturnValueOnce(Definitions.V1MigrationStatus.JustMigrated);
             blockMocks.setValueMock.mockImplementation();
+            jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
+                getTeamConfig: jest.fn().mockReturnValue({ exists: false }),
+            } as any);
+            const onlyV1ProfilesExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", { get: () => true });
             const v1ProfileOptsMock = jest.spyOn(ProfilesUtils as any, "v1ProfileOptions").mockResolvedValue(ProfilesConvertStatus.CreateNewSelected);
             await ProfilesUtils.handleV1MigrationStatus();
             expect(executeCommandMock.mock.lastCall?.[0]).toBe("zowe.ds.addSession");
             expect(v1ProfileOptsMock).toHaveBeenCalled();
             blockMocks.getValueMock.mockRestore();
             blockMocks.setValueMock.mockRestore();
+            onlyV1ProfilesExistMock[Symbol.dispose]();
         });
 
         it("should reload the window once if the user just migrated from v1", async () => {
