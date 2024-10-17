@@ -10,15 +10,22 @@
  */
 
 import { JSXInternal } from "preact/src/jsx";
+import * as l10n from "@vscode/l10n";
 
 export default function PersistentManagerHeader({ timestamp }: Readonly<{ timestamp: Readonly<Date | undefined> }>): JSXInternal.Element {
   const renderTimestamp = () => {
-    return timestamp && <p style={{ fontStyle: "italic", marginRight: "1em" }}>Last refreshed: {timestamp.toLocaleString(navigator.language)}</p>;
+    return (
+      timestamp && (
+        <p style={{ fontStyle: "italic", marginRight: "1em" }}>
+          {l10n.t("Last refreshed:")} {timestamp.toLocaleString(navigator.language)}
+        </p>
+      )
+    );
   };
 
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-      <h1>Manage Persistent Properties</h1>
+      <h1>{l10n.t("Manage Persistent Properties")}</h1>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>{renderTimestamp()}</div>
     </div>
   );
