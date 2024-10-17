@@ -10,7 +10,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
-- Fixed an issue where the contents of an editor did not update when polling spool content or using the "Pull from Mainframe" action with jobs.
+- Fixed an issue where the contents of an editor did not update when polling spool content or using the "Pull from Mainframe" action with jobs. [#3249](https://github.com/zowe/zowe-explorer-vscode/pull/3249)
 
 ## `3.0.1`
 
