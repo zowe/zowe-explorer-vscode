@@ -205,6 +205,8 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
         spoolEntry.data = bufBuilder.read() ?? new Uint8Array();
+        spoolEntry.mtime = Date.now();
+        spoolEntry.size = spoolEntry.data.byteLength;
         if (editor) {
             await this._updateResourceInEditor(uri);
         }

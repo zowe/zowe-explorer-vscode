@@ -1059,10 +1059,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                     })}`,
                     Constants.STATUS_BAR_TIMEOUT_MS
                 );
-                await JobFSProvider.instance.fetchSpoolAtUri(
-                    node.resourceUri,
-                    vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path)
-                );
+                await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
                 statusMsg.dispose();
             },
         });
