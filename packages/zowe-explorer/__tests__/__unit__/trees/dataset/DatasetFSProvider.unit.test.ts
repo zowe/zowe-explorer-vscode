@@ -673,12 +673,11 @@ describe("stat", () => {
             } as any);
             const handleErrorSpy = jest.spyOn(DatasetFSProvider.instance as any, "_handleError");
             await expect(DatasetFSProvider.instance.stat(testUris.ps)).rejects.toThrow();
-            expect(handleErrorSpy).toHaveBeenCalledWith(exampleError, {
+            expect(handleErrorSpy).toHaveBeenCalledWith(exampleError, expect.objectContaining({
                 additionalContext: `Failed to get stats for data set ${testUris.ps.path}`,
-                allowRetry: true,
                 apiType: ZoweExplorerApiType.Mvs,
                 profileType: "zosmf",
-            });
+            }));
             mvsApiMock.mockRestore();
             getInfoForUriMock.mockRestore();
             lookupMock.mockRestore();
@@ -705,12 +704,14 @@ describe("stat", () => {
                 .spyOn(DatasetFSProvider.instance as any, "_handleError")
                 .mockResolvedValue({ correlation: { asError: jest.fn() } as any, userResponse: "Retry" });
             await DatasetFSProvider.instance.stat(testUris.ps);
-            expect(handleErrorSpy).toHaveBeenCalledWith(exampleError, {
-                additionalContext: `Failed to get stats for data set ${testUris.ps.path}`,
-                allowRetry: true,
-                apiType: ZoweExplorerApiType.Mvs,
-                profileType: "zosmf",
-            });
+            expect(handleErrorSpy).toHaveBeenCalledWith(
+                exampleError,
+                expect.objectContaining({
+                    additionalContext: `Failed to get stats for data set ${testUris.ps.path}`,
+                    apiType: ZoweExplorerApiType.Mvs,
+                    profileType: "zosmf",
+                })
+            );
             expect(statSpy).toHaveBeenCalledTimes(2);
             expect(statSpy).toHaveBeenCalledWith(testUris.ps);
             mvsApiMock.mockRestore();
@@ -905,12 +906,14 @@ describe("delete", () => {
         expect(mockMvsApi.deleteDataSet).toHaveBeenCalledWith(fakePs.name, { responseTimeout: undefined });
         expect(_lookupMock).toHaveBeenCalledWith(testUris.ps, false);
         expect(_fireSoonMock).toHaveBeenCalled();
-        expect(handleErrorMock).toHaveBeenCalledWith(sampleError, {
-            additionalContext: "Failed to delete /USER.DATA.PS",
-            allowRetry: true,
-            apiType: ZoweExplorerApiType.Mvs,
-            profileType: "zosmf",
-        });
+        expect(handleErrorMock).toHaveBeenCalledWith(
+            sampleError,
+            expect.objectContaining({
+                additionalContext: "Failed to delete /USER.DATA.PS",
+                apiType: ZoweExplorerApiType.Mvs,
+                profileType: "zosmf",
+            })
+        );
         expect(fakeSession.entries.has(fakePs.name)).toBe(true);
         mvsApiMock.mockRestore();
     });
@@ -994,12 +997,14 @@ describe("rename", () => {
             DatasetFSProvider.instance.rename(testUris.pds, testUris.pds.with({ path: "/USER.DATA.PDS2" }), { overwrite: true })
         ).rejects.toThrow();
         expect(mockMvsApi.renameDataSet).toHaveBeenCalledWith("USER.DATA.PDS", "USER.DATA.PDS2");
-        expect(handleErrorMock).toHaveBeenCalledWith(sampleError, {
-            additionalContext: "Failed to rename USER.DATA.PDS",
-            allowRetry: true,
-            apiType: ZoweExplorerApiType.Mvs,
-            profileType: "zosmf",
-        });
+        expect(handleErrorMock).toHaveBeenCalledWith(
+            sampleError,
+            expect.objectContaining({
+                additionalContext: "Failed to rename USER.DATA.PDS",
+                apiType: ZoweExplorerApiType.Mvs,
+                profileType: "zosmf",
+            })
+        );
         _lookupMock.mockRestore();
         mvsApiMock.mockRestore();
         _lookupParentDirectoryMock.mockRestore();

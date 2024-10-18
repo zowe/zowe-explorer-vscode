@@ -124,16 +124,16 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         try {
             await ussApi.move(oldInfo.path, info.path);
         } catch (err) {
-            const { correlation, userResponse } = await this._handleError(err, {
+            this._handleError(err, {
                 additionalContext: vscode.l10n.t({ message: "Failed to move {0}", args: [oldInfo.path], comment: "File path" }),
                 apiType: ZoweExplorerApiType.Uss,
-                allowRetry: true,
+                retry: {
+                    fn: this.move.bind(this),
+                    args: [oldUri, newUri],
+                },
                 profileType: info.profile.type,
             });
-            if (userResponse === "Retry") {
-                return this.move(oldUri, newUri);
-            }
-            throw correlation.asError();
+            throw err;
         }
         await this._relocateEntry(oldUri, newUri, info.path);
         return true;
@@ -150,15 +150,15 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 await vscode.workspace.fs.createDirectory(uri);
             }
         } catch (err) {
-            const { userResponse } = await this._handleError(err, {
+            this._handleError(err, {
                 additionalContext: vscode.l10n.t("Failed to list {0}", err.message),
                 apiType: ZoweExplorerApiType.Uss,
-                allowRetry: true,
+                retry: {
+                    fn: this.listFiles.bind(this),
+                    args: [profile, uri, keepRelative],
+                },
                 profileType: profile.type,
             });
-            if (userResponse === "Retry") {
-                return this.listFiles(profile, uri, keepRelative);
-            }
             return { success: false, commandResponse: err.message };
         }
 
@@ -285,6 +285,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const metadata = file.metadata;
         await this.autoDetectEncoding(file as UssFile);
         const profileEncoding = file.encoding ? null : file.metadata.profile.profile?.encoding;
+
         let resp: IZosFilesResponse;
         try {
             resp = await ZoweExplorerApiRegister.getUssApi(metadata.profile).getContents(filePath, {
@@ -295,20 +296,20 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 stream: bufBuilder,
             });
         } catch (err) {
-            const { correlation, userResponse } = await this._handleError(err, {
+            this._handleError(err, {
                 additionalContext: vscode.l10n.t({
                     message: "Failed to get contents for {0}",
                     args: [filePath],
                     comment: ["File path"],
                 }),
-                allowRetry: true,
+                retry: {
+                    fn: this.fetchFileAtUri.bind(this),
+                    args: [uri, options],
+                },
                 apiType: ZoweExplorerApiType.Uss,
                 profileType: metadata.profile.type,
             });
-            if (userResponse === "Retry") {
-                return this.fetchFileAtUri(uri, options);
-            }
-            throw correlation.asError();
+            throw err;
         }
 
         const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
@@ -349,20 +350,20 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 entry.encoding = isBinary ? { kind: "binary" } : undefined;
             }
         } catch (err) {
-            const { userResponse } = await this._handleError(err, {
+            this._handleError(err, {
                 additionalContext: vscode.l10n.t({
                     message: "Failed to detect encoding for {0}",
                     args: [entry.metadata.path],
                     comment: ["File path"],
                 }),
-                allowRetry: true,
+                retry: {
+                    fn: this.autoDetectEncoding.bind(this),
+                    args: [entry],
+                },
                 apiType: ZoweExplorerApiType.Uss,
                 profileType: entry.metadata.profile.type,
             });
-            if (userResponse === "Retry") {
-                return this.autoDetectEncoding(entry);
-            }
-            return;
+            throw err;
         }
     }
 
@@ -523,15 +524,15 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         } catch (err) {
             if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
                 // Some unknown error happened, don't update the entry
-                const { correlation, userResponse } = await this._handleError(err, {
+                this._handleError(err, {
                     apiType: ZoweExplorerApiType.Uss,
-                    allowRetry: true,
+                    retry: {
+                        fn: this.writeFile.bind(this),
+                        args: [uri, content, options],
+                    },
                     profileType: parentDir.metadata.profile.type,
                 });
-                if (userResponse === "Retry") {
-                    return this.writeFile(uri, content, options);
-                }
-                throw correlation.asError();
+                throw err;
             }
 
             entry.data = content;
@@ -584,20 +585,20 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         try {
             await ZoweExplorerApiRegister.getUssApi(entry.metadata.profile).rename(entry.metadata.path, newPath);
         } catch (err) {
-            const { correlation, userResponse } = await this._handleError(err, {
+            this._handleError(err, {
                 additionalContext: vscode.l10n.t({
                     message: "Failed to rename {0}",
                     args: [entry.metadata.path],
                     comment: ["File path"],
                 }),
-                allowRetry: true,
+                retry: {
+                    fn: this.rename.bind(this),
+                    args: [oldUri, newUri, options],
+                },
                 apiType: ZoweExplorerApiType.Uss,
                 profileType: entry.metadata.profile?.type,
             });
-            if (userResponse === "Retry") {
-                return this.rename(oldUri, newUri, options);
-            }
-            throw correlation.asError();
+            throw err;
         }
 
         parentDir.entries.delete(entry.name);
@@ -626,20 +627,20 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 entryToDelete instanceof UssDirectory
             );
         } catch (err) {
-            const { correlation, userResponse } = await this._handleError(err, {
+            this._handleError(err, {
                 additionalContext: vscode.l10n.t({
                     message: "Failed to delete {0}",
                     args: [entryToDelete.metadata.path],
                     comment: ["File name"],
                 }),
-                allowRetry: true,
+                retry: {
+                    fn: this.delete.bind(this),
+                    args: [uri, _options]
+                },
                 apiType: ZoweExplorerApiType.Uss,
                 profileType: parent.metadata.profile.type,
             });
-            if (userResponse === "Retry") {
-                return this.delete(uri, _options);
-            }
-            throw correlation.asError();
+            throw err;
         }
 
         parent.entries.delete(entryToDelete.name);
@@ -746,20 +747,20 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 await api.uploadFromBuffer(Buffer.from(fileEntry.data), outputPath);
             }
         } catch (err) {
-            const { userResponse } = await this._handleError(err, {
+            this._handleError(err, {
                 additionalContext: vscode.l10n.t({
                     message: "Failed to copy {0} to {1}",
                     args: [source.path, destination.path, err.message],
                     comment: ["Source path", "Destination path"],
                 }),
-                allowRetry: true,
+                retry: {
+                    fn: this.copyTree.bind(this),
+                    args: [source, destination, options]
+                },
                 apiType: ZoweExplorerApiType.Uss,
                 profileType: destInfo.profile.type,
             });
-            if (userResponse === "Retry") {
-                await this.copyTree(source, destination, options);
-            }
-            return;
+            throw err;
         }
     }
 

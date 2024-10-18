@@ -101,16 +101,16 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.parse(uri.path).name, { attributes: true });
             }
         } catch (err) {
-            const { correlation, userResponse } = await this._handleError(err, {
+            this._handleError(err, {
                 additionalContext: vscode.l10n.t({ message: "Failed to get stats for data set {0}", args: [uri.path], comment: "Data set path" }),
-                allowRetry: true,
+                retry: {
+                    fn: this.stat.bind(this),
+                    args: [uri],
+                },
                 apiType: ZoweExplorerApiType.Mvs,
                 profileType: uriInfo.profile?.type,
             });
-            if (userResponse === "Retry") {
-                return this.stat(uri);
-            }
-            throw correlation.asError();
+            throw err;
         }
 
         // Attempt to parse a successful API response and update the data set's cached stats.
@@ -154,15 +154,15 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 }
             }
         } catch (err) {
-            const { userResponse } = await this._handleError(err, {
+            this._handleError(err, {
                 additionalContext: vscode.l10n.t("Failed to list datasets"),
-                allowRetry: true,
+                retry: {
+                    fn: this.fetchEntriesForProfile.bind(this),
+                    args: [uri, uriInfo, pattern],
+                },
                 apiType: ZoweExplorerApiType.Mvs,
                 profileType: this._getInfoFromUri(uri).profile?.type,
             });
-            if (userResponse === "Retry") {
-                return this.fetchEntriesForProfile(uri, uriInfo, pattern);
-            }
         }
         for (const resp of datasetResponses) {
             for (const ds of resp.apiResponse?.items ?? resp.apiResponse ?? []) {
@@ -198,15 +198,15 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         try {
             members = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(path.posix.basename(uri.path));
         } catch (err) {
-            const { userResponse } = await this._handleError(err, {
+            this._handleError(err, {
                 additionalContext: vscode.l10n.t("Failed to list dataset members"),
-                allowRetry: true,
+                retry: {
+                    fn: this.fetchEntriesForDataset.bind(this),
+                    args: [entry, uri, uriInfo],
+                },
                 apiType: ZoweExplorerApiType.Mvs,
                 profileType: uriInfo.profile?.type,
             });
-            if (userResponse === "Retry") {
-                return this.fetchEntriesForDataset(entry, uri, uriInfo);
-            }
         }
         const pdsExtension = DatasetUtils.getExtension(entry.name);
 
@@ -227,7 +227,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             entry = this.lookup(uri, false) as PdsEntry | DsEntry;
         } catch (err) {
             if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
-                await this._handleError(err, {
+                this._handleError(err, {
                     additionalContext: vscode.l10n.t("Failed to locate data set {0}", uri.path),
                     apiType: ZoweExplorerApiType.Mvs,
                     profileType: uriInfo.profile?.type,
@@ -253,15 +253,15 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     throw vscode.FileSystemError.FileNotFound(uri);
                 }
             } catch (err) {
-                const { userResponse } = await this._handleError(err, {
-                    allowRetry: true,
+                this._handleError(err, {
                     additionalContext: vscode.l10n.t("Failed to list data set {0}", uri.path),
                     apiType: ZoweExplorerApiType.Mvs,
+                    retry: {
+                        fn: this.fetchDataset.bind(this),
+                        args: [uri, uriInfo],
+                    },
                     profileType: uriInfo.profile?.type,
                 });
-                if (userResponse === "Retry") {
-                    return this.fetchDataset(uri, uriInfo);
-                }
                 return undefined;
             }
         }
@@ -397,20 +397,20 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 stream: bufBuilder,
             });
         } catch (err) {
-            const { correlation, userResponse } = await this._handleError(err, {
+            this._handleError(err, {
                 additionalContext: vscode.l10n.t({
                     message: "Failed to get contents for {0}",
                     args: [uri.path],
                     comment: ["File path"],
                 }),
-                allowRetry: true,
                 apiType: ZoweExplorerApiType.Mvs,
+                retry: {
+                    fn: this.fetchDatasetAtUri.bind(this),
+                    args: [uri, options],
+                },
                 profileType: this._getInfoFromUri(uri).profile?.type,
             });
-            if (userResponse === "Retry") {
-                return this.fetchDatasetAtUri(uri, options);
-            }
-            throw correlation.asError();
+            throw err;
         }
         const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
 
@@ -446,20 +446,20 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             ds = this._lookupAsFile(uri) as DsEntry;
         } catch (err) {
             if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
-                const { correlation, userResponse } = await this._handleError(err, {
+                this._handleError(err, {
                     additionalContext: vscode.l10n.t({
                         message: "Failed to read {0}",
                         args: [uri.path],
                         comment: ["File path"],
                     }),
-                    allowRetry: true,
                     apiType: ZoweExplorerApiType.Mvs,
                     profileType: this._getInfoFromUri(uri).profile?.type,
+                    retry: {
+                        fn: this.readFile.bind(this),
+                        args: [uri],
+                    },
                 });
-                if (userResponse === "Retry") {
-                    return this.readFile(uri);
-                }
-                throw correlation.asError();
+                throw err;
             }
 
             // check if parent directory exists; if not, do a remote lookup
@@ -597,20 +597,20 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
         } catch (err) {
             if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
-                const { correlation, userResponse } = await this._handleError(err, {
+                this._handleError(err, {
                     additionalContext: vscode.l10n.t({
                         message: "Failed to save {0}",
                         args: [entry.metadata.path],
                         comment: ["File path"],
                     }),
-                    allowRetry: true,
                     apiType: ZoweExplorerApiType.Mvs,
                     profileType: entry.metadata.profile.type,
+                    retry: {
+                        fn: this.writeFile.bind(this),
+                        args: [uri, content, options],
+                    },
                 });
-                if (userResponse === "Retry") {
-                    return this.writeFile(uri, content, options);
-                }
-                throw correlation.asError();
+                throw err;
             }
 
             entry.data = content;
@@ -655,20 +655,20 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 responseTimeout: entry.metadata.profile.profile?.responseTimeout,
             });
         } catch (err) {
-            const { correlation, userResponse } = await this._handleError(err, {
+            this._handleError(err, {
                 additionalContext: vscode.l10n.t({
                     message: "Failed to delete {0}",
                     args: [entry.metadata.path],
                     comment: ["File path"],
                 }),
-                allowRetry: true,
                 apiType: ZoweExplorerApiType.Mvs,
                 profileType: entry.metadata.profile.type,
+                retry: {
+                    fn: this.delete.bind(this),
+                    args: [uri, _options],
+                },
             });
-            if (userResponse === "Retry") {
-                return this.delete(uri, _options);
-            }
-            throw correlation.asError();
+            throw err;
         }
 
         parent.entries.delete(entry.name);
@@ -701,20 +701,20 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 );
             }
         } catch (err) {
-            const { correlation, userResponse } = await this._handleError(err, {
+            this._handleError(err, {
                 additionalContext: vscode.l10n.t({
                     message: "Failed to rename {0}",
                     args: [oldName],
                     comment: ["Data set name"],
                 }),
-                allowRetry: true,
                 apiType: ZoweExplorerApiType.Mvs,
                 profileType: entry.metadata.profile.type,
+                retry: {
+                    fn: this.rename.bind(this),
+                    args: [oldUri, newUri, options],
+                },
             });
-            if (userResponse === "Retry") {
-                return this.rename(oldUri, newUri, options);
-            }
-            throw correlation.asError();
+            throw err;
         }
 
         parentDir.entries.delete(entry.name);

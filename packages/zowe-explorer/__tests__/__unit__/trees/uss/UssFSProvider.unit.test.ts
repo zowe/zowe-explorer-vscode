@@ -912,12 +912,14 @@ describe("delete", () => {
         await expect(UssFSProvider.instance.delete(testUris.file, { recursive: false })).rejects.toThrow();
         expect(getDelInfoMock).toHaveBeenCalledWith(testUris.file);
         expect(deleteMock).toHaveBeenCalledWith(testEntries.file.metadata.path, false);
-        expect(handleErrorMock).toHaveBeenCalledWith(exampleError, {
-            additionalContext: "Failed to delete /aFile.txt",
-            allowRetry: true,
-            apiType: ZoweExplorerApiType.Uss,
-            profileType: testEntries.file.metadata.profile.type,
-        });
+        expect(handleErrorMock).toHaveBeenCalledWith(
+            exampleError,
+            expect.objectContaining({
+                additionalContext: "Failed to delete /aFile.txt",
+                apiType: ZoweExplorerApiType.Uss,
+                profileType: testEntries.file.metadata.profile.type,
+            })
+        );
         expect(sesEntry.entries.has("aFile.txt")).toBe(true);
         expect(sesEntry.size).toBe(1);
     });

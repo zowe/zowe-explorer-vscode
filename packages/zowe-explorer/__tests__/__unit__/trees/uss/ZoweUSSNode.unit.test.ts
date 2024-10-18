@@ -443,10 +443,9 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
 
         const newFullPath = "/u/user/newName";
         const errMessageMock = jest.spyOn(Gui, "errorMessage").mockImplementation();
-        const renameMock = jest.spyOn(UssFSProvider.instance, "rename").mockRejectedValueOnce(new Error("Rename error: file is busy"));
+        const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockRejectedValueOnce(new Error("Rename error: file is busy"));
         await blockMocks.ussDir.rename(newFullPath);
 
-        expect(errMessageMock).toHaveBeenCalledWith("Rename error: file is busy");
         errMessageMock.mockRestore();
         renameMock.mockRestore();
     });

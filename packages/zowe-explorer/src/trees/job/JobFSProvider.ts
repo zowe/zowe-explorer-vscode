@@ -116,15 +116,15 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                 }
             }
         } catch (err) {
-            const { correlation, userResponse } = await this._handleError(err, {
-                allowRetry: true,
+            this._handleError(err, {
                 apiType: ZoweExplorerApiType.Jes,
                 profileType: uriInfo.profile?.type,
+                retry: {
+                    fn: this.readDirectory.bind(this),
+                    args: [uri],
+                },
             });
-            if (userResponse === "Retry") {
-                return this.readDirectory(uri);
-            }
-            throw correlation.asError();
+            throw err;
         }
 
         for (const entry of fsEntry.entries) {
@@ -233,20 +233,20 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             try {
                 await this.fetchSpoolAtUri(uri);
             } catch (err) {
-                const { correlation, userResponse } = await this._handleError(err, {
+                this._handleError(err, {
                     additionalContext: vscode.l10n.t({
                         message: "Failed to get contents for {0}",
                         args: [spoolEntry.name],
                         comment: "Spool name",
                     }),
-                    allowRetry: true,
                     apiType: ZoweExplorerApiType.Jes,
                     profileType: spoolEntry.metadata.profile.type,
+                    retry: {
+                        fn: this.readFile.bind(this),
+                        args: [uri],
+                    },
                 });
-                if (userResponse === "Retry") {
-                    return this.readFile(uri);
-                }
-                throw correlation.asError();
+                throw err;
             }
             spoolEntry.wasAccessed = true;
         }
@@ -320,20 +320,20 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             try {
                 await ZoweExplorerApiRegister.getJesApi(profInfo.profile).deleteJob(entry.job.jobname, entry.job.jobid);
             } catch (err) {
-                const { correlation, userResponse } = await this._handleError(err, {
+                this._handleError(err, {
                     additionalContext: vscode.l10n.t({
                         message: "Failed to delete job {0}",
                         args: [entry.job.jobname],
                         comment: "Job name",
                     }),
-                    allowRetry: true,
                     apiType: ZoweExplorerApiType.Jes,
                     profileType: profInfo.profile.type,
+                    retry: {
+                        fn: this.delete.bind(this),
+                        args: [uri, options],
+                    },
                 });
-                if (userResponse === "Retry") {
-                    return this.delete(uri, options);
-                }
-                throw correlation.asError();
+                throw err;
             }
         }
         parent.entries.delete(entry.name);
