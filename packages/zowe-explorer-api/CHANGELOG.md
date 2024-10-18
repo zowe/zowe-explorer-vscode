@@ -14,8 +14,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
-### Bug fixes
-
 - Zowe Explorer now includes support for the [VS Code display languages](https://code.visualstudio.com/docs/getstarted/locales) French, German, Japanese, Portuguese, and Spanish. [#3239](https://github.com/zowe/zowe-explorer-vscode/pull/3239)
 - Localization of strings within the webviews. [#2983](https://github.com/zowe/zowe-explorer-vscode/issues/2983)
 
