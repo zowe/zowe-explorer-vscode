@@ -101,16 +101,16 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.parse(uri.path).name, { attributes: true });
             }
         } catch (err) {
-            const { userResponse } = await this._handleError(err, {
+            const { correlation, userResponse } = await this._handleError(err, {
                 additionalContext: vscode.l10n.t({ message: "Failed to get stats for data set {0}", args: [uri.path], comment: "Data set path" }),
                 allowRetry: true,
                 apiType: ZoweExplorerApiType.Mvs,
                 profileType: uriInfo.profile?.type,
             });
-            if (userResponse === "retry") {
+            if (userResponse === "Retry") {
                 return this.stat(uri);
             }
-            return entry;
+            throw correlation.asError();
         }
 
         // Attempt to parse a successful API response and update the data set's cached stats.
