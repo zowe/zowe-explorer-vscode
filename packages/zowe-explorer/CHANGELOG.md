@@ -15,6 +15,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where the contents of an editor did not update when polling spool content or using the "Pull from Mainframe" action with jobs. [#3249](https://github.com/zowe/zowe-explorer-vscode/pull/3249)
 - Fixed an issue where Zowe Explorer sometimes prompted the user to convert V1 profiles when changes were made to a team configuration after initialization. [#3246](https://github.com/zowe/zowe-explorer-vscode/pull/3246)
 - Fixed an issue where the encoding of a USS file was not automatically detected when opened for the first time. [#3253](https://github.com/zowe/zowe-explorer-vscode/pull/3253)
+- Fixed an issue where renaming a USS file or data set did not update the opened editor with the new location. [#3260](https://github.com/zowe/zowe-explorer-vscode/issues/3260)
 
 ## `3.0.1`
 
