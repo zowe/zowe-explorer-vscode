@@ -29,7 +29,6 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 - Replaced `ts-loader` dependency with `esbuild-loader` to improve build speed for developers. [#2909](https://github.com/zowe/zowe-explorer-vscode/pull/2909)
 - Added support for streams to the `getContents` and `putContents` functions (`FtpMvsApi` and `FtpUssApi` interfaces) with the following API: `uploadFromBuffer`.
 - Removed pop-up notification of successful registration with Zowe Explorer and log the success message. [#2862](https://github.com/zowe/zowe-explorer-vscode/issues/2862)
-- `DatasetFSProvider.stat()` will now throw a `FileNotFound` error for extenders trying to fetch an MVS resource that does not exist. [#3252](https://github.com/zowe/zowe-explorer-vscode/issues/3252)
 - **Breaking:** updated the `FtpMvsApi.putContents` function to throw an error when an e-tag conflict is found to establish consistency with the `FtpUssApi.putContents` function which has always thrown an error for this scenario.
 - **Breaking:** Removed the deprecated `FtpUssApi.putContents` function in favor of the `FtpUssApi.putContent` function.
 
