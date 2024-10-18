@@ -9,7 +9,7 @@
  *
  */
 
-import { Disposable, FilePermission, FileSystemError, FileType, TextEditor, Uri } from "vscode";
+import { Disposable, FilePermission, FileSystemError, FileType, TextEditor, TextEditorLineNumbersStyle, Uri } from "vscode";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import {
     DirEntry,
@@ -21,6 +21,7 @@ import {
     FsDatasetsUtils,
     Gui,
     PdsEntry,
+    ZoweExplorerApiType,
     ZoweScheme,
 } from "@zowe/zowe-explorer-api";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
@@ -655,6 +656,31 @@ describe("stat", () => {
         lookupParentDirMock.mockRestore();
         mvsApiMock.mockRestore();
     });
+    it("calls handleError if the API response was unsuccessful for remote lookup", async () => {
+        const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(testEntries.ps);
+        const getInfoForUriMock = jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+            isRoot: false,
+            slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+            profileName: "sestest",
+            profile: testEntries.ps.metadata.profile,
+        });
+        const exampleError = new Error("Response unsuccessful");
+        const dataSetMock = jest.fn().mockRejectedValue(exampleError);
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+            dataSet: dataSetMock,
+        } as any);
+        const handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation();
+        await expect(DatasetFSProvider.instance.stat(testUris.ps)).rejects.toThrow();
+        expect(handleErrorMock).toHaveBeenCalledWith(exampleError, {
+            additionalContext: `Failed to get stats for data set ${testUris.ps.path}`,
+            allowRetry: true,
+            apiType: ZoweExplorerApiType.Mvs,
+            profileType: "zosmf",
+        });
+        mvsApiMock.mockRestore();
+        getInfoForUriMock.mockRestore();
+        lookupMock.mockRestore();
+    });
 });
 
 describe("fetchEntriesForDataset", () => {
@@ -828,25 +854,28 @@ describe("delete", () => {
         const fakeSession = { ...testEntries.session, entries: new Map() };
         fakeSession.entries.set("USER.DATA.PS", fakePs);
 
+        const sampleError = new Error("Data set does not exist on remote");
         const mockMvsApi = {
-            deleteDataSet: jest.fn().mockRejectedValueOnce(new Error("Data set does not exist on remote")),
+            deleteDataSet: jest.fn().mockRejectedValueOnce(sampleError),
         };
         const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
         const _lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValueOnce(fakePs);
         const _fireSoonMock = jest.spyOn(DatasetFSProvider.instance as any, "_fireSoon").mockImplementation();
-        const errorMsgMock = jest.spyOn(Gui, "errorMessage").mockImplementation();
+        const handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockResolvedValue(undefined);
         jest.spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(fakeSession);
 
         await expect(DatasetFSProvider.instance.delete(testUris.ps, { recursive: false })).rejects.toThrow();
         expect(mockMvsApi.deleteDataSet).toHaveBeenCalledWith(fakePs.name, { responseTimeout: undefined });
         expect(_lookupMock).toHaveBeenCalledWith(testUris.ps, false);
         expect(_fireSoonMock).toHaveBeenCalled();
-        expect(errorMsgMock).toHaveBeenCalledWith("Failed to delete /USER.DATA.PS: Data set does not exist on remote", {
-            items: ["Retry", "More info"],
+        expect(handleErrorMock).toHaveBeenCalledWith(sampleError, {
+            additionalContext: "Failed to delete /USER.DATA.PS",
+            allowRetry: true,
+            apiType: ZoweExplorerApiType.Mvs,
+            profileType: "zosmf",
         });
         expect(fakeSession.entries.has(fakePs.name)).toBe(true);
         mvsApiMock.mockRestore();
-        errorMsgMock.mockRestore();
     });
 });
 
@@ -912,10 +941,10 @@ describe("rename", () => {
     it("displays an error message when renaming fails on the remote system", async () => {
         const oldPds = new PdsEntry("USER.DATA.PDS");
         oldPds.metadata = testEntries.pds.metadata;
+        const sampleError = new Error("could not upload data set");
         const mockMvsApi = {
-            renameDataSet: jest.fn().mockRejectedValueOnce(new Error("could not upload data set")),
+            renameDataSet: jest.fn().mockRejectedValueOnce(sampleError),
         };
-        const errMsgSpy = jest.spyOn(Gui, "errorMessage");
         const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
         const _lookupMock = jest
             .spyOn(DatasetFSProvider.instance as any, "lookup")
@@ -923,11 +952,17 @@ describe("rename", () => {
         const _lookupParentDirectoryMock = jest
             .spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory")
             .mockReturnValueOnce({ ...testEntries.session });
+        const handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockResolvedValue(undefined);
         await expect(
             DatasetFSProvider.instance.rename(testUris.pds, testUris.pds.with({ path: "/USER.DATA.PDS2" }), { overwrite: true })
         ).rejects.toThrow();
         expect(mockMvsApi.renameDataSet).toHaveBeenCalledWith("USER.DATA.PDS", "USER.DATA.PDS2");
-        expect(errMsgSpy).toHaveBeenCalledWith("Failed to rename USER.DATA.PDS: could not upload data set", { items: ["Retry", "More info"] });
+        expect(handleErrorMock).toHaveBeenCalledWith(sampleError, {
+            additionalContext: "Failed to rename USER.DATA.PDS",
+            allowRetry: true,
+            apiType: ZoweExplorerApiType.Mvs,
+            profileType: "zosmf",
+        });
         _lookupMock.mockRestore();
         mvsApiMock.mockRestore();
         _lookupParentDirectoryMock.mockRestore();

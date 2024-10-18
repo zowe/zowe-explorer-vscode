@@ -102,7 +102,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
         } catch (err) {
             const { userResponse } = await this._handleError(err, {
-                additionalContext: vscode.l10n.t("Failed to get stats for data set {0}", uri.path),
+                additionalContext: vscode.l10n.t({ message: "Failed to get stats for data set {0}", args: [uri.path], comment: "Data set path" }),
                 allowRetry: true,
                 apiType: ZoweExplorerApiType.Mvs,
                 profileType: uriInfo.profile?.type,
