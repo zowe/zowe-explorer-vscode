@@ -21,6 +21,11 @@ import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
 import { Definitions } from "../configuration/Definitions";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 
+export enum ProfilesConvertStatus {
+    ConvertSelected,
+    CreateNewSelected,
+}
+
 export class ProfilesUtils {
     public static PROFILE_SECURITY: string | boolean = Constants.ZOWE_CLI_SCM;
 
@@ -354,32 +359,28 @@ export class ProfilesUtils {
                     } `
             );
             ZoweLogger.debug(`Summary of team configuration files considered for Zowe Explorer: ${JSON.stringify(layerSummary)}`);
-        } else {
-            // For users upgrading from v1 to v3, we must force a "Reload Window" operation to make sure that
-            // VS Code registers our updated TreeView IDs. Otherwise, VS Code's "Refresh Extensions" option will break v3 init.
-            const ussPersistentSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent");
-            const upgradingFromV1 = ZoweLocalStorage.getValue<Definitions.V1MigrationStatus>(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
-            if (ussPersistentSettings != null && upgradingFromV1 == null && imperative.ProfileInfo.onlyV1ProfilesExist) {
-                await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.JustMigrated);
-                await vscode.commands.executeCommand("workbench.action.reloadWindow");
-            }
-            if (imperative.ProfileInfo.onlyV1ProfilesExist) {
-                await this.v1ProfileOptions();
-            }
         }
     }
 
     public static async handleV1MigrationStatus(): Promise<void> {
-        const migrationStatus = ZoweLocalStorage.getValue<Definitions.V1MigrationStatus>(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
-        if (migrationStatus == null) {
-            // If there is no v1 migration status, return.
-            return;
+        // For users upgrading from v1 to v3, we must force a "Reload Window" operation to make sure that
+        // VS Code registers our updated TreeView IDs. Otherwise, VS Code's "Refresh Extensions" option will break v3 init.
+        const ussPersistentSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent");
+        const upgradingFromV1 = ZoweLocalStorage.getValue<Definitions.V1MigrationStatus>(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
+        const mProfileInfo = await ProfilesUtils.getProfileInfo();
+        if (ussPersistentSettings != null && upgradingFromV1 == null && imperative.ProfileInfo.onlyV1ProfilesExist) {
+            await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.JustMigrated);
+            await vscode.commands.executeCommand("workbench.action.reloadWindow");
         }
 
+        if (upgradingFromV1 == null || mProfileInfo.getTeamConfig().exists || !imperative.ProfileInfo.onlyV1ProfilesExist) {
+            return;
+        }
+        const userSelection = await this.v1ProfileOptions();
+
         // Open the "Add Session" quick pick if the user selected "Create New" in the v1 migration prompt.
-        if (migrationStatus === Definitions.V1MigrationStatus.CreateConfigSelected) {
-            vscode.commands.executeCommand("zowe.ds.addSession", SharedTreeProviders.ds);
-            await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.JustMigrated);
+        if (userSelection === ProfilesConvertStatus.CreateNewSelected) {
+            await vscode.commands.executeCommand("zowe.ds.addSession", SharedTreeProviders.ds);
         }
     }
 
@@ -555,7 +556,7 @@ export class ProfilesUtils {
         }
     }
 
-    private static async v1ProfileOptions(): Promise<void> {
+    private static async v1ProfileOptions(): Promise<ProfilesConvertStatus | undefined> {
         const v1ProfileErrorMsg = vscode.l10n.t(
             // eslint-disable-next-line max-len
             "Zowe V1 profiles in use.\nZowe Explorer no longer supports V1 profiles. Choose to convert existing profiles to a team configuration or create new profiles."
@@ -565,20 +566,17 @@ export class ProfilesUtils {
         const createButton = vscode.l10n.t("Create New");
         const selection = await Gui.infoMessage(v1ProfileErrorMsg, { items: [convertButton, createButton], vsCodeOpts: { modal: true } });
         switch (selection) {
-            case createButton: {
+            case createButton:
                 ZoweLogger.info("Create new team configuration chosen.");
-                await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.CreateConfigSelected);
-                break;
-            }
-            case convertButton: {
+                await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, undefined);
+                return ProfilesConvertStatus.CreateNewSelected;
+            case convertButton:
                 ZoweLogger.info("Convert v1 profiles to team configuration chosen.");
                 await this.convertV1Profs();
-                break;
-            }
-            default: {
-                void Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
-                break;
-            }
+                await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, undefined);
+                return ProfilesConvertStatus.ConvertSelected;
+            default:
+                return undefined;
         }
     }
 

@@ -43,6 +43,7 @@ import { IconUtils } from "../../../../src/icons/IconUtils";
 import { FilterDescriptor } from "../../../../src/management/FilterManagement";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import { Icon } from "../../../../src/icons/Icon";
+import { ZoweTreeProvider } from "../../../../src/trees/ZoweTreeProvider";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -550,6 +551,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
             qpValue: "",
             qpItem: new FilterDescriptor("\uFF0B " + "Create a new filter"),
             resolveQuickPickHelper: jest.spyOn(Gui, "resolveQuickPick"),
+            checkJwtTokenForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtTokenForProfile").mockImplementationOnce(() => {}),
         };
         newMocks.resolveQuickPickHelper.mockImplementation(() => Promise.resolve(newMocks.qpItem));
         globalMocks.createQuickPick.mockReturnValue({
@@ -655,7 +657,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
 
     it("Tests that filter() works correctly for favorited search nodes with credentials", async () => {
         const globalMocks = createGlobalMocks();
-        await createBlockMocks(globalMocks);
+        const blockMocks = await createBlockMocks(globalMocks);
 
         const sessionWithCred = createISession();
         globalMocks.createSessCfgFromArgs.mockReturnValue(sessionWithCred);
@@ -669,6 +671,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         node.fullPath = "/u/myFolder";
         globalMocks.testTree.mFavorites.push(node);
         await expect(globalMocks.testTree.filterPrompt(node)).resolves.not.toThrow();
+        expect(blockMocks.checkJwtTokenForProfile).toHaveBeenCalledWith("ussTestSess2");
     });
 
     it("Tests that filter() works correctly for favorited search nodes without credentials", async () => {
@@ -1685,6 +1688,7 @@ describe("USSTree Unit Tests - Function crossLparMove", () => {
                 profile: ussDirNode.getProfile(),
             }),
         ];
+        ussDirNode.dirty = false;
 
         const deleteMock = jest.spyOn(UssFSProvider.instance, "delete").mockResolvedValue(undefined);
         const readFileMock = jest.spyOn(UssFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));

@@ -227,7 +227,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         const responses = await this.getDatasets(cachedProfile);
         if (responses == null) {
-            return this.children;
+            return [];
         }
 
         // push nodes to an object with property names to avoid duplicates

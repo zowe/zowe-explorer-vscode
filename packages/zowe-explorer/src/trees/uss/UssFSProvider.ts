@@ -283,6 +283,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const bufBuilder = new BufferBuilder();
         const filePath = uri.path.substring(uriInfo.slashAfterProfilePos);
         const metadata = file.metadata;
+        await this.autoDetectEncoding(file as UssFile);
         const profileEncoding = file.encoding ? null : file.metadata.profile.profile?.encoding;
         let resp: IZosFilesResponse;
         try {
@@ -309,7 +310,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             }
             throw correlation.asError();
         }
-        await this.autoDetectEncoding(file as UssFile);
 
         const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
         if (options?.isConflict) {
@@ -433,7 +433,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             // or if the entry does not exist and the new contents are empty (new placeholder entry)
             options?.noStatusMsg || (!entry && content.byteLength === 0)
                 ? new vscode.Disposable(() => {})
-                : Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
+                : Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Saving USS file...")}`);
 
         let resp: IZosFilesResponse;
         try {

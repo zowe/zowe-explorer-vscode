@@ -53,7 +53,7 @@ export class DatasetInit {
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.refreshNode", async (node, nodeList) => {
-                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Pulling from Mainframe..."));
+                const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Pulling from Mainframe...")}`);
                 let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
                 selectedNodes = selectedNodes.filter((element) => SharedContext.isDs(element) || SharedContext.isDsMember(element));
                 for (const item of selectedNodes) {

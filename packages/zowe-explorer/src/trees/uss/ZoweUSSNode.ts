@@ -203,7 +203,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         const response = await this.getUssFiles(cachedProfile);
         if (!response.success) {
-            return this.children;
+            return [];
         }
 
         // If search path has changed, invalidate all children

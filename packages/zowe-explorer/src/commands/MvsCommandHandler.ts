@@ -42,7 +42,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
         return this.instance;
     }
 
-    private static readonly defaultDialogText: string = vscode.l10n.t("$(plus) Create a new MVS command");
+    private static readonly defaultDialogText: string = `$(plus) ${vscode.l10n.t("Create a new MVS command")}`;
     private static instance: MvsCommandHandler;
     public outputChannel: vscode.OutputChannel;
 

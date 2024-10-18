@@ -46,7 +46,7 @@ import { AuthUtils } from "../../utils/AuthUtils";
  * @implements {vscode.TreeDataProvider}
  */
 export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types.IZoweUSSTreeType {
-    public static readonly defaultDialogText: string = vscode.l10n.t("$(plus) Create a new filter");
+    public static readonly defaultDialogText: string = `$(plus) ${vscode.l10n.t("Create a new filter")}`;
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.USS;
     public mFavoriteSession: ZoweUSSNode;
     public mSessionNodes: IZoweUSSTreeNode[] = [];
@@ -208,7 +208,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             }
         }
 
-        const movingMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Moving USS files..."));
+        const movingMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Moving USS files...")}`);
         const parentsToUpdate = new Set<IZoweUSSTreeNode>();
 
         for (const item of droppedItems.value) {

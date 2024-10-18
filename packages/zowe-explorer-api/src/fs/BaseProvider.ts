@@ -61,11 +61,11 @@ export class BaseProvider {
         }
         await vscode.workspace.fs.writeFile(uri.with({ query: "forceUpload=true" }), fsEntry.data);
         Gui.setStatusBarMessage(
-            vscode.l10n.t({
-                message: "$(check) Overwrite applied for {0}",
+            `$(check) ${vscode.l10n.t({
+                message: "Overwrite applied for {0}",
                 args: [fsEntry.name],
                 comment: "File name",
-            }),
+            })}`,
             this.FS_PROVIDER_UI_TIMEOUT
         );
         fsEntry.conflictData = null;

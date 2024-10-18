@@ -9,7 +9,7 @@
  *
  */
 
-import { Disposable, FilePermission, FileType, Uri } from "vscode";
+import { Disposable, FilePermission, FileType, Uri, window } from "vscode";
 import { FsJobsUtils, FilterEntry, Gui, JobEntry, SpoolEntry, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { createIJobFile, createIJobObject } from "../../../__mocks__/mockCreators/jobs";
@@ -91,16 +91,22 @@ describe("refreshSpool", () => {
     });
 
     it("calls fetchSpoolAtUri for a valid spool node", async () => {
+        const node = { resourceUri: testUris.spool, contextValue: "spool" } as any;
+        const editorListMock = new MockedProperty(window, "visibleTextEditors", {
+            value: [{ document: { uri: testUris.spool } }],
+        });
         const fetchSpoolAtUriMock = jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation();
         const disposeMock = jest.fn();
         const statusBarMsgMock = jest.spyOn(Gui, "setStatusBarMessage").mockReturnValue({ dispose: disposeMock });
-        const node = { resourceUri: testUris.spool, contextValue: "spool" } as any;
         await JobFSProvider.refreshSpool(node);
         expect(statusBarMsgMock).toHaveBeenCalledWith("$(sync~spin) Fetching spool file...");
-        expect(fetchSpoolAtUriMock).toHaveBeenCalledWith(node.resourceUri);
+        expect(fetchSpoolAtUriMock).toHaveBeenCalledWith(node.resourceUri, {
+            document: { uri: { path: "/sestest/TESTJOB(JOB1234) - ACTIVE/JES2.JESMSGLG.2", scheme: "zowe-jobs" } },
+        });
         expect(disposeMock).toHaveBeenCalled();
         fetchSpoolAtUriMock.mockRestore();
         statusBarMsgMock.mockRestore();
+        editorListMock[Symbol.dispose]();
     });
 });
 

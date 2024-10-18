@@ -43,7 +43,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         return this.instance;
     }
 
-    private static readonly defaultDialogText: string = vscode.l10n.t("$(plus) Create a new TSO command");
+    private static readonly defaultDialogText: string = `$(plus) ${vscode.l10n.t("Create a new TSO command")}`;
     private static instance: TsoCommandHandler;
     public outputChannel: vscode.OutputChannel;
 
