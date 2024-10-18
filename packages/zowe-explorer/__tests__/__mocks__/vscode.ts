@@ -1498,6 +1498,11 @@ export namespace workspace {
     }
 }
 
+// We need to do this since "delete" is a reserved keyword and cannot be defined as a function name.
+Object.defineProperty(workspace.fs, "delete", {
+    value: jest.fn(),
+});
+
 export interface InputBoxOptions {
     placeholder?: string;
 }

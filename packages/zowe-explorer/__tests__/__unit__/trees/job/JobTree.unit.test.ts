@@ -135,7 +135,7 @@ async function createGlobalMocks() {
     };
 
     jest.spyOn(JobFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
-    jest.spyOn(JobFSProvider.instance, "delete").mockImplementation(globalMocks.FileSystemProvider.delete);
+    jest.spyOn(vscode.workspace.fs, "delete").mockImplementation(globalMocks.FileSystemProvider.delete);
     jest.spyOn(Gui, "createTreeView").mockImplementation(globalMocks.createTreeView);
     Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {

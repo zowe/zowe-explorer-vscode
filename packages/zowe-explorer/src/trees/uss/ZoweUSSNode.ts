@@ -364,7 +364,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         });
 
         try {
-            await UssFSProvider.instance.rename(oldUri, newUri, { overwrite: false });
+            await vscode.workspace.fs.rename(oldUri, newUri, { overwrite: false });
         } catch (err) {
             Gui.errorMessage(err.message);
             return;
@@ -416,7 +416,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             return;
         }
         try {
-            await UssFSProvider.instance.delete(this.resourceUri, { recursive: this.isFolder });
+            await vscode.workspace.fs.delete(this.resourceUri, { recursive: this.isFolder });
         } catch (err) {
             ZoweLogger.error(err);
             if (err instanceof Error) {

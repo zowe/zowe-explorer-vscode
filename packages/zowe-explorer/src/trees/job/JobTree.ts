@@ -218,7 +218,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     public async delete(node: IZoweJobTreeNode): Promise<void> {
         ZoweLogger.trace("JobTree.delete called.");
 
-        await JobFSProvider.instance.delete(node.resourceUri, { recursive: false, deleteRemote: true });
+        await vscode.workspace.fs.delete(node.resourceUri, { recursive: false });
         const favNode = this.relabelFavoritedJob(node);
         favNode.contextValue = SharedContext.asFavorite(favNode);
         await this.removeFavorite(favNode);
