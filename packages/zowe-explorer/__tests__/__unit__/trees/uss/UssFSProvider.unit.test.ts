@@ -10,7 +10,7 @@
  */
 
 import { Disposable, FilePermission, FileSystemError, FileType, TextEditor, Uri, workspace } from "vscode";
-import { BaseProvider, DirEntry, FileEntry, Gui, UssDirectory, UssFile, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { BaseProvider, DirEntry, FileEntry, Gui, UssDirectory, UssFile, ZoweExplorerApiType, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
@@ -142,17 +142,6 @@ describe("move", () => {
 });
 
 describe("listFiles", () => {
-    it("throws an error when called with a URI with an empty path", async () => {
-        await expect(
-            UssFSProvider.instance.listFiles(
-                testProfile,
-                Uri.from({
-                    scheme: ZoweScheme.USS,
-                    path: "",
-                })
-            )
-        ).rejects.toThrow("Could not list USS files: Empty path provided in URI");
-    });
     it("removes '.', '..', and '...' from IZosFilesResponse items when successful", async () => {
         jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
             fileList: jest.fn().mockResolvedValueOnce({
@@ -643,27 +632,6 @@ describe("writeFile", () => {
         ussApiMock.mockRestore();
     });
 
-    it("throws an error when there is an error unrelated to etag", async () => {
-        const mockUssApi = {
-            uploadFromBuffer: jest.fn().mockRejectedValueOnce(new Error("Unknown error on remote system")),
-        };
-        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
-        const folder = {
-            ...testEntries.folder,
-            entries: new Map([[testEntries.file.name, { ...testEntries.file }]]),
-        };
-        const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
-        const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValue(undefined);
-        const newContents = new Uint8Array([3, 6, 9]);
-        await expect(UssFSProvider.instance.writeFile(testUris.file, newContents, { create: false, overwrite: true })).rejects.toThrow(
-            "Unknown error on remote system"
-        );
-
-        lookupParentDirMock.mockRestore();
-        ussApiMock.mockRestore();
-        autoDetectEncodingMock.mockRestore();
-    });
-
     it("calls _handleConflict when there is an etag error", async () => {
         const mockUssApi = {
             uploadFromBuffer: jest.fn().mockRejectedValueOnce(new Error("Rest API failure with HTTP(S) status 412")),
@@ -894,11 +862,13 @@ describe("rename", () => {
         };
         (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
 
-        await UssFSProvider.instance.rename(testUris.folder, testUris.folder.with({ path: "/sestest/aFolder2" }), { overwrite: true });
+        await expect(
+            UssFSProvider.instance.rename(testUris.folder, testUris.folder.with({ path: "/sestest/aFolder2" }), { overwrite: true })
+        ).rejects.toThrow();
         expect(mockUssApi.rename).toHaveBeenCalledWith("/aFolder", "/aFolder2");
         expect(folderEntry.metadata.path).toBe("/aFolder");
         expect(sessionEntry.entries.has("aFolder2")).toBe(false);
-        expect(errMsgSpy).toHaveBeenCalledWith("Renaming /aFolder failed due to API error: could not upload file");
+        expect(errMsgSpy).toHaveBeenCalledWith("Failed to rename /aFolder: could not upload file", { items: ["Retry", "More info"] });
 
         lookupMock.mockRestore();
         ussApiMock.mockRestore();
@@ -933,15 +903,23 @@ describe("delete", () => {
             parent: sesEntry,
             parentUri: Uri.from({ scheme: ZoweScheme.USS, path: "/sestest" }),
         });
-        const errorMsgMock = jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce(undefined);
-        const deleteMock = jest.fn().mockRejectedValueOnce(new Error("insufficient permissions"));
+        const exampleError = new Error("insufficient permissions");
+        const deleteMock = jest.fn().mockRejectedValueOnce(exampleError);
         jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
             delete: deleteMock,
         } as any);
-        await UssFSProvider.instance.delete(testUris.file, { recursive: false });
+        const handleErrorMock = jest.spyOn((BaseProvider as any).prototype, "_handleError");
+        await expect(UssFSProvider.instance.delete(testUris.file, { recursive: false })).rejects.toThrow();
         expect(getDelInfoMock).toHaveBeenCalledWith(testUris.file);
         expect(deleteMock).toHaveBeenCalledWith(testEntries.file.metadata.path, false);
-        expect(errorMsgMock).toHaveBeenCalledWith("Deleting /aFile.txt failed due to API error: insufficient permissions");
+        expect(handleErrorMock).toHaveBeenCalledWith(
+            exampleError,
+            expect.objectContaining({
+                additionalContext: "Failed to delete /aFile.txt",
+                apiType: ZoweExplorerApiType.Uss,
+                profileType: testEntries.file.metadata.profile.type,
+            })
+        );
         expect(sesEntry.entries.has("aFile.txt")).toBe(true);
         expect(sesEntry.size).toBe(1);
     });

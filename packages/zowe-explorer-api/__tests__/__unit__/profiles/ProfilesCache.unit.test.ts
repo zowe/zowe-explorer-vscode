@@ -317,6 +317,21 @@ describe("ProfilesCache", () => {
             expect(profCache.getAllTypes()).toEqual([...profileTypes, "ssh", "base"]);
         });
 
+        it("should refresh profile data for existing profile and keep object reference", async () => {
+            const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+            const profInfoSpy = jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, zftpProfile]));
+            await profCache.refresh(fakeApiRegister as unknown as Types.IApiRegisterClient);
+            expect(profCache.allProfiles.length).toEqual(2);
+            expect(profCache.allProfiles[0]).toMatchObject(lpar1Profile);
+            const oldZosmfProfile = profCache.allProfiles[0];
+            const newZosmfProfile = { ...lpar1Profile, profile: lpar2Profile.profile };
+            profInfoSpy.mockResolvedValue(createProfInfoMock([newZosmfProfile, zftpProfile]));
+            await profCache.refresh(fakeApiRegister as unknown as Types.IApiRegisterClient);
+            expect(profCache.allProfiles.length).toEqual(2);
+            expect(profCache.allProfiles[0]).toMatchObject(newZosmfProfile);
+            expect(oldZosmfProfile.profile).toEqual(newZosmfProfile.profile);
+        });
+
         it("should refresh profile data for and merge tokens with base profile", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
             jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(

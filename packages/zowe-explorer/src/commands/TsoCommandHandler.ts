@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zostso from "@zowe/zos-tso-for-zowe-sdk";
-import { Gui, Validation, imperative, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, Validation, imperative, IZoweTreeNode, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import { ZoweCommandProvider } from "./ZoweCommandProvider";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { Profiles } from "../configuration/Profiles";
@@ -134,7 +134,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     })
                 );
             } else {
-                await AuthUtils.errorHandling(error, profile.name);
+                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Command, profile });
             }
         }
     }
@@ -229,7 +229,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 ZoweLogger.error(message);
                 Gui.errorMessage(message);
             } else {
-                await AuthUtils.errorHandling(error, profile.name);
+                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Command, profile });
             }
         }
     }

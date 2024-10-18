@@ -15,6 +15,18 @@ import * as path from "path";
 import { FsAbstractUtils } from "./utils";
 import { Gui } from "../globals/Gui";
 import { ZosEncoding } from "../tree";
+import { ErrorCorrelator, ZoweExplorerApiType } from "../utils/ErrorCorrelator";
+
+export interface HandleErrorOpts {
+    retry?: {
+        fn: (...args: any[]) => any | PromiseLike<any>;
+        args?: any[];
+    };
+    profileType?: string;
+    apiType?: ZoweExplorerApiType;
+    templateArgs?: Record<string, string>;
+    additionalContext?: string;
+}
 
 export class BaseProvider {
     // eslint-disable-next-line no-magic-numbers
@@ -415,6 +427,24 @@ export class BaseProvider {
             entry = child;
         }
         return entry;
+    }
+
+    protected _handleError(err: Error, opts?: HandleErrorOpts): void {
+        ErrorCorrelator.getInstance()
+            .displayError(opts?.apiType ?? ZoweExplorerApiType.All, err, {
+                additionalContext: opts?.additionalContext,
+                allowRetry: opts?.retry?.fn != null,
+                profileType: opts?.profileType ?? "any",
+                templateArgs: opts?.templateArgs,
+            })
+            .then(async ({ userResponse }) => {
+                if (userResponse === "Retry" && opts?.retry?.fn != null) {
+                    await opts.retry.fn(...(opts?.retry.args ?? []));
+                }
+            })
+            .catch(() => {
+                throw err;
+            });
     }
 
     protected _lookupAsDirectory(uri: vscode.Uri, silent: boolean): DirEntry {

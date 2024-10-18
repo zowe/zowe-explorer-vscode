@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
-import { Gui, IZoweJobTreeNode, Sorting, Types } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, Sorting, Types, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import { ZoweJobNode } from "./ZoweJobNode";
 import { JobTree } from "./JobTree";
 import { JobUtils } from "./JobUtils";
@@ -54,7 +54,7 @@ export class JobActions {
                 })
             );
         } catch (error) {
-            await AuthUtils.errorHandling(error, job.getProfile().name);
+            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Jes, profile: job.getProfile() });
         }
     }
 
@@ -120,7 +120,7 @@ export class JobActions {
         if (deletionErrors.length) {
             const errorMessages = deletionErrors.map((error) => error.message).join(", ");
             const userMessage = `There were errors during jobs deletion: ${errorMessages}`;
-            await AuthUtils.errorHandling(userMessage);
+            await AuthUtils.errorHandling(userMessage, { apiType: ZoweExplorerApiType.Jes });
         }
     }
 
@@ -137,7 +137,7 @@ export class JobActions {
             try {
                 await jobsProvider.addSession({ sessionName: sessionName.trim() });
             } catch (error) {
-                await AuthUtils.errorHandling(error);
+                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Jes, profile: sessionName });
                 return;
             }
             sessionNode = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label.toString().trim() === sessionName.trim());
@@ -145,7 +145,7 @@ export class JobActions {
         try {
             jobsProvider.refreshElement(sessionNode);
         } catch (error) {
-            await AuthUtils.errorHandling(error);
+            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Jes, profile: sessionName });
             return;
         }
         sessionNode.searchId = jobId;
@@ -183,7 +183,7 @@ export class JobActions {
                 }
             }
         } catch (error) {
-            await AuthUtils.errorHandling(error);
+            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Jes });
         }
     }
 
@@ -227,7 +227,7 @@ export class JobActions {
                 }
             }
         } catch (error) {
-            await AuthUtils.errorHandling(error);
+            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Jes });
         }
     }
 
@@ -270,7 +270,7 @@ export class JobActions {
             const jclDoc = await vscode.workspace.openTextDocument({ language: "jcl", content: jobJcl });
             await Gui.showTextDocument(jclDoc, { preview: false });
         } catch (error) {
-            await AuthUtils.errorHandling(error);
+            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Jes, profile: job.getProfile() });
         }
     }
 
@@ -307,7 +307,7 @@ export class JobActions {
                     vscode.l10n.t("jobActions.modifyCommand.apiNonExisting", "Not implemented yet for profile of type: ") + job.getProfile().type
                 );
             } else {
-                await AuthUtils.errorHandling(error, job.getProfile().name);
+                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Command, profile: job.getProfile() });
             }
         }
     }
@@ -343,7 +343,7 @@ export class JobActions {
                     })
                 );
             } else {
-                await AuthUtils.errorHandling(error, job.getProfile().name);
+                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Command, profile: job.getProfile() });
             }
         }
     }

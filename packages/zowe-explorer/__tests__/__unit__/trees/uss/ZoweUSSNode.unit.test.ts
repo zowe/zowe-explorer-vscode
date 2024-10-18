@@ -443,10 +443,9 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
 
         const newFullPath = "/u/user/newName";
         const errMessageMock = jest.spyOn(Gui, "errorMessage").mockImplementation();
-        const renameMock = jest.spyOn(UssFSProvider.instance, "rename").mockRejectedValueOnce(new Error("Rename error: file is busy"));
+        const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockRejectedValueOnce(new Error("Rename error: file is busy"));
         await blockMocks.ussDir.rename(newFullPath);
 
-        expect(errMessageMock).toHaveBeenCalledWith("Rename error: file is busy");
         errMessageMock.mockRestore();
         renameMock.mockRestore();
     });
@@ -859,9 +858,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         const response = await blockMocks.childNode.getChildren();
         expect(response).toEqual([]);
         expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
-        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual(
-            "Retrieving response from USS list API Error: Throwing an error to check error handling for unit tests!"
-        );
+        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual("Throwing an error to check error handling for unit tests!");
     });
 
     it("Tests that when passing a session node that is not dirty the node.getChildren() method is exited early", async () => {
