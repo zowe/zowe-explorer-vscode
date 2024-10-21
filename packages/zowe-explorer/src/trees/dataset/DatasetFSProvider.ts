@@ -221,7 +221,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     attributes: true,
                 });
                 if (resp.success && resp.apiResponse?.items?.length > 0) {
-                    entryIsDir = resp.apiResponse.items[0].dsorg.startsWith("PO");
+                    entryIsDir = resp.apiResponse.items[0].dsorg?.startsWith("PO");
                 } else {
                     throw vscode.FileSystemError.FileNotFound(uri);
                 }
