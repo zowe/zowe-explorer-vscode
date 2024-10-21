@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ZoweTerminal Unit Tests should not change the keys 1`] = `
+{
+  "BACKSPACE": "",
+  "CLEAR_ALL": "[2J[3J[;H",
+  "CLEAR_LINE": "[2K
+",
+  "CTRL_C": "",
+  "DEL": "[P",
+  "DOWN": "[B",
+  "EMPTY_LINE": "> ",
+  "ENTER": "
+",
+  "LEFT": "[D",
+  "NEW_LINE": "
+",
+  "RIGHT": "[C",
+  "UP": "[A",
+}
+`;

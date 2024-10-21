@@ -39,7 +39,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.historyIndex = this.mHistory.length;
         this.command = options?.startup ?? "";
         this.cursorPosition = this.command.length;
-        this.formatCommandLine = options.formatCommandLine;
+        this.formatCommandLine = options?.formatCommandLine ?? ((cmd: string) => `${ZoweTerminal.Keys.EMPTY_LINE}${cmd}`);
     }
 
     private mMessage: string;
@@ -84,7 +84,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     public onDidClose?: vscode.Event<void> = this.closeEmitter.event;
 
     // Start is called when the terminal is opened
-    public open(initialDimensions: vscode.TerminalDimensions | undefined): void {
+    public open(initialDimensions?: vscode.TerminalDimensions | undefined): void {
         this.writeLine(this.mMessage);
         if (this.command.length > 0) {
             this.handleInput(ZoweTerminal.Keys.ENTER);
