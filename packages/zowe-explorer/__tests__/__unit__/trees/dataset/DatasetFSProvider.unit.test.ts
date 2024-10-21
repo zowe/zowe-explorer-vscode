@@ -811,6 +811,52 @@ describe("fetchEntriesForDataset", () => {
         expect(allMembersMock).toHaveBeenCalled();
         mvsApiMock.mockRestore();
     });
+    it("calls _handleError in the case of an API error", async () => {
+        const allMembersMock = jest.fn().mockRejectedValue(new Error("API error"));
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+            allMembers: allMembersMock,
+        } as any);
+        const _handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation();
+        const fakePds = Object.assign(Object.create(Object.getPrototypeOf(testEntries.pds)), testEntries.pds);
+        await expect(
+            (DatasetFSProvider.instance as any).fetchEntriesForDataset(fakePds, testUris.pds, {
+                isRoot: false,
+                slashAfterProfilePos: testUris.pds.path.indexOf("/", 1),
+                profileName: "sestest",
+                profile: testProfile,
+            })
+        ).rejects.toThrow();
+        expect(allMembersMock).toHaveBeenCalled();
+        expect(_handleErrorMock).toHaveBeenCalled();
+        _handleErrorMock.mockRestore();
+        mvsApiMock.mockRestore();
+    });
+});
+
+describe("fetchEntriesForProfile", () => {
+    it("calls _handleError in the case of an API error", async () => {
+        const dataSetsMatchingPattern = jest.fn().mockRejectedValue(new Error("API error"));
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+            dataSetsMatchingPattern,
+        } as any);
+        const fakeSession = Object.assign(Object.create(Object.getPrototypeOf(testEntries.session)), testEntries.session);
+        const _handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation();
+        const lookupAsDirMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(fakeSession);
+        await (DatasetFSProvider.instance as any).fetchEntriesForProfile(
+            testUris.session,
+            {
+                isRoot: true,
+                slashAfterProfilePos: testUris.pds.path.indexOf("/", 1),
+                profileName: "sestest",
+                profile: testProfile,
+            },
+            "PUBLIC.*"
+        );
+        expect(_handleErrorMock).toHaveBeenCalled();
+        expect(lookupAsDirMock).toHaveBeenCalled();
+        _handleErrorMock.mockRestore();
+        mvsApiMock.mockRestore();
+    });
 });
 
 describe("fetchDataset", () => {

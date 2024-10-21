@@ -159,7 +159,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 },
                 profileType: profile.type,
             });
-            return { success: false, commandResponse: err.message };
+            throw err;
         }
 
         return {
@@ -635,7 +635,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 }),
                 retry: {
                     fn: this.delete.bind(this),
-                    args: [uri, _options]
+                    args: [uri, _options],
                 },
                 apiType: ZoweExplorerApiType.Uss,
                 profileType: parent.metadata.profile.type,
@@ -755,7 +755,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 }),
                 retry: {
                     fn: this.copyTree.bind(this),
-                    args: [source, destination, options]
+                    args: [source, destination, options],
                 },
                 apiType: ZoweExplorerApiType.Uss,
                 profileType: destInfo.profile.type,

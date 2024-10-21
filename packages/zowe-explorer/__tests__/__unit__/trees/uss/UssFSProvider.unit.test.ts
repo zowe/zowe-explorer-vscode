@@ -139,6 +139,19 @@ describe("move", () => {
         expect(await UssFSProvider.instance.move(testUris.file, newUri)).toBe(false);
         expect(errorMsgMock).toHaveBeenCalledWith("The 'move' function is not implemented for this USS API.");
     });
+    it("throws an error if the API request failed", async () => {
+        getInfoFromUriMock.mockReturnValueOnce({
+            // info for new URI
+            path: "/aFile2.txt",
+            profile: testProfile,
+        });
+        const move = jest.fn().mockRejectedValue(new Error("error during move"));
+        const handleErrorMock = jest.spyOn(UssFSProvider.instance as any, "_handleError").mockImplementation();
+        jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({ move } as any);
+        await expect(UssFSProvider.instance.move(testUris.file, newUri)).rejects.toThrow();
+        expect(handleErrorMock).toHaveBeenCalled();
+        handleErrorMock.mockRestore();
+    });
 });
 
 describe("listFiles", () => {
@@ -180,6 +193,15 @@ describe("listFiles", () => {
                 items: [],
             },
         });
+    });
+    it("returns an unsuccessful response if an error occurred", async () => {
+        jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
+            fileList: jest.fn().mockRejectedValue(new Error("error listing files")),
+        } as any);
+        const _handleErrorMock = jest.spyOn(UssFSProvider.instance as any, "_handleError").mockImplementation();
+        await expect(UssFSProvider.instance.listFiles(testProfile, testUris.folder)).rejects.toThrow();
+        expect(_handleErrorMock).toHaveBeenCalled();
+        _handleErrorMock.mockRestore();
     });
 });
 
@@ -311,6 +333,23 @@ describe("fetchFileAtUri", () => {
         expect(fileEntry.data?.byteLength).toBe(exampleData.length);
         autoDetectEncodingMock.mockRestore();
     });
+    it("throws an error if it failed to fetch contents", async () => {
+        const fileEntry = { ...testEntries.file };
+        const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
+        const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation();
+        jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
+            getContents: jest.fn().mockRejectedValue(new Error("error retrieving contents")),
+        } as any);
+
+        const _handleErrorMock = jest.spyOn(UssFSProvider.instance as any, "_handleError").mockImplementation();
+        await expect(UssFSProvider.instance.fetchFileAtUri(testUris.file)).rejects.toThrow();
+
+        expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.file);
+        expect(autoDetectEncodingMock).toHaveBeenCalledWith(fileEntry);
+        expect(_handleErrorMock).toHaveBeenCalled();
+        autoDetectEncodingMock.mockRestore();
+        _handleErrorMock.mockRestore();
+    });
     it("calls getContents to get the data for a file entry with encoding", async () => {
         const fileEntry = { ...testEntries.file };
         const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
@@ -415,6 +454,20 @@ describe("autoDetectEncoding", () => {
         mockUssApi = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({
             getTag: getTagMock.mockClear(),
         } as any);
+    });
+
+    it("throws error if getTag call fails", async () => {
+        getTagMock.mockRejectedValueOnce(new Error("error fetching tag"));
+        const testEntry = new UssFile("testFile");
+        testEntry.metadata = {
+            path: "/testFile",
+            profile: testProfile,
+        };
+        const _handleErrorMock = jest.spyOn(UssFSProvider.instance as any, "_handleError").mockImplementation();
+        await expect(UssFSProvider.instance.autoDetectEncoding(testEntry)).rejects.toThrow();
+        expect(getTagMock).toHaveBeenCalledTimes(1);
+        expect(_handleErrorMock).toHaveBeenCalled();
+        _handleErrorMock.mockRestore();
     });
 
     it("sets encoding if file tagged as binary", async () => {
@@ -630,6 +683,39 @@ describe("writeFile", () => {
         expect(fileEntry.etag).toBe("NEWETAG");
         expect(fileEntry.data).toBe(newContents);
         ussApiMock.mockRestore();
+    });
+
+    it("throws an error when an unknown API error occurs", async () => {
+        const mockUssApi = {
+            uploadFromBuffer: jest.fn().mockRejectedValueOnce(new Error("Rest API failure")),
+        };
+        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
+        const statusMsgMock = jest.spyOn(Gui, "setStatusBarMessage");
+        const folder = {
+            ...testEntries.folder,
+            entries: new Map([[testEntries.file.name, { ...testEntries.file }]]),
+        };
+        const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+        const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValue(undefined);
+        const newContents = new Uint8Array([3, 6, 9]);
+        const handleConflictMock = jest.spyOn(UssFSProvider.instance as any, "_handleConflict").mockImplementation();
+        const _handleErrorMock = jest.spyOn(UssFSProvider.instance as any, "_handleError").mockImplementation();
+        await expect(UssFSProvider.instance.writeFile(testUris.file, newContents, { create: false, overwrite: true })).rejects.toThrow();
+
+        expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.file);
+        expect(statusMsgMock).toHaveBeenCalledWith("$(sync~spin) Saving USS file...");
+        expect(mockUssApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(newContents), testEntries.file.metadata.path, {
+            binary: false,
+            encoding: undefined,
+            etag: testEntries.file.etag,
+            returnEtag: true,
+        });
+        expect(handleConflictMock).not.toHaveBeenCalled();
+        expect(_handleErrorMock).toHaveBeenCalled();
+        handleConflictMock.mockRestore();
+        _handleErrorMock.mockRestore();
+        ussApiMock.mockRestore();
+        autoDetectEncodingMock.mockRestore();
     });
 
     it("calls _handleConflict when there is an etag error", async () => {

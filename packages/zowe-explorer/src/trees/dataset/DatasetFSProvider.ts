@@ -207,6 +207,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 apiType: ZoweExplorerApiType.Mvs,
                 profileType: uriInfo.profile?.type,
             });
+            throw err;
         }
         const pdsExtension = DatasetUtils.getExtension(entry.name);
 
