@@ -153,6 +153,23 @@ describe("readDirectory", () => {
         expect(mockJesApi.getSpoolFiles).toHaveBeenCalledWith(testEntries.job.job?.jobname, testEntries.job.job?.jobid);
         jesApiMock.mockRestore();
     });
+
+    it("throws error when API error occurs", async () => {
+        const mockJesApi = {
+            getSpoolFiles: jest.fn().mockRejectedValue(new Error("Failed to fetch spools")),
+        };
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const fakeJob = new JobEntry(testEntries.job.name);
+        fakeJob.job = testEntries.job.job;
+        const _handleErrorMock = jest.spyOn(JobFSProvider.instance as any, "_handleError").mockImplementation();
+        const lookupAsDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupAsDirectory").mockReturnValueOnce(fakeJob);
+        await expect(JobFSProvider.instance.readDirectory(testUris.job)).rejects.toThrow();
+        expect(lookupAsDirMock).toHaveBeenCalledWith(testUris.job, false);
+        expect(mockJesApi.getSpoolFiles).toHaveBeenCalledWith(testEntries.job.job?.jobname, testEntries.job.job?.jobid);
+        expect(_handleErrorMock).toHaveBeenCalled();
+        jesApiMock.mockRestore();
+        _handleErrorMock.mockRestore();
+    });
 });
 
 describe("updateFilterForUri", () => {
@@ -216,6 +233,19 @@ describe("readFile", () => {
         const fetchSpoolAtUriMock = jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockResolvedValueOnce(spoolEntry);
         expect(await JobFSProvider.instance.readFile(testUris.spool)).toBe(spoolEntry.data);
         expect(spoolEntry.wasAccessed).toBe(true);
+        lookupAsFileMock.mockRestore();
+        fetchSpoolAtUriMock.mockRestore();
+    });
+    it("throws error if an error occurred while fetching spool", async () => {
+        const spoolEntry = { ...testEntries.spool };
+        const lookupAsFileMock = jest.spyOn(JobFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(spoolEntry);
+        const _handleErrorMock = jest.spyOn(JobFSProvider.instance as any, "_handleError").mockImplementation();
+        const fetchSpoolAtUriMock = jest
+            .spyOn(JobFSProvider.instance, "fetchSpoolAtUri")
+            .mockRejectedValueOnce(new Error("Failed to fetch contents for spool"));
+        await expect(JobFSProvider.instance.readFile(testUris.spool)).rejects.toThrow();
+        expect(_handleErrorMock).toHaveBeenCalled();
+        _handleErrorMock.mockRestore();
         lookupAsFileMock.mockRestore();
         fetchSpoolAtUriMock.mockRestore();
     });
@@ -307,6 +337,25 @@ describe("delete", () => {
             .spyOn(JobFSProvider.instance as any, "_lookupParentDirectory")
             .mockReturnValueOnce({ ...testEntries.session });
         await JobFSProvider.instance.delete(testUris.job, { recursive: true, deleteRemote: true });
+        const jobInfo = testEntries.job.job;
+        expect(jobInfo).not.toBeUndefined();
+        expect(mockUssApi.deleteJob).toHaveBeenCalledWith(jobInfo?.jobname || "TESTJOB", jobInfo?.jobid || "JOB12345");
+        ussApiMock.mockRestore();
+        lookupMock.mockRestore();
+        lookupParentDirMock.mockRestore();
+    });
+    it("throws an error if an API error occurs during deletion", async () => {
+        const mockUssApi = {
+            deleteJob: jest.fn().mockRejectedValue(new Error("Failed to delete job")),
+        };
+        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockUssApi as any);
+        const fakeJob = new JobEntry(testEntries.job.name);
+        fakeJob.job = testEntries.job.job;
+        const lookupMock = jest.spyOn(JobFSProvider.instance as any, "lookup").mockReturnValueOnce(fakeJob);
+        const lookupParentDirMock = jest
+            .spyOn(JobFSProvider.instance as any, "_lookupParentDirectory")
+            .mockReturnValueOnce({ ...testEntries.session });
+        await expect(JobFSProvider.instance.delete(testUris.job, { recursive: true, deleteRemote: true })).rejects.toThrow();
         const jobInfo = testEntries.job.job;
         expect(jobInfo).not.toBeUndefined();
         expect(mockUssApi.deleteJob).toHaveBeenCalledWith(jobInfo?.jobname || "TESTJOB", jobInfo?.jobid || "JOB12345");
