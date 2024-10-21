@@ -38,11 +38,6 @@ jest.mock("../../../../src/tools/ZoweLogger");
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
         const executeCommand = { fun: jest.fn() };
-        const cmdProviders = {
-            mvs: {issueMvsCommand: jest.fn()},
-            tso: {issueTsoCommand: jest.fn()},
-            uss: {issueUnixCommand: jest.fn()},
-        };
         const test: ITestContext = {
             context: { subscriptions: [] },
             value: {
@@ -55,6 +50,7 @@ describe("Test src/shared/extension", () => {
             _: { _: "_" },
         };
         const profileMocks = { deleteProfile: jest.fn(), disableValidation: jest.fn(), enableValidation: jest.fn(), refresh: jest.fn() };
+        const cmdProviders = { mvs: { issueMvsCommand: jest.fn() }, tso: { issueTsoCommand: jest.fn() }, uss: { issueUnixCommand: jest.fn() } };
         const treeProvider = {
             addFavorite: jest.fn(),
             deleteSession: jest.fn(),
@@ -83,9 +79,7 @@ describe("Test src/shared/extension", () => {
             },
             {
                 name: "zowe.editHistory",
-                mock: [
-                    { spy: jest.spyOn(SharedHistoryView, "SharedHistoryView"), arg: [test.context, test.value.providers, cmdProviders] },
-                ],
+                mock: [{ spy: jest.spyOn(SharedHistoryView, "SharedHistoryView"), arg: [test.context, test.value.providers, cmdProviders] }],
             },
             {
                 name: "zowe.promptCredentials",
