@@ -207,14 +207,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(uriPath[0], {
                     attributes: true,
                 });
+                entryIsDir = false;
                 const memberName = path.parse(uriPath[1]).name;
                 if (
-                    resp.success &&
-                    resp.apiResponse?.items?.length > 0 &&
-                    resp.apiResponse.items.find((respItem) => respItem.member === memberName)
+                    !resp.success ||
+                    resp.apiResponse?.items?.length < 1 ||
+                    !resp.apiResponse.items.find((respItem) => respItem.member === memberName)
                 ) {
-                    entryIsDir = false;
-                } else {
                     throw vscode.FileSystemError.FileNotFound(uri);
                 }
             } else {
@@ -222,8 +221,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     attributes: true,
                 });
                 if (resp.success && resp.apiResponse?.items?.length > 0) {
-                    const dsorg: string = resp.apiResponse?.items?.[0]?.dsorg;
-                    entryIsDir = pdsMember ? false : dsorg?.startsWith("PO") ?? false;
+                    entryIsDir = resp.apiResponse.items[0].dsorg.startsWith("PO");
                 } else {
                     throw vscode.FileSystemError.FileNotFound(uri);
                 }
