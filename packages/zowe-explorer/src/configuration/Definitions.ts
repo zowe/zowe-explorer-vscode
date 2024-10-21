@@ -15,9 +15,9 @@ import { Types, IZoweTreeNode, imperative, ZosEncoding, IZoweTree } from "@zowe/
 import type { DatasetTree } from "../trees/dataset/DatasetTree";
 import type { JobTree } from "../trees/job/JobTree";
 import type { USSTree } from "../trees/uss/USSTree";
-import { MvsCommandHandler } from "../commands/MvsCommandHandler";
-import { TsoCommandHandler } from "../commands/TsoCommandHandler";
-import { UnixCommandHandler } from "../commands/UnixCommandHandler";
+import type { MvsCommandHandler } from "../commands/MvsCommandHandler";
+import type { TsoCommandHandler } from "../commands/TsoCommandHandler";
+import type { UnixCommandHandler } from "../commands/UnixCommandHandler";
 
 export namespace Definitions {
     export type LocalFileInfo = {
