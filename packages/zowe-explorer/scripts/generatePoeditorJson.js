@@ -5,7 +5,7 @@
  */
 
 const fs = require("fs");
-const langId = process.argv[2];
+const langId = process.argv.slice(2).find(arg => !arg.startsWith("-"));
 const fileSuffix = langId ? `${langId}.json` : "json";
 const poeditorJson = {};
 const packageNls = require(__dirname + "/../package.nls." + fileSuffix);
@@ -25,3 +25,16 @@ for (const [k, v] of Object.entries(l10nBundle)) {
     }
 }
 fs.writeFileSync(__dirname + "/../l10n/poeditor." + fileSuffix, JSON.stringify(poeditorJson, null, 2) + "\n");
+
+if (process.argv.includes("--strip")) {
+    // Strip comments out of bundle.l10n.json and sort properties by key
+    const jsonFilePath = __dirname + "/../l10n/bundle.l10n.json";
+    let l10nBundle = JSON.parse(fs.readFileSync(jsonFilePath, "utf-8"));
+    for (const [k, v] of Object.entries(l10nBundle)) {
+        if (typeof v === "object") {
+            l10nBundle[k] = l10nBundle[k].message;
+        }
+    }
+    l10nBundle = Object.fromEntries(Object.entries(l10nBundle).sort(([a], [b]) => a.localeCompare(b)));
+    fs.writeFileSync(jsonFilePath, JSON.stringify(l10nBundle, null, 2) + "\n");
+}

@@ -6,6 +6,12 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
+## `3.0.2`
+
+## `3.0.1`
+
+### Bug fixes
+
 - Fixed bug where the `getContents` MVS and USS APIs failed to return whenever a local file path was provided. [#3199](https://github.com/zowe/zowe-explorer-vscode/issues/3199)
 
 ## `3.0.0`

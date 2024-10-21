@@ -17,6 +17,7 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { JobTree } from "../job/JobTree";
 import { Constants } from "../../configuration/Constants";
 import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
+import * as fs from "fs";
 
 export class SharedHistoryView extends WebView {
     private treeProviders: Definitions.IZoweProviders;
@@ -69,6 +70,23 @@ export class SharedHistoryView extends WebView {
             case "clear-all":
                 await this.clearAll(message);
                 break;
+            case "GET_LOCALIZATION": {
+                const filePath = vscode.l10n.uri?.fsPath + "";
+                fs.readFile(filePath, "utf8", (err, data) => {
+                    if (err) {
+                        // File doesn't exist, fallback to English strings
+                        return;
+                    }
+                    if (!this.panel) {
+                        return;
+                    }
+                    this.panel.webview.postMessage({
+                        command: "GET_LOCALIZATION",
+                        contents: data,
+                    });
+                });
+                break;
+            }
             default:
                 break;
         }

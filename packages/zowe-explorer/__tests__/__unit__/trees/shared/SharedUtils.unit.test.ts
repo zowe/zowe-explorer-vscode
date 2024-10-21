@@ -421,6 +421,23 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         );
     });
 
+    it("prompts for encoding for tagged USS binary file", async () => {
+        const blockMocks = createBlockMocks();
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.profile,
+            parentPath: "/root",
+        });
+        node.setEncoding(binaryEncoding);
+        blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[0]);
+        const encoding = await SharedUtils.promptForEncoding(node, "binary");
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(await blockMocks.showQuickPick.mock.calls[0][0][0]).toEqual({ label: "binary", description: "USS file tag" });
+        expect(encoding).toEqual({ kind: "binary" });
+    });
+
     it("prompts for encoding for USS file when profile contains encoding", async () => {
         const blockMocks = createBlockMocks();
         (blockMocks.profile.profile as any).encoding = "IBM-1047";

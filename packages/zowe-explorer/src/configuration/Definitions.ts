@@ -135,7 +135,7 @@ export namespace Definitions {
         AllJobs,
     }
     export enum V1MigrationStatus {
-        CreateConfigSelected,
+        None,
         JustMigrated,
     }
     export enum LocalStorageKey {

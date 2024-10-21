@@ -322,6 +322,31 @@ describe("fetchFileAtUri", () => {
         expect(fileEntry.data?.byteLength).toBe(exampleData.length);
         autoDetectEncodingMock.mockRestore();
     });
+    it("calls getContents to get the data for a file entry with encoding", async () => {
+        const fileEntry = { ...testEntries.file };
+        const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
+        const exampleData = "hello world!";
+        const getContentsMock = jest.fn().mockImplementationOnce((filePath, opts) => {
+            opts.stream.write(exampleData);
+            return {
+                apiResponse: {
+                    etag: "123abc",
+                },
+            };
+        });
+        jest.spyOn(ZoweExplorerApiRegister, "getUssApi")
+            .mockReturnValueOnce({
+                getTag: jest.fn().mockResolvedValueOnce("binary"),
+            } as any)
+            .mockReturnValueOnce({ getContents: getContentsMock } as any);
+
+        await UssFSProvider.instance.fetchFileAtUri(testUris.file);
+
+        expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.file);
+        expect(fileEntry.data?.toString()).toBe(exampleData);
+        expect(fileEntry.encoding).toEqual({ kind: "binary" });
+        expect(getContentsMock).toHaveBeenCalledWith("/aFile.txt", expect.objectContaining({ binary: true }));
+    });
     it("assigns conflictData if the 'isConflict' option is specified", async () => {
         const fileEntry = { ...testEntries.file };
         const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
