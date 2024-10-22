@@ -69,6 +69,11 @@ export const ErrorInfo = ({ error, stackTrace }: ErrorInfoProps) => {
       <VSCodeDivider />
       <h2>Additional resources</h2>
       <ul>
+        {error.properties.correlation?.resources?.map((r) => (
+          <li>
+            <a href={r.href}>{r.title ?? r.href}</a>
+          </li>
+        ))}
         <li>
           <a href="https://github.com/zowe/zowe-explorer-vscode/">GitHub</a>
         </li>

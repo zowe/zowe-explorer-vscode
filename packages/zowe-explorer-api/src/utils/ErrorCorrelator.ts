@@ -19,6 +19,11 @@ import { ImperativeError } from "@zowe/imperative";
  */
 type ErrorMatch = string | RegExp;
 
+export interface ExternalResource {
+    href: string;
+    title?: string;
+}
+
 export interface ErrorCorrelation {
     /**
      * An optional error code returned from the server.
@@ -40,6 +45,10 @@ export interface ErrorCorrelation {
      * @type {string[]}
      */
     tips?: string[];
+    /**
+     * Error-specific, external resources for users to help with resolution during troubleshooting.
+     */
+    resources?: ExternalResource[];
 }
 
 export interface CorrelatedErrorProps {
