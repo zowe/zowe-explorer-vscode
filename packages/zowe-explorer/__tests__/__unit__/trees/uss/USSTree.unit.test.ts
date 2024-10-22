@@ -104,7 +104,7 @@ function createGlobalMocks() {
     };
 
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
-    jest.spyOn(UssFSProvider.instance, "rename").mockImplementation(globalMocks.FileSystemProvider.rename);
+    jest.spyOn(vscode.workspace.fs, "rename").mockImplementation(globalMocks.FileSystemProvider.rename);
 
     globalMocks.mockTextDocuments.push(globalMocks.mockTextDocumentDirty);
     globalMocks.mockTextDocuments.push(globalMocks.mockTextDocumentClean);
@@ -1690,7 +1690,7 @@ describe("USSTree Unit Tests - Function crossLparMove", () => {
         ];
         ussDirNode.dirty = false;
 
-        const deleteMock = jest.spyOn(UssFSProvider.instance, "delete").mockResolvedValue(undefined);
+        const deleteMock = jest.spyOn(vscode.workspace.fs, "delete").mockResolvedValue(undefined);
         const readFileMock = jest.spyOn(UssFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
         const writeFileMock = jest.spyOn(UssFSProvider.instance, "writeFile").mockResolvedValue(undefined);
         const existsMock = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);

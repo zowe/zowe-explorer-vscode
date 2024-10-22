@@ -734,6 +734,33 @@ describe("fetchEntriesForDataset", () => {
 describe("fetchDataset", () => {
     describe("calls dataSet to verify that the data set exists on the mainframe", () => {
         describe("PS", () => {
+            it("non-existent PS URI", async () => {
+                const dataSetMock = jest.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [],
+                    },
+                    commandResponse: "",
+                });
+                const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                    dataSet: dataSetMock,
+                } as any);
+                try {
+                    await (DatasetFSProvider.instance as any).fetchDataset(testUris.ps, {
+                        isRoot: false,
+                        slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                        profileName: "sestest",
+                        profile: testProfile,
+                    });
+                    // Fail test if above expression doesn't throw anything.
+                    expect(true).toBe(false);
+                } catch (e) {
+                    expect(e.message).toBe(testUris.ps.toString(true));
+                }
+                expect(dataSetMock).toHaveBeenCalled();
+                mvsApiMock.mockRestore();
+            });
+
             it("non-existent URI", async () => {
                 const dataSetMock = jest.fn().mockResolvedValue({
                     success: true,
@@ -747,7 +774,7 @@ describe("fetchDataset", () => {
                 } as any);
                 await (DatasetFSProvider.instance as any).fetchDataset(testUris.ps, {
                     isRoot: false,
-                    slashAfterProfilePos: testUris.pds.path.indexOf("/", 1),
+                    slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
                     profileName: "sestest",
                     profile: testProfile,
                 });
@@ -772,6 +799,36 @@ describe("fetchDataset", () => {
         });
 
         describe("PDS", () => {
+            it("non-existent PDS URI", async () => {
+                const dataSetMock = jest.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [],
+                    },
+                    commandResponse: "",
+                });
+                const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                    dataSet: dataSetMock,
+                } as any);
+                const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup");
+                lookupMock.mockImplementation(() => {
+                    throw FileSystemError.FileNotFound(testUris.pds);
+                });
+                try {
+                    await (DatasetFSProvider.instance as any).fetchDataset(testUris.pds, {
+                        isRoot: false,
+                        slashAfterProfilePos: testUris.pds.path.indexOf("/", 1),
+                        profileName: "sestest",
+                        profile: testProfile,
+                    });
+                    // Fail test if above expression doesn't throw anything.
+                    expect(true).toBe(false);
+                } catch (e) {
+                    expect(e.message).toBe(testUris.pds.toString(true));
+                }
+                lookupMock.mockRestore();
+                mvsApiMock.mockRestore();
+            });
             it("non-existent URI", async () => {
                 const dataSetMock = jest.fn().mockResolvedValue({
                     success: true,
@@ -805,6 +862,63 @@ describe("fetchDataset", () => {
                 createDirMock.mockRestore();
                 mvsApiMock.mockRestore();
                 fetchEntriesForDatasetMock.mockRestore();
+            });
+        });
+
+        describe("PDS member", () => {
+            it("non-existent member URI", async () => {
+                const allMembersMockNoMatch = jest.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            {
+                                member: "NOMATCH",
+                            },
+                        ],
+                    },
+                    commandResponse: "",
+                });
+                const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                    allMembers: allMembersMockNoMatch,
+                } as any);
+                try {
+                    await (DatasetFSProvider.instance as any).fetchDataset(testUris.pdsMember, {
+                        isRoot: false,
+                        slashAfterProfilePos: testUris.pds.path.indexOf("/", 1),
+                        profileName: "sestest",
+                        profile: testProfile,
+                    });
+                    // Fail test if above expression doesn't throw anything.
+                    expect(true).toBe(false);
+                } catch (e) {
+                    expect(e.message).toBe(testUris.pdsMember.toString(true));
+                }
+                expect(allMembersMockNoMatch).toHaveBeenCalledWith("USER.DATA.PDS");
+                mvsApiMock.mockRestore();
+            });
+            it("existing member URI", async () => {
+                const allMembersMock = jest.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            {
+                                member: "MEMBER1",
+                            },
+                        ],
+                    },
+                    commandResponse: "",
+                });
+                const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                    allMembers: allMembersMock,
+                } as any);
+                await (DatasetFSProvider.instance as any).fetchDataset(testUris.pdsMember, {
+                    isRoot: false,
+                    slashAfterProfilePos: testUris.pdsMember.path.indexOf("/", 1),
+                    profileName: "sestest",
+                    profile: testProfile,
+                });
+                expect(allMembersMock).toHaveBeenCalledWith("USER.DATA.PDS");
+                mvsApiMock.mockRestore();
             });
         });
     });

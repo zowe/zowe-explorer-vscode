@@ -6,9 +6,20 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-- Zowe Explorer now includes support for the [VS Code display languages](https://code.visualstudio.com/docs/getstarted/locales) French, German, Japanese, Portuguese, and Spanish. Download the respective language pack and switch.
-- Localization of strings within the webviews. [#2983](https://github.com/zowe/zowe-explorer-vscode/issues/2983)
+- Update Zowe SDKs to `8.2.0` to get the latest enhancements from Imperative.
 - Added expired JSON web token detection for profiles in each tree view (Data Sets, USS, Jobs). When a user performs a search on a profile, they are prompted to log in if their token expired. [#3175](https://github.com/zowe/zowe-explorer-vscode/issues/3175)
+
+### Bug fixes
+
+- `DatasetFSProvider.stat()` will now throw a `FileNotFound` error for extenders trying to fetch an MVS resource that does not exist. [#3252](https://github.com/zowe/zowe-explorer-vscode/issues/3252)
+- Fixed an issue where renaming or deleting a USS file or data set did not update the opened editor. [#3260](https://github.com/zowe/zowe-explorer-vscode/issues/3260)
+
+## `3.0.2`
+
+### New features and enhancements
+
+- Zowe Explorer now includes support for the [VS Code display languages](https://code.visualstudio.com/docs/getstarted/locales) French, German, Japanese, Portuguese, and Spanish. Download the respective language pack and switch. [#3239](https://github.com/zowe/zowe-explorer-vscode/pull/3239)
+- Localization of strings within Zowe Explorer webviews. [#2983](https://github.com/zowe/zowe-explorer-vscode/issues/2983)
 
 ### Bug fixes
 

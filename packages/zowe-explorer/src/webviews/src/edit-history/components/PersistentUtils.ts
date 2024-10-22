@@ -12,14 +12,13 @@
 import { createContext } from "preact";
 import { DataPanelContextType } from "../types";
 import { useContext } from "preact/hooks";
-import * as l10n from "@vscode/l10n";
 
 export const DataPanelContext = createContext<DataPanelContextType | null>(null);
 
 export function useDataPanelContext(): DataPanelContextType {
     const dataPanelContext = useContext(DataPanelContext);
     if (!dataPanelContext) {
-        throw new Error(l10n.t("DataPanelContext has to be used within <DataPanelContext.Provider>"));
+        throw new Error("DataPanelContext has to be used within <DataPanelContext.Provider>");
     }
     return dataPanelContext;
 }
