@@ -8,8 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Update Zowe SDKs to `8.2.0` to get the latest enhancements from Imperative.
 - Added expired JSON web token detection for profiles in each tree view (Data Sets, USS, Jobs). When a user performs a search on a profile, they are prompted to log in if their token expired. [#3175](https://github.com/zowe/zowe-explorer-vscode/issues/3175)
-- Implemented more user-friendly error messages when encountering API or network errors within Zowe Explorer. [#3243](https://github.com/zowe/zowe-explorer-vscode/pull/3243)
-- Added a "Troubleshoot" option for certain errors to provide additional context, tips, and resources for how to resolve them. [#3243](https://github.com/zowe/zowe-explorer-vscode/pull/3243)
+- Implemented more user-friendly error messages for API or network errors within Zowe Explorer. [#3243](https://github.com/zowe/zowe-explorer-vscode/pull/3243)
+- Use the "Troubleshoot" option for certain errors to obtain additional context, tips, and resources for how to resolve the errors. [#3243](https://github.com/zowe/zowe-explorer-vscode/pull/3243)
 
 ### Bug fixes
 
