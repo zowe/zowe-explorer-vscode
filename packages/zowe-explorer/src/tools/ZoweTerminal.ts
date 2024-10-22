@@ -153,7 +153,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                     if (cmd === ":clear") {
                         this.clear();
                     } else if (cmd === ":exit") {
-                        this.closeEmitter.fire();
+                        this.close();
                     }
                 } else {
                     const output = await this.processCmd(cmd);

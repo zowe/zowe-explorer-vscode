@@ -265,7 +265,7 @@ describe("UnixCommand Actions Unit Testing", () => {
 
         expect(showInputBox.mock.calls.length).toBe(2);
         expect(appendLine.mock.calls.length).toBe(2);
-        expect(appendLine.mock.calls[0][0]).toBe("> testUser@firstProfile:/u/directorypath$ /d iplinfo1");
+        expect(appendLine.mock.calls[0][0]).toBe("> testUser@firstProfile:/u/directorypath $ /d iplinfo1");
         expect(appendLine.mock.calls[1][0]["commandResponse"]).toBe("iplinfo1");
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
@@ -286,7 +286,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         });
     });
 
-    fit("tests the issueUnixCommand function user selects a history item", async () => {
+    it("tests the issueUnixCommand function user selects a history item", async () => {
         const mockUssApi = await apiRegisterInstance.getUssApi(profileOne);
         const getUssApiMock = jest.fn();
         getUssApiMock.mockReturnValue(mockUssApi);
@@ -452,10 +452,10 @@ describe("UnixCommand Actions Unit Testing", () => {
 
         await getUnixActions().issueUnixCommand();
 
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
     });
 
-    fit("tests the issueUnixCommand function user starts typing a value in quick pick", async () => {
+    it("tests the issueUnixCommand function user starts typing a value in quick pick", async () => {
         createQuickPick.mockReturnValueOnce({
             placeholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
             activeItems: [qpItem2],

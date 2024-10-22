@@ -32,9 +32,10 @@ describe("ZoweTerminal Unit Tests", () => {
         iTerm.handleInput("002");
         iTerm.handleInput(ZoweTerminal.Keys.ENTER);
         expect(spyCb).toHaveBeenCalledWith("old002");
-        // expect((iTerm as any).mHistory as string[]).toContain("old002");
+        // expect((iTerm as any).mHistory as string[]).toContain("test002");
         spyCb.mockClear();
 
+        iTerm.handleInput(ZoweTerminal.Keys.UP);
         iTerm.handleInput(ZoweTerminal.Keys.UP);
         iTerm.handleInput(ZoweTerminal.Keys.DOWN);
         iTerm.handleInput(ZoweTerminal.Keys.LEFT);
@@ -43,10 +44,18 @@ describe("ZoweTerminal Unit Tests", () => {
         iTerm.handleInput(ZoweTerminal.Keys.RIGHT);
         iTerm.handleInput(ZoweTerminal.Keys.BACKSPACE);
         iTerm.handleInput("11");
+        iTerm.handleInput(ZoweTerminal.Keys.BACKSPACE);
         iTerm.handleInput(ZoweTerminal.Keys.ENTER);
-        expect(spyCb).toHaveBeenCalledWith("11");
+        expect(spyCb).toHaveBeenCalledWith("1");
+        // expect(spyCb).toHaveBeenCalledWith("test12");
         spyCb.mockClear();
 
+        (iTerm as any).command = "";
+        iTerm.handleInput(ZoweTerminal.Keys.ENTER);
         iTerm.handleInput(ZoweTerminal.Keys.CTRL_C);
+        iTerm.handleInput(":clear");
+        iTerm.handleInput(ZoweTerminal.Keys.ENTER);
+        iTerm.handleInput(":exit");
+        iTerm.handleInput(ZoweTerminal.Keys.ENTER);
     });
 });
