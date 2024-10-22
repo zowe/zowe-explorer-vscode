@@ -389,12 +389,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
                 throw err;
             }
-
-            // check if parent directory exists; if not, do a remote lookup
-            const parent = this._lookupParentDirectory(uri, true);
-            if (parent == null) {
-                ds = await this.remoteLookupForResource(uri);
-            }
+            ds = await this.remoteLookupForResource(uri);
         }
 
         if (ds == null) {
