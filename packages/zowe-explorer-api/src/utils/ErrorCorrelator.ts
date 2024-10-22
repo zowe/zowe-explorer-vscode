@@ -9,7 +9,6 @@
  *
  */
 
-import { Singleton } from "./Singleton";
 import { Gui } from "../globals";
 import { commands } from "vscode";
 import Mustache = require("mustache");
@@ -121,7 +120,9 @@ export enum ZoweExplorerApiType {
 export type ErrorsForApiType = Map<ZoweExplorerApiType, ApiErrors>;
 export type ApiErrors = Record<string, ErrorCorrelation[]>;
 
-export class ErrorCorrelator extends Singleton {
+export class ErrorCorrelator {
+    private static instance: ErrorCorrelator = null;
+
     private errorMatches: ErrorsForApiType = new Map([
         [
             ZoweExplorerApiType.Mvs,
@@ -224,8 +225,14 @@ export class ErrorCorrelator extends Singleton {
         ],
     ]);
 
-    public constructor() {
-        super();
+    private constructor() {}
+
+    public static getInstance(): ErrorCorrelator {
+        if (!ErrorCorrelator.instance) {
+            ErrorCorrelator.instance = new ErrorCorrelator();
+        }
+
+        return ErrorCorrelator.instance;
     }
 
     /**

@@ -11,6 +11,7 @@
 
 import * as imperative from "@zowe/imperative";
 import { ProfilesCache } from "../profiles/ProfilesCache";
+import { ErrorCorrelator } from "..";
 
 /**
  * This interface can be used by other VS Code Extensions to access an alternative
@@ -45,4 +46,11 @@ export interface IApiExplorerExtender {
      * or to create them automatically if it is non-existant.
      */
     initForZowe(type: string, profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]): void | Promise<void>;
+
+    /**
+     * Allows extenders to contribute error correlations, providing user-friendly
+     * summaries of API or network errors. Also gives extenders the opportunity to 
+     * provide tips or additional resources for errors.
+     */
+    getErrorCorrelator(): ErrorCorrelator;
 }
