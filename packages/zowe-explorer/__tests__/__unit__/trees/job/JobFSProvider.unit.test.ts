@@ -336,7 +336,7 @@ describe("delete", () => {
         const lookupParentDirMock = jest
             .spyOn(JobFSProvider.instance as any, "_lookupParentDirectory")
             .mockReturnValueOnce({ ...testEntries.session });
-        await JobFSProvider.instance.delete(testUris.job, { recursive: true, deleteRemote: true });
+        await JobFSProvider.instance.delete(testUris.job, { recursive: true });
         const jobInfo = testEntries.job.job;
         expect(jobInfo).not.toBeUndefined();
         expect(mockUssApi.deleteJob).toHaveBeenCalledWith(jobInfo?.jobname || "TESTJOB", jobInfo?.jobid || "JOB12345");
@@ -375,7 +375,7 @@ describe("delete", () => {
         fakeJob.job = testEntries.job.job;
         const lookupMock = jest.spyOn(JobFSProvider.instance as any, "lookup").mockReturnValueOnce(fakeSpool);
         const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(fakeJob);
-        await JobFSProvider.instance.delete(testUris.spool, { recursive: true, deleteRemote: true });
+        await JobFSProvider.instance.delete(testUris.spool, { recursive: true });
         expect(mockUssApi.deleteJob).not.toHaveBeenCalled();
         expect(lookupParentDirMock).not.toHaveBeenCalled();
         ussApiMock.mockRestore();

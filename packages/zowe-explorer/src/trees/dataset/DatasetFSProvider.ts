@@ -244,14 +244,26 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const pdsMember = uriPath.length === 2;
         if (!entryExists) {
             try {
-                const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(entryIsDir ? uriPath[0] : path.parse(uriPath[0]).name, {
-                    attributes: true,
-                });
-                if (resp.success) {
-                    const dsorg: string = resp.apiResponse?.items?.[0]?.dsorg;
-                    entryIsDir = pdsMember ? false : dsorg?.startsWith("PO") ?? false;
+                if (pdsMember) {
+                    const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(uriPath[0]);
+                    entryIsDir = false;
+                    const memberName = path.parse(uriPath[1]).name;
+                    if (
+                        !resp.success ||
+                        resp.apiResponse?.items?.length < 1 ||
+                        !resp.apiResponse.items.find((respItem) => respItem.member === memberName)
+                    ) {
+                        throw vscode.FileSystemError.FileNotFound(uri);
+                    }
                 } else {
-                    throw vscode.FileSystemError.FileNotFound(uri);
+                    const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(uriPath[0], {
+                        attributes: true,
+                    });
+                    if (resp.success && resp.apiResponse?.items?.length > 0) {
+                        entryIsDir = resp.apiResponse.items[0].dsorg?.startsWith("PO");
+                    } else {
+                        throw vscode.FileSystemError.FileNotFound(uri);
+                    }
                 }
             } catch (err) {
                 this._handleError(err, {
@@ -263,10 +275,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     },
                     profileType: uriInfo.profile?.type,
                 });
-                return undefined;
+                throw err;
             }
         }
-
         if (entryIsDir) {
             if (!entryExists) {
                 this.createDirectory(uri);

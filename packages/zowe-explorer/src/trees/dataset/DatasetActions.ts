@@ -1195,7 +1195,7 @@ export class DatasetActions {
             }
             await datasetProvider.checkCurrentProfile(node);
             if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
-                await DatasetFSProvider.instance.delete(node.resourceUri, { recursive: false });
+                await vscode.workspace.fs.delete(node.resourceUri, { recursive: false });
             } else {
                 return;
             }

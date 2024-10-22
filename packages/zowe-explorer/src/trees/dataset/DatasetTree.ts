@@ -1168,7 +1168,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             const newUri = node.resourceUri.with({
                 path: path.posix.join(path.posix.dirname(node.resourceUri.path), afterMemberName),
             });
-            await DatasetFSProvider.instance.rename(node.resourceUri, newUri, { overwrite: false });
+            await vscode.workspace.fs.rename(node.resourceUri, newUri, { overwrite: false });
             node.resourceUri = newUri;
             node.label = afterMemberName;
             node.tooltip = afterMemberName;
@@ -1223,7 +1223,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             const newUri = node.resourceUri.with({
                 path: path.posix.join(path.posix.dirname(node.resourceUri.path), afterDataSetName),
             });
-            await DatasetFSProvider.instance.rename(node.resourceUri, newUri, { overwrite: false });
+            await vscode.workspace.fs.rename(node.resourceUri, newUri, { overwrite: false });
 
             // Rename corresponding node in Sessions or Favorites section (whichever one Rename wasn't called from)
             if (SharedContext.isFavorite(node)) {

@@ -127,7 +127,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     true
                 );
             }
-            await UssFSProvider.instance.delete(sourceUri, { recursive: true });
+            await vscode.workspace.fs.delete(sourceUri, { recursive: true });
         } else {
             // create a file on the remote system for writing
             try {
@@ -161,7 +161,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
 
             if (!recursiveCall) {
                 // Delete any files from the selection on the source LPAR
-                await UssFSProvider.instance.delete(sourceNode.resourceUri, { recursive: false });
+                await vscode.workspace.fs.delete(sourceNode.resourceUri, { recursive: false });
             }
         }
     }

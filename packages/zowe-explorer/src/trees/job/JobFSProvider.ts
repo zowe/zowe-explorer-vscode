@@ -306,7 +306,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param options Options for deleting the spool file or job
      * - `deleteRemote` - Deletes the job from the remote system if set to true.
      */
-    public async delete(uri: vscode.Uri, options: { readonly recursive: boolean; readonly deleteRemote: boolean }): Promise<void> {
+    public async delete(uri: vscode.Uri, options: { readonly recursive: boolean }): Promise<void> {
         const entry = this.lookup(uri, false);
         const isJob = FsJobsUtils.isJobEntry(entry);
         if (!isJob) {
@@ -315,26 +315,23 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const parent = this._lookupParentDirectory(uri, false);
         const profInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-
-        if (options.deleteRemote) {
-            try {
-                await ZoweExplorerApiRegister.getJesApi(profInfo.profile).deleteJob(entry.job.jobname, entry.job.jobid);
-            } catch (err) {
-                this._handleError(err, {
-                    additionalContext: vscode.l10n.t({
-                        message: "Failed to delete job {0}",
-                        args: [entry.job.jobname],
-                        comment: "Job name",
-                    }),
-                    apiType: ZoweExplorerApiType.Jes,
-                    profileType: profInfo.profile.type,
-                    retry: {
-                        fn: this.delete.bind(this),
-                        args: [uri, options],
-                    },
-                });
-                throw err;
-            }
+        try {
+            await ZoweExplorerApiRegister.getJesApi(profInfo.profile).deleteJob(entry.job.jobname, entry.job.jobid);
+        } catch (err) {
+            this._handleError(err, {
+                additionalContext: vscode.l10n.t({
+                    message: "Failed to delete job {0}",
+                    args: [entry.job.jobname],
+                    comment: "Job name",
+                }),
+                apiType: ZoweExplorerApiType.Jes,
+                profileType: profInfo.profile.type,
+                retry: {
+                    fn: this.delete.bind(this),
+                    args: [uri, options],
+                },
+            });
+            throw err;
         }
         parent.entries.delete(entry.name);
         this._fireSoon({ type: vscode.FileChangeType.Deleted, uri });
