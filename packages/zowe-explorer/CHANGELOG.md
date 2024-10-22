@@ -12,6 +12,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- `DatasetFSProvider.stat()` will now throw a `FileNotFound` error for extenders trying to fetch an MVS resource that does not exist. [#3252](https://github.com/zowe/zowe-explorer-vscode/issues/3252)
+- Fixed an issue where renaming or deleting a USS file or data set did not update the opened editor. [#3260](https://github.com/zowe/zowe-explorer-vscode/issues/3260)
+
 ## `3.0.2`
 
 ### New features and enhancements
