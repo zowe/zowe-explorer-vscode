@@ -893,7 +893,7 @@ describe("fetchDataset", () => {
                 } catch (e) {
                     expect(e.message).toBe(testUris.pdsMember.toString(true));
                 }
-                expect(allMembersMockNoMatch).toHaveBeenCalledWith("USER.DATA.PDS", { attributes: true });
+                expect(allMembersMockNoMatch).toHaveBeenCalledWith("USER.DATA.PDS");
                 mvsApiMock.mockRestore();
             });
             it("existing member URI", async () => {
@@ -917,7 +917,7 @@ describe("fetchDataset", () => {
                     profileName: "sestest",
                     profile: testProfile,
                 });
-                expect(allMembersMock).toHaveBeenCalledWith("USER.DATA.PDS", { attributes: true });
+                expect(allMembersMock).toHaveBeenCalledWith("USER.DATA.PDS");
                 mvsApiMock.mockRestore();
             });
         });
