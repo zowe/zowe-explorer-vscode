@@ -82,7 +82,7 @@ export abstract class ZoweCommandProvider {
                             args: [this.terminalName],
                             comment: ["Terminal Name"],
                         }),
-                        history: [...this.history.getSearchHistory()].reverse() ?? [],
+                        history: [...this.history.getSearchHistory()].reverse(),
                         startup: command,
                         formatCommandLine: (cmd: string) => this.formatCommandLine(cmd, profile),
                     }

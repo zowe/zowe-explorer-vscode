@@ -10,14 +10,15 @@
  */
 
 import * as vscode from "vscode";
-import { ProfilesCache, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, ProfilesCache, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { createIProfile, createISession } from "../../__mocks__/mockCreators/shared";
-import { ZoweCommandProvider } from "../../../src/commands/ZoweCommandProvider";
+import { ICommandProviderDialogs, ZoweCommandProvider } from "../../../src/commands/ZoweCommandProvider";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { SharedContext } from "../../../src/trees/shared/SharedContext";
 import { createIJobFile } from "../../__mocks__/mockCreators/jobs";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
+import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 
 const globalMocks = {
     testSession: createISession(),
@@ -25,7 +26,7 @@ const globalMocks = {
     mockIJobFile: createIJobFile(),
 };
 describe("ZoweCommandProvider Unit Tests", () => {
-    describe("ZoweCommandProvider Unit Tests - function refreshElement", () => {
+    describe("function refreshElement", () => {
         it("should refresh the tree data", () => {
             const testNode = new (ZoweTreeNode as any)("test", vscode.TreeItemCollapsibleState.None, undefined);
             Object.defineProperty(ZoweCommandProvider.prototype, "mOnDidChangeTreeData", {
@@ -37,55 +38,108 @@ describe("ZoweCommandProvider Unit Tests", () => {
             expect(ZoweCommandProvider.prototype.refreshElement(testNode)).toEqual(undefined);
         });
     });
-});
-
-describe("ZoweCommandProvider Unit Tests - function checkCurrentProfile", () => {
-    const testNode: any = new ZoweDatasetNode({
-        label: "test",
-        collapsibleState: vscode.TreeItemCollapsibleState.None,
-        session: globalMocks.testSession,
-    });
-    testNode.setProfileToChoice(globalMocks.testProfile);
-    testNode.contextValue = "session server";
-
-    beforeEach(async () => {
-        jest.spyOn(ProfilesCache.prototype, "refresh").mockImplementation();
-        const profilesInstance = await Profiles.createInstance(undefined as any);
-        Object.defineProperty(profilesInstance, "log", {
-            value: {
-                error: jest.fn(),
-            },
+    describe("function checkCurrentProfile", () => {
+        const testNode: any = new ZoweDatasetNode({
+            label: "test",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: globalMocks.testSession,
         });
-        jest.spyOn(ZoweCommandProvider.prototype, "refresh").mockImplementationOnce(() => {});
-        jest.spyOn(SharedContext, "isSessionNotFav").mockReturnValue(true);
-    });
-    it("should check current profile and perform the case when status is 'active'", async () => {
-        const profileStatus = { name: "test", status: "active" };
+        testNode.setProfileToChoice(globalMocks.testProfile);
+        testNode.contextValue = "session server";
 
-        jest.spyOn(Profiles.getInstance(), "checkCurrentProfile").mockResolvedValue(profileStatus);
-        await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(profileStatus);
-    });
-    it("should check current profile and perform the case when status is 'unverified'", async () => {
-        const profileStatus = { name: "test", status: "unverified" };
-
-        jest.spyOn(Profiles.getInstance(), "checkCurrentProfile").mockResolvedValue(profileStatus);
-        await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(profileStatus);
-    });
-    it("should check current profile and perform the case when status is 'inactive'", async () => {
-        Object.defineProperty(ZoweCommandProvider, "mOnDidChangeTreeData", {
-            value: {
-                debug: jest.fn(),
-            },
-            configurable: true,
+        beforeEach(async () => {
+            jest.spyOn(ProfilesCache.prototype, "refresh").mockImplementation();
+            const profilesInstance = await Profiles.createInstance(undefined as any);
+            Object.defineProperty(profilesInstance, "log", {
+                value: {
+                    error: jest.fn(),
+                },
+            });
+            jest.spyOn(ZoweCommandProvider.prototype, "refresh").mockImplementationOnce(() => {});
+            jest.spyOn(SharedContext, "isSessionNotFav").mockReturnValue(true);
         });
-        const profileStatus = { name: "test", status: "inactive" };
-        jest.spyOn(Profiles.getInstance(), "checkCurrentProfile").mockResolvedValue(profileStatus);
-        const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
-        await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(profileStatus);
-        expect(errorHandlingSpy).toHaveBeenCalledWith(
-            "Profile Name " +
-                globalMocks.testProfile.name +
-                " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
-        );
+        it("should check current profile and perform the case when status is 'active'", async () => {
+            const profileStatus = { name: "test", status: "active" };
+
+            jest.spyOn(Profiles.getInstance(), "checkCurrentProfile").mockResolvedValue(profileStatus);
+            await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(profileStatus);
+        });
+        it("should check current profile and perform the case when status is 'unverified'", async () => {
+            const profileStatus = { name: "test", status: "unverified" };
+
+            jest.spyOn(Profiles.getInstance(), "checkCurrentProfile").mockResolvedValue(profileStatus);
+            await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(profileStatus);
+        });
+        it("should check current profile and perform the case when status is 'inactive'", async () => {
+            Object.defineProperty(ZoweCommandProvider, "mOnDidChangeTreeData", {
+                value: {
+                    debug: jest.fn(),
+                },
+                configurable: true,
+            });
+            const profileStatus = { name: "test", status: "inactive" };
+            jest.spyOn(Profiles.getInstance(), "checkCurrentProfile").mockResolvedValue(profileStatus);
+            const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
+            await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(profileStatus);
+            expect(errorHandlingSpy).toHaveBeenCalledWith(
+                "Profile Name " +
+                    globalMocks.testProfile.name +
+                    " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
+            );
+        });
+    });
+
+    describe("integrated terminals", () => {
+        describe("function issueCommand", () => {
+            it("should create an integrated terminal", async () => {
+                const createTerminal = jest.fn().mockReturnValue({ show: jest.fn() });
+                Object.defineProperty(vscode.window, "createTerminal", { value: createTerminal });
+                const mockCmdProvider: any = {
+                    useIntegratedTerminals: true,
+                    terminalName: "test-terminal",
+                    pseudoTerminal: {},
+                    formatCommandLine: (cmd: string) => "test-" + cmd,
+                    history: { getSearchHistory: () => ["old-cmd-01", "old-cmd-02"] },
+                };
+                const testProfile: any = { name: "test", profile: { user: "firstName", password: "12345" } };
+
+                await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, testProfile, "test");
+                expect(createTerminal).toHaveBeenCalled();
+            });
+        });
+
+        describe("function selectServiceProfile", () => {
+            it("should select the specified profile", async () => {
+                const mockCmdProvider: any = {
+                    dialogs: { selectProfile: "select profile" },
+                };
+
+                jest.spyOn(Gui, "showQuickPick").mockResolvedValue("prof02" as any);
+                const selected = await ZoweCommandProvider.prototype.selectServiceProfile.call(
+                    mockCmdProvider,
+                    [{ name: "prof01" }, { name: "prof02" }],
+                    "test"
+                );
+
+                expect(selected).toEqual({ name: "prof02" });
+            });
+            it("should handle operation cancelled", async () => {
+                const mockCmdProvider: any = {
+                    dialogs: { selectProfile: "select profile" },
+                    operationCancelled: "Operation cancelled",
+                };
+
+                jest.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
+                const spyMessage = jest.spyOn(Gui, "showMessage").mockImplementation(jest.fn());
+                const selected = await ZoweCommandProvider.prototype.selectServiceProfile.call(
+                    mockCmdProvider,
+                    [{ name: "prof01" }, { name: "prof02" }],
+                    "test"
+                );
+
+                expect(spyMessage).toHaveBeenCalledWith(mockCmdProvider.operationCancelled);
+                expect(selected).toBeUndefined();
+            });
+        });
     });
 });
