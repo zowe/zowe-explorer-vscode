@@ -2232,7 +2232,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             mvsApi,
             profileInstance,
             mockCheckCurrentProfile,
-            rename: jest.spyOn(DatasetFSProvider.instance, "rename").mockImplementation(),
+            rename: jest.spyOn(vscode.workspace.fs, "rename").mockImplementation(),
         };
     }
 
@@ -2479,7 +2479,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         favProfileNode.children.push(favParent);
         testTree.mFavorites.push(favProfileNode);
         const renameDataSetMemberSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSetMember");
-        const renameMock = jest.spyOn(DatasetFSProvider.instance, "rename").mockImplementation();
+        const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockImplementation();
 
         await testTree.rename(child);
 
