@@ -1108,6 +1108,20 @@ describe("ProfilesUtils unit tests", () => {
             };
         }
 
+        it("should return early if profileInfo is nullish", async () => {
+            const blockMocks = getBlockMocks();
+            blockMocks.getValueMock.mockReturnValueOnce(Definitions.V1MigrationStatus.JustMigrated);
+            blockMocks.setValueMock.mockImplementation();
+            const getProfInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue(undefined as any);
+            const onlyV1ProfilesExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", { get: () => true });
+            await ProfilesUtils.handleV1MigrationStatus();
+            expect(getProfInfoMock).toHaveBeenCalled();
+            expect(onlyV1ProfilesExistMock.mock).not.toHaveBeenCalled();
+            blockMocks.getValueMock.mockRestore();
+            blockMocks.setValueMock.mockRestore();
+            onlyV1ProfilesExistMock[Symbol.dispose]();
+        });
+
         it("should call executeCommand with zowe.ds.addSession if the migration status is CreateConfigSelected", async () => {
             const blockMocks = getBlockMocks();
             const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
