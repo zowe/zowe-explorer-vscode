@@ -34,7 +34,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         options?: { startup?: string; message?: string; history?: string[]; formatCommandLine?: (cmd: string) => string }
     ) {
         this.mTerminalName = terminalName;
-        this.mMessage = options?.message ?? `Welcome to the ${this.mTerminalName} Terminal!`;
+        this.mMessage = options?.message ?? this.mTerminalName;
         this.mHistory = options?.history ?? [];
         this.historyIndex = this.mHistory.length;
         this.command = options?.startup ?? "";

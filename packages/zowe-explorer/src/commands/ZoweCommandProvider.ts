@@ -73,8 +73,47 @@ export abstract class ZoweCommandProvider {
                 this.pseudoTerminal = new ZoweTerminal(
                     this.terminalName,
                     async (command: string): Promise<string> => {
-                        // this.history.addSearchHistory(command);
-                        return this.runCommand(profile, command);
+                        try {
+                            // We need to await the response, otherwise we can't catch errors thrown
+                            return await this.runCommand(profile, command);
+                        } catch (error) {
+                            if (error instanceof imperative.ImperativeError) {
+                                let formattedError = "";
+                                formattedError += imperative.TextUtils.chalk.red(
+                                    vscode.l10n.t("Unable to perform this operation due to the following problem.") + "\n"
+                                );
+
+                                formattedError += imperative.TextUtils.chalk.red(
+                                    error.message.replace(/Rest API failure with HTTP\(S\) status \d\d\d\n/, "")
+                                );
+
+                                const responseTitle = vscode.l10n.t("Response From Service") + "\n";
+                                if (error.causeErrors) {
+                                    try {
+                                        const causeErrorsJson = JSON.parse(error.causeErrors);
+                                        formattedError += "\n" + imperative.TextUtils.chalk.bold.yellow(responseTitle);
+                                        formattedError += imperative.TextUtils.prettyJson(causeErrorsJson, undefined, false, "");
+                                    } catch (parseErr) {
+                                        // causeErrors was not JSON.
+                                        const causeErrString: string = error.causeErrors.toString();
+                                        if (causeErrString.length > 0) {
+                                            // output the text value of causeErrors
+                                            formattedError += "\n" + imperative.TextUtils.chalk.bold.yellow(responseTitle);
+                                            formattedError += causeErrString;
+                                        }
+                                    }
+                                }
+
+                                const diagInfo: string = error.details.additionalDetails;
+                                if (diagInfo?.length > 0) {
+                                    formattedError += imperative.TextUtils.chalk.bold.yellow(`\n${vscode.l10n.t("Diagnostic Information")}\n`);
+                                    formattedError += diagInfo;
+                                }
+
+                                return formattedError;
+                            }
+                            return error.message;
+                        }
                     },
                     {
                         message: vscode.l10n.t({
@@ -87,7 +126,7 @@ export abstract class ZoweCommandProvider {
                         formatCommandLine: (cmd: string) => this.formatCommandLine(cmd, profile),
                     }
                 );
-                this.terminal = vscode.window.createTerminal({ name: this.terminalName, pty: this.pseudoTerminal });
+                this.terminal = vscode.window.createTerminal({ name: `(${profile.name}) ${this.terminalName}`, pty: this.pseudoTerminal });
                 this.terminal.show();
             } else {
                 this.outputChannel.appendLine(this.formatCommandLine(command, profile));

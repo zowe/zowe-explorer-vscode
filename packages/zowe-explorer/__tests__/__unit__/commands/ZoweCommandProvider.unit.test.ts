@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { Gui, ProfilesCache, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, ProfilesCache, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { createIProfile, createISession } from "../../__mocks__/mockCreators/shared";
 import { ZoweCommandProvider } from "../../../src/commands/ZoweCommandProvider";
 import { Profiles } from "../../../src/configuration/Profiles";
@@ -93,17 +93,34 @@ describe("ZoweCommandProvider Unit Tests", () => {
             it("should create an integrated terminal", async () => {
                 const createTerminal = jest.fn().mockReturnValue({ show: jest.fn() });
                 Object.defineProperty(vscode.window, "createTerminal", { value: createTerminal });
+                const testError = new imperative.ImperativeError({
+                    msg: "test-msg",
+                    causeErrors: "test-causeErrors",
+                    additionalDetails: "test-additionalDetails",
+                });
                 const mockCmdProvider: any = {
                     useIntegratedTerminals: true,
                     terminalName: "test-terminal",
                     pseudoTerminal: {},
                     formatCommandLine: (cmd: string) => "test-" + cmd,
                     history: { getSearchHistory: () => ["old-cmd-01", "old-cmd-02"] },
+                    runCommand: jest.fn().mockRejectedValue(testError),
                 };
                 const testProfile: any = { name: "test", profile: { user: "firstName", password: "12345" } };
 
                 await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, testProfile, "test");
                 expect(createTerminal).toHaveBeenCalled();
+
+                // Test errorHandling on callback
+                const pty = createTerminal.mock.calls[0][0].pty;
+                const errorOutput = await pty.processCmd();
+
+                expect(errorOutput).toContain("Unable to perform this operation due to the following problem.");
+                expect(errorOutput).toContain("test-msg");
+                expect(errorOutput).toContain("Response From Service");
+                expect(errorOutput).toContain("test-causeErrors");
+                expect(errorOutput).toContain("Diagnostic Information");
+                expect(errorOutput).toContain("test-additionalDetails");
             });
         });
 

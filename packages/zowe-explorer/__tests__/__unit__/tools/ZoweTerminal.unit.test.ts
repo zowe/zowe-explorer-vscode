@@ -26,22 +26,22 @@ describe("ZoweTerminal Unit Tests", () => {
         expect(spyCb).toHaveBeenCalledWith("testABC");
         spyCb.mockClear();
 
-        await iTerm.handleInput(ZoweTerminal.Keys.UP);                  // testABC|
-        await iTerm.handleInput(ZoweTerminal.Keys.UP);                  // old|
-        await iTerm.handleInput(ZoweTerminal.Keys.DOWN);                // testABC|
-        await iTerm.handleInput(ZoweTerminal.Keys.LEFT);                // testAB|C
-        await iTerm.handleInput(ZoweTerminal.Keys.LEFT);                // testA|BC
-        await iTerm.handleInput(ZoweTerminal.Keys.BACKSPACE);           // test|BC
-        await iTerm.handleInput(ZoweTerminal.Keys.RIGHT);               // testB|C
-        await iTerm.handleInput(ZoweTerminal.Keys.BACKSPACE);           // test|C
+        await iTerm.handleInput(ZoweTerminal.Keys.UP); // testABC|
+        await iTerm.handleInput(ZoweTerminal.Keys.UP); // old|
+        await iTerm.handleInput(ZoweTerminal.Keys.DOWN); // testABC|
+        await iTerm.handleInput(ZoweTerminal.Keys.LEFT); // testAB|C
+        await iTerm.handleInput(ZoweTerminal.Keys.LEFT); // testA|BC
+        await iTerm.handleInput(ZoweTerminal.Keys.BACKSPACE); // test|BC
+        await iTerm.handleInput(ZoweTerminal.Keys.RIGHT); // testB|C
+        await iTerm.handleInput(ZoweTerminal.Keys.BACKSPACE); // test|C
         // handle multiple characters in sequence (CPU delay / copy+paste)
         await iTerm.handleInput("1A"); // test1A|C
-        await iTerm.handleInput(ZoweTerminal.Keys.BACKSPACE);           // test1|C
+        await iTerm.handleInput(ZoweTerminal.Keys.BACKSPACE); // test1|C
         // Handle double byte characters
-        await iTerm.handleInput("🙏🙏");                                 // test1🙏🙏|C
-        await iTerm.handleInput(ZoweTerminal.Keys.BACKSPACE);           // test1🙏|C
+        await iTerm.handleInput("🙏🙏"); // test1🙏🙏|C
+        await iTerm.handleInput(ZoweTerminal.Keys.BACKSPACE); // test1🙏|C
         // Handle unicode "hello"
-        await iTerm.handleInput("\u0048\u0065\u006C\u006C\u006F");      // test1🙏Hello|C
+        await iTerm.handleInput("\u0048\u0065\u006C\u006C\u006F"); // test1🙏Hello|C
         await iTerm.handleInput(ZoweTerminal.Keys.ENTER);
         expect(spyCb).toHaveBeenCalledWith("test1🙏HelloC");
         spyCb.mockClear();

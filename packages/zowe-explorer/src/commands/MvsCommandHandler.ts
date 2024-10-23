@@ -96,10 +96,10 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                         command = await this.getQuickPick([session && session.ISession ? session.ISession.hostname : "unknown"]);
                     }
                     await this.issueCommand(profile, command);
-                } else {
-                    Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
-                    return;
                 }
+            } else {
+                Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
+                return;
             }
         } catch (error) {
             if (error.toString().includes("non-existing")) {
