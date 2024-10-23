@@ -21,30 +21,29 @@ describe("ZoweTerminal Unit Tests", () => {
         const iTerm = new ZoweTerminal("test", spyCb, { history: ["old"] });
         iTerm.open();
 
-        await iTerm.handleInput("test");
+        await iTerm.handleInput("testABC");
         await iTerm.handleInput(ZoweTerminal.Keys.ENTER);
-        expect(spyCb).toHaveBeenCalledWith("test");
-        expect((iTerm as any).mHistory as string[]).toContain("test");
+        expect(spyCb).toHaveBeenCalledWith("testABC");
         spyCb.mockClear();
 
-        await iTerm.handleInput(ZoweTerminal.Keys.UP);
-        await iTerm.handleInput("002");
+        await iTerm.handleInput(ZoweTerminal.Keys.UP);                  // testABC|
+        await iTerm.handleInput(ZoweTerminal.Keys.UP);                  // old|
+        await iTerm.handleInput(ZoweTerminal.Keys.DOWN);                // testABC|
+        await iTerm.handleInput(ZoweTerminal.Keys.LEFT);                // testAB|C
+        await iTerm.handleInput(ZoweTerminal.Keys.LEFT);                // testA|BC
+        await iTerm.handleInput(ZoweTerminal.Keys.BACKSPACE);           // test|BC
+        await iTerm.handleInput(ZoweTerminal.Keys.RIGHT);               // testB|C
+        await iTerm.handleInput(ZoweTerminal.Keys.BACKSPACE);           // test|C
+        // handle multiple characters in sequence (CPU delay / copy+paste)
+        await iTerm.handleInput("1A"); // test1A|C
+        await iTerm.handleInput(ZoweTerminal.Keys.BACKSPACE);           // test1|C
+        // Handle double byte characters
+        await iTerm.handleInput("🙏🙏");                                 // test1🙏🙏|C
+        await iTerm.handleInput(ZoweTerminal.Keys.BACKSPACE);           // test1🙏|C
+        // Handle unicode "hello"
+        await iTerm.handleInput("\u0048\u0065\u006C\u006C\u006F");      // test1🙏Hello|C
         await iTerm.handleInput(ZoweTerminal.Keys.ENTER);
-        expect((iTerm as any).mHistory as string[]).toContain("test002");
-        spyCb.mockClear();
-
-        await iTerm.handleInput(ZoweTerminal.Keys.UP);
-        await iTerm.handleInput(ZoweTerminal.Keys.UP);
-        await iTerm.handleInput(ZoweTerminal.Keys.DOWN);
-        await iTerm.handleInput(ZoweTerminal.Keys.LEFT);
-        await iTerm.handleInput(ZoweTerminal.Keys.LEFT);
-        await iTerm.handleInput(ZoweTerminal.Keys.BACKSPACE);
-        await iTerm.handleInput(ZoweTerminal.Keys.RIGHT);
-        await iTerm.handleInput(ZoweTerminal.Keys.BACKSPACE);
-        await iTerm.handleInput("1A");
-        await iTerm.handleInput(ZoweTerminal.Keys.BACKSPACE);
-        await iTerm.handleInput(ZoweTerminal.Keys.ENTER);
-        expect(spyCb).toHaveBeenCalledWith("test12");
+        expect(spyCb).toHaveBeenCalledWith("test1🙏HelloC");
         spyCb.mockClear();
 
         (iTerm as any).command = "";
@@ -55,6 +54,6 @@ describe("ZoweTerminal Unit Tests", () => {
         await iTerm.handleInput(":exit");
         await iTerm.handleInput(ZoweTerminal.Keys.ENTER);
 
-        expect((iTerm as any).mHistory as string[]).toEqual(["old", "test", "test002", "test12", ":clear", ":exit"]);
+        expect((iTerm as any).mHistory as string[]).toEqual(["old", "testABC", "test1🙏HelloC", ":clear", ":exit"]);
     });
 });

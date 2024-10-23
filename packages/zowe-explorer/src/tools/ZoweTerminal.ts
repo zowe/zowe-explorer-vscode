@@ -133,11 +133,10 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                 this.write(ZoweTerminal.Keys.LEFT);
                 this.write(ZoweTerminal.Keys.DEL);
 
-                this.cursorPosition = Math.max(0, this.cursorPosition - 1);
-
-                const tmp = this.command.split("");
-                tmp.splice(this.cursorPosition, 1);
-                this.command = tmp.join("");
+                const charArray = Array.from(this.command);
+                charArray.splice(this.cursorPosition - 1, 1);
+                this.command = charArray.join("");
+                this.cursorPosition--;
                 break;
             }
             case ZoweTerminal.Keys.ENTER: {
@@ -165,9 +164,11 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                 break;
             }
             default: {
-                this.command = this.command.slice(0, Math.max(0, this.cursorPosition)) + data + this.command.slice(this.cursorPosition);
+                const charArray = Array.from(this.command);
+                this.command = charArray.slice(0, Math.max(0, this.cursorPosition)).join("") + data + charArray.slice(this.cursorPosition).join("");
+                this.cursorPosition = Math.min(Array.from(this.command).length, this.cursorPosition + Array.from(data).length);
+
                 this.write(data);
-                this.cursorPosition = Math.min(this.command.length, this.cursorPosition + data.length);
                 this.refreshCmd();
             }
         }
