@@ -5,10 +5,12 @@ on:
     paths:
       - packages/zowe-explorer-ftp-extension/**
       - packages/zowe-explorer-api/**
+      - .github/workflows/zowe-explorer-ftp-ci.yml
   pull_request:
     paths:
       - packages/zowe-explorer-ftp-extension/**
       - packages/zowe-explorer-api/**
+      - .github/workflows/zowe-explorer-ftp-ci.yml
 
 jobs:
   zftp-build:
