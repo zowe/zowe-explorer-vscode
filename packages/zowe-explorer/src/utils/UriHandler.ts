@@ -18,6 +18,6 @@ export class ZoweUriHandler implements UriHandler {
         if (!Object.values(ZoweScheme).some((scheme) => scheme === parsedUri.scheme)) {
             return;
         }
-        commands.executeCommand("vscode.open", parsedUri, { preview: false });
+        return commands.executeCommand("vscode.open", parsedUri, { preview: false });
     }
 }

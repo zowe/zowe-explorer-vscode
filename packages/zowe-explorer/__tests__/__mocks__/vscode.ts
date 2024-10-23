@@ -518,7 +518,47 @@ export interface WebviewViewProvider {
     resolveWebviewView(webviewView: WebviewView, context: WebviewViewResolveContext, token: CancellationToken): Thenable<void> | void;
 }
 
+/**
+ * A uri handler is responsible for handling system-wide {@link Uri uris}.
+ *
+ * @see {@link window.registerUriHandler}.
+ */
+export interface UriHandler {
+    /**
+     * Handle the provided system-wide {@link Uri}.
+     *
+     * @see {@link window.registerUriHandler}.
+     */
+    handleUri(uri: Uri): ProviderResult<void>;
+}
+
 export namespace window {
+    /**
+     * Registers a {@link UriHandler uri handler} capable of handling system-wide {@link Uri uris}.
+     * In case there are multiple windows open, the topmost window will handle the uri.
+     * A uri handler is scoped to the extension it is contributed from; it will only
+     * be able to handle uris which are directed to the extension itself. A uri must respect
+     * the following rules:
+     *
+     * - The uri-scheme must be `vscode.env.uriScheme`;
+     * - The uri-authority must be the extension id (e.g. `my.extension`);
+     * - The uri-path, -query and -fragment parts are arbitrary.
+     *
+     * For example, if the `my.extension` extension registers a uri handler, it will only
+     * be allowed to handle uris with the prefix `product-name://my.extension`.
+     *
+     * An extension can only register a single uri handler in its entire activation lifetime.
+     *
+     * * *Note:* There is an activation event `onUri` that fires when a uri directed for
+     * the current extension is about to be handled.
+     *
+     * @param handler The uri handler to register for this extension.
+     * @returns A {@link Disposable disposable} that unregisters the handler.
+     */
+    export function registerUriHandler(handler: UriHandler): Disposable {
+        return () => {};
+    }
+
     /**
      * Register a new provider for webview views.
      *
@@ -1512,14 +1552,23 @@ export interface TextDocument {
 }
 
 export class Uri {
+    private static _regexp = /^(([^:/?#]+?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
     public static file(path: string): Uri {
         return Uri.parse(path);
     }
-    public static parse(value: string, strict?: boolean): Uri {
-        const newUri = new Uri();
-        newUri.path = value;
+    public static parse(value: string, _strict?: boolean): Uri {
+        const match = Uri._regexp.exec(value);
+        if (!match) {
+            return new Uri();
+        }
 
-        return newUri;
+        return Uri.from({
+            scheme: match[2] || "",
+            authority: match[4] || "",
+            path: match[5] || "",
+            query: match[7] || "",
+            fragment: match[9] || "",
+        });
     }
 
     public with(change: { scheme?: string; authority?: string; path?: string; query?: string; fragment?: string }): Uri {

@@ -611,14 +611,24 @@ export interface TreeDataProvider<T> {
 }
 
 export class Uri {
+    private static _regexp = /^(([^:/?#]+?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
+
     public static file(path: string): Uri {
         return Uri.parse(path);
     }
     public static parse(value: string, _strict?: boolean): Uri {
-        const newUri = new Uri();
-        newUri.path = value;
+        const match = Uri._regexp.exec(value);
+        if (!match) {
+            return new Uri();
+        }
 
-        return newUri;
+        return Uri.from({
+            scheme: match[2] || "",
+            authority: match[4] || "",
+            path: match[5] || "",
+            query: match[7] || "",
+            fragment: match[9] || "",
+        });
     }
 
     public with(change: { scheme?: string; authority?: string; path?: string; query?: string; fragment?: string }): Uri {
