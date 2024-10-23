@@ -2313,3 +2313,35 @@ describe("Profiles Unit Tests - function basicAuthClearSecureArray", () => {
         getProfileFromConfigMock.mockRestore();
     });
 });
+
+describe("Profiles Unit Tests - function tokenAuthClearSecureArray", () => {
+    it("does not call Config.delete when tokenType, tokenValue, tokenExpiration arg's are missing in mergeArgsForProfile", async () => {
+        const teamCfgMock = {
+            delete: jest.fn(),
+            save: jest.fn(),
+            set: jest.fn(),
+        };
+        const profAttrsMock = {
+            isDefaultProfile: false,
+            profName: "example_profile",
+            profType: "zosmf",
+            profLoc: {
+                jsonLoc: undefined,
+            },
+        };
+        const mergeArgsMock = {
+            knownArgs: [],
+        };
+        const getProfileInfoMock = jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: jest.fn().mockReturnValue(teamCfgMock),
+            mergeArgsForProfile: jest.fn().mockReturnValue(mergeArgsMock),
+        } as any);
+        const getProfileFromConfigMock = jest.spyOn(Profiles.getInstance(), "getProfileFromConfig").mockResolvedValue(profAttrsMock);
+        await Profiles.getInstance().tokenAuthClearSecureArray("example_profile");
+        expect(teamCfgMock.delete).not.toHaveBeenCalled();
+        expect(teamCfgMock.set).not.toHaveBeenCalled();
+        expect(teamCfgMock.save).toHaveBeenCalled();
+        getProfileInfoMock.mockRestore();
+        getProfileFromConfigMock.mockRestore();
+    });
+});
