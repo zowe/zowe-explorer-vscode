@@ -834,8 +834,14 @@ export class Profiles extends ProfilesCache {
         if (profAttrs.profLoc.jsonLoc) {
             configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, loginTokenType?.startsWith("apimlAuthenticationToken") ? [] : ["tokenValue"]);
         }
-        configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "user")?.argLoc.jsonLoc);
-        configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "password")?.argLoc.jsonLoc);
+        const userArgJsonLoc = profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "user")?.argLoc.jsonLoc;
+        if (userArgJsonLoc) {
+            configApi.delete(userArgJsonLoc);
+        }
+        const passwordArgJsonLoc = profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "password")?.argLoc.jsonLoc;
+        if (passwordArgJsonLoc) {
+            configApi.delete(passwordArgJsonLoc);
+        }
         await configApi.save();
     }
 
