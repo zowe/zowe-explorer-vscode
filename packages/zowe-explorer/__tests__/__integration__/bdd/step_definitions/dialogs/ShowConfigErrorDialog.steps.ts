@@ -32,7 +32,7 @@ Then("the Show Config dialog should appear", async function () {
 
 When('the user clicks on the "Show Config" button', async function () {
     const button = await this.configErrorDialog.elem.$("a[role='button']");
-    await expect(button).toBeDefined();
+    await expect(button).toBeClickable();
     await button.click();
 });
 
