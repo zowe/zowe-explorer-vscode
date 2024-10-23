@@ -853,10 +853,20 @@ export class Profiles extends ProfilesCache {
         // For users with nested profiles, we should only update the secure array if a base profile or a regular profile matching profileName exists.
         // Otherwise, we want to keep `tokenValue` in the secure array of the parent profile to avoid disconnecting child profiles
         if (profAttrs?.profLoc.jsonLoc) {
-            configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, usingApimlToken ? [] : ["user", "password"]);
-            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc);
-            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenValue")?.argLoc.jsonLoc);
-            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenExpiration")?.argLoc.jsonLoc);
+            const tokenTypeArgJsonLoc = profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc;
+            if (tokenTypeArgJsonLoc) {
+                configApi.delete(tokenTypeArgJsonLoc);
+            }
+            const tokenValueArgJsonLoc = profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenValue")
+                ?.argLoc.jsonLoc;
+            if (tokenValueArgJsonLoc) {
+                configApi.delete(tokenValueArgJsonLoc);
+            }
+            const tokenExpirationArgJsonLoc = profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenExpiration")
+                ?.argLoc.jsonLoc;
+            if (tokenExpirationArgJsonLoc) {
+                configApi.delete(tokenExpirationArgJsonLoc);
+            }
             await configApi.save();
         }
     }
