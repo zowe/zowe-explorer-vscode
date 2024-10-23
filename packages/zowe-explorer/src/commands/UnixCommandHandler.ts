@@ -230,7 +230,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
 
     public formatCommandLine(command: string, profile?: imperative.IProfileLoaded): string {
         const prof = this.nodeProfile ?? profile;
-        const user: string = prof?.profile.user ?? prof.profile.user;
+        const user: string = prof?.profile.user;
         if (prof) {
             return `> ${user}@${prof.name}:${this.sshCwd ?? "~"} $ ${command}`;
         } else {

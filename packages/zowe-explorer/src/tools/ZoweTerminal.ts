@@ -167,7 +167,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
             default: {
                 this.command = this.command.slice(0, Math.max(0, this.cursorPosition)) + data + this.command.slice(this.cursorPosition);
                 this.write(data);
-                this.cursorPosition = Math.min(this.command.length, this.cursorPosition + 1);
+                this.cursorPosition = Math.min(this.command.length, this.cursorPosition + data.length);
                 this.refreshCmd();
             }
         }
