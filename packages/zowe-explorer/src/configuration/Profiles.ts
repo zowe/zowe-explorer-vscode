@@ -853,6 +853,7 @@ export class Profiles extends ProfilesCache {
         // For users with nested profiles, we should only update the secure array if a base profile or a regular profile matching profileName exists.
         // Otherwise, we want to keep `tokenValue` in the secure array of the parent profile to avoid disconnecting child profiles
         if (profAttrs?.profLoc.jsonLoc) {
+            configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, usingApimlToken ? [] : ["user", "password"]);
             const tokenTypeArgJsonLoc = profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc;
             if (tokenTypeArgJsonLoc) {
                 configApi.delete(tokenTypeArgJsonLoc);
@@ -867,8 +868,8 @@ export class Profiles extends ProfilesCache {
             if (tokenExpirationArgJsonLoc) {
                 configApi.delete(tokenExpirationArgJsonLoc);
             }
-            await configApi.save();
         }
+        await configApi.save();
     }
 
     public async handleSwitchAuthentication(node: Types.IZoweNodeType): Promise<void> {
