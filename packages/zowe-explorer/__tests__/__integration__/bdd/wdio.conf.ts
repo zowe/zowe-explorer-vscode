@@ -10,7 +10,7 @@
  */
 
 import type { Options } from "@wdio/types";
-import { join, join as joinPath, resolve as resolvePath } from "path";
+import { join as joinPath, resolve as resolvePath } from "path";
 import { emptyDirSync } from "fs-extra";
 import { baseConfig } from "../../__common__/base.wdio.conf";
 import { renameSync, rmSync, writeFileSync } from "fs";
@@ -155,8 +155,8 @@ export const config: Options.Testrunner = {
 
     beforeFeature: async function (uri, feature) {
         if (feature.name === "Show Config Error Dialog") {
-            const configPath = join(process.env["ZOWE_CLI_HOME"], "zowe.config.json");
-            const backupConfigPath = join(process.env["ZOWE_CLI_HOME"], "zowe.config.bkp");
+            const configPath = joinPath(process.env["ZOWE_CLI_HOME"], "zowe.config.json");
+            const backupConfigPath = joinPath(process.env["ZOWE_CLI_HOME"], "zowe.config.bkp");
             renameSync(configPath, backupConfigPath);
             writeFileSync(configPath, "invalidjson");
         }
@@ -164,8 +164,8 @@ export const config: Options.Testrunner = {
 
     afterFeature: async function (uri, feature) {
         if (feature.name === "Show Config Error Dialog") {
-            const backupConfigPath = join(process.env["ZOWE_CLI_HOME"], "zowe.config.bkp");
-            const configPath = join(process.env["ZOWE_CLI_HOME"], "zowe.config.json");
+            const backupConfigPath = joinPath(process.env["ZOWE_CLI_HOME"], "zowe.config.bkp");
+            const configPath = joinPath(process.env["ZOWE_CLI_HOME"], "zowe.config.json");
             rmSync(configPath);
             renameSync(backupConfigPath, configPath);
         }
