@@ -1638,7 +1638,7 @@ export class Uri {
     /**
      * Path is the `/some/path` part of `http://www.example.com/some/path?query#fragment`.
      */
-    path: string;
+    path: string = "";
 
     /**
      * Query is the `query` part of `http://www.example.com/some/path?query#fragment`.
