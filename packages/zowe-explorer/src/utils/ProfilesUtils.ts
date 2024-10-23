@@ -367,13 +367,23 @@ export class ProfilesUtils {
         // VS Code registers our updated TreeView IDs. Otherwise, VS Code's "Refresh Extensions" option will break v3 init.
         const ussPersistentSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent");
         const upgradingFromV1 = ZoweLocalStorage.getValue<Definitions.V1MigrationStatus>(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
-        const mProfileInfo = await ProfilesUtils.getProfileInfo();
+        let profileInfo: imperative.ProfileInfo;
+        try {
+            profileInfo = await ProfilesUtils.getProfileInfo();
+        } catch (err) {
+            return;
+        }
+
+        if (profileInfo == null) {
+            return;
+        }
+
         if (ussPersistentSettings != null && upgradingFromV1 == null && imperative.ProfileInfo.onlyV1ProfilesExist) {
             await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.JustMigrated);
             await vscode.commands.executeCommand("workbench.action.reloadWindow");
         }
 
-        if (upgradingFromV1 == null || mProfileInfo.getTeamConfig().exists || !imperative.ProfileInfo.onlyV1ProfilesExist) {
+        if (upgradingFromV1 == null || profileInfo.getTeamConfig().exists || !imperative.ProfileInfo.onlyV1ProfilesExist) {
             return;
         }
         const userSelection = await this.v1ProfileOptions();
