@@ -1,14 +1,3 @@
-/**
- * This program and the accompanying materials are made available under the terms of the
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at
- * https://www.eclipse.org/legal/epl-v20.html
- *
- * SPDX-License-Identifier: EPL-2.0
- *
- * Copyright Contributors to the Zowe Project.
- *
- */
-
 import { Then, When } from "@cucumber/cucumber";
 import { getZoweExplorerContainer } from "../../../../__common__/shared.wdio";
 import { Notification, Workbench } from "wdio-vscode-service";
@@ -21,8 +10,10 @@ When("a user opens Zowe Explorer", async function () {
 Then("the Show Config dialog should appear", async function () {
     this.workbench = await browser.getWorkbench();
     let notification: Notification;
+    const notificationCenter = await (this.workbench as Workbench).openNotificationsCenter();
+    await notificationCenter.wait(60000);
     await browser.waitUntil(async () => {
-        const notifications: Notification[] = await this.workbench.getNotifications();
+        const notifications: Notification[] = await notificationCenter.getNotifications("error" as any);
         for (const n of notifications) {
             if ((await n.getMessage()).startsWith("Error encountered when loading your Zowe config.")) {
                 notification = n;
