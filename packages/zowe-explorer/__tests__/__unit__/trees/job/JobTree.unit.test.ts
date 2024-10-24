@@ -931,7 +931,7 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
                 label: `Job Owner`,
                 value: "kristina",
                 show: true,
-                placeHolder: `Enter job owner ID`,
+                placeHolder: `Enter Job Owner ID`,
                 validateInput: (text) => SharedUtils.jobStringValidator(text, "owner"),
             },
             {
@@ -939,7 +939,7 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
                 label: `Job Prefix`,
                 value: "job*",
                 show: true,
-                placeHolder: `Enter job prefix`,
+                placeHolder: `Enter Job Prefix`,
                 validateInput: (text) => SharedUtils.jobStringValidator(text, "prefix"),
             },
             {
@@ -947,7 +947,7 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
                 label: `Job Status`,
                 value: "output",
                 show: true,
-                placeHolder: `Enter job status`,
+                placeHolder: `Enter Job Status`,
             },
         ];
         expect(JSON.stringify(actualPickerObj)).toEqual(JSON.stringify(expectedObj));

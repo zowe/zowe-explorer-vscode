@@ -43,7 +43,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         return this.instance;
     }
 
-    private static readonly defaultDialogText: string = `$(plus) ${vscode.l10n.t("Create a new TSO command")}`;
+    private static readonly defaultDialogText: string = `$(plus) ${vscode.l10n.t("Create a new TSO Command")}`;
     private static instance: TsoCommandHandler;
     public outputChannel: vscode.OutputChannel;
 
@@ -75,7 +75,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS);
             if (profileNamesList.length > 0) {
                 const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: vscode.l10n.t("Select the Profile to use to submit the TSO command"),
+                    placeHolder: vscode.l10n.t("Select the profile to use to submit the TSO Command"),
                     ignoreFocusOut: true,
                     canPickMany: false,
                 };
@@ -149,12 +149,12 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             const quickpick = Gui.createQuickPick();
             quickpick.placeholder = alwaysEdit
                 ? vscode.l10n.t({
-                      message: "Select a TSO command to run against {0} (An option to edit will follow)",
+                      message: "Select a TSO Command to run against {0} (An option to edit will follow)",
                       args: [hostname],
                       comment: ["Host name"],
                   })
                 : vscode.l10n.t({
-                      message: "Select a TSO command to run immediately against {0}",
+                      message: "Select a TSO Command to run immediately against {0}",
                       args: [hostname],
                       comment: ["Host name"],
                   });
@@ -179,7 +179,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         if (!response || alwaysEdit) {
             // manually entering a search
             const options2: vscode.InputBoxOptions = {
-                prompt: vscode.l10n.t("Enter or update the TSO command"),
+                prompt: vscode.l10n.t("Enter or update the TSO Command"),
                 value: response,
                 valueSelection: response ? [response.length, response.length] : undefined,
             };
@@ -211,7 +211,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 const submitResponse = await Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,
-                        title: vscode.l10n.t("TSO command submitted."),
+                        title: vscode.l10n.t("TSO Command submitted."),
                     },
                     () => {
                         return ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommandWithParms(command, tsoParams);
@@ -243,7 +243,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             });
             if (tsoProfileNamesList.length) {
                 const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: vscode.l10n.t("Select the TSO Profile to use for account number."),
+                    placeHolder: vscode.l10n.t("Select the TSO profile to use for account number."),
                     ignoreFocusOut: true,
                     canPickMany: false,
                 };

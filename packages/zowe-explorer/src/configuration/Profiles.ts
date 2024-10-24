@@ -345,10 +345,10 @@ export class Profiles extends ProfilesCache {
         let addProfilePlaceholder = "";
         switch (zoweFileProvider.getTreeType()) {
             case PersistenceSchemaEnum.Dataset:
-                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the DATA SETS Explorer`);
+                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the Data Sets Explorer`);
                 break;
             case PersistenceSchemaEnum.Job:
-                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the JOBS Explorer`);
+                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the Jobs Explorer`);
                 break;
             default:
                 // Use USS View as default for placeholder text
@@ -692,7 +692,7 @@ export class Profiles extends ProfilesCache {
                         {
                             location: vscode.ProgressLocation.Notification,
                             title: vscode.l10n.t({
-                                message: `Validating {0} Profile.`,
+                                message: `Validating {0} profile.`,
                                 args: [theProfile.name],
                                 comment: [`The profile name`],
                             }),
@@ -806,7 +806,7 @@ export class Profiles extends ProfilesCache {
             if (loginOk) {
                 Gui.showMessage(
                     vscode.l10n.t({
-                        message: "Login to Authentication service was successful for {0}.",
+                        message: "Login to Authentication Service was successful for {0}.",
                         args: [serviceProfile.name],
                         comment: ["Service profile name"],
                     })
@@ -887,7 +887,7 @@ export class Profiles extends ProfilesCache {
             loginTokenType = await zeInstance.getCommonApi(serviceProfile).getTokenTypeName();
         } catch (error) {
             ZoweLogger.warn(error);
-            Gui.errorMessage(vscode.l10n.t("Cannot switch to Token-based Authentication for profile {0}.", serviceProfile.name));
+            Gui.errorMessage(vscode.l10n.t("Cannot switch to token-based Authentication for profile {0}.", serviceProfile.name));
             return;
         }
         switch (true) {
@@ -908,7 +908,7 @@ export class Profiles extends ProfilesCache {
 
                 if (loginOk) {
                     Gui.showMessage(
-                        vscode.l10n.t("Login using token-based Authentication service was successful for profile {0}.", serviceProfile.name)
+                        vscode.l10n.t("Login using token-based Authentication Service was successful for profile {0}.", serviceProfile.name)
                     );
                     await this.basicAuthClearSecureArray(serviceProfile.name, loginTokenType);
                     const updBaseProfile: imperative.IProfile = {
@@ -920,7 +920,7 @@ export class Profiles extends ProfilesCache {
                         profile: { ...node.getProfile().profile, ...updBaseProfile },
                     });
                 } else {
-                    Gui.errorMessage(vscode.l10n.t("Unable to switch to Token-based Authentication for profile {0}.", serviceProfile.name));
+                    Gui.errorMessage(vscode.l10n.t("Unable to switch to token-based Authentication for profile {0}.", serviceProfile.name));
                     return;
                 }
                 break;
@@ -939,13 +939,13 @@ export class Profiles extends ProfilesCache {
                     await this.tokenAuthClearSecureArray(serviceProfile.name, loginTokenType);
                     ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
                 } else {
-                    Gui.errorMessage(vscode.l10n.t("Unable to switch to Basic Authentication for profile {0}.", serviceProfile.name));
+                    Gui.errorMessage(vscode.l10n.t("Unable to switch to basic Authentication for profile {0}.", serviceProfile.name));
                     return;
                 }
                 break;
             }
             default: {
-                Gui.errorMessage(vscode.l10n.t("Unable to Switch Authentication for profile {0}.", serviceProfile.name));
+                Gui.errorMessage(vscode.l10n.t("Unable to switch Authentication for profile {0}.", serviceProfile.name));
             }
         }
     }
@@ -1046,7 +1046,7 @@ export class Profiles extends ProfilesCache {
             if (logoutOk) {
                 Gui.showMessage(
                     vscode.l10n.t({
-                        message: "Logout from Authentication service was successful for {0}.",
+                        message: "Logout from Authentication Service was successful for {0}.",
                         args: [serviceProfile.name],
                         comment: ["Service profile name"],
                     })

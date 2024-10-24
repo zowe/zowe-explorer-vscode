@@ -1688,7 +1688,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("No selection made. Operation cancelled.");
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("No selection made. Operation Cancelled.");
     });
     it("Checking adding of new filter error is caught on getChildren", async () => {
         const globalMocks = createGlobalMocks();
@@ -3150,7 +3150,7 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             // Object.defineProperty(SettingsConfig, "setDirectValue", { value: jest.fn(), configurable: true });
 
             await tree.addDsTemplate(newTemplate as any);
-            expect(infoLoggerSpy).toHaveBeenCalledWith("Adding new data set template {0}.");
+            expect(infoLoggerSpy).toHaveBeenCalledWith("Adding new Data Set template {0}.");
             expect(setValueSpy).toHaveBeenCalled();
             infoLoggerSpy.mockClear();
             setValueSpy.mockClear();

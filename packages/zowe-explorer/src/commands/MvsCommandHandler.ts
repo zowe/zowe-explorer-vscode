@@ -42,7 +42,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
         return this.instance;
     }
 
-    private static readonly defaultDialogText: string = `$(plus) ${vscode.l10n.t("Create a new MVS command")}`;
+    private static readonly defaultDialogText: string = `$(plus) ${vscode.l10n.t("Create a new MVS Command")}`;
     private static instance: MvsCommandHandler;
     public outputChannel: vscode.OutputChannel;
 
@@ -141,12 +141,12 @@ export class MvsCommandHandler extends ZoweCommandProvider {
             const quickpick = Gui.createQuickPick();
             quickpick.placeholder = alwaysEdit
                 ? vscode.l10n.t({
-                      message: "Select an MVS command to run against {0} (An option to edit will follow)",
+                      message: "Select an MVS Command to run against {0} (An option to edit will follow)",
                       args: [hostname],
                       comment: ["Host name"],
                   })
                 : vscode.l10n.t({
-                      message: "Select an MVS command to run immediately against {0}",
+                      message: "Select an MVS Command to run immediately against {0}",
                       args: [hostname],
                       comment: ["Host name"],
                   });
@@ -171,7 +171,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
         if (!response || alwaysEdit) {
             // manually entering a search
             const options2: vscode.InputBoxOptions = {
-                prompt: vscode.l10n.t("Enter or update the MVS command"),
+                prompt: vscode.l10n.t("Enter or update the MVS Command"),
                 value: response,
                 valueSelection: response ? [response.length, response.length] : undefined,
             };
@@ -203,7 +203,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 const submitResponse = await Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,
-                        title: vscode.l10n.t("MVS command submitted."),
+                        title: vscode.l10n.t("MVS Command submitted."),
                     },
                     () => {
                         return ZoweExplorerApiRegister.getCommandApi(profile).issueMvsCommand(command, profile.profile?.consoleName);
