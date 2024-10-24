@@ -206,7 +206,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         ZoweLogger.trace(`ZoweDatasetNode.getChildren called for ${this.label as string}.`);
         if (!this.pattern && SharedContext.isSessionNotFav(this)) {
             const placeholder = new ZoweDatasetNode({
-                label: vscode.l10n.t("Use the search button to display Data Sets"),
+                label: vscode.l10n.t("Use the search button to display data sets"),
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: this,
                 contextOverride: Constants.INFORMATION_CONTEXT,
@@ -369,7 +369,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         this.dirty = false;
         if (Object.keys(elementChildren).length === 0) {
             const placeholder = new ZoweDatasetNode({
-                label: vscode.l10n.t("No Data Sets found"),
+                label: vscode.l10n.t("No data sets found"),
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: this,
                 contextOverride: Constants.INFORMATION_CONTEXT,

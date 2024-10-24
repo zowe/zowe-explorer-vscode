@@ -566,10 +566,10 @@
       "Session label"
     ]
   },
-  "Use the search button to display Data Sets": "Use the search button to display Data Sets",
+  "Use the search button to display data sets": "Use the search button to display data sets",
   "The response from Zowe CLI was not successful": "The response from Zowe CLI was not successful",
   "{0} members failed to load due to invalid name errors for {1}": "{0} members failed to load due to invalid name errors for {1}",
-  "No Data Sets found": "No Data Sets found",
+  "No data sets found": "No data sets found",
   "Retrieving response from MVS list API": "Retrieving response from MVS list API",
   "Cannot download, item invalid.": "Cannot download, item invalid.",
   "Name (default)": "Name (default)",
