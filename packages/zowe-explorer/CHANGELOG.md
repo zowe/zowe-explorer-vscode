@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Update Zowe SDKs to `8.2.0` to get the latest enhancements from Imperative.
 - Added expired JSON web token detection for profiles in each tree view (Data Sets, USS, Jobs). When a user performs a search on a profile, they are prompted to log in if their token expired. [#3175](https://github.com/zowe/zowe-explorer-vscode/issues/3175)
+- Added the ability to open VS Code URLs that point to Zowe Resources. [#3271](https://github.com/zowe/zowe-explorer-vscode/pull/3271)
+  - Example: `vscode://Zowe.vscode-extension-for-zowe?zowe-ds:/lpar.zosmf/TEST.PDS/MEMB` will open the `MEMB` PDS member under the `TEST.PDS` using the `lpar.zosmf` profile.
 
 ### Bug fixes
 

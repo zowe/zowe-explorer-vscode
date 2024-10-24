@@ -611,14 +611,24 @@ export interface TreeDataProvider<T> {
 }
 
 export class Uri {
+    private static _regexp = /^(([^:/?#]+?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
+
     public static file(path: string): Uri {
         return Uri.parse(path);
     }
     public static parse(value: string, _strict?: boolean): Uri {
-        const newUri = new Uri();
-        newUri.path = value;
+        const match = Uri._regexp.exec(value);
+        if (!match) {
+            return new Uri();
+        }
 
-        return newUri;
+        return Uri.from({
+            scheme: match[2] || "",
+            authority: match[4] || "",
+            path: match[5] || "",
+            query: match[7] || "",
+            fragment: match[9] || "",
+        });
     }
 
     public with(change: { scheme?: string; authority?: string; path?: string; query?: string; fragment?: string }): Uri {
@@ -688,7 +698,7 @@ export class Uri {
     /**
      * Path is the `/some/path` part of `http://www.example.com/some/path?query#fragment`.
      */
-    path: string;
+    path: string = "";
 
     /**
      * Query is the `query` part of `http://www.example.com/some/path?query#fragment`.
@@ -720,7 +730,7 @@ export class Uri {
      * u.fsPath === '\\server\c$\folder\file.txt'
      * ```
      */
-    fsPath: string;
+    fsPath: string = "";
 
     public toString(): string {
         let result = this.scheme ? `${this.scheme}://` : "";

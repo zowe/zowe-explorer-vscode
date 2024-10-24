@@ -46,6 +46,7 @@ import { SharedContext } from "./SharedContext";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { CertificateWizard } from "../../utils/CertificateWizard";
 import { ZosConsoleViewProvider } from "../../zosconsole/ZosConsolePanel";
+import { ZoweUriHandler } from "../../utils/UriHandler";
 
 export class SharedInit {
     private static originalEmitZoweEvent: typeof imperative.EventProcessor.prototype.emitEvent;
@@ -276,6 +277,7 @@ export class SharedInit {
                     return LocalFileManagement.fileSelectedToCompare;
                 })
             );
+            context.subscriptions.push(vscode.window.registerUriHandler(ZoweUriHandler.getInstance()));
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.placeholderCommand", () => {
                     // This command does nothing, its here to let us disable individual items in the tree view
