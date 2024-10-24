@@ -181,8 +181,8 @@ export class ProfilesUtils {
 
     /**
      * Use the default credential manager in Zowe Explorer and setup before use
-     * @returns Promise<imperative.ProfileInfo> the object of profileInfo using the default credential manager
-     * @throws If `readProfilesFromDisk` fails, or if an error is thrown unrelated to credential management initialization
+     * @returns {imperative.ProfileInfo} a ProfileInfo instance using the default credential manager,
+     * or undefined if an error occurred unrelated to credential manager initialization
      */
     public static async setupDefaultCredentialManager(): Promise<imperative.ProfileInfo> {
         try {
@@ -302,7 +302,6 @@ export class ProfilesUtils {
     /**
      * Creates an instance of ProfileInfo and calls `readProfilesFromDisk` to load profiles.
      * @returns An instance of `ProfileInfo`, or `undefined` if there was an error.
-     * @throws If there was an error unrelated to credential management initialization.
      */
     public static async getProfileInfo(): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
