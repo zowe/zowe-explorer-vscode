@@ -170,7 +170,7 @@ export class ZoweVsCodeExtension {
         ];
         const response = await Gui.showQuickPick(qpItems, {
             placeHolder: "Select an authentication method for obtaining token",
-            title: `[${baseProfile.name}] Log in to authentication service`,
+            title: `[${baseProfile.name}] Log in to Authentication Service`,
         });
         if (response === qpItems[0]) {
             const creds = await ZoweVsCodeExtension.promptUserPass({ session: updSession.ISession, rePrompt: true });

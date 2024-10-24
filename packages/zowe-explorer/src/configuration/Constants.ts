@@ -147,7 +147,7 @@ export class Constants {
             key: `dsntype`,
             label: `Data Set Type (DSNTYPE)`,
             value: null,
-            placeHolder: vscode.l10n.t(`Specify the data set type (DSNTYPE)`),
+            placeHolder: vscode.l10n.t(`Specify the Data Set type (DSNTYPE)`),
         },
         {
             key: `mgntclass`,
@@ -159,13 +159,13 @@ export class Constants {
             key: `dsName`,
             label: `Data Set Name`,
             value: null,
-            placeHolder: vscode.l10n.t(`Enter a data set name`),
+            placeHolder: vscode.l10n.t(`Enter a Data Set name`),
         },
         {
             key: `dsorg`,
             label: `Data Set Organization (DSORG)`,
             value: null,
-            placeHolder: vscode.l10n.t(`Select a data set organization (DSORG)`),
+            placeHolder: vscode.l10n.t(`Select a Data Set organization (DSORG)`),
         },
         {
             key: `primary`,
@@ -178,7 +178,7 @@ export class Constants {
             key: `recfm`,
             label: `Record Format`,
             value: null,
-            placeHolder: vscode.l10n.t(`Enter the data set's record format`),
+            placeHolder: vscode.l10n.t(`Enter the Data Set's record format`),
         },
         {
             key: `lrecl`,
@@ -198,7 +198,7 @@ export class Constants {
             key: `size`,
             label: `Size`,
             value: null,
-            placeHolder: vscode.l10n.t(`Enter the size of the data set`),
+            placeHolder: vscode.l10n.t(`Enter the size of the Data Set`),
         },
         {
             key: `storclass`,
@@ -210,7 +210,7 @@ export class Constants {
             key: `volser`,
             label: `Volume Serial`,
             value: null,
-            placeHolder: vscode.l10n.t(`Enter the volume serial on which the data set should be placed`),
+            placeHolder: vscode.l10n.t(`Enter the volume serial on which the Data Set should be placed`),
         },
     ];
     public static JOB_STATUS = [

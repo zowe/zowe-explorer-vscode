@@ -18,12 +18,12 @@ import { FilterItem } from "../../management/FilterManagement";
 
 export class DataSetTemplates {
     public static getDsTemplates(): Types.DataSetAllocTemplate[] {
-        ZoweLogger.trace(vscode.l10n.t("Getting data set templates."));
+        ZoweLogger.trace(vscode.l10n.t("Getting Data Set templates."));
         return SettingsConfig.getDirectValue(Constants.SETTINGS_DS_TEMPLATES);
     }
 
     public static async resetDsTemplateSetting(): Promise<void> {
-        ZoweLogger.trace(vscode.l10n.t("Resetting data set templates array."));
+        ZoweLogger.trace(vscode.l10n.t("Resetting Data Set templates array."));
         await this.updateDsTemplateSetting();
     }
 
@@ -31,7 +31,7 @@ export class DataSetTemplates {
         templates: Types.DataSetAllocTemplate[] = [],
         target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global
     ): Promise<void> {
-        ZoweLogger.trace(vscode.l10n.t("Updating data set templates."));
+        ZoweLogger.trace(vscode.l10n.t("Updating Data Set templates."));
         await SettingsConfig.setDirectValue(Constants.SETTINGS_DS_TEMPLATES, templates, target);
     }
 
@@ -62,15 +62,15 @@ export class DataSetTemplates {
             });
             // Add value to front of stack
             templateSettings.unshift(criteria);
-            ZoweLogger.info(vscode.l10n.t("Adding new data set template {0}.", newTemplateName));
+            ZoweLogger.info(vscode.l10n.t("Adding new Data Set template {0}.", newTemplateName));
             await this.updateDsTemplateSetting(templateSettings, target);
         }
     }
 
     private static promptForSaveLocation<T extends string>(): Thenable<T | undefined> {
         const qpOptions: vscode.QuickPickOptions = {
-            title: vscode.l10n.t("Data set template save location"),
-            placeHolder: vscode.l10n.t("Choose the setting location to save the data set template..."),
+            title: vscode.l10n.t("Data Set template save location"),
+            placeHolder: vscode.l10n.t("Choose the setting location to save the Data Set template..."),
             ignoreFocusOut: true,
             canPickMany: false,
         };

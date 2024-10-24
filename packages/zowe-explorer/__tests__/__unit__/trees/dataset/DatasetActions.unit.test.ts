@@ -182,7 +182,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         expect(newNode?.contextValue).toBe(Constants.DS_MEMBER_CONTEXT);
         expect(newNode?.command.command).toBe("vscode.open");
         expect(mySpy).toHaveBeenCalledWith({
-            placeHolder: "Name of Member",
+            placeHolder: "Name of member",
             validateInput: expect.any(Function),
         });
         expect(mocked(zosfiles.Upload.bufferToDataSet)).toHaveBeenCalledWith(
@@ -256,7 +256,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
 
         expect(parent.children.find((node) => node.label === "TESTMEMBER")).toBeDefined();
-        expect(mySpy).toHaveBeenCalledWith({ placeHolder: "Name of Member", validateInput: expect.any(Function) });
+        expect(mySpy).toHaveBeenCalledWith({ placeHolder: "Name of member", validateInput: expect.any(Function) });
         expect(mocked(zosfiles.Upload.bufferToDataSet)).toHaveBeenCalledWith(
             blockMocks.zosmfSession,
             Buffer.from(""),
@@ -572,7 +572,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith(
-            `Are you sure you want to delete the following 1 item(s)?\nThis will permanently remove these data sets and/or members from your ` +
+            `Are you sure you want to delete the following 1 item(s)?\nThis will permanently remove these Data Sets and/or members from your ` +
                 `system.\n\n ${blockMocks.testFavoritedNode.getLabel().toString()}`,
             { items: ["Delete"], vsCodeOpts: { modal: true } }
         );
@@ -590,7 +590,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith(
-            `Are you sure you want to delete the following 1 item(s)?\nThis will permanently remove these data sets and/or members from your ` +
+            `Are you sure you want to delete the following 1 item(s)?\nThis will permanently remove these Data Sets and/or members from your ` +
                 `system.\n\n ${blockMocks.testFavoritedNode.getLabel().toString()}(${blockMocks.testFavMemberNode.getLabel().toString()})`,
             { items: ["Delete"], vsCodeOpts: { modal: true } }
         );
@@ -607,7 +607,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("No data sets selected for deletion, cancelling...");
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("No Data Sets selected for deletion, cancelling...");
     });
 
     it("Should account for favorited data sets during deletion", async () => {
@@ -1708,7 +1708,7 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
         });
         clipboard.writeText("INVALID");
 
-        await expect(DatasetActions.pasteMember(node, blockMocks.testDatasetTree)).rejects.toEqual(Error("Invalid paste. Copy data set(s) first."));
+        await expect(DatasetActions.pasteMember(node, blockMocks.testDatasetTree)).rejects.toEqual(Error("Invalid paste. Copy Data Set(s) first."));
         expect(copySpy).not.toHaveBeenCalled();
     });
     it("Should not call zowe.Copy.dataSet when pasting to partitioned data set with no member name", async () => {
@@ -2394,7 +2394,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             // do nothing
         }
 
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error encountered when creating data set. Error: Generic Error");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error encountered when creating Data Set. Error: Generic Error");
         expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenLastCalledWith(Constants.SETTINGS_DS_DEFAULT_PS);
         expect(createDataSetSpy).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
             alcunit: "CYL",
@@ -2879,7 +2879,7 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
 
         await DatasetActions.allocateLike(blockMocks.testDatasetTree, blockMocks.testNode);
 
-        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("You must enter a new data set name.");
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("You must enter a new Data Set name.");
     });
     it("Tests that allocateLike fails if error is thrown", async () => {
         createGlobalMocks();
@@ -2896,7 +2896,7 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
         }
 
         expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
-        expect(errorHandlingSpy).toHaveBeenCalledWith(errorMessage, "test", "Unable to create data set.");
+        expect(errorHandlingSpy).toHaveBeenCalledWith(errorMessage, "test", "Unable to create Data Set.");
     });
 });
 

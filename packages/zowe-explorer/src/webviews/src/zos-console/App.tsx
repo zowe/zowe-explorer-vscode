@@ -42,7 +42,7 @@ export function App() {
           l10n.config({
             contents: contents,
           });
-          setPlaceholder(l10n.t("Enter command here..."));
+          setPlaceholder(l10n.t("Enter Command here..."));
           break;
         }
       }

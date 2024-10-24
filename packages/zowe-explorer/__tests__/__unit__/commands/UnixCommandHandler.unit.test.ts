@@ -249,7 +249,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the Unix command",
+            placeHolder: "Select the profile to use to submit the Unix Command",
         });
 
         expect(showInputBox.mock.calls.length).toBe(2);
@@ -306,7 +306,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the Unix command",
+            placeHolder: "Select the profile to use to submit the Unix Command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(appendLine.mock.calls.length).toBe(2);
@@ -338,7 +338,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the Unix command",
+            placeHolder: "Select the profile to use to submit the Unix Command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(1);
@@ -369,7 +369,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the Unix command",
+            placeHolder: "Select the profile to use to submit the Unix Command",
         });
         expect(showInputBox.mock.calls.length).toBe(2);
         expect(showInformationMessage.mock.calls.length).toBe(1);
@@ -402,7 +402,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the Unix command",
+            placeHolder: "Select the profile to use to submit the Unix Command",
         });
         expect(showInputBox.mock.calls.length).toBe(2);
         expect(showErrorMessage.mock.calls.length).toBe(1);
@@ -479,7 +479,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the Unix command",
+            placeHolder: "Select the profile to use to submit the Unix Command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
     });
@@ -617,7 +617,7 @@ describe("UnixCommand Actions Unit Testing", () => {
             }),
         });
         await unixActions.issueUnixCommand(testNode, null as any);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("Issuing UNIX commands is not supported for this profile type, zosmf.");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("Issuing UNIX Commands is not supported for this profile type, zosmf.");
     });
 
     it("tests the issueUnixCommand function user does not select a profile - userSelectProfile", async () => {

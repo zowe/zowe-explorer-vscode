@@ -652,7 +652,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
 
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
         expect(globalMocks.showInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showInformationMessage.mock.calls[0][0]).toBe("No selection made. Operation cancelled.");
+        expect(globalMocks.showInformationMessage.mock.calls[0][0]).toBe("No selection made. Operation Cancelled.");
     });
 
     it("Tests that filter() works correctly for favorited search nodes with credentials", async () => {

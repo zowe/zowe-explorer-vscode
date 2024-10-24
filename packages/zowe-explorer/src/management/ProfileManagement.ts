@@ -76,7 +76,7 @@ export class ProfileManagement {
     public static readonly basicAuthAddQpItems: Record<string, vscode.QuickPickItem> = {
         [ProfileManagement.AuthQpLabels.add]: {
             label: `$(plus) ${vscode.l10n.t("Add Credentials")}`,
-            description: vscode.l10n.t("Add username and password for basic authentication"),
+            description: vscode.l10n.t("Add username and password for basic Authentication"),
         },
     };
     public static readonly basicAuthUpdateQpItems: Record<string, vscode.QuickPickItem> = {
@@ -117,18 +117,18 @@ export class ProfileManagement {
     public static readonly switchAuthenticationQpItems: Record<string, vscode.QuickPickItem> = {
         [ProfileManagement.AuthQpLabels.switch]: {
             label: `$(key) ${vscode.l10n.t("Change the Authentication Method")}`,
-            description: vscode.l10n.t("Change the authentication method"),
+            description: vscode.l10n.t("Change the Authentication Method"),
         },
     };
     public static readonly tokenAuthLoginQpItem: Record<string, vscode.QuickPickItem> = {
         [ProfileManagement.AuthQpLabels.login]: {
-            label: `$(arrow-right) ${vscode.l10n.t("Log in to authentication service")}`,
+            label: `$(arrow-right) ${vscode.l10n.t("Log in to Authentication Service")}`,
             description: vscode.l10n.t("Log in to obtain a new token value"),
         },
     };
     public static readonly tokenAuthLogoutQpItem: Record<string, vscode.QuickPickItem> = {
         [ProfileManagement.AuthQpLabels.logout]: {
-            label: `$(arrow-left) ${vscode.l10n.t("Log out of authentication service")}`,
+            label: `$(arrow-left) ${vscode.l10n.t("Log out of Authentication Service")}`,
             description: vscode.l10n.t("Log out to invalidate and remove stored token value"),
         },
     };
@@ -214,17 +214,17 @@ export class ProfileManagement {
     private static getQpPlaceholders(profile: imperative.IProfileLoaded): { basicAuth: string; tokenAuth: string; chooseAuth: string } {
         return {
             basicAuth: vscode.l10n.t({
-                message: "Profile {0} is using basic authentication. Choose a profile action.",
+                message: "Profile {0} is using basic Authentication. Choose a profile action.",
                 args: [profile.name],
                 comment: ["Profile name"],
             }),
             tokenAuth: vscode.l10n.t({
-                message: "Profile {0} is using token authentication. Choose a profile action.",
+                message: "Profile {0} is using token Authentication. Choose a profile action.",
                 args: [profile.name],
                 comment: ["Profile name"],
             }),
             chooseAuth: vscode.l10n.t({
-                message: "Profile {0} doesn't specify an authentication method. Choose a profile action.",
+                message: "Profile {0} doesn't specify an Authentication method. Choose a profile action.",
                 args: [profile.name],
                 comment: ["Profile name"],
             }),

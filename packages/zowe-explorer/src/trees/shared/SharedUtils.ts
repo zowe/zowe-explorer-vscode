@@ -127,10 +127,10 @@ export class SharedUtils {
     public static jobStringValidator(text: string, localizedParam: "owner" | "prefix"): string | null {
         switch (localizedParam) {
             case "owner":
-                return text.length > Constants.JOBS_MAX_PREFIX ? vscode.l10n.t("Invalid job owner") : null;
+                return text.length > Constants.JOBS_MAX_PREFIX ? vscode.l10n.t("Invalid Job Owner") : null;
             case "prefix":
             default:
-                return text.length > Constants.JOBS_MAX_PREFIX ? vscode.l10n.t("Invalid job prefix") : null;
+                return text.length > Constants.JOBS_MAX_PREFIX ? vscode.l10n.t("Invalid Job Prefix") : null;
         }
     }
 

@@ -50,7 +50,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             label: `Job Owner`,
             value: "",
             show: true,
-            placeHolder: vscode.l10n.t("Enter job owner ID"),
+            placeHolder: vscode.l10n.t("Enter Job Owner ID"),
             validateInput: (text: string): string | null => SharedUtils.jobStringValidator(text, "owner"),
         },
         {
@@ -58,7 +58,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             label: `Job Prefix`,
             value: "*",
             show: true,
-            placeHolder: vscode.l10n.t("Enter job prefix"),
+            placeHolder: vscode.l10n.t("Enter Job Prefix"),
             validateInput: (text: string): string | null => SharedUtils.jobStringValidator(text, "prefix"),
         },
         {
@@ -66,7 +66,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             label: JobTree.chooseJobStatusLabel,
             value: "*",
             show: true,
-            placeHolder: vscode.l10n.t("Enter job status"),
+            placeHolder: vscode.l10n.t("Enter Job Status"),
         },
     ];
 
@@ -78,7 +78,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         menuType: Definitions.JobPickerTypes.QuerySearch,
     });
     public searchById = new FilterItem({
-        text: `$(search) ${vscode.l10n.t("Search by job ID")}`,
+        text: `$(search) ${vscode.l10n.t("Search by Job ID")}`,
         menuType: Definitions.JobPickerTypes.IdSearch,
     });
     private treeView: vscode.TreeView<IZoweJobTreeNode>;
@@ -425,7 +425,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 }
             } catch (error) {
                 const errMessage: string = vscode.l10n.t({
-                    message: `Error: You have Zowe Job favorites that refer to a non-existent CLI profile named: {0}.
+                    message: `Error: You have Zowe job favorites that refer to a non-existent CLI profile named: {0}.
                          To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.
                           Would you like to do this now? {1}`,
                     args: [profileName, SharedUtils.getAppName()],
@@ -579,7 +579,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         let cancelled = false;
         if (userSelected) {
             const checkConfirmation = vscode.l10n.t({
-                message: "This will remove all favorited Jobs items for profile {0}. Continue?",
+                message: "This will remove all favorited jobs items for profile {0}. Continue?",
                 args: [profileName],
                 comment: ["Profile name"],
             });
@@ -655,7 +655,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         const choice = await Gui.resolveQuickPick(quickpick);
         quickpick.hide();
         if (!choice) {
-            Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
+            Gui.showMessage(vscode.l10n.t("No selection made. Operation Cancelled."));
             return undefined;
         }
         return choice as FilterItem;
@@ -708,7 +708,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     public async handleSearchByJobId(jobId?: string): Promise<Definitions.IJobSearchCriteria> {
         ZoweLogger.trace("JobTree.handleSearchByJobId called.");
         const options = {
-            prompt: vscode.l10n.t("Enter a job ID"),
+            prompt: vscode.l10n.t("Enter a Job ID"),
             value: jobId,
         };
         const newUserJobId = await Gui.showInputBox(options);
@@ -911,7 +911,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             matchOnDescription: false,
         });
         if (!choice) {
-            Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
+            Gui.showMessage(vscode.l10n.t("No selection made. Operation Cancelled."));
             return undefined;
         }
         const pattern = choice.label;

@@ -394,7 +394,9 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         expect(getSpoolFilesSpy).not.toHaveBeenCalled();
         expect(mocked(Gui.showOpenDialog)).not.toHaveBeenCalled();
         expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
-        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain("Download Single Spool operation not implemented by extender");
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(
+            "Download single spool operation not implemented by extender. Please contact the extension developer(s)."
+        );
     });
 });
 

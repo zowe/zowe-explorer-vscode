@@ -102,7 +102,7 @@ describe("CertificateWizard", () => {
         await (certWizard as any).onDidReceiveMessage({
             command: "close",
         });
-        expect(traceMock).toHaveBeenCalledWith("User dismissed the certificate wizard.");
+        expect(traceMock).toHaveBeenCalledWith("User dismissed the Certificate Wizard.");
     });
 
     it("handles the get_localization message", async () => {

@@ -638,7 +638,7 @@ describe("ProfilesUtils unit tests", () => {
             } as any;
 
             await expect((ProfilesUtils as any).activateCredentialManagerOverride(credentialManagerExtension)).rejects.toThrow(
-                "Custom credential manager failed to activate"
+                "Custom Credential Manager failed to activate"
             );
         });
     });

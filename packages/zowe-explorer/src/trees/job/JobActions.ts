@@ -196,7 +196,7 @@ export class JobActions {
         ZoweLogger.trace("job.actions.downloadSingleSpool called.");
         try {
             if (ZoweExplorerApiRegister.getJesApi(nodes[0].getProfile()).downloadSingleSpool == null) {
-                throw Error(vscode.l10n.t("Download Single Spool operation not implemented by extender. Please contact the extension developer(s)."));
+                throw Error(vscode.l10n.t("Download single spool operation not implemented by extender. Please contact the extension developer(s)."));
             }
             const dirUri = await Gui.showOpenDialog({
                 openLabel: vscode.l10n.t("Select"),
