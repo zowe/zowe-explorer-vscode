@@ -157,7 +157,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
             const choice = await Gui.resolveQuickPick(quickpick);
             quickpick.hide();
             if (!choice) {
-                Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
+                Gui.showMessage(vscode.l10n.t("No selection made. Operation Cancelled."));
                 return;
             }
             if (choice instanceof FilterDescriptor) {

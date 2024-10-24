@@ -100,7 +100,7 @@ export class AuthUtils {
         return Gui.showMessage(
             vscode.l10n.t({
                 message:
-                    "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
+                    "Your connection is no longer active for profile '{0}'. Please log in to an Authentication Service to restore the connection.",
                 args: [profileName],
                 comment: ["Profile name"],
             }),

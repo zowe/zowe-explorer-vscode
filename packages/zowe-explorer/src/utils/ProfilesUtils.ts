@@ -111,7 +111,7 @@ export class ProfilesUtils {
             }
             return undefined;
         } catch (err) {
-            throw new Error(vscode.l10n.t("Custom credential manager failed to activate"));
+            throw new Error(vscode.l10n.t("Custom Credential Manager failed to activate"));
         }
     }
 
@@ -124,9 +124,9 @@ export class ProfilesUtils {
         ZoweLogger.trace("ProfilesUtils.setupCustomCredentialManager called.");
         ZoweLogger.info(
             vscode.l10n.t({
-                message: "Custom credential manager {0} found, attempting to activate.",
+                message: "Custom Credential Manager {0} found, attempting to activate.",
                 args: [credentialManagerMap.credMgrDisplayName],
-                comment: ["Credential manager display name"],
+                comment: ["Credential Manager display name"],
             })
         );
         const customCredentialManagerExtension =
@@ -156,12 +156,12 @@ export class ProfilesUtils {
         const yesGloballyButton = vscode.l10n.t("Yes, globally");
         const yesWorkspaceButton = vscode.l10n.t("Only for this workspace");
         const response = await Gui.warningMessage(
-            vscode.l10n.t("Zowe Explorer failed to activate since the default credential manager is not supported in your environment."),
+            vscode.l10n.t("Zowe Explorer failed to activate since the default Credential Manager is not supported in your environment."),
             {
                 items: [noButton, yesGloballyButton, yesWorkspaceButton],
                 vsCodeOpts: {
                     modal: true,
-                    detail: vscode.l10n.t("Do you wish to disable credential management? (VS Code window reload will be triggered)"),
+                    detail: vscode.l10n.t("Do you wish to disable Credential Management? (VS Code window reload will be triggered)"),
                 },
             }
         );
@@ -186,7 +186,7 @@ export class ProfilesUtils {
     public static async setupDefaultCredentialManager(): Promise<imperative.ProfileInfo> {
         try {
             ZoweLogger.trace("ProfilesUtils.setupDefaultCredentialManager called.");
-            ZoweLogger.info(vscode.l10n.t("No custom credential managers found, using the default instead."));
+            ZoweLogger.info(vscode.l10n.t("No custom Credential Managers found, using the default instead."));
             ProfilesUtils.updateCredentialManagerSetting(Constants.ZOWE_CLI_SCM);
             const defaultCredentialManager = imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring);
             const profileInfo = new imperative.ProfileInfo("zowe", {
@@ -227,12 +227,12 @@ export class ProfilesUtils {
         });
         if (credentialManager) {
             const header = vscode.l10n.t({
-                message: `Custom credential manager {0} found`,
+                message: `Custom Credential Manager {0} found`,
                 args: [credentialManager.credMgrDisplayName],
-                comment: ["Credential manager display name"],
+                comment: ["Credential Manager display name"],
             });
 
-            const message = vscode.l10n.t("Do you wish to use this credential manager instead?");
+            const message = vscode.l10n.t("Do you wish to use this Credential Manager instead?");
             const optionYes = vscode.l10n.t("Yes");
             const optionDontAskAgain = vscode.l10n.t("Don't ask again");
 
@@ -267,11 +267,11 @@ export class ProfilesUtils {
     public static async promptAndHandleMissingCredentialManager(credentialManager: imperative.ICredentialManagerNameMap): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.promptAndHandleMissingCredentialManager called.");
         const header = vscode.l10n.t({
-            message: "Plugin of name '{0}' was defined for custom credential management on imperative.json file.",
+            message: "Plugin of name '{0}' was defined for custom Credential Management on imperative.json file.",
             args: [credentialManager.credMgrDisplayName],
-            comment: ["Credential manager display name"],
+            comment: ["Credential Manager display name"],
         });
-        const installMessage = vscode.l10n.t("Please install associated VS Code extension for custom credential manager or revert to default.");
+        const installMessage = vscode.l10n.t("Please install associated VS Code extension for custom Credential Manager or revert to default.");
         const revertToDefaultButton = vscode.l10n.t("Use Default");
         const installButton = vscode.l10n.t("Install");
         await Gui.infoMessage(header, { items: [installButton, revertToDefaultButton], vsCodeOpts: { modal: true, detail: installMessage } }).then(

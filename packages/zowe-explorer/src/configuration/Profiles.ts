@@ -771,7 +771,7 @@ export class Profiles extends ProfilesCache {
         }
         // This check will handle service profiles that have username and password
         if (AuthUtils.isProfileUsingBasicAuth(serviceProfile)) {
-            Gui.showMessage(vscode.l10n.t(`This profile is using basic authentication and does not support token authentication.`));
+            Gui.showMessage(vscode.l10n.t(`This profile is using basic Authentication and does not support token Authentication.`));
             return false;
         }
 
@@ -806,7 +806,7 @@ export class Profiles extends ProfilesCache {
             if (loginOk) {
                 Gui.showMessage(
                     vscode.l10n.t({
-                        message: "Login to authentication service was successful for {0}.",
+                        message: "Login to Authentication service was successful for {0}.",
                         args: [serviceProfile.name],
                         comment: ["Service profile name"],
                     })
@@ -859,11 +859,11 @@ export class Profiles extends ProfilesCache {
         const qp = Gui.createQuickPick();
         const qpItemYes: vscode.QuickPickItem = {
             label: vscode.l10n.t("Yes"),
-            description: vscode.l10n.t("To change the authentication"),
+            description: vscode.l10n.t("To change the Authentication"),
         };
         const qpItemNo: vscode.QuickPickItem = {
             label: vscode.l10n.t("No"),
-            description: vscode.l10n.t("To continue in current authentication"),
+            description: vscode.l10n.t("To continue in current Authentication"),
         };
         qp.items = [qpItemYes, qpItemNo];
         qp.placeholder = vscode.l10n.t("Do you wish to change the Authentication");
@@ -908,7 +908,7 @@ export class Profiles extends ProfilesCache {
 
                 if (loginOk) {
                     Gui.showMessage(
-                        vscode.l10n.t("Login using token-based authentication service was successful for profile {0}.", serviceProfile.name)
+                        vscode.l10n.t("Login using token-based Authentication service was successful for profile {0}.", serviceProfile.name)
                     );
                     await this.basicAuthClearSecureArray(serviceProfile.name, loginTokenType);
                     const updBaseProfile: imperative.IProfile = {
@@ -920,7 +920,7 @@ export class Profiles extends ProfilesCache {
                         profile: { ...node.getProfile().profile, ...updBaseProfile },
                     });
                 } else {
-                    Gui.errorMessage(vscode.l10n.t("Unable to switch to Token-based authentication for profile {0}.", serviceProfile.name));
+                    Gui.errorMessage(vscode.l10n.t("Unable to switch to Token-based Authentication for profile {0}.", serviceProfile.name));
                     return;
                 }
                 break;
@@ -931,7 +931,7 @@ export class Profiles extends ProfilesCache {
 
                 if (creds !== undefined) {
                     const successMsg = vscode.l10n.t(
-                        "Login using basic authentication was successful for profile {0}.",
+                        "Login using basic Authentication was successful for profile {0}.",
                         typeof profile === "string" ? profile : profile.name
                     );
                     ZoweLogger.info(successMsg);
@@ -939,7 +939,7 @@ export class Profiles extends ProfilesCache {
                     await this.tokenAuthClearSecureArray(serviceProfile.name, loginTokenType);
                     ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
                 } else {
-                    Gui.errorMessage(vscode.l10n.t("Unable to switch to Basic authentication for profile {0}.", serviceProfile.name));
+                    Gui.errorMessage(vscode.l10n.t("Unable to switch to Basic Authentication for profile {0}.", serviceProfile.name));
                     return;
                 }
                 break;
@@ -1016,7 +1016,7 @@ export class Profiles extends ProfilesCache {
         const serviceProfile = node.getProfile();
         // This check will handle service profiles that have username and password
         if (AuthUtils.isProfileUsingBasicAuth(serviceProfile)) {
-            Gui.showMessage(vscode.l10n.t(`This profile is using basic authentication and does not support token authentication.`));
+            Gui.showMessage(vscode.l10n.t(`This profile is using basic Authentication and does not support token Authentication.`));
             return;
         }
 
@@ -1046,7 +1046,7 @@ export class Profiles extends ProfilesCache {
             if (logoutOk) {
                 Gui.showMessage(
                     vscode.l10n.t({
-                        message: "Logout from authentication service was successful for {0}.",
+                        message: "Logout from Authentication service was successful for {0}.",
                         args: [serviceProfile.name],
                         comment: ["Service profile name"],
                     })

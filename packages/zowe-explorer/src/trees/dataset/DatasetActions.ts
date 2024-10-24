@@ -243,7 +243,7 @@ export class DatasetActions {
             // Show newly-created data set in expanded tree view
             await DatasetActions.focusOnNewDs(node, dsName, datasetProvider, theFilter);
         } catch (err) {
-            const errorMsg = vscode.l10n.t("Error encountered when creating data set.");
+            const errorMsg = vscode.l10n.t("Error encountered when creating Data Set.");
             ZoweLogger.error(errorMsg + JSON.stringify(err));
             if (err instanceof Error) {
                 await AuthUtils.errorHandling(err, node.getProfileName(), errorMsg);
@@ -312,7 +312,7 @@ export class DatasetActions {
             // The user must choose a session
             const qpItems = [];
             const quickpick = Gui.createQuickPick();
-            quickpick.placeholder = vscode.l10n.t("Select the profile to which the original data set belongs");
+            quickpick.placeholder = vscode.l10n.t("Select the profile to which the original Data Set belongs");
             quickpick.ignoreFocusOut = true;
 
             for (const thisSession of datasetProvider.mSessionNodes) {
@@ -338,15 +338,15 @@ export class DatasetActions {
             const currSelection = datasetProvider.getTreeView().selection.length > 0 ? datasetProvider.getTreeView().selection[0].label : null;
             const inputBoxOptions: vscode.InputBoxOptions = {
                 ignoreFocusOut: true,
-                placeHolder: vscode.l10n.t("Enter the name of the data set to copy attributes from"),
+                placeHolder: vscode.l10n.t("Enter the name of the Data Set to copy attributes from"),
                 value: currSelection as string,
                 validateInput: (text) => {
-                    return DatasetUtils.validateDataSetName(text) === true ? null : vscode.l10n.t("Enter a valid data set name.");
+                    return DatasetUtils.validateDataSetName(text) === true ? null : vscode.l10n.t("Enter a valid Data Set name.");
                 },
             };
             likeDSName = await Gui.showInputBox(inputBoxOptions);
             if (!likeDSName) {
-                Gui.showMessage(vscode.l10n.t("You must enter a new data set name."));
+                Gui.showMessage(vscode.l10n.t("You must enter a new Data Set name."));
                 return;
             }
             ZoweLogger.trace(`${likeDSName} was entered to use attributes for new data set.`);
@@ -357,7 +357,7 @@ export class DatasetActions {
         }
         ZoweLogger.info(
             vscode.l10n.t({
-                message: "Allocating data set like {0}.",
+                message: "Allocating Data Set like {0}.",
                 args: [likeDSName],
                 comment: ["Like Data Set name"],
             })
@@ -366,14 +366,14 @@ export class DatasetActions {
         // Get new data set name
         const options: vscode.InputBoxOptions = {
             ignoreFocusOut: true,
-            placeHolder: vscode.l10n.t("Enter a name for the new data set"),
+            placeHolder: vscode.l10n.t("Enter a name for the new Data Set"),
             validateInput: (text) => {
-                return DatasetUtils.validateDataSetName(text) === true ? null : vscode.l10n.t("Enter a valid data set name.");
+                return DatasetUtils.validateDataSetName(text) === true ? null : vscode.l10n.t("Enter a valid Data Set name.");
             },
         };
         const newDSName = await Gui.showInputBox(options);
         if (!newDSName) {
-            Gui.showMessage(vscode.l10n.t("You must enter a new data set name."));
+            Gui.showMessage(vscode.l10n.t("You must enter a new Data Set name."));
             return;
         } else {
             ZoweLogger.trace(`${newDSName} was entered for the name of the new data set.`);
@@ -382,7 +382,7 @@ export class DatasetActions {
                 await ZoweExplorerApiRegister.getMvsApi(profile).allocateLikeDataSet(newDSName.toUpperCase(), likeDSName);
             } catch (err) {
                 if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, newDSName, vscode.l10n.t("Unable to create data set."));
+                    await AuthUtils.errorHandling(err, newDSName, vscode.l10n.t("Unable to create Data Set."));
                 }
                 throw err;
             }
@@ -425,7 +425,7 @@ export class DatasetActions {
             await Gui.withProgress(
                 {
                     location: vscode.ProgressLocation.Notification,
-                    title: vscode.l10n.t("Uploading to data set"),
+                    title: vscode.l10n.t("Uploading to Data Set"),
                     cancellable: true,
                 },
                 async (progress, token) => {
@@ -532,7 +532,7 @@ export class DatasetActions {
 
         // Check that there are items to be deleted
         if (!nodes || nodes.length === 0) {
-            Gui.showMessage(vscode.l10n.t("No data sets selected for deletion, cancelling..."));
+            Gui.showMessage(vscode.l10n.t("No Data Sets selected for deletion, cancelling..."));
             return;
         }
 
@@ -564,7 +564,7 @@ export class DatasetActions {
         // Confirm that the user really wants to delete
         ZoweLogger.debug(
             vscode.l10n.t({
-                message: "Deleting data set(s): {0}",
+                message: "Deleting Data Set(s): {0}",
                 args: [nodesToDelete.join(",")],
                 comment: ["Data Sets to delete"],
             })
@@ -572,7 +572,7 @@ export class DatasetActions {
         const deleteButton = vscode.l10n.t("Delete");
         const message = vscode.l10n.t({
             // eslint-disable-next-line max-len
-            message: `Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}`,
+            message: `Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these Data Sets and/or members from your system.\n\n{1}`,
             args: [nodesToDelete.length, nodesToDelete.toString().replace(/(,)/g, "\n")],
             comment: ["Data Sets to delete length", "Data Sets to delete"],
         });
@@ -652,7 +652,7 @@ export class DatasetActions {
     public static async createMember(parent: IZoweDatasetTreeNode, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
         ZoweLogger.trace("dataset.actions.createMember called.");
         const options: vscode.InputBoxOptions = {
-            placeHolder: vscode.l10n.t("Name of Member"),
+            placeHolder: vscode.l10n.t("Name of member"),
             validateInput: (text) => {
                 return DatasetUtils.validateMemberName(text) === true ? null : vscode.l10n.t("Enter valid member name");
             },
@@ -660,7 +660,7 @@ export class DatasetActions {
         const name = (await Gui.showInputBox(options))?.toUpperCase();
         ZoweLogger.debug(
             vscode.l10n.t({
-                message: "Creating new data set member {0}",
+                message: "Creating new Data Set member {0}",
                 args: [name],
                 comment: ["Data Set member name"],
             })
@@ -775,7 +775,7 @@ export class DatasetActions {
         }
         if (choice.includes(DatasetActions.localizedStrings.allocString)) {
             // User wants to allocate straightaway - skip Step 4
-            const allocMsg = vscode.l10n.t("Allocating new data set");
+            const allocMsg = vscode.l10n.t("Allocating new Data Set");
             ZoweLogger.debug(allocMsg);
             Gui.showMessage(allocMsg);
         } else {
@@ -786,7 +786,7 @@ export class DatasetActions {
                 Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
                 return;
             }
-            ZoweLogger.debug(vscode.l10n.t("Attempting to allocate new data set"));
+            ZoweLogger.debug(vscode.l10n.t("Attempting to allocate new Data Set"));
         }
         const isMatch = DatasetActions.compareDsProperties(type, datasetProvider);
         // Format properties for use by API
@@ -1316,7 +1316,7 @@ export class DatasetActions {
 
         const unique = [...new Set(selectedNodes.map((item) => item.contextValue))];
         if (unique.length > 1) {
-            Gui.showMessage(vscode.l10n.t("Cannot perform the copy operation as the data sets selected have different types"));
+            Gui.showMessage(vscode.l10n.t("Cannot perform the copy operation as the Data Sets selected have different types"));
             return;
         }
         if (SharedContext.isDsMember(selectedNodes[0])) {
@@ -1568,7 +1568,7 @@ export class DatasetActions {
             const lbl = node.getLabel().toString();
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
             if (mvsApi?.copyDataSet == null) {
-                await Gui.errorMessage(vscode.l10n.t("Copying data sets is not supported."));
+                await Gui.errorMessage(vscode.l10n.t("Copying Data Sets is not supported."));
             } else {
                 await Gui.withProgress(
                     {
@@ -1694,7 +1694,7 @@ export class DatasetActions {
                     validateInput: (text) => {
                         return DatasetUtils.validateDataSetName(text) && (lbl !== text) === true
                             ? null
-                            : vscode.l10n.t("Enter a valid data set name.");
+                            : vscode.l10n.t("Enter a valid Data Set name.");
                     },
                 };
 
