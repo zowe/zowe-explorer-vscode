@@ -182,6 +182,7 @@ export class ProfilesUtils {
     /**
      * Use the default credential manager in Zowe Explorer and setup before use
      * @returns Promise<imperative.ProfileInfo> the object of profileInfo using the default credential manager
+     * @throws If `readProfilesFromDisk` fails, or if an error is thrown unrelated to credential management initialization
      */
     public static async setupDefaultCredentialManager(): Promise<imperative.ProfileInfo> {
         try {
@@ -203,6 +204,9 @@ export class ProfilesUtils {
         } catch (err) {
             if (err instanceof imperative.ProfInfoErr && err.errorCode === imperative.ProfInfoErr.LOAD_CRED_MGR_FAILED) {
                 await ProfilesUtils.promptAndDisableCredentialManagement();
+            }
+            if (err instanceof Error) {
+                ZoweLogger.error(err.message);
             }
             // Ignore other types of errors since they will be handled later
         }
