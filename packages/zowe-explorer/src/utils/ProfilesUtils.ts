@@ -295,6 +295,11 @@ export class ProfilesUtils {
         );
     }
 
+    /**
+     * Creates an instance of ProfileInfo and calls `readProfilesFromDisk` to load profiles.
+     * @returns An instance of `ProfileInfo`, or `undefined` if there was an error.
+     * @throws If there was an error unrelated to credential management initialization.
+     */
     public static async getProfileInfo(): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
         const hasSecureCredentialManagerEnabled: boolean = SettingsConfig.getDirectValue<boolean>(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
@@ -398,7 +403,7 @@ export class ProfilesUtils {
         if (profInfo == null) {
             return;
         }
-        
+
         if (!profInfo.getTeamConfig().exists && !imperative.ProfileInfo.onlyV1ProfilesExist) {
             Gui.showMessage(
                 vscode.l10n.t("No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration."),
