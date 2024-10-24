@@ -395,6 +395,10 @@ export class ProfilesUtils {
      */
     public static async promptUserWithNoConfigs(): Promise<void> {
         const profInfo = await ProfilesUtils.getProfileInfo();
+        if (profInfo == null) {
+            return;
+        }
+        
         if (!profInfo.getTeamConfig().exists && !imperative.ProfileInfo.onlyV1ProfilesExist) {
             Gui.showMessage(
                 vscode.l10n.t("No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration."),
