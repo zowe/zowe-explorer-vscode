@@ -1270,6 +1270,13 @@ describe("ProfilesUtils unit tests", () => {
     });
 
     describe("promptUserWithNoConfigs", () => {
+        it("returns early if profileInfo is nullish", async () => {
+            const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue(undefined as any);
+            const showMessageSpy = jest.spyOn(Gui, "showMessage");
+            await ProfilesUtils.promptUserWithNoConfigs();
+            expect(showMessageSpy).not.toHaveBeenCalled();
+            profInfoMock.mockRestore();
+        });
         it("prompts the user if they don't have any Zowe client configs", async () => {
             const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
                 getTeamConfig: () => ({ exists: false }),
