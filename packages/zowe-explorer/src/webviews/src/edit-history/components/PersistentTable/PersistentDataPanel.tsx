@@ -18,7 +18,7 @@ import { panelId } from "../../types";
 import PersistentToolBar from "../PersistentToolBar/PersistentToolBar";
 import PersistentTableData from "./PersistentTableData";
 import PersistentDataGridHeaders from "./PersistentDataGridHeaders";
-import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
+import PersistentVSCodeAPI from "../../../PersistentVSCodeAPI";
 
 export default function PersistentDataPanel({ type }: Readonly<{ type: Readonly<string> }>): JSXInternal.Element {
   const [data, setData] = useState<{ [type: string]: { [property: string]: string[] } }>({ ds: {}, uss: {}, jobs: {} });

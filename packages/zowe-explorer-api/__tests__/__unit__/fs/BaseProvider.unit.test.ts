@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import { BaseProvider, ConflictViewSelection, DirEntry, FileEntry, ZoweScheme } from "../../../src/fs";
 import { Gui } from "../../../src/globals";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
+import { ErrorCorrelator, ZoweExplorerApiType } from "../../../src";
 
 function getGlobalMocks(): { [key: string]: any } {
     return {
@@ -540,6 +541,35 @@ describe("_handleConflict", () => {
         const diffOverwriteMock = jest.spyOn(prov, "diffOverwrite").mockImplementation();
         expect(await prov._handleConflict(globalMocks.testFileUri, globalMocks.fileFsEntry)).toBe(ConflictViewSelection.Overwrite);
         expect(diffOverwriteMock).toHaveBeenCalledWith(globalMocks.testFileUri);
+    });
+});
+describe("_handleError", () => {
+    it("calls ErrorCorrelator.displayError to display error to user - no options provided", async () => {
+        const displayErrorMock = jest.spyOn(ErrorCorrelator.prototype, "displayError").mockReturnValue(new Promise((res, rej) => {}));
+        const prov = new (BaseProvider as any)();
+        prov._handleError(new Error("example"));
+        expect(displayErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.All, new Error("example"), {
+            additionalContext: undefined,
+            allowRetry: false,
+            profileType: "any",
+            templateArgs: undefined,
+        });
+    });
+    it("calls ErrorCorrelator.displayError to display error to user - options provided", async () => {
+        const displayErrorMock = jest.spyOn(ErrorCorrelator.prototype, "displayError").mockReturnValue(new Promise((res, rej) => {}));
+        const prov = new (BaseProvider as any)();
+        prov._handleError(new Error("example"), {
+            additionalContext: "Failed to list data sets",
+            apiType: ZoweExplorerApiType.Mvs,
+            profileType: "zosmf",
+            templateArgs: {},
+        });
+        expect(displayErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.Mvs, new Error("example"), {
+            additionalContext: "Failed to list data sets",
+            allowRetry: false,
+            profileType: "zosmf",
+            templateArgs: {},
+        });
     });
 });
 

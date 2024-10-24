@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweTreeNode, PersistenceSchemaEnum, Validation } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, PersistenceSchemaEnum, Validation, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedContext } from "../trees/shared/SharedContext";
@@ -75,7 +75,8 @@ export class ZoweCommandProvider {
                         "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
                     args: [profile.name],
                     comment: ["Profile name"],
-                })
+                }),
+                { apiType: ZoweExplorerApiType.Command, profile }
             );
         } else if (profileStatus.status === "active") {
             if (

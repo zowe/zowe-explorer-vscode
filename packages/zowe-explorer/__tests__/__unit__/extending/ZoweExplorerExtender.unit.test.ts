@@ -23,7 +23,7 @@ import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { UssFSProvider } from "../../../src/trees/uss/UssFSProvider";
 import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
-import { FileManagement, Gui, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { ErrorCorrelator, FileManagement, Gui, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { DatasetTree } from "../../../src/trees/dataset/DatasetTree";
 import { USSTree } from "../../../src/trees/uss/USSTree";
 import { JobTree } from "../../../src/trees/job/JobTree";
@@ -315,6 +315,13 @@ describe("ZoweExplorerExtender unit tests", () => {
             expect(addProfTypeToSchema).toHaveBeenCalled();
             expect(warnSpy).toHaveBeenCalledWith("Schema version is older than the installed version");
             addProfTypeToSchema.mockRestore();
+        });
+    });
+
+    describe("getErrorCorrelator", () => {
+        it("returns the singleton instance of ErrorCorrelator", () => {
+            const blockMocks = createBlockMocks();
+            expect(blockMocks.instTest.getErrorCorrelator()).toBe(ErrorCorrelator.getInstance());
         });
     });
 });

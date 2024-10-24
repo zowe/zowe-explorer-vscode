@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as path from "path";
-import { Gui, imperative, IZoweDatasetTreeNode, Validation, Types, FsAbstractUtils, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweDatasetTreeNode, Validation, Types, FsAbstractUtils, ZoweScheme, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetUtils } from "./DatasetUtils";
 import { DatasetFSProvider } from "./DatasetFSProvider";
@@ -246,7 +246,7 @@ export class DatasetActions {
             const errorMsg = vscode.l10n.t("Error encountered when creating data set.");
             ZoweLogger.error(errorMsg + JSON.stringify(err));
             if (err instanceof Error) {
-                await AuthUtils.errorHandling(err, node.getProfileName(), errorMsg);
+                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile(), scenario: errorMsg });
             }
             throw new Error(err);
         }
@@ -382,7 +382,12 @@ export class DatasetActions {
                 await ZoweExplorerApiRegister.getMvsApi(profile).allocateLikeDataSet(newDSName.toUpperCase(), likeDSName);
             } catch (err) {
                 if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, newDSName, vscode.l10n.t("Unable to create data set."));
+                    await AuthUtils.errorHandling(err, {
+                        apiType: ZoweExplorerApiType.Mvs,
+                        profile,
+                        dsName: newDSName,
+                        scenario: vscode.l10n.t("Unable to create data set."),
+                    });
                 }
                 throw err;
             }
@@ -438,7 +443,10 @@ export class DatasetActions {
                         Gui.reportProgress(progress, value.length, index, "Uploading");
                         const response = await DatasetActions.uploadFile(node, item.fsPath);
                         if (!response?.success) {
-                            await AuthUtils.errorHandling(response?.commandResponse, node.getProfileName(), response?.commandResponse);
+                            await AuthUtils.errorHandling(response?.commandResponse, {
+                                apiType: ZoweExplorerApiType.Mvs,
+                                profile: node.getProfile(),
+                            });
                             break;
                         }
                         index++;
@@ -476,7 +484,7 @@ export class DatasetActions {
                 responseTimeout: prof.profile?.responseTimeout,
             });
         } catch (e) {
-            await AuthUtils.errorHandling(e, node.getProfileName());
+            await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
         }
     }
 
@@ -674,7 +682,11 @@ export class DatasetActions {
                 });
             } catch (err) {
                 if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, label, vscode.l10n.t("Unable to create member."));
+                    await AuthUtils.errorHandling(err, {
+                        apiType: ZoweExplorerApiType.Mvs,
+                        parentDsName: label,
+                        scenario: vscode.l10n.t("Unable to create member."),
+                    });
                 }
                 throw err;
             }
@@ -878,7 +890,11 @@ export class DatasetActions {
                 }
             } catch (err) {
                 if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, node.getProfileName(), vscode.l10n.t("Unable to list attributes."));
+                    await AuthUtils.errorHandling(err, {
+                        apiType: ZoweExplorerApiType.Mvs,
+                        profile: node.getProfile(),
+                        scenario: vscode.l10n.t("Unable to list attributes."),
+                    });
                 }
                 throw err;
             }
@@ -1012,7 +1028,11 @@ export class DatasetActions {
                 );
             } catch (error) {
                 if (error instanceof Error) {
-                    await AuthUtils.errorHandling(error, sessProfileName, vscode.l10n.t("Job submission failed."));
+                    await AuthUtils.errorHandling(error, {
+                        apiType: ZoweExplorerApiType.Mvs,
+                        profile: sessProfile,
+                        scenario: vscode.l10n.t("Job submission failed."),
+                    });
                 }
             }
         } else {
@@ -1135,7 +1155,11 @@ export class DatasetActions {
                 );
             } catch (error) {
                 if (error instanceof Error) {
-                    await AuthUtils.errorHandling(error, sesName, vscode.l10n.t("Job submission failed."));
+                    await AuthUtils.errorHandling(error, {
+                        apiType: ZoweExplorerApiType.Mvs,
+                        profile: sessProfile,
+                        scenario: vscode.l10n.t("Job submission failed."),
+                    });
                 }
             }
         }
@@ -1192,7 +1216,7 @@ export class DatasetActions {
                     })
                 );
             } else {
-                await AuthUtils.errorHandling(err, node.getProfileName());
+                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
             }
             throw err;
         }
@@ -1276,7 +1300,7 @@ export class DatasetActions {
                     })
                 );
             } else {
-                await AuthUtils.errorHandling(err, node.getProfileName());
+                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
             }
         }
     }
@@ -1293,7 +1317,7 @@ export class DatasetActions {
             await node.getChildren();
             datasetProvider.refreshElement(node);
         } catch (err) {
-            await AuthUtils.errorHandling(err, node.getProfileName());
+            await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
         }
     }
 
@@ -1712,7 +1736,11 @@ export class DatasetActions {
                 }
             } catch (error) {
                 if (error instanceof Error) {
-                    await AuthUtils.errorHandling(error, DatasetUtils.getNodeLabels(node).dataSetName, vscode.l10n.t("Unable to copy data set."));
+                    await AuthUtils.errorHandling(error, {
+                        apiType: ZoweExplorerApiType.Mvs,
+                        dsName: DatasetUtils.getNodeLabels(node).dataSetName,
+                        scenario: vscode.l10n.t("Unable to copy data set."),
+                    });
                 }
             }
         }
