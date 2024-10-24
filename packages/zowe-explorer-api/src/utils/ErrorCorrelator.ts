@@ -312,7 +312,9 @@ export class ErrorCorrelator {
         const userSelection = await Gui.errorMessage(
             `${opts?.additionalContext ? opts.additionalContext + ": " : ""}${error.message}${errorCodeStr}`.trim(),
             {
-                items: [opts?.allowRetry ? "Retry" : undefined, error.correlationFound ? "More info" : "Troubleshoot"].filter(Boolean),
+                items: [opts?.allowRetry ? "Retry" : undefined, ...(error.correlationFound ? ["More info"] : ["Show log", "Troubleshoot"])].filter(
+                    Boolean
+                ),
             }
         );
 
