@@ -44,11 +44,11 @@ export class Profiles extends ProfilesCache {
         Constants.PROFILES_CACHE = Profiles.loader;
         try {
             await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
+            await Profiles.getInstance().getProfileInfo();
         } catch (err) {
             ZoweLogger.error(err);
             ZoweExplorerExtender.showZoweConfigError(err.message);
         }
-        await Profiles.getInstance().getProfileInfo();
         return Profiles.loader;
     }
 
