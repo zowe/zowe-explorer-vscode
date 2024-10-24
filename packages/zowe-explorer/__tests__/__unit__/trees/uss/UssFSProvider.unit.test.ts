@@ -954,7 +954,7 @@ describe("rename", () => {
         expect(mockUssApi.rename).toHaveBeenCalledWith("/aFolder", "/aFolder2");
         expect(folderEntry.metadata.path).toBe("/aFolder");
         expect(sessionEntry.entries.has("aFolder2")).toBe(false);
-        expect(errMsgSpy).toHaveBeenCalledWith("Failed to rename /aFolder: could not upload file", { items: ["Retry", "More info"] });
+        expect(errMsgSpy).toHaveBeenCalledWith("Failed to rename /aFolder: could not upload file", { items: ["Retry", "Show log", "Troubleshoot"] });
 
         lookupMock.mockRestore();
         ussApiMock.mockRestore();

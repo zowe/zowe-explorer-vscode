@@ -520,7 +520,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
             // do nothing
         }
 
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("testError", { items: ["More info"] });
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("testError", { items: ["Show log", "Troubleshoot"] });
     });
 
     it("Checking of opening for PDS Member", async () => {

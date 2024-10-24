@@ -93,9 +93,9 @@ describe("ProfilesUtils unit tests", () => {
             const errorDetails = new Error("i haz error");
             const scenario = "Task failed successfully";
             await AuthUtils.errorHandling(errorDetails, { scenario });
-            expect(Gui.errorMessage).toHaveBeenCalledWith(errorDetails.message, { items: ["More info"] });
+            expect(Gui.errorMessage).toHaveBeenCalledWith(errorDetails.message, { items: ["Show log", "Troubleshoot"] });
             expect(ZoweLogger.error).toHaveBeenCalledWith(
-                `${errorDetails.toString()}\n` + util.inspect({ errorDetails, moreInfo: { scenario } }, { depth: null })
+                `${errorDetails.toString()}\n` + util.inspect({ errorDetails, ...{ scenario, profile: undefined } }, { depth: null })
             );
         });
 
@@ -110,9 +110,9 @@ describe("ProfilesUtils unit tests", () => {
             const scenario = "Task failed successfully";
             await AuthUtils.errorHandling(errorDetails, { scenario });
             // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-            expect(Gui.errorMessage).toHaveBeenCalledWith(errorDetails.message, { items: ["More info"] });
+            expect(Gui.errorMessage).toHaveBeenCalledWith(errorDetails.message, { items: ["Show log", "Troubleshoot"] });
             expect(ZoweLogger.error).toHaveBeenCalledWith(
-                `Error: ${errorDetails.message}\n` + util.inspect({ errorDetails, moreInfo: { scenario } }, { depth: null })
+                `Error: ${errorDetails.message}\n` + util.inspect({ errorDetails, ...{ scenario, profile: undefined } }, { depth: null })
             );
         });
 
@@ -571,7 +571,7 @@ describe("ProfilesUtils unit tests", () => {
             await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
             expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
             expect(readConfigFromDiskSpy).toHaveBeenCalledTimes(1);
-            expect(Gui.errorMessage).toHaveBeenCalledWith(testError.message, { items: ["More info"] });
+            expect(Gui.errorMessage).toHaveBeenCalledWith(testError.message, { items: ["Show log", "Troubleshoot"] });
         });
 
         it("should handle JSON parse error thrown on read config from disk", async () => {
