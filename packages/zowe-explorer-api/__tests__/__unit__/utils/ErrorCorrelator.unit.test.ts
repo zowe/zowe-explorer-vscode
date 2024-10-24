@@ -76,7 +76,9 @@ describe("displayError", () => {
     it("calls correlateError to get an error correlation", async () => {
         const correlateErrorMock = jest
             .spyOn(ErrorCorrelator.prototype, "correlateError")
-            .mockReturnValueOnce(new CorrelatedError({ initialError: "Summary of network error" }));
+            .mockReturnValueOnce(
+                new CorrelatedError({ correlation: { summary: "Summary of network error" }, initialError: "This is the full error message" })
+            );
         const errorMessageMock = jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce(undefined);
         await ErrorCorrelator.getInstance().displayError(ZoweExplorerApiType.Mvs, "This is the full error message", { profileType: "zosmf" });
         expect(correlateErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.Mvs, "This is the full error message", { profileType: "zosmf" });

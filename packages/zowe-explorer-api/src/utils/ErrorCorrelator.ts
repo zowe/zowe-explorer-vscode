@@ -88,7 +88,7 @@ export class CorrelatedError {
         this.errorCode = properties.initialError instanceof ImperativeError ? properties.initialError.errorCode : this.properties.errorCode;
         this.wasCorrelated = properties.correlation != null;
 
-        if (this.correlationFound) {
+        if (this.wasCorrelated) {
             this.message = this.properties.correlation.summary;
         } else {
             this.message = this.properties.initialError instanceof Error ? this.properties.initialError.message : this.properties.initialError;
@@ -318,7 +318,7 @@ export class ErrorCorrelator {
 
         // If the user selected "More info", show the full error details in a dialog,
         // containing "Show log" and "Troubleshoot" dialog options
-        let nextSelection: string = error.correlationFound ? undefined : userSelection;
+        let nextSelection = userSelection;
         if (error.correlationFound && userSelection === "More info") {
             const fullErrorMsg = error.initial instanceof Error ? error.initial.message : error.initial;
             nextSelection = await Gui.errorMessage(fullErrorMsg, {
