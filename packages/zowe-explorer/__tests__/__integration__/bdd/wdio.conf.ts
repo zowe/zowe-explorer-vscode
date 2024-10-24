@@ -13,6 +13,7 @@ import type { Options } from "@wdio/types";
 import { join as joinPath, resolve as resolvePath } from "path";
 import { emptyDirSync } from "fs-extra";
 import { baseConfig } from "../../__common__/base.wdio.conf";
+import { renameSync, rmSync, writeFileSync } from "fs";
 
 const dataDir = joinPath(__dirname, "..", "..", "__common__", ".wdio-vscode-service", "data");
 const screenshotDir = joinPath(__dirname, "results", "screenshots");
@@ -150,6 +151,24 @@ export const config: Options.Testrunner = {
     // Hooks
     onPrepare: function (config, caps) {
         emptyDirSync(screenshotDir);
+    },
+
+    beforeFeature: async function (uri, feature) {
+        if (feature.name === "Show Config Error Dialog") {
+            const configPath = joinPath(process.env["ZOWE_CLI_HOME"], "zowe.config.json");
+            const backupConfigPath = joinPath(process.env["ZOWE_CLI_HOME"], "zowe.config.bkp");
+            renameSync(configPath, backupConfigPath);
+            writeFileSync(configPath, "invalidjson");
+        }
+    },
+
+    afterFeature: async function (uri, feature) {
+        if (feature.name === "Show Config Error Dialog") {
+            const backupConfigPath = joinPath(process.env["ZOWE_CLI_HOME"], "zowe.config.bkp");
+            const configPath = joinPath(process.env["ZOWE_CLI_HOME"], "zowe.config.json");
+            rmSync(configPath);
+            renameSync(backupConfigPath, configPath);
+        }
     },
 
     afterStep: async function (step, scenario, result, context) {
