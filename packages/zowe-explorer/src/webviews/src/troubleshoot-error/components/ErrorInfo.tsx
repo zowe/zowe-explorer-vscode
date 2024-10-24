@@ -23,10 +23,8 @@ export const ErrorInfo = ({ error, stackTrace }: ErrorInfoProps) => {
         {error.errorCode ?? "Not available"}
       </p>
       <p>
-        <span style={{ fontWeight: "bold" }}>
-          Description: <br />
-        </span>
-        {error.properties.correlation?.summary}
+        <span style={{ fontWeight: "bold" }}>Description: </span>
+        {error.message}
       </p>
       <details style={{ marginBottom: "0.5rem" }}>
         <summary
@@ -65,8 +63,12 @@ export const ErrorInfo = ({ error, stackTrace }: ErrorInfoProps) => {
         />
       </details>
       <VSCodeDivider />
-      {error.properties.correlation?.tips ? <TipList tips={error.properties.correlation?.tips} /> : null}
-      <VSCodeDivider />
+      {error.properties.correlation?.tips ? (
+        <>
+          <TipList tips={error.properties.correlation?.tips} />
+          <VSCodeDivider />
+        </>
+      ) : null}
       <h2>Additional resources</h2>
       <ul>
         {error.properties.correlation?.resources?.map((r) => (

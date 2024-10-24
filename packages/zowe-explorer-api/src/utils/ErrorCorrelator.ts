@@ -81,25 +81,26 @@ export interface HandledErrorInfo {
  */
 export class CorrelatedError {
     public errorCode?: string;
+    public message: string;
+    private wasCorrelated: boolean;
 
     public constructor(public properties: CorrelatedErrorProps) {
-        if (properties.initialError instanceof Error) {
-            // preserve stack from initial error
-        }
+        this.errorCode = properties.initialError instanceof ImperativeError ? properties.initialError.errorCode : this.properties.errorCode;
+        this.wasCorrelated = properties.correlation != null;
 
-        this.errorCode = this.initial instanceof ImperativeError ? this.initial.errorCode : this.properties.errorCode;
+        if (this.correlationFound) {
+            this.message = this.properties.correlation.summary;
+        } else {
+            this.message = this.properties.initialError instanceof Error ? this.properties.initialError.message : this.properties.initialError;
+        }
+    }
+
+    public get correlationFound(): boolean {
+        return this.wasCorrelated;
     }
 
     public get stack(): string | undefined {
         return this.initial instanceof Error ? this.initial.stack : undefined;
-    }
-
-    public get message(): string {
-        if (this.properties.correlation) {
-            return this.properties.correlation.summary;
-        }
-
-        return this.properties.initialError instanceof Error ? this.properties.initialError.message : this.properties.initialError;
     }
 
     public get initial(): Error | string {
@@ -311,31 +312,30 @@ export class ErrorCorrelator {
         const userSelection = await Gui.errorMessage(
             `${opts?.additionalContext ? opts.additionalContext + ": " : ""}${error.message}${errorCodeStr}`.trim(),
             {
-                items: [opts?.allowRetry ? "Retry" : undefined, "More info"].filter(Boolean),
+                items: [opts?.allowRetry ? "Retry" : undefined, error.correlationFound ? "More info" : "Troubleshoot"].filter(Boolean),
             }
         );
 
         // If the user selected "More info", show the full error details in a dialog,
         // containing "Show log" and "Troubleshoot" dialog options
-        if (userSelection === "More info") {
+        let nextSelection: string = error.correlationFound ? undefined : userSelection;
+        if (error.correlationFound && userSelection === "More info") {
             const fullErrorMsg = error.initial instanceof Error ? error.initial.message : error.initial;
-            const secondDialogSelection = await Gui.errorMessage(fullErrorMsg, {
+            nextSelection = await Gui.errorMessage(fullErrorMsg, {
                 items: ["Show log", "Troubleshoot"],
             });
-
-            switch (secondDialogSelection) {
-                // Reveal the output channel when the "Show log" option is selected
-                case "Show log":
-                    return commands.executeCommand("zowe.revealOutputChannel");
-                // Show the troubleshooting webview when the "Troubleshoot" option is selected
-                case "Troubleshoot":
-                    return commands.executeCommand("zowe.troubleshootError", error, error.stack);
-                default:
-                    return;
-            }
         }
 
-        return userSelection;
+        switch (nextSelection) {
+            // Reveal the output channel when the "Show log" option is selected
+            case "Show log":
+                return commands.executeCommand("zowe.revealOutputChannel");
+            // Show the troubleshooting webview when the "Troubleshoot" option is selected
+            case "Troubleshoot":
+                return commands.executeCommand("zowe.troubleshootError", error, error.stack);
+            default:
+                return nextSelection;
+        }
     }
 
     /**

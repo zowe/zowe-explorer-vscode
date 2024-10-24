@@ -80,14 +80,10 @@ export class AuthUtils {
         ZoweLogger.error(`${errorDetails.toString()}\n` + util.inspect({ errorDetails, moreInfo }, { depth: null }));
 
         const profile = typeof moreInfo.profile === "string" ? Constants.PROFILES_CACHE.loadNamedProfile(moreInfo.profile) : moreInfo?.profile;
-        const correlation = ErrorCorrelator.getInstance().correlateError(
-            moreInfo?.apiType ?? ZoweExplorerApiType.All,
-            typeof errorDetails === "string" ? errorDetails : errorDetails.message,
-            {
-                profileType: profile?.type,
-                ...Object.keys(moreInfo).reduce((all, k) => (typeof moreInfo[k] === "string" ? { ...all, [k]: moreInfo[k] } : all), {}),
-            }
-        );
+        const correlation = ErrorCorrelator.getInstance().correlateError(moreInfo?.apiType ?? ZoweExplorerApiType.All, errorDetails, {
+            profileType: profile?.type,
+            ...Object.keys(moreInfo).reduce((all, k) => (typeof moreInfo[k] === "string" ? { ...all, [k]: moreInfo[k] } : all), {}),
+        });
         if (typeof errorDetails !== "string" && (errorDetails as imperative.ImperativeError)?.mDetails !== undefined) {
             const imperativeError: imperative.ImperativeError = errorDetails as imperative.ImperativeError;
             const httpErrorCode = Number(imperativeError.mDetails.errorCode);
