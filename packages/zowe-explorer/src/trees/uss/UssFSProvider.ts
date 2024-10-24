@@ -150,16 +150,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 await vscode.workspace.fs.createDirectory(uri);
             }
         } catch (err) {
-            this._handleError(err, {
-                additionalContext: vscode.l10n.t("Failed to list {0}", err.message),
-                apiType: ZoweExplorerApiType.Uss,
-                retry: {
-                    fn: this.listFiles.bind(this),
-                    args: [profile, uri, keepRelative],
-                },
-                profileType: profile.type,
-            });
-            throw err;
+            if (err instanceof Error) {
+                ZoweLogger.error(err.message);
+            }
+            return { success: false, commandResponse: err instanceof Error ? err.message : JSON.stringify(err) };
         }
 
         return {
