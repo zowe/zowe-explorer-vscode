@@ -339,13 +339,15 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @param uri The URI pointing to a valid file to fetch from the remote system
      * @param editor (optional) An editor instance to reload if the URI is already open
      */
-    public async fetchDatasetAtUri(uri: vscode.Uri, options?: { editor?: vscode.TextEditor | null; isConflict?: boolean }): Promise<DsEntry | null> {
+    public async fetchDatasetAtUri(
+        uri: vscode.Uri,
+        options?: { editor?: vscode.TextEditor | null; isConflict?: boolean }
+    ): Promise<FileEntry | null> {
         ZoweLogger.trace(`[DatasetFSProvider] fetchDatasetAtUri called with ${uri.toString()}`);
-        let dsEntry = this._lookupAsFile(uri, { silent: true }) as DsEntry;
-        // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
+        let dsEntry = this._lookupAsFile(uri, { silent: true }) as DsEntry | undefined;
         const bufBuilder = new BufferBuilder();
         const metadata = dsEntry?.metadata ?? this._getInfoFromUri(uri);
-        const profileEncoding = dsEntry?.encoding ? null : metadata.profile.profile?.encoding;
+        const profileEncoding = dsEntry?.encoding ? null : dsEntry?.metadata.profile.profile?.encoding;
         try {
             const resp = await ZoweExplorerApiRegister.getMvsApi(metadata.profile).getContents(metadata.dsName, {
                 binary: dsEntry?.encoding?.kind === "binary",
@@ -355,7 +357,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 stream: bufBuilder,
             });
             const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
-            //if an entry does not exist for the file, create one
+            //if an entry does not exist for the dataset, create it
             if (!dsEntry) {
                 const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
                 const uriPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1).split("/");
@@ -368,6 +370,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 parentDir.entries.set(dsname, ds);
                 dsEntry = parentDir.entries.get(dsname) as DsEntry;
             }
+            //update entry's contents, attributes
             if (options?.isConflict) {
                 dsEntry.conflictData = {
                     contents: data,
@@ -410,8 +413,15 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
                 throw err;
             }
+        }
+
+        // we need to fetch the contents from the mainframe if the file hasn't been accessed yet
+        if (!ds || (!ds.wasAccessed && !urlQuery.has("inDiff")) || isConflict) {
             //try and fetch its contents from remote
-            ds = await this.fetchDatasetAtUri(uri, { isConflict });
+            ds = (await this.fetchDatasetAtUri(uri, { isConflict })) as DsEntry;
+            if (!isConflict && ds) {
+                ds.wasAccessed = true;
+            }
         }
 
         if (FsAbstractUtils.isDirectoryEntry(ds)) {
@@ -427,13 +437,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         if (profInfo.profile == null) {
             throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("Profile does not exist for this file."));
-        }
-
-        // we need to fetch the contents from the mainframe if the file hasn't been accessed yet
-        if ((!ds.wasAccessed && !urlQuery.has("inDiff")) || isConflict) {
-            if (!isConflict) {
-                ds.wasAccessed = true;
-            }
         }
 
         return isConflict ? ds.conflictData.contents : ds.data;
