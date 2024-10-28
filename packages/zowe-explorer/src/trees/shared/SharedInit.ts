@@ -277,7 +277,9 @@ export class SharedInit {
                     return LocalFileManagement.fileSelectedToCompare;
                 })
             );
-            context.subscriptions.push(vscode.commands.registerCommand("zowe.copyExternalLink", SharedUtils.copyExternalLink));
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.copyExternalLink", (node: IZoweTreeNode) => SharedUtils.copyExternalLink(context, node))
+            );
             context.subscriptions.push(vscode.window.registerUriHandler(ZoweUriHandler.getInstance()));
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.placeholderCommand", () => {

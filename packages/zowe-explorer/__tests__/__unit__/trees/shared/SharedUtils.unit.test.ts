@@ -558,14 +558,14 @@ describe("Shared utils unit tests - function copyExternalLink", () => {
         const copyClipboardMock = jest.spyOn(vscode.env.clipboard, "writeText");
         const ussNode = createUSSNode(createISession(), createIProfile());
         ussNode.resourceUri = undefined;
-        await SharedUtils.copyExternalLink(ussNode);
+        await SharedUtils.copyExternalLink({ extension: { id: "Zowe.vscode-extension-for-zowe" } } as any, ussNode);
         expect(copyClipboardMock).not.toHaveBeenCalled();
     });
 
     it("copies a link for a node with a resource URI", async () => {
         const copyClipboardMock = jest.spyOn(vscode.env.clipboard, "writeText");
         const ussNode = createUSSNode(createISession(), createIProfile());
-        await SharedUtils.copyExternalLink(ussNode);
+        await SharedUtils.copyExternalLink({ extension: { id: "Zowe.vscode-extension-for-zowe" } } as any, ussNode);
         expect(copyClipboardMock).toHaveBeenCalledWith(`vscode://Zowe.vscode-extension-for-zowe?${ussNode.resourceUri?.toString()}`);
     });
 });

@@ -23,9 +23,9 @@ import { SharedContext } from "./SharedContext";
 import { Definitions } from "../../configuration/Definitions";
 
 export class SharedUtils {
-    public static async copyExternalLink(this: void, node: IZoweTreeNode): Promise<void> {
+    public static async copyExternalLink(this: void, context: vscode.ExtensionContext, node: IZoweTreeNode): Promise<void> {
         if (node?.resourceUri != null) {
-            await vscode.env.clipboard.writeText(`vscode://Zowe.vscode-extension-for-zowe?${node.resourceUri.toString()}`);
+            await vscode.env.clipboard.writeText(`vscode://${context.extension.id}?${node.resourceUri.toString()}`);
         }
     }
 
