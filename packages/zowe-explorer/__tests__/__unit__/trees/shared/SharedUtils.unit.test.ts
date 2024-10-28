@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import { createIProfile, createISession, createInstanceOfProfile } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
+import { createUSSNode } from "../../../__mocks__/mockCreators/uss";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { imperative, ProfilesCache, Gui, ZosEncoding, BaseProvider } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../../../src/configuration/Constants";
@@ -549,5 +550,22 @@ describe("Shared utils unit tests - function parseFavorites", () => {
         const favData = SharedUtils.parseFavorites(["[testProfile]: "]);
         expect(favData.length).toBe(0);
         expect(warnSpy).toHaveBeenCalledWith("Failed to parse a saved favorite. Attempted to parse: [testProfile]: ");
+    });
+});
+
+describe("Shared utils unit tests - function copyExternalLink", () => {
+    it("does nothing for an invalid node or one without a resource URI", async () => {
+        const copyClipboardMock = jest.spyOn(vscode.env.clipboard, "writeText");
+        const ussNode = createUSSNode(createISession(), createIProfile());
+        ussNode.resourceUri = undefined;
+        await SharedUtils.copyExternalLink(ussNode);
+        expect(copyClipboardMock).not.toHaveBeenCalled();
+    });
+
+    it("copies a link for a node with a resource URI", async () => {
+        const copyClipboardMock = jest.spyOn(vscode.env.clipboard, "writeText");
+        const ussNode = createUSSNode(createISession(), createIProfile());
+        await SharedUtils.copyExternalLink(ussNode);
+        expect(copyClipboardMock).toHaveBeenCalledWith(`vscode://Zowe.vscode-extension-for-zowe?${ussNode.resourceUri?.toString()}`);
     });
 });

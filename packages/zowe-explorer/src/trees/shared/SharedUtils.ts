@@ -23,6 +23,12 @@ import { SharedContext } from "./SharedContext";
 import { Definitions } from "../../configuration/Definitions";
 
 export class SharedUtils {
+    public static async copyExternalLink(this: void, node: IZoweTreeNode): Promise<void> {
+        if (node?.resourceUri != null) {
+            await vscode.env.clipboard.writeText(`vscode://Zowe.vscode-extension-for-zowe?${node.resourceUri.toString()}`);
+        }
+    }
+
     public static filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
         ZoweLogger.trace("shared.utils.filterTreeByString called.");
         const filteredArray: vscode.QuickPickItem[] = [];

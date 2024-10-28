@@ -405,6 +405,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.copyExternalLink",
+        "title": "%copyExternalLink%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.uss.addSession",
         "title": "%uss.addSession%",
         "category": "Zowe Explorer",
@@ -830,6 +835,11 @@
           "group": "002_zowe_ussSystemSpecific@5"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/ && !listMultiSelection",
+          "command": "zowe.copyExternalLink",
+          "group": "002_zowe_ussSystemSpecific@6"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
           "command": "zowe.addFavorite",
           "group": "003_zowe_ussWorkspace@0"
@@ -1020,14 +1030,19 @@
           "group": "098_zowe_dsMisc@0"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|session).*/ && !listMultiSelection",
-          "command": "zowe.ds.filterBy",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member).*/ && !listMultiSelection",
+          "command": "zowe.copyExternalLink",
           "group": "098_zowe_dsMisc@1"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|session).*/ && !listMultiSelection",
-          "command": "zowe.ds.sortBy",
+          "command": "zowe.ds.filterBy",
           "group": "098_zowe_dsMisc@2"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|session).*/ && !listMultiSelection",
+          "command": "zowe.ds.sortBy",
+          "group": "098_zowe_dsMisc@3"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^fileError.*/",
@@ -1203,6 +1218,11 @@
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(job|spool).*/",
           "command": "zowe.jobs.copyName",
           "group": "003_zowe_jobsMisc@0"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(job|spool).*/",
+          "command": "zowe.copyExternalLink",
+          "group": "003_zowe_jobsMisc@1"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^spool.*/",
