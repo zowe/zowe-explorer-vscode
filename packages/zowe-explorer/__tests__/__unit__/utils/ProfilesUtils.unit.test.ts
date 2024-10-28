@@ -1299,6 +1299,10 @@ describe("ProfilesUtils unit tests", () => {
             const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
                 getTeamConfig: () => ({ exists: false }),
             } as any);
+            const noConfigDialogShownMock = new MockedProperty(ProfilesUtils, "noConfigDialogShown", {
+                configurable: true,
+                value: false,
+            });
             const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
                 configurable: true,
                 get: () => false,
@@ -1315,11 +1319,16 @@ describe("ProfilesUtils unit tests", () => {
             executeCommandMock.mockRestore();
             profInfoMock.mockRestore();
             onlyV1ProfsExistMock[Symbol.dispose]();
+            noConfigDialogShownMock[Symbol.dispose]();
         });
         it("does not prompt the user if they have a Zowe team config", async () => {
             const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
                 getTeamConfig: () => ({ exists: true }),
             } as any);
+            const noConfigDialogShownMock = new MockedProperty(ProfilesUtils, "noConfigDialogShown", {
+                configurable: true,
+                value: false,
+            });
             const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
                 configurable: true,
                 get: () => false,
@@ -1333,11 +1342,16 @@ describe("ProfilesUtils unit tests", () => {
             expect(profInfoMock).toHaveBeenCalled();
             profInfoMock.mockRestore();
             onlyV1ProfsExistMock[Symbol.dispose]();
+            noConfigDialogShownMock[Symbol.dispose]();
         });
         it("does not prompt the user if they have v1 profiles", async () => {
             const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
                 getTeamConfig: () => ({ exists: false }),
             } as any);
+            const noConfigDialogShownMock = new MockedProperty(ProfilesUtils, "noConfigDialogShown", {
+                configurable: true,
+                value: false,
+            });
             const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
                 configurable: true,
                 get: () => true,
@@ -1351,6 +1365,7 @@ describe("ProfilesUtils unit tests", () => {
             expect(profInfoMock).toHaveBeenCalled();
             profInfoMock.mockRestore();
             onlyV1ProfsExistMock[Symbol.dispose]();
+            noConfigDialogShownMock[Symbol.dispose]();
         });
     });
 
