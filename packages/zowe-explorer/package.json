@@ -1022,7 +1022,7 @@
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member).*/",
           "command": "zowe.addToWorkspace",
-          "group": "003_zowe_dsWorkspace@2"
+          "group": "002_zowe_dsWorkspace@2"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem == profile_fav && !listMultiSelection",
