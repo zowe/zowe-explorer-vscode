@@ -1270,6 +1270,13 @@ describe("ProfilesUtils unit tests", () => {
     });
 
     describe("promptUserWithNoConfigs", () => {
+        it("returns early if user was already prompted in this session", async () => {
+            const noConfigDialogShownMock = new MockedProperty(ProfilesUtils, "noConfigDialogShown", { value: true });
+            const getProfInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo");
+            await ProfilesUtils.promptUserWithNoConfigs();
+            expect(getProfInfoSpy).not.toHaveBeenCalled();
+            noConfigDialogShownMock[Symbol.dispose]();
+        });
         it("returns early if profileInfo is nullish", async () => {
             const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue(undefined as any);
             const showMessageSpy = jest.spyOn(Gui, "showMessage");
@@ -1278,6 +1285,7 @@ describe("ProfilesUtils unit tests", () => {
             profInfoMock.mockRestore();
         });
         it("prompts the user if they don't have any Zowe client configs", async () => {
+            const noConfigDialogShownMock = new MockedProperty(ProfilesUtils, "noConfigDialogShown", { value: false });
             const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
                 getTeamConfig: () => ({ exists: false }),
             } as any);
@@ -1294,6 +1302,7 @@ describe("ProfilesUtils unit tests", () => {
             expect(profInfoMock).toHaveBeenCalled();
             profInfoMock.mockRestore();
             onlyV1ProfsExistMock[Symbol.dispose]();
+            noConfigDialogShownMock[Symbol.dispose]();
         });
         it("executes zowe.ds.addSession if the user selects 'Create New' in the prompt", async () => {
             const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
