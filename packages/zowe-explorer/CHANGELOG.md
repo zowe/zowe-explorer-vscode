@@ -16,7 +16,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue during initialization where a broken team configuration file caused the "Show Config" action in the error dialog to stop working. [#3273](https://github.com/zowe/zowe-explorer-vscode/issues/3273)
 - Fixed issue where switching the authentication methods would cause `Cannot read properties of undefined` error. [#3142](https://github.com/zowe/zowe-explorer-vscode/issues/3142)
 - Fixed an issue where calling `vscode.workspace.fs.readFile` with a PDS member URI would throw an error when the PDS already existed as a filesystem entry. [#3267](https://github.com/zowe/zowe-explorer-vscode/issues/3267)
-- Fixed issue where Zowe Explorer would present the "No configs detected" notification before it was used in a workspace without a Zowe config. [#3280](https://github.com/zowe/zowe-explorer-vscode/issues/3280)
+- Fixed issue where Zowe Explorer would present the "No configs detected" notification when initialized in a workspace without a Zowe team configuration. [#3280](https://github.com/zowe/zowe-explorer-vscode/issues/3280)
 
 ## `3.0.2`
 
