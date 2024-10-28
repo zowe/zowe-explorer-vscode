@@ -214,6 +214,7 @@ export class SharedInit {
                     }
                 })
             );
+            context.subscriptions.push(vscode.commands.registerCommand("zowe.addToWorkspace", SharedUtils.addToWorkspace));
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.removeFavProfile", (node: IZoweTreeNode) =>
                     SharedTreeProviders.getProviderForNode(node).removeFavProfile(node.label as string, true)

@@ -287,4 +287,28 @@ export class SharedUtils {
     public static getSessionLabel(node: IZoweTreeNode): string {
         return (SharedContext.isSession(node) ? node : node.getSessionNode()).label as string;
     }
+
+    /**
+     * Adds one or more Data Sets/USS nodes to a workspace.
+     * @param node Single node selection
+     * @param nodeList List of selected nodes
+     */
+    public static addToWorkspace(
+        this: void,
+        node: IZoweUSSTreeNode | IZoweDatasetTreeNode,
+        nodeList: IZoweUSSTreeNode[] | IZoweDatasetTreeNode[]
+    ): void {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
+        for (const item of selectedNodes) {
+            if (workspaceFolders?.some((folder) => folder.uri === item.resourceUri)) {
+                continue;
+            }
+
+            vscode.workspace.updateWorkspaceFolders(workspaceFolders?.length ?? 0, null, {
+                uri: item.resourceUri,
+                name: item.label as string,
+            });
+        }
+    }
 }

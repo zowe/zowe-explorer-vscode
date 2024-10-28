@@ -212,6 +212,11 @@
         }
       },
       {
+        "command": "zowe.addToWorkspace",
+        "title": "%addToWorkspace%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.ds.addSession",
         "title": "%addSession%",
         "category": "Zowe Explorer",
@@ -840,6 +845,11 @@
           "group": "003_zowe_ussWorkspace@1"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(textFile.*|binaryFile.*|directory.*)/",
+          "command": "zowe.addToWorkspace",
+          "group": "003_zowe_ussWorkspace@2"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
           "command": "zowe.addFavorite",
           "group": "003_zowe_ussWorkspace@3"
@@ -1008,6 +1018,11 @@
           "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr).*_fav.*/",
           "command": "zowe.removeFavorite",
           "group": "002_zowe_dsWorkspace@1"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member).*/",
+          "command": "zowe.addToWorkspace",
+          "group": "003_zowe_dsWorkspace@2"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem == profile_fav && !listMultiSelection",
