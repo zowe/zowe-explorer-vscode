@@ -398,7 +398,7 @@ export class SharedInit {
                 await (folder.uri.scheme === ZoweScheme.DS ? DatasetFSProvider.instance : UssFSProvider.instance).remoteLookupForResource(folder.uri);
             } catch (err) {
                 if (err instanceof Error) {
-                    ZoweLogger.error(err.toString());
+                    ZoweLogger.error(err.message);
                 }
             }
         }
