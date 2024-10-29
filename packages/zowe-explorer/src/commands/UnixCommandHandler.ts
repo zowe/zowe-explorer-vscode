@@ -202,7 +202,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         }
         if (!(this.sshProfile.profile.host && this.sshProfile.profile.port)) {
             const currentProfile = await this.profileInstance.getProfileFromConfig(this.sshProfile.name);
-            const filePath = currentProfile.profLoc.osLoc[0];
+            const filePath = currentProfile.profLoc.osLoc?.[0];
             await this.profileInstance.openConfigFile(filePath);
             ZoweLogger.error(this.unixCmdMsgs.sshProfMissingInfoMsg);
             Gui.errorMessage(this.unixCmdMsgs.sshProfMissingInfoMsg);
