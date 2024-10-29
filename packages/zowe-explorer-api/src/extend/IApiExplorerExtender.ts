@@ -52,5 +52,5 @@ export interface IApiExplorerExtender {
      * summaries of API or network errors. Also gives extenders the opportunity to
      * provide tips or additional resources for errors.
      */
-    getErrorCorrelator(): ErrorCorrelator;
+    getErrorCorrelator?(): ErrorCorrelator;
 }
