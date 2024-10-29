@@ -165,7 +165,6 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 if (this.sshCwd == undefined) {
                     this.nodeProfile = undefined;
                     ZoweLogger.info(this.operationCancelled);
-                    Gui.showMessage(this.operationCancelled);
                     return;
                 }
             }

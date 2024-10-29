@@ -160,7 +160,7 @@ export abstract class ZoweCommandProvider {
             };
             const sesName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
             if (sesName === undefined) {
-                Gui.showMessage(this.operationCancelled);
+                ZoweLogger.info(this.operationCancelled);
                 return;
             }
             const profile = this.profileInstance.allProfiles.find((tempProfile) => tempProfile.name === sesName);
@@ -191,7 +191,7 @@ export abstract class ZoweCommandProvider {
             };
             const sesName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
             if (sesName === undefined) {
-                Gui.showMessage(this.operationCancelled);
+                ZoweLogger.info(this.operationCancelled);
                 return;
             }
             profile = profiles.filter((tempProfile) => tempProfile.name === sesName)[0];
@@ -216,7 +216,7 @@ export abstract class ZoweCommandProvider {
             const choice = await Gui.resolveQuickPick(quickpick);
             quickpick.hide();
             if (!choice) {
-                Gui.showMessage(this.operationCancelled);
+                ZoweLogger.info(this.operationCancelled);
                 return;
             }
             if (choice instanceof FilterDescriptor) {
@@ -237,7 +237,7 @@ export abstract class ZoweCommandProvider {
             // get user input
             response = await Gui.showInputBox(options2);
             if (!response) {
-                Gui.showMessage(this.operationCancelled);
+                ZoweLogger.info(this.operationCancelled);
                 return;
             }
         }

@@ -18,6 +18,7 @@ import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { SharedContext } from "../../../src/trees/shared/SharedContext";
 import { createIJobFile } from "../../__mocks__/mockCreators/jobs";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
+import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 
 const globalMocks = {
     testSession: createISession(),
@@ -146,7 +147,7 @@ describe("ZoweCommandProvider Unit Tests", () => {
                 };
 
                 jest.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
-                const spyMessage = jest.spyOn(Gui, "showMessage").mockImplementation(jest.fn());
+                const spyMessage = jest.spyOn(ZoweLogger, "info").mockImplementation(jest.fn());
                 const selected = await ZoweCommandProvider.prototype.selectServiceProfile.call(
                     mockCmdProvider,
                     [{ name: "prof01" }, { name: "prof02" }],

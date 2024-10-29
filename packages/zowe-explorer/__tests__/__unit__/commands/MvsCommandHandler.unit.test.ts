@@ -332,8 +332,7 @@ describe("mvsCommandActions unit testing", () => {
             ignoreFocusOut: true,
             placeHolder: "Select an MVS profile for this command",
         });
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
+        expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
     it("tests the issueMvsCommand function user escapes the command box", async () => {
@@ -372,8 +371,7 @@ describe("mvsCommandActions unit testing", () => {
             placeHolder: "Select an MVS profile for this command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
+        expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
     it("tests the issueMvsCommand function user starts typing a value in quick pick", async () => {
@@ -562,8 +560,7 @@ describe("mvsCommandActions unit testing", () => {
 
         await getMvsActions().issueMvsCommand();
 
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
+        expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
     it("tests the issueMvsCommand function from a session", async () => {

@@ -358,8 +358,7 @@ describe("UnixCommand Actions Unit Testing", () => {
             placeHolder: "Select an SSH profile for this command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
+        expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
     it("tests the issueUnixCommand function user escapes the commandbox", async () => {
@@ -389,8 +388,7 @@ describe("UnixCommand Actions Unit Testing", () => {
             placeHolder: "Select an SSH profile for this command",
         });
         expect(showInputBox.mock.calls.length).toBe(2);
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
+        expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
     it("tests the issueUnixCommand function - issueUnixCommand throws an error", async () => {
@@ -451,8 +449,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         showInputBox.mockReturnValueOnce(undefined);
 
         await getUnixActions().issueUnixCommand();
-
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
+        expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
     it("tests the issueUnixCommand function user starts typing a value in quick pick", async () => {
@@ -517,8 +514,7 @@ describe("UnixCommand Actions Unit Testing", () => {
 
         await getUnixActions().issueUnixCommand();
 
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
+        expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
     it("tests the issueUnixCommand function no profiles error", async () => {
@@ -609,7 +605,7 @@ describe("UnixCommand Actions Unit Testing", () => {
             value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
+        expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
     it("getCommand API is not implemented", async () => {
@@ -653,7 +649,6 @@ describe("UnixCommand Actions Unit Testing", () => {
 
         await getUnixActions().selectNodeProfile(Definitions.Trees.USS);
 
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
+        expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 });

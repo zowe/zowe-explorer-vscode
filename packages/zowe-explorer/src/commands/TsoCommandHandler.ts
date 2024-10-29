@@ -182,7 +182,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             };
             tsoParms.account = await Gui.showInputBox(InputBoxOptions);
             if (!tsoParms.account) {
-                Gui.showMessage(this.operationCancelled);
+                ZoweLogger.info(this.operationCancelled);
                 return;
             }
         }
