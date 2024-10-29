@@ -16,7 +16,7 @@ import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 
-export interface ErrorContext {
+interface ErrorContext {
     apiType?: ZoweExplorerApiType;
     profile?: string | imperative.IProfileLoaded;
     scenario?: string;
