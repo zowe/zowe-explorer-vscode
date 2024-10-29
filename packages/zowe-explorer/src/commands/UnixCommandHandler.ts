@@ -91,7 +91,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         ZoweLogger.trace("UnixCommandHandler.issueUnixCommand called.");
 
         if (node) {
-            // await this.checkCurrentProfile(node);
+            await this.checkCurrentProfile(node);
             this.nodeProfile = node.getProfile();
             this.sshCwd = node.fullPath;
         }
@@ -238,7 +238,6 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     }
 
     public runCommand(profile: imperative.IProfileLoaded, command: string): Promise<string> {
-        this.nodeProfile = undefined;
         return ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand(command, this.sshCwd, this.sshSession);
     }
 }
