@@ -10,23 +10,12 @@
  */
 
 import * as vscode from "vscode";
-import { DirEntry, FileEntry, IFileSystemEntry, FS_PROVIDER_DELAY, ConflictViewSelection, DeleteMetadata } from "./types";
+import { DirEntry, FileEntry, IFileSystemEntry, FS_PROVIDER_DELAY, ConflictViewSelection, DeleteMetadata, HandleErrorOpts } from "./types";
 import * as path from "path";
 import { FsAbstractUtils } from "./utils";
 import { Gui } from "../globals/Gui";
 import { ZosEncoding } from "../tree";
 import { ErrorCorrelator, ZoweExplorerApiType } from "../utils/ErrorCorrelator";
-
-export interface HandleErrorOpts {
-    retry?: {
-        fn: (...args: any[]) => any | PromiseLike<any>;
-        args?: any[];
-    };
-    profileType?: string;
-    apiType?: ZoweExplorerApiType;
-    templateArgs?: Record<string, string>;
-    additionalContext?: string;
-}
 
 export class BaseProvider {
     // eslint-disable-next-line no-magic-numbers

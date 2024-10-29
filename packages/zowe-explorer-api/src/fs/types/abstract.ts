@@ -13,6 +13,7 @@ import { Duplex } from "stream";
 import { IProfileLoaded } from "@zowe/imperative";
 import * as vscode from "vscode";
 import { ZosEncoding } from "../../tree";
+import { ZoweExplorerApiType } from "../../utils/ErrorCorrelator";
 
 export enum ZoweScheme {
     DS = "zowe-ds",
@@ -147,3 +148,14 @@ export type UriFsInfo = {
     profileName: string;
     profile?: IProfileLoaded;
 };
+
+export interface HandleErrorOpts {
+    retry?: {
+        fn: (...args: any[]) => any | PromiseLike<any>;
+        args?: any[];
+    };
+    profileType?: string;
+    apiType?: ZoweExplorerApiType;
+    templateArgs?: Record<string, string>;
+    additionalContext?: string;
+}
