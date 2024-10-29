@@ -48,14 +48,14 @@ describe("ZoweTreeNode", () => {
 
     it("getProfile should return profile of current node", () => {
         const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined);
-        node.setProfileToChoice({ name: "myProfile" } as unknown as imperative.IProfileLoaded);
-        expect(node.getProfile()).toEqual({ name: "myProfile" });
+        node.setProfileToChoice("myProfile" as unknown as imperative.IProfileLoaded);
+        expect(node.getProfile()).toBe("myProfile");
     });
 
     it("getProfile should return profile of parent node", () => {
-        const parentNode = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined, undefined, { name: "parentProfile" });
+        const parentNode = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined, undefined, "parentProfile");
         const node = makeNode("test", vscode.TreeItemCollapsibleState.None, parentNode);
-        expect(node.getProfile()).toEqual({ name: "parentProfile" });
+        expect(node.getProfile()).toBe("parentProfile");
     });
 
     it("getProfileName should return profile name of current node", () => {
@@ -82,13 +82,50 @@ describe("ZoweTreeNode", () => {
     });
 
     it("setProfileToChoice should update properties on existing profile object", () => {
-        const origProfile: Partial<imperative.IProfileLoaded> = { name: "oldProfile", profile: { host: "example.com" } };
-        const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined, undefined, origProfile);
+        const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined, undefined, {
+            name: "oldProfile",
+            profile: { host: "example.com" },
+        });
         node.setProfileToChoice({ name: "newProfile", profile: { host: "example.com", port: 443 } } as unknown as imperative.IProfileLoaded);
-        // Profile properties should be updated in original reference
-        expect(node.getProfileName()).toBe("newProfile");
+        // Profile name should not change but properties should
+        expect(node.getProfileName()).toBe("oldProfile");
         expect(node.getProfile().profile?.port).toBeDefined();
-        expect(origProfile.name).toBe("newProfile");
-        expect(origProfile.profile?.port).toBeDefined();
+    });
+
+    it("setProfileToChoice should update profile for associated FSProvider entry", () => {
+        const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined);
+        node.resourceUri = vscode.Uri.file(__dirname);
+        const fsEntry = {
+            metadata: {
+                profile: { name: "oldProfile" },
+            },
+        };
+        node.setProfileToChoice(
+            { name: "newProfile" } as unknown as imperative.IProfileLoaded,
+            {
+                lookup: jest.fn().mockReturnValue(fsEntry),
+            } as unknown as BaseProvider
+        );
+        expect(node.getProfileName()).toBe("newProfile");
+        expect(fsEntry.metadata.profile.name).toBe("newProfile");
+    });
+
+    it("setProfileToChoice should update child nodes with the new profile", () => {
+        const node = makeNode("test", vscode.TreeItemCollapsibleState.Expanded, undefined);
+        const nodeChild = makeNode("child", vscode.TreeItemCollapsibleState.None, undefined);
+        node.children = [nodeChild as any];
+        const setProfileToChoiceChildMock = jest.spyOn(nodeChild, "setProfileToChoice").mockImplementation();
+        const fsEntry = {
+            metadata: {
+                profile: { name: "oldProfile" },
+            },
+        };
+        const mockNewProfile = { name: "newProfile" } as unknown as imperative.IProfileLoaded;
+        const mockProvider = {
+            lookup: jest.fn().mockReturnValue(fsEntry),
+        } as unknown as BaseProvider;
+        node.setProfileToChoice(mockNewProfile, mockProvider);
+        expect(node.getProfileName()).toBe("newProfile");
+        expect(setProfileToChoiceChildMock).toHaveBeenCalledWith(mockNewProfile, mockProvider);
     });
 });
