@@ -287,4 +287,44 @@ export class SharedUtils {
     public static getSessionLabel(node: IZoweTreeNode): string {
         return (SharedContext.isSession(node) ? node : node.getSessionNode()).label as string;
     }
+
+    /**
+     * Adds one or more Data Sets/USS nodes to a workspace.
+     * @param node Single node selection
+     * @param nodeList List of selected nodes
+     */
+    public static addToWorkspace(
+        this: void,
+        node: IZoweUSSTreeNode | IZoweDatasetTreeNode,
+        nodeList: IZoweUSSTreeNode[] | IZoweDatasetTreeNode[]
+    ): void {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
+        for (const item of selectedNodes) {
+            let resourceUri = item.resourceUri;
+            const isSession = SharedContext.isSession(item);
+            if (isSession) {
+                if (item.fullPath?.length > 0) {
+                    resourceUri = item.resourceUri.with({ path: path.posix.join(item.resourceUri.path, item.fullPath) });
+                } else {
+                    Gui.infoMessage(
+                        vscode.l10n.t({
+                            message: "A search must be set for {0} before it can be added to a workspace.",
+                            args: [item.label as string],
+                            comment: "Name of USS session",
+                        })
+                    );
+                    continue;
+                }
+            }
+            if (workspaceFolders?.some((folder) => folder.uri === resourceUri)) {
+                continue;
+            }
+
+            vscode.workspace.updateWorkspaceFolders(workspaceFolders?.length ?? 0, null, {
+                uri: resourceUri,
+                name: isSession ? `[${item.label as string}] ${item.fullPath}` : (item.label as string),
+            });
+        }
+    }
 }
