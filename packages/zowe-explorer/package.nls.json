@@ -20,6 +20,7 @@
   "diff.overwrite": "Overwrite",
   "diff.useRemote": "Use Remote",
   "addFavorite": "Add to Favorites",
+  "addToWorkspace": "Add to Workspace",
   "removeFavProfile": "Remove profile from Favorites",
   "addSession": "Add Profile to Data Sets View",
   "createDataset": "Create New Data Set",
