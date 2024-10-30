@@ -22,7 +22,7 @@ export class VscSettings {
         return vscode.workspace.getConfiguration(first).get(rest.join("."), defaultValue);
     }
 
-    // create mock ProxyVariables
+    // create mock ProxyVariables, able to remove after CLI changes adopted
     public static proxyVars: {
         http_proxy: string;
         https_proxy: string;

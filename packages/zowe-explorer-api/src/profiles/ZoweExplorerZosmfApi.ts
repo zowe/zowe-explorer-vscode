@@ -45,6 +45,9 @@ export namespace ZoweExplorerZosmf {
             const sessCfg = zosmf.ZosmfSession.createSessCfgFromArgs(cmdArgs);
             imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
             const sessionToUse = new imperative.Session(sessCfg);
+            const VsCodeProxySettings = VscSettings.getVsCodeProxySettings();
+            // will be able to uncomment following line and assign with CLI udpates
+            // sessionToUse.ISession.proxy = VsCodeProxySettings;
             return sessionToUse;
         }
 
@@ -57,10 +60,9 @@ export namespace ZoweExplorerZosmf {
                     imperative.Logger.getAppLogger().error(error as string);
                 }
             }
-            const VsCodeProxySettings = new Promise((resolve) => {
-                resolve(VscSettings.getVsCodeProxySettings());
-            });
-            // this.session.proxy = VsCodeProxySettings;
+            const VsCodeProxySettings = VscSettings.getVsCodeProxySettings();
+            // will be able to uncomment following line and assign with CLI udpates
+            // this.session.ISession.proxy = VsCodeProxySettings;
             return this.session;
         }
 
