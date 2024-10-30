@@ -840,7 +840,7 @@
           "group": "002_zowe_ussSystemSpecific@5"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/ && !listMultiSelection",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(directory|favorite|profile_fav|ussSession))/ && !listMultiSelection",
           "command": "zowe.copyExternalLink",
           "group": "002_zowe_ussSystemSpecific@6"
         },
@@ -1045,7 +1045,7 @@
           "group": "098_zowe_dsMisc@0"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member).*/ && !listMultiSelection",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(ds|member).*/ && !listMultiSelection",
           "command": "zowe.copyExternalLink",
           "group": "098_zowe_dsMisc@1"
         },
@@ -1235,7 +1235,7 @@
           "group": "003_zowe_jobsMisc@0"
         },
         {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(job|spool).*/",
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^spool.*/",
           "command": "zowe.copyExternalLink",
           "group": "003_zowe_jobsMisc@1"
         },
