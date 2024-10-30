@@ -47,7 +47,6 @@
   "Certificate Key File": "Certificate Key File",
   "Submit": "Submit",
   "Cancel": "Cancel",
-  "Troubleshoot Error": "Troubleshoot Error",
   "Zowe explorer profiles are being set as unsecured.": "Zowe explorer profiles are being set as unsecured.",
   "Zowe explorer profiles are being set as secured.": "Zowe explorer profiles are being set as secured.",
   "Custom credential manager failed to activate": "Custom credential manager failed to activate",
@@ -159,8 +158,14 @@
   "Enter the path to the certificate key for authenticating the connection.": "Enter the path to the certificate key for authenticating the connection.",
   "Certificate Keys": "Certificate Keys",
   "Select Certificate Key": "Select Certificate Key",
-  "Update Credentials": "Update Credentials",
   "Required parameter 'host' must not be blank.": "Required parameter 'host' must not be blank.",
+  "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out./Label": {
+    "message": "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
+    "comment": [
+      "Label"
+    ]
+  },
+  "Update Credentials": "Update Credentials",
   "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection./Profile name": {
     "message": "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
     "comment": [
@@ -274,37 +279,21 @@
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "Pulling from Mainframe...": "Pulling from Mainframe...",
   "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
-  "Failed to move {0}/File path": {
-    "message": "Failed to move {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Failed to list {0}": "Failed to list {0}",
-  "Failed to get contents for {0}/File path": {
-    "message": "Failed to get contents for {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Failed to detect encoding for {0}/File path": {
-    "message": "Failed to detect encoding for {0}",
-    "comment": [
-      "File path"
-    ]
-  },
+  "Could not list USS files: Empty path provided in URI": "Could not list USS files: Empty path provided in URI",
   "Profile does not exist for this file.": "Profile does not exist for this file.",
   "Saving USS file...": "Saving USS file...",
-  "Failed to rename {0}/File path": {
-    "message": "Failed to rename {0}",
+  "Renaming {0} failed due to API error: {1}/File pathError message": {
+    "message": "Renaming {0} failed due to API error: {1}",
     "comment": [
-      "File path"
+      "File path",
+      "Error message"
     ]
   },
-  "Failed to delete {0}/File name": {
-    "message": "Failed to delete {0}",
+  "Deleting {0} failed due to API error: {1}/File nameError message": {
+    "message": "Deleting {0} failed due to API error: {1}",
     "comment": [
-      "File name"
+      "File name",
+      "Error message"
     ]
   },
   "No error details given": "No error details given",
@@ -313,13 +302,6 @@
     "comment": [
       "USS path",
       "Error message"
-    ]
-  },
-  "Failed to copy {0} to {1}/Source pathDestination path": {
-    "message": "Failed to copy {0} to {1}",
-    "comment": [
-      "Source path",
-      "Destination path"
     ]
   },
   "{0} location/Node type": {
@@ -507,18 +489,7 @@
   "Phase Name": "Phase Name",
   "Error Details": "Error Details",
   "Fetching spool file...": "Fetching spool file...",
-  "Failed to get contents for {0}/Spool name": {
-    "message": "Failed to get contents for {0}",
-    "comment": [
-      "Spool name"
-    ]
-  },
-  "Failed to delete job {0}/Job name": {
-    "message": "Failed to delete job {0}",
-    "comment": [
-      "Job name"
-    ]
-  },
+  "Failed to fetch jobs: getJobsByParameters is not implemented for this session's JES API.": "Failed to fetch jobs: getJobsByParameters is not implemented for this session's JES API.",
   "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}/Job name": {
     "message": "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}",
     "comment": [
@@ -707,39 +678,19 @@
   "Choose the setting location to save the data set template...": "Choose the setting location to save the data set template...",
   "Save as User setting": "Save as User setting",
   "Save as Workspace setting": "Save as Workspace setting",
-  "Failed to get stats for data set {0}/Data set path": {
-    "message": "Failed to get stats for data set {0}",
-    "comment": [
-      "Data set path"
-    ]
-  },
-  "Failed to list datasets": "Failed to list datasets",
-  "Failed to list dataset members": "Failed to list dataset members",
-  "Failed to locate data set {0}": "Failed to locate data set {0}",
-  "Failed to list data set {0}": "Failed to list data set {0}",
-  "Failed to read {0}/File path": {
-    "message": "Failed to read {0}",
-    "comment": [
-      "File path"
-    ]
-  },
   "Saving data set...": "Saving data set...",
-  "Failed to save {0}/File path": {
-    "message": "Failed to save {0}",
+  "Deleting {0} failed due to API error: {1}/File pathError message": {
+    "message": "Deleting {0} failed due to API error: {1}",
     "comment": [
-      "File path"
+      "File path",
+      "Error message"
     ]
   },
-  "Failed to delete {0}/File path": {
-    "message": "Failed to delete {0}",
+  "Renaming {0} failed due to API error: {1}/File nameError message": {
+    "message": "Renaming {0} failed due to API error: {1}",
     "comment": [
-      "File path"
-    ]
-  },
-  "Failed to rename {0}/Data set name": {
-    "message": "Failed to rename {0}",
-    "comment": [
-      "Data set name"
+      "File name",
+      "Error message"
     ]
   },
   "Partitioned Data Set: Binary": "Partitioned Data Set: Binary",

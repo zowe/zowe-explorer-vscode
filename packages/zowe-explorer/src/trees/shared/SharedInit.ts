@@ -47,6 +47,7 @@ import { SharedContext } from "./SharedContext";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { CertificateWizard } from "../../utils/CertificateWizard";
 import { ZosConsoleViewProvider } from "../../zosconsole/ZosConsolePanel";
+import { ZoweUriHandler } from "../../utils/UriHandler";
 import { TroubleshootError } from "../../utils/TroubleshootError";
 
 export class SharedInit {
@@ -216,6 +217,7 @@ export class SharedInit {
                     }
                 })
             );
+            context.subscriptions.push(vscode.commands.registerCommand("zowe.addToWorkspace", SharedUtils.addToWorkspace));
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.removeFavProfile", (node: IZoweTreeNode) =>
                     SharedTreeProviders.getProviderForNode(node).removeFavProfile(node.label as string, true)
@@ -279,6 +281,9 @@ export class SharedInit {
                 })
             );
             context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.copyExternalLink", (node: IZoweTreeNode) => SharedUtils.copyExternalLink(context, node))
+            );
+            context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.revealOutputChannel", (): void => {
                     ZoweLogger.zeOutputChannel.show();
                 })
@@ -289,6 +294,7 @@ export class SharedInit {
                     (error: CorrelatedError, stackTrace?: string) => new TroubleshootError(context, { error, stackTrace })
                 )
             );
+            context.subscriptions.push(vscode.window.registerUriHandler(ZoweUriHandler.getInstance()));
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.placeholderCommand", () => {
                     // This command does nothing, its here to let us disable individual items in the tree view
