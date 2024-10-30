@@ -233,6 +233,7 @@ async function createGlobalMocks() {
             "zowe.saveSearch",
             "zowe.addFavorite",
             "zowe.removeFavorite",
+            "zowe.addToWorkspace",
             "zowe.removeFavProfile",
             "zowe.openWithEncoding",
             "zowe.issueTsoCmd",

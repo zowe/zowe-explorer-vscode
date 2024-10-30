@@ -215,6 +215,7 @@ export class SharedInit {
                     }
                 })
             );
+            context.subscriptions.push(vscode.commands.registerCommand("zowe.addToWorkspace", SharedUtils.addToWorkspace));
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.removeFavProfile", (node: IZoweTreeNode) =>
                     SharedTreeProviders.getProviderForNode(node).removeFavProfile(node.label as string, true)
@@ -398,7 +399,13 @@ export class SharedInit {
             (f) => f.uri.scheme === ZoweScheme.DS || f.uri.scheme === ZoweScheme.USS
         );
         for (const folder of newWorkspaces) {
-            await (folder.uri.scheme === ZoweScheme.DS ? DatasetFSProvider.instance : UssFSProvider.instance).remoteLookupForResource(folder.uri);
+            try {
+                await (folder.uri.scheme === ZoweScheme.DS ? DatasetFSProvider.instance : UssFSProvider.instance).remoteLookupForResource(folder.uri);
+            } catch (err) {
+                if (err instanceof Error) {
+                    ZoweLogger.error(err.message);
+                }
+            }
         }
     }
 
