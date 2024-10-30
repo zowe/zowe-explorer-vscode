@@ -20,7 +20,7 @@ import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import { MainframeInteraction } from "../extend/MainframeInteraction";
 import { FileManagement } from "../utils";
 import { Types } from "../Types";
-import { ZoweVsCodeExtension } from "../vscode";
+import { VscSettings } from "../vscode/doc/VscSettings";
 
 /**
  * Implementations of Zowe Explorer API for z/OSMF profiles
@@ -57,8 +57,10 @@ export namespace ZoweExplorerZosmf {
                     imperative.Logger.getAppLogger().error(error as string);
                 }
             }
-            const VsCodeProxySettings = ZoweVsCodeExtension.getVsCodeProxySettings();
-            this.session.ProxyVariables = VsCodeProxySettings;
+            const VsCodeProxySettings = new Promise((resolve) => {
+                resolve(VscSettings.getVsCodeProxySettings());
+            });
+            // this.session.proxy = VsCodeProxySettings;
             return this.session;
         }
 

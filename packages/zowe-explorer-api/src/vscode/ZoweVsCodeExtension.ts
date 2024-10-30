@@ -11,13 +11,13 @@
 
 import * as semver from "semver";
 import * as vscode from "vscode";
-import { ProfilesCache } from "../profiles";
+import { ProfilesCache } from "../profiles/ProfilesCache";
 import { Login, Logout } from "@zowe/core-for-zowe-sdk";
 import * as imperative from "@zowe/imperative";
 import { Gui } from "../globals/Gui";
 import { PromptCredentialsOptions } from "./doc/PromptCredentials";
 import { Types } from "../Types";
-import { BaseProfileAuthOptions } from "./doc";
+import { BaseProfileAuthOptions } from "./doc/BaseProfileAuth";
 
 /**
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
@@ -280,24 +280,6 @@ export class ZoweVsCodeExtension {
         serviceProfile.profile = { ...serviceProfile.profile, tokenType: undefined, tokenValue: undefined };
         await cache.updateCachedProfile(serviceProfile, opts.profileNode);
         return true;
-    }
-
-    public static async getVsCodeProxySettings(): Promise<{}> {
-        const proxySupport = (await vscode.workspace.getConfiguration("http").get("proxySupport")) || undefined;
-        if (proxySupport !== "on") {
-            return;
-        }
-        const noProxy = (await vscode.workspace.getConfiguration("http").get("noProxy")) || undefined;
-        const strictSsl = (await vscode.workspace.getConfiguration("http").get("proxyStrictSSL")) || undefined;
-        const proxyAuth = (await vscode.workspace.getConfiguration("http").get("proxyAuthorization")) || undefined;
-        const proxy = (await vscode.workspace.getConfiguration("http").get("proxy")) || undefined;
-        return {
-            http_proxy: proxy,
-            https_proxy: proxy,
-            no_proxy: noProxy,
-            proxy_authorization: proxyAuth,
-            proxy_strict_ssl: strictSsl,
-        };
     }
 
     /**
