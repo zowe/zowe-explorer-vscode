@@ -1320,6 +1320,23 @@ export namespace workspace {
     export function onDidOpenTextDocument<T>(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) {}
     export function onDidSaveTextDocument<T>(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) {}
 
+    export function updateWorkspaceFolders(
+        start: number,
+        deleteCount: number | undefined | null,
+        ...workspaceFoldersToAdd: {
+            /**
+             * The uri of a workspace folder that's to be added.
+             */
+            readonly uri: Uri;
+            /**
+             * The name of a workspace folder that's to be added.
+             */
+            readonly name?: string;
+        }[]
+    ): boolean {
+        return false;
+    }
+
     export function getConfiguration(configuration: string) {
         return {
             update: () => {

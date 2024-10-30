@@ -25,6 +25,7 @@ import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
+import { MockedProperty } from "../../../__mocks__/mockUtils";
 
 function createGlobalMocks() {
     const newMocks = {
@@ -549,5 +550,81 @@ describe("Shared utils unit tests - function parseFavorites", () => {
         const favData = SharedUtils.parseFavorites(["[testProfile]: "]);
         expect(favData.length).toBe(0);
         expect(warnSpy).toHaveBeenCalledWith("Failed to parse a saved favorite. Attempted to parse: [testProfile]: ");
+    });
+});
+
+describe("Shared utils unit tests - function addToWorkspace", () => {
+    it("adds a Data Set resource to the workspace", () => {
+        const datasetNode = new ZoweDatasetNode({
+            label: "EXAMPLE.DS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.DS_DS_CONTEXT,
+            profile: createIProfile(),
+        });
+        const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
+        SharedUtils.addToWorkspace(datasetNode, null as any);
+        expect(updateWorkspaceFoldersMock).toHaveBeenCalledWith(0, null, { uri: datasetNode.resourceUri, name: datasetNode.label as string });
+    });
+    it("adds a USS resource to the workspace", () => {
+        const ussNode = new ZoweUSSNode({
+            label: "textFile.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.USS_TEXT_FILE_CONTEXT,
+            profile: createIProfile(),
+        });
+        const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
+        SharedUtils.addToWorkspace(ussNode, null as any);
+        expect(updateWorkspaceFoldersMock).toHaveBeenCalledWith(0, null, { uri: ussNode.resourceUri, name: ussNode.label as string });
+    });
+    it("adds a USS session w/ fullPath to the workspace", () => {
+        const ussNode = new ZoweUSSNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.USS_SESSION_CONTEXT,
+            profile: createIProfile(),
+            session: createISession(),
+        });
+        ussNode.fullPath = "/u/users/smpluser";
+        const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
+        SharedUtils.addToWorkspace(ussNode, null as any);
+        expect(updateWorkspaceFoldersMock).toHaveBeenCalledWith(0, null, {
+            uri: ussNode.resourceUri?.with({ path: `/sestest${ussNode.fullPath}` }),
+            name: `[${ussNode.label as string}] ${ussNode.fullPath}`,
+        });
+    });
+    it("displays an info message when adding a USS session w/o fullPath", () => {
+        const ussNode = new ZoweUSSNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.USS_SESSION_CONTEXT,
+            profile: createIProfile(),
+            session: createISession(),
+        });
+        ussNode.fullPath = "";
+        const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
+        const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
+        updateWorkspaceFoldersMock.mockClear();
+        SharedUtils.addToWorkspace(ussNode, null as any);
+        expect(updateWorkspaceFoldersMock).not.toHaveBeenCalledWith(0, null, {
+            uri: ussNode.resourceUri?.with({ path: `/sestest${ussNode.fullPath}` }),
+            name: `[${ussNode.label as string}] ${ussNode.fullPath}`,
+        });
+        expect(infoMessageSpy).toHaveBeenCalledWith("A search must be set for sestest before it can be added to a workspace.");
+    });
+    it("skips adding a resource that's already in the workspace", () => {
+        const ussNode = new ZoweUSSNode({
+            label: "textFile.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.USS_TEXT_FILE_CONTEXT,
+            profile: createIProfile(),
+        });
+        const workspaceFolders = new MockedProperty(vscode.workspace, "workspaceFolders", {
+            value: [{ uri: ussNode.resourceUri, name: ussNode.label }],
+        });
+        const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
+        updateWorkspaceFoldersMock.mockClear();
+        SharedUtils.addToWorkspace(ussNode, null as any);
+        expect(updateWorkspaceFoldersMock).not.toHaveBeenCalledWith(0, null, { uri: ussNode.resourceUri, name: ussNode.label as string });
+        workspaceFolders[Symbol.dispose]();
     });
 });
