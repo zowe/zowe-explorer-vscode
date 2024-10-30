@@ -105,6 +105,8 @@
   "zowe.logger.fatal.description": "Messages about catastraphic error events.",
   "zowe.cliLoggerSetting.presented": "User has been asked to sync Zowe Explorer log setting with Zowe CL's environment variable.",
   "zowe.commands.history": "Toggle if Commands persist locally",
+  "zowe.commands.alwaysEdit": "Allow editing of commands before submitting",
+  "zowe.commands.useIntegratedTerminals": "Allow commands to be executed using integrated terminals",
   "zowe.automaticProfileValidation": "Allow automatic validation of profiles.",
   "zowe.pollInterval.info": "Default interval (in milliseconds) when polling spool files.",
   "zowe.security.checkForCustomCredentialManagers": "Check for any installed VS Code extensions for handling credentials when activating Zowe Explorer",

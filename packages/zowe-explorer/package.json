@@ -1696,13 +1696,13 @@
         "zowe.commands.useIntegratedTerminals": {
           "type": "boolean",
           "default": true,
-          "description": "Allow commands to be executed using integrated terminals",
+          "description": "%zowe.commands.useIntegratedTerminals%",
           "scope": "window"
         },
         "zowe.commands.alwaysEdit": {
           "type": "boolean",
           "default": true,
-          "description": "Allow editing of commands before submitting",
+          "description": "%zowe.commands.alwaysEdit%",
           "scope": "window"
         },
         "zowe.commands.history": {

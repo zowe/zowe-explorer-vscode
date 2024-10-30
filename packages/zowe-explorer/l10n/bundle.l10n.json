@@ -370,6 +370,12 @@
     ]
   },
   "Enter a codepage (e.g., 1047, IBM-1047)": "Enter a codepage (e.g., 1047, IBM-1047)",
+  "A search must be set for {0} before it can be added to a workspace./Name of USS session": {
+    "message": "A search must be set for {0} before it can be added to a workspace.",
+    "comment": [
+      "Name of USS session"
+    ]
+  },
   "Changes in the credential vault detected, refreshing Zowe Explorer.": "Changes in the credential vault detected, refreshing Zowe Explorer.",
   "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",
   "Team config file deleted, refreshing Zowe Explorer.": "Team config file deleted, refreshing Zowe Explorer.",
@@ -1066,6 +1072,9 @@
   "Ascending": "Ascending",
   "Descending": "Descending",
   "Operation cancelled": "Operation cancelled",
+  "Unable to perform this operation due to the following problem.": "Unable to perform this operation due to the following problem.",
+  "Response From Service": "Response From Service",
+  "Diagnostic Information": "Diagnostic Information",
   "Welcome to the integrated terminal for: {0}/Terminal Name": {
     "message": "Welcome to the integrated terminal for: {0}",
     "comment": [
