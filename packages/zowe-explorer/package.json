@@ -1768,7 +1768,7 @@
     ]
   },
   "scripts": {
-    "build": "pnpm copy-secrets && pnpm clean:bundle && pnpm license && webpack --mode development && pnpm madge",
+    "build": "pnpm copy-secrets && pnpm clean:bundle && pnpm license && pnpm build:nls && webpack --mode development && pnpm madge",
     "test": "pnpm test:unit",
     "test:e2e": "cd __tests__/__e2e__/ && wdio run ./wdio.conf.ts",
     "test:integration": "cd __tests__/__integration__/bdd && wdio run ./wdio.conf.ts",
@@ -1794,7 +1794,9 @@
     "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/",
     "pretty": "prettier --write .",
     "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src && node ./scripts/generatePoeditorJson.js",
-    "copy-secrets": "node ./scripts/getSecretsPrebuilds.js"
+    "copy-secrets": "node ./scripts/getSecretsPrebuilds.js",
+    "build:nlsPseudo": "pnpm dlx @vscode/l10n-dev generate-pseudo -o ./l10n/ ./l10n/bundle.l10n.json ./package.nls.json",
+    "build:nls": "pnpm run build:nlsPseudo"
   },
   "engines": {
     "vscode": "^1.79.0"
@@ -1827,11 +1829,11 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "@zowe/core-for-zowe-sdk": "^8.1.1",
-    "@zowe/secrets-for-zowe-sdk": "^8.1.0",
-    "@zowe/zos-files-for-zowe-sdk": "^8.1.1",
-    "@zowe/zos-jobs-for-zowe-sdk": "^8.1.1",
-    "@zowe/zosmf-for-zowe-sdk": "^8.1.1",
+    "@zowe/core-for-zowe-sdk": "^8.2.0",
+    "@zowe/secrets-for-zowe-sdk": "^8.1.2",
+    "@zowe/zos-files-for-zowe-sdk": "^8.2.0",
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.2.0",
+    "@zowe/zosmf-for-zowe-sdk": "^8.2.0",
     "@zowe/zowe-explorer-api": "3.1.0-SNAPSHOT",
     "dayjs": "^1.11.10",
     "fs-extra": "8.0.1",

@@ -44,11 +44,11 @@ export class Profiles extends ProfilesCache {
         Constants.PROFILES_CACHE = Profiles.loader;
         try {
             await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
+            await Profiles.getInstance().getProfileInfo();
         } catch (err) {
             ZoweLogger.error(err);
             ZoweExplorerExtender.showZoweConfigError(err.message);
         }
-        await Profiles.getInstance().getProfileInfo();
         return Profiles.loader;
     }
 
@@ -834,8 +834,14 @@ export class Profiles extends ProfilesCache {
         if (profAttrs.profLoc.jsonLoc) {
             configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, loginTokenType?.startsWith("apimlAuthenticationToken") ? [] : ["tokenValue"]);
         }
-        configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "user")?.argLoc.jsonLoc);
-        configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "password")?.argLoc.jsonLoc);
+        const userArgJsonLoc = profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "user")?.argLoc.jsonLoc;
+        if (userArgJsonLoc) {
+            configApi.delete(userArgJsonLoc);
+        }
+        const passwordArgJsonLoc = profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "password")?.argLoc.jsonLoc;
+        if (passwordArgJsonLoc) {
+            configApi.delete(passwordArgJsonLoc);
+        }
         await configApi.save();
     }
 
@@ -848,11 +854,22 @@ export class Profiles extends ProfilesCache {
         // Otherwise, we want to keep `tokenValue` in the secure array of the parent profile to avoid disconnecting child profiles
         if (profAttrs?.profLoc.jsonLoc) {
             configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, usingApimlToken ? [] : ["user", "password"]);
-            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc);
-            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenValue")?.argLoc.jsonLoc);
-            configApi.delete(profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenExpiration")?.argLoc.jsonLoc);
-            await configApi.save();
+            const tokenTypeArgJsonLoc = profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc;
+            if (tokenTypeArgJsonLoc) {
+                configApi.delete(tokenTypeArgJsonLoc);
+            }
+            const tokenValueArgJsonLoc = profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenValue")
+                ?.argLoc.jsonLoc;
+            if (tokenValueArgJsonLoc) {
+                configApi.delete(tokenValueArgJsonLoc);
+            }
+            const tokenExpirationArgJsonLoc = profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenExpiration")
+                ?.argLoc.jsonLoc;
+            if (tokenExpirationArgJsonLoc) {
+                configApi.delete(tokenExpirationArgJsonLoc);
+            }
         }
+        await configApi.save();
     }
 
     public async handleSwitchAuthentication(node: Types.IZoweNodeType): Promise<void> {

@@ -56,8 +56,11 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         if (!SharedContext.isSpoolFile(node)) {
             return;
         }
-        const statusBarMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching spool file..."));
-        await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
+        const statusBarMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Fetching spool file...")}`);
+        await JobFSProvider.instance.fetchSpoolAtUri(
+            node.resourceUri,
+            vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path)
+        );
         statusBarMsg.dispose();
     }
 
@@ -202,6 +205,8 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
         spoolEntry.data = bufBuilder.read() ?? new Uint8Array();
+        spoolEntry.mtime = Date.now();
+        spoolEntry.size = spoolEntry.data.byteLength;
         if (editor) {
             await this._updateResourceInEditor(uri);
         }
@@ -276,7 +281,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param options Options for deleting the spool file or job
      * - `deleteRemote` - Deletes the job from the remote system if set to true.
      */
-    public async delete(uri: vscode.Uri, options: { readonly recursive: boolean; readonly deleteRemote: boolean }): Promise<void> {
+    public async delete(uri: vscode.Uri, options: { readonly recursive: boolean }): Promise<void> {
         const entry = this.lookup(uri, false);
         const isJob = FsJobsUtils.isJobEntry(entry);
         if (!isJob) {
@@ -286,10 +291,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const parent = this._lookupParentDirectory(uri, false);
 
         const profInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-
-        if (options.deleteRemote) {
-            await ZoweExplorerApiRegister.getJesApi(profInfo.profile).deleteJob(entry.job.jobname, entry.job.jobid);
-        }
+        await ZoweExplorerApiRegister.getJesApi(profInfo.profile).deleteJob(entry.job.jobname, entry.job.jobid);
         parent.entries.delete(entry.name);
         this._fireSoon({ type: vscode.FileChangeType.Deleted, uri });
     }

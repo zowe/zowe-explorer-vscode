@@ -52,13 +52,6 @@ export class AuthUtils {
                     args: [label],
                     comment: ["Label"],
                 });
-                const errToken = vscode.l10n.t({
-                    message:
-                        // eslint-disable-next-line max-len
-                        "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
-                    args: [label],
-                    comment: ["Label"],
-                });
                 if (label.includes("[")) {
                     label = label.substring(0, label.indexOf(" [")).trim();
                 }
@@ -68,13 +61,8 @@ export class AuthUtils {
                     const isTokenAuth = await AuthUtils.isUsingTokenAuth(label);
 
                     if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
-                        const message = vscode.l10n.t("Log in to Authentication Service");
-                        const success = Gui.showMessage(errToken, { items: [message] }).then(async (selection) => {
-                            if (selection) {
-                                return Constants.PROFILES_CACHE.ssoLogin(null, label);
-                            }
-                        });
-                        return success;
+                        AuthUtils.promptUserForSsoLogin(label);
+                        return;
                     }
                 }
                 const checkCredsButton = vscode.l10n.t("Update Credentials");
@@ -102,6 +90,26 @@ export class AuthUtils {
         // Try to keep message readable since VS Code doesn't support newlines in error messages
         Gui.errorMessage(moreInfo + errorDetails.toString().replace(/\n/g, " | "));
         return false;
+    }
+
+    /**
+     * Prompts user to log in to authentication service.
+     * @param profileName The name of the profile used to log in
+     */
+    public static promptUserForSsoLogin(profileName: string): Thenable<void> {
+        return Gui.showMessage(
+            vscode.l10n.t({
+                message:
+                    "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
+                args: [profileName],
+                comment: ["Profile name"],
+            }),
+            { items: [vscode.l10n.t("Log in to Authentication Service")], vsCodeOpts: { modal: true } }
+        ).then(async (selection) => {
+            if (selection) {
+                await Constants.PROFILES_CACHE.ssoLogin(null, profileName);
+            }
+        });
     }
 
     /**

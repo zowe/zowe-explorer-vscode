@@ -11,11 +11,11 @@ on:
       - .github/release.config.js
       - .github/workflows/deployment.yml
       - lerna.json
-  # workflow_dispatch:
-  #   inputs:
-  #     version:
-  #       description: Override version to be published
-  #       required: false
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Override version to be published
+        required: false
 
 jobs:
   release:
@@ -27,6 +27,12 @@ jobs:
       pull-requests: write
 
     steps:
+      - name: Check permissions
+        if: ${{ github.event_name == 'workflow-dispatch' }}
+        uses: prince-chrismc/check-actor-permissions-action@v3
+        with:
+          permission: admin
+
       - name: Checkout
         uses: actions/checkout@v4
         with:

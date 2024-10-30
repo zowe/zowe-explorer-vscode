@@ -52,9 +52,9 @@ import { DataSetTemplates } from "./DatasetTemplates";
  */
 export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implements Types.IZoweDatasetTreeType {
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.Dataset;
-    private static readonly defaultDialogText: string = vscode.l10n.t(
-        "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)"
-    );
+    private static readonly defaultDialogText: string = `$(plus) ${vscode.l10n.t(
+        "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)"
+    )}`;
     public mFavoriteSession: ZoweDatasetNode;
 
     public mSessionNodes: IZoweDatasetTreeNode[] = [];
@@ -1167,7 +1167,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             const newUri = node.resourceUri.with({
                 path: path.posix.join(path.posix.dirname(node.resourceUri.path), afterMemberName),
             });
-            await DatasetFSProvider.instance.rename(node.resourceUri, newUri, { overwrite: false });
+            await vscode.workspace.fs.rename(node.resourceUri, newUri, { overwrite: false });
             node.resourceUri = newUri;
             node.label = afterMemberName;
             node.tooltip = afterMemberName;
@@ -1222,7 +1222,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             const newUri = node.resourceUri.with({
                 path: path.posix.join(path.posix.dirname(node.resourceUri.path), afterDataSetName),
             });
-            await DatasetFSProvider.instance.rename(node.resourceUri, newUri, { overwrite: false });
+            await vscode.workspace.fs.rename(node.resourceUri, newUri, { overwrite: false });
 
             // Rename corresponding node in Sessions or Favorites section (whichever one Rename wasn't called from)
             if (SharedContext.isFavorite(node)) {
@@ -1319,7 +1319,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             return;
         }
 
-        if (selection.label === vscode.l10n.t("$(fold) Sort Direction")) {
+        if (selection.label === DatasetUtils.DATASET_SORT_OPTS[4]) {
             // Update sort direction (if a new one was provided)
             const dir = await Gui.showQuickPick(Constants.SORT_DIRS, {
                 placeHolder: vscode.l10n.t("Select a sorting direction"),
@@ -1343,11 +1343,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         // Update sort for node based on selections
         this.updateSortForNode(node, { ...sortOpts, method: sortMethod }, isSession);
         Gui.setStatusBarMessage(
-            vscode.l10n.t({
-                message: "$(check) Sorting updated for {0}",
+            `$(check) ${vscode.l10n.t({
+                message: "Sorting updated for {0}",
                 args: [node.label as string],
                 comment: ["Node label"],
-            }),
+            })}`,
             Constants.MS_PER_SEC * 4
         );
     }
@@ -1436,7 +1436,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                   args: [node.label as string],
                   comment: ["Node label"],
               });
-        const clearFilter = isSession ? vscode.l10n.t("$(clear-all) Clear filter for profile") : vscode.l10n.t("$(clear-all) Clear filter for PDS");
+        const clearFilter = isSession
+            ? `$(clear-all) ${vscode.l10n.t("Clear filter for profile")}`
+            : `$(clear-all) ${vscode.l10n.t("Clear filter for PDS")}`;
         const selection = (
             await Gui.showQuickPick(
                 [...DatasetUtils.DATASET_FILTER_OPTS.map((sortOpt, i) => (node.filter?.method === i ? `${sortOpt} $(check)` : sortOpt)), clearFilter],
@@ -1457,11 +1459,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (selection === clearFilter) {
                 this.updateFilterForNode(node, null, isSession);
                 Gui.setStatusBarMessage(
-                    vscode.l10n.t({
-                        message: "$(check) Filter cleared for {0}",
+                    `$(check) ${vscode.l10n.t({
+                        message: "Filter cleared for {0}",
                         args: [node.label as string],
                         comment: ["Node label"],
-                    }),
+                    })}`,
                     Constants.MS_PER_SEC * 4
                 );
             }
@@ -1497,11 +1499,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             isSession
         );
         Gui.setStatusBarMessage(
-            vscode.l10n.t({
-                message: "$(check) Filter updated for {0}",
+            `$(check) ${vscode.l10n.t({
+                message: "Filter updated for {0}",
                 args: [node.label as string],
                 comment: ["Node label"],
-            }),
+            })}`,
             Constants.MS_PER_SEC * 4
         );
     }

@@ -14,6 +14,7 @@ import { JSXInternal } from "preact/src/jsx";
 import { useDataPanelContext } from "../PersistentUtils";
 import { useEffect, useState } from "preact/hooks";
 import { isEqual } from "es-toolkit";
+import * as l10n from "@vscode/l10n";
 
 export default function PersistentTableData({ persistentProp }: Readonly<{ persistentProp: readonly string[] }>): JSXInternal.Element {
   const { type, selection, selectedItems } = useDataPanelContext();
@@ -57,7 +58,7 @@ export default function PersistentTableData({ persistentProp }: Readonly<{ persi
   const renderNoRecordsFound = () => {
     return (
       <VSCodeDataGridRow>
-        <VSCodeDataGridCell grid-column="1">No records found</VSCodeDataGridCell>
+        <VSCodeDataGridCell grid-column="1">{l10n.t("No records found")}</VSCodeDataGridCell>
       </VSCodeDataGridRow>
     );
   };

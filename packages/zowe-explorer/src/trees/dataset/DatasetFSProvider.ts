@@ -203,17 +203,28 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const uriPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1).split("/");
         const pdsMember = uriPath.length === 2;
         if (!entryExists) {
-            const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(entryIsDir ? uriPath[0] : path.parse(uriPath[0]).name, {
-                attributes: true,
-            });
-            if (resp.success) {
-                const dsorg: string = resp.apiResponse?.items?.[0]?.dsorg;
-                entryIsDir = pdsMember ? false : dsorg?.startsWith("PO") ?? false;
+            if (pdsMember) {
+                const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(uriPath[0]);
+                entryIsDir = false;
+                const memberName = path.parse(uriPath[1]).name;
+                if (
+                    !resp.success ||
+                    resp.apiResponse?.items?.length < 1 ||
+                    !resp.apiResponse.items.find((respItem) => respItem.member === memberName)
+                ) {
+                    throw vscode.FileSystemError.FileNotFound(uri);
+                }
             } else {
-                throw vscode.FileSystemError.FileNotFound(uri);
+                const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(uriPath[0], {
+                    attributes: true,
+                });
+                if (resp.success && resp.apiResponse?.items?.length > 0) {
+                    entryIsDir = resp.apiResponse.items[0].dsorg?.startsWith("PO");
+                } else {
+                    throw vscode.FileSystemError.FileNotFound(uri);
+                }
             }
         }
-
         if (entryIsDir) {
             if (!entryExists) {
                 this.createDirectory(uri);
@@ -379,11 +390,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 throw err;
             }
 
-            // check if parent directory exists; if not, do a remote lookup
-            const parent = this._lookupParentDirectory(uri, true);
-            if (parent == null) {
-                ds = await this.remoteLookupForResource(uri);
-            }
+            // do a remote lookup if the entry does not yet exist locally
+            ds = await this.remoteLookupForResource(uri);
         }
 
         if (ds == null) {
@@ -427,7 +435,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     }
 
     private async uploadEntry(parent: DirEntry, entry: DsEntry, content: Uint8Array, forceUpload?: boolean): Promise<IZosFilesResponse> {
-        const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
+        const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Saving data set...")}`);
         let resp: IZosFilesResponse;
         try {
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile);
