@@ -576,6 +576,41 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
         SharedUtils.addToWorkspace(ussNode, null as any);
         expect(updateWorkspaceFoldersMock).toHaveBeenCalledWith(0, null, { uri: ussNode.resourceUri, name: ussNode.label as string });
     });
+    it("adds a USS session w/ fullPath to the workspace", () => {
+        const ussNode = new ZoweUSSNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.USS_SESSION_CONTEXT,
+            profile: createIProfile(),
+            session: createISession(),
+        });
+        ussNode.fullPath = "/u/users/smpluser";
+        const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
+        SharedUtils.addToWorkspace(ussNode, null as any);
+        expect(updateWorkspaceFoldersMock).toHaveBeenCalledWith(0, null, {
+            uri: ussNode.resourceUri?.with({ path: `/sestest${ussNode.fullPath}` }),
+            name: `[${ussNode.label as string}] ${ussNode.fullPath}`,
+        });
+    });
+    it("displays an info message when adding a USS session w/o fullPath", () => {
+        const ussNode = new ZoweUSSNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.USS_SESSION_CONTEXT,
+            profile: createIProfile(),
+            session: createISession(),
+        });
+        ussNode.fullPath = "";
+        const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
+        const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
+        updateWorkspaceFoldersMock.mockClear();
+        SharedUtils.addToWorkspace(ussNode, null as any);
+        expect(updateWorkspaceFoldersMock).not.toHaveBeenCalledWith(0, null, {
+            uri: ussNode.resourceUri?.with({ path: `/sestest${ussNode.fullPath}` }),
+            name: `[${ussNode.label as string}] ${ussNode.fullPath}`,
+        });
+        expect(infoMessageSpy).toHaveBeenCalledWith("A search must be set for sestest before it can be added to a workspace.");
+    });
     it("skips adding a resource that's already in the workspace", () => {
         const ussNode = new ZoweUSSNode({
             label: "textFile.txt",

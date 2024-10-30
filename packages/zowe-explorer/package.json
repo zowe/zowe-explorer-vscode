@@ -845,7 +845,7 @@
           "group": "003_zowe_ussWorkspace@1"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(textFile.*|binaryFile.*|directory.*)/",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(directory.*|ussSession.*)/",
           "command": "zowe.addToWorkspace",
           "group": "003_zowe_ussWorkspace@2"
         },
@@ -1020,7 +1020,7 @@
           "group": "002_zowe_dsWorkspace@1"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member).*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/",
           "command": "zowe.addToWorkspace",
           "group": "002_zowe_dsWorkspace@2"
         },
