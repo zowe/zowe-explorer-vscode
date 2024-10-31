@@ -17,6 +17,7 @@ import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
 import { DatasetInit } from "../../../../src/trees/dataset/DatasetInit";
 import { SharedInit } from "../../../../src/trees/shared/SharedInit";
+import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 
 describe("Test src/dataset/extension", () => {
     describe("initDatasetProvider", () => {
@@ -39,7 +40,9 @@ describe("Test src/dataset/extension", () => {
             filterPrompt: jest.fn(),
             rename: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
-            getTreeView: jest.fn(),
+            getTreeView: jest.fn().mockReturnValue({
+                onDidChangeVisibility: jest.fn(),
+            }),
             sortPdsMembersDialog: jest.fn(),
             filterPdsMembersDialog: jest.fn(),
             openWithEncoding: jest.fn(),
@@ -144,7 +147,11 @@ describe("Test src/dataset/extension", () => {
                 name: "zowe.ds.pasteDataSets:1",
                 parm: [false],
                 mock: [
-                    { spy: jest.spyOn(dsProvider, "getTreeView"), arg: [], ret: { reveal: jest.fn(), selection: [test.value] } },
+                    {
+                        spy: jest.spyOn(dsProvider, "getTreeView"),
+                        arg: [],
+                        ret: { reveal: jest.fn(), onDidChangeVisibility: jest.fn(), selection: [test.value] },
+                    },
                     { spy: jest.spyOn(DatasetActions, "pasteDataSetMembers"), arg: [dsProvider, test.value] },
                     { spy: jest.spyOn(DatasetActions, "refreshDataset"), arg: ["test", dsProvider] },
                 ],
@@ -152,7 +159,11 @@ describe("Test src/dataset/extension", () => {
             {
                 name: "zowe.ds.pasteDataSets:2",
                 mock: [
-                    { spy: jest.spyOn(dsProvider, "getTreeView"), arg: [], ret: { reveal: jest.fn(), selection: [test.value] } },
+                    {
+                        spy: jest.spyOn(dsProvider, "getTreeView"),
+                        arg: [],
+                        ret: { reveal: jest.fn(), onDidChangeVisibility: jest.fn(), selection: [test.value] },
+                    },
                     { spy: jest.spyOn(DatasetActions, "pasteDataSetMembers"), arg: [dsProvider, test.value] },
                     { spy: jest.spyOn(DatasetActions, "refreshDataset"), arg: ["test", dsProvider] },
                 ],
@@ -204,12 +215,11 @@ describe("Test src/dataset/extension", () => {
             onDidChangeConfiguration = (fun: () => void) => {
                 return { onDidChangeConfiguration: fun };
             };
-            spyCreateDatasetTree = jest.spyOn(DatasetInit, "createDatasetTree");
+            spyCreateDatasetTree = jest.spyOn(DatasetInit, "createDatasetTree").mockResolvedValue(dsProvider as any);
             jest.spyOn(SharedInit, "initSubscribers").mockImplementation(jest.fn());
             Object.defineProperty(vscode.commands, "registerCommand", { value: registerCommand });
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
 
-            spyCreateDatasetTree.mockResolvedValue(dsProvider as any);
             await DatasetInit.initDatasetProvider(test.context);
         });
         beforeEach(() => {
@@ -225,6 +235,14 @@ describe("Test src/dataset/extension", () => {
             spyCreateDatasetTree.mockResolvedValue(null);
             const myProvider = await DatasetInit.initDatasetProvider(test.context);
             expect(myProvider).toBe(null);
+        });
+    });
+
+    describe("datasetTreeVisibilityChanged", () => {
+        it("calls ProfilesUtils.promptUserWithNoConfigs if visible", async () => {
+            const promptUserWithNoConfigsMock = jest.spyOn(ProfilesUtils, "promptUserWithNoConfigs").mockImplementation();
+            await DatasetInit.datasetTreeVisibilityChanged({ visible: true });
+            expect(promptUserWithNoConfigsMock).toHaveBeenCalled();
         });
     });
 });
