@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosuss from "@zowe/zos-uss-for-zowe-sdk";
 import { ICommandProviderDialogs, ZoweCommandProvider } from "./ZoweCommandProvider";
-import { Gui, IZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTreeNode, Validation, imperative } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { AuthUtils } from "../utils/AuthUtils";
@@ -129,7 +129,12 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     )
                 );
             }
+
             await this.profileInstance.checkCurrentProfile(this.nodeProfile);
+            if (this.profileInstance.validProfile === Validation.ValidationType.INVALID) {
+                Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
+                return;
+            }
 
             if (this.isSshRequiredForProf) {
                 await this.getSshProfile();
@@ -150,8 +155,6 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     return;
                 }
             }
-
-            await this.profileInstance.checkCurrentProfile(this.nodeProfile);
 
             if (!this.sshCwd) {
                 const options: vscode.InputBoxOptions = {
