@@ -327,7 +327,7 @@ export namespace ZoweExplorerZosmf {
                 { dsn: toDataSetName, member: toMemberName },
                 {
                     responseTimeout: this.profile.profile.responseTimeout,
-                    ...(newOptions ?? {}),
+                    ...newOptions,
                 }
             );
         }
