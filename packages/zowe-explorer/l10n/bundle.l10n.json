@@ -258,7 +258,7 @@
   "Select a filter": "Select a filter",
   "No selection made. Operation cancelled.": "No selection made. Operation cancelled.",
   "New filter": "New filter",
-  "You must enter a path.": "You must enter a path.",
+  "Please enter a valid USS path.": "Please enter a valid USS path.",
   "Initializing profiles with USS favorites.": "Initializing profiles with USS favorites.",
   "No USS favorites found.": "No USS favorites found.",
   "Loading profile: {0} for USS favorites/Profile name": {
