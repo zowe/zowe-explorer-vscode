@@ -101,15 +101,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.parse(uri.path).name, { attributes: true });
             }
         } catch (err) {
-            this._handleError(err, {
-                additionalContext: vscode.l10n.t({ message: "Failed to get stats for data set {0}", args: [uri.path], comment: "Data set path" }),
-                retry: {
-                    fn: this.stat.bind(this),
-                    args: [uri],
-                },
-                apiType: ZoweExplorerApiType.Mvs,
-                profileType: uriInfo.profile?.type,
-            });
+            if (err instanceof Error) {
+                ZoweLogger.error(err.message);
+            }
             throw err;
         }
 
@@ -161,7 +155,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     args: [uri, uriInfo, pattern],
                 },
                 apiType: ZoweExplorerApiType.Mvs,
-                profileType: this._getInfoFromUri(uri).profile?.type,
+                profileType: uriInfo.profile?.type,
+                templateArgs: { profileName: uriInfo.profileName },
             });
         }
         for (const resp of datasetResponses) {
@@ -206,6 +201,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 },
                 apiType: ZoweExplorerApiType.Mvs,
                 profileType: uriInfo.profile?.type,
+                templateArgs: { profileName: uriInfo.profileName },
             });
             throw err;
         }
@@ -228,12 +224,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             entry = this.lookup(uri, false) as PdsEntry | DsEntry;
         } catch (err) {
             if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
-                this._handleError(err, {
-                    additionalContext: vscode.l10n.t("Failed to locate data set {0}", uri.path),
-                    apiType: ZoweExplorerApiType.Mvs,
-                    profileType: uriInfo.profile?.type,
-                });
-                return undefined;
+                throw err;
             }
         }
 
@@ -266,15 +257,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     }
                 }
             } catch (err) {
-                this._handleError(err, {
-                    additionalContext: vscode.l10n.t("Failed to list data set {0}", uri.path),
-                    apiType: ZoweExplorerApiType.Mvs,
-                    retry: {
-                        fn: this.fetchDataset.bind(this),
-                        args: [uri, uriInfo],
-                    },
-                    profileType: uriInfo.profile?.type,
-                });
+                if (err instanceof Error) {
+                    ZoweLogger.error(err.message);
+                }
                 throw err;
             }
         }
@@ -467,6 +452,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             ds = this._lookupAsFile(uri) as DsEntry;
         } catch (err) {
             if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
+                const uriInfo = this._getInfoFromUri(uri);
                 this._handleError(err, {
                     additionalContext: vscode.l10n.t({
                         message: "Failed to read {0}",
@@ -474,11 +460,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         comment: ["File path"],
                     }),
                     apiType: ZoweExplorerApiType.Mvs,
-                    profileType: this._getInfoFromUri(uri).profile?.type,
+                    profileType: uriInfo.profile?.type,
                     retry: {
                         fn: this.readFile.bind(this),
                         args: [uri],
                     },
+                    templateArgs: { profileName: uriInfo.profile?.name ?? "" },
                 });
                 throw err;
             }
@@ -624,6 +611,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         fn: this.writeFile.bind(this),
                         args: [uri, content, options],
                     },
+                    templateArgs: { profileName: entry.metadata.profile.name ?? "" },
                 });
                 throw err;
             }
@@ -682,6 +670,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     fn: this.delete.bind(this),
                     args: [uri, _options],
                 },
+                templateArgs: { profileName: entry.metadata.profile?.name ?? "" },
             });
             throw err;
         }
@@ -728,6 +717,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     fn: this.rename.bind(this),
                     args: [oldUri, newUri, options],
                 },
+                templateArgs: { profileName: entry.metadata.profile?.name ?? "" },
             });
             throw err;
         }

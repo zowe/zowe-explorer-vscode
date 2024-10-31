@@ -249,17 +249,14 @@ describe("fetchDatasetAtUri", () => {
         mvsApiMock.mockRestore();
     });
 
-    it("calls _handleError and throws error if API call fails", async () => {
+    it("returns null if API call fails", async () => {
         const mockMvsApi = {
             getContents: jest.fn().mockRejectedValue(new Error("unknown API error")),
         };
         const fakePo = { ...testEntries.ps };
-        const handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation();
         const lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(fakePo);
         const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
-        await expect(DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps, { isConflict: true })).rejects.toThrow();
-        expect(handleErrorMock).toHaveBeenCalled();
-        handleErrorMock.mockRestore();
+        expect(await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps, { isConflict: true })).toBe(null);
 
         lookupAsFileMock.mockRestore();
         mvsApiMock.mockRestore();

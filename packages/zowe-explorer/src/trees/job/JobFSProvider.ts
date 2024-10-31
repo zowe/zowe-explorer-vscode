@@ -123,6 +123,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                     fn: this.readDirectory.bind(this),
                     args: [uri],
                 },
+                templateArgs: { profileName: uriInfo.profile?.name ?? "" },
             });
             throw err;
         }
@@ -245,6 +246,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                         fn: this.readFile.bind(this),
                         args: [uri],
                     },
+                    templateArgs: { profileName: spoolEntry.metadata.profile?.name ?? "" },
                 });
                 throw err;
             }
@@ -330,6 +332,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                     fn: this.delete.bind(this),
                     args: [uri, options],
                 },
+                templateArgs: { profileName: profInfo.profile.name ?? "" },
             });
             throw err;
         }

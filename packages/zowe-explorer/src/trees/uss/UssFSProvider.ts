@@ -132,6 +132,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     args: [oldUri, newUri],
                 },
                 profileType: info.profile.type,
+                templateArgs: { profileName: info.profile.name ?? "" },
             });
             throw err;
         }
@@ -302,6 +303,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 },
                 apiType: ZoweExplorerApiType.Uss,
                 profileType: metadata.profile.type,
+                templateArgs: { profileName: metadata.profile.name },
             });
             throw err;
         }
@@ -356,6 +358,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 },
                 apiType: ZoweExplorerApiType.Uss,
                 profileType: entry.metadata.profile.type,
+                templateArgs: { profileName: entry.metadata.profile.name ?? "" },
             });
             throw err;
         }
@@ -525,6 +528,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                         args: [uri, content, options],
                     },
                     profileType: parentDir.metadata.profile.type,
+                    templateArgs: { profileName: parentDir.metadata.profile.name ?? "" },
                 });
                 throw err;
             }
@@ -591,6 +595,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 },
                 apiType: ZoweExplorerApiType.Uss,
                 profileType: entry.metadata.profile?.type,
+                templateArgs: { profileName: entry.metadata.profile?.name ?? "" },
             });
             throw err;
         }
@@ -633,6 +638,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 },
                 apiType: ZoweExplorerApiType.Uss,
                 profileType: parent.metadata.profile.type,
+                templateArgs: { profileName: parent.metadata.profile.name ?? "" },
             });
             throw err;
         }
@@ -753,6 +759,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 },
                 apiType: ZoweExplorerApiType.Uss,
                 profileType: destInfo.profile.type,
+                templateArgs: { profileName: destInfo.profile.name ?? "" },
             });
             throw err;
         }
