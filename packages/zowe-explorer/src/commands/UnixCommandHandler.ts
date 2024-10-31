@@ -238,6 +238,11 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     }
 
     public runCommand(profile: imperative.IProfileLoaded, command: string): Promise<string> {
-        return ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand(command, this.sshCwd, this.sshSession);
+        // Clear path and selected profile for follow up commands from the command palette
+        const cwd = this.sshCwd;
+        this.sshCwd = undefined;
+        this.nodeProfile = undefined;
+
+        return ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand(command, cwd, this.sshSession);
     }
 }
