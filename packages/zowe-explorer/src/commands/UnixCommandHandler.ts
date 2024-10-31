@@ -141,14 +141,26 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 if (!this.sshProfile) {
                     return;
                 }
-
                 const cmdArgs: imperative.ICommandArguments = this.getSshCmdArgs(this.sshProfile.profile);
                 // create the ssh session
                 const sshSessCfg = zosuss.SshSession.createSshSessCfgFromArgs(cmdArgs);
                 imperative.ConnectionPropsForSessCfg.resolveSessCfgProps<zosuss.ISshSession>(sshSessCfg, cmdArgs);
                 this.sshSession = new zosuss.SshSession(sshSessCfg);
 
-                if (!this.sshSession) {
+                const profileStatus = await this.profileInstance.profileValidationHelper(
+                    this.sshProfile,
+                    // TODO(zFernand0): Move this validation to the @zowe/zos-uss-for-zowe-sdk
+                    (prof: imperative.IProfileLoaded, type: string) =>
+                        new Promise((resolve, _) => {
+                            if (type !== "ssh") resolve("unverified");
+                            const conn = new (require("ssh2").Client)();
+                            conn.on("ready", () => conn.end() && resolve("active"))
+                                .on("error", () => resolve("inactive"))
+                                .connect(prof.profile);
+                        })
+                );
+
+                if (!this.sshSession || profileStatus !== "active") {
                     this.nodeProfile = undefined;
                     ZoweLogger.error(this.unixCmdMsgs.sshSessionErrorMsg);
                     Gui.errorMessage(this.unixCmdMsgs.sshSessionErrorMsg);

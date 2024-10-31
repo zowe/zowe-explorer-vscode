@@ -668,6 +668,33 @@ export class Profiles extends ProfilesCache {
         await this.openConfigFile(filePath);
     }
 
+    public async profileValidationHelper(theProfile: imperative.IProfileLoaded, getStatus: (...args: unknown[]) => Promise<string>) {
+        return Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: vscode.l10n.t({
+                    message: `Validating {0} Profile.`,
+                    args: [theProfile.name],
+                    comment: [`The profile name`],
+                }),
+                cancellable: true,
+            },
+            async (progress, token) => {
+                token.onCancellationRequested(() => {
+                    // will be returned as undefined
+                    Gui.showMessage(
+                        vscode.l10n.t({
+                            message: `Validating {0} was cancelled.`,
+                            args: [theProfile.name],
+                            comment: [`The profile name`],
+                        })
+                    );
+                });
+                return getStatus(theProfile, theProfile.type);
+            }
+        );
+    }
+
     public async validateProfiles(theProfile: imperative.IProfileLoaded): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("Profiles.validateProfiles called.");
         let filteredProfile: Validation.IValidationProfile;
@@ -688,30 +715,7 @@ export class Profiles extends ProfilesCache {
         if (filteredProfile === undefined) {
             try {
                 if (getSessStatus.getStatus) {
-                    profileStatus = await Gui.withProgress(
-                        {
-                            location: vscode.ProgressLocation.Notification,
-                            title: vscode.l10n.t({
-                                message: `Validating {0} Profile.`,
-                                args: [theProfile.name],
-                                comment: [`The profile name`],
-                            }),
-                            cancellable: true,
-                        },
-                        async (progress, token) => {
-                            token.onCancellationRequested(() => {
-                                // will be returned as undefined
-                                Gui.showMessage(
-                                    vscode.l10n.t({
-                                        message: `Validating {0} was cancelled.`,
-                                        args: [theProfile.name],
-                                        comment: [`The profile name`],
-                                    })
-                                );
-                            });
-                            return getSessStatus.getStatus(theProfile, theProfile.type);
-                        }
-                    );
+                    profileStatus = await this.profileValidationHelper(theProfile, getSessStatus.getStatus.bind(getSessStatus));
                 } else {
                     profileStatus = "unverified";
                 }
