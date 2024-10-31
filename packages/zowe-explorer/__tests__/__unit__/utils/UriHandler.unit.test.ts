@@ -9,7 +9,7 @@
  *
  */
 
-import { Uri } from "vscode";
+import { commands, Uri } from "vscode";
 import { ZoweUriHandler } from "../../../src/utils/UriHandler";
 import { DatasetFSProvider } from "../../../src/trees/dataset/DatasetFSProvider";
 
@@ -32,5 +32,16 @@ describe("ZoweUriHandler", () => {
         await ZoweUriHandler.getInstance().handleUri(uri);
         const zoweUri = Uri.parse(uri.query);
         expect(blockMocks.remoteLookupForResource).toHaveBeenCalledWith(zoweUri);
+    });
+
+    it("calls remoteLookupForResource with the parsed URI if a Zowe resource URI was provided", async () => {
+        const blockMocks = getBlockMocks();
+        blockMocks.remoteLookupForResource.mockResolvedValue({ name: "exampleEntry" } as any);
+        const executeCommandSpy = jest.spyOn(commands, "executeCommand");
+        const uri = Uri.parse("vscode://Zowe.vscode-extension-for-zowe?zowe-ds:/lpar.zosmf/TEST.PS");
+        await ZoweUriHandler.getInstance().handleUri(uri);
+        const zoweUri = Uri.parse(uri.query);
+        expect(blockMocks.remoteLookupForResource).toHaveBeenCalledWith(zoweUri);
+        expect(executeCommandSpy).toHaveBeenCalledWith("vscode.open", zoweUri, { preview: false });
     });
 });
