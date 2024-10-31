@@ -711,7 +711,7 @@ describe("stat", () => {
     });
 
     describe("error handling", () => {
-        it("API response was unsuccessful for remote lookup, dialog dismissed", async () => {
+        it("API response was unsuccessful for remote lookup", async () => {
             const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(testEntries.ps);
             const getInfoForUriMock = jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
                 isRoot: false,
@@ -724,52 +724,7 @@ describe("stat", () => {
             const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
                 dataSet: dataSetMock,
             } as any);
-            const handleErrorSpy = jest.spyOn(DatasetFSProvider.instance as any, "_handleError");
             await expect(DatasetFSProvider.instance.stat(testUris.ps)).rejects.toThrow();
-            expect(handleErrorSpy).toHaveBeenCalledWith(
-                exampleError,
-                expect.objectContaining({
-                    additionalContext: `Failed to get stats for data set ${testUris.ps.path}`,
-                    apiType: ZoweExplorerApiType.Mvs,
-                    profileType: "zosmf",
-                })
-            );
-            mvsApiMock.mockRestore();
-            getInfoForUriMock.mockRestore();
-            lookupMock.mockRestore();
-        });
-
-        it("API response was unsuccessful for remote lookup, Retry selected", async () => {
-            const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(testEntries.ps);
-            const getInfoForUriMock = jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
-                isRoot: false,
-                slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
-                profileName: "sestest",
-                profile: testEntries.ps.metadata.profile,
-            });
-            const exampleError = new Error("Response unsuccessful");
-            const dataSetMock = jest.fn().mockRejectedValue(exampleError);
-            const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
-                dataSet: dataSetMock,
-            } as any);
-            const statSpy = jest
-                .spyOn(DatasetFSProvider.instance, "stat")
-                .mockImplementationOnce(DatasetFSProvider.instance.stat)
-                .mockImplementation();
-            const handleErrorSpy = jest
-                .spyOn(DatasetFSProvider.instance as any, "_handleError")
-                .mockResolvedValue({ correlation: { asError: jest.fn() } as any, userResponse: "Retry" });
-            await DatasetFSProvider.instance.stat(testUris.ps);
-            expect(handleErrorSpy).toHaveBeenCalledWith(
-                exampleError,
-                expect.objectContaining({
-                    additionalContext: `Failed to get stats for data set ${testUris.ps.path}`,
-                    apiType: ZoweExplorerApiType.Mvs,
-                    profileType: "zosmf",
-                })
-            );
-            expect(statSpy).toHaveBeenCalledTimes(2);
-            expect(statSpy).toHaveBeenCalledWith(testUris.ps);
             mvsApiMock.mockRestore();
             getInfoForUriMock.mockRestore();
             lookupMock.mockRestore();
@@ -1042,15 +997,12 @@ describe("fetchDataset", () => {
         const lookupMock = jest.spyOn(DatasetFSProvider.instance, "lookup").mockImplementation(() => {
             throw new Error("unknown fs error");
         });
-        const handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation();
-        await (DatasetFSProvider.instance as any).fetchDataset(testUris.ps, {
+        await expect((DatasetFSProvider.instance as any).fetchDataset(testUris.ps, {
             isRoot: false,
             slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
             profileName: "sestest",
             profile: testProfile,
-        });
-        expect(handleErrorMock).toHaveBeenCalled();
-        handleErrorMock.mockRestore();
+        })).rejects.toThrow();
         lookupMock.mockRestore();
     });
 });
