@@ -298,7 +298,7 @@ describe("readFile", () => {
             throw FileSystemError.FileNotFound(uri as Uri);
         });
         const lookupParentDir = jest.spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(null);
-        const remoteLookupForResourceMock = jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockResolvedValue(testEntries.pds);
+        const fetchDatasetAtUriMock = jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue(testEntries.pds);
 
         let err;
         try {
@@ -311,7 +311,7 @@ describe("readFile", () => {
         expect(_lookupAsFileMock).toHaveBeenCalledWith(testUris.ps);
         _lookupAsFileMock.mockRestore();
         lookupParentDir.mockRestore();
-        remoteLookupForResourceMock.mockRestore();
+        fetchDatasetAtUriMock.mockRestore();
     });
 
     it("throws an error if the entry does not exist and the error is not FileNotFound", async () => {
@@ -339,7 +339,7 @@ describe("readFile", () => {
             profile: testProfile,
             path: "/USER.DATA.PS",
         });
-        const fetchDatasetAtUriMock = jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockImplementation();
+        const fetchDatasetAtUriMock = jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValueOnce(new DsEntry("USER.DATA.PS"));
 
         await DatasetFSProvider.instance.readFile(testUris.ps);
         expect(_lookupAsFileMock).toHaveBeenCalledWith(testUris.ps);
@@ -348,28 +348,26 @@ describe("readFile", () => {
         _getInfoFromUriMock.mockRestore();
     });
 
-    it("calls remoteLookupForResource if entry does not exist locally", async () => {
+    it("calls fetchDatasetAtUri if entry does not exist locally", async () => {
         const _lookupAsFileMock = jest
             .spyOn(DatasetFSProvider.instance as any, "_lookupAsFile")
             .mockImplementationOnce(() => {
                 throw FileSystemError.FileNotFound(testUris.pdsMember);
             })
             .mockReturnValue(testEntries.pdsMember);
-
-        const fetchDatasetAtUriMock = jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockImplementation();
+        const fetchDatasetAtUriMock = jest
+            .spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri")
+            .mockResolvedValueOnce(new DsEntry("USER.DATA.PDS(MEMBER)"));
         const _getInfoFromUriMock = jest.spyOn(DatasetFSProvider.instance as any, "_getInfoFromUri").mockReturnValueOnce({
             profile: testProfile,
             path: "/USER.DATA.PS",
         });
-        const remoteLookupForResourceMock = jest
-            .spyOn(DatasetFSProvider.instance, "remoteLookupForResource")
-            .mockResolvedValue(testEntries.pdsMember);
 
         await DatasetFSProvider.instance.readFile(testUris.pdsMember);
         expect(_lookupAsFileMock).toHaveBeenCalledWith(testUris.pdsMember);
-        expect(remoteLookupForResourceMock).toHaveBeenCalledWith(testUris.pdsMember);
         expect(fetchDatasetAtUriMock).toHaveBeenCalledWith(testUris.pdsMember, { isConflict: false });
         _getInfoFromUriMock.mockRestore();
+        fetchDatasetAtUriMock.mockRestore();
     });
 
     it("throws error if parent exists and file cannot be found", async () => {
@@ -380,17 +378,14 @@ describe("readFile", () => {
             profile: testProfile,
             path: "/USER.DATA.PS",
         });
-        const remoteLookupForResourceMock = jest
-            .spyOn(DatasetFSProvider.instance, "remoteLookupForResource")
-            .mockReset()
-            .mockResolvedValueOnce(null as any);
-
+        const fetchDatasetAtUriMock = jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValueOnce(null);
         await expect(DatasetFSProvider.instance.readFile(testUris.pdsMember)).rejects.toThrow();
         expect(_lookupAsFileMock).toHaveBeenCalledWith(testUris.pdsMember);
-        expect(remoteLookupForResourceMock).toHaveBeenCalledWith(testUris.pdsMember);
+        expect(fetchDatasetAtUriMock).toHaveBeenCalledWith(testUris.pdsMember, { isConflict: false });
+
         _getInfoFromUriMock.mockRestore();
         _lookupAsFileMock.mockRestore();
-        remoteLookupForResourceMock.mockRestore();
+        fetchDatasetAtUriMock.mockRestore();
     });
 
     it("returns the data for an entry", async () => {
