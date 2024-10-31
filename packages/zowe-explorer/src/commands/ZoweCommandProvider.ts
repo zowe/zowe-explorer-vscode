@@ -45,7 +45,6 @@ export abstract class ZoweCommandProvider {
     public readonly onDidChangeTreeData: vscode.Event<IZoweTreeNode | void> = this.mOnDidChangeTreeData.event;
 
     public abstract dialogs: ICommandProviderDialogs;
-    private useIntegratedTerminals: boolean;
     public outputChannel: vscode.OutputChannel;
     public terminal: vscode.Terminal;
     public pseudoTerminal: ZoweTerminal;
@@ -53,11 +52,6 @@ export abstract class ZoweCommandProvider {
     public constructor(protected terminalName: string) {
         this.history = new ZowePersistentFilters(PersistenceSchemaEnum.Commands, ZoweCommandProvider.totalFilters);
         this.profileInstance = Profiles.getInstance();
-
-        this.useIntegratedTerminals = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS) ?? true;
-        if (!this.useIntegratedTerminals) {
-            this.outputChannel = Gui.createOutputChannel(this.terminalName);
-        }
     }
 
     public abstract formatCommandLine(command: string, profile: imperative.IProfileLoaded): string;
@@ -69,7 +63,8 @@ export abstract class ZoweCommandProvider {
             return;
         }
         try {
-            if (this.useIntegratedTerminals) {
+          const iTerms = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS) ?? true;
+            if (iTerms) {
                 this.pseudoTerminal = new ZoweTerminal(
                     this.terminalName,
                     async (command: string): Promise<string> => {
@@ -129,6 +124,7 @@ export abstract class ZoweCommandProvider {
                 this.terminal = vscode.window.createTerminal({ name: `(${profile.name}) ${this.terminalName}`, pty: this.pseudoTerminal });
                 this.terminal.show();
             } else {
+                this.outputChannel ??= Gui.createOutputChannel(this.terminalName);
                 this.outputChannel.appendLine(this.formatCommandLine(command, profile));
                 const response = await Gui.withProgress(
                     {
