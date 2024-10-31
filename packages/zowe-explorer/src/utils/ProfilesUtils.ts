@@ -28,6 +28,7 @@ export enum ProfilesConvertStatus {
 
 export class ProfilesUtils {
     public static PROFILE_SECURITY: string | boolean = Constants.ZOWE_CLI_SCM;
+    private static noConfigDialogShown: boolean = false;
 
     /**
      * Check if the credential manager's vsix is installed for use
@@ -402,6 +403,10 @@ export class ProfilesUtils {
      * This aims to help direct new Zowe Explorer users to create a new team configuration.
      */
     public static async promptUserWithNoConfigs(): Promise<void> {
+        if (ProfilesUtils.noConfigDialogShown) {
+            return;
+        }
+
         const profInfo = await ProfilesUtils.getProfileInfo();
         if (profInfo == null) {
             return;
@@ -418,6 +423,7 @@ export class ProfilesUtils {
                     await vscode.commands.executeCommand("zowe.ds.addSession");
                 }
             });
+            ProfilesUtils.noConfigDialogShown = true;
         }
     }
 
