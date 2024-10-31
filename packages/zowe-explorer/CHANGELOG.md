@@ -18,6 +18,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue during initialization where a broken team configuration file caused the "Show Config" action in the error dialog to stop working. [#3273](https://github.com/zowe/zowe-explorer-vscode/issues/3273)
 - Fixed issue where switching the authentication methods would cause `Cannot read properties of undefined` error. [#3142](https://github.com/zowe/zowe-explorer-vscode/issues/3142)
 - Fixed an issue where calling `vscode.workspace.fs.readFile` with a PDS member URI would throw an error when the PDS already existed as a filesystem entry. [#3267](https://github.com/zowe/zowe-explorer-vscode/issues/3267)
+- Reduced the number of MVS API calls performed by `vscode.workspace.fs.readFile` when fetching the contents of a data set entry. [#3278](https://github.com/zowe/zowe-explorer-vscode/issues/3278)
 
 ## `3.0.2`
 
