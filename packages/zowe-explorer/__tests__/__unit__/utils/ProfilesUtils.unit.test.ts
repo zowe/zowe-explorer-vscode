@@ -1267,6 +1267,13 @@ describe("ProfilesUtils unit tests", () => {
     });
 
     describe("promptUserWithNoConfigs", () => {
+        it("returns early if user was already prompted in this session", async () => {
+            const noConfigDialogShownMock = new MockedProperty(ProfilesUtils, "noConfigDialogShown", { value: true });
+            const getProfInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo");
+            await ProfilesUtils.promptUserWithNoConfigs();
+            expect(getProfInfoSpy).not.toHaveBeenCalled();
+            noConfigDialogShownMock[Symbol.dispose]();
+        });
         it("returns early if profileInfo is nullish", async () => {
             const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue(undefined as any);
             const showMessageSpy = jest.spyOn(Gui, "showMessage");
@@ -1275,6 +1282,7 @@ describe("ProfilesUtils unit tests", () => {
             profInfoMock.mockRestore();
         });
         it("prompts the user if they don't have any Zowe client configs", async () => {
+            const noConfigDialogShownMock = new MockedProperty(ProfilesUtils, "noConfigDialogShown", { value: false });
             const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
                 getTeamConfig: () => ({ exists: false }),
             } as any);
@@ -1291,11 +1299,16 @@ describe("ProfilesUtils unit tests", () => {
             expect(profInfoMock).toHaveBeenCalled();
             profInfoMock.mockRestore();
             onlyV1ProfsExistMock[Symbol.dispose]();
+            noConfigDialogShownMock[Symbol.dispose]();
         });
         it("executes zowe.ds.addSession if the user selects 'Create New' in the prompt", async () => {
             const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
                 getTeamConfig: () => ({ exists: false }),
             } as any);
+            const noConfigDialogShownMock = new MockedProperty(ProfilesUtils, "noConfigDialogShown", {
+                configurable: true,
+                value: false,
+            });
             const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
                 configurable: true,
                 get: () => false,
@@ -1312,11 +1325,16 @@ describe("ProfilesUtils unit tests", () => {
             executeCommandMock.mockRestore();
             profInfoMock.mockRestore();
             onlyV1ProfsExistMock[Symbol.dispose]();
+            noConfigDialogShownMock[Symbol.dispose]();
         });
         it("does not prompt the user if they have a Zowe team config", async () => {
             const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
                 getTeamConfig: () => ({ exists: true }),
             } as any);
+            const noConfigDialogShownMock = new MockedProperty(ProfilesUtils, "noConfigDialogShown", {
+                configurable: true,
+                value: false,
+            });
             const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
                 configurable: true,
                 get: () => false,
@@ -1330,11 +1348,16 @@ describe("ProfilesUtils unit tests", () => {
             expect(profInfoMock).toHaveBeenCalled();
             profInfoMock.mockRestore();
             onlyV1ProfsExistMock[Symbol.dispose]();
+            noConfigDialogShownMock[Symbol.dispose]();
         });
         it("does not prompt the user if they have v1 profiles", async () => {
             const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
                 getTeamConfig: () => ({ exists: false }),
             } as any);
+            const noConfigDialogShownMock = new MockedProperty(ProfilesUtils, "noConfigDialogShown", {
+                configurable: true,
+                value: false,
+            });
             const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
                 configurable: true,
                 get: () => true,
@@ -1348,6 +1371,7 @@ describe("ProfilesUtils unit tests", () => {
             expect(profInfoMock).toHaveBeenCalled();
             profInfoMock.mockRestore();
             onlyV1ProfsExistMock[Symbol.dispose]();
+            noConfigDialogShownMock[Symbol.dispose]();
         });
     });
 
