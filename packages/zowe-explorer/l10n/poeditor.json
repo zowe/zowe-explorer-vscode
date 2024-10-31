@@ -62,6 +62,9 @@
   "addFavorite": {
     "Add to Favorites": ""
   },
+  "addToWorkspace": {
+    "Add to Workspace": ""
+  },
   "removeFavProfile": {
     "Remove profile from Favorites": ""
   },
@@ -593,6 +596,7 @@
   "Choose encoding for {0}": "",
   "Current encoding is {0}": "",
   "Enter a codepage (e.g., 1047, IBM-1047)": "",
+  "A search must be set for {0} before it can be added to a workspace.": "",
   "Changes in the credential vault detected, refreshing Zowe Explorer.": "",
   "Team config file created, refreshing Zowe Explorer.": "",
   "Team config file deleted, refreshing Zowe Explorer.": "",
