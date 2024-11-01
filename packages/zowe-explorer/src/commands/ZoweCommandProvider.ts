@@ -70,6 +70,7 @@ export abstract class ZoweCommandProvider {
                     async (command: string): Promise<string> => {
                         try {
                             // We need to await the response, otherwise we can't catch errors thrown
+                            this.history.addSearchHistory(command);
                             return await this.runCommand(profile, command);
                         } catch (error) {
                             if (error instanceof imperative.ImperativeError) {
