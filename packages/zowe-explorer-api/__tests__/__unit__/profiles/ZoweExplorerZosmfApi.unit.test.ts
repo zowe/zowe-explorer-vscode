@@ -20,6 +20,7 @@ import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import { ZoweExplorerZosmf } from "../../../src/profiles/ZoweExplorerZosmfApi";
 import { FileManagement } from "../../../src/utils/FileManagement";
 import { MainframeInteraction } from "../../../src/extend";
+import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
 
 type ITestApi<T> = {
     [K in keyof T]: {
@@ -98,10 +99,13 @@ describe("ZosmfUssApi", () => {
                 user: "aZosmfUser",
             },
         } as imperative.IProfileLoaded;
+        const exampleSession = imperative.Session.createFromUrl(new URL("http://localhost"));
+        exampleSession.ISession.password = exampleProfile.profile?.password;
+        exampleSession.ISession.user = exampleProfile.profile?.user;
+        jest.spyOn(ProfilesCache, "getProfileSessionWithVscProxy").mockReturnValueOnce(exampleSession as any);
 
         it("should include profile properties in the built session object", () => {
             const api = new ZoweExplorerZosmf.UssApi();
-
             const transformedProps = { ...exampleProfile.profile, hostname: exampleProfile.profile?.host };
             delete transformedProps["host"];
             expect((api as any)._getSession(exampleProfile).mISession).toMatchObject(transformedProps);
@@ -201,216 +205,224 @@ describe("ZosmfUssApi", () => {
         });
     });
 
-    it("uploads a file from buffer", async () => {
-        const uploadFileSpy = jest.spyOn(zosfiles.Upload, "bufferToUssFile").mockImplementation();
-        const zosmfApi = new ZoweExplorerZosmf.UssApi();
-        const buf = Buffer.from("123abc");
-        await zosmfApi.uploadFromBuffer(buf, "/some/uss/path");
-        expect(uploadFileSpy).toHaveBeenCalledWith(zosmfApi.getSession(), "/some/uss/path", buf, undefined);
-    });
+    describe("misc", () => {
+        fakeSession.ISession.user = fakeProfile.user;
+        fakeSession.ISession.password = fakeProfile.password;
+        fakeSession.ISession.basePath = fakeProfile.basePath;
+        jest.spyOn(ProfilesCache, "getProfileSessionWithVscProxy").mockReturnValue(fakeSession as any);
 
-    it("constants should be unchanged", () => {
-        const zosmfApi = new ZoweExplorerZosmf.UssApi();
-        expect(zosmfApi.getProfileTypeName()).toMatchSnapshot();
-        expect(zosmfApi.getTokenTypeName()).toMatchSnapshot();
-    });
-
-    it("getSessionFromCommandArgument should build session from arguments", () => {
-        const zosmfApi = new ZoweExplorerZosmf.UssApi();
-        const session = zosmfApi.getSessionFromCommandArgument(fakeProfile as unknown as imperative.ICommandArguments);
-        expect(session).toBeDefined();
-        const sessCfg: imperative.ISession = {
-            ...fakeProfile,
-            hostname: fakeProfile.host,
-            type: imperative.SessConstants.AUTH_TYPE_BASIC,
-        };
-        delete sessCfg["host"];
-        expect(session.ISession).toMatchObject(sessCfg);
-    });
-
-    it("getSession should build session from profile with user and password", () => {
-        const zosmfApi = new ZoweExplorerZosmf.UssApi({
-            profile: fakeProfile,
-        } as unknown as imperative.IProfileLoaded);
-        const session = zosmfApi.getSession();
-        expect(session).toBeDefined();
-        const sessCfg: Partial<ITestProfile> & { hostname: string; type: string } = {
-            ...fakeProfile,
-            hostname: fakeProfile.host,
-            type: imperative.SessConstants.AUTH_TYPE_BASIC,
-        };
-        delete sessCfg.host;
-        expect(session.ISession).toMatchObject(sessCfg);
-    });
-
-    it("getSession should build session from profile with token", () => {
-        const fakeProfileWithToken = {
-            ...fakeProfile,
-            tokenType: imperative.SessConstants.TOKEN_TYPE_JWT,
-            tokenValue: "fakeToken",
-        };
-        delete fakeProfileWithToken.user;
-        delete fakeProfileWithToken.password;
-        const zosmfApi = new ZoweExplorerZosmf.UssApi({
-            profile: fakeProfileWithToken,
-        } as unknown as imperative.IProfileLoaded);
-        const session = zosmfApi.getSession();
-        expect(session).toBeDefined();
-        const sessCfg: Partial<ITestProfile> & { hostname: string; type: string } = {
-            ...fakeProfileWithToken,
-            hostname: fakeProfileWithToken.host,
-            type: imperative.SessConstants.AUTH_TYPE_TOKEN,
-        };
-        delete sessCfg.host;
-        expect(session.ISession).toMatchObject(sessCfg);
-    });
-
-    it("getSession should log error when it fails", () => {
-        const zosmfApi = new ZoweExplorerZosmf.UssApi({} as unknown as imperative.IProfileLoaded);
-        const loggerSpy = jest.spyOn(imperative.Logger.prototype, "error").mockReturnValue("");
-        const session = zosmfApi.getSession();
-        expect(session).toBeUndefined();
-        expect(loggerSpy).toHaveBeenCalledTimes(1);
-    });
-
-    it("getStatus should validate active profile", async () => {
-        const zosmfApi = new ZoweExplorerZosmf.UssApi();
-        const checkStatusSpy = jest.spyOn(zosmf.CheckStatus, "getZosmfInfo").mockResolvedValue({});
-        const status = await zosmfApi.getStatus({ profile: fakeProfile } as unknown as imperative.IProfileLoaded, "zosmf");
-        expect(status).toBe("active");
-        expect(checkStatusSpy).toHaveBeenCalledTimes(1);
-    });
-
-    it("getStatus should validate inactive profile", async () => {
-        const zosmfApi = new ZoweExplorerZosmf.UssApi();
-        const checkStatusSpy = jest.spyOn(zosmf.CheckStatus, "getZosmfInfo").mockResolvedValue(undefined as unknown as zosmf.IZosmfInfoResponse);
-        const status = await zosmfApi.getStatus({ profile: fakeProfile } as unknown as imperative.IProfileLoaded, "zosmf");
-        expect(status).toBe("inactive");
-        expect(checkStatusSpy).toHaveBeenCalledTimes(1);
-    });
-
-    it("should test that copy calls zowe.Utilities.putUSSPayload", async () => {
-        const api = new ZoweExplorerZosmf.UssApi();
-        api.getSession = jest.fn();
-        const response = Buffer.from("hello world!");
-
-        Object.defineProperty(zosfiles.Utilities, "putUSSPayload", {
-            value: jest.fn().mockResolvedValue(response),
-            configurable: true,
+        it("uploads a file from buffer", async () => {
+            const uploadFileSpy = jest.spyOn(zosfiles.Upload, "bufferToUssFile").mockImplementation();
+            const zosmfApi = new ZoweExplorerZosmf.UssApi();
+            jest.spyOn(zosmfApi, "getSession").mockReturnValue(fakeSession);
+            const buf = Buffer.from("123abc");
+            await zosmfApi.uploadFromBuffer(buf, "/some/uss/path");
+            expect(uploadFileSpy).toHaveBeenCalledWith(zosmfApi.getSession(), "/some/uss/path", buf, undefined);
         });
 
-        await expect(api.copy("/")).resolves.toEqual(response);
-    });
-
-    it("getStatus should validate unverified profile", async () => {
-        const zosmfApi = new ZoweExplorerZosmf.UssApi();
-        const status = await zosmfApi.getStatus({ profile: fakeProfile } as unknown as imperative.IProfileLoaded, "sample");
-        expect(status).toBe("unverified");
-    });
-
-    it("login and logout should call APIML endpoints", async () => {
-        const zosmfApi = new ZoweExplorerZosmf.UssApi();
-        const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("");
-        const logoutSpy = jest.spyOn(Logout, "apimlLogout").mockResolvedValue();
-
-        await zosmfApi.login(fakeSession);
-        expect(loginSpy).toHaveBeenCalledWith(fakeSession);
-
-        await zosmfApi.logout(fakeSession);
-        expect(logoutSpy).toHaveBeenCalledWith(fakeSession);
-    });
-
-    it("should retrieve the tag of a file", async () => {
-        const zosmfApi = new ZoweExplorerZosmf.UssApi();
-        jest.spyOn(JSON, "parse").mockReturnValue({
-            stdout: ["-t UTF-8 tesfile.txt"],
+        it("constants should be unchanged", () => {
+            const zosmfApi = new ZoweExplorerZosmf.UssApi();
+            expect(zosmfApi.getProfileTypeName()).toMatchSnapshot();
+            expect(zosmfApi.getTokenTypeName()).toMatchSnapshot();
         });
 
-        Object.defineProperty(zosfiles.Utilities, "putUSSPayload", {
-            value: () => Buffer.from(""),
-            configurable: true,
+        it("getSessionFromCommandArgument should build session from arguments", () => {
+            const zosmfApi = new ZoweExplorerZosmf.UssApi();
+            const session = zosmfApi.getSessionFromCommandArgument(fakeProfile as unknown as imperative.ICommandArguments);
+            expect(session).toBeDefined();
+            const sessCfg: imperative.ISession = {
+                ...fakeProfile,
+                hostname: fakeProfile.host,
+                type: imperative.SessConstants.AUTH_TYPE_BASIC,
+            };
+            delete sessCfg["host"];
+            expect(session.ISession).toMatchObject(sessCfg);
         });
-        await expect(zosmfApi.getTag("testfile.txt")).resolves.toEqual("UTF-8");
-    });
 
-    it("should update the tag attribute when passed in", async () => {
-        const zosmfApi = new ZoweExplorerZosmf.UssApi();
-        const changeTagSpy = jest.fn();
-        Object.defineProperty(zosfiles.Utilities, "putUSSPayload", {
-            value: changeTagSpy,
-            configurable: true,
+        it("getSession should build session from profile with user and password", () => {
+            const zosmfApi = new ZoweExplorerZosmf.UssApi({
+                profile: fakeProfile,
+            } as unknown as imperative.IProfileLoaded);
+            const session = zosmfApi.getSession();
+            expect(session).toBeDefined();
+            const sessCfg: Partial<ITestProfile> & { hostname: string; type: string } = {
+                ...fakeProfile,
+                hostname: fakeProfile.host,
+                type: imperative.SessConstants.AUTH_TYPE_BASIC,
+            };
+            delete sessCfg.host;
+            expect(session.ISession).toMatchObject(sessCfg);
         });
-        await expect(zosmfApi.updateAttributes("/test/path", { tag: "utf-8" })).resolves.not.toThrow();
-        expect(changeTagSpy).toHaveBeenCalledTimes(1);
-    });
 
-    it("calls putUSSPayload to move a directory from old path to new path", async () => {
-        const api = new ZoweExplorerZosmf.UssApi();
-        const putUssPayloadSpy = jest.fn();
-        Object.defineProperty(zosfiles.Utilities, "putUSSPayload", {
-            value: putUssPayloadSpy,
-            configurable: true,
+        it("getSession should build session from profile with token", () => {
+            const fakeProfileWithToken = {
+                ...fakeProfile,
+                tokenType: imperative.SessConstants.TOKEN_TYPE_JWT,
+                tokenValue: "fakeToken",
+            };
+            delete fakeProfileWithToken.user;
+            delete fakeProfileWithToken.password;
+            const zosmfApi = new ZoweExplorerZosmf.UssApi({
+                profile: fakeProfileWithToken,
+            } as unknown as imperative.IProfileLoaded);
+            const session = zosmfApi.getSession();
+            expect(session).toBeDefined();
+            const sessCfg: Partial<ITestProfile> & { hostname: string; type: string } = {
+                ...fakeProfileWithToken,
+                hostname: fakeProfileWithToken.host,
+                type: imperative.SessConstants.AUTH_TYPE_TOKEN,
+            };
+            delete sessCfg.host;
+            expect(session.ISession).toMatchObject(sessCfg);
         });
-        await expect(api.move("/old/path", "/new/path")).resolves.not.toThrow();
-        expect(putUssPayloadSpy).toHaveBeenCalledWith(api.getSession(), "/new/path", { request: "move", from: "/old/path" });
-    });
 
-    const ussApis: ITestApi<ZoweExplorerZosmf.UssApi>[] = [
-        {
-            name: "isFileTagBinOrAscii",
-            spy: jest.spyOn(zosfiles.Utilities, "isFileTagBinOrAscii"),
-            args: ["ussPath"],
-        },
-        {
-            name: "fileList",
-            spy: jest.spyOn(zosfiles.List, "fileList"),
-            args: ["ussPath"],
-        },
-        {
-            name: "isFileTagBinOrAscii",
-            spy: jest.spyOn(zosfiles.Utilities, "isFileTagBinOrAscii"),
-            args: ["ussPath"],
-        },
-        {
-            name: "getContents",
-            spy: jest.spyOn(zosfiles.Download, "ussFile"),
-            args: ["ussPath", {}],
-        },
-        {
-            name: "putContent",
-            spy: jest.spyOn(zosfiles.Upload, "fileToUssFile"),
-            args: ["localPath", "ussPath", {}],
-        },
-        {
-            name: "uploadDirectory",
-            spy: jest.spyOn(zosfiles.Upload, "dirToUSSDirRecursive"),
-            args: ["localPath", "ussPath", {}],
-        },
-        {
-            name: "create",
-            spy: jest.spyOn(zosfiles.Create, "uss"),
-            args: ["ussPath", "file", "777"],
-        },
-        {
-            name: "delete",
-            spy: jest.spyOn(zosfiles.Delete, "ussFile"),
-            args: ["/ussPath", false],
-            transform: (args) => [args[0].slice(1), args[1]],
-        },
-        {
-            name: "delete",
-            spy: jest.spyOn(zosfiles.Delete, "ussFile"),
-            args: ["ussPath", false],
-        },
-        {
-            name: "rename",
-            spy: jest.spyOn(zosfiles.Utilities, "renameUSSFile"),
-            args: ["ussPath1", "ussPath2"],
-        },
-    ];
-    ussApis.forEach((ussApi) => {
-        it(`${ussApi?.name} should inject session into Zowe API`, async () => {
-            await expectApiWithSession(ussApi, new ZoweExplorerZosmf.UssApi());
+        it("getSession should log error when it fails", () => {
+            const zosmfApi = new ZoweExplorerZosmf.UssApi({} as unknown as imperative.IProfileLoaded);
+            const loggerSpy = jest.spyOn(imperative.Logger.prototype, "error").mockReturnValue("");
+            const session = zosmfApi.getSession();
+            expect(session).toBeUndefined();
+            expect(loggerSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it("getStatus should validate active profile", async () => {
+            const zosmfApi = new ZoweExplorerZosmf.UssApi();
+            const checkStatusSpy = jest.spyOn(zosmf.CheckStatus, "getZosmfInfo").mockResolvedValue({});
+            const status = await zosmfApi.getStatus({ profile: fakeProfile } as unknown as imperative.IProfileLoaded, "zosmf");
+            expect(status).toBe("active");
+            expect(checkStatusSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it("getStatus should validate inactive profile", async () => {
+            const zosmfApi = new ZoweExplorerZosmf.UssApi();
+            const checkStatusSpy = jest.spyOn(zosmf.CheckStatus, "getZosmfInfo").mockResolvedValue(undefined as unknown as zosmf.IZosmfInfoResponse);
+            const status = await zosmfApi.getStatus({ profile: fakeProfile } as unknown as imperative.IProfileLoaded, "zosmf");
+            expect(status).toBe("inactive");
+            expect(checkStatusSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it("should test that copy calls zowe.Utilities.putUSSPayload", async () => {
+            const api = new ZoweExplorerZosmf.UssApi();
+            api.getSession = jest.fn();
+            const response = Buffer.from("hello world!");
+
+            Object.defineProperty(zosfiles.Utilities, "putUSSPayload", {
+                value: jest.fn().mockResolvedValue(response),
+                configurable: true,
+            });
+
+            await expect(api.copy("/")).resolves.toEqual(response);
+        });
+
+        it("getStatus should validate unverified profile", async () => {
+            const zosmfApi = new ZoweExplorerZosmf.UssApi();
+            const status = await zosmfApi.getStatus({ profile: fakeProfile } as unknown as imperative.IProfileLoaded, "sample");
+            expect(status).toBe("unverified");
+        });
+
+        it("login and logout should call APIML endpoints", async () => {
+            const zosmfApi = new ZoweExplorerZosmf.UssApi();
+            const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("");
+            const logoutSpy = jest.spyOn(Logout, "apimlLogout").mockResolvedValue();
+
+            await zosmfApi.login(fakeSession);
+            expect(loginSpy).toHaveBeenCalledWith(fakeSession);
+
+            await zosmfApi.logout(fakeSession);
+            expect(logoutSpy).toHaveBeenCalledWith(fakeSession);
+        });
+
+        it("should retrieve the tag of a file", async () => {
+            const zosmfApi = new ZoweExplorerZosmf.UssApi();
+            jest.spyOn(JSON, "parse").mockReturnValue({
+                stdout: ["-t UTF-8 tesfile.txt"],
+            });
+
+            Object.defineProperty(zosfiles.Utilities, "putUSSPayload", {
+                value: () => Buffer.from(""),
+                configurable: true,
+            });
+            await expect(zosmfApi.getTag("testfile.txt")).resolves.toEqual("UTF-8");
+        });
+
+        it("should update the tag attribute when passed in", async () => {
+            const zosmfApi = new ZoweExplorerZosmf.UssApi();
+            const changeTagSpy = jest.fn();
+            Object.defineProperty(zosfiles.Utilities, "putUSSPayload", {
+                value: changeTagSpy,
+                configurable: true,
+            });
+            await expect(zosmfApi.updateAttributes("/test/path", { tag: "utf-8" })).resolves.not.toThrow();
+            expect(changeTagSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it("calls putUSSPayload to move a directory from old path to new path", async () => {
+            const api = new ZoweExplorerZosmf.UssApi();
+            const putUssPayloadSpy = jest.fn();
+            Object.defineProperty(zosfiles.Utilities, "putUSSPayload", {
+                value: putUssPayloadSpy,
+                configurable: true,
+            });
+            await expect(api.move("/old/path", "/new/path")).resolves.not.toThrow();
+            expect(putUssPayloadSpy).toHaveBeenCalledWith(api.getSession(), "/new/path", { request: "move", from: "/old/path" });
+        });
+
+        const ussApis: ITestApi<ZoweExplorerZosmf.UssApi>[] = [
+            {
+                name: "isFileTagBinOrAscii",
+                spy: jest.spyOn(zosfiles.Utilities, "isFileTagBinOrAscii"),
+                args: ["ussPath"],
+            },
+            {
+                name: "fileList",
+                spy: jest.spyOn(zosfiles.List, "fileList"),
+                args: ["ussPath"],
+            },
+            {
+                name: "isFileTagBinOrAscii",
+                spy: jest.spyOn(zosfiles.Utilities, "isFileTagBinOrAscii"),
+                args: ["ussPath"],
+            },
+            {
+                name: "getContents",
+                spy: jest.spyOn(zosfiles.Download, "ussFile"),
+                args: ["ussPath", {}],
+            },
+            {
+                name: "putContent",
+                spy: jest.spyOn(zosfiles.Upload, "fileToUssFile"),
+                args: ["localPath", "ussPath", {}],
+            },
+            {
+                name: "uploadDirectory",
+                spy: jest.spyOn(zosfiles.Upload, "dirToUSSDirRecursive"),
+                args: ["localPath", "ussPath", {}],
+            },
+            {
+                name: "create",
+                spy: jest.spyOn(zosfiles.Create, "uss"),
+                args: ["ussPath", "file", "777"],
+            },
+            {
+                name: "delete",
+                spy: jest.spyOn(zosfiles.Delete, "ussFile"),
+                args: ["/ussPath", false],
+                transform: (args) => [args[0].slice(1), args[1]],
+            },
+            {
+                name: "delete",
+                spy: jest.spyOn(zosfiles.Delete, "ussFile"),
+                args: ["ussPath", false],
+            },
+            {
+                name: "rename",
+                spy: jest.spyOn(zosfiles.Utilities, "renameUSSFile"),
+                args: ["ussPath1", "ussPath2"],
+            },
+        ];
+        ussApis.forEach((ussApi) => {
+            it(`${ussApi?.name} should inject session into Zowe API`, async () => {
+                await expectApiWithSession(ussApi, new ZoweExplorerZosmf.UssApi());
+            });
         });
     });
 });

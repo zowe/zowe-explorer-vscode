@@ -3,3 +3,7 @@
 exports[`ZosmfUssApi constants should be unchanged 1`] = `"zosmf"`;
 
 exports[`ZosmfUssApi constants should be unchanged 2`] = `"apimlAuthenticationToken"`;
+
+exports[`ZosmfUssApi misc constants should be unchanged 1`] = `"zosmf"`;
+
+exports[`ZosmfUssApi misc constants should be unchanged 2`] = `"apimlAuthenticationToken"`;
