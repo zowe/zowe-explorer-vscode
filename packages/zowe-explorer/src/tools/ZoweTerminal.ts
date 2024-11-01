@@ -9,6 +9,7 @@
  *
  */
 
+import { imperative } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 
 export class ZoweTerminal implements vscode.Pseudoterminal {
@@ -83,15 +84,13 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     private closeEmitter = new vscode.EventEmitter<void>();
     public onDidClose?: vscode.Event<void> = this.closeEmitter.event;
 
-    // Start is called when the terminal is opened
     public open(initialDimensions?: vscode.TerminalDimensions | undefined): void {
-        this.writeLine(this.mMessage);
+        this.writeLine(imperative.TextUtils.chalk.dim.italic(this.mMessage));
         if (this.command.length > 0) {
             this.handleInput(ZoweTerminal.Keys.ENTER);
         }
     }
 
-    // Close is called when the terminal is closed
     public close(): void {
         this.closeEmitter.fire();
     }
