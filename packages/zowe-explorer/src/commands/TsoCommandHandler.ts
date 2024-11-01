@@ -11,12 +11,13 @@
 
 import * as vscode from "vscode";
 import * as zostso from "@zowe/zos-tso-for-zowe-sdk";
-import { Gui, Validation, imperative, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, Validation, imperative, IZoweTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { ICommandProviderDialogs, ZoweCommandProvider } from "./ZoweCommandProvider";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { AuthUtils } from "../utils/AuthUtils";
 import { Definitions } from "../configuration/Definitions";
+import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 
 /**
  * Provides a class that manages submitting a TSO command on the server
@@ -38,6 +39,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         return this.instance;
     }
 
+    public history: ZowePersistentFilters;
     private static instance: TsoCommandHandler;
 
     public readonly dialogs: ICommandProviderDialogs = {
@@ -63,6 +65,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
 
     public constructor() {
         super(vscode.l10n.t("Zowe TSO Command"));
+        this.history = new ZowePersistentFilters(PersistenceSchemaEnum.TsoCommands, ZoweCommandProvider.totalFilters);
     }
 
     /**

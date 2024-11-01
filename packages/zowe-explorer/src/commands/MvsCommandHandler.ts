@@ -10,12 +10,13 @@
  */
 
 import * as vscode from "vscode";
-import { Validation, imperative, IZoweTreeNode, Gui } from "@zowe/zowe-explorer-api";
+import { Validation, imperative, IZoweTreeNode, Gui, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { ICommandProviderDialogs, ZoweCommandProvider } from "./ZoweCommandProvider";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { AuthUtils } from "../utils/AuthUtils";
 import { Definitions } from "../configuration/Definitions";
+import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 
 /**
  * Provides a class that manages submitting a command on the server
@@ -56,10 +57,12 @@ export class MvsCommandHandler extends ZoweCommandProvider {
             }),
     };
 
+    public history: ZowePersistentFilters;
     private static instance: MvsCommandHandler;
 
     public constructor() {
         super(vscode.l10n.t("Zowe MVS Command"));
+        this.history = new ZowePersistentFilters(PersistenceSchemaEnum.MvsCommands, ZoweCommandProvider.totalFilters);
     }
 
     /**

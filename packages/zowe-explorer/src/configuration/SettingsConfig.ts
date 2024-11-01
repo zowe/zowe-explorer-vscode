@@ -192,7 +192,9 @@ export class SettingsConfig {
             PersistenceSchemaEnum.Dataset,
             PersistenceSchemaEnum.USS,
             PersistenceSchemaEnum.Job,
-            PersistenceSchemaEnum.Commands,
+            PersistenceSchemaEnum.MvsCommands,
+            PersistenceSchemaEnum.TsoCommands,
+            PersistenceSchemaEnum.UssCommands,
             Definitions.LocalStorageKey.CLI_LOGGER_SETTING_PRESENTED,
         ];
         const vscodePersistentSettings = persistentSettings.filter((setting) => {

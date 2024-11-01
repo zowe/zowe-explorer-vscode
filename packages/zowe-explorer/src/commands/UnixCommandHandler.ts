@@ -12,11 +12,12 @@
 import * as vscode from "vscode";
 import * as zosuss from "@zowe/zos-uss-for-zowe-sdk";
 import { ICommandProviderDialogs, ZoweCommandProvider } from "./ZoweCommandProvider";
-import { Gui, IZoweTreeNode, Validation, imperative } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTreeNode, PersistenceSchemaEnum, Validation, imperative } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { AuthUtils } from "../utils/AuthUtils";
 import { Definitions } from "../configuration/Definitions";
+import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 
 /**
  * Provides a class that manages submitting a Unix command on the server
@@ -38,6 +39,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         return this.instance;
     }
 
+    public history: ZowePersistentFilters;
     private static instance: UnixCommandHandler;
     private nodeProfile: imperative.IProfileLoaded = undefined;
     private unixCmdMsgs = {
@@ -85,6 +87,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
 
     public constructor() {
         super(vscode.l10n.t("Zowe Unix Command"));
+        this.history = new ZowePersistentFilters(PersistenceSchemaEnum.UssCommands, ZoweCommandProvider.totalFilters);
     }
 
     public async issueUnixCommand(node?: IZoweTreeNode, command?: string): Promise<void> {
@@ -255,7 +258,6 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     public runCommand(profile: imperative.IProfileLoaded, command: string): Promise<string> {
         // Clear path and selected profile for follow up commands from the command palette
         this.nodeProfile = undefined;
-
         return ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand(command, this.sshCwd, this.sshSession);
     }
 }

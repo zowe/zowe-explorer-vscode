@@ -1725,12 +1725,28 @@
           "description": "%zowe.commands.alwaysEdit%",
           "scope": "window"
         },
-        "zowe.commands.history": {
+        "zowe.commands.mvs.history": {
           "default": {
             "persistence": true,
             "history": []
           },
-          "description": "%zowe.commands.history%",
+          "description": "%zowe.commands.mvs.history%",
+          "scope": "application"
+        },
+        "zowe.commands.tso.history": {
+          "default": {
+            "persistence": true,
+            "history": []
+          },
+          "description": "%zowe.commands.tso.history%",
+          "scope": "application"
+        },
+        "zowe.commands.uss.history": {
+          "default": {
+            "persistence": true,
+            "history": []
+          },
+          "description": "%zowe.commands.uss.history%",
           "scope": "application"
         },
         "zowe.automaticProfileValidation": {

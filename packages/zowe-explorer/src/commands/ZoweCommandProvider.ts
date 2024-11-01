@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { Gui, imperative, IZoweTreeNode, PersistenceSchemaEnum, Validation } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweTreeNode, Validation } from "@zowe/zowe-explorer-api";
 import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedContext } from "../trees/shared/SharedContext";
@@ -36,10 +36,10 @@ export interface ICommandProviderDialogs {
 
 export abstract class ZoweCommandProvider {
     // eslint-disable-next-line no-magic-numbers
-    private static readonly totalFilters: number = 10;
+    public static readonly totalFilters: number = 10;
     protected readonly operationCancelled: string = vscode.l10n.t("Operation cancelled");
     public profileInstance: Profiles;
-    public history: ZowePersistentFilters;
+    public abstract history: ZowePersistentFilters;
     // Event Emitters used to notify subscribers that the refresh event has fired
     public mOnDidChangeTreeData: vscode.EventEmitter<IZoweTreeNode | void> = new vscode.EventEmitter<IZoweTreeNode | undefined>();
     public readonly onDidChangeTreeData: vscode.Event<IZoweTreeNode | void> = this.mOnDidChangeTreeData.event;
@@ -50,7 +50,6 @@ export abstract class ZoweCommandProvider {
     public pseudoTerminal: ZoweTerminal;
 
     public constructor(protected terminalName: string) {
-        this.history = new ZowePersistentFilters(PersistenceSchemaEnum.Commands, ZoweCommandProvider.totalFilters);
         this.profileInstance = Profiles.getInstance();
     }
 

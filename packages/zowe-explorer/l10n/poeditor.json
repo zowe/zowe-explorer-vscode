@@ -314,8 +314,14 @@
   "zowe.cliLoggerSetting.presented": {
     "User has been asked to sync Zowe Explorer log setting with Zowe CL's environment variable.": ""
   },
-  "zowe.commands.history": {
-    "Toggle if Commands persist locally": ""
+  "zowe.commands.mvs.history": {
+    "Toggle if MVS Commands persist locally": ""
+  },
+  "zowe.commands.tso.history": {
+    "Toggle if TSO Commands persist locally": ""
+  },
+  "zowe.commands.uss.history": {
+    "Toggle if Unix Commands persist locally": ""
   },
   "zowe.commands.alwaysEdit": {
     "Allow editing of commands before submitting": ""
