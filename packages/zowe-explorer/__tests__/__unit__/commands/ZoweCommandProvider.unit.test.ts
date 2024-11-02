@@ -104,7 +104,7 @@ describe("ZoweCommandProvider Unit Tests", () => {
                     terminalName: "test-terminal",
                     pseudoTerminal: {},
                     formatCommandLine: (cmd: string) => "test-" + cmd,
-                    history: { getSearchHistory: () => ["old-cmd-01", "old-cmd-02"] },
+                    history: { getSearchHistory: () => ["old-cmd-01", "old-cmd-02"], addSearchHistory: jest.fn() },
                     runCommand: jest.fn().mockRejectedValue(testError),
                 };
                 const testProfile: any = { name: "test", profile: { user: "firstName", password: "12345" } };
