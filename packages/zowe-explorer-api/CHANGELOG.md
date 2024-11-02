@@ -7,6 +7,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ### New features and enhancements
 
 - Update Zowe SDKs to `8.2.0` to get the latest enhancements from Imperative.
+- Added individual user settings for MVS, TSO, and Unix commands. [#3079](https://github.com/zowe/zowe-explorer-vscode/pull/3079)
 
 ### Bug fixes
 
