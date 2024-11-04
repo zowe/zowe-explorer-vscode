@@ -22,14 +22,6 @@ export class VscSettings {
         return vscode.workspace.getConfiguration(first).get(rest.join("."), defaultValue);
     }
 
-    // create mock ProxyVariables, able to remove after CLI changes adopted
-    public static proxyVars: {
-        http_proxy: string;
-        https_proxy: string;
-        no_proxy: string[];
-        proxy_authorization: string;
-        proxy_strict_ssl: boolean;
-    };
     // Return will be Promise<imperative.ProxyVariables>
     // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     public static getVsCodeProxySettings() {
@@ -37,10 +29,17 @@ export class VscSettings {
         if (proxySupport !== "on") {
             return;
         }
-        this.proxyVars.no_proxy = this.getDirectValue("http.noProxy");
-        this.proxyVars.proxy_strict_ssl = this.getDirectValue("http.proxyStrictSSL");
-        this.proxyVars.proxy_authorization = this.getDirectValue("http.proxyAuthorization");
-        this.proxyVars.http_proxy = this.proxyVars.https_proxy = this.getDirectValue("http.proxy");
-        return this.proxyVars;
+        const http_proxy = this.getDirectValue("http.proxy");
+        const no_proxy = this.getDirectValue("http.noProxy");
+        const proxy_strict_ssl = this.getDirectValue("http.proxyStrictSSL");
+        const proxy_authorization = this.getDirectValue("http.proxyAuthorization");
+
+        return {
+            http_proxy,
+            https_proxy: http_proxy,
+            no_proxy,
+            proxy_authorization,
+            proxy_strict_ssl,
+        };
     }
 }

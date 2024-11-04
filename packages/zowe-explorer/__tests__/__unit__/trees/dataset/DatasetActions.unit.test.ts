@@ -132,8 +132,8 @@ const createBlockMocksShared = () => {
     const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
     const mvsApi = createMvsApi(imperativeProfile);
     const fetchDsAtUri = jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockImplementation();
-    Object.defineProperty(ProfilesCache, "getProfileSessionWithVscProxy", { value: jest.fn().mockReturnValue(zosmfSession), configurable: true });
     bindMvsApi(mvsApi);
+    Object.defineProperty(ProfilesCache, "getProfileSessionWithVscProxy", { value: jest.fn().mockReturnValue(zosmfSession), configurable: true });
 
     return {
         session,
