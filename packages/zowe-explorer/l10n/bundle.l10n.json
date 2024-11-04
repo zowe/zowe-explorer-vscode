@@ -39,7 +39,7 @@
   "The API does not support updating attributes for this": "The API does not support updating attributes for this",
   "Waiting for data from extension...": "Waiting for data from extension...",
   "Log in to Authentication Service": "Log in to Authentication Service",
-  "Select a certificate and Certificate Key in PEM format:": "Select a certificate and Certificate Key in PEM format:",
+  "Select a certificate and certificate key in PEM format:": "Select a certificate and certificate key in PEM format:",
   "Value": "Value",
   "Actions": "Actions",
   "Certificate File": "Certificate File",

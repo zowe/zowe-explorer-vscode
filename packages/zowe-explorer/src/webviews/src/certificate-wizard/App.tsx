@@ -49,7 +49,7 @@ export function App() {
       <div style={{ marginTop: "1em" }}>
         <div style={{ maxWidth: "fit-content" }}>
           <VSCodeDataGrid style={{ marginTop: "1em" }} gridTemplateColumns="15vw 45vw 30vw">
-            <h3>{l10n.t("Select a certificate and Certificate Key in PEM format:")}</h3>
+            <h3>{l10n.t("Select a certificate and certificate key in PEM format:")}</h3>
             <VSCodeDataGridRow rowType="header">
               <VSCodeDataGridCell cellType="columnheader" gridColumn="1"></VSCodeDataGridCell>
               <VSCodeDataGridCell cellType="columnheader" gridColumn="2">
