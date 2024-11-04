@@ -19,8 +19,7 @@ const fs = require("fs");
 const TerserPlugin = require("terser-webpack-plugin");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 
-/**@type {webpack.Configuration}*/
-const config = {
+const config = (mode) => ({
     target: "node",
     entry: "./src/extension.ts",
     output: {
@@ -45,7 +44,7 @@ const config = {
         warnings: false,
     },
     optimization: {
-        minimize: true,
+        minimize: mode !== "development",
         minimizer: [
             new TerserPlugin({
                 parallel: true,
@@ -98,6 +97,6 @@ const config = {
             },
         }),
     ],
-};
+});
 
-module.exports = config;
+module.exports = (_, { mode }) => config(mode);
