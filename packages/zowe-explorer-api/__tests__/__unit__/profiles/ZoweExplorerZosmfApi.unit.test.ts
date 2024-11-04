@@ -516,6 +516,17 @@ describe("ZosmfMvsApi", () => {
             spy: jest.spyOn(zosfiles.Delete, "dataSet"),
             args: ["dsname", fakeProperties],
         },
+        {
+            name: "dataSetsMatchingPattern",
+            spy: jest.spyOn(zosfiles.List, "dataSetsMatchingPattern"),
+            args: [["SAMPLE.A*", "SAMPLE.B*"], fakeProperties],
+        },
+        {
+            name: "copyDataSet",
+            spy: jest.spyOn(zosfiles.Copy, "dataSet"),
+            args: ["FROM.NAME", "TO.NAME", undefined, undefined, fakeProperties],
+            transform: (args) => [{ dsn: args[1] }, { enq: undefined, "from-dataset": { dsn: args[0] }, replace: undefined, ...fakeProperties }],
+        },
     ];
     mvsApis.forEach((mvsApi) => {
         it(`${mvsApi?.name} should inject session into Zowe API`, async () => {
