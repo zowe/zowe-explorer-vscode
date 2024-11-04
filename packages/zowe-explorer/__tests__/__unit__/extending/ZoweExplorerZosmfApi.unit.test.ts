@@ -30,7 +30,9 @@ describe("Zosmf API tests", () => {
 
         const api = new ZoweExplorerZosmf.MvsApi();
         api.getSession = jest.fn();
-        await api.copyDataSetMember({ dsn: "IBM.FROM", member: "IEFBR14" }, { dsn: "IBM.TO", member: "IEFBR15" });
+        await api.copyDataSetMember({ dsn: "IBM.FROM", member: "IEFBR14" }, { dsn: "IBM.TO", member: "IEFBR15" }, {
+            responseTimeout: undefined,
+        } as any);
     });
 
     it("should test that copy data set uses enq", async () => {
@@ -46,7 +48,7 @@ describe("Zosmf API tests", () => {
         await api.copyDataSetMember(
             { dsn: "IBM.FROM", member: "IEFBR14" },
             { dsn: "IBM.TO", member: "IEFBR15" },
-            { enq: "SHR", "from-dataset": { dsn: "BROADCOM.FROM" } }
+            { enq: "SHR", "from-dataset": { dsn: "BROADCOM.FROM" }, responseTimeout: undefined }
         );
     });
 
@@ -62,6 +64,7 @@ describe("Zosmf API tests", () => {
         api.getSession = jest.fn();
         await api.copyDataSetMember({ dsn: "IBM.FROM", member: "IEFBR14" }, { dsn: "IBM.TO", member: "IEFBR15" }, {
             enq: "SHR",
+            responseTimeout: undefined,
         } as any);
     });
 
@@ -80,6 +83,7 @@ describe("Zosmf API tests", () => {
 
         await api.putContent("someLocalFile.txt", "/some/remote", {
             encoding: "285",
+            responseTimeout: undefined,
         });
     });
 
