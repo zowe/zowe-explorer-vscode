@@ -262,6 +262,11 @@ describe("ZosmfUssApi", () => {
             };
             delete fakeProfileWithToken.user;
             delete fakeProfileWithToken.password;
+            fakeSession.ISession.tokenType = imperative.SessConstants.TOKEN_TYPE_JWT;
+            fakeSession.ISession.tokenValue = "fakeToken";
+            fakeSession.ISession.type = "token";
+            delete fakeSession.ISession.user;
+            delete fakeSession.ISession.password;
             const zosmfApi = new ZoweExplorerZosmf.UssApi({
                 profile: fakeProfileWithToken,
             } as unknown as imperative.IProfileLoaded);
@@ -277,6 +282,7 @@ describe("ZosmfUssApi", () => {
         });
 
         it("getSession should log error when it fails", () => {
+            jest.resetAllMocks();
             const zosmfApi = new ZoweExplorerZosmf.UssApi({} as unknown as imperative.IProfileLoaded);
             const loggerSpy = jest.spyOn(imperative.Logger.prototype, "error").mockReturnValue("");
             const session = zosmfApi.getSession();
