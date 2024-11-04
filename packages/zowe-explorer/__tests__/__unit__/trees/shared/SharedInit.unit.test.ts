@@ -555,6 +555,16 @@ describe("Test src/shared/extension", () => {
             expect(remoteLookupDsSpy).not.toHaveBeenCalled();
             expect(remoteLookupUssSpy).not.toHaveBeenCalled();
         });
+        it("logs an error if one occurs", async () => {
+            const fakeEventInfo = getFakeEventInfo([{ uri: vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/lpar.zosmf/TEST.PDS" }) }]);
+            const sampleError = new Error("issue fetching data set");
+            const remoteLookupMock = jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockRejectedValueOnce(sampleError);
+            const errorMock = jest.spyOn(ZoweLogger, "error").mockImplementation();
+            await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo);
+            expect(errorMock).toHaveBeenCalledWith(sampleError.message);
+            expect(remoteLookupMock).toHaveBeenCalled();
+            remoteLookupMock.mockRestore();
+        });
     });
 
     describe("emitZoweEventHook", () => {

@@ -20,7 +20,8 @@
   "diff.overwrite": "Overwrite",
   "diff.useRemote": "Use Remote",
   "addFavorite": "Add to Favorites",
-  "removeFavProfile": "Remove Profile from Favorites",
+  "addToWorkspace": "Add to Workspace",
+  "removeFavProfile": "Remove profile from Favorites",
   "addSession": "Add Profile to Data Sets View",
   "createDataset": "Create New Data Set",
   "createMember": "Create New Member",
@@ -135,5 +136,6 @@
   "compareWithSelected": "Compare with Selected",
   "compareWithSelectedReadOnly": "Compare with Selected (Read-Only)",
   "openWithEncoding": "Open with Encoding",
+  "copyExternalLink": "Copy External Link",
   "zowe.history.deprecationMsg": "Changes made here will not be reflected in Zowe Explorer, use right-click Edit History option to access information from local storage."
 }
