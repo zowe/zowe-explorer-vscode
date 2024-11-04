@@ -80,7 +80,7 @@ export class CertificateWizard extends WebView {
             case "promptCertKey":
                 {
                     const tempCertKey = await Gui.showOpenDialog({
-                        title: vscode.l10n.t("Enter the path to the Certificate Key for authenticating the connection."),
+                        title: vscode.l10n.t("Certificate Key for Authentication."),
                         defaultUri: this.opts.certKey ? vscode.Uri.file(this.opts.certKey) : undefined,
                         filters: {
                             [vscode.l10n.t("Certificate Keys")]: ["cer", "crt", "pem", "key"],

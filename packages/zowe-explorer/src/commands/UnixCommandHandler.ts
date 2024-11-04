@@ -366,7 +366,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 const submitResponse = await Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,
-                        title: vscode.l10n.t("Unix Command submitted."),
+                        title: vscode.l10n.t("Unix Command Submitted."),
                     },
                     () => {
                         // eslint-disable-next-line @typescript-eslint/no-unsafe-return

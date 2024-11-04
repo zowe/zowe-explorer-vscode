@@ -203,7 +203,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 const submitResponse = await Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,
-                        title: vscode.l10n.t("MVS Command submitted."),
+                        title: vscode.l10n.t("MVS Command Submitted."),
                     },
                     () => {
                         return ZoweExplorerApiRegister.getCommandApi(profile).issueMvsCommand(command, profile.profile?.consoleName);

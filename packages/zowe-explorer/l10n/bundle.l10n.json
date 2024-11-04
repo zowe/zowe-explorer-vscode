@@ -155,7 +155,7 @@
   "Enter the path to the certificate for authenticating the connection.": "Enter the path to the certificate for authenticating the connection.",
   "Certificate Files": "Certificate Files",
   "Select Certificate": "Select Certificate",
-  "Enter the path to the Certificate Key for authenticating the connection.": "Enter the path to the Certificate Key for authenticating the connection.",
+  "Certificate Key for Authentication.": "Certificate Key for Authentication.",
   "Certificate Keys": "Certificate Keys",
   "Select Certificate Key": "Select Certificate Key",
   "Required parameter 'host' must not be blank.": "Required parameter 'host' must not be blank.",
@@ -208,6 +208,32 @@
   "Profile auth error": "Profile auth error",
   "Profile is not authenticated, please log in to continue": "Profile is not authenticated, please log in to continue",
   "Retrieving response from USS list API": "Retrieving response from USS list API",
+  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
+  "Could not list USS files: Empty path provided in URI": "Could not list USS files: Empty path provided in URI",
+  "Profile does not exist for this file.": "Profile does not exist for this file.",
+  "Saving USS file...": "Saving USS file...",
+  "Renaming {0} failed due to API error: {1}/File pathError message": {
+    "message": "Renaming {0} failed due to API error: {1}",
+    "comment": [
+      "File path",
+      "Error message"
+    ]
+  },
+  "Deleting {0} failed due to API error: {1}/File nameError message": {
+    "message": "Deleting {0} failed due to API error: {1}",
+    "comment": [
+      "File name",
+      "Error message"
+    ]
+  },
+  "No error details given": "No error details given",
+  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
+    "message": "Error fetching destination {0} for paste action: {1}",
+    "comment": [
+      "USS path",
+      "Error message"
+    ]
+  },
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
     "comment": [
@@ -278,32 +304,6 @@
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "Pulling from Mainframe...": "Pulling from Mainframe...",
-  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
-  "Could not list USS files: Empty path provided in URI": "Could not list USS files: Empty path provided in URI",
-  "Profile does not exist for this file.": "Profile does not exist for this file.",
-  "Saving USS file...": "Saving USS file...",
-  "Renaming {0} failed due to API error: {1}/File pathError message": {
-    "message": "Renaming {0} failed due to API error: {1}",
-    "comment": [
-      "File path",
-      "Error message"
-    ]
-  },
-  "Deleting {0} failed due to API error: {1}/File nameError message": {
-    "message": "Deleting {0} failed due to API error: {1}",
-    "comment": [
-      "File name",
-      "Error message"
-    ]
-  },
-  "No error details given": "No error details given",
-  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
-    "message": "Error fetching destination {0} for paste action: {1}",
-    "comment": [
-      "USS path",
-      "Error message"
-    ]
-  },
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -680,7 +680,7 @@
   "Resetting Data Set templates array.": "Resetting Data Set templates array.",
   "Updating Data Set templates.": "Updating Data Set templates.",
   "Adding new Data Set template {0}.": "Adding new Data Set template {0}.",
-  "Data Set template save location": "Data Set template save location",
+  "Data Set Template Save Location": "Data Set Template Save Location",
   "Choose the setting location to save the Data Set template...": "Choose the setting location to save the Data Set template...",
   "Save as User setting": "Save as User setting",
   "Save as Workspace setting": "Save as Workspace setting",
@@ -947,8 +947,8 @@
   },
   "Reload Window": "Reload Window",
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.",
-  "Choose \"Create new...\" to define or select a profile to add to the Data Sets Explorer": "Choose \"Create new...\" to define or select a profile to add to the Data Sets Explorer",
-  "Choose \"Create new...\" to define or select a profile to add to the Jobs Explorer": "Choose \"Create new...\" to define or select a profile to add to the Jobs Explorer",
+  "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree",
+  "Choose \"Create new...\" to define or select a profile to add to the JOBS tree": "Choose \"Create new...\" to define or select a profile to add to the JOBS tree",
   "Choose \"Create new...\" to define or select a profile to add to the USS Explorer": "Choose \"Create new...\" to define or select a profile to add to the USS Explorer",
   "Profile selection has been cancelled.": "Profile selection has been cancelled.",
   "The profile {0} has been added to the {1} tree./chosen profiletree type": {
@@ -974,8 +974,8 @@
     ]
   },
   "Select the profile you want to delete": "Select the profile you want to delete",
-  "Validating {0} profile./The profile name": {
-    "message": "Validating {0} profile.",
+  "Validating {0} Profile./The profile name": {
+    "message": "Validating {0} Profile.",
     "comment": [
       "The profile name"
     ]
@@ -1112,7 +1112,7 @@
     ]
   },
   "Enter or update the Unix Command": "Enter or update the Unix Command",
-  "Unix Command submitted.": "Unix Command submitted.",
+  "Unix Command Submitted.": "Unix Command Submitted.",
   "Create a new TSO Command": "Create a new TSO Command",
   "Zowe TSO Command": "Zowe TSO Command",
   "Select the profile to use to submit the TSO Command": "Select the profile to use to submit the TSO Command",
@@ -1131,7 +1131,7 @@
   },
   "Enter or update the TSO Command": "Enter or update the TSO Command",
   "No command entered.": "No command entered.",
-  "TSO Command submitted.": "TSO Command submitted.",
+  "TSO Command Submitted.": "TSO Command Submitted.",
   "No account number was supplied.": "No account number was supplied.",
   "Select the TSO profile to use for account number.": "Select the TSO profile to use for account number.",
   "Account Number": "Account Number",
@@ -1153,5 +1153,5 @@
     ]
   },
   "Enter or update the MVS Command": "Enter or update the MVS Command",
-  "MVS Command submitted.": "MVS Command submitted."
+  "MVS Command Submitted.": "MVS Command Submitted."
 }

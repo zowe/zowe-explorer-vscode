@@ -345,10 +345,10 @@ export class Profiles extends ProfilesCache {
         let addProfilePlaceholder = "";
         switch (zoweFileProvider.getTreeType()) {
             case PersistenceSchemaEnum.Dataset:
-                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the Data Sets Explorer`);
+                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the DATA SETS tree`);
                 break;
             case PersistenceSchemaEnum.Job:
-                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the Jobs Explorer`);
+                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the JOBS tree`);
                 break;
             default:
                 // Use USS View as default for placeholder text
@@ -692,7 +692,7 @@ export class Profiles extends ProfilesCache {
                         {
                             location: vscode.ProgressLocation.Notification,
                             title: vscode.l10n.t({
-                                message: `Validating {0} profile.`,
+                                message: `Validating {0} Profile.`,
                                 args: [theProfile.name],
                                 comment: [`The profile name`],
                             }),

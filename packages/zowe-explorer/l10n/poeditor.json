@@ -177,10 +177,10 @@
     "Delete Job": ""
   },
   "runModifyCommand": {
-    "Issue Modify command": ""
+    "Issue Modify Command": ""
   },
   "runStopCommand": {
-    "Issue Stop command": ""
+    "Issue Stop Command": ""
   },
   "refreshJobsServer": {
     "Refresh": ""
@@ -207,28 +207,28 @@
     "Zowe Explorer": ""
   },
   "zowe.ds.default.binary": {
-    "Default values of Binary Data Set creation": ""
+    "Default values of Binary data set creation": ""
   },
   "zowe.ds.default.c": {
-    "Default values of C Data Set creation": ""
+    "Default values of C data set creation": ""
   },
   "zowe.ds.default.classic": {
-    "Default values of Classic Data Set creation": ""
+    "Default values of Classic data set creation": ""
   },
   "zowe.ds.default.pds": {
-    "Default values of Partitioned Data Set creation": ""
+    "Default values of Partitioned data set creation": ""
   },
   "zowe.ds.default.extended": {
-    "Default values of Partitioned Data Set extended creation": ""
+    "Default values of Partitioned data set extended creation": ""
   },
   "zowe.ds.default.ps": {
-    "Default values of Sequential Data Set creation": ""
+    "Default values of Sequential data set creation": ""
   },
   "zowe.ds.history": {
     "Toggle if favorite files persist locally": ""
   },
   "zowe.ds.templates": {
-    "Zowe Explorer saved Data Set templates": ""
+    "Zowe Explorer saved data set templates": ""
   },
   "zowe.files.logsFolder.path": {
     "Path to Zowe Explorer logs folder": ""
@@ -240,7 +240,7 @@
     "Toggle if Jobs favorite files persist locally": ""
   },
   "zowe.jobs.confirmSubmission": {
-    "Require user confirmation before submitting a Job": ""
+    "Require user confirmation before submitting a job": ""
   },
   "zowe.jobs.confirmSubmission.yourJobs": {
     "Your Jobs": ""
@@ -255,13 +255,13 @@
     "Disabled": ""
   },
   "zowe.jobs.confirmSubmission.disabled.desc": {
-    "No confirmation dialogs will be shown when submitting a Job.": ""
+    "No confirmation dialogs will be shown when submitting a job.": ""
   },
   "zowe.jobs.confirmSubmission.yourJobs.desc": {
-    "Shows a confirmation dialog when submitting your Jobs.": ""
+    "Shows a confirmation dialog when submitting your jobs.": ""
   },
   "zowe.jobs.confirmSubmission.otherUserJobs.desc": {
-    "Shows a confirmation dialog when submitting Jobs from another user.": ""
+    "Shows a confirmation dialog when submitting jobs from another user.": ""
   },
   "zowe.jobs.confirmSubmission.allJobs.desc": {
     "Shows a confirmation dialog when submitting any job.": ""
@@ -318,16 +318,16 @@
     "Toggle if Commands persist locally": ""
   },
   "zowe.automaticProfileValidation": {
-    "Allow automatic validation of Profiles.": ""
+    "Allow automatic validation of profiles.": ""
   },
   "zowe.pollInterval.info": {
     "Default interval (in milliseconds) when polling spool files.": ""
   },
   "zowe.security.checkForCustomCredentialManagers": {
-    "Check for any installed VS Code extensions for handling Credentials when activating Zowe Explorer": ""
+    "Check for any installed VS Code extensions for handling credentials when activating Zowe Explorer": ""
   },
   "zowe.security.secureCredentialsEnabled": {
-    "Allow Credentials to be stored securely. If disabled and autoStore is set to true, z/OS Credentials are stored as clear text in zowe.config.json.": ""
+    "Allow credentials to be stored securely. If disabled and autoStore is set to true, z/OS credentials are stored as clear text in zowe.config.json.": ""
   },
   "issueTsoCmd": {
     "Issue TSO Command": ""
@@ -387,10 +387,10 @@
     "Filter Jobs...": ""
   },
   "ds.filterBy": {
-    "Filter PDS members...": ""
+    "Filter PDS Members...": ""
   },
   "ds.sortBy": {
-    "Sort PDS members...": ""
+    "Sort PDS Members...": ""
   },
   "issueUnixCmd": {
     "Issue Unix Command": ""
@@ -511,7 +511,7 @@
   "Enter the path to the certificate for authenticating the connection.": "",
   "Certificate Files": "",
   "Select Certificate": "",
-  "Enter the path to the Certificate Key for authenticating the connection.": "",
+  "Certificate Key for Authentication.": "",
   "Certificate Keys": "",
   "Select Certificate Key": "",
   "Required parameter 'host' must not be blank.": "",
@@ -534,6 +534,14 @@
   "Profile auth error": "",
   "Profile is not authenticated, please log in to continue": "",
   "Retrieving response from USS list API": "",
+  "The 'move' function is not implemented for this USS API.": "",
+  "Could not list USS files: Empty path provided in URI": "",
+  "Profile does not exist for this file.": "",
+  "Saving USS file...": "",
+  "Renaming {0} failed due to API error: {1}": "",
+  "Deleting {0} failed due to API error: {1}": "",
+  "No error details given": "",
+  "Error fetching destination {0} for paste action: {1}": "",
   "Downloaded: {0}": "",
   "Encoding: {0}": "",
   "Binary": "",
@@ -562,14 +570,6 @@
   "initializeUSSFavorites.error.buttonRemove": "",
   "File does not exist. It may have been deleted.": "",
   "Pulling from Mainframe...": "",
-  "The 'move' function is not implemented for this USS API.": "",
-  "Could not list USS files: Empty path provided in URI": "",
-  "Profile does not exist for this file.": "",
-  "Saving USS file...": "",
-  "Renaming {0} failed due to API error: {1}": "",
-  "Deleting {0} failed due to API error: {1}": "",
-  "No error details given": "",
-  "Error fetching destination {0} for paste action: {1}": "",
   "{0} location": "",
   "Choose a location to create the {0}": "",
   "Name of file or directory": "",
@@ -720,7 +720,7 @@
   "Resetting Data Set templates array.": "",
   "Updating Data Set templates.": "",
   "Adding new Data Set template {0}.": "",
-  "Data Set template save location": "",
+  "Data Set Template Save Location": "",
   "Choose the setting location to save the Data Set template...": "",
   "Save as User setting": "",
   "Save as Workspace setting": "",
@@ -826,8 +826,8 @@
   "Internal error: Tried to call a non-existing Common API in API register: {0}": "",
   "Reload Window": "",
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "",
-  "Choose \"Create new...\" to define or select a profile to add to the Data Sets Explorer": "",
-  "Choose \"Create new...\" to define or select a profile to add to the Jobs Explorer": "",
+  "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree": "",
+  "Choose \"Create new...\" to define or select a profile to add to the JOBS tree": "",
   "Choose \"Create new...\" to define or select a profile to add to the USS Explorer": "",
   "Profile selection has been cancelled.": "",
   "The profile {0} has been added to the {1} tree.": "",
@@ -837,7 +837,7 @@
   "Password": "",
   "Enter the password for the {0} connection. Leave blank to not store.": "",
   "Select the profile you want to delete": "",
-  "Validating {0} profile.": "",
+  "Validating {0} Profile.": "",
   "Validating {0} was cancelled.": "",
   "Profile validation failed for {0}.": "",
   "This profile is using basic Authentication and does not support token Authentication.": "",
@@ -907,7 +907,7 @@
   "Select a Unix Command to run against {0} (An option to edit will follow)": "",
   "Select a Unix Command to run immediately against {0}": "",
   "Enter or update the Unix Command": "",
-  "Unix Command submitted.": "",
+  "Unix Command Submitted.": "",
   "Create a new TSO Command": "",
   "Zowe TSO Command": "",
   "Select the profile to use to submit the TSO Command": "",
@@ -916,7 +916,7 @@
   "Select a TSO Command to run immediately against {0}": "",
   "Enter or update the TSO Command": "",
   "No command entered.": "",
-  "TSO Command submitted.": "",
+  "TSO Command Submitted.": "",
   "No account number was supplied.": "",
   "Select the TSO profile to use for account number.": "",
   "Account Number": "",
@@ -928,5 +928,5 @@
   "Select an MVS Command to run against {0} (An option to edit will follow)": "",
   "Select an MVS Command to run immediately against {0}": "",
   "Enter or update the MVS Command": "",
-  "MVS Command submitted.": ""
+  "MVS Command Submitted.": ""
 }

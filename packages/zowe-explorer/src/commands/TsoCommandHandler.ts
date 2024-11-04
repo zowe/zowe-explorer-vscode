@@ -211,7 +211,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 const submitResponse = await Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,
-                        title: vscode.l10n.t("TSO Command submitted."),
+                        title: vscode.l10n.t("TSO Command Submitted."),
                     },
                     () => {
                         return ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommandWithParms(command, tsoParams);
