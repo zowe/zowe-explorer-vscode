@@ -76,7 +76,7 @@ export class ProfileManagement {
     public static readonly basicAuthAddQpItems: Record<string, vscode.QuickPickItem> = {
         [ProfileManagement.AuthQpLabels.add]: {
             label: `$(plus) ${vscode.l10n.t("Add Credentials")}`,
-            description: vscode.l10n.t("Add username and password for basic Authentication"),
+            description: vscode.l10n.t("Add username and password for basic authentication"),
         },
     };
     public static readonly basicAuthUpdateQpItems: Record<string, vscode.QuickPickItem> = {
@@ -205,7 +205,7 @@ export class ProfileManagement {
                 break;
             }
             default: {
-                Gui.infoMessage(vscode.l10n.t("Operation Cancelled"));
+                Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
                 break;
             }
         }
@@ -214,17 +214,17 @@ export class ProfileManagement {
     private static getQpPlaceholders(profile: imperative.IProfileLoaded): { basicAuth: string; tokenAuth: string; chooseAuth: string } {
         return {
             basicAuth: vscode.l10n.t({
-                message: "Profile {0} is using basic Authentication. Choose a profile action.",
+                message: "Profile {0} is using basic authentication. Choose a profile action.",
                 args: [profile.name],
                 comment: ["Profile name"],
             }),
             tokenAuth: vscode.l10n.t({
-                message: "Profile {0} is using token Authentication. Choose a profile action.",
+                message: "Profile {0} is using token authentication. Choose a profile action.",
                 args: [profile.name],
                 comment: ["Profile name"],
             }),
             chooseAuth: vscode.l10n.t({
-                message: "Profile {0} doesn't specify an Authentication method. Choose a profile action.",
+                message: "Profile {0} doesn't specify an authentication method. Choose a profile action.",
                 args: [profile.name],
                 comment: ["Profile name"],
             }),
@@ -280,7 +280,7 @@ export class ProfileManagement {
     private static async handleHideProfiles(node: IZoweTreeNode): Promise<void> {
         const shouldHideFromAllTrees = await Profiles.handleChangeForAllTrees(node.getLabel().toString(), false);
         if (shouldHideFromAllTrees === undefined) {
-            Gui.infoMessage(vscode.l10n.t("Operation Cancelled"));
+            Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
             return;
         }
         return vscode.commands.executeCommand("zowe.removeSession", node, null, shouldHideFromAllTrees);

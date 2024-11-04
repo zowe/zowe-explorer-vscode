@@ -423,7 +423,7 @@ describe("writeFile", () => {
         await DatasetFSProvider.instance.writeFile(testUris.ps, newContents, { create: false, overwrite: true });
 
         expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.ps);
-        expect(statusMsgMock).toHaveBeenCalledWith("$(sync~spin) Saving Data Set...");
+        expect(statusMsgMock).toHaveBeenCalledWith("$(sync~spin) Saving data set...");
         expect(mockMvsApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(newContents), testEntries.ps.name, {
             binary: false,
             encoding: undefined,
@@ -485,7 +485,7 @@ describe("writeFile", () => {
         await DatasetFSProvider.instance.writeFile(testUris.ps, newContents, { create: false, overwrite: true });
 
         expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.ps);
-        expect(statusMsgMock).toHaveBeenCalledWith("$(sync~spin) Saving Data Set...");
+        expect(statusMsgMock).toHaveBeenCalledWith("$(sync~spin) Saving data set...");
         expect(mockMvsApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(newContents), testEntries.ps.name, {
             binary: false,
             encoding: undefined,
@@ -517,7 +517,7 @@ describe("writeFile", () => {
         await DatasetFSProvider.instance.writeFile(testUris.ps, newContents, { create: true, overwrite: true });
 
         expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.ps);
-        expect(statusMsgMock).toHaveBeenCalledWith("$(sync~spin) Saving Data Set...");
+        expect(statusMsgMock).toHaveBeenCalledWith("$(sync~spin) Saving data set...");
         expect(mockMvsApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(newContents), testEntries.ps.name, {
             binary: false,
             encoding: undefined,

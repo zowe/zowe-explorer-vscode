@@ -43,22 +43,22 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         return this.instance;
     }
 
-    private static readonly defaultDialogText: string = `$(plus) ${vscode.l10n.t("Create a new Unix Command")}`;
+    private static readonly defaultDialogText: string = `$(plus) ${vscode.l10n.t("Create a new Unix command")}`;
     private static instance: UnixCommandHandler;
     private serviceProf: imperative.IProfileLoaded = undefined;
     private unixCmdMsgs = {
-        opCancelledMsg: vscode.l10n.t("Operation Cancelled"),
+        opCancelledMsg: vscode.l10n.t("Operation cancelled"),
         issueCmdNotSupportedMsg: vscode.l10n.t({
             message: "Issuing commands is not supported for this profile type, {0}.",
             args: [this.serviceProf?.type],
             comment: ["Profile type"],
         }),
         issueUnixCmdNotSupportedMsg: vscode.l10n.t({
-            message: "Issuing UNIX Commands is not supported for this profile type, {0}.",
+            message: "Issuing UNIX commands is not supported for this profile type, {0}.",
             args: [this.serviceProf?.type],
             comment: ["Profile type"],
         }),
-        sshSessionErrorMsg: vscode.l10n.t("Error preparing SSH connection for issuing UNIX Commands, please check SSH profile for correctness."),
+        sshSessionErrorMsg: vscode.l10n.t("Error preparing SSH connection for issuing UNIX commands, please check SSH profile for correctness."),
         sshProfNotFoundMsg: vscode.l10n.t("No SSH profile found. Please create an SSH profile."),
         sshProfMissingInfoMsg: vscode.l10n.t("SSH profile missing connection details. Please update."),
         noProfilesAvailableMsg: vscode.l10n.t("No profiles available."),
@@ -100,7 +100,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 ZoweLogger.error(this.unixCmdMsgs.issueUnixCmdNotSupportedMsg);
                 Gui.errorMessage(
                     vscode.l10n.t({
-                        message: "Issuing UNIX Commands is not supported for this profile type, {0}.",
+                        message: "Issuing UNIX commands is not supported for this profile type, {0}.",
                         args: [this.serviceProf?.type],
                         comment: ["Profile type"],
                     })
@@ -111,13 +111,13 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             try {
                 this.isSshRequiredForProf = ZoweExplorerApiRegister.getCommandApi(this.serviceProf).sshProfileRequired();
                 ZoweLogger.info(
-                    vscode.l10n.t("An SSH profile will be used for issuing UNIX Commands with the profile {0}.", [this.serviceProf?.name])
+                    vscode.l10n.t("An SSH profile will be used for issuing UNIX commands with the profile {0}.", [this.serviceProf?.name])
                 );
             } catch (e) {
                 // error would be due to missing API, assuming SSH profile not required
                 ZoweLogger.warn(
                     vscode.l10n.t(
-                        "Error checking if SSH profile type required for issuing UNIX Commands, setting requirement to false for profile {0}.",
+                        "Error checking if SSH profile type required for issuing UNIX commands, setting requirement to false for profile {0}.",
                         [this.serviceProf?.name]
                     )
                 );
@@ -278,7 +278,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         if (profileNamesList.length) {
             if (!sshReq) {
                 const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: vscode.l10n.t("Select the profile to use to submit the Unix Command"),
+                    placeHolder: vscode.l10n.t("Select the profile to use to submit the Unix command"),
                     ignoreFocusOut: true,
                     canPickMany: false,
                 };
@@ -305,12 +305,12 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             const quickpick = Gui.createQuickPick();
             quickpick.placeholder = alwaysEdit
                 ? vscode.l10n.t({
-                      message: "Select a Unix Command to run against {0} (An option to edit will follow)",
+                      message: "Select a Unix command to run against {0} (An option to edit will follow)",
                       args: [cwd],
                       comment: ["Current work directory"],
                   })
                 : vscode.l10n.t({
-                      message: "Select a Unix Command to run immediately against {0}",
+                      message: "Select a Unix command to run immediately against {0}",
                       args: [cwd],
                       comment: ["Current work directory"],
                   });
@@ -336,7 +336,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         }
         if (!response || alwaysEdit) {
             const options2: vscode.InputBoxOptions = {
-                prompt: vscode.l10n.t("Enter or update the Unix Command"),
+                prompt: vscode.l10n.t("Enter or update the Unix command"),
                 value: response,
                 valueSelection: response ? [response.length, response.length] : undefined,
             };
@@ -366,7 +366,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 const submitResponse = await Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,
-                        title: vscode.l10n.t("Unix Command Submitted."),
+                        title: vscode.l10n.t("Unix command submitted."),
                     },
                     () => {
                         // eslint-disable-next-line @typescript-eslint/no-unsafe-return

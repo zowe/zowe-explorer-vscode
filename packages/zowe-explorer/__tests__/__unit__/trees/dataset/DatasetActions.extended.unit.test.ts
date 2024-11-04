@@ -156,7 +156,7 @@ describe("mvsNodeActions", () => {
         await DatasetActions.uploadDialog(node, testTree);
 
         expect(globalMocks.showOpenDialog).toHaveBeenCalled();
-        expect(globalMocks.showInformationMessage.mock.calls.map((call) => call[0])).toEqual(["Operation Cancelled"]);
+        expect(globalMocks.showInformationMessage.mock.calls.map((call) => call[0])).toEqual(["Operation cancelled"]);
         expect(globalMocks.openTextDocument).not.toHaveBeenCalled();
         expect(testTree.refreshElement).not.toHaveBeenCalled();
     });

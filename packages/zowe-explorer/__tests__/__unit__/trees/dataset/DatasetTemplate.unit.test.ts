@@ -68,20 +68,20 @@ describe("DataSetTemplates Class Unit Tests", () => {
             getValueSpy.mockReturnValue(templates);
             const response = DataSetTemplates.getDsTemplates();
             expect(response).toEqual(templates);
-            expect(traceLoggerSpy).toHaveBeenCalledWith("Getting Data Set templates.");
+            expect(traceLoggerSpy).toHaveBeenCalledWith("Getting data set templates.");
         });
     });
     describe("resetDsTemplateSetting()", () => {
         it("should reset dataset templates to empty array", async () => {
             await DataSetTemplates.resetDsTemplateSetting();
-            expect(traceLoggerSpy).toHaveBeenCalledWith("Resetting Data Set templates array.");
+            expect(traceLoggerSpy).toHaveBeenCalledWith("Resetting data set templates array.");
             expect(setValueSpy).toHaveBeenCalled();
         });
     });
     describe("updateDsTemplateSetting()", () => {
         it("should update data set templates", async () => {
             await DataSetTemplates.updateDsTemplateSetting(templates);
-            expect(traceLoggerSpy).toHaveBeenCalledWith("Updating Data Set templates.");
+            expect(traceLoggerSpy).toHaveBeenCalledWith("Updating data set templates.");
         });
     });
     describe("addDsTemplateSetting()", () => {
@@ -112,7 +112,7 @@ describe("DataSetTemplates Class Unit Tests", () => {
             } as any);
             getValueSpy.mockReturnValue([template2]);
             await DataSetTemplates.addDsTemplateSetting(template1 as any);
-            expect(infoLoggerSpy).toHaveBeenCalledWith("Adding new Data Set template {0}.");
+            expect(infoLoggerSpy).toHaveBeenCalledWith("Adding new data set template {0}.");
         });
         it("should add a dataset template to global setting by choice", async () => {
             createBlockMocks();
@@ -121,7 +121,7 @@ describe("DataSetTemplates Class Unit Tests", () => {
                 configurable: true,
             });
             await DataSetTemplates.addDsTemplateSetting(newTemplate as any);
-            expect(infoLoggerSpy).toHaveBeenCalledWith("Adding new Data Set template {0}.");
+            expect(infoLoggerSpy).toHaveBeenCalledWith("Adding new data set template {0}.");
             expect(setValueSpy).toHaveBeenCalledWith("zowe.ds.templates", [newTemplate], vscode.ConfigurationTarget.Global);
         });
         it("should add a dataset template to workspace setting by choice", async () => {
@@ -132,7 +132,7 @@ describe("DataSetTemplates Class Unit Tests", () => {
             });
             templates.unshift(newTemplate);
             await DataSetTemplates.addDsTemplateSetting(newTemplate as any);
-            expect(infoLoggerSpy).toHaveBeenCalledWith("Adding new Data Set template {0}.");
+            expect(infoLoggerSpy).toHaveBeenCalledWith("Adding new data set template {0}.");
             expect(setValueSpy).toHaveBeenCalledWith("zowe.ds.templates", templates, vscode.ConfigurationTarget.Workspace);
         });
     });

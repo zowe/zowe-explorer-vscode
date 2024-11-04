@@ -234,10 +234,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public async initializeFavorites(log: imperative.Logger): Promise<void> {
         ZoweLogger.trace("DatasetTree.initializeFavorites called.");
         this.log = log;
-        ZoweLogger.debug(vscode.l10n.t("Initializing profiles with Data Set favorites."));
+        ZoweLogger.debug(vscode.l10n.t("Initializing profiles with data set favorites."));
         const lines: string[] = this.mHistory.readFavorites();
         if (lines.length === 0) {
-            ZoweLogger.debug(vscode.l10n.t("No Data Set favorites found."));
+            ZoweLogger.debug(vscode.l10n.t("No data set favorites found."));
             return;
         }
 
@@ -311,7 +311,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             // This case should not happen if the regex for initializeFavorites is defined correctly, but is here as a catch-all just in case.
             Gui.errorMessage(
                 vscode.l10n.t({
-                    message: "Error creating Data Set favorite node: {0} for profile {1}.",
+                    message: "Error creating data set favorite node: {0} for profile {1}.",
                     args: [label, profile.name],
                     comment: ["Label", "Profile name"],
                 })
@@ -336,7 +336,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         this.log = log;
         ZoweLogger.debug(
             vscode.l10n.t({
-                message: "Loading profile: {0} for Data Set favorites",
+                message: "Loading profile: {0} for data set favorites",
                 args: [profileName],
                 comment: ["Profile name"],
             })
@@ -363,7 +363,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 }
             } catch (error) {
                 const errMessage: string = vscode.l10n.t({
-                    message: `Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}.
+                    message: `Error: You have Zowe data set favorites that refer to a non-existent CLI profile named: {0}.
                     To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.
                     Would you like to do this now? {1}`,
                     args: [profileName, SharedUtils.getAppName()],
@@ -670,7 +670,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         let cancelled = false;
         if (userSelected) {
             const checkConfirmation = vscode.l10n.t({
-                message: "This will remove all favorited Data Sets items for profile {0}. Continue?",
+                message: "This will remove all favorited data sets items for profile {0}. Continue?",
                 args: [profileName],
                 comment: ["Profile name"],
             });
@@ -995,7 +995,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             if (SharedContext.isSessionNotFav(node)) {
-                ZoweLogger.debug(vscode.l10n.t("Prompting the user for a Data Set pattern"));
+                ZoweLogger.debug(vscode.l10n.t("Prompting the user for a data set pattern"));
                 if (this.mHistory.getSearchHistory().length > 0) {
                     const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
                     const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
@@ -1007,7 +1007,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     const choice = await Gui.resolveQuickPick(quickpick);
                     quickpick.hide();
                     if (!choice) {
-                        Gui.showMessage(vscode.l10n.t("No selection made. Operation Cancelled."));
+                        Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
                         return;
                     }
                     if (choice instanceof FilterDescriptor) {
@@ -1019,7 +1019,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     }
                 }
                 const options: vscode.InputBoxOptions = {
-                    prompt: vscode.l10n.t("Search Data Sets: use a comma to separate multiple patterns"),
+                    prompt: vscode.l10n.t("Search data sets: use a comma to separate multiple patterns"),
                     value: pattern,
                 };
                 // get user input
@@ -1151,16 +1151,16 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         };
         let afterMemberName = await Gui.showInputBox(options);
         if (!afterMemberName) {
-            Gui.showMessage(vscode.l10n.t("Rename Operation Cancelled."));
+            Gui.showMessage(vscode.l10n.t("Rename Operation cancelled."));
             return;
         }
         afterMemberName = afterMemberName.toUpperCase();
 
         ZoweLogger.debug(
             vscode.l10n.t({
-                message: "Renaming Data Set {0}",
+                message: "Renaming data set {0}",
                 args: [afterMemberName],
-                comment: ["Old Data Set name"],
+                comment: ["Old data set name"],
             })
         );
         if (afterMemberName && afterMemberName !== beforeMemberName) {
@@ -1201,21 +1201,21 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         const options: vscode.InputBoxOptions = {
             value: beforeDataSetName,
             validateInput: (text) => {
-                return DatasetUtils.validateDataSetName(text) === true ? null : vscode.l10n.t("Enter a valid Data Set name.");
+                return DatasetUtils.validateDataSetName(text) === true ? null : vscode.l10n.t("Enter a valid data set name.");
             },
         };
         let afterDataSetName = await Gui.showInputBox(options);
         if (!afterDataSetName) {
-            Gui.showMessage(vscode.l10n.t("Rename Operation Cancelled."));
+            Gui.showMessage(vscode.l10n.t("Rename Operation cancelled."));
             return;
         }
         afterDataSetName = afterDataSetName.toUpperCase();
 
         ZoweLogger.debug(
             vscode.l10n.t({
-                message: "Renaming Data Set {0}",
+                message: "Renaming data set {0}",
                 args: [afterDataSetName],
-                comment: ["Old Data Set name"],
+                comment: ["Old data set name"],
             })
         );
         if (afterDataSetName && afterDataSetName !== beforeDataSetName) {

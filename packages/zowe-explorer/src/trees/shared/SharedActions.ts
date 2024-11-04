@@ -174,7 +174,7 @@ export class SharedActions {
             const choice = await Gui.resolveQuickPick(quickpick);
             quickpick.hide();
             if (!choice || choice === createPick) {
-                Gui.showMessage(vscode.l10n.t("No selection made. Operation Cancelled."));
+                Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
                 return;
             } else if (choice instanceof FilterDescriptor) {
                 pattern = quickpick.value;

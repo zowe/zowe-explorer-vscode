@@ -50,7 +50,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             label: `Job Owner`,
             value: "",
             show: true,
-            placeHolder: vscode.l10n.t("Enter Job Owner ID"),
+            placeHolder: vscode.l10n.t("Enter job owner ID"),
             validateInput: (text: string): string | null => SharedUtils.jobStringValidator(text, "owner"),
         },
         {
@@ -58,7 +58,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             label: `Job Prefix`,
             value: "*",
             show: true,
-            placeHolder: vscode.l10n.t("Enter Job Prefix"),
+            placeHolder: vscode.l10n.t("Enter job prefix"),
             validateInput: (text: string): string | null => SharedUtils.jobStringValidator(text, "prefix"),
         },
         {
@@ -66,7 +66,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             label: JobTree.chooseJobStatusLabel,
             value: "*",
             show: true,
-            placeHolder: vscode.l10n.t("Enter Job Status"),
+            placeHolder: vscode.l10n.t("Enter job status"),
         },
     ];
 
@@ -78,7 +78,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         menuType: Definitions.JobPickerTypes.QuerySearch,
     });
     public searchById = new FilterItem({
-        text: `$(search) ${vscode.l10n.t("Search by Job ID")}`,
+        text: `$(search) ${vscode.l10n.t("Search by job ID")}`,
         menuType: Definitions.JobPickerTypes.IdSearch,
     });
     private treeView: vscode.TreeView<IZoweJobTreeNode>;
@@ -655,7 +655,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         const choice = await Gui.resolveQuickPick(quickpick);
         quickpick.hide();
         if (!choice) {
-            Gui.showMessage(vscode.l10n.t("No selection made. Operation Cancelled."));
+            Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
             return undefined;
         }
         return choice as FilterItem;
@@ -708,7 +708,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     public async handleSearchByJobId(jobId?: string): Promise<Definitions.IJobSearchCriteria> {
         ZoweLogger.trace("JobTree.handleSearchByJobId called.");
         const options = {
-            prompt: vscode.l10n.t("Enter a Job ID"),
+            prompt: vscode.l10n.t("Enter a job ID"),
             value: jobId,
         };
         const newUserJobId = await Gui.showInputBox(options);
@@ -911,7 +911,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             matchOnDescription: false,
         });
         if (!choice) {
-            Gui.showMessage(vscode.l10n.t("No selection made. Operation Cancelled."));
+            Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
             return undefined;
         }
         const pattern = choice.label;
@@ -1055,7 +1055,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                     `$(sync~spin) ${vscode.l10n.t({
                         message: "Polling: {0}...",
                         args: [path.posix.basename(node.resourceUri.path)],
-                        comment: ["Unique Spool name"],
+                        comment: ["Unique spool name"],
                     })}`,
                     Constants.STATUS_BAR_TIMEOUT_MS
                 );

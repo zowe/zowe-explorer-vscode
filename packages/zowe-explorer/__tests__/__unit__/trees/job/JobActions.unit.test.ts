@@ -644,7 +644,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         await DatasetActions.submitJcl(blockMocks.testDatasetTree, undefined);
 
         expect(submitJclSpy).not.toHaveBeenCalled();
-        expect(messageSpy).toHaveBeenCalledWith("Operation Cancelled");
+        expect(messageSpy).toHaveBeenCalledWith("Operation cancelled");
     });
 
     it("Checking API error on submit of active text editor content as JCL", async () => {
