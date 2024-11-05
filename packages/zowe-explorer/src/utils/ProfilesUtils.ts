@@ -406,7 +406,7 @@ export class ProfilesUtils {
             return;
         }
 
-        if (!profInfo.onlyV1ProfilesExist) {
+        if (!profInfo.getTeamConfig().exists && !profInfo.onlyV1ProfilesExist) {
             Gui.showMessage(
                 vscode.l10n.t("No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration."),
                 {

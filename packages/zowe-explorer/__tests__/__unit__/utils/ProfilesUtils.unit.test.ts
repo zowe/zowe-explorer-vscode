@@ -710,7 +710,7 @@ describe("ProfilesUtils unit tests", () => {
                 credMgrZEName: "test",
             });
             setupCustomCredentialManagerSpy.mockReturnValueOnce({});
-            await expect(ProfilesUtils.getProfileInfo()).resolves.toEqual({});
+            await expect(ProfilesUtils.getProfileInfo()).resolves.toBeInstanceOf(imperative.ProfileInfo);
         });
 
         it("should retrieve the default credential manager if no custom credential manager is found", async () => {
@@ -720,7 +720,7 @@ describe("ProfilesUtils unit tests", () => {
             getDirectValueSpy.mockReturnValueOnce(true);
             getCredentialManagerMapSpy.mockReturnValueOnce(undefined);
             setupCustomCredentialManagerSpy.mockReturnValueOnce({});
-            await expect(ProfilesUtils.getProfileInfo()).resolves.toEqual({});
+            await expect(ProfilesUtils.getProfileInfo()).resolves.toBeInstanceOf(imperative.ProfileInfo);
         });
 
         it("should retrieve the default credential manager and prompt to disable credential management if environment not supported", async () => {
@@ -851,7 +851,7 @@ describe("ProfilesUtils unit tests", () => {
                     credMgrPluginName: "test",
                     credMgrZEName: "test",
                 })
-            ).resolves.toEqual({} as imperative.ProfileInfo);
+            ).resolves.toBeInstanceOf(imperative.ProfileInfo);
             expect(zoweLoggerTraceSpy).toHaveBeenCalledTimes(2);
             expect(zoweLoggerInfoSpy).toHaveBeenCalledTimes(2);
         });
@@ -1011,6 +1011,7 @@ describe("ProfilesUtils unit tests", () => {
                 readProfilesFromDisk: mockReadProfilesFromDisk,
                 getTeamConfig: jest.fn().mockReturnValue({ configName: "zowe.config.json" }),
                 getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
+                onlyV1ProfilesExist: true,
             } as never);
             const infoMsgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Convert Existing Profiles" as any);
             Object.defineProperty(imperative, "ConvertMsgFmt", {
@@ -1037,13 +1038,8 @@ describe("ProfilesUtils unit tests", () => {
             jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
             Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn().mockReturnValue({}), configurable: true });
             Object.defineProperty(Gui, "showTextDocument", { value: jest.fn(), configurable: true });
-            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
-                configurable: true,
-                get: () => true,
-            });
 
             await expect((ProfilesUtils as any).v1ProfileOptions()).resolves.toBe(ProfilesConvertStatus.ConvertSelected);
-            onlyV1ProfsExistMock[Symbol.dispose]();
 
             expect(infoMsgSpy).toHaveBeenCalledTimes(2);
             infoMsgSpy.mockRestore();
@@ -1056,15 +1052,11 @@ describe("ProfilesUtils unit tests", () => {
                 readProfilesFromDisk: mockReadProfilesFromDisk,
                 getTeamConfig: jest.fn().mockReturnValue([]),
                 getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
+                onlyV1ProfilesExist: true,
             } as never);
             const infoMsgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(undefined);
 
-            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
-                configurable: true,
-                get: () => true,
-            });
             await expect((ProfilesUtils as any).v1ProfileOptions()).resolves.not.toThrow();
-            onlyV1ProfsExistMock[Symbol.dispose]();
 
             infoMsgSpy.mockRestore();
             profInfoSpy.mockRestore();
@@ -1083,17 +1075,13 @@ describe("ProfilesUtils unit tests", () => {
                 readProfilesFromDisk: mockReadProfilesFromDisk,
                 getTeamConfig: jest.fn().mockReturnValue([]),
                 getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
+                onlyV1ProfilesExist: true,
             } as never);
             const infoMsgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Create New");
 
             jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(Definitions.V1MigrationStatus.JustMigrated);
             jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
-            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
-                configurable: true,
-                get: () => true,
-            });
             await expect((ProfilesUtils as any).v1ProfileOptions()).resolves.toBe(ProfilesConvertStatus.CreateNewSelected);
-            onlyV1ProfsExistMock[Symbol.dispose]();
 
             infoMsgSpy.mockRestore();
             profInfoSpy.mockRestore();
@@ -1112,14 +1100,15 @@ describe("ProfilesUtils unit tests", () => {
             const blockMocks = getBlockMocks();
             blockMocks.getValueMock.mockReturnValueOnce(Definitions.V1MigrationStatus.JustMigrated);
             blockMocks.setValueMock.mockImplementation();
-            const getProfInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue(undefined as any);
-            const onlyV1ProfilesExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", { get: () => true });
+            const onlyV1ProfilesExistMock = jest.fn().mockReturnValue(true);
+            const getProfInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
+                onlyV1ProfilesExist: { get: onlyV1ProfilesExistMock },
+            } as any);
             await ProfilesUtils.handleV1MigrationStatus();
             expect(getProfInfoMock).toHaveBeenCalled();
-            expect(onlyV1ProfilesExistMock.mock).not.toHaveBeenCalled();
+            expect(onlyV1ProfilesExistMock).not.toHaveBeenCalled();
             blockMocks.getValueMock.mockRestore();
             blockMocks.setValueMock.mockRestore();
-            onlyV1ProfilesExistMock[Symbol.dispose]();
         });
 
         it("should call executeCommand with zowe.ds.addSession if the migration status is CreateConfigSelected", async () => {
@@ -1129,15 +1118,14 @@ describe("ProfilesUtils unit tests", () => {
             blockMocks.setValueMock.mockImplementation();
             jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
                 getTeamConfig: jest.fn().mockReturnValue({ exists: false }),
+                onlyV1ProfilesExist: true,
             } as any);
-            const onlyV1ProfilesExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", { get: () => true });
             const v1ProfileOptsMock = jest.spyOn(ProfilesUtils as any, "v1ProfileOptions").mockResolvedValue(ProfilesConvertStatus.CreateNewSelected);
             await ProfilesUtils.handleV1MigrationStatus();
             expect(executeCommandMock.mock.lastCall?.[0]).toBe("zowe.ds.addSession");
             expect(v1ProfileOptsMock).toHaveBeenCalled();
             blockMocks.getValueMock.mockRestore();
             blockMocks.setValueMock.mockRestore();
-            onlyV1ProfilesExistMock[Symbol.dispose]();
         });
 
         it("should reload the window once if the user just migrated from v1", async () => {
@@ -1147,6 +1135,7 @@ describe("ProfilesUtils unit tests", () => {
                 getTeamConfig: () => ({
                     exists: false,
                 }),
+                onlyV1ProfilesExist: true,
             } as never);
             const getConfigurationMock = jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
                 persistent: true,
@@ -1154,10 +1143,6 @@ describe("ProfilesUtils unit tests", () => {
                 has: jest.fn(),
                 inspect: jest.fn(),
                 update: jest.fn(),
-            });
-            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
-                configurable: true,
-                get: () => true,
             });
             const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
             const getValueMock = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
@@ -1171,7 +1156,6 @@ describe("ProfilesUtils unit tests", () => {
             getConfigurationMock.mockRestore();
             getValueMock.mockRestore();
             setValueMock.mockRestore();
-            onlyV1ProfsExistMock[Symbol.dispose]();
 
             profInfoSpy.mockRestore();
         });
@@ -1183,6 +1167,7 @@ describe("ProfilesUtils unit tests", () => {
                 getTeamConfig: () => ({
                     exists: false,
                 }),
+                onlyV1ProfilesExist: false,
             } as never);
             const getConfigurationMock = jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
                 persistent: true,
@@ -1190,10 +1175,6 @@ describe("ProfilesUtils unit tests", () => {
                 has: jest.fn(),
                 inspect: jest.fn(),
                 update: jest.fn(),
-            });
-            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
-                configurable: true,
-                get: () => false,
             });
             const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
             const getValueMock = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
@@ -1206,7 +1187,6 @@ describe("ProfilesUtils unit tests", () => {
             getConfigurationMock.mockRestore();
             getValueMock.mockRestore();
             setValueMock.mockRestore();
-            onlyV1ProfsExistMock[Symbol.dispose]();
 
             profInfoSpy.mockRestore();
         });
@@ -1218,12 +1198,8 @@ describe("ProfilesUtils unit tests", () => {
                 getTeamConfig: () => ({
                     exists: false,
                 }),
-                onlyV1ProfilesExist: () => true,
+                onlyV1ProfilesExist: true,
             };
-            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
-                configurable: true,
-                get: () => true,
-            });
             const profInfoSpy = jest.spyOn(ProfilesUtils, "getProfileInfo").mockReturnValueOnce(fakeProfInfo as any);
             const getConfigurationMock = jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
                 persistent: true,
@@ -1241,7 +1217,6 @@ describe("ProfilesUtils unit tests", () => {
             getConfigurationMock.mockRestore();
             getValueMock.mockRestore();
             v1ProfileOptionsMock.mockRestore();
-            onlyV1ProfsExistMock[Symbol.dispose]();
 
             profInfoSpy.mockRestore();
         });
@@ -1252,17 +1227,13 @@ describe("ProfilesUtils unit tests", () => {
                 readProfilesFromDisk: mockReadProfilesFromDisk,
                 getTeamConfig: jest.fn().mockReturnValue([]),
                 getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
+                onlyV1ProfilesExist: true,
             } as never);
             const msgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Create New" as any);
 
-            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
-                configurable: true,
-                get: () => true,
-            });
             const v1ProfOptsMock = jest.spyOn(ProfilesUtils as any, "v1ProfileOptions").mockResolvedValue(ProfilesConvertStatus.CreateNewSelected);
             await expect((ProfilesUtils as any).v1ProfileOptions()).resolves.not.toThrow();
             expect(v1ProfOptsMock).toHaveBeenCalled();
-            onlyV1ProfsExistMock[Symbol.dispose]();
 
             msgSpy.mockRestore();
             profInfoSpy.mockRestore();
@@ -1288,11 +1259,8 @@ describe("ProfilesUtils unit tests", () => {
             const noConfigDialogShownMock = new MockedProperty(ProfilesUtils, "noConfigDialogShown", { value: false });
             const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
                 getTeamConfig: () => ({ exists: false }),
+                onlyV1ProfilesExist: false,
             } as any);
-            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
-                configurable: true,
-                get: () => false,
-            });
             const showMessageSpy = jest.spyOn(Gui, "showMessage");
             await ProfilesUtils.promptUserWithNoConfigs();
             expect(showMessageSpy).toHaveBeenCalledWith(
@@ -1301,20 +1269,16 @@ describe("ProfilesUtils unit tests", () => {
             );
             expect(profInfoMock).toHaveBeenCalled();
             profInfoMock.mockRestore();
-            onlyV1ProfsExistMock[Symbol.dispose]();
             noConfigDialogShownMock[Symbol.dispose]();
         });
         it("executes zowe.ds.addSession if the user selects 'Create New' in the prompt", async () => {
             const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
                 getTeamConfig: () => ({ exists: false }),
+                onlyV1ProfilesExist: false,
             } as any);
             const noConfigDialogShownMock = new MockedProperty(ProfilesUtils, "noConfigDialogShown", {
                 configurable: true,
                 value: false,
-            });
-            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
-                configurable: true,
-                get: () => false,
             });
             const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValue("Create New");
             const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
@@ -1327,20 +1291,16 @@ describe("ProfilesUtils unit tests", () => {
             expect(executeCommandMock).toHaveBeenCalledWith("zowe.ds.addSession");
             executeCommandMock.mockRestore();
             profInfoMock.mockRestore();
-            onlyV1ProfsExistMock[Symbol.dispose]();
             noConfigDialogShownMock[Symbol.dispose]();
         });
         it("does not prompt the user if they have a Zowe team config", async () => {
             const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
                 getTeamConfig: () => ({ exists: true }),
+                onlyV1ProfilesExist: false,
             } as any);
             const noConfigDialogShownMock = new MockedProperty(ProfilesUtils, "noConfigDialogShown", {
                 configurable: true,
                 value: false,
-            });
-            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
-                configurable: true,
-                get: () => false,
             });
             const showMessageSpy = jest.spyOn(Gui, "showMessage");
             await ProfilesUtils.promptUserWithNoConfigs();
@@ -1350,20 +1310,16 @@ describe("ProfilesUtils unit tests", () => {
             );
             expect(profInfoMock).toHaveBeenCalled();
             profInfoMock.mockRestore();
-            onlyV1ProfsExistMock[Symbol.dispose]();
             noConfigDialogShownMock[Symbol.dispose]();
         });
         it("does not prompt the user if they have v1 profiles", async () => {
             const profInfoMock = jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
                 getTeamConfig: () => ({ exists: false }),
+                onlyV1ProfilesExist: true,
             } as any);
             const noConfigDialogShownMock = new MockedProperty(ProfilesUtils, "noConfigDialogShown", {
                 configurable: true,
                 value: false,
-            });
-            const onlyV1ProfsExistMock = new MockedProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", {
-                configurable: true,
-                get: () => true,
             });
             const showMessageSpy = jest.spyOn(Gui, "showMessage");
             await ProfilesUtils.promptUserWithNoConfigs();
@@ -1373,7 +1329,6 @@ describe("ProfilesUtils unit tests", () => {
             );
             expect(profInfoMock).toHaveBeenCalled();
             profInfoMock.mockRestore();
-            onlyV1ProfsExistMock[Symbol.dispose]();
             noConfigDialogShownMock[Symbol.dispose]();
         });
     });
