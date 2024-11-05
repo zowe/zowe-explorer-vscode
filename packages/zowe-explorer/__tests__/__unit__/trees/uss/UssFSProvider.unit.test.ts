@@ -198,10 +198,7 @@ describe("listFiles", () => {
         jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
             fileList: jest.fn().mockRejectedValue(new Error("error listing files")),
         } as any);
-        expect(await UssFSProvider.instance.listFiles(testProfile, testUris.folder)).toStrictEqual({
-            success: false,
-            commandResponse: "error listing files",
-        });
+        await expect(UssFSProvider.instance.listFiles(testProfile, testUris.folder)).rejects.toThrow();
     });
 });
 

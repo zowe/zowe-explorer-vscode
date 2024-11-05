@@ -154,7 +154,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             if (err instanceof Error) {
                 ZoweLogger.error(err.message);
             }
-            return { success: false, commandResponse: err instanceof Error ? err.message : JSON.stringify(err) };
+            throw err;
         }
 
         return {
