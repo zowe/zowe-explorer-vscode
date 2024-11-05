@@ -463,11 +463,8 @@ describe("autoDetectEncoding", () => {
             path: "/testFile",
             profile: testProfile,
         };
-        const _handleErrorMock = jest.spyOn(UssFSProvider.instance as any, "_handleError").mockImplementation();
         await expect(UssFSProvider.instance.autoDetectEncoding(testEntry)).rejects.toThrow();
         expect(getTagMock).toHaveBeenCalledTimes(1);
-        expect(_handleErrorMock).toHaveBeenCalled();
-        _handleErrorMock.mockRestore();
     });
 
     it("sets encoding if file tagged as binary", async () => {

@@ -332,35 +332,17 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             return;
         }
 
-        try {
-            const ussApi = ZoweExplorerApiRegister.getUssApi(entry.metadata.profile);
-            if (ussApi.getTag != null) {
-                const taggedEncoding = await ussApi.getTag(entry.metadata.path);
-                if (taggedEncoding === "binary" || taggedEncoding === "mixed") {
-                    entry.encoding = { kind: "binary" };
-                } else if (taggedEncoding !== "untagged") {
-                    entry.encoding = { kind: "other", codepage: taggedEncoding };
-                }
-            } else {
-                const isBinary = await ussApi.isFileTagBinOrAscii(entry.metadata.path);
-                entry.encoding = isBinary ? { kind: "binary" } : undefined;
+        const ussApi = ZoweExplorerApiRegister.getUssApi(entry.metadata.profile);
+        if (ussApi.getTag != null) {
+            const taggedEncoding = await ussApi.getTag(entry.metadata.path);
+            if (taggedEncoding === "binary" || taggedEncoding === "mixed") {
+                entry.encoding = { kind: "binary" };
+            } else if (taggedEncoding !== "untagged") {
+                entry.encoding = { kind: "other", codepage: taggedEncoding };
             }
-        } catch (err) {
-            this._handleError(err, {
-                additionalContext: vscode.l10n.t({
-                    message: "Failed to detect encoding for {0}",
-                    args: [entry.metadata.path],
-                    comment: ["File path"],
-                }),
-                retry: {
-                    fn: this.autoDetectEncoding.bind(this),
-                    args: [entry],
-                },
-                apiType: ZoweExplorerApiType.Uss,
-                profileType: entry.metadata.profile.type,
-                templateArgs: { profileName: entry.metadata.profile.name ?? "" },
-            });
-            throw err;
+        } else {
+            const isBinary = await ussApi.isFileTagBinOrAscii(entry.metadata.path);
+            entry.encoding = isBinary ? { kind: "binary" } : undefined;
         }
     }
 

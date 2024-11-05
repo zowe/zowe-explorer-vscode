@@ -602,8 +602,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 this._handleError(err, {
                     additionalContext: vscode.l10n.t({
                         message: "Failed to save {0}",
-                        args: [entry.metadata.path],
-                        comment: ["File path"],
+                        args: [(entry.metadata as DsEntryMetadata).dsName],
+                        comment: ["Data set name"],
                     }),
                     apiType: ZoweExplorerApiType.Mvs,
                     profileType: entry.metadata.profile.type,
