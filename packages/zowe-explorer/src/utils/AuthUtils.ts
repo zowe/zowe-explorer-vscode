@@ -83,7 +83,7 @@ export class AuthUtils {
         const correlation = ErrorCorrelator.getInstance().correlateError(moreInfo?.apiType ?? ZoweExplorerApiType.All, errorDetails, {
             profileType: profile?.type,
             ...Object.keys(moreInfo).reduce((all, k) => (typeof moreInfo[k] === "string" ? { ...all, [k]: moreInfo[k] } : all), {}),
-            templateArgs: { ...(moreInfo.templateArgs ?? {}), profileName: profile?.name ?? "" },
+            templateArgs: { profileName: profile?.name ?? "", ...moreInfo?.templateArgs },
         });
         if (typeof errorDetails !== "string" && (errorDetails as imperative.ImperativeError)?.mDetails !== undefined) {
             const imperativeError: imperative.ImperativeError = errorDetails as imperative.ImperativeError;
