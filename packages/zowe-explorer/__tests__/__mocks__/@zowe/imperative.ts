@@ -263,7 +263,7 @@ export class CliProfileManager {
 }
 
 export class ProfileInfo {
-    public static onlyV1ProfilesExist = false;
+    public onlyV1ProfilesExist = false;
     constructor(appName: string, profInfoOpts?: IProfOpts) {}
 
     public readProfilesFromDisk(teamCfgOpts?: IConfigOpts) {

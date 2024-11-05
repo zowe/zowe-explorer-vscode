@@ -351,12 +351,6 @@ export class ProfilesUtils {
                 Gui.warningMessage(schemaWarning);
                 ZoweLogger.warn(schemaWarning);
             }
-            Constants.SAVED_PROFILE_CONTENTS.clear();
-            for (const layer of mProfileInfo.getTeamConfig().layers) {
-                if (layer.exists) {
-                    Constants.SAVED_PROFILE_CONTENTS.set(vscode.Uri.file(layer.path).fsPath, fs.readFileSync(layer.path));
-                }
-            }
             ZoweLogger.info(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName}"`);
             const layers = mProfileInfo.getTeamConfig().layers || [];
             const layerSummary = layers.map(
@@ -381,12 +375,12 @@ export class ProfilesUtils {
             return;
         }
 
-        if (ussPersistentSettings != null && upgradingFromV1 == null && imperative.ProfileInfo.onlyV1ProfilesExist) {
+        if (ussPersistentSettings != null && upgradingFromV1 == null && profileInfo.onlyV1ProfilesExist) {
             await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.JustMigrated);
             await vscode.commands.executeCommand("workbench.action.reloadWindow");
         }
 
-        if (upgradingFromV1 == null || profileInfo.getTeamConfig().exists || !imperative.ProfileInfo.onlyV1ProfilesExist) {
+        if (upgradingFromV1 == null || !profileInfo.onlyV1ProfilesExist) {
             return;
         }
         const userSelection = await this.v1ProfileOptions();
@@ -412,7 +406,7 @@ export class ProfilesUtils {
             return;
         }
 
-        if (!profInfo.getTeamConfig().exists && !imperative.ProfileInfo.onlyV1ProfilesExist) {
+        if (!profInfo.onlyV1ProfilesExist) {
             Gui.showMessage(
                 vscode.l10n.t("No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration."),
                 {
