@@ -382,8 +382,7 @@ export namespace ZoweExplorerZosmf {
      */
     export class CommandApi extends CommonApi implements MainframeInteraction.ICommand {
         public issueTsoCommandWithParms(command: string, parms: zostso.IStartTsoParms): Promise<zostso.IIssueResponse> {
-            // eslint-disable-next-line deprecation/deprecation
-            return zostso.IssueTso.issueTsoCommand(this.getSession(), parms.account, command, parms);
+            return zostso.IssueTso.issueTsoCmd(this.getSession(), command, { addressSpaceOptions: parms });
         }
 
         public issueMvsCommand(command: string, consoleName?: string): Promise<zosconsole.IConsoleResponse> {
@@ -393,13 +392,24 @@ export namespace ZoweExplorerZosmf {
         public async issueUnixCommand(command: string, cwd: string, sshSession: zosuss.SshSession): Promise<string> {
             let stdout = "";
             if (cwd) {
-                await zosuss.Shell.executeSshCwd(sshSession, command, '"' + cwd + '"', (data: string) => {
-                    stdout += data;
-                });
+                await zosuss.Shell.executeSshCwd(
+                    sshSession,
+                    command,
+                    '"' + cwd + '"',
+                    (data: string) => {
+                        stdout += data;
+                    },
+                    true
+                );
             } else {
-                await zosuss.Shell.executeSsh(sshSession, command, (data: string) => {
-                    stdout += data;
-                });
+                await zosuss.Shell.executeSsh(
+                    sshSession,
+                    command,
+                    (data: string) => {
+                        stdout += data;
+                    },
+                    true
+                );
             }
             return stdout;
         }

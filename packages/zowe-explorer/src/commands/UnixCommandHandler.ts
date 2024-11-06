@@ -152,15 +152,13 @@ export class UnixCommandHandler extends ZoweCommandProvider {
 
                 const profileStatus = await this.profileInstance.profileValidationHelper(
                     this.sshProfile,
-                    // TODO(zFernand0): Move this validation to the @zowe/zos-uss-for-zowe-sdk
-                    (prof: imperative.IProfileLoaded, type: string) =>
-                        new Promise((resolve, _) => {
-                            if (type !== "ssh") resolve("unverified");
-                            const conn = new (require("ssh2").Client)();
-                            conn.on("ready", () => conn.end() && resolve("active"))
-                                .on("error", () => resolve("inactive"))
-                                .connect(prof.profile);
-                        })
+                    async (prof: imperative.IProfileLoaded, type: string): Promise<string> => {
+                        if (type !== "ssh" || prof.profile.host !== this.sshSession.ISshSession.hostname) return "unverified";
+                        if (await zosuss.Shell.isConnectionValid(this.sshSession)) {
+                            return "active";
+                        }
+                        return "inactive";
+                    }
                 );
 
                 if (!this.sshSession || profileStatus !== "active") {
