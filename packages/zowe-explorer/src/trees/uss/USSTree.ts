@@ -749,11 +749,11 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 const options: vscode.InputBoxOptions = {
                     placeHolder: vscode.l10n.t("New filter"),
                     value: remotepath,
+                    validateInput: (input: string) => (input.length > 0 ? null : vscode.l10n.t("Please enter a valid USS path.")),
                 };
                 // get user input
                 remotepath = await Gui.showInputBox(options);
-                if (!remotepath || remotepath.length === 0) {
-                    Gui.showMessage(vscode.l10n.t("You must enter a path."));
+                if (remotepath == null) {
                     return;
                 }
             } else {

@@ -39,7 +39,7 @@ export class DatasetActions {
         dsPartitioned: vscode.l10n.t("Partitioned Data Set: Default"),
         dsExtended: vscode.l10n.t("Partitioned Data Set: Extended"),
         dsSequential: vscode.l10n.t("Sequential Data Set"),
-        opCancelled: vscode.l10n.t("Operation Cancelled"),
+        opCancelled: vscode.l10n.t("Operation cancelled"),
         copyingFiles: vscode.l10n.t("Copying File(s)"),
         profileInvalid: vscode.l10n.t("Profile is invalid, check connection details."),
         allocString: vscode.l10n.t("Allocate Data Set"),
@@ -359,7 +359,7 @@ export class DatasetActions {
             vscode.l10n.t({
                 message: "Allocating data set like {0}.",
                 args: [likeDSName],
-                comment: ["Like Data Set name"],
+                comment: ["Like data set name"],
             })
         );
 
@@ -660,7 +660,7 @@ export class DatasetActions {
     public static async createMember(parent: IZoweDatasetTreeNode, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
         ZoweLogger.trace("dataset.actions.createMember called.");
         const options: vscode.InputBoxOptions = {
-            placeHolder: vscode.l10n.t("Name of Member"),
+            placeHolder: vscode.l10n.t("Name of member"),
             validateInput: (text) => {
                 return DatasetUtils.validateMemberName(text) === true ? null : vscode.l10n.t("Enter valid member name");
             },
@@ -974,7 +974,7 @@ export class DatasetActions {
             const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES);
             if (profileNamesList.length > 1) {
                 const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: vscode.l10n.t("Select the Profile to use to submit the job"),
+                    placeHolder: vscode.l10n.t("Select the profile to use to submit the job"),
                     ignoreFocusOut: true,
                     canPickMany: false,
                 };
@@ -1489,7 +1489,7 @@ export class DatasetActions {
             if (node.contextValue.includes(Constants.DS_PDS_CONTEXT)) {
                 const inputBoxOptions: vscode.InputBoxOptions = {
                     value: beforeMemberName,
-                    placeHolder: vscode.l10n.t("Name of Data Set Member"),
+                    placeHolder: vscode.l10n.t("Name of data set member"),
                     validateInput: (text) => {
                         return DatasetUtils.validateMemberName(text) === true ? null : vscode.l10n.t("Enter valid member name");
                     },

@@ -62,7 +62,7 @@ export class Profiles extends ProfilesCache {
     public loadedProfile: imperative.IProfileLoaded;
     public validProfile: Validation.ValidationType = Validation.ValidationType.INVALID;
     private mProfileInfo: imperative.ProfileInfo;
-    private profilesOpCancelled = vscode.l10n.t(`Operation Cancelled`);
+    private profilesOpCancelled = vscode.l10n.t(`Operation cancelled`);
     private manualEditMsg = vscode.l10n.t(
         `The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.`
     );
@@ -345,14 +345,14 @@ export class Profiles extends ProfilesCache {
         let addProfilePlaceholder = "";
         switch (zoweFileProvider.getTreeType()) {
             case PersistenceSchemaEnum.Dataset:
-                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the DATA SETS Explorer`);
+                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the DATA SETS tree`);
                 break;
             case PersistenceSchemaEnum.Job:
-                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the JOBS Explorer`);
+                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the JOBS tree`);
                 break;
             default:
                 // Use USS View as default for placeholder text
-                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the USS Explorer`);
+                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the USS tree`);
         }
         if (allProfiles.length > 0) {
             quickpick.items = [configPick, configEdit, ...items];
@@ -883,14 +883,14 @@ export class Profiles extends ProfilesCache {
             description: vscode.l10n.t("To continue in current authentication"),
         };
         qp.items = [qpItemYes, qpItemNo];
-        qp.placeholder = vscode.l10n.t("Do you wish to change the Authentication");
+        qp.placeholder = vscode.l10n.t("Do you wish to change the authentication");
         qp.activeItems = [qpItemYes];
         qp.show();
         const qpSelection = await Gui.resolveQuickPick(qp);
         qp.hide();
 
         if (qpSelection === undefined) {
-            Gui.infoMessage(vscode.l10n.t("Operation Cancelled"));
+            Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
             return;
         }
         if (qpSelection.label === vscode.l10n.t("No")) {
@@ -904,7 +904,7 @@ export class Profiles extends ProfilesCache {
             loginTokenType = await zeInstance.getCommonApi(serviceProfile).getTokenTypeName();
         } catch (error) {
             ZoweLogger.warn(error);
-            Gui.errorMessage(vscode.l10n.t("Cannot switch to Token-based Authentication for profile {0}.", serviceProfile.name));
+            Gui.errorMessage(vscode.l10n.t("Cannot switch to token-based authentication for profile {0}.", serviceProfile.name));
             return;
         }
         switch (true) {
@@ -937,7 +937,7 @@ export class Profiles extends ProfilesCache {
                         profile: { ...node.getProfile().profile, ...updBaseProfile },
                     });
                 } else {
-                    Gui.errorMessage(vscode.l10n.t("Unable to switch to Token-based authentication for profile {0}.", serviceProfile.name));
+                    Gui.errorMessage(vscode.l10n.t("Unable to switch to token-based authentication for profile {0}.", serviceProfile.name));
                     return;
                 }
                 break;
@@ -956,13 +956,13 @@ export class Profiles extends ProfilesCache {
                     await this.tokenAuthClearSecureArray(serviceProfile.name, loginTokenType);
                     ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
                 } else {
-                    Gui.errorMessage(vscode.l10n.t("Unable to switch to Basic authentication for profile {0}.", serviceProfile.name));
+                    Gui.errorMessage(vscode.l10n.t("Unable to switch to basic authentication for profile {0}.", serviceProfile.name));
                     return;
                 }
                 break;
             }
             default: {
-                Gui.errorMessage(vscode.l10n.t("Unable to Switch Authentication for profile {0}.", serviceProfile.name));
+                Gui.errorMessage(vscode.l10n.t("Unable to switch authentication for profile {0}.", serviceProfile.name));
             }
         }
     }

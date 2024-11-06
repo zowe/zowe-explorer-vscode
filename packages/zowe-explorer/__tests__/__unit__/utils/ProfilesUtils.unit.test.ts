@@ -370,7 +370,7 @@ describe("ProfilesUtils unit tests", () => {
             });
             jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
             await ProfilesUtils.promptCredentials(null as any);
-            expect(Gui.showMessage).toHaveBeenCalledWith("Operation Cancelled");
+            expect(Gui.showMessage).toHaveBeenCalledWith("Operation cancelled");
         });
 
         it("shows an info message if the profile credentials were updated", async () => {
@@ -796,7 +796,7 @@ describe("ProfilesUtils unit tests", () => {
                 Buffer.from(
                     JSON.stringify({
                         overrides: {
-                            credentialManager: "My Custom Credential Manager",
+                            credentialManager: "My Custom credential manager",
                         },
                     })
                 )
@@ -806,7 +806,7 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
 
-            expect(ProfilesUtils.getCredentialManagerOverride()).toBe("My Custom Credential Manager");
+            expect(ProfilesUtils.getCredentialManagerOverride()).toBe("My Custom credential manager");
             expect(zoweLoggerTraceSpy).toHaveBeenCalledTimes(1);
         });
 
@@ -1009,7 +1009,7 @@ describe("ProfilesUtils unit tests", () => {
                 getTeamConfig: jest.fn().mockReturnValue({ configName: "zowe.config.json" }),
                 getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
             } as never);
-            const infoMsgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Convert Existing Profiles" as any);
+            const infoMsgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Convert existing profiles" as any);
             Object.defineProperty(imperative, "ConvertMsgFmt", {
                 value: jest.fn().mockReturnValue({
                     REPORT_LINE: 1,

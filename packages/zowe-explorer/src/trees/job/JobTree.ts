@@ -425,7 +425,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 }
             } catch (error) {
                 const errMessage: string = vscode.l10n.t({
-                    message: `Error: You have Zowe Job favorites that refer to a non-existent CLI profile named: {0}.
+                    message: `Error: You have Zowe job favorites that refer to a non-existent CLI profile named: {0}.
                          To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.
                           Would you like to do this now? {1}`,
                     args: [profileName, SharedUtils.getAppName()],
@@ -579,7 +579,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         let cancelled = false;
         if (userSelected) {
             const checkConfirmation = vscode.l10n.t({
-                message: "This will remove all favorited Jobs items for profile {0}. Continue?",
+                message: "This will remove all favorited jobs items for profile {0}. Continue?",
                 args: [profileName],
                 comment: ["Profile name"],
             });
@@ -1055,7 +1055,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                     `$(sync~spin) ${vscode.l10n.t({
                         message: "Polling: {0}...",
                         args: [path.posix.basename(node.resourceUri.path)],
-                        comment: ["Unique Spool name"],
+                        comment: ["Unique spool name"],
                     })}`,
                     Constants.STATUS_BAR_TIMEOUT_MS
                 );
