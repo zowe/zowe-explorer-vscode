@@ -10,6 +10,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added expired JSON web token detection for profiles in each tree view (Data Sets, USS, Jobs). When a user performs a search on a profile, they are prompted to log in if their token expired. [#3175](https://github.com/zowe/zowe-explorer-vscode/issues/3175)
 - Add a data set or USS resource to a virtual workspace with the new "Add to Workspace" context menu option. [#3265](https://github.com/zowe/zowe-explorer-vscode/issues/3265)
 - Power users and developers can now build links to efficiently open mainframe resources in Zowe Explorer. Use the **Copy External Link** option in the context menu to get the URL for a data set or USS resource, or create a link in the format `vscode://Zowe.vscode-extension-for-zowe?<ZoweResourceUri>`. For more information on building resource URIs, see the [FileSystemProvider wiki article](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#file-paths-vs-uris). [#3271](https://github.com/zowe/zowe-explorer-vscode/pull/3271)
+- Implemented more user-friendly error messages for API or network errors within Zowe Explorer. [#3243](https://github.com/zowe/zowe-explorer-vscode/pull/3243)
+- Use the "Troubleshoot" option for certain errors to obtain additional context, tips, and resources for how to resolve the errors. [#3243](https://github.com/zowe/zowe-explorer-vscode/pull/3243)
 
 ### Bug fixes
 

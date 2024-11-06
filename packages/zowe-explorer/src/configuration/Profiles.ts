@@ -110,7 +110,7 @@ export class Profiles extends ProfilesCache {
                 await Profiles.getInstance().ssoLogin(null, theProfile.name);
                 theProfile = Profiles.getInstance().loadNamedProfile(theProfile.name);
             } catch (error) {
-                await AuthUtils.errorHandling(error, theProfile.name, error.message);
+                await AuthUtils.errorHandling(error, { profile: theProfile });
                 return profileStatus;
             }
         } else if (!usingTokenAuth && (!theProfile.profile.user || !theProfile.profile.password)) {
@@ -123,7 +123,7 @@ export class Profiles extends ProfilesCache {
             try {
                 values = await Profiles.getInstance().promptCredentials(theProfile);
             } catch (error) {
-                await AuthUtils.errorHandling(error, theProfile.name, error.message);
+                await AuthUtils.errorHandling(error, { profile: theProfile });
                 return profileStatus;
             }
             if (values) {
@@ -748,7 +748,7 @@ export class Profiles extends ProfilesCache {
                         comment: [`The profile name`],
                     })
                 );
-                await AuthUtils.errorHandling(error, theProfile.name);
+                await AuthUtils.errorHandling(error, { profile: theProfile });
                 filteredProfile = {
                     status: "inactive",
                     name: theProfile.name,
