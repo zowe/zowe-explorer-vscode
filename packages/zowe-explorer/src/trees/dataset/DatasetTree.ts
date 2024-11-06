@@ -24,6 +24,7 @@ import {
     ZosEncoding,
     FsAbstractUtils,
     DatasetMatch,
+    ZoweExplorerApiType,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetFSProvider } from "./DatasetFSProvider";
@@ -432,7 +433,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 if (err.toString().includes("hostname")) {
                     ZoweLogger.error(err);
                 } else {
-                    await AuthUtils.errorHandling(err, profile.name);
+                    await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile });
                 }
             }
             // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
@@ -1058,7 +1059,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     response = await this.getChildren(sessionNode);
                 });
             } catch (err) {
-                await AuthUtils.errorHandling(err, String(node.label));
+                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
             }
             if (response.length === 0) {
                 return;

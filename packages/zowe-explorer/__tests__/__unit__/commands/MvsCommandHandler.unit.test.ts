@@ -290,7 +290,7 @@ describe("mvsCommandActions unit testing", () => {
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("Error: fake testError");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("fake testError");
     });
 
     it("tests the issueMvsCommand function user escapes the quick pick box", async () => {

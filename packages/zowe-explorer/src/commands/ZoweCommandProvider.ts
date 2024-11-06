@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { Gui, imperative, IZoweTreeNode, Validation } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweTreeNode, Validation, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedContext } from "../trees/shared/SharedContext";
@@ -140,7 +140,7 @@ export abstract class ZoweCommandProvider {
                 this.history.addSearchHistory(command);
             }
         } catch (error) {
-            await AuthUtils.errorHandling(error, profile.name);
+            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Command, profile });
         }
     }
 
@@ -282,7 +282,8 @@ export abstract class ZoweCommandProvider {
                         "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
                     args: [profile.name],
                     comment: ["Profile name"],
-                })
+                }),
+                { apiType: ZoweExplorerApiType.Command, profile }
             );
         } else if (profileStatus.status === "active") {
             if (

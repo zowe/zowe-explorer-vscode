@@ -422,7 +422,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         });
         expect(showInputBox.mock.calls.length).toBe(2);
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("Error: fake testError");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("fake testError");
     });
 
     it("If nothing is entered in the inputbox of path", async () => {

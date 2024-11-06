@@ -14,7 +14,7 @@ import { VSCodeDivider, VSCodePanels, VSCodePanelTab } from "@vscode/webview-ui-
 import { JSXInternal } from "preact/src/jsx";
 import { isSecureOrigin } from "../utils";
 import PersistentDataPanel from "./components/PersistentTable/PersistentDataPanel";
-import PersistentVSCodeAPI from "./components/PersistentVSCodeAPI";
+import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
 import PersistentManagerHeader from "./components/PersistentManagerHeader/PersistentManagerHeader";
 import * as l10n from "@vscode/l10n";
 

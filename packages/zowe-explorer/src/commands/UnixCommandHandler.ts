@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosuss from "@zowe/zos-uss-for-zowe-sdk";
 import { ICommandProviderDialogs, ZoweCommandProvider } from "./ZoweCommandProvider";
-import { Gui, IZoweTreeNode, PersistenceSchemaEnum, Validation, imperative } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTreeNode, PersistenceSchemaEnum, Validation, ZoweExplorerApiType, imperative } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { AuthUtils } from "../utils/AuthUtils";
@@ -200,7 +200,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     })
                 );
             } else {
-                await AuthUtils.errorHandling(error, this.nodeProfile.name);
+                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Command, profile: this.nodeProfile });
             }
         }
     }

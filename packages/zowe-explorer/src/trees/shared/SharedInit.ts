@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import {
     FileManagement,
     Gui,
+    CorrelatedError,
     IZoweTree,
     IZoweTreeNode,
     TableViewProvider,
@@ -47,6 +48,7 @@ import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { CertificateWizard } from "../../utils/CertificateWizard";
 import { ZosConsoleViewProvider } from "../../zosconsole/ZosConsolePanel";
 import { ZoweUriHandler } from "../../utils/UriHandler";
+import { TroubleshootError } from "../../utils/TroubleshootError";
 
 export class SharedInit {
     private static originalEmitZoweEvent: typeof imperative.EventProcessor.prototype.emitEvent;
@@ -286,6 +288,17 @@ export class SharedInit {
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.copyExternalLink", (node: IZoweTreeNode) => SharedUtils.copyExternalLink(context, node))
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.revealOutputChannel", (): void => {
+                    ZoweLogger.zeOutputChannel.show();
+                })
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand(
+                    "zowe.troubleshootError",
+                    (error: CorrelatedError, stackTrace?: string) => new TroubleshootError(context, { error, stackTrace })
+                )
             );
             context.subscriptions.push(vscode.window.registerUriHandler(ZoweUriHandler.getInstance()));
             context.subscriptions.push(
