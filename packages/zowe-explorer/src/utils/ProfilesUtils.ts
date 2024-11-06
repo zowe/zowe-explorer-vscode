@@ -321,7 +321,7 @@ export class ProfilesUtils {
         }
 
         return new imperative.ProfileInfo("zowe", {
-            credMgrOverride: await this.setupDefaultCredentialManager(),
+            credMgrOverride: hasSecureCredentialManagerEnabled && (await this.setupDefaultCredentialManager()),
         });
     }
 

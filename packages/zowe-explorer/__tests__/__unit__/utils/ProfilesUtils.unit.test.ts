@@ -727,7 +727,7 @@ describe("ProfilesUtils unit tests", () => {
             const expectedErrMsg =
                 // eslint-disable-next-line max-len
                 "Failed to load credential manager. This may be related to Zowe Explorer being unable to use the default credential manager in a browser based environment.";
-            getDirectValueSpy.mockReturnValueOnce(false);
+            getDirectValueSpy.mockReturnValueOnce(true);
             getCredentialManagerOverrideSpy.mockReturnValue("@zowe/cli");
             isVSCodeCredentialPluginInstalledSpy.mockReturnValueOnce(false);
             getDirectValueSpy.mockReturnValueOnce(true);

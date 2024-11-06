@@ -208,6 +208,32 @@
   "Profile auth error": "Profile auth error",
   "Profile is not authenticated, please log in to continue": "Profile is not authenticated, please log in to continue",
   "Retrieving response from USS list API": "Retrieving response from USS list API",
+  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
+  "Could not list USS files: Empty path provided in URI": "Could not list USS files: Empty path provided in URI",
+  "Profile does not exist for this file.": "Profile does not exist for this file.",
+  "Saving USS file...": "Saving USS file...",
+  "Renaming {0} failed due to API error: {1}/File pathError message": {
+    "message": "Renaming {0} failed due to API error: {1}",
+    "comment": [
+      "File path",
+      "Error message"
+    ]
+  },
+  "Deleting {0} failed due to API error: {1}/File nameError message": {
+    "message": "Deleting {0} failed due to API error: {1}",
+    "comment": [
+      "File name",
+      "Error message"
+    ]
+  },
+  "No error details given": "No error details given",
+  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
+    "message": "Error fetching destination {0} for paste action: {1}",
+    "comment": [
+      "USS path",
+      "Error message"
+    ]
+  },
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
     "comment": [
@@ -278,32 +304,6 @@
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "Pulling from Mainframe...": "Pulling from Mainframe...",
-  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
-  "Could not list USS files: Empty path provided in URI": "Could not list USS files: Empty path provided in URI",
-  "Profile does not exist for this file.": "Profile does not exist for this file.",
-  "Saving USS file...": "Saving USS file...",
-  "Renaming {0} failed due to API error: {1}/File pathError message": {
-    "message": "Renaming {0} failed due to API error: {1}",
-    "comment": [
-      "File path",
-      "Error message"
-    ]
-  },
-  "Deleting {0} failed due to API error: {1}/File nameError message": {
-    "message": "Deleting {0} failed due to API error: {1}",
-    "comment": [
-      "File name",
-      "Error message"
-    ]
-  },
-  "No error details given": "No error details given",
-  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
-    "message": "Error fetching destination {0} for paste action: {1}",
-    "comment": [
-      "USS path",
-      "Error message"
-    ]
-  },
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -376,10 +376,10 @@
       "Name of USS session"
     ]
   },
-  "Changes in the credential vault detected, refreshing Zowe Explorer.": "Changes in the credential vault detected, refreshing Zowe Explorer.",
   "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",
   "Team config file deleted, refreshing Zowe Explorer.": "Team config file deleted, refreshing Zowe Explorer.",
-  "Team config file updated.": "Team config file updated.",
+  "Team config file updated, refreshing Zowe Explorer.": "Team config file updated, refreshing Zowe Explorer.",
+  "Changes in the credential vault detected, refreshing Zowe Explorer.": "Changes in the credential vault detected, refreshing Zowe Explorer.",
   "Changes in credential management detected, refreshing Zowe Explorer.": "Changes in credential management detected, refreshing Zowe Explorer.",
   "Zowe Explorer has activated successfully.": "Zowe Explorer has activated successfully.",
   "Type the new pattern to add to history": "Type the new pattern to add to history",
