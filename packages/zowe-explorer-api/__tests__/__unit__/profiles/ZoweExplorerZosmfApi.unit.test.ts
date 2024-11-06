@@ -65,12 +65,14 @@ async function expectUnixCommandApiWithSshSession<T>(
     sshobj: zosuss.SshSession
 ): Promise<void> {
     spy.mockClear().mockResolvedValue(undefined);
-    spy.mockImplementation((sshobject: zosuss.SshSession, command: string, cwd: string, callback: (data: string) => void, cleanStdout?: boolean) => {
-        callback("test");
-    });
+    spy.mockImplementation(
+        (_sshobject: zosuss.SshSession, _command: string, _cwd: string, callback: (data: string) => void, _cleanStdout?: boolean) => {
+            callback("test");
+        }
+    );
     const spywhenpathnotspecified = jest.spyOn(zosuss.Shell, "executeSsh");
     spywhenpathnotspecified.mockImplementation(
-        (sshobject: zosuss.SshSession, command: string, callback: (data: string) => void, cleanStdout?: boolean) => {
+        (_sshobject: zosuss.SshSession, _command: string, callback: (data: string) => void, _cleanStdout?: boolean) => {
             callback("test");
         }
     );
@@ -654,7 +656,7 @@ describe("ZosmfCommandApi", () => {
             name: "issueTsoCmdWithParms",
             spy: jest.spyOn(zostso.IssueTso, "issueTsoCmd"),
             args: ["command"],
-            transform: (args) => [...args, {addressSpaceOptions: undefined}],
+            transform: (args) => [...args, { addressSpaceOptions: undefined }],
         },
         {
             name: "issueMvsCommand",

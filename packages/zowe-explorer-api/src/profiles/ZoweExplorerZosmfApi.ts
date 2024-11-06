@@ -444,7 +444,7 @@ export namespace ZoweExplorerZosmf {
         }
 
         public issueTsoCmdWithParms(command: string, parms: zostso.IStartTsoParms): Promise<zostso.IIssueResponse> {
-            return zostso.IssueTso.issueTsoCmd(this.getSession(), command, {addressSpaceOptions: parms});
+            return zostso.IssueTso.issueTsoCmd(this.getSession(), command, { addressSpaceOptions: parms });
         }
 
         public issueMvsCommand(command: string, consoleName?: string): Promise<zosconsole.IConsoleResponse> {

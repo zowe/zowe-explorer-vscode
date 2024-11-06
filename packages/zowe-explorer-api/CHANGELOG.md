@@ -13,6 +13,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Fixed an issue to review inconsistent capitalization across translation strings. [#2935](https://github.com/zowe/zowe-explorer-vscode/issues/2935)
 - Fixed an issue where the `responseTimeout` profile property was ignored for z/OSMF MVS and USS API calls. [#3225](https://github.com/zowe/zowe-explorer-vscode/issues/3225)
+- Updated dependecies for technical currency. [#3786](https://github.com/zowe/zowe-explorer-vscode/issues/3786)
 
 ## `3.0.2`
 
