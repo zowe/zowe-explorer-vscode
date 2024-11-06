@@ -189,7 +189,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command",
+            placeHolder: "Select the profile to use to submit the command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(appendLine.mock.calls.length).toBe(2);
@@ -232,7 +232,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command",
+            placeHolder: "Select the profile to use to submit the command",
         });
         expect(showInputBox.mock.calls.length).toBe(0);
         expect(appendLine.mock.calls.length).toBe(2);
@@ -276,11 +276,11 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command",
+            placeHolder: "Select the profile to use to submit the command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("Error: fake testError");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("fake testError");
     });
 
     it("tests the issueMvsCommand function user escapes the quick pick box", async () => {
@@ -317,7 +317,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command",
+            placeHolder: "Select the profile to use to submit the command",
         });
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made. Operation cancelled.");
@@ -356,7 +356,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command",
+            placeHolder: "Select the profile to use to submit the command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(1);
@@ -413,7 +413,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command",
+            placeHolder: "Select the profile to use to submit the command",
         });
         expect(showInputBox.mock.calls.length).toBe(0);
     });
@@ -457,7 +457,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command",
+            placeHolder: "Select the profile to use to submit the command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
     });
@@ -499,7 +499,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command",
+            placeHolder: "Select the profile to use to submit the command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
     });
@@ -547,7 +547,7 @@ describe("mvsCommandActions unit testing", () => {
         await mvsActions.issueMvsCommand();
 
         expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
     });
 
     it("tests the issueMvsCommand function from a session", async () => {
@@ -615,7 +615,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command",
+            placeHolder: "Select the profile to use to submit the command",
         });
         expect(showInputBox.mock.calls.length).toBe(0);
         expect(showErrorMessage.mock.calls.length).toBe(1);

@@ -23,6 +23,7 @@ import {
     IZoweExplorerTreeApi,
     imperative,
     ZoweVsCodeExtension,
+    ErrorCorrelator,
 } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
@@ -139,6 +140,14 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
         public ussFileProvider?: Types.IZoweUSSTreeType,
         public jobsProvider?: Types.IZoweJobTreeType
     ) {}
+
+    /**
+     * @implements The {@link IApiExplorerExtender.getErrorCorrelator} function
+     * @returns Singleton instance of the error correlator
+     */
+    public getErrorCorrelator(): ErrorCorrelator {
+        return ErrorCorrelator.getInstance();
+    }
 
     /**
      *

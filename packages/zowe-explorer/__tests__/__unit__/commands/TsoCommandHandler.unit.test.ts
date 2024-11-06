@@ -189,7 +189,7 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the TSO command",
+            placeHolder: "Select the profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(appendLine.mock.calls.length).toBe(2);
@@ -231,7 +231,7 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the TSO command",
+            placeHolder: "Select the profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(0);
         expect(appendLine.mock.calls.length).toBe(2);
@@ -275,11 +275,11 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the TSO command",
+            placeHolder: "Select the profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("Error: fake testError");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("fake testError");
     });
 
     it("tests the issueTsoCommand function user escapes the quick pick box", async () => {
@@ -316,7 +316,7 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the TSO command",
+            placeHolder: "Select the profile to use to submit the TSO command",
         });
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made. Operation cancelled.");
@@ -355,7 +355,7 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the TSO command",
+            placeHolder: "Select the profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(1);
@@ -412,7 +412,7 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the TSO command",
+            placeHolder: "Select the profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(0);
     });
@@ -456,7 +456,7 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the TSO command",
+            placeHolder: "Select the profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
     });
@@ -498,7 +498,7 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the TSO command",
+            placeHolder: "Select the profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
     });
@@ -546,7 +546,7 @@ describe("TsoCommandHandler unit testing", () => {
         await tsoActions.issueTsoCommand();
 
         expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
     });
 
     it("tests the issueTsoCommand function from a session", async () => {
@@ -614,7 +614,7 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the TSO command",
+            placeHolder: "Select the profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(0);
         expect(showErrorMessage.mock.calls.length).toBe(1);

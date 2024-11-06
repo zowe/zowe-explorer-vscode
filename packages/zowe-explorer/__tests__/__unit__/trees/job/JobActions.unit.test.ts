@@ -41,6 +41,7 @@ import { JobActions } from "../../../../src/trees/job/JobActions";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
 import { Definitions } from "../../../../src/configuration/Definitions";
 import { SpoolUtils } from "../../../../src/utils/SpoolUtils";
+import { AuthUtils } from "../../../../src/utils/AuthUtils";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -394,7 +395,9 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         expect(getSpoolFilesSpy).not.toHaveBeenCalled();
         expect(mocked(Gui.showOpenDialog)).not.toHaveBeenCalled();
         expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
-        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain("Download Single Spool operation not implemented by extender");
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(
+            "Download single spool operation not implemented by extender. Please contact the extension developer(s)."
+        );
     });
 });
 
@@ -415,8 +418,14 @@ describe("Jobs Actions Unit Tests - Function downloadJcl", () => {
     });
     it("Checking failed attempt to download Job JCL", async () => {
         createGlobalMocks();
-        await JobActions.downloadJcl(undefined as any);
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
+        const showTextDocumentMock = jest.spyOn(vscode.workspace, "openTextDocument").mockImplementationOnce(() => {
+            throw new Error();
+        });
+        const errorHandlingMock = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
+        await JobActions.downloadJcl({ getProfile: jest.fn(), job: createIJobObject() } as any);
+        expect(showTextDocumentMock).toHaveBeenCalled();
+        expect(errorHandlingMock).toHaveBeenCalled();
+        errorHandlingMock.mockRestore();
     });
 });
 
@@ -642,7 +651,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         await DatasetActions.submitJcl(blockMocks.testDatasetTree, undefined);
 
         expect(submitJclSpy).not.toHaveBeenCalled();
-        expect(messageSpy).toHaveBeenCalledWith("Operation Cancelled");
+        expect(messageSpy).toHaveBeenCalledWith("Operation cancelled");
     });
 
     it("Checking API error on submit of active text editor content as JCL", async () => {
@@ -1043,6 +1052,7 @@ describe("focusing on a job in the tree view", () => {
         const existingJobSession = createJobSessionNode(session, profile);
         const datasetSessionName = existingJobSession.label as string;
         const jobTree = createTreeView();
+        const errorHandlingMock = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
         const jobTreeProvider = createJobsTree(session, submittedJob, profile, jobTree);
         jobTreeProvider.mSessionNodes.push(existingJobSession);
         const testError = new Error("focusOnJob failed");
@@ -1053,8 +1063,7 @@ describe("focusing on a job in the tree view", () => {
         await JobActions.focusOnJob(jobTreeProvider, datasetSessionName, submittedJob.jobid);
         // assert
         expect(mocked(jobTreeProvider.refreshElement)).toHaveBeenCalledWith(existingJobSession);
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
-        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
+        expect(errorHandlingMock).toHaveBeenCalled();
     });
     it("should handle error adding a new tree view session", async () => {
         // arrange
@@ -1064,6 +1073,7 @@ describe("focusing on a job in the tree view", () => {
         const newJobSession = createJobSessionNode(session, profile);
         const datasetSessionName = newJobSession.label as string;
         const jobTree = createTreeView();
+        const errorHandlingMock = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
         const jobTreeProvider = createJobsTree(session, submittedJob, profile, jobTree);
         const testError = new Error("focusOnJob failed");
         jest.spyOn(jobTreeProvider, "addSession").mockRejectedValueOnce(testError);
@@ -1071,8 +1081,7 @@ describe("focusing on a job in the tree view", () => {
         await JobActions.focusOnJob(jobTreeProvider, datasetSessionName, submittedJob.jobid);
         // assert
         expect(mocked(jobTreeProvider.addSession)).toHaveBeenCalledWith({ sessionName: datasetSessionName });
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
-        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
+        expect(errorHandlingMock).toHaveBeenCalled();
     });
 });
 

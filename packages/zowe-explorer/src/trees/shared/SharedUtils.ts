@@ -329,7 +329,7 @@ export class SharedUtils {
 
             vscode.workspace.updateWorkspaceFolders(workspaceFolders?.length ?? 0, null, {
                 uri: resourceUri,
-                name: isSession ? `[${item.label as string}] ${item.fullPath}` : (item.label as string),
+                name: `[${item.getProfileName()}] ${SharedContext.isDatasetNode(item) ? (item.label as string) : item.fullPath}`,
             });
         }
     }

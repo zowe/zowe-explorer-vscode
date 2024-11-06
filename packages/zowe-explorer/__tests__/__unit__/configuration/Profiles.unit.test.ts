@@ -395,7 +395,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
         spy.mockResolvedValueOnce(undefined);
         await Profiles.getInstance().editZoweConfigFile();
         expect(spy).toHaveBeenCalled();
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation cancelled");
         spy.mockClear();
     });
     it("Tests that editZoweConfigFile opens correct file when Global is selected", async () => {
@@ -500,7 +500,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         spy.mockResolvedValueOnce(undefined);
         await Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree);
         expect(spy).toHaveBeenCalled();
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation cancelled");
         spy.mockClear();
     });
     it("Tests that createZoweSchema will open correct config file when cancelling creation in location with existing config file", async () => {
@@ -810,7 +810,7 @@ describe("Profiles Unit Tests - function getDeleteProfile", () => {
         const showMessageSpy = jest.spyOn(Gui, "showMessage");
         jest.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
         await expect(privateProfile.getDeleteProfile()).resolves.toEqual(undefined);
-        expect(showMessageSpy).toHaveBeenCalledWith("Operation Cancelled");
+        expect(showMessageSpy).toHaveBeenCalledWith("Operation cancelled");
     });
 });
 
@@ -891,13 +891,14 @@ describe("Profiles Unit Tests - function validateProfile", () => {
             throw testError;
         });
         const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling");
-        await Profiles.getInstance().validateProfiles({
+        const profile = {
             name: "test1",
             message: "",
             type: "",
             failNotFound: false,
-        });
-        expect(errorHandlingSpy).toHaveBeenCalledWith(testError, "test1");
+        };
+        await Profiles.getInstance().validateProfiles(profile);
+        expect(errorHandlingSpy).toHaveBeenCalledWith(testError, { profile });
     });
     it("should return an object with profile validation status of 'unverified' from session status if validated profiles doesn't exist", async () => {
         createBlockMocks();

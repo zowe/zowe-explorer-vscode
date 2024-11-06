@@ -531,7 +531,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         globalMocks.showOpenDialog.mockReturnValue(undefined);
         await USSActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree, true);
         expect(globalMocks.showOpenDialog).toHaveBeenCalled();
-        expect(globalMocks.showInformationMessage.mock.calls.map((call) => call[0])).toEqual(["Operation Cancelled"]);
+        expect(globalMocks.showInformationMessage.mock.calls.map((call) => call[0])).toEqual(["Operation cancelled"]);
     });
 
     it("Tests that uploadDialog() throws an error successfully", async () => {

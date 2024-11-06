@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { Validation, imperative, IZoweTreeNode, Gui } from "@zowe/zowe-explorer-api";
+import { Validation, imperative, IZoweTreeNode, Gui, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import { ZoweCommandProvider } from "./ZoweCommandProvider";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { Profiles } from "../configuration/Profiles";
@@ -75,13 +75,13 @@ export class MvsCommandHandler extends ZoweCommandProvider {
             const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS);
             if (profileNamesList.length) {
                 const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: vscode.l10n.t("Select the Profile to use to submit the command"),
+                    placeHolder: vscode.l10n.t("Select the profile to use to submit the command"),
                     ignoreFocusOut: true,
                     canPickMany: false,
                 };
                 const sesName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
                 if (sesName === undefined) {
-                    Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
+                    Gui.showMessage(vscode.l10n.t("Operation cancelled"));
                     return;
                 }
                 profile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
@@ -126,7 +126,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                     })
                 );
             } else {
-                await AuthUtils.errorHandling(error, profile.name);
+                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Command, profile });
             }
         }
     }
@@ -215,7 +215,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 }
             }
         } catch (error) {
-            await AuthUtils.errorHandling(error, profile.name);
+            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Command, profile });
         }
         this.history.addSearchHistory(command);
     }

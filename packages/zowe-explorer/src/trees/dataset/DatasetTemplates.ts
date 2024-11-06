@@ -69,7 +69,7 @@ export class DataSetTemplates {
 
     private static promptForSaveLocation<T extends string>(): Thenable<T | undefined> {
         const qpOptions: vscode.QuickPickOptions = {
-            title: vscode.l10n.t("Data set template save location"),
+            title: vscode.l10n.t("Data Set Template Save Location"),
             placeHolder: vscode.l10n.t("Choose the setting location to save the data set template..."),
             ignoreFocusOut: true,
             canPickMany: false,
