@@ -75,13 +75,13 @@ export class MvsCommandHandler extends ZoweCommandProvider {
             const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS);
             if (profileNamesList.length) {
                 const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: vscode.l10n.t("Select the Profile to use to submit the command"),
+                    placeHolder: vscode.l10n.t("Select the profile to use to submit the command"),
                     ignoreFocusOut: true,
                     canPickMany: false,
                 };
                 const sesName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
                 if (sesName === undefined) {
-                    Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
+                    Gui.showMessage(vscode.l10n.t("Operation cancelled"));
                     return;
                 }
                 profile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];

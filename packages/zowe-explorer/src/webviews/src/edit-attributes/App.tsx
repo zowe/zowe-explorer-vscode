@@ -166,7 +166,7 @@ export function App() {
   return attributes.current ? (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1>{l10n.t("File properties")}</h1>
+        <h1>{l10n.t("File Properties")}</h1>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           {timestamp && (
             <p style={{ fontStyle: "italic", marginRight: "1em" }}>
@@ -261,7 +261,7 @@ export function App() {
   ) : (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1>{l10n.t("File properties")}</h1>
+        <h1>{l10n.t("File Properties")}</h1>
         <VSCodeProgressRing style={{ marginLeft: "1em" }} />
       </div>
       <VSCodeDivider />
