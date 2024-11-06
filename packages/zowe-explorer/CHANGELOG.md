@@ -21,6 +21,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where calling `vscode.workspace.fs.readFile` with a PDS member URI would throw an error when the PDS already existed as a filesystem entry. [#3267](https://github.com/zowe/zowe-explorer-vscode/issues/3267)
 - Fixed issue where Zowe Explorer would present the "No configs detected" notification when initialized in a workspace without a Zowe team configuration. [#3280](https://github.com/zowe/zowe-explorer-vscode/issues/3280)
 - Reduced the number of MVS API calls performed by `vscode.workspace.fs.readFile` when fetching the contents of a data set entry. [#3278](https://github.com/zowe/zowe-explorer-vscode/issues/3278)
+- Fixed issue where persistent settings defined at the workspace level were migrated into global storage rather than workspace-specific storage. [#3180](https://github.com/zowe/zowe-explorer-vscode/issues/3180)
 
 ## `3.0.2`
 
