@@ -21,10 +21,10 @@ enum StorageAccessLevel {
     Write = 1 << 1,
 }
 
-type LocalStorageKey = Definitions.LocalStorageKey | PersistenceSchemaEnum;
+export type StorageKeys = Definitions.LocalStorageKey | PersistenceSchemaEnum;
 
 type LocalStorageACL = {
-    [key in LocalStorageKey]?: StorageAccessLevel;
+    [key in StorageKeys]?: StorageAccessLevel;
 };
 
 export class ZoweLocalStorage {
@@ -39,7 +39,7 @@ export class ZoweLocalStorage {
     public static getValue<T>(key: keyof LocalStorageACL): T {
         ZoweLogger.trace("ZoweLocalStorage.getValue called");
         const defaultValue = meta.contributes.configuration.properties[key]?.default;
-        return ZoweLocalStorage.workspaceState.get<T>(key, defaultValue) ?? ZoweLocalStorage.globalState.get<T>(key, defaultValue);
+        return ZoweLocalStorage.workspaceState?.get<T>(key, defaultValue) ?? ZoweLocalStorage.globalState.get<T>(key, defaultValue);
     }
 
     public static setValue<T>(key: keyof LocalStorageACL, value: T, setInWorkspace?: boolean): Thenable<void> {
@@ -50,6 +50,15 @@ export class ZoweLocalStorage {
     }
 }
 
+/**
+ * @brief
+ *
+ * External-facing, local storage access facility that controls what keys can be read from or written to.
+ *
+ * @details
+ * - Access control rules are defined using the bit-flags specified in the {@link StorageAccessLevel} enum.
+ * - Define new local storage keys in the access control list to expose read or write access to extenders.
+ */
 export class LocalStorageAccess extends ZoweLocalStorage {
     private static _instance: LocalStorageAccess;
     private static accessControl: LocalStorageACL = {
@@ -64,6 +73,11 @@ export class LocalStorageAccess extends ZoweLocalStorage {
         [Definitions.LocalStorageKey.V1_MIGRATION_STATUS]: StorageAccessLevel.None,
     };
 
+    /**
+     * Asserts that the given key is readable from local storage.
+     * @param key The key to read data from in local storage
+     * @throws If the key is not readable from the access facility
+     */
     private static expectReadable(key: keyof LocalStorageACL): void {
         if ((LocalStorageAccess.accessControl[key] & StorageAccessLevel.Read) > 0) {
             return;
@@ -78,6 +92,11 @@ export class LocalStorageAccess extends ZoweLocalStorage {
         );
     }
 
+    /**
+     * Asserts that the given key is writable from local storage.
+     * @param key The key to write data to in local storage
+     * @throws If the key is not writable from the access facility
+     */
     private static expectWritable(key: keyof LocalStorageACL): void {
         if ((LocalStorageAccess.accessControl[key] & StorageAccessLevel.Write) > 0) {
             return;
@@ -92,6 +111,9 @@ export class LocalStorageAccess extends ZoweLocalStorage {
         );
     }
 
+    /**
+     * @returns {LocalStorageAccess} The singleton instance for the access facility
+     */
     public static get instance(): LocalStorageAccess {
         if (LocalStorageAccess._instance == null) {
             LocalStorageAccess._instance = new LocalStorageAccess();
@@ -100,24 +122,42 @@ export class LocalStorageAccess extends ZoweLocalStorage {
         return LocalStorageAccess._instance;
     }
 
-    public static getReadableKeys(): LocalStorageKey[] {
+    /**
+     * @returns The list of readable keys from the access facility
+     */
+    public static getReadableKeys(): StorageKeys[] {
         return Object.keys(LocalStorageAccess.accessControl).filter(
             (k) => LocalStorageAccess.accessControl[k] & StorageAccessLevel.Read
-        ) as LocalStorageKey[];
+        ) as StorageKeys[];
     }
 
-    public static getWritableKeys(): LocalStorageKey[] {
+    /**
+     * @returns The list of writable keys from the access facility
+     */
+    public static getWritableKeys(): StorageKeys[] {
         return Object.keys(LocalStorageAccess.accessControl).filter(
             (k) => LocalStorageAccess.accessControl[k] & StorageAccessLevel.Write
-        ) as LocalStorageKey[];
+        ) as StorageKeys[];
     }
 
-    public static getValue<T>(key: keyof LocalStorageACL): T | null {
+    /**
+     * Retrieve the value from local storage for the given key.
+     * @param key A readable key
+     * @returns The value if it exists in local storage, or `undefined` otherwise
+     * @throws If the extender does not have appropriate read permissions for the given key
+     */
+    public static getValue<T>(key: keyof LocalStorageACL): T {
         ZoweLogger.trace(`LocalStorageAccess.getValue called with key ${key}.`);
         LocalStorageAccess.expectReadable(key);
         return ZoweLocalStorage.getValue(key);
     }
 
+    /**
+     * Set a value in local storage for the given key.
+     * @param key A writable key
+     * @param value The new value for the given key to set in local storage
+     * @throws If the extender does not have appropriate write permissions for the given key
+     */
     public static setValue<T>(key: keyof LocalStorageACL, value: T): Thenable<void> {
         ZoweLogger.trace(`LocalStorageAccess.setValue called with key ${key}.`);
         LocalStorageAccess.expectWritable(key);
