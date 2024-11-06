@@ -60,13 +60,15 @@ async function expectUnixCommandApiWithSshSession<T>(
     sshobj: zosuss.SshSession
 ): Promise<void> {
     spy.mockClear().mockResolvedValue(undefined);
-    spy.mockImplementation((sshobject: zosuss.SshSession, command: string, cwd: string, callback: (data: string) => void) => {
+    spy.mockImplementation((sshobject: zosuss.SshSession, command: string, cwd: string, callback: (data: string) => void, cleanStdout?: boolean) => {
         callback("test");
     });
     const spywhenpathnotspecified = jest.spyOn(zosuss.Shell, "executeSsh");
-    spywhenpathnotspecified.mockImplementation((sshobject: zosuss.SshSession, command: string, callback: (data: string) => void) => {
-        callback("test");
-    });
+    spywhenpathnotspecified.mockImplementation(
+        (sshobject: zosuss.SshSession, command: string, callback: (data: string) => void, cleanStdout?: boolean) => {
+            callback("test");
+        }
+    );
     await apiInstance[name as string](sshobj, ...args, true, () => {});
     await apiInstance[name as string](sshobj, ...args, false, () => {});
     expect(spy).toHaveBeenCalled();
@@ -623,6 +625,12 @@ describe("ZosmfCommandApi", () => {
             spy: jest.spyOn(zostso.IssueTso, "issueTsoCommand"),
             args: ["command", { account: "ACCT#" }],
             transform: (args) => [args[1].account, ...args],
+        },
+        {
+            name: "issueTsoCmdWithParms",
+            spy: jest.spyOn(zostso.IssueTso, "issueTsoCmd"),
+            args: ["command"],
+            transform: (args) => [...args, {addressSpaceOptions: undefined}],
         },
         {
             name: "issueMvsCommand",
