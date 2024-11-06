@@ -216,6 +216,10 @@ function createGlobalMocks() {
         value: jest.fn().mockReturnValue(true),
         configurable: true,
     });
+    Object.defineProperty(ProfilesCache, "getProfileSessionWithVscProxy", {
+        value: jest.fn().mockReturnValue(globalMocks.testSession),
+        configurable: true,
+    });
 
     jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
         ds: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testTree.mSessionNodes], refresh: jest.fn() } as any,
