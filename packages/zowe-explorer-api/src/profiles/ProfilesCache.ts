@@ -390,8 +390,7 @@ export class ProfilesCache {
 
     public static getProfileSessionWithVscProxy(session: imperative.Session): imperative.Session {
         const VsCodeProxySettings = VscSettings.getVsCodeProxySettings();
-        // will be able to uncomment following line and assign with CLI udpates
-        // session.ISession.proxy = VsCodeProxySettings;
+        session.ISession.proxy = VsCodeProxySettings;
         return session;
     }
 

@@ -10,6 +10,7 @@
  */
 
 import * as vscode from "vscode";
+import * as imperative from "@zowe/imperative";
 
 export class VscSettings {
     /**
@@ -22,17 +23,16 @@ export class VscSettings {
         return vscode.workspace.getConfiguration(first).get(rest.join("."), defaultValue);
     }
 
-    // Return will be Promise<imperative.ProxyVariables>
     // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    public static getVsCodeProxySettings() {
+    public static getVsCodeProxySettings(): imperative.ProxyVariables {
         const proxySupport = this.getDirectValue("http.proxySupport");
         if (proxySupport !== "on") {
             return;
         }
-        const http_proxy = this.getDirectValue("http.proxy");
-        const no_proxy = this.getDirectValue("http.noProxy");
-        const proxy_strict_ssl = this.getDirectValue("http.proxyStrictSSL");
-        const proxy_authorization = this.getDirectValue("http.proxyAuthorization");
+        const http_proxy: string = this.getDirectValue("http.proxy");
+        const no_proxy: string[] = this.getDirectValue("http.noProxy");
+        const proxy_strict_ssl: boolean = this.getDirectValue("http.proxyStrictSSL");
+        const proxy_authorization: string = this.getDirectValue("http.proxyAuthorization");
 
         return {
             http_proxy,
