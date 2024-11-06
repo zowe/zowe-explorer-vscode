@@ -117,18 +117,18 @@ export class ProfileManagement {
     public static readonly switchAuthenticationQpItems: Record<string, vscode.QuickPickItem> = {
         [ProfileManagement.AuthQpLabels.switch]: {
             label: `$(key) ${vscode.l10n.t("Change the Authentication Method")}`,
-            description: vscode.l10n.t("Change the authentication method"),
+            description: vscode.l10n.t("Change the Authentication Method"),
         },
     };
     public static readonly tokenAuthLoginQpItem: Record<string, vscode.QuickPickItem> = {
         [ProfileManagement.AuthQpLabels.login]: {
-            label: `$(arrow-right) ${vscode.l10n.t("Log in to authentication service")}`,
+            label: `$(arrow-right) ${vscode.l10n.t("Log in to Authentication Service")}`,
             description: vscode.l10n.t("Log in to obtain a new token value"),
         },
     };
     public static readonly tokenAuthLogoutQpItem: Record<string, vscode.QuickPickItem> = {
         [ProfileManagement.AuthQpLabels.logout]: {
-            label: `$(arrow-left) ${vscode.l10n.t("Log out of authentication service")}`,
+            label: `$(arrow-left) ${vscode.l10n.t("Log out of Authentication Service")}`,
             description: vscode.l10n.t("Log out to invalidate and remove stored token value"),
         },
     };
@@ -205,7 +205,7 @@ export class ProfileManagement {
                 break;
             }
             default: {
-                Gui.infoMessage(vscode.l10n.t("Operation Cancelled"));
+                Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
                 break;
             }
         }
@@ -280,7 +280,7 @@ export class ProfileManagement {
     private static async handleHideProfiles(node: IZoweTreeNode): Promise<void> {
         const shouldHideFromAllTrees = await Profiles.handleChangeForAllTrees(node.getLabel().toString(), false);
         if (shouldHideFromAllTrees === undefined) {
-            Gui.infoMessage(vscode.l10n.t("Operation Cancelled"));
+            Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
             return;
         }
         return vscode.commands.executeCommand("zowe.removeSession", node, null, shouldHideFromAllTrees);
