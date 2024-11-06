@@ -75,13 +75,13 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS);
             if (profileNamesList.length > 0) {
                 const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: vscode.l10n.t("Select the Profile to use to submit the TSO command"),
+                    placeHolder: vscode.l10n.t("Select the profile to use to submit the TSO command"),
                     ignoreFocusOut: true,
                     canPickMany: false,
                 };
                 const sesName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
                 if (sesName === undefined) {
-                    Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
+                    Gui.showMessage(vscode.l10n.t("Operation cancelled"));
                     return;
                 }
                 const allProfiles = profiles.allProfiles;
@@ -243,13 +243,13 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             });
             if (tsoProfileNamesList.length) {
                 const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: vscode.l10n.t("Select the TSO Profile to use for account number."),
+                    placeHolder: vscode.l10n.t("Select the TSO profile to use for account number."),
                     ignoreFocusOut: true,
                     canPickMany: false,
                 };
                 const sesName = await Gui.showQuickPick(tsoProfileNamesList, quickPickOptions);
                 if (sesName === undefined) {
-                    Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
+                    Gui.showMessage(vscode.l10n.t("Operation cancelled"));
                     return;
                 }
                 tsoProfile = tsoProfiles.filter((temprofile) => temprofile.name === sesName)[0];
@@ -301,7 +301,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             };
             tsoParms.account = await Gui.showInputBox(InputBoxOptions);
             if (!tsoParms.account) {
-                Gui.showMessage(vscode.l10n.t("Operation Cancelled."));
+                Gui.showMessage(vscode.l10n.t("Operation cancelled."));
                 return;
             }
         }
