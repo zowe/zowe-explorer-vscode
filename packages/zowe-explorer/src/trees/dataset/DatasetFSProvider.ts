@@ -27,6 +27,7 @@ import {
     UriFsInfo,
     FileEntry,
     ZoweExplorerApiType,
+    imperative,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -34,6 +35,7 @@ import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import * as dayjs from "dayjs";
 import { DatasetUtils } from "./DatasetUtils";
+import { AuthUtils } from "../../utils/AuthUtils";
 
 export class DatasetFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: DatasetFSProvider;
@@ -434,6 +436,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             //Callers of fetchDatasetAtUri() do not expect it to throw an error
             if (error instanceof Error) {
                 ZoweLogger.error(error.message);
+            }
+            if (
+                error instanceof imperative.ImperativeError &&
+                metadata.profile != null &&
+                (Number(error.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
+                    error.message.includes("All configured authentication methods failed"))
+            ) {
+                AuthUtils.promptForAuthentication(error, metadata.profile).catch((err) => err instanceof Error && ZoweLogger.error(err.message));
             }
             return null;
         }

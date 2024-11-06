@@ -30,6 +30,7 @@ import { USSFileStructure } from "./USSFileStructure";
 import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../tools/ZoweLogger";
+import { AuthUtils } from "../../utils/AuthUtils";
 
 export class UssFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     // Event objects for provider
@@ -291,21 +292,18 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 stream: bufBuilder,
             });
         } catch (err) {
-            this._handleError(err, {
-                additionalContext: vscode.l10n.t({
-                    message: "Failed to get contents for {0}",
-                    args: [filePath],
-                    comment: ["File path"],
-                }),
-                retry: {
-                    fn: this.fetchFileAtUri.bind(this),
-                    args: [uri, options],
-                },
-                apiType: ZoweExplorerApiType.Uss,
-                profileType: metadata.profile.type,
-                templateArgs: { profileName: metadata.profile.name },
-            });
-            throw err;
+            if (err instanceof Error) {
+                ZoweLogger.error(err.message);
+            }
+            if (
+                err instanceof imperative.ImperativeError &&
+                metadata.profile != null &&
+                (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
+                    err.message.includes("All configured authentication methods failed"))
+            ) {
+                AuthUtils.promptForAuthentication(err, metadata.profile).catch((error) => error instanceof Error && ZoweLogger.error(error.message));
+            }
+            return;
         }
 
         const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();

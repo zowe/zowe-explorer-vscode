@@ -26,8 +26,8 @@ interface ErrorContext {
 export class AuthUtils {
     public static async promptForAuthentication(
         imperativeError: imperative.ImperativeError,
-        correlation: CorrelatedError,
-        profile: imperative.IProfileLoaded
+        profile: imperative.IProfileLoaded,
+        correlation?: CorrelatedError
     ): Promise<boolean> {
         if (imperativeError.mDetails.additionalDetails) {
             const tokenError: string = imperativeError.mDetails.additionalDetails;
@@ -35,7 +35,7 @@ export class AuthUtils {
 
             if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
                 const message = vscode.l10n.t("Log in to Authentication Service");
-                const success = Gui.showMessage(correlation.message, { items: [message] }).then(async (selection) => {
+                const success = Gui.showMessage(correlation?.message ?? imperativeError.message, { items: [message] }).then(async (selection) => {
                     if (selection) {
                         return Constants.PROFILES_CACHE.ssoLogin(null, profile.name);
                     }
@@ -44,7 +44,7 @@ export class AuthUtils {
             }
         }
         const checkCredsButton = vscode.l10n.t("Update Credentials");
-        const creds = await Gui.errorMessage(correlation.message, {
+        const creds = await Gui.errorMessage(correlation?.message ?? imperativeError.message, {
             items: [checkCredsButton],
             vsCodeOpts: { modal: true },
         }).then(async (selection) => {
@@ -97,7 +97,7 @@ export class AuthUtils {
                 (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
                     imperativeError.message.includes("All configured authentication methods failed"))
             ) {
-                return AuthUtils.promptForAuthentication(imperativeError, correlation, profile);
+                return AuthUtils.promptForAuthentication(imperativeError, profile, correlation);
             }
         }
         if (errorDetails.toString().includes("Could not find profile")) {
