@@ -71,7 +71,7 @@ export class AuthUtils {
                     vsCodeOpts: { modal: true },
                 }).then(async (selection) => {
                     if (selection !== checkCredsButton) {
-                        Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
+                        Gui.showMessage(vscode.l10n.t("Operation cancelled"));
                         return;
                     }
                     return Constants.PROFILES_CACHE.promptCredentials(label.trim(), true);

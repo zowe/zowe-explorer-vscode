@@ -182,7 +182,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         expect(newNode?.contextValue).toBe(Constants.DS_MEMBER_CONTEXT);
         expect(newNode?.command.command).toBe("vscode.open");
         expect(mySpy).toHaveBeenCalledWith({
-            placeHolder: "Name of Member",
+            placeHolder: "Name of member",
             validateInput: expect.any(Function),
         });
         expect(mocked(zosfiles.Upload.bufferToDataSet)).toHaveBeenCalledWith(
@@ -256,7 +256,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
 
         expect(parent.children.find((node) => node.label === "TESTMEMBER")).toBeDefined();
-        expect(mySpy).toHaveBeenCalledWith({ placeHolder: "Name of Member", validateInput: expect.any(Function) });
+        expect(mySpy).toHaveBeenCalledWith({ placeHolder: "Name of member", validateInput: expect.any(Function) });
         expect(mocked(zosfiles.Upload.bufferToDataSet)).toHaveBeenCalledWith(
             blockMocks.zosmfSession,
             Buffer.from(""),
@@ -2426,7 +2426,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(undefined);
         await DatasetActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Operation Cancelled");
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Operation cancelled");
         expect(createDataSetSpy).not.toHaveBeenCalled();
     });
     it("Tests that user can edit the node label", async () => {
@@ -2649,7 +2649,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         node.contextValue = Constants.DS_DS_CONTEXT;
         await DatasetActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(createDataSetSpy).toHaveBeenCalledWith("Operation Cancelled");
+        expect(createDataSetSpy).toHaveBeenCalledWith("Operation cancelled");
     });
     it("Checking opCancelled message shown when no ds type chosen", async () => {
         createGlobalMocks();
@@ -2673,7 +2673,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const createDataSetSpy = jest.spyOn(Gui, "showMessage");
         await DatasetActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(createDataSetSpy).toHaveBeenCalledWith("Operation Cancelled");
+        expect(createDataSetSpy).toHaveBeenCalledWith("Operation cancelled");
     });
     it("Checking opCancelled message shown when user escapes allocate or edit attributes options", async () => {
         createGlobalMocks();
@@ -2698,7 +2698,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const createDataSetSpy = jest.spyOn(Gui, "showMessage");
         await DatasetActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(createDataSetSpy).toHaveBeenCalledWith("Operation Cancelled");
+        expect(createDataSetSpy).toHaveBeenCalledWith("Operation cancelled");
     });
     it("Checking opCancelled message shown when user escapes during edit attributes", async () => {
         createGlobalMocks();
@@ -2727,7 +2727,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const createDataSetSpy = jest.spyOn(Gui, "showMessage");
         await DatasetActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(createDataSetSpy).toHaveBeenCalledWith("Operation Cancelled");
+        expect(createDataSetSpy).toHaveBeenCalledWith("Operation cancelled");
     });
     it("Checking opCancelled message shown when no template name supplied", async () => {
         createGlobalMocks();
@@ -2774,7 +2774,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         expect(templateSpy).toHaveBeenCalled();
         expect(addTempSpy).toHaveBeenCalledTimes(0);
-        expect(opCancelledSpy).toHaveBeenCalledWith("Operation Cancelled");
+        expect(opCancelledSpy).toHaveBeenCalledWith("Operation cancelled");
         templateSpy.mockClear();
         addTempSpy.mockClear();
     });

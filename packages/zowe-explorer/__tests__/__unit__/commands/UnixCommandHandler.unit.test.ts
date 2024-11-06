@@ -261,7 +261,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select an SSH profile for this command",
+            placeHolder: "Select the profile to use to submit the Unix command",
         });
 
         expect(showInputBox.mock.calls.length).toBe(2);
@@ -321,7 +321,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select an SSH profile for this command",
+            placeHolder: "Select the profile to use to submit the Unix command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(appendLine.mock.calls.length).toBe(2);
@@ -356,7 +356,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select an SSH profile for this command",
+            placeHolder: "Select the profile to use to submit the Unix command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(0);
@@ -386,7 +386,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select an SSH profile for this command",
+            placeHolder: "Select the profile to use to submit the Unix command",
         });
         expect(showInputBox.mock.calls.length).toBe(2);
         expect(showInformationMessage.mock.calls.length).toBe(0);
@@ -418,7 +418,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select an SSH profile for this command",
+            placeHolder: "Select the profile to use to submit the Unix command",
         });
         expect(showInputBox.mock.calls.length).toBe(2);
         expect(showErrorMessage.mock.calls.length).toBe(1);
@@ -497,7 +497,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select an SSH profile for this command",
+            placeHolder: "Select the profile to use to submit the Unix command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
     });

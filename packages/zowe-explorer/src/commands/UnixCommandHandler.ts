@@ -69,7 +69,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     public readonly dialogs: ICommandProviderDialogs = {
         commandSubmitted: vscode.l10n.t("Unix command submitted."),
         defaultText: vscode.l10n.t("$(plus) Create a new Unix command"),
-        selectProfile: vscode.l10n.t("Select an SSH profile for this command"),
+        selectProfile: vscode.l10n.t("Select the profile to use to submit the Unix command"),
         searchCommand: vscode.l10n.t("Enter or update the Unix command"),
         writeCommand: (options) =>
             vscode.l10n.t({
@@ -145,7 +145,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     return;
                 }
                 const cmdArgs: imperative.ICommandArguments = this.getSshCmdArgs(this.sshProfile.profile);
-                // create the ssh session
+                // create the SSH session
                 const sshSessCfg = zosuss.SshSession.createSshSessCfgFromArgs(cmdArgs);
                 imperative.ConnectionPropsForSessCfg.resolveSessCfgProps<zosuss.ISshSession>(sshSessCfg, cmdArgs);
                 this.sshSession = new zosuss.SshSession(sshSessCfg);

@@ -41,7 +41,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
     public readonly dialogs: ICommandProviderDialogs = {
         commandSubmitted: vscode.l10n.t("MVS command submitted."),
         defaultText: `$(plus) ${vscode.l10n.t("Create a new MVS command")}`,
-        selectProfile: vscode.l10n.t("Select an MVS profile for this command"),
+        selectProfile: vscode.l10n.t("Select the profile to use to submit the MVS command"),
         searchCommand: vscode.l10n.t("Enter or update the MVS command"),
         writeCommand: (options) =>
             vscode.l10n.t({

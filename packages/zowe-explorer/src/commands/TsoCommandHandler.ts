@@ -45,7 +45,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
     public readonly dialogs: ICommandProviderDialogs = {
         commandSubmitted: vscode.l10n.t("TSO command submitted."),
         defaultText: `$(plus) ${vscode.l10n.t("Create a new TSO command")}`,
-        selectProfile: vscode.l10n.t("Select a TSO profile for this command"),
+        selectProfile: vscode.l10n.t("Select the profile to use to submit the TSO command"),
         searchCommand: vscode.l10n.t("Enter or update the TSO command"),
         writeCommand: (options) =>
             vscode.l10n.t({

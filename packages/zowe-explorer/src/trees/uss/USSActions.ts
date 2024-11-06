@@ -177,7 +177,7 @@ export class USSActions {
             ussFileProvider.refreshElement(node);
             ussFileProvider.getTreeView().reveal(node, { expand: true, focus: true });
         } else {
-            Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
+            Gui.showMessage(vscode.l10n.t("Operation cancelled"));
         }
     }
 

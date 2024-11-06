@@ -196,7 +196,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select an MVS profile for this command",
+            placeHolder: "Select the profile to use to submit the MVS command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(appendLine.mock.calls.length).toBe(2);
@@ -242,7 +242,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select an MVS profile for this command",
+            placeHolder: "Select the profile to use to submit the MVS command",
         });
         expect(showInputBox.mock.calls.length).toBe(0);
         expect(appendLine.mock.calls.length).toBe(2);
@@ -286,7 +286,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select an MVS profile for this command",
+            placeHolder: "Select the profile to use to submit the MVS command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls.length).toBe(1);
@@ -330,12 +330,12 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select an MVS profile for this command",
+            placeHolder: "Select the profile to use to submit the MVS command",
         });
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
-    it("tests the issueMvsCommand function user escapes the command box", async () => {
+    it("tests the issueMvsCommand function user escapes the MVS command box", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -368,7 +368,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select an MVS profile for this command",
+            placeHolder: "Select the profile to use to submit the MVS command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(0);
@@ -427,7 +427,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select an MVS profile for this command",
+            placeHolder: "Select the profile to use to submit the MVS command",
         });
         expect(showInputBox.mock.calls.length).toBe(0);
     });
@@ -471,7 +471,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select an MVS profile for this command",
+            placeHolder: "Select the profile to use to submit the MVS command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
     });
@@ -513,7 +513,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select an MVS profile for this command",
+            placeHolder: "Select the profile to use to submit the MVS command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
     });
@@ -628,7 +628,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select an MVS profile for this command",
+            placeHolder: "Select the profile to use to submit the MVS command",
         });
         expect(showInputBox.mock.calls.length).toBe(0);
         expect(showErrorMessage.mock.calls.length).toBe(1);

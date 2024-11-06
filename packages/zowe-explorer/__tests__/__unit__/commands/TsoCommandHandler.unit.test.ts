@@ -198,7 +198,7 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select a TSO profile for this command",
+            placeHolder: "Select the profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(appendLine.mock.calls.length).toBe(2);
@@ -243,7 +243,7 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select a TSO profile for this command",
+            placeHolder: "Select the profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(0);
         expect(appendLine.mock.calls.length).toBe(2);
@@ -287,7 +287,7 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select a TSO profile for this command",
+            placeHolder: "Select the profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls.length).toBe(1);
@@ -331,7 +331,7 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select a TSO profile for this command",
+            placeHolder: "Select the profile to use to submit the TSO command",
         });
     });
 
@@ -368,7 +368,7 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select a TSO profile for this command",
+            placeHolder: "Select the profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(0);
@@ -427,7 +427,7 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select a TSO profile for this command",
+            placeHolder: "Select the profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(0);
     });
@@ -471,7 +471,7 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select a TSO profile for this command",
+            placeHolder: "Select the profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
     });
@@ -513,7 +513,7 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select a TSO profile for this command",
+            placeHolder: "Select the profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
     });
@@ -628,7 +628,7 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select a TSO profile for this command",
+            placeHolder: "Select the profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(0);
         expect(showErrorMessage.mock.calls.length).toBe(1);
