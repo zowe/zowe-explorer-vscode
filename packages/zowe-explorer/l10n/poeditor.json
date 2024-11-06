@@ -561,7 +561,7 @@
   "Select a filter": "",
   "No selection made. Operation cancelled.": "",
   "New filter": "",
-  "You must enter a path.": "",
+  "Please enter a valid USS path.": "",
   "Initializing profiles with USS favorites.": "",
   "No USS favorites found.": "",
   "Loading profile: {0} for USS favorites": "",
