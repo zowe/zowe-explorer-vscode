@@ -84,7 +84,8 @@ describe("ZoweCommandProvider Unit Tests", () => {
             expect(errorHandlingSpy).toHaveBeenCalledWith(
                 "Profile Name " +
                     globalMocks.testProfile.name +
-                    " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
+                    " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
+                { apiType: "cmd", profile: globalMocks.testProfile }
             );
         });
     });
