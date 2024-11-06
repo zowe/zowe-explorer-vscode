@@ -49,16 +49,14 @@ describe("LocalStorageAccess", () => {
         it("calls ZoweLocalStorage.getValue for all readable keys", () => {
             const getValueMock = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(123);
             for (const key of keysWithPerm(1)) {
-                expect(LocalStorageAccess.instance.getValue(key)).toBe(123);
+                expect(LocalStorageAccess.getValue(key)).toBe(123);
                 expect(getValueMock).toHaveBeenCalledWith(key);
             }
         });
 
         it("throws error for all keys that are not readable", () => {
             for (const key of omitKeysWithPermission(1)) {
-                expect(() => LocalStorageAccess.instance.getValue(key)).toThrow(
-                    `Insufficient read permissions for ${key as string} in local storage.`
-                );
+                expect(() => LocalStorageAccess.getValue(key)).toThrow(`Insufficient read permissions for ${key as string} in local storage.`);
             }
         });
     });
@@ -67,14 +65,14 @@ describe("LocalStorageAccess", () => {
         it("calls ZoweLocalStorage.setValue for all writable keys", () => {
             const setValueMock = jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
             for (const key of keysWithPerm(2)) {
-                LocalStorageAccess.instance.setValue(key, 123);
+                LocalStorageAccess.setValue(key, 123);
                 expect(setValueMock).toHaveBeenCalledWith(key, 123);
             }
         });
 
         it("throws error for all keys that are not writable", () => {
             for (const key of omitKeysWithPermission(2)) {
-                expect(() => LocalStorageAccess.instance.setValue(key, undefined)).toThrow(
+                expect(() => LocalStorageAccess.setValue(key, undefined)).toThrow(
                     `Insufficient write permissions for ${key as string} in local storage.`
                 );
             }
