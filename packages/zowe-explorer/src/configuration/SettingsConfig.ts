@@ -204,6 +204,11 @@ export class SettingsConfig {
         }
     }
 
+    /**
+     * Migrates settings from `settings.json` at the given level.
+     * @param level Global or workspace configuration target
+     * @returns Whether at least one setting was migrated to local storage for the given level
+     */
     private static async migrateSettingsAtLevel(level: vscode.ConfigurationTarget.Global | vscode.ConfigurationTarget.Workspace): Promise<boolean> {
         const isWorkspace = level === vscode.ConfigurationTarget.Workspace;
         let valueMigrated = false;
@@ -219,8 +224,8 @@ export class SettingsConfig {
             }
 
             valueMigrated ||= true;
-            ZoweLocalStorage.setValue(setting, value, isWorkspace);
-            SettingsConfig.setDirectValue(setting, undefined, level);
+            await ZoweLocalStorage.setValue(setting, value, isWorkspace);
+            await SettingsConfig.setDirectValue(setting, undefined, level);
         }
 
         return valueMigrated;
