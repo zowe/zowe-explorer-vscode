@@ -137,7 +137,7 @@ describe("ProfileManagement unit tests", () => {
             mocks.mockResolveQp.mockResolvedValueOnce(undefined);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
-            expect(mocks.opCancelledSpy).toHaveBeenCalledWith("Operation Cancelled");
+            expect(mocks.opCancelledSpy).toHaveBeenCalledWith("Operation cancelled");
         });
         it("profile using basic authentication should see promptCredentials called when Update Credentials chosen", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
@@ -204,7 +204,7 @@ describe("ProfileManagement unit tests", () => {
             mocks.mockResolveQp.mockResolvedValueOnce(undefined);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
-            expect(mocks.opCancelledSpy).toHaveBeenCalledWith("Operation Cancelled");
+            expect(mocks.opCancelledSpy).toHaveBeenCalledWith("Operation cancelled");
         });
         it("profile using token authentication should see ssoLogin called when Log in to authentication service chosen", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
@@ -264,7 +264,7 @@ describe("ProfileManagement unit tests", () => {
             mocks.mockResolveQp.mockResolvedValueOnce(undefined);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
-            expect(mocks.opCancelledSpy).toHaveBeenCalledWith("Operation Cancelled");
+            expect(mocks.opCancelledSpy).toHaveBeenCalledWith("Operation cancelled");
         });
         it("profile with no authentication method should see promptCredentials called when Add Basic Credentials chosen", async () => {
             const mocks = createBlockMocks(createGlobalMocks());

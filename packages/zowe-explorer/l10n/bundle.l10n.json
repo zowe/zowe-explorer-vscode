@@ -32,7 +32,7 @@
   "User": "User",
   "Group": "Group",
   "All": "All",
-  "File properties": "File properties",
+  "File Properties": "File Properties",
   "Tag": "Tag",
   "Owner": "Owner",
   "Apply changes": "Apply changes",
@@ -47,8 +47,9 @@
   "Certificate Key File": "Certificate Key File",
   "Submit": "Submit",
   "Cancel": "Cancel",
-  "Zowe explorer profiles are being set as unsecured.": "Zowe explorer profiles are being set as unsecured.",
-  "Zowe explorer profiles are being set as secured.": "Zowe explorer profiles are being set as secured.",
+  "Troubleshoot Error": "Troubleshoot Error",
+  "Zowe Explorer profiles are being set as unsecured.": "Zowe Explorer profiles are being set as unsecured.",
+  "Zowe Explorer profiles are being set as secured.": "Zowe Explorer profiles are being set as secured.",
   "Custom credential manager failed to activate": "Custom credential manager failed to activate",
   "Custom credential manager {0} found, attempting to activate./Credential manager display name": {
     "message": "Custom credential manager {0} found, attempting to activate.",
@@ -84,7 +85,7 @@
   "\"Update Credentials\" operation not supported when \"autoStore\" is false": "\"Update Credentials\" operation not supported when \"autoStore\" is false",
   "Connection Name": "Connection Name",
   "Enter a name for the connection.": "Enter a name for the connection.",
-  "Operation Cancelled": "Operation Cancelled",
+  "Operation cancelled": "Operation cancelled",
   "Credentials for {0} were successfully updated/Profile name": {
     "message": "Credentials for {0} were successfully updated",
     "comment": [
@@ -98,8 +99,8 @@
     ]
   },
   "Reading imperative.json failed. Will try to create file.": "Reading imperative.json failed. Will try to create file.",
-  "Reading imperative.json Credential Manager.\n {0}/File content": {
-    "message": "Reading imperative.json Credential Manager.\n {0}",
+  "Reading imperative.json credential manager.\n {0}/File content": {
+    "message": "Reading imperative.json credential manager.\n {0}",
     "comment": [
       "File content"
     ]
@@ -110,8 +111,8 @@
       "Settings file"
     ]
   },
-  "Updating imperative.json Credential Manager to {0}.\n{1}/Default credential override settingNew credential override setting": {
-    "message": "Updating imperative.json Credential Manager to {0}.\n{1}",
+  "Updating imperative.json credential manager to {0}.\n{1}/Default credential override settingNew credential override setting": {
+    "message": "Updating imperative.json credential manager to {0}.\n{1}",
     "comment": [
       "Default credential override setting",
       "New credential override setting"
@@ -123,9 +124,9 @@
       "Error message"
     ]
   },
-  "Zowe Profiles initialized successfully.": "Zowe Profiles initialized successfully.",
-  "Convert Existing Profiles": "Convert Existing Profiles",
-  "Tree Item is not a Zowe Explorer item.": "Tree Item is not a Zowe Explorer item.",
+  "Zowe profiles initialized successfully.": "Zowe profiles initialized successfully.",
+  "Convert existing profiles": "Convert existing profiles",
+  "Tree item is not a Zowe Explorer item.": "Tree item is not a Zowe Explorer item.",
   "Zowe Explorer": "Zowe Explorer",
   "Initialized logger for Zowe Explorer": "Initialized logger for Zowe Explorer",
   "This log file can be found at {0}/Log file location": {
@@ -148,22 +149,16 @@
     ]
   },
   "All Files": "All Files",
-  "User dismissed the certificate wizard.": "User dismissed the certificate wizard.",
+  "User dismissed the Certificate Wizard.": "User dismissed the Certificate Wizard.",
   "Certificate Wizard": "Certificate Wizard",
   "Enter the path to the certificate for authenticating the connection.": "Enter the path to the certificate for authenticating the connection.",
   "Certificate Files": "Certificate Files",
   "Select Certificate": "Select Certificate",
-  "Enter the path to the certificate key for authenticating the connection.": "Enter the path to the certificate key for authenticating the connection.",
+  "Certificate Key for Authentication.": "Certificate Key for Authentication.",
   "Certificate Keys": "Certificate Keys",
   "Select Certificate Key": "Select Certificate Key",
-  "Required parameter 'host' must not be blank.": "Required parameter 'host' must not be blank.",
-  "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out./Label": {
-    "message": "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
-    "comment": [
-      "Label"
-    ]
-  },
   "Update Credentials": "Update Credentials",
+  "Required parameter 'host' must not be blank.": "Required parameter 'host' must not be blank.",
   "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection./Profile name": {
     "message": "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
     "comment": [
@@ -207,21 +202,30 @@
   "Profile is not authenticated, please log in to continue": "Profile is not authenticated, please log in to continue",
   "Retrieving response from USS list API": "Retrieving response from USS list API",
   "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
-  "Could not list USS files: Empty path provided in URI": "Could not list USS files: Empty path provided in URI",
-  "Profile does not exist for this file.": "Profile does not exist for this file.",
-  "Saving USS file...": "Saving USS file...",
-  "Renaming {0} failed due to API error: {1}/File pathError message": {
-    "message": "Renaming {0} failed due to API error: {1}",
+  "Failed to move {0}/File path": {
+    "message": "Failed to move {0}",
     "comment": [
-      "File path",
-      "Error message"
+      "File path"
     ]
   },
-  "Deleting {0} failed due to API error: {1}/File nameError message": {
-    "message": "Deleting {0} failed due to API error: {1}",
+  "Failed to get contents for {0}/File path": {
+    "message": "Failed to get contents for {0}",
     "comment": [
-      "File name",
-      "Error message"
+      "File path"
+    ]
+  },
+  "Profile does not exist for this file.": "Profile does not exist for this file.",
+  "Saving USS file...": "Saving USS file...",
+  "Failed to rename {0}/File path": {
+    "message": "Failed to rename {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Failed to delete {0}/File name": {
+    "message": "Failed to delete {0}",
+    "comment": [
+      "File name"
     ]
   },
   "No error details given": "No error details given",
@@ -230,6 +234,13 @@
     "comment": [
       "USS path",
       "Error message"
+    ]
+  },
+  "Failed to copy {0} to {1}/Source pathDestination path": {
+    "message": "Failed to copy {0} to {1}",
+    "comment": [
+      "Source path",
+      "Destination path"
     ]
   },
   "Downloaded: {0}/Download time": {
@@ -282,7 +293,7 @@
   "Select a filter": "Select a filter",
   "No selection made. Operation cancelled.": "No selection made. Operation cancelled.",
   "New filter": "New filter",
-  "You must enter a path.": "You must enter a path.",
+  "Please enter a valid USS path.": "Please enter a valid USS path.",
   "Initializing profiles with USS favorites.": "Initializing profiles with USS favorites.",
   "No USS favorites found.": "No USS favorites found.",
   "Loading profile: {0} for USS favorites/Profile name": {
@@ -416,16 +427,16 @@
       "Profile name"
     ]
   },
-  "Error: You have Zowe Job favorites that refer to a non-existent CLI profile named: {0}.\n                         To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n                          Would you like to do this now? {1}/Profile nameApplication name": {
-    "message": "Error: You have Zowe Job favorites that refer to a non-existent CLI profile named: {0}.\n                         To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n                          Would you like to do this now? {1}",
+  "Error: You have Zowe job favorites that refer to a non-existent CLI profile named: {0}.\n                         To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n                          Would you like to do this now? {1}/Profile nameApplication name": {
+    "message": "Error: You have Zowe job favorites that refer to a non-existent CLI profile named: {0}.\n                         To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n                          Would you like to do this now? {1}",
     "comment": [
       "Profile name",
       "Application name"
     ]
   },
   "Remove": "Remove",
-  "This will remove all favorited Jobs items for profile {0}. Continue?/Profile name": {
-    "message": "This will remove all favorited Jobs items for profile {0}. Continue?",
+  "This will remove all favorited jobs items for profile {0}. Continue?/Profile name": {
+    "message": "This will remove all favorited jobs items for profile {0}. Continue?",
     "comment": [
       "Profile name"
     ]
@@ -439,10 +450,10 @@
       "URI path"
     ]
   },
-  "Polling: {0}.../Unique Spool name": {
+  "Polling: {0}.../Unique spool name": {
     "message": "Polling: {0}...",
     "comment": [
-      "Unique Spool name"
+      "Unique spool name"
     ]
   },
   "Filter: {0}/The new filter": {
@@ -493,7 +504,18 @@
   "Phase Name": "Phase Name",
   "Error Details": "Error Details",
   "Fetching spool file...": "Fetching spool file...",
-  "Failed to fetch jobs: getJobsByParameters is not implemented for this session's JES API.": "Failed to fetch jobs: getJobsByParameters is not implemented for this session's JES API.",
+  "Failed to get contents for {0}/Spool name": {
+    "message": "Failed to get contents for {0}",
+    "comment": [
+      "Spool name"
+    ]
+  },
+  "Failed to delete job {0}/Job name": {
+    "message": "Failed to delete job {0}",
+    "comment": [
+      "Job name"
+    ]
+  },
   "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}/Job name": {
     "message": "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}",
     "comment": [
@@ -519,7 +541,7 @@
       "Deleted jobs"
     ]
   },
-  "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).": "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).",
+  "Download single spool operation not implemented by extender. Please contact the extension developer(s).": "Download single spool operation not implemented by extender. Please contact the extension developer(s).",
   "No spool files found for {0}/Spool node label": {
     "message": "No spool files found for {0}",
     "comment": [
@@ -596,29 +618,29 @@
       "Profile name"
     ]
   },
-  "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}.\n                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n                    Would you like to do this now? {1}/Profile nameApplication name": {
-    "message": "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}.\n                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n                    Would you like to do this now? {1}",
+  "Error: You have Zowe data set favorites that refer to a non-existent CLI profile named: {0}.\n                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n                    Would you like to do this now? {1}/Profile nameApplication name": {
+    "message": "Error: You have Zowe data set favorites that refer to a non-existent CLI profile named: {0}.\n                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n                    Would you like to do this now? {1}",
     "comment": [
       "Profile name",
       "Application name"
     ]
   },
   "PDS already in favorites": "PDS already in favorites",
-  "This will remove all favorited Data Sets items for profile {0}. Continue?/Profile name": {
-    "message": "This will remove all favorited Data Sets items for profile {0}. Continue?",
+  "This will remove all favorited data sets items for profile {0}. Continue?/Profile name": {
+    "message": "This will remove all favorited data sets items for profile {0}. Continue?",
     "comment": [
       "Profile name"
     ]
   },
   "Node does not exist. It may have been deleted.": "Node does not exist. It may have been deleted.",
   "Prompting the user for a data set pattern": "Prompting the user for a data set pattern",
-  "Search Data Sets: use a comma to separate multiple patterns": "Search Data Sets: use a comma to separate multiple patterns",
+  "Search data sets: use a comma to separate multiple patterns": "Search data sets: use a comma to separate multiple patterns",
   "Enter valid member name": "Enter valid member name",
-  "Rename operation cancelled.": "Rename operation cancelled.",
-  "Renaming data set {0}/Old Data Set name": {
+  "Rename Operation cancelled.": "Rename Operation cancelled.",
+  "Renaming data set {0}/Old data set name": {
     "message": "Renaming data set {0}",
     "comment": [
-      "Old Data Set name"
+      "Old data set name"
     ]
   },
   "Enter a valid data set name.": "Enter a valid data set name.",
@@ -678,23 +700,35 @@
   "Resetting data set templates array.": "Resetting data set templates array.",
   "Updating data set templates.": "Updating data set templates.",
   "Adding new data set template {0}.": "Adding new data set template {0}.",
-  "Data set template save location": "Data set template save location",
+  "Data Set Template Save Location": "Data Set Template Save Location",
   "Choose the setting location to save the data set template...": "Choose the setting location to save the data set template...",
   "Save as User setting": "Save as User setting",
   "Save as Workspace setting": "Save as Workspace setting",
-  "Saving data set...": "Saving data set...",
-  "Deleting {0} failed due to API error: {1}/File pathError message": {
-    "message": "Deleting {0} failed due to API error: {1}",
+  "Failed to list datasets": "Failed to list datasets",
+  "Failed to list dataset members": "Failed to list dataset members",
+  "Failed to read {0}/File path": {
+    "message": "Failed to read {0}",
     "comment": [
-      "File path",
-      "Error message"
+      "File path"
     ]
   },
-  "Renaming {0} failed due to API error: {1}/File nameError message": {
-    "message": "Renaming {0} failed due to API error: {1}",
+  "Saving data set...": "Saving data set...",
+  "Failed to save {0}/Data set name": {
+    "message": "Failed to save {0}",
     "comment": [
-      "File name",
-      "Error message"
+      "Data set name"
+    ]
+  },
+  "Failed to delete {0}/File path": {
+    "message": "Failed to delete {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Failed to rename {0}/Data set name": {
+    "message": "Failed to rename {0}",
+    "comment": [
+      "Data set name"
     ]
   },
   "Partitioned Data Set: Binary": "Partitioned Data Set: Binary",
@@ -717,10 +751,10 @@
   "You must select a profile.": "You must select a profile.",
   "Enter the name of the data set to copy attributes from": "Enter the name of the data set to copy attributes from",
   "You must enter a new data set name.": "You must enter a new data set name.",
-  "Allocating data set like {0}./Like Data Set name": {
+  "Allocating data set like {0}./Like data set name": {
     "message": "Allocating data set like {0}.",
     "comment": [
-      "Like Data Set name"
+      "Like data set name"
     ]
   },
   "Enter a name for the new data set": "Enter a name for the new data set",
@@ -755,7 +789,7 @@
       "Data Sets deleted"
     ]
   },
-  "Name of Member": "Name of Member",
+  "Name of member": "Name of member",
   "Creating new data set member {0}/Data Set member name": {
     "message": "Creating new data set member {0}",
     "comment": [
@@ -786,7 +820,7 @@
       "Document file name"
     ]
   },
-  "Select the Profile to use to submit the job": "Select the Profile to use to submit the job",
+  "Select the profile to use to submit the job": "Select the profile to use to submit the job",
   "No profiles available": "No profiles available",
   "Session for submitting JCL was null or undefined!": "Session for submitting JCL was null or undefined!",
   "Job submitted {0}/Job ID and set job command": {
@@ -853,7 +887,7 @@
   },
   "Unable to gather more information": "Unable to gather more information",
   "Invalid paste. Copy data set(s) first.": "Invalid paste. Copy data set(s) first.",
-  "Name of Data Set Member": "Name of Data Set Member",
+  "Name of data set member": "Name of data set member",
   "Copying data sets is not supported.": "Copying data sets is not supported.",
   "Replace": "Replace",
   "The data set member already exists.\nDo you want to replace it?": "The data set member already exists.\nDo you want to replace it?",
@@ -881,10 +915,8 @@
   "Hide Profile": "Hide Profile",
   "Hide profile name from tree view": "Hide profile name from tree view",
   "Change the Authentication Method": "Change the Authentication Method",
-  "Change the authentication method": "Change the authentication method",
-  "Log in to authentication service": "Log in to authentication service",
   "Log in to obtain a new token value": "Log in to obtain a new token value",
-  "Log out of authentication service": "Log out of authentication service",
+  "Log out of Authentication Service": "Log out of Authentication Service",
   "Log out to invalidate and remove stored token value": "Log out to invalidate and remove stored token value",
   "Profile {0} is using basic authentication. Choose a profile action./Profile name": {
     "message": "Profile {0} is using basic authentication. Choose a profile action.",
@@ -947,9 +979,9 @@
   },
   "Reload Window": "Reload Window",
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.",
-  "Choose \"Create new...\" to define or select a profile to add to the DATA SETS Explorer": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS Explorer",
-  "Choose \"Create new...\" to define or select a profile to add to the JOBS Explorer": "Choose \"Create new...\" to define or select a profile to add to the JOBS Explorer",
-  "Choose \"Create new...\" to define or select a profile to add to the USS Explorer": "Choose \"Create new...\" to define or select a profile to add to the USS Explorer",
+  "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree",
+  "Choose \"Create new...\" to define or select a profile to add to the JOBS tree": "Choose \"Create new...\" to define or select a profile to add to the JOBS tree",
+  "Choose \"Create new...\" to define or select a profile to add to the USS tree": "Choose \"Create new...\" to define or select a profile to add to the USS tree",
   "Profile selection has been cancelled.": "Profile selection has been cancelled.",
   "The profile {0} has been added to the {1} tree./chosen profiletree type": {
     "message": "The profile {0} has been added to the {1} tree.",
@@ -1014,13 +1046,13 @@
   },
   "To change the authentication": "To change the authentication",
   "To continue in current authentication": "To continue in current authentication",
-  "Do you wish to change the Authentication": "Do you wish to change the Authentication",
-  "Cannot switch to Token-based Authentication for profile {0}.": "Cannot switch to Token-based Authentication for profile {0}.",
+  "Do you wish to change the authentication": "Do you wish to change the authentication",
+  "Cannot switch to token-based authentication for profile {0}.": "Cannot switch to token-based authentication for profile {0}.",
   "Login using token-based authentication service was successful for profile {0}.": "Login using token-based authentication service was successful for profile {0}.",
-  "Unable to switch to Token-based authentication for profile {0}.": "Unable to switch to Token-based authentication for profile {0}.",
+  "Unable to switch to token-based authentication for profile {0}.": "Unable to switch to token-based authentication for profile {0}.",
   "Login using basic authentication was successful for profile {0}.": "Login using basic authentication was successful for profile {0}.",
-  "Unable to switch to Basic authentication for profile {0}.": "Unable to switch to Basic authentication for profile {0}.",
-  "Unable to Switch Authentication for profile {0}.": "Unable to Switch Authentication for profile {0}.",
+  "Unable to switch to basic authentication for profile {0}.": "Unable to switch to basic authentication for profile {0}.",
+  "Unable to switch authentication for profile {0}.": "Unable to switch authentication for profile {0}.",
   "Logout from authentication service was successful for {0}./Service profile name": {
     "message": "Logout from authentication service was successful for {0}.",
     "comment": [
@@ -1097,8 +1129,8 @@
       "Profile type"
     ]
   },
-  "Select the ssh Profile.": "Select the ssh Profile.",
-  "Select the Profile to use to submit the Unix command": "Select the Profile to use to submit the Unix command",
+  "Select the SSH Profile.": "Select the SSH Profile.",
+  "Select the profile to use to submit the Unix command": "Select the profile to use to submit the Unix command",
   "Select a Unix command to run against {0} (An option to edit will follow)/Current work directory": {
     "message": "Select a Unix command to run against {0} (An option to edit will follow)",
     "comment": [
@@ -1115,7 +1147,7 @@
   "Unix command submitted.": "Unix command submitted.",
   "Create a new TSO command": "Create a new TSO command",
   "Zowe TSO Command": "Zowe TSO Command",
-  "Select the Profile to use to submit the TSO command": "Select the Profile to use to submit the TSO command",
+  "Select the profile to use to submit the TSO command": "Select the profile to use to submit the TSO command",
   "Profile is invalid": "Profile is invalid",
   "Select a TSO command to run against {0} (An option to edit will follow)/Host name": {
     "message": "Select a TSO command to run against {0} (An option to edit will follow)",
@@ -1133,13 +1165,13 @@
   "No command entered.": "No command entered.",
   "TSO command submitted.": "TSO command submitted.",
   "No account number was supplied.": "No account number was supplied.",
-  "Select the TSO Profile to use for account number.": "Select the TSO Profile to use for account number.",
+  "Select the TSO profile to use for account number.": "Select the TSO profile to use for account number.",
   "Account Number": "Account Number",
   "Enter the account number for the TSO connection.": "Enter the account number for the TSO connection.",
-  "Operation Cancelled.": "Operation Cancelled.",
+  "Operation cancelled.": "Operation cancelled.",
   "Create a new MVS command": "Create a new MVS command",
   "Zowe MVS Command": "Zowe MVS Command",
-  "Select the Profile to use to submit the command": "Select the Profile to use to submit the command",
+  "Select the profile to use to submit the command": "Select the profile to use to submit the command",
   "Select an MVS command to run against {0} (An option to edit will follow)/Host name": {
     "message": "Select an MVS command to run against {0} (An option to edit will follow)",
     "comment": [

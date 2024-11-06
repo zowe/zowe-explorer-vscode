@@ -11,6 +11,9 @@
 
 import { commands, ProviderResult, Uri, UriHandler } from "vscode";
 import { ZoweScheme } from "../../../zowe-explorer-api/src";
+import { DatasetFSProvider } from "../trees/dataset/DatasetFSProvider";
+import { UssFSProvider } from "../trees/uss/UssFSProvider";
+import { ZoweLogger } from "../tools/ZoweLogger";
 
 export class ZoweUriHandler implements UriHandler {
     private static instance: ZoweUriHandler = null;
@@ -26,9 +29,20 @@ export class ZoweUriHandler implements UriHandler {
 
     public handleUri(uri: Uri): ProviderResult<void> {
         const parsedUri = Uri.parse(uri.query);
-        if (!Object.values(ZoweScheme).some((scheme) => scheme === parsedUri.scheme)) {
+        if (uri.scheme === ZoweScheme.Jobs || !Object.values(ZoweScheme).some((scheme) => scheme === parsedUri.scheme)) {
             return;
         }
-        return commands.executeCommand("vscode.open", parsedUri, { preview: false });
+
+        const fsProvider = parsedUri.scheme === ZoweScheme.DS ? DatasetFSProvider.instance : UssFSProvider.instance;
+        return fsProvider
+            .remoteLookupForResource(parsedUri)
+            .then(async (_entry) => {
+                await commands.executeCommand("vscode.open", parsedUri, { preview: false });
+            })
+            .catch((err) => {
+                if (err instanceof Error) {
+                    ZoweLogger.error(`Failed to open external URL: ${err.message}`);
+                }
+            });
     }
 }

@@ -90,10 +90,10 @@ export class ProfilesUtils {
             return;
         } else if (!settingEnabled || !defaultCredentialManagerFound) {
             this.PROFILE_SECURITY = false;
-            ZoweLogger.info(vscode.l10n.t(`Zowe explorer profiles are being set as unsecured.`));
+            ZoweLogger.info(vscode.l10n.t(`Zowe Explorer profiles are being set as unsecured.`));
         } else {
             this.PROFILE_SECURITY = Constants.ZOWE_CLI_SCM;
-            ZoweLogger.info(vscode.l10n.t(`Zowe explorer profiles are being set as secured.`));
+            ZoweLogger.info(vscode.l10n.t(`Zowe Explorer profiles are being set as secured.`));
         }
         if (currentProfileSecurity !== this.PROFILE_SECURITY) {
             imperative.CredentialManagerOverride.recordCredMgrInConfig(this.PROFILE_SECURITY);
@@ -460,7 +460,7 @@ export class ProfilesUtils {
             ).trim();
 
             if (!profile) {
-                Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
+                Gui.showMessage(vscode.l10n.t("Operation cancelled"));
                 return;
             }
         }
@@ -523,7 +523,7 @@ export class ProfilesUtils {
                 settings = JSON.parse(fileContent);
                 ZoweLogger.debug(
                     vscode.l10n.t({
-                        message: "Reading imperative.json Credential Manager.\n {0}",
+                        message: "Reading imperative.json credential manager.\n {0}",
                         args: [fileContent],
                         comment: ["File content"],
                     })
@@ -556,7 +556,7 @@ export class ProfilesUtils {
         const newData = JSON.stringify(settings, null, 2);
         ZoweLogger.debug(
             vscode.l10n.t({
-                message: "Updating imperative.json Credential Manager to {0}.\n{1}",
+                message: "Updating imperative.json credential manager to {0}.\n{1}",
                 args: [this.PROFILE_SECURITY, newData],
                 comment: ["Default credential override setting", "New credential override setting"],
             })
@@ -584,10 +584,10 @@ export class ProfilesUtils {
 
         try {
             await ProfilesUtils.readConfigFromDisk(true);
-            ZoweLogger.info(vscode.l10n.t("Zowe Profiles initialized successfully."));
+            ZoweLogger.info(vscode.l10n.t("Zowe profiles initialized successfully."));
         } catch (err) {
             if (err instanceof imperative.ImperativeError) {
-                await AuthUtils.errorHandling(err, undefined, err.mDetails.causeErrors);
+                await AuthUtils.errorHandling(err, { scenario: err.mDetails.causeErrors });
             } else {
                 ZoweLogger.error(err);
                 errorCallback(err.message);
@@ -601,7 +601,7 @@ export class ProfilesUtils {
             "Zowe V1 profiles in use.\nZowe Explorer no longer supports V1 profiles. Choose to convert existing profiles to a team configuration or create new profiles."
         );
         ZoweLogger.warn(v1ProfileErrorMsg);
-        const convertButton = vscode.l10n.t("Convert Existing Profiles");
+        const convertButton = vscode.l10n.t("Convert existing profiles");
         const createButton = vscode.l10n.t("Create New");
         const selection = await Gui.infoMessage(v1ProfileErrorMsg, { items: [convertButton, createButton], vsCodeOpts: { modal: true } });
         switch (selection) {
@@ -647,7 +647,7 @@ export class ProfilesUtils {
         if (node instanceof ZoweTreeNode) {
             return node.getProfile();
         }
-        throw new Error(vscode.l10n.t("Tree Item is not a Zowe Explorer item."));
+        throw new Error(vscode.l10n.t("Tree item is not a Zowe Explorer item."));
     }
 
     private static async convertV1Profs(): Promise<void> {

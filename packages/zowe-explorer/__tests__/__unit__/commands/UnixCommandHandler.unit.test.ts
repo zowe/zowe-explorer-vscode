@@ -249,7 +249,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the Unix command",
+            placeHolder: "Select the profile to use to submit the Unix command",
         });
 
         expect(showInputBox.mock.calls.length).toBe(2);
@@ -306,7 +306,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the Unix command",
+            placeHolder: "Select the profile to use to submit the Unix command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(appendLine.mock.calls.length).toBe(2);
@@ -338,11 +338,11 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the Unix command",
+            placeHolder: "Select the profile to use to submit the Unix command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
     });
 
     it("tests the issueUnixCommand function user escapes the commandbox", async () => {
@@ -369,11 +369,11 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the Unix command",
+            placeHolder: "Select the profile to use to submit the Unix command",
         });
         expect(showInputBox.mock.calls.length).toBe(2);
         expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
     });
 
     it("tests the issueUnixCommand function - issueUnixCommand throws an error", async () => {
@@ -402,11 +402,11 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the Unix command",
+            placeHolder: "Select the profile to use to submit the Unix command",
         });
         expect(showInputBox.mock.calls.length).toBe(2);
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("Error: fake testError");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("fake testError");
     });
 
     it("If nothing is entered in the inputbox of path", async () => {
@@ -435,7 +435,7 @@ describe("UnixCommand Actions Unit Testing", () => {
 
         await unixActions.issueUnixCommand();
 
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
     });
 
     it("tests the issueUnixCommand function user starts typing a value in quick pick", async () => {
@@ -479,7 +479,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the Unix command",
+            placeHolder: "Select the profile to use to submit the Unix command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
     });
@@ -498,7 +498,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         await unixActions.issueUnixCommand();
 
         expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
     });
 
     it("tests the issueUnixCommand function no profiles error", async () => {
@@ -589,7 +589,7 @@ describe("UnixCommand Actions Unit Testing", () => {
             value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
     });
 
     it("getCommand API is not implemented", async () => {
@@ -634,6 +634,6 @@ describe("UnixCommand Actions Unit Testing", () => {
         await (unixActions as any).userSelectProfile();
 
         expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
     });
 });
