@@ -209,4 +209,58 @@ describe("SettingsConfig Unit Tests", () => {
             expect(migrateToLocalStorageSpy).toHaveBeenCalledTimes(1);
         });
     });
+
+    describe("function migrateSettingsAtLevel", () => {
+        function getBlockMocks() {
+            const configurationsMock = jest.spyOn(SettingsConfig as any, "configurations", "get");
+            const setDirectValueMock = jest.spyOn(SettingsConfig, "setDirectValue").mockImplementation();
+            const setValueMock = jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
+            jest.spyOn(SettingsConfig, "setMigratedDsTemplates").mockImplementation();
+
+            return {
+                configurationsMock,
+                setDirectValueMock,
+                setValueMock,
+            };
+        }
+
+        it("migrates workspace-level settings from settings config", async () => {
+            const blockMocks = getBlockMocks();
+            blockMocks.configurationsMock.mockReturnValue({
+                inspect: () => ({
+                    globalValue: undefined,
+                    workspaceValue: 123,
+                }),
+            });
+            await (SettingsConfig as any).migrateSettingsAtLevel(vscode.ConfigurationTarget.Workspace);
+            for (const [_, value, setInWorkspace] of blockMocks.setValueMock.mock.calls) {
+                expect(value).toBe(123);
+                expect(setInWorkspace).toBe(true);
+            }
+            for (const [_, value, target] of blockMocks.setDirectValueMock.mock.calls) {
+                expect(value).toEqual(undefined);
+                expect(target).toBe(vscode.ConfigurationTarget.Workspace);
+            }
+        });
+
+        it("migrates global-level settings from settings config", async () => {
+            const blockMocks = getBlockMocks();
+            blockMocks.configurationsMock.mockReturnValue({
+                inspect: () => ({
+                    globalValue: 123,
+                    workspaceValue: undefined,
+                }),
+            });
+            await (SettingsConfig as any).migrateSettingsAtLevel(vscode.ConfigurationTarget.Global);
+
+            for (const [_, value, setInWorkspace] of blockMocks.setValueMock.mock.calls) {
+                expect(value).toBe(123);
+                expect(setInWorkspace).toBe(false);
+            }
+            for (const [_, value, target] of blockMocks.setDirectValueMock.mock.calls) {
+                expect(value).toEqual(undefined);
+                expect(target).toBe(vscode.ConfigurationTarget.Global);
+            }
+        });
+    });
 });
