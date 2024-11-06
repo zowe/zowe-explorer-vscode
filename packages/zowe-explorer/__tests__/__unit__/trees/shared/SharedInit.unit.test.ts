@@ -428,7 +428,7 @@ describe("Test src/shared/extension", () => {
             jest.clearAllMocks();
             // Trigger Vault changes
             await onCredentialManagerUpdatedCallback();
-            expect(spyTranslatedLog.mock.calls[0][0]).toContain("Credential Management");
+            expect(spyTranslatedLog.mock.calls[0][0]).toContain("credential management");
             expect(spyGetProfileInfo).toHaveBeenCalled();
             expect(spyRefreshAll).toHaveBeenCalled();
         });

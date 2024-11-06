@@ -49,34 +49,34 @@
   "Cancel": "Cancel",
   "Zowe Explorer profiles are being set as unsecured.": "Zowe Explorer profiles are being set as unsecured.",
   "Zowe Explorer profiles are being set as secured.": "Zowe Explorer profiles are being set as secured.",
-  "Custom Credential Manager failed to activate": "Custom Credential Manager failed to activate",
-  "Custom Credential Manager {0} found, attempting to activate./Credential Manager display name": {
-    "message": "Custom Credential Manager {0} found, attempting to activate.",
+  "Custom credential manager failed to activate": "Custom credential manager failed to activate",
+  "Custom credential manager {0} found, attempting to activate./Credential manager display name": {
+    "message": "Custom credential manager {0} found, attempting to activate.",
     "comment": [
-      "Credential Manager display name"
+      "Credential manager display name"
     ]
   },
   "Yes, globally": "Yes, globally",
   "Only for this workspace": "Only for this workspace",
-  "Zowe Explorer failed to activate since the default Credential Manager is not supported in your environment.": "Zowe Explorer failed to activate since the default Credential Manager is not supported in your environment.",
-  "Do you wish to disable Credential Management? (VS Code window reload will be triggered)": "Do you wish to disable Credential Management? (VS Code window reload will be triggered)",
-  "No custom Credential Managers found, using the default instead.": "No custom Credential Managers found, using the default instead.",
-  "Custom Credential Manager {0} found/Credential Manager display name": {
-    "message": "Custom Credential Manager {0} found",
+  "Zowe Explorer failed to activate since the default credential manager is not supported in your environment.": "Zowe Explorer failed to activate since the default credential manager is not supported in your environment.",
+  "Do you wish to disable credential management? (VS Code window reload will be triggered)": "Do you wish to disable credential management? (VS Code window reload will be triggered)",
+  "No custom credential managers found, using the default instead.": "No custom credential managers found, using the default instead.",
+  "Custom credential manager {0} found/Credential manager display name": {
+    "message": "Custom credential manager {0} found",
     "comment": [
-      "Credential Manager display name"
+      "Credential manager display name"
     ]
   },
-  "Do you wish to use this Credential Manager instead?": "Do you wish to use this Credential Manager instead?",
+  "Do you wish to use this credential manager instead?": "Do you wish to use this credential manager instead?",
   "Yes": "Yes",
   "Don't ask again": "Don't ask again",
-  "Plugin of name '{0}' was defined for custom Credential Management on imperative.json file./Credential Manager display name": {
-    "message": "Plugin of name '{0}' was defined for custom Credential Management on imperative.json file.",
+  "Plugin of name '{0}' was defined for custom credential management on imperative.json file./Credential manager display name": {
+    "message": "Plugin of name '{0}' was defined for custom credential management on imperative.json file.",
     "comment": [
-      "Credential Manager display name"
+      "Credential manager display name"
     ]
   },
-  "Please install associated VS Code extension for custom Credential Manager or revert to default.": "Please install associated VS Code extension for custom Credential Manager or revert to default.",
+  "Please install associated VS Code extension for custom credential manager or revert to default.": "Please install associated VS Code extension for custom credential manager or revert to default.",
   "Use Default": "Use Default",
   "Install": "Install",
   "Reload": "Reload",
@@ -100,8 +100,8 @@
     ]
   },
   "Reading imperative.json failed. Will try to create file.": "Reading imperative.json failed. Will try to create file.",
-  "Reading imperative.json Credential Manager.\n {0}/File content": {
-    "message": "Reading imperative.json Credential Manager.\n {0}",
+  "Reading imperative.json credential manager.\n {0}/File content": {
+    "message": "Reading imperative.json credential manager.\n {0}",
     "comment": [
       "File content"
     ]
@@ -112,8 +112,8 @@
       "Settings file"
     ]
   },
-  "Updating imperative.json Credential Manager to {0}.\n{1}/Default credential override settingNew credential override setting": {
-    "message": "Updating imperative.json Credential Manager to {0}.\n{1}",
+  "Updating imperative.json credential manager to {0}.\n{1}/Default credential override settingNew credential override setting": {
+    "message": "Updating imperative.json credential manager to {0}.\n{1}",
     "comment": [
       "Default credential override setting",
       "New credential override setting"
@@ -380,7 +380,7 @@
   "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",
   "Team config file deleted, refreshing Zowe Explorer.": "Team config file deleted, refreshing Zowe Explorer.",
   "Team config file updated.": "Team config file updated.",
-  "Changes in Credential Management detected, refreshing Zowe Explorer.": "Changes in Credential Management detected, refreshing Zowe Explorer.",
+  "Changes in credential management detected, refreshing Zowe Explorer.": "Changes in credential management detected, refreshing Zowe Explorer.",
   "Zowe Explorer has activated successfully.": "Zowe Explorer has activated successfully.",
   "Type the new pattern to add to history": "Type the new pattern to add to history",
   "action is not supported for this property type.": "action is not supported for this property type.",
@@ -949,7 +949,7 @@
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.",
   "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree",
   "Choose \"Create new...\" to define or select a profile to add to the JOBS tree": "Choose \"Create new...\" to define or select a profile to add to the JOBS tree",
-  "Choose \"Create new...\" to define or select a profile to add to the USS Explorer": "Choose \"Create new...\" to define or select a profile to add to the USS Explorer",
+  "Choose \"Create new...\" to define or select a profile to add to the USS tree": "Choose \"Create new...\" to define or select a profile to add to the USS tree",
   "Profile selection has been cancelled.": "Profile selection has been cancelled.",
   "The profile {0} has been added to the {1} tree./chosen profiletree type": {
     "message": "The profile {0} has been added to the {1} tree.",

@@ -638,7 +638,7 @@ describe("ProfilesUtils unit tests", () => {
             } as any;
 
             await expect((ProfilesUtils as any).activateCredentialManagerOverride(credentialManagerExtension)).rejects.toThrow(
-                "Custom Credential Manager failed to activate"
+                "Custom credential manager failed to activate"
             );
         });
     });
@@ -799,7 +799,7 @@ describe("ProfilesUtils unit tests", () => {
                 Buffer.from(
                     JSON.stringify({
                         overrides: {
-                            credentialManager: "My Custom Credential Manager",
+                            credentialManager: "My Custom credential manager",
                         },
                     })
                 )
@@ -809,7 +809,7 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
 
-            expect(ProfilesUtils.getCredentialManagerOverride()).toBe("My Custom Credential Manager");
+            expect(ProfilesUtils.getCredentialManagerOverride()).toBe("My Custom credential manager");
             expect(zoweLoggerTraceSpy).toHaveBeenCalledTimes(1);
         });
 

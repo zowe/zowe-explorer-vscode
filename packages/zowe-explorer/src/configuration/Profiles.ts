@@ -352,7 +352,7 @@ export class Profiles extends ProfilesCache {
                 break;
             default:
                 // Use USS View as default for placeholder text
-                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the USS Explorer`);
+                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the USS tree`);
         }
         if (allProfiles.length > 0) {
             quickpick.items = [configPick, configEdit, ...items];

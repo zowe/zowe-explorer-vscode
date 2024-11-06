@@ -368,7 +368,7 @@ export class SharedInit {
             const zoweWatcher = imperative.EventOperator.getWatcher().subscribeShared(
                 imperative.ZoweSharedEvents.ON_CREDENTIAL_MANAGER_CHANGED,
                 async () => {
-                    ZoweLogger.info(vscode.l10n.t("Changes in Credential Management detected, refreshing Zowe Explorer."));
+                    ZoweLogger.info(vscode.l10n.t("Changes in credential management detected, refreshing Zowe Explorer."));
                     await ProfilesUtils.getProfileInfo();
                     await SharedActions.refreshAll();
                     ZoweExplorerApiRegister.getInstance().onCredMgrUpdateEmitter.fire(Validation.EventType.UPDATE);
