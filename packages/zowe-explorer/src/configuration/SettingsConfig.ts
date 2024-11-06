@@ -14,7 +14,6 @@ import { Gui, PersistenceSchemaEnum, ZoweVsCodeExtension } from "@zowe/zowe-expl
 import { Constants } from "./Constants";
 import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
 import { Definitions } from "./Definitions";
-import { ZoweLogger } from "../tools/ZoweLogger";
 
 export class SettingsConfig {
     /**

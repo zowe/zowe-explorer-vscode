@@ -18,7 +18,7 @@ import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 describe("SettingsConfig Unit Tests", () => {
     beforeEach(() => {
         Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLocalStorage, "storage", {
+        Object.defineProperty(ZoweLocalStorage, "globalState", {
             value: {
                 get: () => ({
                     persistence: true,

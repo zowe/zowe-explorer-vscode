@@ -218,7 +218,7 @@ async function createGlobalMocks() {
     globalMocks.mockGetJesApi.mockReturnValue(globalMocks.jesApi);
     ZoweExplorerApiRegister.getJesApi = globalMocks.mockGetJesApi.bind(ZoweExplorerApiRegister);
 
-    Object.defineProperty(ZoweLocalStorage, "storage", {
+    Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
             update: jest.fn(),

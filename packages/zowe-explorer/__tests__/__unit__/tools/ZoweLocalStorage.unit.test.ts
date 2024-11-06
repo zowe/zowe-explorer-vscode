@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { LocalStorageAccess, ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
+import { LocalStorageAccess, StorageKeys, ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Definitions } from "../../../src/configuration/Definitions";
 
@@ -18,7 +18,7 @@ describe("ZoweLocalStorage Unit Tests", () => {
     it("should initialize successfully", () => {
         const mockGlobalState = { get: jest.fn(), update: jest.fn(), keys: () => [] } as vscode.Memento;
         ZoweLocalStorage.initializeZoweLocalStorage(mockGlobalState);
-        expect((ZoweLocalStorage as any).storage).toEqual(mockGlobalState);
+        expect((ZoweLocalStorage as any).globalState).toEqual(mockGlobalState);
     });
 
     it("should get and set values successfully", () => {
@@ -36,14 +36,28 @@ describe("ZoweLocalStorage Unit Tests", () => {
 
 describe("LocalStorageAccess", () => {
     // Read: 1, Write: 2, Read | Write: 3
-    function omitKeysWithPermission(permBits: number): Definitions.LocalStorageKey[] {
-        return Object.values(Definitions.LocalStorageKey).filter(
-            (k: Definitions.LocalStorageKey) => !(((LocalStorageAccess as any).accessControl[k] & permBits) > 0)
+    function omitKeysWithPermission(permBits: number): StorageKeys[] {
+        return Object.values({ ...Definitions.LocalStorageKey, ...PersistenceSchemaEnum }).filter(
+            (k) => !(((LocalStorageAccess as any).accessControl[k] & permBits) > 0)
         );
     }
-    function keysWithPerm(permBits: number): Definitions.LocalStorageKey[] {
-        return Object.values(Definitions.LocalStorageKey).filter((k) => (LocalStorageAccess as any).accessControl[k] === permBits);
+    function keysWithPerm(permBits: number): StorageKeys[] {
+        return Object.values({ ...Definitions.LocalStorageKey, ...PersistenceSchemaEnum }).filter(
+            (k) => (LocalStorageAccess as any).accessControl[k] === permBits
+        );
     }
+
+    describe("getReadableKeys", () => {
+        it("returns a list of readable keys to the user", () => {
+            expect(LocalStorageAccess.getReadableKeys()).toStrictEqual([...keysWithPerm(1), ...keysWithPerm(3)]);
+        });
+    });
+
+    describe("getWritableKeys", () => {
+        it("returns a list of writable keys to the user", () => {
+            expect(LocalStorageAccess.getWritableKeys()).toStrictEqual([...keysWithPerm(2), ...keysWithPerm(3)]);
+        });
+    });
 
     describe("getValue", () => {
         it("calls ZoweLocalStorage.getValue for all readable keys", () => {

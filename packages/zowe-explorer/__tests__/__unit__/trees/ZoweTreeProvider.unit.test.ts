@@ -38,7 +38,7 @@ import { DatasetInit } from "../../../src/trees/dataset/DatasetInit";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
 
 async function createGlobalMocks() {
-    Object.defineProperty(ZoweLocalStorage, "storage", {
+    Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
             update: jest.fn(),

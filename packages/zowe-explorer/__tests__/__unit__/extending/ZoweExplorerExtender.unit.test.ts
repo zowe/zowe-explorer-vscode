@@ -71,7 +71,7 @@ describe("ZoweExplorerExtender unit tests", () => {
             value: newMocks.mockTextDocument,
             configurable: true,
         });
-        Object.defineProperty(ZoweLocalStorage, "storage", {
+        Object.defineProperty(ZoweLocalStorage, "globalState", {
             value: {
                 get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
                 update: jest.fn(),
