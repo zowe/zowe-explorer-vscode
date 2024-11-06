@@ -162,7 +162,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
          */
         let profileInfo: imperative.ProfileInfo;
         try {
-            profileInfo = await ProfilesUtils.getProfileInfo();
+            profileInfo = await ProfilesUtils.setupProfileInfo();
             await profileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir });
         } catch (error) {
             ZoweLogger.warn(error);

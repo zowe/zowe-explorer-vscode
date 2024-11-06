@@ -389,7 +389,7 @@ describe("Test src/shared/extension", () => {
 
             // Spy callback behavior
             const spyTranslatedLog = jest.spyOn(vscode.l10n, "t");
-            const spyGetProfileInfo = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockImplementationOnce(jest.fn());
+            const spyGetProfileInfo = jest.spyOn(profUtils.ProfilesUtils, "setupProfileInfo").mockImplementationOnce(jest.fn());
             const spyReadConfigFromDisk = jest.spyOn(profUtils.ProfilesUtils, "readConfigFromDisk").mockImplementationOnce(jest.fn());
             const spyRefreshAll = jest.spyOn(SharedActions, "refreshAll").mockImplementation(jest.fn());
 
