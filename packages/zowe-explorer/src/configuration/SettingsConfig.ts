@@ -186,31 +186,45 @@ export class SettingsConfig {
         }
     }
 
+    private static PERSISTENT_SETTINGS = [
+        PersistenceSchemaEnum.Dataset,
+        PersistenceSchemaEnum.USS,
+        PersistenceSchemaEnum.Job,
+        PersistenceSchemaEnum.Commands,
+        Definitions.LocalStorageKey.CLI_LOGGER_SETTING_PRESENTED,
+    ];
+
     private static async migrateToLocalStorage(): Promise<void> {
         // Migrate persistent settings to new LocalStorage solution
-        const persistentSettings = [
-            PersistenceSchemaEnum.Dataset,
-            PersistenceSchemaEnum.USS,
-            PersistenceSchemaEnum.Job,
-            PersistenceSchemaEnum.Commands,
-            Definitions.LocalStorageKey.CLI_LOGGER_SETTING_PRESENTED,
-        ];
-        const vscodePersistentSettings = persistentSettings.filter((setting) => {
-            return SettingsConfig.configurations.inspect(setting).globalValue;
-        });
-        if (vscodePersistentSettings.length > 0) {
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            vscodePersistentSettings.forEach(async (setting) => {
-                ZoweLogger.debug(setting.toString());
-                if (setting === PersistenceSchemaEnum.Dataset) {
-                    await this.setMigratedDsTemplates();
-                }
-                ZoweLocalStorage.setValue(setting, SettingsConfig.configurations.inspect(setting).globalValue);
-                SettingsConfig.setDirectValue(setting, undefined, vscode.ConfigurationTarget.Global);
-            });
+        const globalSettingsMigrated = await SettingsConfig.migrateSettingsAtLevel(vscode.ConfigurationTarget.Global);
+        const workspaceSettingsMigrated = await SettingsConfig.migrateSettingsAtLevel(vscode.ConfigurationTarget.Workspace);
+
+        if (globalSettingsMigrated || workspaceSettingsMigrated) {
             ZoweLocalStorage.setValue(Definitions.LocalStorageKey.SETTINGS_LOCAL_STORAGE_MIGRATED, true);
             await SettingsConfig.promptReload();
         }
+    }
+
+    private static async migrateSettingsAtLevel(level: vscode.ConfigurationTarget.Global | vscode.ConfigurationTarget.Workspace): Promise<boolean> {
+        const isWorkspace = level === vscode.ConfigurationTarget.Workspace;
+        let valueMigrated = false;
+        for (const setting of SettingsConfig.PERSISTENT_SETTINGS) {
+            const settingInfo = SettingsConfig.configurations.inspect(setting);
+            const value = isWorkspace ? settingInfo.workspaceValue : settingInfo.globalValue;
+            if (value == null) {
+                continue;
+            }
+
+            if (setting === PersistenceSchemaEnum.Dataset) {
+                await this.setMigratedDsTemplates();
+            }
+
+            valueMigrated ||= true;
+            ZoweLocalStorage.setValue(setting, value, isWorkspace);
+            SettingsConfig.setDirectValue(setting, undefined, level);
+        }
+
+        return valueMigrated;
     }
 
     public static async setMigratedDsTemplates(): Promise<void> {
