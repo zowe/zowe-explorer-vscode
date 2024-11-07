@@ -4,6 +4,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
+- Updated the test for the default credential manager for better compatibility with Cloud-based platforms such as Eclipse Che and Red Hat OpenShift Dev Spaces.
+
 ### New features and enhancements
 
 - Update Zowe SDKs to `8.2.0` to get the latest enhancements from Imperative.
