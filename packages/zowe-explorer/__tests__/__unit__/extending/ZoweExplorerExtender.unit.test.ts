@@ -328,7 +328,7 @@ describe("ZoweExplorerExtender unit tests", () => {
     describe("getLocalStorage", () => {
         it("returns the singleton instance of LocalStorageAccess", () => {
             const blockMocks = createBlockMocks();
-            expect(blockMocks.instTest.getLocalStorage()).toBe(LocalStorageAccess.instance);
+            expect(blockMocks.instTest.getLocalStorage()).toBe(LocalStorageAccess);
         });
     });
 });

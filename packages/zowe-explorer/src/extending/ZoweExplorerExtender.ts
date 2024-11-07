@@ -223,7 +223,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
     }
 
     public getLocalStorage(): LocalStorageAccess {
-        return LocalStorageAccess.instance;
+        return LocalStorageAccess;
     }
 
     /**

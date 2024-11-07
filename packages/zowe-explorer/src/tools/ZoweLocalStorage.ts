@@ -60,7 +60,6 @@ export class ZoweLocalStorage {
  * - Define new local storage keys in the access control list to expose read or write access to extenders.
  */
 export class LocalStorageAccess extends ZoweLocalStorage {
-    private static _instance: LocalStorageAccess;
     private static accessControl: LocalStorageACL = {
         [Definitions.LocalStorageKey.CLI_LOGGER_SETTING_PRESENTED]: StorageAccessLevel.Read,
         [Definitions.LocalStorageKey.SETTINGS_LOCAL_STORAGE_MIGRATED]: StorageAccessLevel.Read,
@@ -109,17 +108,6 @@ export class LocalStorageAccess extends ZoweLocalStorage {
                 comment: "Local storage key",
             })
         );
-    }
-
-    /**
-     * @returns {LocalStorageAccess} The singleton instance for the access facility
-     */
-    public static get instance(): LocalStorageAccess {
-        if (LocalStorageAccess._instance == null) {
-            LocalStorageAccess._instance = new LocalStorageAccess();
-        }
-
-        return LocalStorageAccess._instance;
     }
 
     /**

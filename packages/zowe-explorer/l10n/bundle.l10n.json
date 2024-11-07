@@ -904,6 +904,18 @@
     ]
   },
   "Error encountered while activating and initializing logger": "Error encountered while activating and initializing logger",
+  "Insufficient read permissions for {0} in local storage./Local storage key": {
+    "message": "Insufficient read permissions for {0} in local storage.",
+    "comment": [
+      "Local storage key"
+    ]
+  },
+  "Insufficient write permissions for {0} in local storage./Local storage key": {
+    "message": "Insufficient write permissions for {0} in local storage.",
+    "comment": [
+      "Local storage key"
+    ]
+  },
   "Add Credentials": "Add Credentials",
   "Add username and password for basic authentication": "Add username and password for basic authentication",
   "Update stored username and password": "Update stored username and password",

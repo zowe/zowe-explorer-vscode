@@ -800,6 +800,8 @@
   "Unable to copy data set.": "",
   "Failed to upload changes for {0}: {1}": "",
   "Error encountered while activating and initializing logger": "",
+  "Insufficient read permissions for {0} in local storage.": "",
+  "Insufficient write permissions for {0} in local storage.": "",
   "Add Credentials": "",
   "Add username and password for basic authentication": "",
   "Update stored username and password": "",
