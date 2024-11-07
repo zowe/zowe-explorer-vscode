@@ -226,7 +226,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                     (error) => error instanceof Error && ZoweLogger.error(error.message)
                 );
             }
-            return spoolEntry;
+            throw err;
         }
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
@@ -248,25 +248,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         const spoolEntry = this._lookupAsFile(uri) as SpoolEntry;
         if (!spoolEntry.wasAccessed) {
-            try {
-                await this.fetchSpoolAtUri(uri);
-            } catch (err) {
-                this._handleError(err, {
-                    additionalContext: vscode.l10n.t({
-                        message: "Failed to get contents for {0}",
-                        args: [spoolEntry.name],
-                        comment: "Spool name",
-                    }),
-                    apiType: ZoweExplorerApiType.Jes,
-                    profileType: spoolEntry.metadata.profile.type,
-                    retry: {
-                        fn: this.readFile.bind(this),
-                        args: [uri],
-                    },
-                    templateArgs: { profileName: spoolEntry.metadata.profile?.name ?? "" },
-                });
-                throw err;
-            }
+            await this.fetchSpoolAtUri(uri);
             spoolEntry.wasAccessed = true;
         }
 
