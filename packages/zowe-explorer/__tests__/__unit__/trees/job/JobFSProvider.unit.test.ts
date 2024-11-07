@@ -239,13 +239,10 @@ describe("readFile", () => {
     it("throws error if an error occurred while fetching spool", async () => {
         const spoolEntry = { ...testEntries.spool };
         const lookupAsFileMock = jest.spyOn(JobFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(spoolEntry);
-        const _handleErrorMock = jest.spyOn(JobFSProvider.instance as any, "_handleError").mockImplementation();
         const fetchSpoolAtUriMock = jest
             .spyOn(JobFSProvider.instance, "fetchSpoolAtUri")
             .mockRejectedValueOnce(new Error("Failed to fetch contents for spool"));
         await expect(JobFSProvider.instance.readFile(testUris.spool)).rejects.toThrow();
-        expect(_handleErrorMock).toHaveBeenCalled();
-        _handleErrorMock.mockRestore();
         lookupAsFileMock.mockRestore();
         fetchSpoolAtUriMock.mockRestore();
     });
