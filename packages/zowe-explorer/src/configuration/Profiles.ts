@@ -90,7 +90,7 @@ export class Profiles extends ProfilesCache {
 
     public showProfileInactiveMsg(profileName: string): void {
         const inactiveMsg = vscode.l10n.t({
-            message: "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
+            message: "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
             args: [profileName],
             comment: ["Profile name"],
         });
