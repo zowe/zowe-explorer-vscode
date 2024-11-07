@@ -104,7 +104,7 @@ export class AuthUtils {
             return false;
         }
 
-        ErrorCorrelator.getInstance().displayCorrelatedError(correlation, { templateArgs: { profileName: profile?.name ?? "" } });
+        void ErrorCorrelator.getInstance().displayCorrelatedError(correlation, { templateArgs: { profileName: profile?.name ?? "" } });
         return false;
     }
 
