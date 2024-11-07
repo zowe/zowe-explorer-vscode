@@ -301,7 +301,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
                     err.message.includes("All configured authentication methods failed"))
             ) {
-                AuthUtils.promptForAuthentication(err, metadata.profile).catch((error) => error instanceof Error && ZoweLogger.error(error.message));
+                void AuthUtils.promptForAuthentication(err, metadata.profile).catch(
+                    (error) => error instanceof Error && ZoweLogger.error(error.message)
+                );
             }
             return;
         }

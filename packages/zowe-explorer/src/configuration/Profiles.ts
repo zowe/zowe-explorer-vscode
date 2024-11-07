@@ -95,7 +95,7 @@ export class Profiles extends ProfilesCache {
             comment: ["Profile name"],
         });
         ZoweLogger.error(inactiveMsg);
-        Gui.errorMessage(inactiveMsg);
+        void Gui.errorMessage(inactiveMsg);
     }
 
     public async checkCurrentProfile(theProfile: imperative.IProfileLoaded): Promise<Validation.IValidationProfile> {

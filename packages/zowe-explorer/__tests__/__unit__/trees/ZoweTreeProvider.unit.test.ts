@@ -119,6 +119,7 @@ async function createGlobalMocks() {
                     name: globalMocks.testProfile.name,
                     status: "active",
                 }),
+                showProfileInactiveMsg: jest.fn(),
                 getProfileSetting: globalMocks.mockGetProfileSetting.mockReturnValue({
                     name: globalMocks.testProfile.name,
                     status: "active",
@@ -358,7 +359,7 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         blockMocks.jobNode.contextValue = "session";
-        globalMocks.mockCheckCurrentProfile.mockReturnValueOnce({
+        globalMocks.mockCheckCurrentProfile.mockResolvedValueOnce({
             name: globalMocks.testProfile.name,
             status: "inactive",
         });
@@ -646,12 +647,14 @@ describe("Tree Provider Unit Tests - function checkJwtTokenForProfile", () => {
         ]);
         const hasTokenExpiredForProfile = jest.fn();
         const mergeArgsForProfile = jest.fn();
+        const showProfileInactiveMsg = jest.fn();
         const profilesGetInstance = jest.spyOn(Profiles, "getInstance").mockReturnValue({
             getProfileInfo: jest.fn().mockResolvedValue({
                 hasTokenExpiredForProfile,
                 getAllProfiles,
                 mergeArgsForProfile,
             } as any),
+            showProfileInactiveMsg,
         } as any);
 
         return {

@@ -443,7 +443,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 (Number(error.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
                     error.message.includes("All configured authentication methods failed"))
             ) {
-                AuthUtils.promptForAuthentication(error, metadata.profile).catch((err) => err instanceof Error && ZoweLogger.error(err.message));
+                void AuthUtils.promptForAuthentication(error, metadata.profile).catch((err) => err instanceof Error && ZoweLogger.error(err.message));
             }
             return null;
         }
