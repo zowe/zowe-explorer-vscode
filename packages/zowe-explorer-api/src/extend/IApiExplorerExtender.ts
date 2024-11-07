@@ -12,6 +12,7 @@
 import * as imperative from "@zowe/imperative";
 import { ProfilesCache } from "../profiles/ProfilesCache";
 import { ErrorCorrelator } from "../utils/ErrorCorrelator";
+import { ILocalStorageAccess } from "./ILocalStorageAccess";
 
 /**
  * This interface can be used by other VS Code Extensions to access an alternative
@@ -53,4 +54,11 @@ export interface IApiExplorerExtender {
      * provide tips or additional resources for errors.
      */
     getErrorCorrelator?(): ErrorCorrelator;
+
+    /**
+     * Allows extenders to access Zowe Explorer's local storage values. Retrieve a list of
+     * readable and writable keys by calling the `getReadableKeys, getWritableKeys` functions
+     * on the returned instance.
+     */
+    getLocalStorage?(): ILocalStorageAccess;
 }

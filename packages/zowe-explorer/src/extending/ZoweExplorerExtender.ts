@@ -29,6 +29,7 @@ import { Constants } from "../configuration/Constants";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { LocalStorageAccess } from "../tools/ZoweLocalStorage";
+import { ILocalStorageAccess } from "@zowe/zowe-explorer-api/src/extend/ILocalStorageAccess";
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
@@ -222,7 +223,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
         }
     }
 
-    public getLocalStorage(): LocalStorageAccess {
+    public getLocalStorage(): ILocalStorageAccess {
         return LocalStorageAccess;
     }
 
