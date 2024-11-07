@@ -26,6 +26,7 @@ import {
     ZoweScheme,
     PdsEntry,
     FsDatasetsUtils,
+    ZoweExplorerApiType,
 } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -193,10 +194,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return dsEntry.stats;
     }
 
-    public setProfileToChoice(profile: imperative.IProfileLoaded): void {
-        super.setProfileToChoice(profile, DatasetFSProvider.instance);
-    }
-
     /**
      * Retrieves child nodes of this ZoweDatasetNode
      *
@@ -239,7 +236,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             // Throws reject if the Zowe command does not throw an error but does not succeed
             // The dataSetsMatchingPattern API may return success=false and apiResponse=[] when no data sets found
             if (!response.success && !(Array.isArray(response.apiResponse) && response.apiResponse.length === 0)) {
-                await AuthUtils.errorHandling(vscode.l10n.t("The response from Zowe CLI was not successful"));
+                await AuthUtils.errorHandling(new imperative.ImperativeError({ msg: response.commandResponse }), {
+                    apiType: ZoweExplorerApiType.Mvs,
+                    profile: cachedProfile,
+                    scenario: vscode.l10n.t("The response from Zowe CLI was not successful"),
+                });
                 return [];
             }
 
@@ -589,7 +590,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 responses.push(await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(this.label as string, options));
             }
         } catch (error) {
-            const updated = await AuthUtils.errorHandling(error, this.getProfileName(), vscode.l10n.t("Retrieving response from MVS list API"));
+            const updated = await AuthUtils.errorHandling(error, {
+                apiType: ZoweExplorerApiType.Mvs,
+                profile: this.getProfile(),
+                scenario: vscode.l10n.t("Retrieving response from MVS list API"),
+            });
             AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
             return;
         }
@@ -627,7 +632,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     datasetProvider.addFileHistory(`[${this.getProfileName()}]: ${this.label as string}`);
                 }
             } catch (err) {
-                await AuthUtils.errorHandling(err, this.getProfileName());
+                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: this.getProfile() });
                 throw err;
             }
         }

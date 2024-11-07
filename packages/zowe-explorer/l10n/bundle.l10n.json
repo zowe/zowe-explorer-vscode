@@ -47,6 +47,7 @@
   "Certificate Key File": "Certificate Key File",
   "Submit": "Submit",
   "Cancel": "Cancel",
+  "Troubleshoot Error": "Troubleshoot Error",
   "Zowe Explorer profiles are being set as unsecured.": "Zowe Explorer profiles are being set as unsecured.",
   "Zowe Explorer profiles are being set as secured.": "Zowe Explorer profiles are being set as secured.",
   "Custom credential manager failed to activate": "Custom credential manager failed to activate",
@@ -158,14 +159,8 @@
   "Certificate Key for Authentication.": "Certificate Key for Authentication.",
   "Certificate Keys": "Certificate Keys",
   "Select Certificate Key": "Select Certificate Key",
-  "Required parameter 'host' must not be blank.": "Required parameter 'host' must not be blank.",
-  "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out./Label": {
-    "message": "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
-    "comment": [
-      "Label"
-    ]
-  },
   "Update Credentials": "Update Credentials",
+  "Required parameter 'host' must not be blank.": "Required parameter 'host' must not be blank.",
   "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection./Profile name": {
     "message": "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
     "comment": [
@@ -208,32 +203,6 @@
   "Profile auth error": "Profile auth error",
   "Profile is not authenticated, please log in to continue": "Profile is not authenticated, please log in to continue",
   "Retrieving response from USS list API": "Retrieving response from USS list API",
-  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
-  "Could not list USS files: Empty path provided in URI": "Could not list USS files: Empty path provided in URI",
-  "Profile does not exist for this file.": "Profile does not exist for this file.",
-  "Saving USS file...": "Saving USS file...",
-  "Renaming {0} failed due to API error: {1}/File pathError message": {
-    "message": "Renaming {0} failed due to API error: {1}",
-    "comment": [
-      "File path",
-      "Error message"
-    ]
-  },
-  "Deleting {0} failed due to API error: {1}/File nameError message": {
-    "message": "Deleting {0} failed due to API error: {1}",
-    "comment": [
-      "File name",
-      "Error message"
-    ]
-  },
-  "No error details given": "No error details given",
-  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
-    "message": "Error fetching destination {0} for paste action: {1}",
-    "comment": [
-      "USS path",
-      "Error message"
-    ]
-  },
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
     "comment": [
@@ -284,7 +253,7 @@
   "Select a filter": "Select a filter",
   "No selection made. Operation cancelled.": "No selection made. Operation cancelled.",
   "New filter": "New filter",
-  "You must enter a path.": "You must enter a path.",
+  "Please enter a valid USS path.": "Please enter a valid USS path.",
   "Initializing profiles with USS favorites.": "Initializing profiles with USS favorites.",
   "No USS favorites found.": "No USS favorites found.",
   "Loading profile: {0} for USS favorites/Profile name": {
@@ -304,6 +273,48 @@
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "Pulling from Mainframe...": "Pulling from Mainframe...",
+  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
+  "Failed to move {0}/File path": {
+    "message": "Failed to move {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Failed to get contents for {0}/File path": {
+    "message": "Failed to get contents for {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Profile does not exist for this file.": "Profile does not exist for this file.",
+  "Saving USS file...": "Saving USS file...",
+  "Failed to rename {0}/File path": {
+    "message": "Failed to rename {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Failed to delete {0}/File name": {
+    "message": "Failed to delete {0}",
+    "comment": [
+      "File name"
+    ]
+  },
+  "No error details given": "No error details given",
+  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
+    "message": "Error fetching destination {0} for paste action: {1}",
+    "comment": [
+      "USS path",
+      "Error message"
+    ]
+  },
+  "Failed to copy {0} to {1}/Source pathDestination path": {
+    "message": "Failed to copy {0} to {1}",
+    "comment": [
+      "Source path",
+      "Destination path"
+    ]
+  },
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -495,7 +506,18 @@
   "Phase Name": "Phase Name",
   "Error Details": "Error Details",
   "Fetching spool file...": "Fetching spool file...",
-  "Failed to fetch jobs: getJobsByParameters is not implemented for this session's JES API.": "Failed to fetch jobs: getJobsByParameters is not implemented for this session's JES API.",
+  "Failed to get contents for {0}/Spool name": {
+    "message": "Failed to get contents for {0}",
+    "comment": [
+      "Spool name"
+    ]
+  },
+  "Failed to delete job {0}/Job name": {
+    "message": "Failed to delete job {0}",
+    "comment": [
+      "Job name"
+    ]
+  },
   "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}/Job name": {
     "message": "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}",
     "comment": [
@@ -684,19 +706,31 @@
   "Choose the setting location to save the data set template...": "Choose the setting location to save the data set template...",
   "Save as User setting": "Save as User setting",
   "Save as Workspace setting": "Save as Workspace setting",
-  "Saving data set...": "Saving data set...",
-  "Deleting {0} failed due to API error: {1}/File pathError message": {
-    "message": "Deleting {0} failed due to API error: {1}",
+  "Failed to list datasets": "Failed to list datasets",
+  "Failed to list dataset members": "Failed to list dataset members",
+  "Failed to read {0}/File path": {
+    "message": "Failed to read {0}",
     "comment": [
-      "File path",
-      "Error message"
+      "File path"
     ]
   },
-  "Renaming {0} failed due to API error: {1}/File nameError message": {
-    "message": "Renaming {0} failed due to API error: {1}",
+  "Saving data set...": "Saving data set...",
+  "Failed to save {0}/Data set name": {
+    "message": "Failed to save {0}",
     "comment": [
-      "File name",
-      "Error message"
+      "Data set name"
+    ]
+  },
+  "Failed to delete {0}/File path": {
+    "message": "Failed to delete {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Failed to rename {0}/Data set name": {
+    "message": "Failed to rename {0}",
+    "comment": [
+      "Data set name"
     ]
   },
   "Partitioned Data Set: Binary": "Partitioned Data Set: Binary",
