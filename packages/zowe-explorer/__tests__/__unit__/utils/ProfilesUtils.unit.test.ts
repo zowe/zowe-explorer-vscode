@@ -684,6 +684,7 @@ describe("ProfilesUtils unit tests", () => {
         let setupCustomCredentialManagerSpy: jest.SpyInstance;
         let readProfilesFromDiskSpy: jest.SpyInstance;
         let disableCredentialManagementSpy: jest.SpyInstance;
+        let checkDefaultCredentialManagerSpy: jest.SpyInstance;
 
         beforeEach(() => {
             jest.clearAllMocks();
@@ -697,6 +698,7 @@ describe("ProfilesUtils unit tests", () => {
             setupCustomCredentialManagerSpy = jest.spyOn(ProfilesUtils, "setupCustomCredentialManager");
             readProfilesFromDiskSpy = jest.spyOn(imperative.ProfileInfo.prototype, "readProfilesFromDisk");
             disableCredentialManagementSpy = jest.spyOn(ProfilesUtils, "disableCredentialManagement");
+            checkDefaultCredentialManagerSpy = jest.spyOn(ProfilesUtils, "checkDefaultCredentialManager");
         });
 
         it("should retrieve the custom credential manager", async () => {
@@ -724,11 +726,11 @@ describe("ProfilesUtils unit tests", () => {
             await expect(ProfilesUtils.getProfileInfo()).resolves.toEqual({});
         });
 
-        it("should prompt to disable credential management if environment not supported", async () => {
+        it("should throw exception of readProfilesFromDiskSpy fails", async () => {
             const expectedErrMsg =
                 // eslint-disable-next-line max-len
                 "Failed to load credential manager. This may be related to Zowe Explorer being unable to use the default credential manager in a browser based environment.";
-            jest.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(false);
+            checkDefaultCredentialManagerSpy.mockReturnValue(false);
             getDirectValueSpy.mockReturnValueOnce(false);
             getCredentialManagerOverrideSpy.mockReturnValue("@zowe/cli");
             isVSCodeCredentialPluginInstalledSpy.mockReturnValueOnce(false);
@@ -745,12 +747,12 @@ describe("ProfilesUtils unit tests", () => {
                 });
                 throw err;
             });
-            await ProfilesUtils.getProfileInfo();
-            expect(disableCredentialManagementSpy).toHaveBeenCalledTimes(1);
+            await expect(ProfilesUtils.getProfileInfo()).rejects.toThrow(expectedErrMsg);
         });
 
         it("should ignore  error if it is not an instance of ProfInfoErr", async () => {
             const expectedErrorMsg = "Another error unrelated to credential management";
+            checkDefaultCredentialManagerSpy.mockReturnValue(true);
             getDirectValueSpy.mockReturnValueOnce(false);
             getCredentialManagerOverrideSpy.mockReturnValue("@zowe/cli");
             isVSCodeCredentialPluginInstalledSpy.mockReturnValueOnce(false);
@@ -969,6 +971,7 @@ describe("ProfilesUtils unit tests", () => {
         let setDirectValueSpy: jest.SpyInstance;
         let warningMessageSpy: jest.SpyInstance;
         let executeCommandSpy: jest.SpyInstance;
+        let getDirectValueSpy: jest.SpyInstance;
 
         beforeEach(() => {
             jest.clearAllMocks();
@@ -977,32 +980,15 @@ describe("ProfilesUtils unit tests", () => {
             setDirectValueSpy = jest.spyOn(SettingsConfig, "setDirectValue");
             warningMessageSpy = jest.spyOn(Gui, "warningMessage");
             executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand");
+            getDirectValueSpy = jest.spyOn(SettingsConfig, "getDirectValue");
         });
 
-        it("should prompt whether to disable credential management, and disable globally if 'Yes, globally' selected", async () => {
+        it("should show warning that credential management was disabled", async () => {
             warningMessageSpy.mockResolvedValue("Yes, globally");
+            getDirectValueSpy.mockReturnValueOnce(true);
             await expect(ProfilesUtils.disableCredentialManagement()).resolves.not.toThrow();
             expect(setDirectValueSpy).toHaveBeenCalledWith(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
             expect(executeCommandSpy).toHaveBeenCalledWith("workbench.action.reloadWindow");
-        });
-
-        it("should prompt whether to disable credential management, and disable on workspace if 'Only for this workspace' selected", async () => {
-            warningMessageSpy.mockResolvedValue("Only for this workspace");
-            await expect(ProfilesUtils.disableCredentialManagement()).resolves.not.toThrow();
-            expect(setDirectValueSpy).toHaveBeenCalledWith(
-                Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED,
-                false,
-                vscode.ConfigurationTarget.Workspace
-            );
-            expect(executeCommandSpy).toHaveBeenCalledWith("workbench.action.reloadWindow");
-        });
-
-        it("should prompt whether to disable credential management, and throw error if 'No'", async () => {
-            warningMessageSpy.mockResolvedValue("No");
-            await expect(ProfilesUtils.disableCredentialManagement()).rejects.toThrow(
-                // eslint-disable-next-line max-len
-                "Failed to load credential manager. This may be related to Zowe Explorer being unable to use the default credential manager in a browser based environment."
-            );
         });
     });
 
