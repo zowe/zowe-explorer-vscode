@@ -88,6 +88,16 @@ export class Profiles extends ProfilesCache {
         return this.mProfileInfo;
     }
 
+    public showProfileInactiveMsg(profileName: string): void {
+        const inactiveMsg = vscode.l10n.t({
+            message: "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
+            args: [profileName],
+            comment: ["Profile name"],
+        });
+        ZoweLogger.error(inactiveMsg);
+        Gui.errorMessage(inactiveMsg);
+    }
+
     public async checkCurrentProfile(theProfile: imperative.IProfileLoaded): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
         let profileStatus: Validation.IValidationProfile = { name: theProfile.name, status: "unverified" };
