@@ -35,12 +35,8 @@ export class AuthUtils {
 
             if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
                 const message = vscode.l10n.t("Log in to Authentication Service");
-                const success = Gui.showMessage(correlation?.message ?? imperativeError.message, { items: [message] }).then(async (selection) => {
-                    if (selection) {
-                        return Constants.PROFILES_CACHE.ssoLogin(null, profile.name);
-                    }
-                });
-                return success;
+                const userResp = await Gui.showMessage(correlation?.message ?? imperativeError.message, { items: [message] });
+                return userResp === message ? Constants.PROFILES_CACHE.ssoLogin(null, profile.name) : false;
             }
         }
         const checkCredsButton = vscode.l10n.t("Update Credentials");
