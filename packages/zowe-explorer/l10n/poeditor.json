@@ -831,7 +831,7 @@
   "Internal error: Tried to call a non-existing Common API in API register: {0}": "",
   "Reload Window": "",
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "",
-  "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.": "",
+  "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.": "",
   "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree": "",
   "Choose \"Create new...\" to define or select a profile to add to the JOBS tree": "",
   "Choose \"Create new...\" to define or select a profile to add to the USS tree": "",
