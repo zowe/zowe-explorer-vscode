@@ -2450,3 +2450,20 @@ describe("Profiles Unit Tests - function tokenAuthClearSecureArray", () => {
         getProfileFromConfigMock.mockRestore();
     });
 });
+
+describe("Profiles unit tests - function showProfilesInactiveMsg", () => {
+    it("should call ZoweLogger.error to log the error", () => {
+        const errorSpy = jest.spyOn(ZoweLogger, "error");
+        Profiles.getInstance().showProfileInactiveMsg("profName");
+        expect(errorSpy).toHaveBeenCalledWith(
+            "Profile profName is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
+        );
+    });
+    it("should call Gui.errorMessage to display the message", () => {
+        const errorMsgSpy = jest.spyOn(Gui, "errorMessage");
+        Profiles.getInstance().showProfileInactiveMsg("profName");
+        expect(errorMsgSpy).toHaveBeenCalledWith(
+            "Profile profName is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
+        );
+    });
+});
