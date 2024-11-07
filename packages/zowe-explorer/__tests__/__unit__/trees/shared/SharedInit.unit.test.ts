@@ -31,6 +31,7 @@ import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
+import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
@@ -336,6 +337,7 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(vscode.workspace, "workspaceFolders", { value: [{ uri: fakeUri }], configurable: true });
             jest.spyOn(vscode.workspace, "createFileSystemWatcher").mockReturnValue(watcher);
             jest.spyOn(ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter, "fire").mockImplementation(mockEmitter);
+            jest.spyOn(SharedUtils, "debounce").mockImplementation((cb: any) => cb);
         });
 
         afterAll(() => {
