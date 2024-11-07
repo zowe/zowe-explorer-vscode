@@ -32,6 +32,15 @@ describe("ZoweLocalStorage Unit Tests", () => {
         ZoweLocalStorage.setValue("fruit" as PersistenceSchemaEnum, "banana");
         expect(ZoweLocalStorage.getValue("fruit" as PersistenceSchemaEnum)).toEqual("banana");
     });
+
+    it("should set workspace values successfully when setInWorkspace is true", () => {
+        const globalState = { get: jest.fn(), update: jest.fn(), keys: () => [] } as vscode.Memento;
+        const workspaceState = { get: jest.fn(), update: jest.fn(), keys: () => [] } as vscode.Memento;
+        ZoweLocalStorage.initializeZoweLocalStorage(globalState, workspaceState);
+        ZoweLocalStorage.setValue("fruit" as PersistenceSchemaEnum, "banana", true);
+        expect(workspaceState.update).toHaveBeenCalled();
+        expect(globalState.update).not.toHaveBeenCalled();
+    });
 });
 
 describe("LocalStorageAccess", () => {
@@ -76,11 +85,13 @@ describe("LocalStorageAccess", () => {
     });
 
     describe("setValue", () => {
-        it("calls ZoweLocalStorage.setValue for all writable keys", () => {
+        it("calls ZoweLocalStorage.setValue for all writable keys", async () => {
             const setValueMock = jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
+            const expectWritableSpy = jest.spyOn(LocalStorageAccess as any, "expectWritable");
             for (const key of keysWithPerm(2)) {
-                LocalStorageAccess.setValue(key, 123);
+                await LocalStorageAccess.setValue(key, 123);
                 expect(setValueMock).toHaveBeenCalledWith(key, 123);
+                expect(expectWritableSpy).not.toThrow();
             }
         });
 

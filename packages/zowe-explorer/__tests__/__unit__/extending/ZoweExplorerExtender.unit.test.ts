@@ -19,7 +19,7 @@ import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreator
 import { createJobsTree, createIJobObject } from "../../__mocks__/mockCreators/jobs";
 import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
-import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
+import { LocalStorageAccess, ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { UssFSProvider } from "../../../src/trees/uss/UssFSProvider";
 import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
@@ -322,6 +322,13 @@ describe("ZoweExplorerExtender unit tests", () => {
         it("returns the singleton instance of ErrorCorrelator", () => {
             const blockMocks = createBlockMocks();
             expect(blockMocks.instTest.getErrorCorrelator()).toBe(ErrorCorrelator.getInstance());
+        });
+    });
+
+    describe("getLocalStorage", () => {
+        it("returns the singleton instance of LocalStorageAccess", () => {
+            const blockMocks = createBlockMocks();
+            expect(blockMocks.instTest.getLocalStorage()).toBe(LocalStorageAccess.instance);
         });
     });
 });
