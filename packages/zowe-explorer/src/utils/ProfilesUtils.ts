@@ -163,8 +163,7 @@ export class ProfilesUtils {
             await SettingsConfig.setDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
             await Gui.infoMessage(
                 vscode.l10n.t(
-                    // eslint-disable-next-line max-len
-                    "Zowe Explorer's default credentials manager is not supported in your environment. Consider installing a custom credential manager for your platform. Click Reload to start Zowe Explorer without a credentials manager."
+                    "Zowe Explorer's default credential manager is not supported in your environment. Consider installing a custom solution for your platform. Click Reload to start Zowe Explorer without a credential manager."
                 ),
                 {
                     items: [vscode.l10n.t("Reload window")],
