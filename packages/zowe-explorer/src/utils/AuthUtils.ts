@@ -52,6 +52,17 @@ export class AuthUtils {
         return creds != null ? true : false;
     }
 
+    public static promptForAuthError(err: Error, profile: imperative.IProfileLoaded): void {
+        if (
+            err instanceof imperative.ImperativeError &&
+            profile != null &&
+            (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
+                err.message.includes("All configured authentication methods failed"))
+        ) {
+            void AuthUtils.promptForAuthentication(err, profile).catch((error) => error instanceof Error && ZoweLogger.error(error.message));
+        }
+    }
+
     public static async openConfigForMissingHostname(profile: imperative.IProfileLoaded): Promise<void> {
         const mProfileInfo = await Constants.PROFILES_CACHE.getProfileInfo();
         Gui.errorMessage(vscode.l10n.t("Required parameter 'host' must not be blank."));

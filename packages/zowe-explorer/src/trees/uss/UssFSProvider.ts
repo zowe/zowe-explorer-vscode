@@ -295,16 +295,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             if (err instanceof Error) {
                 ZoweLogger.error(err.message);
             }
-            if (
-                err instanceof imperative.ImperativeError &&
-                metadata.profile != null &&
-                (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
-                    err.message.includes("All configured authentication methods failed"))
-            ) {
-                void AuthUtils.promptForAuthentication(err, metadata.profile).catch(
-                    (error) => error instanceof Error && ZoweLogger.error(error.message)
-                );
-            }
+            AuthUtils.promptForAuthError(err, metadata.profile);
             return;
         }
 

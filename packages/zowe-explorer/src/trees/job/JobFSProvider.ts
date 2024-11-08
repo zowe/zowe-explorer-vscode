@@ -26,14 +26,12 @@ import {
     FsJobsUtils,
     FsAbstractUtils,
     ZoweExplorerApiType,
-    imperative,
 } from "@zowe/zowe-explorer-api";
 import { IJob, IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { SharedContext } from "../shared/SharedContext";
 import { AuthUtils } from "../../utils/AuthUtils";
-import { ZoweLogger } from "../../tools/ZoweLogger";
 
 export class JobFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: JobFSProvider;
@@ -216,16 +214,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                 bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id));
             }
         } catch (err) {
-            if (
-                err instanceof imperative.ImperativeError &&
-                spoolEntry.metadata.profile != null &&
-                (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
-                    err.message.includes("All configured authentication methods failed"))
-            ) {
-                void AuthUtils.promptForAuthentication(err, spoolEntry.metadata.profile).catch(
-                    (error) => error instanceof Error && ZoweLogger.error(error.message)
-                );
-            }
+            AuthUtils.promptForAuthError(err, spoolEntry.metadata.profile);
             throw err;
         }
 
