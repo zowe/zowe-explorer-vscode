@@ -59,7 +59,7 @@
   },
   "Zowe Explorer's default credential manager is not supported in your environment. Consider installing a custom solution for your platform. Click Reload to start Zowe Explorer without a credential manager.": "Zowe Explorer's default credential manager is not supported in your environment. Consider installing a custom solution for your platform. Click Reload to start Zowe Explorer without a credential manager.",
   "Reload window": "Reload window",
-  "Default Zowe credentials manager not found on current platform.": "Default Zowe credentials manager not found on current platform.",
+  "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions.": "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions.",
   "No custom credential managers found, using the default instead.": "No custom credential managers found, using the default instead.",
   "Custom credential manager {0} found/Credential manager display name": {
     "message": "Custom credential manager {0} found",
