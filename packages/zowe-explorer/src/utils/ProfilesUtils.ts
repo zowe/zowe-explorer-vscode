@@ -177,7 +177,11 @@ export class ProfilesUtils {
         try {
             ProfilesCache.requireKeyring();
         } catch (_error) {
-            ZoweLogger.info(vscode.l10n.t("Default Zowe credentials manager not found on current platform."));
+            ZoweLogger.info(
+                vscode.l10n.t(
+                    "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions."
+                )
+            );
             return false;
         }
         return true;
