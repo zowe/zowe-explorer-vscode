@@ -12,9 +12,19 @@
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as path from "path";
-import { Gui, imperative, IZoweDatasetTreeNode, Validation, 
-    Table, TableBuilder, TableViewProvider,
-    Types, FsAbstractUtils, ZoweScheme, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import {
+    Gui,
+    imperative,
+    IZoweDatasetTreeNode,
+    Validation,
+    Table,
+    TableBuilder,
+    TableViewProvider,
+    Types,
+    FsAbstractUtils,
+    ZoweScheme,
+    ZoweExplorerApiType,
+} from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetUtils } from "./DatasetUtils";
 import { DatasetFSProvider } from "./DatasetFSProvider";
@@ -1765,7 +1775,7 @@ export class DatasetActions {
             return;
         }
 
-        const searchString = await Gui.showInputBox({prompt: vscode.l10n.t("Enter the text to search for.")}); // Figure out show input box
+        const searchString = await Gui.showInputBox({ prompt: vscode.l10n.t("Enter the text to search for.") }); // Figure out show input box
         if (!searchString) {
             Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
             return;
@@ -1773,11 +1783,11 @@ export class DatasetActions {
 
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
         let response: zosfiles.IZosFilesResponse;
-        
+
         await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: vscode.l10n.t("Searching for \"{0}\"", searchString),
+                title: vscode.l10n.t('Searching for "{0}"', searchString),
                 cancellable: true,
             },
             async (progress, token) => {
@@ -1799,17 +1809,20 @@ export class DatasetActions {
                     statusMessage: "",
                     stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
                 };
-                
+
                 try {
                     response = await mvsApi.searchDataSets({
                         pattern,
                         searchString,
                         progressTask: task,
                         mainframeSearch: false,
-                        continueSearch: DatasetActions.continueSearchPrompt
+                        continueSearch: DatasetActions.continueSearchPrompt,
                     });
                     if (response.success === false && response.apiResponse == null) {
-                        await AuthUtils.errorHandling(response.errorMessage, node.getProfileName(), "Error encountered when searching data sets");
+                        await AuthUtils.errorHandling(response.errorMessage, {
+                            profile: node.getProfileName(),
+                            scenario: "Error encountered when searching data sets",
+                        });
                         return;
                     }
                 } catch (err) {
@@ -1833,7 +1846,7 @@ export class DatasetActions {
                     uri = uri + "/" + member;
                     name = name + "(" + member + ")";
                 }
-                
+
                 const extension = DatasetUtils.getExtension(ds.dsn);
                 if (extension != null) {
                     uri += extension;
@@ -1843,59 +1856,59 @@ export class DatasetActions {
                     name,
                     line: match.line as number,
                     column: match.column as number,
-                    position: (match.line as number).toString() + ":" + (match.column as number).toString(), 
+                    position: (match.line as number).toString() + ":" + (match.column as number).toString(),
                     contents: match.contents,
                     uri,
-                    searchString
+                    searchString,
                 });
             }
         }
 
         const table = new TableBuilder(context)
-        .title(vscode.l10n.t("Search Results for \"{0}\"", searchString))
-        .options(
-            {
+            .title(vscode.l10n.t('Search Results for "{0}"', searchString))
+            .options({
                 autoSizeStrategy: { type: "fitCellContents" },
                 pagination: true,
                 rowSelection: "multiple",
                 selectEverything: true,
-                suppressRowClickSelection: true
+                suppressRowClickSelection: true,
             })
-        .isView()
-        .rows(...newMatches)
-        .columns(
-            ...[
-                {
-                    field: "name",
-                    headerName: vscode.l10n.t("Data Set Name"),
-                    filter: true,
-                    sort: "asc",
-                } as Table.ColumnOpts,
-                {
-                    field: "position",
-                    headerName: vscode.l10n.t("Position"),
-                    filter: false
+            .isView()
+            .rows(...newMatches)
+            .columns(
+                ...[
+                    {
+                        field: "name",
+                        headerName: vscode.l10n.t("Data Set Name"),
+                        filter: true,
+                        sort: "asc",
+                    } as Table.ColumnOpts,
+                    {
+                        field: "position",
+                        headerName: vscode.l10n.t("Position"),
+                        filter: false,
+                    },
+                    {
+                        field: "contents",
+                        headerName: vscode.l10n.t("Contents"),
+                        filter: true,
+                    },
+                    {
+                        field: "actions",
+                        hide: true,
+                    },
+                ]
+            )
+            .addRowAction("all", {
+                title: vscode.l10n.t("Open"),
+                command: "open",
+                callback: {
+                    fn: DatasetActions.openSearchAtLocation,
+                    typ: "multi-row",
                 },
-                {
-                    field: "contents",
-                    headerName: vscode.l10n.t("Contents"),
-                    filter: true
-                },
-                {
-                    field: "actions",
-                    hide: true
-                }
-            ])
-        .addRowAction("all", {
-            title: vscode.l10n.t("Open"),
-            command: "open",
-            callback: {
-                fn: DatasetActions.openSearchAtLocation,
-                typ: "multi-row",
-            },
-            type: "secondary"
-        })
-        .build();
+                type: "secondary",
+            })
+            .build();
         await TableViewProvider.getInstance().setTableView(table);
     }
 
@@ -1903,28 +1916,35 @@ export class DatasetActions {
         const childrenToOpen = Object.values(data);
         if (childrenToOpen.length > 0) {
             for (const child of childrenToOpen) {
-                const childUri = vscode.Uri.from({scheme: ZoweScheme.DS, path: child.uri as string});
+                const childUri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: child.uri as string });
                 await DatasetFSProvider.instance.remoteLookupForResource(childUri);
-                Gui.showTextDocument(childUri, {preview: false}).then(editor => {
-                    const startPosition = new vscode.Position(child.line as number - 1, child.column as number - 1);
-                    const endPosition = new vscode.Position(child.line as number - 1,
-                        child.column as number - 1 + ((child.searchString as string).length))
-                    editor.selection = new vscode.Selection(startPosition, endPosition);
-                }, (err) => {
-                    Gui.errorMessage(err.message);
-                });
+                Gui.showTextDocument(childUri, { preview: false }).then(
+                    (editor) => {
+                        const startPosition = new vscode.Position((child.line as number) - 1, (child.column as number) - 1);
+                        const endPosition = new vscode.Position(
+                            (child.line as number) - 1,
+                            (child.column as number) - 1 + (child.searchString as string).length
+                        );
+                        editor.selection = new vscode.Selection(startPosition, endPosition);
+                    },
+                    (err) => {
+                        Gui.errorMessage(err.message);
+                    }
+                );
             }
         }
     }
 
     private static async continueSearchPrompt(this: void, dataSets: zosfiles.IDataSet[]): Promise<boolean> {
         const MAX_DATASETS = 50;
-        if (dataSets.length <= MAX_DATASETS) { return true; }
+        if (dataSets.length <= MAX_DATASETS) {
+            return true;
+        }
 
-        const resp = await Gui.infoMessage(
-            vscode.l10n.t("Are you sure you want to search {0} data sets and members?", dataSets.length.toString()),
-            {items: [vscode.l10n.t("Yes"), vscode.l10n.t("No")], vsCodeOpts: { modal: true }}
-        );
+        const resp = await Gui.infoMessage(vscode.l10n.t("Are you sure you want to search {0} data sets and members?", dataSets.length.toString()), {
+            items: [vscode.l10n.t("Yes"), vscode.l10n.t("No")],
+            vsCodeOpts: { modal: true },
+        });
 
         return resp === vscode.l10n.t("Yes");
     }
