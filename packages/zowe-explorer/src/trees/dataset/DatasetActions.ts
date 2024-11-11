@@ -1781,7 +1781,8 @@ export class DatasetActions {
             return;
         }
 
-        const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
+        const profile = node.getProfile();
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
         let response: zosfiles.IZosFilesResponse;
 
         await Gui.withProgress(

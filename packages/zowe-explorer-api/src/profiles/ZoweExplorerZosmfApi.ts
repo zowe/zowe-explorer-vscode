@@ -377,7 +377,17 @@ export namespace ZoweExplorerZosmf {
             );
         }
         public searchDataSets(searchOptions: zosfiles.ISearchOptions): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.Search.dataSets(this.getSession(), searchOptions);
+            return zosfiles.Search.dataSets(this.getSession(), {
+                ...searchOptions,
+                getOptions: {
+                    responseTimeout: this.profile?.profile?.responseTimeout,
+                    ...searchOptions.getOptions,
+                },
+                listOptions: {
+                    responseTimeout: this.profile?.profile?.responseTimeout,
+                    ...searchOptions.listOptions,
+                },
+            });
         }
     }
 
