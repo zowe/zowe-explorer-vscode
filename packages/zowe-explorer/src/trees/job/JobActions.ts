@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
-import { Gui, IZoweJobTreeNode, Sorting, Types } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, Sorting, Types, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import { ZoweJobNode } from "./ZoweJobNode";
 import { JobTree } from "./JobTree";
 import { JobUtils } from "./JobUtils";
@@ -54,7 +54,7 @@ export class JobActions {
                 })
             );
         } catch (error) {
-            await AuthUtils.errorHandling(error, job.getProfile().name);
+            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Jes, profile: job.getProfile() });
         }
     }
 
@@ -120,7 +120,7 @@ export class JobActions {
         if (deletionErrors.length) {
             const errorMessages = deletionErrors.map((error) => error.message).join(", ");
             const userMessage = `There were errors during jobs deletion: ${errorMessages}`;
-            await AuthUtils.errorHandling(userMessage);
+            await AuthUtils.errorHandling(userMessage, { apiType: ZoweExplorerApiType.Jes });
         }
     }
 
@@ -137,7 +137,7 @@ export class JobActions {
             try {
                 await jobsProvider.addSession({ sessionName: sessionName.trim() });
             } catch (error) {
-                await AuthUtils.errorHandling(error);
+                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Jes, profile: sessionName });
                 return;
             }
             sessionNode = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label.toString().trim() === sessionName.trim());
@@ -145,7 +145,7 @@ export class JobActions {
         try {
             jobsProvider.refreshElement(sessionNode);
         } catch (error) {
-            await AuthUtils.errorHandling(error);
+            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Jes, profile: sessionName });
             return;
         }
         sessionNode.searchId = jobId;
@@ -183,7 +183,7 @@ export class JobActions {
                 }
             }
         } catch (error) {
-            await AuthUtils.errorHandling(error);
+            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Jes });
         }
     }
 
@@ -196,7 +196,7 @@ export class JobActions {
         ZoweLogger.trace("job.actions.downloadSingleSpool called.");
         try {
             if (ZoweExplorerApiRegister.getJesApi(nodes[0].getProfile()).downloadSingleSpool == null) {
-                throw Error(vscode.l10n.t("Download Single Spool operation not implemented by extender. Please contact the extension developer(s)."));
+                throw Error(vscode.l10n.t("Download single spool operation not implemented by extender. Please contact the extension developer(s)."));
             }
             const dirUri = await Gui.showOpenDialog({
                 openLabel: vscode.l10n.t("Select"),
@@ -227,7 +227,7 @@ export class JobActions {
                 }
             }
         } catch (error) {
-            await AuthUtils.errorHandling(error);
+            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Jes });
         }
     }
 
@@ -237,11 +237,11 @@ export class JobActions {
      */
     public static async spoolFilePollEvent(doc: vscode.TextDocument): Promise<void> {
         const statusMsg = Gui.setStatusBarMessage(
-            vscode.l10n.t({
-                message: `$(sync~spin) Polling: {0}...`,
+            `$(sync~spin) ${vscode.l10n.t({
+                message: `Polling: {0}...`,
                 args: [doc.fileName],
                 comment: ["Document file name"],
-            })
+            })}`
         );
         await JobFSProvider.instance.fetchSpoolAtUri(doc.uri);
         statusMsg.dispose();
@@ -270,7 +270,7 @@ export class JobActions {
             const jclDoc = await vscode.workspace.openTextDocument({ language: "jcl", content: jobJcl });
             await Gui.showTextDocument(jclDoc, { preview: false });
         } catch (error) {
-            await AuthUtils.errorHandling(error);
+            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Jes, profile: job.getProfile() });
         }
     }
 
@@ -307,7 +307,7 @@ export class JobActions {
                     vscode.l10n.t("jobActions.modifyCommand.apiNonExisting", "Not implemented yet for profile of type: ") + job.getProfile().type
                 );
             } else {
-                await AuthUtils.errorHandling(error, job.getProfile().name);
+                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Command, profile: job.getProfile() });
             }
         }
     }
@@ -343,7 +343,7 @@ export class JobActions {
                     })
                 );
             } else {
-                await AuthUtils.errorHandling(error, job.getProfile().name);
+                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Command, profile: job.getProfile() });
             }
         }
     }
@@ -499,7 +499,8 @@ export class JobActions {
         if (selection == null) {
             return;
         }
-        if (selection.label === vscode.l10n.t("$(fold) Sort Direction")) {
+        // eslint-disable-next-line no-magic-numbers
+        if (selection.label === JobUtils.JOB_SORT_OPTS[5]) {
             const dir = await Gui.showQuickPick(Constants.SORT_DIRS, {
                 placeHolder: vscode.l10n.t("Select a sorting direction"),
             });
@@ -516,11 +517,11 @@ export class JobActions {
         session.sort.method = JobUtils.JOB_SORT_OPTS.indexOf(selection.label.replace(" $(check)", ""));
         jobsProvider.sortBy(session);
         Gui.setStatusBarMessage(
-            vscode.l10n.t({
-                message: "$(check) Sorting updated for {0}",
+            `$(check) ${vscode.l10n.t({
+                message: "Sorting updated for {0}",
                 args: [session.label as string],
                 comment: ["Session label"],
-            }),
+            })}`,
             Constants.MS_PER_SEC * 4
         );
     }

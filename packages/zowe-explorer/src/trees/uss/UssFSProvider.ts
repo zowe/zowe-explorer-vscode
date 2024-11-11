@@ -23,6 +23,7 @@ import {
     ZosEncoding,
     ZoweScheme,
     UriFsInfo,
+    ZoweExplorerApiType,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { USSFileStructure } from "./USSFileStructure";
@@ -120,7 +121,21 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const oldInfo = this._getInfoFromUri(oldUri);
 
-        await ussApi.move(oldInfo.path, info.path);
+        try {
+            await ussApi.move(oldInfo.path, info.path);
+        } catch (err) {
+            this._handleError(err, {
+                additionalContext: vscode.l10n.t({ message: "Failed to move {0}", args: [oldInfo.path], comment: "File path" }),
+                apiType: ZoweExplorerApiType.Uss,
+                retry: {
+                    fn: this.move.bind(this),
+                    args: [oldUri, newUri],
+                },
+                profileType: info.profile.type,
+                templateArgs: { profileName: info.profile.name ?? "" },
+            });
+            throw err;
+        }
         await this._relocateEntry(oldUri, newUri, info.path);
         return true;
     }
@@ -128,15 +143,18 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     public async listFiles(profile: imperative.IProfileLoaded, uri: vscode.Uri, keepRelative: boolean = false): Promise<IZosFilesResponse> {
         const queryParams = new URLSearchParams(uri.query);
         const ussPath = queryParams.has("searchPath") ? queryParams.get("searchPath") : uri.path.substring(uri.path.indexOf("/", 1));
-        if (ussPath.length === 0) {
-            throw new imperative.ImperativeError({
-                msg: vscode.l10n.t("Could not list USS files: Empty path provided in URI"),
-            });
-        }
-        const response = await ZoweExplorerApiRegister.getUssApi(profile).fileList(ussPath);
-        // If request was successful, create directories for the path if it doesn't exist
-        if (response.success && !keepRelative && response.apiResponse.items?.[0]?.mode?.startsWith("d") && !this.exists(uri)) {
-            await vscode.workspace.fs.createDirectory(uri);
+        let response: IZosFilesResponse;
+        try {
+            response = await ZoweExplorerApiRegister.getUssApi(profile).fileList(ussPath);
+            // If request was successful, create directories for the path if it doesn't exist
+            if (response.success && !keepRelative && response.apiResponse.items?.[0]?.mode?.startsWith("d") && !this.exists(uri)) {
+                await vscode.workspace.fs.createDirectory(uri);
+            }
+        } catch (err) {
+            if (err instanceof Error) {
+                ZoweLogger.error(err.message);
+            }
+            throw err;
         }
 
         return {
@@ -181,7 +199,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         const fileList = entryExists ? await this.listFiles(entry.metadata.profile, uri) : resp;
-        for (const item of fileList.apiResponse.items) {
+        for (const item of fileList.apiResponse?.items ?? []) {
             const itemName = item.name as string;
 
             const isDirectory = item.mode?.startsWith("d") ?? false;
@@ -260,15 +278,35 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const bufBuilder = new BufferBuilder();
         const filePath = uri.path.substring(uriInfo.slashAfterProfilePos);
         const metadata = file.metadata;
-        const profileEncoding = file.encoding ? null : file.metadata.profile.profile?.encoding;
-        const resp = await ZoweExplorerApiRegister.getUssApi(metadata.profile).getContents(filePath, {
-            binary: file.encoding?.kind === "binary",
-            encoding: file.encoding?.kind === "other" ? file.encoding.codepage : profileEncoding,
-            responseTimeout: metadata.profile.profile?.responseTimeout,
-            returnEtag: true,
-            stream: bufBuilder,
-        });
         await this.autoDetectEncoding(file as UssFile);
+        const profileEncoding = file.encoding ? null : file.metadata.profile.profile?.encoding;
+
+        let resp: IZosFilesResponse;
+        try {
+            resp = await ZoweExplorerApiRegister.getUssApi(metadata.profile).getContents(filePath, {
+                binary: file.encoding?.kind === "binary",
+                encoding: file.encoding?.kind === "other" ? file.encoding.codepage : profileEncoding,
+                responseTimeout: metadata.profile.profile?.responseTimeout,
+                returnEtag: true,
+                stream: bufBuilder,
+            });
+        } catch (err) {
+            this._handleError(err, {
+                additionalContext: vscode.l10n.t({
+                    message: "Failed to get contents for {0}",
+                    args: [filePath],
+                    comment: ["File path"],
+                }),
+                retry: {
+                    fn: this.fetchFileAtUri.bind(this),
+                    args: [uri, options],
+                },
+                apiType: ZoweExplorerApiType.Uss,
+                profileType: metadata.profile.type,
+                templateArgs: { profileName: metadata.profile.name },
+            });
+            throw err;
+        }
 
         const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
         if (options?.isConflict) {
@@ -375,7 +413,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             // or if the entry does not exist and the new contents are empty (new placeholder entry)
             options?.noStatusMsg || (!entry && content.byteLength === 0)
                 ? new vscode.Disposable(() => {})
-                : Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
+                : Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Saving USS file...")}`);
 
         let resp: IZosFilesResponse;
         try {
@@ -465,6 +503,15 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         } catch (err) {
             if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
                 // Some unknown error happened, don't update the entry
+                this._handleError(err, {
+                    apiType: ZoweExplorerApiType.Uss,
+                    retry: {
+                        fn: this.writeFile.bind(this),
+                        args: [uri, content, options],
+                    },
+                    profileType: parentDir.metadata.profile.type,
+                    templateArgs: { profileName: parentDir.metadata.profile.name ?? "" },
+                });
                 throw err;
             }
 
@@ -518,14 +565,21 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         try {
             await ZoweExplorerApiRegister.getUssApi(entry.metadata.profile).rename(entry.metadata.path, newPath);
         } catch (err) {
-            await Gui.errorMessage(
-                vscode.l10n.t({
-                    message: "Renaming {0} failed due to API error: {1}",
-                    args: [entry.metadata.path, err.message],
-                    comment: ["File path", "Error message"],
-                })
-            );
-            return;
+            this._handleError(err, {
+                additionalContext: vscode.l10n.t({
+                    message: "Failed to rename {0}",
+                    args: [entry.metadata.path],
+                    comment: ["File path"],
+                }),
+                retry: {
+                    fn: this.rename.bind(this),
+                    args: [oldUri, newUri, options],
+                },
+                apiType: ZoweExplorerApiType.Uss,
+                profileType: entry.metadata.profile?.type,
+                templateArgs: { profileName: entry.metadata.profile?.name ?? "" },
+            });
+            throw err;
         }
 
         parentDir.entries.delete(entry.name);
@@ -554,14 +608,21 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 entryToDelete instanceof UssDirectory
             );
         } catch (err) {
-            await Gui.errorMessage(
-                vscode.l10n.t({
-                    message: "Deleting {0} failed due to API error: {1}",
-                    args: [entryToDelete.metadata.path, err.message],
-                    comment: ["File name", "Error message"],
-                })
-            );
-            return;
+            this._handleError(err, {
+                additionalContext: vscode.l10n.t({
+                    message: "Failed to delete {0}",
+                    args: [entryToDelete.metadata.path],
+                    comment: ["File name"],
+                }),
+                retry: {
+                    fn: this.delete.bind(this),
+                    args: [uri, _options],
+                },
+                apiType: ZoweExplorerApiType.Uss,
+                profileType: parent.metadata.profile.type,
+                templateArgs: { profileName: parent.metadata.profile.name ?? "" },
+            });
+            throw err;
         }
 
         parent.entries.delete(entryToDelete.name);
@@ -636,35 +697,53 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const fileName = this.buildFileName(fileList, path.basename(sourceInfo.path));
         const outputPath = path.posix.join(destInfo.path, fileName);
 
-        if (hasCopyApi && sourceInfo.profile.profile === destInfo.profile.profile) {
-            await api.copy(outputPath, {
-                from: sourceInfo.path,
-                recursive: options.tree.type === USSFileStructure.UssFileType.Directory,
-                overwrite: options.overwrite ?? true,
-            });
-        } else if (options.tree.type === USSFileStructure.UssFileType.Directory) {
-            // Not all APIs respect the recursive option, so it's best to
-            // create a directory and copy recursively to avoid missing any files/folders
-            await api.create(outputPath, "directory");
-            if (options.tree.children) {
-                for (const child of options.tree.children) {
-                    await this.copyTree(
-                        child.localUri,
-                        vscode.Uri.from({
-                            scheme: ZoweScheme.USS,
-                            path: path.posix.join(destInfo.profile.name, outputPath, child.baseName),
-                        }),
-                        { ...options, tree: child }
-                    );
+        try {
+            if (hasCopyApi && sourceInfo.profile.profile === destInfo.profile.profile) {
+                await api.copy(outputPath, {
+                    from: sourceInfo.path,
+                    recursive: options.tree.type === USSFileStructure.UssFileType.Directory,
+                    overwrite: options.overwrite ?? true,
+                });
+            } else if (options.tree.type === USSFileStructure.UssFileType.Directory) {
+                // Not all APIs respect the recursive option, so it's best to
+                // create a directory and copy recursively to avoid missing any files/folders
+                await api.create(outputPath, "directory");
+                if (options.tree.children) {
+                    for (const child of options.tree.children) {
+                        await this.copyTree(
+                            child.localUri,
+                            vscode.Uri.from({
+                                scheme: ZoweScheme.USS,
+                                path: path.posix.join(destInfo.profile.name, outputPath, child.baseName),
+                            }),
+                            { ...options, tree: child }
+                        );
+                    }
                 }
+            } else {
+                const fileEntry = this.lookup(source);
+                if (!fileEntry.wasAccessed) {
+                    // must fetch contents of file first before pasting in new path
+                    await this.readFile(source);
+                }
+                await api.uploadFromBuffer(Buffer.from(fileEntry.data), outputPath);
             }
-        } else {
-            const fileEntry = this.lookup(source);
-            if (!fileEntry.wasAccessed) {
-                // must fetch contents of file first before pasting in new path
-                await this.readFile(source);
-            }
-            await api.uploadFromBuffer(Buffer.from(fileEntry.data), outputPath);
+        } catch (err) {
+            this._handleError(err, {
+                additionalContext: vscode.l10n.t({
+                    message: "Failed to copy {0} to {1}",
+                    args: [source.path, destination.path, err.message],
+                    comment: ["Source path", "Destination path"],
+                }),
+                retry: {
+                    fn: this.copyTree.bind(this),
+                    args: [source, destination, options],
+                },
+                apiType: ZoweExplorerApiType.Uss,
+                profileType: destInfo.profile.type,
+                templateArgs: { profileName: destInfo.profile.name ?? "" },
+            });
+            throw err;
         }
     }
 

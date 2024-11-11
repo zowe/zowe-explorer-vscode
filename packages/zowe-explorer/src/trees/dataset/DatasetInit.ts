@@ -20,6 +20,7 @@ import { SharedActions } from "../shared/SharedActions";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedInit } from "../shared/SharedInit";
 import { SharedUtils } from "../shared/SharedUtils";
+import { ProfilesUtils } from "../../utils/ProfilesUtils";
 
 export class DatasetInit {
     public static async createDatasetTree(log: imperative.Logger): Promise<DatasetTree> {
@@ -30,6 +31,12 @@ export class DatasetInit {
         return tree;
     }
 
+    public static async datasetTreeVisibilityChanged(this: void, e: vscode.TreeViewVisibilityChangeEvent): Promise<void> {
+        if (e.visible) {
+            await ProfilesUtils.promptUserWithNoConfigs();
+        }
+    }
+
     public static async initDatasetProvider(context: vscode.ExtensionContext): Promise<DatasetTree> {
         ZoweLogger.trace("DatasetInit.initDatasetProvider called.");
         context.subscriptions.push(vscode.workspace.registerFileSystemProvider(ZoweScheme.DS, DatasetFSProvider.instance, { isCaseSensitive: true }));
@@ -37,6 +44,8 @@ export class DatasetInit {
         if (datasetProvider == null) {
             return null;
         }
+
+        datasetProvider.getTreeView().onDidChangeVisibility(DatasetInit.datasetTreeVisibilityChanged);
 
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.all.config.init", async () => {
@@ -53,7 +62,7 @@ export class DatasetInit {
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.refreshNode", async (node, nodeList) => {
-                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Pulling from Mainframe..."));
+                const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Pulling from Mainframe...")}`);
                 let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
                 selectedNodes = selectedNodes.filter((element) => SharedContext.isDs(element) || SharedContext.isDsMember(element));
                 for (const item of selectedNodes) {

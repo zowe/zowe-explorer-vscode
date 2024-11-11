@@ -212,6 +212,11 @@
         }
       },
       {
+        "command": "zowe.addToWorkspace",
+        "title": "%addToWorkspace%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.ds.addSession",
         "title": "%addSession%",
         "category": "Zowe Explorer",
@@ -412,6 +417,11 @@
       {
         "command": "zowe.ds.copyName",
         "title": "%copyName%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.copyExternalLink",
+        "title": "%copyExternalLink%",
         "category": "Zowe Explorer"
       },
       {
@@ -840,6 +850,11 @@
           "group": "002_zowe_ussSystemSpecific@5"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(directory|favorite|profile_fav|ussSession))/ && !listMultiSelection",
+          "command": "zowe.copyExternalLink",
+          "group": "002_zowe_ussSystemSpecific@6"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
           "command": "zowe.addFavorite",
           "group": "003_zowe_ussWorkspace@0"
@@ -848,6 +863,11 @@
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession.*|profile.*)).*_fav.*/",
           "command": "zowe.removeFavorite",
           "group": "003_zowe_ussWorkspace@1"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(directory.*|ussSession.*)/",
+          "command": "zowe.addToWorkspace",
+          "group": "003_zowe_ussWorkspace@2"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
@@ -1030,9 +1050,14 @@
           "group": "002_zowe_dsWorkspace@1"
         },
         {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/",
+          "command": "zowe.addToWorkspace",
+          "group": "002_zowe_dsWorkspace@2"
+        },
+        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^session.*_fav.*/ && !listMultiSelection",
           "command": "zowe.ds.filteredDataSetsSearchFor",
-          "group": "002_zowe_dsWorkspace@2"
+          "group": "002_zowe_dsWorkspace@3"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem == profile_fav && !listMultiSelection",
@@ -1045,14 +1070,19 @@
           "group": "098_zowe_dsMisc@0"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|session).*/ && !listMultiSelection",
-          "command": "zowe.ds.filterBy",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(ds|member).*/ && !listMultiSelection",
+          "command": "zowe.copyExternalLink",
           "group": "098_zowe_dsMisc@1"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|session).*/ && !listMultiSelection",
-          "command": "zowe.ds.sortBy",
+          "command": "zowe.ds.filterBy",
           "group": "098_zowe_dsMisc@2"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|session).*/ && !listMultiSelection",
+          "command": "zowe.ds.sortBy",
+          "group": "098_zowe_dsMisc@3"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^fileError.*/",
@@ -1228,6 +1258,11 @@
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(job|spool).*/",
           "command": "zowe.jobs.copyName",
           "group": "003_zowe_jobsMisc@0"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^spool.*/",
+          "command": "zowe.copyExternalLink",
+          "group": "003_zowe_jobsMisc@1"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^spool.*/",
@@ -1801,7 +1836,7 @@
     ]
   },
   "scripts": {
-    "build": "pnpm copy-secrets && pnpm clean:bundle && pnpm license && webpack --mode development && pnpm madge",
+    "build": "pnpm copy-secrets && pnpm clean:bundle && pnpm license && pnpm build:nls && webpack --mode production && pnpm madge",
     "test": "pnpm test:unit",
     "test:e2e": "cd __tests__/__e2e__/ && wdio run ./wdio.conf.ts",
     "test:integration": "cd __tests__/__integration__/bdd && wdio run ./wdio.conf.ts",
@@ -1827,7 +1862,9 @@
     "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/",
     "pretty": "prettier --write .",
     "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src && node ./scripts/generatePoeditorJson.js",
-    "copy-secrets": "node ./scripts/getSecretsPrebuilds.js"
+    "copy-secrets": "node ./scripts/getSecretsPrebuilds.js",
+    "build:nlsPseudo": "pnpm dlx @vscode/l10n-dev generate-pseudo -o ./l10n/ ./l10n/bundle.l10n.json ./package.nls.json",
+    "build:nls": "pnpm run build:nlsPseudo"
   },
   "engines": {
     "vscode": "^1.79.0"

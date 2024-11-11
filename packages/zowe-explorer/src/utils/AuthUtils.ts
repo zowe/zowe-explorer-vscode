@@ -11,97 +11,121 @@
 
 import * as util from "util";
 import * as vscode from "vscode";
-import { imperative, Gui, MainframeInteraction, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { imperative, Gui, MainframeInteraction, IZoweTreeNode, ErrorCorrelator, ZoweExplorerApiType, CorrelatedError } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 
+interface ErrorContext {
+    apiType?: ZoweExplorerApiType;
+    profile?: string | imperative.IProfileLoaded;
+    scenario?: string;
+    [key: string]: any;
+}
+
 export class AuthUtils {
+    public static async promptForAuthentication(
+        imperativeError: imperative.ImperativeError,
+        correlation: CorrelatedError,
+        profile: imperative.IProfileLoaded
+    ): Promise<boolean> {
+        if (imperativeError.mDetails.additionalDetails) {
+            const tokenError: string = imperativeError.mDetails.additionalDetails;
+            const isTokenAuth = await AuthUtils.isUsingTokenAuth(profile.name);
+
+            if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
+                const message = vscode.l10n.t("Log in to Authentication Service");
+                const success = Gui.showMessage(correlation.message, { items: [message] }).then(async (selection) => {
+                    if (selection) {
+                        return Constants.PROFILES_CACHE.ssoLogin(null, profile.name);
+                    }
+                });
+                return success;
+            }
+        }
+        const checkCredsButton = vscode.l10n.t("Update Credentials");
+        const creds = await Gui.errorMessage(correlation.message, {
+            items: [checkCredsButton],
+            vsCodeOpts: { modal: true },
+        }).then(async (selection) => {
+            if (selection !== checkCredsButton) {
+                return;
+            }
+            return Constants.PROFILES_CACHE.promptCredentials(profile, true);
+        });
+        return creds != null ? true : false;
+    }
+
+    public static async openConfigForMissingHostname(profile: imperative.IProfileLoaded): Promise<void> {
+        const mProfileInfo = await Constants.PROFILES_CACHE.getProfileInfo();
+        Gui.errorMessage(vscode.l10n.t("Required parameter 'host' must not be blank."));
+        const profAllAttrs = mProfileInfo.getAllProfiles();
+        for (const prof of profAllAttrs) {
+            if (prof.profName === profile?.name) {
+                const filePath = prof.profLoc.osLoc[0];
+                await Constants.PROFILES_CACHE.openConfigFile(filePath);
+            }
+        }
+    }
+
     /*************************************************************************************************************
      * Error Handling
      * @param {errorDetails} - string or error object
      * @param {label} - additional information such as profile name, credentials, messageID etc
      * @param {moreInfo} - additional/customized error messages
      *************************************************************************************************************/
-    public static async errorHandling(errorDetails: Error | string, label?: string, moreInfo?: string): Promise<boolean> {
+    public static async errorHandling(errorDetails: Error | string, moreInfo?: ErrorContext): Promise<boolean> {
         // Use util.inspect instead of JSON.stringify to handle circular references
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        ZoweLogger.error(`${errorDetails.toString()}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null }));
+        ZoweLogger.error(`${errorDetails.toString()}\n` + util.inspect({ errorDetails, ...{ ...moreInfo, profile: undefined } }, { depth: null }));
+
+        const profile = typeof moreInfo.profile === "string" ? Constants.PROFILES_CACHE.loadNamedProfile(moreInfo.profile) : moreInfo?.profile;
+        const correlation = ErrorCorrelator.getInstance().correlateError(moreInfo?.apiType ?? ZoweExplorerApiType.All, errorDetails, {
+            profileType: profile?.type,
+            ...Object.keys(moreInfo).reduce((all, k) => (typeof moreInfo[k] === "string" ? { ...all, [k]: moreInfo[k] } : all), {}),
+            templateArgs: { profileName: profile?.name ?? "", ...moreInfo?.templateArgs },
+        });
         if (typeof errorDetails !== "string" && (errorDetails as imperative.ImperativeError)?.mDetails !== undefined) {
             const imperativeError: imperative.ImperativeError = errorDetails as imperative.ImperativeError;
             const httpErrorCode = Number(imperativeError.mDetails.errorCode);
             // open config file for missing hostname error
             if (imperativeError.toString().includes("hostname")) {
-                const mProfileInfo = await Constants.PROFILES_CACHE.getProfileInfo();
-                Gui.errorMessage(vscode.l10n.t("Required parameter 'host' must not be blank."));
-                const profAllAttrs = mProfileInfo.getAllProfiles();
-                for (const prof of profAllAttrs) {
-                    if (prof.profName === label.trim()) {
-                        const filePath = prof.profLoc.osLoc[0];
-                        await Constants.PROFILES_CACHE.openConfigFile(filePath);
-                        return false;
-                    }
-                }
+                await AuthUtils.openConfigForMissingHostname(profile);
+                return false;
             } else if (
-                httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
-                imperativeError.message.includes("All configured authentication methods failed")
+                profile != null &&
+                (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
+                    imperativeError.message.includes("All configured authentication methods failed"))
             ) {
-                const errMsg = vscode.l10n.t({
-                    message:
-                        "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
-                    args: [label],
-                    comment: ["Label"],
-                });
-                const errToken = vscode.l10n.t({
-                    message:
-                        // eslint-disable-next-line max-len
-                        "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
-                    args: [label],
-                    comment: ["Label"],
-                });
-                if (label.includes("[")) {
-                    label = label.substring(0, label.indexOf(" [")).trim();
-                }
-
-                if (imperativeError.mDetails.additionalDetails) {
-                    const tokenError: string = imperativeError.mDetails.additionalDetails;
-                    const isTokenAuth = await AuthUtils.isUsingTokenAuth(label);
-
-                    if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
-                        const message = vscode.l10n.t("Log in to Authentication Service");
-                        const success = Gui.showMessage(errToken, { items: [message] }).then(async (selection) => {
-                            if (selection) {
-                                return Constants.PROFILES_CACHE.ssoLogin(null, label);
-                            }
-                        });
-                        return success;
-                    }
-                }
-                const checkCredsButton = vscode.l10n.t("Update Credentials");
-                const creds = await Gui.errorMessage(errMsg, {
-                    items: [checkCredsButton],
-                    vsCodeOpts: { modal: true },
-                }).then(async (selection) => {
-                    if (selection !== checkCredsButton) {
-                        Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
-                        return;
-                    }
-                    return Constants.PROFILES_CACHE.promptCredentials(label.trim(), true);
-                });
-                return creds != null ? true : false;
+                return AuthUtils.promptForAuthentication(imperativeError, correlation, profile);
             }
         }
         if (errorDetails.toString().includes("Could not find profile")) {
             return false;
         }
-        if (moreInfo === undefined) {
-            moreInfo = errorDetails.toString().includes("Error") ? "" : "Error: ";
-        } else {
-            moreInfo += " ";
-        }
-        // Try to keep message readable since VS Code doesn't support newlines in error messages
-        Gui.errorMessage(moreInfo + errorDetails.toString().replace(/\n/g, " | "));
+
+        await ErrorCorrelator.getInstance().displayCorrelatedError(correlation, { templateArgs: { profileName: profile?.name ?? "" } });
         return false;
+    }
+
+    /**
+     * Prompts user to log in to authentication service.
+     * @param profileName The name of the profile used to log in
+     */
+    public static promptUserForSsoLogin(profileName: string): Thenable<void> {
+        return Gui.showMessage(
+            vscode.l10n.t({
+                message:
+                    "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
+                args: [profileName],
+                comment: ["Profile name"],
+            }),
+            { items: [vscode.l10n.t("Log in to Authentication Service")], vsCodeOpts: { modal: true } }
+        ).then(async (selection) => {
+            if (selection) {
+                await Constants.PROFILES_CACHE.ssoLogin(null, profileName);
+            }
+        });
     }
 
     /**

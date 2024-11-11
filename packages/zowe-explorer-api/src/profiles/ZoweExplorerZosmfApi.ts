@@ -119,7 +119,7 @@ export namespace ZoweExplorerZosmf {
      */
     export class UssApi extends CommonApi implements MainframeInteraction.IUss {
         public fileList(ussFilePath: string): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.List.fileList(this.getSession(), ussFilePath);
+            return zosfiles.List.fileList(this.getSession(), ussFilePath, { responseTimeout: this.profile?.profile?.responseTimeout });
         }
 
         public isFileTagBinOrAscii(ussFilePath: string): Promise<boolean> {
@@ -127,11 +127,14 @@ export namespace ZoweExplorerZosmf {
         }
 
         public getContents(inputFilePath: string, options: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.Download.ussFile(this.getSession(), inputFilePath, options);
+            return zosfiles.Download.ussFile(this.getSession(), inputFilePath, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                ...options,
+            });
         }
 
         public copy(outputPath: string, options?: Omit<object, "request">): Promise<Buffer> {
-            return zosfiles.Utilities.putUSSPayload(this.getSession(), outputPath, { ...(options ?? {}), request: "copy" });
+            return zosfiles.Utilities.putUSSPayload(this.getSession(), outputPath, { ...options, request: "copy" });
         }
 
         public async move(oldPath: string, newPath: string): Promise<void> {
@@ -142,11 +145,17 @@ export namespace ZoweExplorerZosmf {
         }
 
         public uploadFromBuffer(buffer: Buffer, filePath: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.Upload.bufferToUssFile(this.getSession(), filePath, buffer, options);
+            return zosfiles.Upload.bufferToUssFile(this.getSession(), filePath, buffer, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                ...options,
+            });
         }
 
         public putContent(inputFilePath: string, ussFilePath: string, options: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.Upload.fileToUssFile(this.getSession(), inputFilePath, ussFilePath, options);
+            return zosfiles.Upload.fileToUssFile(this.getSession(), inputFilePath, ussFilePath, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                ...options,
+            });
         }
 
         public async updateAttributes(ussPath: string, attributes: Partial<Types.FileAttributes>): Promise<zosfiles.IZosFilesResponse> {
@@ -199,17 +208,20 @@ export namespace ZoweExplorerZosmf {
             ussDirectoryPath: string,
             options?: zosfiles.IUploadOptions
         ): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.Upload.dirToUSSDirRecursive(this.getSession(), inputDirectoryPath, ussDirectoryPath, options);
+            return zosfiles.Upload.dirToUSSDirRecursive(this.getSession(), inputDirectoryPath, ussDirectoryPath, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                ...options,
+            });
         }
 
         public create(ussPath: string, type: string, mode?: string): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.Create.uss(this.getSession(), ussPath, type, mode);
+            return zosfiles.Create.uss(this.getSession(), ussPath, type, mode, { responseTimeout: this.profile?.profile?.responseTimeout });
         }
 
         public delete(ussPath: string, recursive?: boolean): Promise<zosfiles.IZosFilesResponse> {
             // handle zosmf api issue with file paths
             const fixedName = ussPath.startsWith("/") ? ussPath.substring(1) : ussPath;
-            return zosfiles.Delete.ussFile(this.getSession(), fixedName, recursive);
+            return zosfiles.Delete.ussFile(this.getSession(), fixedName, recursive, { responseTimeout: this.profile?.profile?.responseTimeout });
         }
 
         public async rename(currentUssPath: string, newUssPath: string): Promise<zosfiles.IZosFilesResponse> {
@@ -235,23 +247,35 @@ export namespace ZoweExplorerZosmf {
      */
     export class MvsApi extends CommonApi implements MainframeInteraction.IMvs {
         public dataSet(filter: string, options?: zosfiles.IListOptions): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.List.dataSet(this.getSession(), filter, options);
+            return zosfiles.List.dataSet(this.getSession(), filter, { responseTimeout: this.profile?.profile?.responseTimeout, ...options });
         }
 
         public allMembers(dataSetName: string, options?: zosfiles.IListOptions): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.List.allMembers(this.getSession(), dataSetName, options);
+            return zosfiles.List.allMembers(this.getSession(), dataSetName, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                ...options,
+            });
         }
 
         public getContents(dataSetName: string, options?: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.Download.dataSet(this.getSession(), dataSetName, options);
+            return zosfiles.Download.dataSet(this.getSession(), dataSetName, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                ...options,
+            });
         }
 
         public uploadFromBuffer(buffer: Buffer, dataSetName: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.Upload.bufferToDataSet(this.getSession(), buffer, dataSetName, options);
+            return zosfiles.Upload.bufferToDataSet(this.getSession(), buffer, dataSetName, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                ...options,
+            });
         }
 
         public putContents(inputFilePath: string, dataSetName: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.Upload.pathToDataSet(this.getSession(), inputFilePath, dataSetName, options);
+            return zosfiles.Upload.pathToDataSet(this.getSession(), inputFilePath, dataSetName, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                ...options,
+            });
         }
 
         public createDataSet(
@@ -259,15 +283,23 @@ export namespace ZoweExplorerZosmf {
             dataSetName: string,
             options?: Partial<zosfiles.ICreateDataSetOptions>
         ): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.Create.dataSet(this.getSession(), dataSetType, dataSetName, options);
+            return zosfiles.Create.dataSet(this.getSession(), dataSetType, dataSetName, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                ...options,
+            });
         }
 
         public createDataSetMember(dataSetName: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.Upload.bufferToDataSet(this.getSession(), Buffer.from(""), dataSetName, options);
+            return zosfiles.Upload.bufferToDataSet(this.getSession(), Buffer.from(""), dataSetName, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                ...options,
+            });
         }
 
         public allocateLikeDataSet(dataSetName: string, likeDataSetName: string): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.Create.dataSetLike(this.getSession(), dataSetName, likeDataSetName);
+            return zosfiles.Create.dataSetLike(this.getSession(), dataSetName, likeDataSetName, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+            });
         }
 
         public copyDataSetMember(
@@ -282,7 +314,7 @@ export namespace ZoweExplorerZosmf {
                 } else {
                     newOptions = {
                         ...options,
-                        ...{ "from-dataset": { dsn: fromDataSetName, member: fromMemberName } },
+                        "from-dataset": { dsn: fromDataSetName, member: fromMemberName },
                     };
                 }
             } else {
@@ -290,34 +322,59 @@ export namespace ZoweExplorerZosmf {
                 // we will need to break the interface definition in the ZoweExplorerApi
                 newOptions = { "from-dataset": { dsn: fromDataSetName, member: fromMemberName } };
             }
-            return zosfiles.Copy.dataSet(this.getSession(), { dsn: toDataSetName, member: toMemberName }, newOptions);
+            return zosfiles.Copy.dataSet(
+                this.getSession(),
+                { dsn: toDataSetName, member: toMemberName },
+                {
+                    responseTimeout: this.profile?.profile?.responseTimeout,
+                    ...newOptions,
+                }
+            );
         }
 
         public renameDataSet(currentDataSetName: string, newDataSetName: string): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.Rename.dataSet(this.getSession(), currentDataSetName, newDataSetName);
+            return zosfiles.Rename.dataSet(this.getSession(), currentDataSetName, newDataSetName, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+            });
         }
 
         public renameDataSetMember(dataSetName: string, oldMemberName: string, newMemberName: string): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.Rename.dataSetMember(this.getSession(), dataSetName, oldMemberName, newMemberName);
+            return zosfiles.Rename.dataSetMember(this.getSession(), dataSetName, oldMemberName, newMemberName, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+            });
         }
 
         public hMigrateDataSet(dataSetName: string): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.HMigrate.dataSet(this.getSession(), dataSetName);
+            return zosfiles.HMigrate.dataSet(this.getSession(), dataSetName, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+            });
         }
 
         public hRecallDataSet(dataSetName: string): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.HRecall.dataSet(this.getSession(), dataSetName);
+            return zosfiles.HRecall.dataSet(this.getSession(), dataSetName, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+            });
         }
 
         public deleteDataSet(dataSetName: string, options?: zosfiles.IDeleteDatasetOptions): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.Delete.dataSet(this.getSession(), dataSetName, options);
+            return zosfiles.Delete.dataSet(this.getSession(), dataSetName, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                ...options,
+            });
         }
 
         public dataSetsMatchingPattern(filter: string[], options?: zosfiles.IDsmListOptions): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.List.dataSetsMatchingPattern(this.getSession(), filter, options);
+            return zosfiles.List.dataSetsMatchingPattern(this.getSession(), filter, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                ...options,
+            });
         }
         public copyDataSet(fromDataSetName: string, toDataSetName: string, enq?: string, replace?: boolean): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.Copy.dataSet(this.getSession(), { dsn: toDataSetName }, { "from-dataset": { dsn: fromDataSetName }, enq, replace });
+            return zosfiles.Copy.dataSet(
+                this.getSession(),
+                { dsn: toDataSetName },
+                { "from-dataset": { dsn: fromDataSetName }, enq, replace, responseTimeout: this.profile?.profile?.responseTimeout }
+            );
         }
         public searchDataSets(searchOptions: zosfiles.ISearchOptions): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.Search.dataSets(this.getSession(), searchOptions);

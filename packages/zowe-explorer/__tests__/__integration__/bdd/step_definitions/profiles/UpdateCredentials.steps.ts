@@ -13,7 +13,6 @@ import * as fs from "fs";
 import * as path from "path";
 import { AfterAll, Then, When } from "@cucumber/cucumber";
 import { paneDivForTree } from "../../../../__common__/shared.wdio";
-import { TreeItem } from "wdio-vscode-service";
 import quickPick from "../../../../__pageobjects__/QuickPick";
 import { Key } from "webdriverio";
 
@@ -54,9 +53,17 @@ When(/a user who has profile with (.*) auth in team config/, function (authType:
 });
 When("the user has a profile in their Data Sets tree", async function () {
     this.treePane = await paneDivForTree("Data Sets");
-    this.profileNode = (await this.treePane.getVisibleItems()).pop() as TreeItem;
-    await expect(this.profileNode).toBeDefined();
-    await expect(await this.profileNode.getLabel()).toContain(this.authType);
+    await browser.waitUntil(async () => {
+        const visibleItems = await this.treePane.getVisibleItems();
+        for (const item of visibleItems) {
+            if ((await item.getLabel()) === `zosmf_${this.authType as string}`) {
+                this.profileNode = item;
+                return true;
+            }
+        }
+
+        return false;
+    });
 });
 When("a user clicks search button for the profile", async function () {
     await this.profileNode.elem.moveTo();

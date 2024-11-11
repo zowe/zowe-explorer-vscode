@@ -13,6 +13,8 @@ import "./style.css";
 import { ActionsBar } from "./ActionsBar";
 import { actionsColumn } from "./actionsColumn";
 import { CheckboxSelectionCallbackParams, HeaderCheckboxSelectionCallbackParams } from "ag-grid-community";
+import { GetLocaleTextParams } from "ag-grid-community";
+import * as l10n from "@vscode/l10n";
 
 const vscodeApi = acquireVsCodeApi();
 
@@ -23,6 +25,7 @@ function isFirstColumn(params: CheckboxSelectionCallbackParams | HeaderCheckboxS
 }
 
 export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewProps) => {
+  const [localization, setLocalizationContents] = useState<{ [key: string]: string }>({});
   const [tableData, setTableData] = useState<Table.ViewOpts | undefined>(data);
   const [theme, setTheme] = useState<string>(baseTheme ?? "ag-theme-quartz");
   const [selectionCount, setSelectionCount] = useState<number>(0);
@@ -76,6 +79,14 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
         return;
       }
 
+      if (event.data.command === "GET_LOCALIZATION") {
+        const { contents } = event.data;
+        setLocalizationContents(contents);
+        l10n.config({
+          contents: contents,
+        });
+      }
+
       const response = event.data;
       if (response.command === "ondatachanged") {
         // Update received from a VS Code extender; update table state
@@ -103,7 +114,13 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
 
     // Once the listener is in place, send a "ready signal" to the TableView instance to handle new data.
     vscodeApi.postMessage({ command: "ready" });
-  }, []);
+    vscodeApi.postMessage({ command: "GET_LOCALIZATION" });
+  }, [localization]);
+
+  const localizationMap = [
+    { key: "Page Size:", localized: l10n.t("Page Size:") },
+    { key: "Page", localized: l10n.t("Page") },
+  ];
 
   // Observe attributes of the `body` element to detect VS Code theme changes.
   useMutableObserver(
@@ -114,6 +131,22 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
     },
     { attributes: true }
   );
+
+  let getLocaleText = (params: GetLocaleTextParams<any, any>): string => {
+    switch (params.key) {
+      case "thousandSeparator":
+        return ".";
+      case "decimalSeparator":
+        return ",";
+      default:
+        if (params.defaultValue) {
+          const localizedObj = localizationMap.find((item) => item.key === params.defaultValue);
+          const localizedVal = localizedObj ? localizedObj.localized : params.defaultValue;
+          return localizedVal;
+        }
+        return "";
+    }
+  };
 
   return (
     <div className={`table-view ${theme} ag-theme-vsc ${contextMenu.open ? "ctx-menu-open" : ""}`}>
@@ -129,7 +162,9 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
         setVisibleColumns={setVisibleColumns}
         vscodeApi={vscodeApi}
       />
-      {tableData ? <AgGridReact {...tableProps(contextMenu, setSelectionCount, tableData, vscodeApi)} ref={gridRef} /> : null}
+      {tableData ? (
+        <AgGridReact {...tableProps(contextMenu, setSelectionCount, tableData, vscodeApi)} ref={gridRef} getLocaleText={getLocaleText} />
+      ) : null}
     </div>
   );
 };

@@ -25,6 +25,7 @@ import {
     ZoweScheme,
     FsJobsUtils,
     FsAbstractUtils,
+    ZoweExplorerApiType,
 } from "@zowe/zowe-explorer-api";
 import { IJob, IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -56,8 +57,11 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         if (!SharedContext.isSpoolFile(node)) {
             return;
         }
-        const statusBarMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching spool file..."));
-        await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
+        const statusBarMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Fetching spool file...")}`);
+        await JobFSProvider.instance.fetchSpoolAtUri(
+            node.resourceUri,
+            vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path)
+        );
         statusBarMsg.dispose();
     }
 
@@ -86,33 +90,42 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const results: [string, vscode.FileType][] = [];
 
         const jesApi = ZoweExplorerApiRegister.getJesApi(uriInfo.profile);
-        if (FsAbstractUtils.isFilterEntry(fsEntry)) {
-            if (!jesApi.getJobsByParameters) {
-                throw new Error(vscode.l10n.t("Failed to fetch jobs: getJobsByParameters is not implemented for this session's JES API."));
+        try {
+            if (FsAbstractUtils.isFilterEntry(fsEntry)) {
+                const jobFiles = await jesApi.getJobsByParameters({
+                    owner: fsEntry.filter["owner"] ?? "*",
+                    status: fsEntry.filter["status"] ?? "*",
+                    prefix: fsEntry.filter["prefix"] ?? "*",
+                });
+                for (const job of jobFiles) {
+                    if (!fsEntry.entries.has(job.jobid)) {
+                        const newJob = new JobEntry(job.jobid);
+                        newJob.job = job;
+                        fsEntry.entries.set(job.jobid, newJob);
+                    }
+                }
+            } else if (FsJobsUtils.isJobEntry(fsEntry)) {
+                const spoolFiles = await jesApi.getSpoolFiles(fsEntry.job.jobname, fsEntry.job.jobid);
+                for (const spool of spoolFiles) {
+                    const spoolName = FsJobsUtils.buildUniqueSpoolName(spool);
+                    if (!fsEntry.entries.has(spoolName)) {
+                        const newSpool = new SpoolEntry(spoolName);
+                        newSpool.spool = spool;
+                        fsEntry.entries.set(spoolName, newSpool);
+                    }
+                }
             }
-
-            const jobFiles = await jesApi.getJobsByParameters({
-                owner: fsEntry.filter["owner"] ?? "*",
-                status: fsEntry.filter["status"] ?? "*",
-                prefix: fsEntry.filter["prefix"] ?? "*",
+        } catch (err) {
+            this._handleError(err, {
+                apiType: ZoweExplorerApiType.Jes,
+                profileType: uriInfo.profile?.type,
+                retry: {
+                    fn: this.readDirectory.bind(this),
+                    args: [uri],
+                },
+                templateArgs: { profileName: uriInfo.profile?.name ?? "" },
             });
-            for (const job of jobFiles) {
-                if (!fsEntry.entries.has(job.jobid)) {
-                    const newJob = new JobEntry(job.jobid);
-                    newJob.job = job;
-                    fsEntry.entries.set(job.jobid, newJob);
-                }
-            }
-        } else if (FsJobsUtils.isJobEntry(fsEntry)) {
-            const spoolFiles = await jesApi.getSpoolFiles(fsEntry.job.jobname, fsEntry.job.jobid);
-            for (const spool of spoolFiles) {
-                const spoolName = FsJobsUtils.buildUniqueSpoolName(spool);
-                if (!fsEntry.entries.has(spoolName)) {
-                    const newSpool = new SpoolEntry(spoolName);
-                    newSpool.spool = spool;
-                    fsEntry.entries.set(spoolName, newSpool);
-                }
-            }
+            throw err;
         }
 
         for (const entry of fsEntry.entries) {
@@ -189,7 +202,6 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const bufBuilder = new BufferBuilder();
 
         const jesApi = ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile);
-
         if (jesApi.downloadSingleSpool) {
             await jesApi.downloadSingleSpool({
                 jobFile: spoolEntry.spool,
@@ -202,6 +214,8 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
         spoolEntry.data = bufBuilder.read() ?? new Uint8Array();
+        spoolEntry.mtime = Date.now();
+        spoolEntry.size = spoolEntry.data.byteLength;
         if (editor) {
             await this._updateResourceInEditor(uri);
         }
@@ -217,7 +231,25 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         const spoolEntry = this._lookupAsFile(uri) as SpoolEntry;
         if (!spoolEntry.wasAccessed) {
-            await this.fetchSpoolAtUri(uri);
+            try {
+                await this.fetchSpoolAtUri(uri);
+            } catch (err) {
+                this._handleError(err, {
+                    additionalContext: vscode.l10n.t({
+                        message: "Failed to get contents for {0}",
+                        args: [spoolEntry.name],
+                        comment: "Spool name",
+                    }),
+                    apiType: ZoweExplorerApiType.Jes,
+                    profileType: spoolEntry.metadata.profile.type,
+                    retry: {
+                        fn: this.readFile.bind(this),
+                        args: [uri],
+                    },
+                    templateArgs: { profileName: spoolEntry.metadata.profile?.name ?? "" },
+                });
+                throw err;
+            }
             spoolEntry.wasAccessed = true;
         }
 
@@ -276,7 +308,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param options Options for deleting the spool file or job
      * - `deleteRemote` - Deletes the job from the remote system if set to true.
      */
-    public async delete(uri: vscode.Uri, options: { readonly recursive: boolean; readonly deleteRemote: boolean }): Promise<void> {
+    public async delete(uri: vscode.Uri, options: { readonly recursive: boolean }): Promise<void> {
         const entry = this.lookup(uri, false);
         const isJob = FsJobsUtils.isJobEntry(entry);
         if (!isJob) {
@@ -284,11 +316,25 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         const parent = this._lookupParentDirectory(uri, false);
-
         const profInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-
-        if (options.deleteRemote) {
+        try {
             await ZoweExplorerApiRegister.getJesApi(profInfo.profile).deleteJob(entry.job.jobname, entry.job.jobid);
+        } catch (err) {
+            this._handleError(err, {
+                additionalContext: vscode.l10n.t({
+                    message: "Failed to delete job {0}",
+                    args: [entry.job.jobname],
+                    comment: "Job name",
+                }),
+                apiType: ZoweExplorerApiType.Jes,
+                profileType: profInfo.profile.type,
+                retry: {
+                    fn: this.delete.bind(this),
+                    args: [uri, options],
+                },
+                templateArgs: { profileName: profInfo.profile.name ?? "" },
+            });
+            throw err;
         }
         parent.entries.delete(entry.name);
         this._fireSoon({ type: vscode.FileChangeType.Deleted, uri });

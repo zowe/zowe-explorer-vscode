@@ -430,7 +430,7 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
                 uss: { addSingleSession: jest.fn(), mSessionNodes: [], refresh: jest.fn() } as any,
                 job: { addSingleSession: jest.fn(), mSessionNodes: [], refresh: jest.fn() } as any,
             }),
-            renameSpy: jest.spyOn(UssFSProvider.instance, "rename").mockImplementation(),
+            renameSpy: jest.spyOn(vscode.workspace.fs, "rename").mockImplementation(),
             getEncodingForFile: jest.spyOn(UssFSProvider.instance as any, "getEncodingForFile").mockReturnValue(undefined),
         };
         newMocks.ussDir.contextValue = Constants.USS_DIR_CONTEXT;
@@ -443,10 +443,9 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
 
         const newFullPath = "/u/user/newName";
         const errMessageMock = jest.spyOn(Gui, "errorMessage").mockImplementation();
-        const renameMock = jest.spyOn(UssFSProvider.instance, "rename").mockRejectedValueOnce(new Error("Rename error: file is busy"));
+        const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockRejectedValueOnce(new Error("Rename error: file is busy"));
         await blockMocks.ussDir.rename(newFullPath);
 
-        expect(errMessageMock).toHaveBeenCalledWith("Rename error: file is busy");
         errMessageMock.mockRestore();
         renameMock.mockRestore();
     });
@@ -631,7 +630,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
                 session: globalMocks.session,
                 profile: globalMocks.profileOne,
             }),
-            fspDelete: jest.spyOn(UssFSProvider.instance, "delete").mockImplementation(),
+            fspDelete: jest.spyOn(vscode.workspace.fs, "delete").mockImplementation(),
         };
 
         newMocks.ussNode = new ZoweUSSNode({
@@ -679,7 +678,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
-        jest.spyOn(UssFSProvider.instance, "delete").mockImplementationOnce(() => {
+        jest.spyOn(vscode.workspace.fs, "delete").mockImplementationOnce(() => {
             throw Error("testError");
         });
 
@@ -859,9 +858,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         const response = await blockMocks.childNode.getChildren();
         expect(response).toEqual([]);
         expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
-        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual(
-            "Retrieving response from USS list API Error: Throwing an error to check error handling for unit tests!"
-        );
+        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual("Throwing an error to check error handling for unit tests!");
     });
 
     it("Tests that when passing a session node that is not dirty the node.getChildren() method is exited early", async () => {

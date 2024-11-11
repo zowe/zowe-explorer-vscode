@@ -395,7 +395,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
         spy.mockResolvedValueOnce(undefined);
         await Profiles.getInstance().editZoweConfigFile();
         expect(spy).toHaveBeenCalled();
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation cancelled");
         spy.mockClear();
     });
     it("Tests that editZoweConfigFile opens correct file when Global is selected", async () => {
@@ -500,7 +500,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         spy.mockResolvedValueOnce(undefined);
         await Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree);
         expect(spy).toHaveBeenCalled();
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation cancelled");
         spy.mockClear();
     });
     it("Tests that createZoweSchema will open correct config file when cancelling creation in location with existing config file", async () => {
@@ -810,7 +810,7 @@ describe("Profiles Unit Tests - function getDeleteProfile", () => {
         const showMessageSpy = jest.spyOn(Gui, "showMessage");
         jest.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
         await expect(privateProfile.getDeleteProfile()).resolves.toEqual(undefined);
-        expect(showMessageSpy).toHaveBeenCalledWith("Operation Cancelled");
+        expect(showMessageSpy).toHaveBeenCalledWith("Operation cancelled");
     });
 });
 
@@ -891,13 +891,14 @@ describe("Profiles Unit Tests - function validateProfile", () => {
             throw testError;
         });
         const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling");
-        await Profiles.getInstance().validateProfiles({
+        const profile = {
             name: "test1",
             message: "",
             type: "",
             failNotFound: false,
-        });
-        expect(errorHandlingSpy).toHaveBeenCalledWith(testError, "test1");
+        };
+        await Profiles.getInstance().validateProfiles(profile);
+        expect(errorHandlingSpy).toHaveBeenCalledWith(testError, { profile });
     });
     it("should return an object with profile validation status of 'unverified' from session status if validated profiles doesn't exist", async () => {
         createBlockMocks();
@@ -2276,6 +2277,173 @@ describe("Profiles Unit Tests - function basicAuthClearSecureArray", () => {
         await Profiles.getInstance().basicAuthClearSecureArray("example_profile");
         expect(teamCfgMock.delete).toHaveBeenCalledWith(mergeArgsMock.knownArgs[0].argLoc.jsonLoc);
         expect(teamCfgMock.delete).toHaveBeenCalledWith(mergeArgsMock.knownArgs[1].argLoc.jsonLoc);
+        expect(teamCfgMock.set).not.toHaveBeenCalled();
+        expect(teamCfgMock.save).toHaveBeenCalled();
+        getProfileInfoMock.mockRestore();
+        getProfileFromConfigMock.mockRestore();
+    });
+
+    it("does not call Config.delete when user and password arg's are missing in mergeArgsForProfile", async () => {
+        const teamCfgMock = {
+            delete: jest.fn(),
+            save: jest.fn(),
+            set: jest.fn(),
+        };
+        const profAttrsMock = {
+            isDefaultProfile: false,
+            profName: "example_profile",
+            profType: "zosmf",
+            profLoc: {
+                jsonLoc: undefined,
+            },
+        };
+        const mergeArgsMock = {
+            knownArgs: [],
+        };
+        const getProfileInfoMock = jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: jest.fn().mockReturnValue(teamCfgMock),
+            mergeArgsForProfile: jest.fn().mockReturnValue(mergeArgsMock),
+        } as any);
+        const getProfileFromConfigMock = jest.spyOn(Profiles.getInstance(), "getProfileFromConfig").mockResolvedValue(profAttrsMock);
+
+        await Profiles.getInstance().basicAuthClearSecureArray("example_profile");
+        expect(teamCfgMock.delete).not.toHaveBeenCalled();
+        expect(teamCfgMock.set).not.toHaveBeenCalled();
+        expect(teamCfgMock.save).toHaveBeenCalled();
+        getProfileInfoMock.mockRestore();
+        getProfileFromConfigMock.mockRestore();
+    });
+});
+
+describe("Profiles Unit Tests - function tokenAuthClearSecureArray", () => {
+    it("calls Config APIs when profLoc.jsonLoc is valid, no loginTokenType provided", async () => {
+        const teamCfgMock = {
+            delete: jest.fn(),
+            save: jest.fn(),
+            set: jest.fn(),
+        };
+        const profAttrsMock = {
+            isDefaultProfile: false,
+            profName: "example_profile",
+            profType: "zosmf",
+            profLoc: {
+                jsonLoc: "/user/path/to/zowe.config.json",
+                locType: imperative.ProfLocType.TEAM_CONFIG,
+            },
+        };
+        const mergeArgsMock = {
+            knownArgs: [
+                {
+                    argName: "tokenType",
+                    argLoc: {
+                        jsonLoc: "profiles.example_profile.properties.tokenType",
+                    },
+                },
+                {
+                    argName: "tokenValue",
+                    argLoc: {
+                        jsonLoc: "profiles.example_profile.properties.tokenValue",
+                    },
+                },
+                {
+                    argName: "tokenExpiration",
+                    argLoc: {
+                        jsonLoc: "profiles.example_profile.properties.tokenExpiration",
+                    },
+                },
+            ],
+        };
+        const getProfileInfoMock = jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: jest.fn().mockReturnValue(teamCfgMock),
+            mergeArgsForProfile: jest.fn().mockReturnValue(mergeArgsMock),
+        } as any);
+        const getProfileFromConfigMock = jest.spyOn(Profiles.getInstance(), "getProfileFromConfig").mockResolvedValue(profAttrsMock);
+
+        await Profiles.getInstance().tokenAuthClearSecureArray("example_profile");
+        expect(teamCfgMock.delete).toHaveBeenCalledWith(mergeArgsMock.knownArgs[0].argLoc.jsonLoc);
+        expect(teamCfgMock.delete).toHaveBeenCalledWith(mergeArgsMock.knownArgs[1].argLoc.jsonLoc);
+        expect(teamCfgMock.delete).toHaveBeenCalledWith(mergeArgsMock.knownArgs[2].argLoc.jsonLoc);
+        expect(teamCfgMock.set).toHaveBeenCalledWith(`${profAttrsMock.profLoc.jsonLoc}.secure`, ["user", "password"]);
+        expect(teamCfgMock.save).toHaveBeenCalled();
+        getProfileInfoMock.mockRestore();
+        getProfileFromConfigMock.mockRestore();
+    });
+    it("calls Config APIs when profLoc.jsonLoc is valid, loginTokenType provided", async () => {
+        const teamCfgMock = {
+            delete: jest.fn(),
+            save: jest.fn(),
+            set: jest.fn(),
+        };
+        const profAttrsMock = {
+            isDefaultProfile: false,
+            profName: "example_profile",
+            profType: "zosmf",
+            profLoc: {
+                jsonLoc: "/user/path/to/zowe.config.json",
+                locType: imperative.ProfLocType.TEAM_CONFIG,
+            },
+        };
+        const mergeArgsMock = {
+            knownArgs: [
+                {
+                    argName: "tokenType",
+                    argLoc: {
+                        jsonLoc: "profiles.example_profile.properties.tokenType",
+                    },
+                },
+                {
+                    argName: "tokenValue",
+                    argLoc: {
+                        jsonLoc: "profiles.example_profile.properties.tokenValue",
+                    },
+                },
+                {
+                    argName: "tokenExpiration",
+                    argLoc: {
+                        jsonLoc: "profiles.example_profile.properties.tokenExpiration",
+                    },
+                },
+            ],
+        };
+        const getProfileInfoMock = jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: jest.fn().mockReturnValue(teamCfgMock),
+            mergeArgsForProfile: jest.fn().mockReturnValue(mergeArgsMock),
+        } as any);
+        const getProfileFromConfigMock = jest.spyOn(Profiles.getInstance(), "getProfileFromConfig").mockResolvedValue(profAttrsMock);
+
+        await Profiles.getInstance().tokenAuthClearSecureArray("example_profile", "apimlAuthenticationToken");
+        expect(teamCfgMock.delete).toHaveBeenCalledWith(mergeArgsMock.knownArgs[0].argLoc.jsonLoc);
+        expect(teamCfgMock.delete).toHaveBeenCalledWith(mergeArgsMock.knownArgs[1].argLoc.jsonLoc);
+        expect(teamCfgMock.delete).toHaveBeenCalledWith(mergeArgsMock.knownArgs[2].argLoc.jsonLoc);
+        expect(teamCfgMock.set).toHaveBeenCalledWith(`${profAttrsMock.profLoc.jsonLoc}.secure`, []);
+        expect(teamCfgMock.save).toHaveBeenCalled();
+        getProfileInfoMock.mockRestore();
+        getProfileFromConfigMock.mockRestore();
+    });
+    it("does not call Config.delete when tokenType, tokenValue, tokenExpiration arg's are missing in mergeArgsForProfile", async () => {
+        const teamCfgMock = {
+            delete: jest.fn(),
+            save: jest.fn(),
+            set: jest.fn(),
+        };
+        const profAttrsMock = {
+            isDefaultProfile: false,
+            profName: "example_profile",
+            profType: "zosmf",
+            profLoc: {
+                jsonLoc: undefined,
+            },
+        };
+        const mergeArgsMock = {
+            knownArgs: [],
+        };
+        const getProfileInfoMock = jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: jest.fn().mockReturnValue(teamCfgMock),
+            mergeArgsForProfile: jest.fn().mockReturnValue(mergeArgsMock),
+        } as any);
+        const getProfileFromConfigMock = jest.spyOn(Profiles.getInstance(), "getProfileFromConfig").mockResolvedValue(profAttrsMock);
+        await Profiles.getInstance().tokenAuthClearSecureArray("example_profile");
+        expect(teamCfgMock.delete).not.toHaveBeenCalled();
         expect(teamCfgMock.set).not.toHaveBeenCalled();
         expect(teamCfgMock.save).toHaveBeenCalled();
         getProfileInfoMock.mockRestore();

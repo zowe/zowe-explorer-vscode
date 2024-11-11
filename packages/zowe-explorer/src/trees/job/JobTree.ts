@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { IJob } from "@zowe/zos-jobs-for-zowe-sdk";
-import { Gui, Validation, imperative, IZoweJobTreeNode, PersistenceSchemaEnum, Poller, Types } from "@zowe/zowe-explorer-api";
+import { Gui, Validation, imperative, IZoweJobTreeNode, PersistenceSchemaEnum, Poller, Types, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import { ZoweJobNode } from "./ZoweJobNode";
 import { JobFSProvider } from "./JobFSProvider";
 import { JobUtils } from "./JobUtils";
@@ -39,7 +39,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     public static readonly Status = "Status: ";
     public static readonly defaultDialogText: string = vscode.l10n.t("Create new...");
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.Job;
-    private static readonly submitJobQueryLabel = vscode.l10n.t("$(check) Submit this query");
+    private static readonly submitJobQueryLabel = `$(check) ${vscode.l10n.t("Submit this query")}`;
     private static readonly chooseJobStatusLabel = "Job Status";
     public dragMimeTypes: string[] = ["application/vnd.code.tree.zowe.jobs.explorer"];
     public dropMimeTypes: string[] = ["application/vnd.code.tree.zowe.jobs.explorer"];
@@ -74,11 +74,11 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     public mFavorites: IZoweJobTreeNode[] = [];
     public lastOpened: Types.ZoweNodeInteraction = {};
     public searchByQuery = new FilterItem({
-        text: vscode.l10n.t("$(plus) Create job search filter"),
+        text: `$(plus) ${vscode.l10n.t("Create job search filter")}`,
         menuType: Definitions.JobPickerTypes.QuerySearch,
     });
     public searchById = new FilterItem({
-        text: vscode.l10n.t("$(search) Search by job ID"),
+        text: `$(search) ${vscode.l10n.t("Search by job ID")}`,
         menuType: Definitions.JobPickerTypes.IdSearch,
     });
     private treeView: vscode.TreeView<IZoweJobTreeNode>;
@@ -193,7 +193,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 if (err.toString().includes("hostname")) {
                     ZoweLogger.error(err);
                 } else {
-                    await AuthUtils.errorHandling(err, profile.name);
+                    await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Jes, profile });
                 }
             }
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
@@ -218,7 +218,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     public async delete(node: IZoweJobTreeNode): Promise<void> {
         ZoweLogger.trace("JobTree.delete called.");
 
-        await JobFSProvider.instance.delete(node.resourceUri, { recursive: false, deleteRemote: true });
+        await vscode.workspace.fs.delete(node.resourceUri, { recursive: false });
         const favNode = this.relabelFavoritedJob(node);
         favNode.contextValue = SharedContext.asFavorite(favNode);
         await this.removeFavorite(favNode);
@@ -425,7 +425,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 }
             } catch (error) {
                 const errMessage: string = vscode.l10n.t({
-                    message: `Error: You have Zowe Job favorites that refer to a non-existent CLI profile named: {0}.
+                    message: `Error: You have Zowe job favorites that refer to a non-existent CLI profile named: {0}.
                          To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.
                           Would you like to do this now? {1}`,
                     args: [profileName, SharedUtils.getAppName()],
@@ -579,7 +579,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         let cancelled = false;
         if (userSelected) {
             const checkConfirmation = vscode.l10n.t({
-                message: "This will remove all favorited Jobs items for profile {0}. Continue?",
+                message: "This will remove all favorited jobs items for profile {0}. Continue?",
                 args: [profileName],
                 comment: ["Profile name"],
             });
@@ -1052,11 +1052,11 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             msInterval: pollInterval,
             request: async () => {
                 const statusMsg = Gui.setStatusBarMessage(
-                    vscode.l10n.t({
-                        message: `$(sync~spin) Polling: {0}...`,
+                    `$(sync~spin) ${vscode.l10n.t({
+                        message: "Polling: {0}...",
                         args: [path.posix.basename(node.resourceUri.path)],
-                        comment: ["Unique Spool name"],
-                    }),
+                        comment: ["Unique spool name"],
+                    })}`,
                     Constants.STATUS_BAR_TIMEOUT_MS
                 );
                 await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
@@ -1110,16 +1110,16 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         const filterMethod = JobUtils.JOB_FILTER_OPTS.indexOf(selection);
 
         const userDismissed = filterMethod < 0;
-        const clearFilterOpt = vscode.l10n.t("$(clear-all) Clear filter for profile");
+        const clearFilterOpt = `$(clear-all) ${vscode.l10n.t("Clear filter for profile")}`;
         if (userDismissed || selection === clearFilterOpt) {
             if (selection === clearFilterOpt) {
                 this.updateFilterForJob(job, null);
                 Gui.setStatusBarMessage(
-                    vscode.l10n.t({
-                        message: "$(check) Filter cleared for {0}",
+                    `$(check) ${vscode.l10n.t({
+                        message: "Filter cleared for {0}",
                         args: [job.label as string],
                         comment: ["Job label"],
-                    }),
+                    })}`,
                     Constants.MS_PER_SEC * 4
                 );
             }
@@ -1146,11 +1146,11 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             SharedTreeProviders.job.refresh();
             this.updateFilterForJob(job, query);
             Gui.setStatusBarMessage(
-                vscode.l10n.t({
-                    message: "$(check) Filter updated for {0}",
+                `$(check) ${vscode.l10n.t({
+                    message: "Filter updated for {0}",
                     args: [job.label as string],
                     comment: ["Job label"],
-                }),
+                })}`,
                 Constants.MS_PER_SEC * 4
             );
         });

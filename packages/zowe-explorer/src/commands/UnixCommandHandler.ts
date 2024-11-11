@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosuss from "@zowe/zos-uss-for-zowe-sdk";
 import { ZoweCommandProvider } from "./ZoweCommandProvider";
-import { Gui, IZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTreeNode, ZoweExplorerApiType, imperative } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../tools/ZoweLogger";
@@ -43,11 +43,11 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         return this.instance;
     }
 
-    private static readonly defaultDialogText: string = vscode.l10n.t("$(plus) Create a new Unix command");
+    private static readonly defaultDialogText: string = `$(plus) ${vscode.l10n.t("Create a new Unix command")}`;
     private static instance: UnixCommandHandler;
     private serviceProf: imperative.IProfileLoaded = undefined;
     private unixCmdMsgs = {
-        opCancelledMsg: vscode.l10n.t("Operation Cancelled"),
+        opCancelledMsg: vscode.l10n.t("Operation cancelled"),
         issueCmdNotSupportedMsg: vscode.l10n.t({
             message: "Issuing commands is not supported for this profile type, {0}.",
             args: [this.serviceProf?.type],
@@ -58,7 +58,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             args: [this.serviceProf?.type],
             comment: ["Profile type"],
         }),
-        sshSessionErrorMsg: vscode.l10n.t("Error preparring SSH connection for issueing UNIX commands, please check SSH profile for correctness."),
+        sshSessionErrorMsg: vscode.l10n.t("Error preparing SSH connection for issuing UNIX commands, please check SSH profile for correctness."),
         sshProfNotFoundMsg: vscode.l10n.t("No SSH profile found. Please create an SSH profile."),
         sshProfMissingInfoMsg: vscode.l10n.t("SSH profile missing connection details. Please update."),
         noProfilesAvailableMsg: vscode.l10n.t("No profiles available."),
@@ -117,7 +117,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 // error would be due to missing API, assuming SSH profile not required
                 ZoweLogger.warn(
                     vscode.l10n.t(
-                        "Error checking if SSH profile type required for issueing UNIX commands, setting requirement to false for profile {0}.",
+                        "Error checking if SSH profile type required for issuing UNIX commands, setting requirement to false for profile {0}.",
                         [this.serviceProf?.name]
                     )
                 );
@@ -165,7 +165,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     })
                 );
             } else {
-                await AuthUtils.errorHandling(error, this.serviceProf.name);
+                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Command, profile: this.serviceProf });
             }
         }
     }
@@ -206,7 +206,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             });
             if (sshProfileNamesList.length) {
                 const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: vscode.l10n.t("Select the ssh Profile."),
+                    placeHolder: vscode.l10n.t("Select the SSH Profile."),
                     ignoreFocusOut: true,
                     canPickMany: false,
                 };
@@ -278,7 +278,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         if (profileNamesList.length) {
             if (!sshReq) {
                 const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: vscode.l10n.t("Select the Profile to use to submit the Unix command"),
+                    placeHolder: vscode.l10n.t("Select the profile to use to submit the Unix command"),
                     ignoreFocusOut: true,
                     canPickMany: false,
                 };
@@ -354,7 +354,6 @@ export class UnixCommandHandler extends ZoweCommandProvider {
 
     private async issueCommand(profile: imperative.IProfileLoaded, command: string, cwd: string): Promise<void> {
         ZoweLogger.trace("UnixCommandHandler.issueCommand called.");
-        const profName = this.sshProfile !== undefined ? this.sshProfile.name : profile.name;
         try {
             if (command) {
                 const user: string = profile.profile.user;
@@ -379,7 +378,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 this.serviceProf = undefined;
             }
         } catch (error) {
-            await AuthUtils.errorHandling(error, profName);
+            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Command, profile });
         }
     }
 }

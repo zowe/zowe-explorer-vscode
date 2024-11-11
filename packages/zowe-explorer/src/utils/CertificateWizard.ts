@@ -12,6 +12,7 @@
 import { Gui, WebView } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { ZoweLogger } from "../tools/ZoweLogger";
+import * as fs from "fs";
 
 export type CertWizardOpts = {
     cert?: string;
@@ -33,7 +34,7 @@ class DeferredPromise<T> {
 }
 
 const allFiles = vscode.l10n.t("All Files");
-const userDismissed = vscode.l10n.t("User dismissed the certificate wizard.");
+const userDismissed = vscode.l10n.t("User dismissed the Certificate Wizard.");
 
 export class CertificateWizard extends WebView {
     private opts: CertWizardOpts;
@@ -79,7 +80,7 @@ export class CertificateWizard extends WebView {
             case "promptCertKey":
                 {
                     const tempCertKey = await Gui.showOpenDialog({
-                        title: vscode.l10n.t("Enter the path to the certificate key for authenticating the connection."),
+                        title: vscode.l10n.t("Certificate Key for Authentication."),
                         defaultUri: this.opts.certKey ? vscode.Uri.file(this.opts.certKey) : undefined,
                         filters: {
                             [vscode.l10n.t("Certificate Keys")]: ["cer", "crt", "pem", "key"],
@@ -115,6 +116,23 @@ export class CertificateWizard extends WebView {
                 });
                 ZoweLogger.trace(userDismissed);
                 break;
+            case "GET_LOCALIZATION": {
+                const filePath = vscode.l10n.uri?.fsPath + "";
+                fs.readFile(filePath, "utf8", (err, data) => {
+                    if (err) {
+                        // File doesn't exist, fallback to English strings
+                        return;
+                    }
+                    if (!this.panel) {
+                        return;
+                    }
+                    this.panel.webview.postMessage({
+                        command: "GET_LOCALIZATION",
+                        contents: data,
+                    });
+                });
+                break;
+            }
             default:
                 break;
         }

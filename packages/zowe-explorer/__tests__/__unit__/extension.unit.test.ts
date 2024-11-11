@@ -233,6 +233,7 @@ async function createGlobalMocks() {
             "zowe.saveSearch",
             "zowe.addFavorite",
             "zowe.removeFavorite",
+            "zowe.addToWorkspace",
             "zowe.removeFavProfile",
             "zowe.openWithEncoding",
             "zowe.issueTsoCmd",
@@ -242,6 +243,9 @@ async function createGlobalMocks() {
             "zowe.compareWithSelected",
             "zowe.compareWithSelectedReadOnly",
             "zowe.compareFileStarted",
+            "zowe.copyExternalLink",
+            "zowe.revealOutputChannel",
+            "zowe.troubleshootError",
             "zowe.placeholderCommand",
         ],
     };
@@ -351,6 +355,11 @@ async function createGlobalMocks() {
             "zowe.automaticProfileValidation": true,
         }),
     });
+    jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
+        getTeamConfig: jest.fn().mockReturnValue({
+            exists: jest.fn(),
+        }),
+    } as any);
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
         value: jest.fn(() => {
             return { value: globalMocks.mockProfCacheProfileInfo, configurable: true };

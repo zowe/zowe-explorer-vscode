@@ -25,6 +25,7 @@ import {
     UssDirectory,
     FsAbstractUtils,
     MainframeInteraction,
+    ZoweExplorerApiType,
 } from "@zowe/zowe-explorer-api";
 import { USSUtils } from "./USSUtils";
 import { Constants } from "../../configuration/Constants";
@@ -158,10 +159,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             return;
         }
         ussEntry.attributes = { ...ussEntry.attributes, ...attributes };
-    }
-
-    public setProfileToChoice(profile: imperative.IProfileLoaded): void {
-        super.setProfileToChoice(profile, UssFSProvider.instance);
     }
 
     public get onUpdate(): vscode.Event<IZoweUSSTreeNode> {
@@ -364,7 +361,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         });
 
         try {
-            await UssFSProvider.instance.rename(oldUri, newUri, { overwrite: false });
+            await vscode.workspace.fs.rename(oldUri, newUri, { overwrite: false });
         } catch (err) {
             Gui.errorMessage(err.message);
             return;
@@ -416,7 +413,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             return;
         }
         try {
-            await UssFSProvider.instance.delete(this.resourceUri, { recursive: this.isFolder });
+            await vscode.workspace.fs.delete(this.resourceUri, { recursive: this.isFolder });
         } catch (err) {
             ZoweLogger.error(err);
             if (err instanceof Error) {
@@ -540,7 +537,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
                 }
             } catch (err) {
-                await AuthUtils.errorHandling(err, this.getProfileName());
+                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Uss, profile: this.getProfile() });
                 throw err;
             }
         }
@@ -581,7 +578,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     })
                 );
             } else {
-                await AuthUtils.errorHandling(err, this.getProfileName());
+                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Uss, profile: this.getProfile() });
             }
         }
     }
@@ -654,7 +651,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 );
             }
         } catch (error) {
-            await AuthUtils.errorHandling(error, this.label.toString(), vscode.l10n.t("Error uploading files"));
+            await AuthUtils.errorHandling(error, {
+                apiType: ZoweExplorerApiType.Uss,
+                profile: this.getProfile(),
+                scenario: vscode.l10n.t("Error uploading files"),
+            });
         }
     }
 
@@ -680,7 +681,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 return await UssFSProvider.instance.listFiles(profile, this.resourceUri);
             }
         } catch (error) {
-            const updated = await AuthUtils.errorHandling(error, this.getProfileName(), vscode.l10n.t("Retrieving response from USS list API"));
+            const updated = await AuthUtils.errorHandling(error, {
+                apiType: ZoweExplorerApiType.Uss,
+                profile: this.getProfile(),
+                scenario: vscode.l10n.t("Retrieving response from USS list API"),
+            });
             AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getUssApi(prof), this.getSessionNode(), updated && this);
             return { success: false, commandResponse: null };
         }

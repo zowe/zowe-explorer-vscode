@@ -10,11 +10,12 @@
  */
 
 import * as vscode from "vscode";
-import { DirEntry, FileEntry, IFileSystemEntry, FS_PROVIDER_DELAY, ConflictViewSelection, DeleteMetadata } from "./types";
+import { DirEntry, FileEntry, IFileSystemEntry, FS_PROVIDER_DELAY, ConflictViewSelection, DeleteMetadata, HandleErrorOpts } from "./types";
 import * as path from "path";
 import { FsAbstractUtils } from "./utils";
 import { Gui } from "../globals/Gui";
 import { ZosEncoding } from "../tree";
+import { ErrorCorrelator, ZoweExplorerApiType } from "../utils/ErrorCorrelator";
 
 export class BaseProvider {
     // eslint-disable-next-line no-magic-numbers
@@ -52,11 +53,11 @@ export class BaseProvider {
         }
         await vscode.workspace.fs.writeFile(uri.with({ query: "forceUpload=true" }), fsEntry.data);
         Gui.setStatusBarMessage(
-            vscode.l10n.t({
-                message: "$(check) Overwrite applied for {0}",
+            `$(check) ${vscode.l10n.t({
+                message: "Overwrite applied for {0}",
                 args: [fsEntry.name],
                 comment: "File name",
-            }),
+            })}`,
             this.FS_PROVIDER_UI_TIMEOUT
         );
         fsEntry.conflictData = null;
@@ -415,6 +416,24 @@ export class BaseProvider {
             entry = child;
         }
         return entry;
+    }
+
+    protected _handleError(err: Error, opts?: HandleErrorOpts): void {
+        ErrorCorrelator.getInstance()
+            .displayError(opts?.apiType ?? ZoweExplorerApiType.All, err, {
+                additionalContext: opts?.additionalContext,
+                allowRetry: opts?.retry?.fn != null,
+                profileType: opts?.profileType ?? "any",
+                templateArgs: opts?.templateArgs,
+            })
+            .then(async ({ userResponse }) => {
+                if (userResponse === "Retry" && opts?.retry?.fn != null) {
+                    await opts.retry.fn(...(opts?.retry.args ?? []));
+                }
+            })
+            .catch(() => {
+                throw err;
+            });
     }
 
     protected _lookupAsDirectory(uri: vscode.Uri, silent: boolean): DirEntry {

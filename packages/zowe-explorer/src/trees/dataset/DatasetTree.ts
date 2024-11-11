@@ -24,6 +24,7 @@ import {
     ZosEncoding,
     FsAbstractUtils,
     DatasetMatch,
+    ZoweExplorerApiType,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetFSProvider } from "./DatasetFSProvider";
@@ -52,9 +53,9 @@ import { DataSetTemplates } from "./DatasetTemplates";
  */
 export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implements Types.IZoweDatasetTreeType {
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.Dataset;
-    private static readonly defaultDialogText: string = vscode.l10n.t(
-        "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)"
-    );
+    private static readonly defaultDialogText: string = `$(plus) ${vscode.l10n.t(
+        "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)"
+    )}`;
     public mFavoriteSession: ZoweDatasetNode;
 
     public mSessionNodes: IZoweDatasetTreeNode[] = [];
@@ -363,7 +364,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 }
             } catch (error) {
                 const errMessage: string = vscode.l10n.t({
-                    message: `Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}.
+                    message: `Error: You have Zowe data set favorites that refer to a non-existent CLI profile named: {0}.
                     To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.
                     Would you like to do this now? {1}`,
                     args: [profileName, SharedUtils.getAppName()],
@@ -432,7 +433,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 if (err.toString().includes("hostname")) {
                     ZoweLogger.error(err);
                 } else {
-                    await AuthUtils.errorHandling(err, profile.name);
+                    await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile });
                 }
             }
             // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
@@ -670,7 +671,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         let cancelled = false;
         if (userSelected) {
             const checkConfirmation = vscode.l10n.t({
-                message: "This will remove all favorited Data Sets items for profile {0}. Continue?",
+                message: "This will remove all favorited data sets items for profile {0}. Continue?",
                 args: [profileName],
                 comment: ["Profile name"],
             });
@@ -1019,7 +1020,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     }
                 }
                 const options: vscode.InputBoxOptions = {
-                    prompt: vscode.l10n.t("Search Data Sets: use a comma to separate multiple patterns"),
+                    prompt: vscode.l10n.t("Search data sets: use a comma to separate multiple patterns"),
                     value: pattern,
                 };
                 // get user input
@@ -1058,7 +1059,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     response = await this.getChildren(sessionNode);
                 });
             } catch (err) {
-                await AuthUtils.errorHandling(err, String(node.label));
+                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
             }
             if (response.length === 0) {
                 return;
@@ -1151,7 +1152,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         };
         let afterMemberName = await Gui.showInputBox(options);
         if (!afterMemberName) {
-            Gui.showMessage(vscode.l10n.t("Rename operation cancelled."));
+            Gui.showMessage(vscode.l10n.t("Rename Operation cancelled."));
             return;
         }
         afterMemberName = afterMemberName.toUpperCase();
@@ -1160,14 +1161,14 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             vscode.l10n.t({
                 message: "Renaming data set {0}",
                 args: [afterMemberName],
-                comment: ["Old Data Set name"],
+                comment: ["Old data set name"],
             })
         );
         if (afterMemberName && afterMemberName !== beforeMemberName) {
             const newUri = node.resourceUri.with({
                 path: path.posix.join(path.posix.dirname(node.resourceUri.path), afterMemberName),
             });
-            await DatasetFSProvider.instance.rename(node.resourceUri, newUri, { overwrite: false });
+            await vscode.workspace.fs.rename(node.resourceUri, newUri, { overwrite: false });
             node.resourceUri = newUri;
             node.label = afterMemberName;
             node.tooltip = afterMemberName;
@@ -1206,7 +1207,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         };
         let afterDataSetName = await Gui.showInputBox(options);
         if (!afterDataSetName) {
-            Gui.showMessage(vscode.l10n.t("Rename operation cancelled."));
+            Gui.showMessage(vscode.l10n.t("Rename Operation cancelled."));
             return;
         }
         afterDataSetName = afterDataSetName.toUpperCase();
@@ -1215,14 +1216,14 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             vscode.l10n.t({
                 message: "Renaming data set {0}",
                 args: [afterDataSetName],
-                comment: ["Old Data Set name"],
+                comment: ["Old data set name"],
             })
         );
         if (afterDataSetName && afterDataSetName !== beforeDataSetName) {
             const newUri = node.resourceUri.with({
                 path: path.posix.join(path.posix.dirname(node.resourceUri.path), afterDataSetName),
             });
-            await DatasetFSProvider.instance.rename(node.resourceUri, newUri, { overwrite: false });
+            await vscode.workspace.fs.rename(node.resourceUri, newUri, { overwrite: false });
 
             // Rename corresponding node in Sessions or Favorites section (whichever one Rename wasn't called from)
             if (SharedContext.isFavorite(node)) {
@@ -1319,7 +1320,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             return;
         }
 
-        if (selection.label === vscode.l10n.t("$(fold) Sort Direction")) {
+        if (selection.label === DatasetUtils.DATASET_SORT_OPTS[4]) {
             // Update sort direction (if a new one was provided)
             const dir = await Gui.showQuickPick(Constants.SORT_DIRS, {
                 placeHolder: vscode.l10n.t("Select a sorting direction"),
@@ -1343,11 +1344,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         // Update sort for node based on selections
         this.updateSortForNode(node, { ...sortOpts, method: sortMethod }, isSession);
         Gui.setStatusBarMessage(
-            vscode.l10n.t({
-                message: "$(check) Sorting updated for {0}",
+            `$(check) ${vscode.l10n.t({
+                message: "Sorting updated for {0}",
                 args: [node.label as string],
                 comment: ["Node label"],
-            }),
+            })}`,
             Constants.MS_PER_SEC * 4
         );
     }
@@ -1436,7 +1437,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                   args: [node.label as string],
                   comment: ["Node label"],
               });
-        const clearFilter = isSession ? vscode.l10n.t("$(clear-all) Clear filter for profile") : vscode.l10n.t("$(clear-all) Clear filter for PDS");
+        const clearFilter = isSession
+            ? `$(clear-all) ${vscode.l10n.t("Clear filter for profile")}`
+            : `$(clear-all) ${vscode.l10n.t("Clear filter for PDS")}`;
         const selection = (
             await Gui.showQuickPick(
                 [...DatasetUtils.DATASET_FILTER_OPTS.map((sortOpt, i) => (node.filter?.method === i ? `${sortOpt} $(check)` : sortOpt)), clearFilter],
@@ -1457,11 +1460,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (selection === clearFilter) {
                 this.updateFilterForNode(node, null, isSession);
                 Gui.setStatusBarMessage(
-                    vscode.l10n.t({
-                        message: "$(check) Filter cleared for {0}",
+                    `$(check) ${vscode.l10n.t({
+                        message: "Filter cleared for {0}",
                         args: [node.label as string],
                         comment: ["Node label"],
-                    }),
+                    })}`,
                     Constants.MS_PER_SEC * 4
                 );
             }
@@ -1497,11 +1500,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             isSession
         );
         Gui.setStatusBarMessage(
-            vscode.l10n.t({
-                message: "$(check) Filter updated for {0}",
+            `$(check) ${vscode.l10n.t({
+                message: "Filter updated for {0}",
                 args: [node.label as string],
                 comment: ["Node label"],
-            }),
+            })}`,
             Constants.MS_PER_SEC * 4
         );
     }

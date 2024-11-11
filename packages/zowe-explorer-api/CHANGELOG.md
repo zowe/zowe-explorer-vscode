@@ -6,7 +6,20 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Update Zowe SDKs to `8.2.0` to get the latest enhancements from Imperative.
+
 ### Bug fixes
+
+- Fixed an issue to review inconsistent capitalization across translation strings. [#2935](https://github.com/zowe/zowe-explorer-vscode/issues/2935)
+- Fixed an issue where the `responseTimeout` profile property was ignored for z/OSMF MVS and USS API calls. [#3225](https://github.com/zowe/zowe-explorer-vscode/issues/3225)
+
+## `3.0.2`
+
+### New features and enhancements
+
+- Zowe Explorer now includes support for the [VS Code display languages](https://code.visualstudio.com/docs/getstarted/locales) French, German, Japanese, Portuguese, and Spanish. [#3239](https://github.com/zowe/zowe-explorer-vscode/pull/3239)
+- Localization of strings within the webviews. [#2983](https://github.com/zowe/zowe-explorer-vscode/issues/2983)
+- Leverage the new error correlation facility to provide user-friendly summaries of API and network errors. Extenders can also contribute to the correlator to provide human-readable translations of error messages, as well as tips and additional resources for how to resolve the error. [#3243](https://github.com/zowe/zowe-explorer-vscode/pull/3243)
 
 ## `3.0.1`
 

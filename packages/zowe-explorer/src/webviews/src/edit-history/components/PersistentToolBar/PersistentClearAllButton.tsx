@@ -12,8 +12,8 @@
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
 import { useDataPanelContext } from "../PersistentUtils";
-import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
-import * as nls from "@vscode/l10n";
+import PersistentVSCodeAPI from "../../../PersistentVSCodeAPI";
+import * as l10n from "@vscode/l10n";
 
 export default function PersistentClearAllButton(): JSXInternal.Element {
   const { type, selection } = useDataPanelContext();
@@ -29,11 +29,11 @@ export default function PersistentClearAllButton(): JSXInternal.Element {
   };
 
   const renderClearAllButton = () => {
-    const clearAllText = nls.t("Clear All");
+    const clearAllText = l10n.t("Clear All");
     const selectionType = ["search", "fileHistory", "encodingHistory"];
     return selectionType.includes(selection[type]) ? (
       <VSCodeButton title={clearAllText} appearance="secondary" style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
-        Clear All
+        {clearAllText}
       </VSCodeButton>
     ) : null;
   };
