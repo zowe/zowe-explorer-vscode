@@ -26,6 +26,7 @@ export class Constants {
     public static readonly HOME_SUFFIX = Constants.CONTEXT_PREFIX + "home";
     public static readonly FAV_PROFILE_CONTEXT = "profile_fav";
     public static readonly RC_SUFFIX = Constants.CONTEXT_PREFIX + "rc=";
+    public static readonly TYPE_SUFFIX = Constants.CONTEXT_PREFIX + "type=";
     public static readonly VALIDATE_SUFFIX = Constants.CONTEXT_PREFIX + "validate";
     public static readonly NO_VALIDATE_SUFFIX = Constants.CONTEXT_PREFIX + "noValidate";
     public static readonly INFORMATION_CONTEXT = "information";
