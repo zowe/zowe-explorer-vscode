@@ -663,7 +663,6 @@
   "Phase Name": "",
   "Error Details": "",
   "Fetching spool file...": "",
-  "Failed to get contents for {0}": "",
   "Failed to delete job {0}": "",
   "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}": "",
   "Job {0} was deleted.": "",

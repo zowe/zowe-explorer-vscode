@@ -494,12 +494,6 @@
   "Phase Name": "Phase Name",
   "Error Details": "Error Details",
   "Fetching spool file...": "Fetching spool file...",
-  "Failed to get contents for {0}/Spool name": {
-    "message": "Failed to get contents for {0}",
-    "comment": [
-      "Spool name"
-    ]
-  },
   "Failed to delete job {0}/Job name": {
     "message": "Failed to delete job {0}",
     "comment": [
