@@ -217,11 +217,43 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         await Profiles.getInstance().editSession(profile);
     }
 
+    private setStatusForSession(node: IZoweTreeNode, status: Validation.ValidationType): void {
+        let statusContext: string;
+        switch (status) {
+            default:
+            case Validation.ValidationType.UNVERIFIED:
+                statusContext = Constants.UNVERIFIED_CONTEXT;
+                break;
+            case Validation.ValidationType.VALID:
+                statusContext = Constants.ACTIVE_CONTEXT;
+                break;
+            case Validation.ValidationType.INVALID:
+                statusContext = Constants.INACTIVE_CONTEXT;
+                break;
+        }
+
+        node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
+        node.contextValue = node.contextValue + statusContext;
+        const inactiveIcon = IconGenerator.getIconById(IconUtils.IconId.sessionInactive);
+        if (inactiveIcon) {
+            node.iconPath = inactiveIcon.path;
+        }
+        this.nodeDataChanged(node as T);
+    }
+
+    private updateSessionContext(profileName: string, status: Validation.ValidationType): void {
+        for (const provider of Object.values(SharedTreeProviders.providers)) {
+            const session = (provider as IZoweTree<IZoweTreeNode>).mSessionNodes.find((n) => n.getProfileName() === profileName);
+            (provider as ZoweTreeProvider<T>)?.setStatusForSession(session, status);
+        }
+    }
+
     public async checkCurrentProfile(node: IZoweTreeNode): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("ZoweTreeProvider.checkCurrentProfile called.");
         const profile = node.getProfile();
+        const profileName = profile.name ?? node.getProfileName();
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
-        const didLogin = await ZoweTreeProvider.checkJwtTokenForProfile(node.getProfileName());
+        const didLogin = await ZoweTreeProvider.checkJwtTokenForProfile(profileName);
         if (!didLogin) {
             // Mark profile as inactive if user dismissed "token expired/login" prompt
             profileStatus.status = "inactive";
@@ -232,12 +264,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
                 SharedContext.isSessionNotFav(node) &&
                 (node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))
             ) {
-                node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
-                node.contextValue = node.contextValue + Constants.INACTIVE_CONTEXT;
-                const inactiveIcon = IconGenerator.getIconById(IconUtils.IconId.sessionInactive);
-                if (inactiveIcon) {
-                    node.iconPath = inactiveIcon.path;
-                }
+                this.updateSessionContext(profileName, Validation.ValidationType.INVALID);
                 Profiles.getInstance().validProfile = Validation.ValidationType.INVALID;
             }
 
@@ -247,12 +274,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
                 SharedContext.isSessionNotFav(node) &&
                 (node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))
             ) {
-                node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
-                node.contextValue = node.contextValue + Constants.ACTIVE_CONTEXT;
-                const activeIcon = IconGenerator.getIconById(IconUtils.IconId.sessionActive);
-                if (activeIcon) {
-                    node.iconPath = activeIcon.path;
-                }
+                this.updateSessionContext(profileName, Validation.ValidationType.VALID);
                 Profiles.getInstance().validProfile = Validation.ValidationType.VALID;
             }
         } else if (profileStatus.status === "unverified") {
@@ -260,8 +282,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
                 SharedContext.isSessionNotFav(node) &&
                 (node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))
             ) {
-                node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
-                node.contextValue = node.contextValue + Constants.UNVERIFIED_CONTEXT;
+                this.updateSessionContext(profileName, Validation.ValidationType.UNVERIFIED);
                 Profiles.getInstance().validProfile = Validation.ValidationType.UNVERIFIED;
             }
         }
