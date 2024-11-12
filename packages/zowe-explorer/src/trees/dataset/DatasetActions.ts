@@ -1854,7 +1854,7 @@ export class DatasetActions {
             for (const child of childrenToOpen) {
                 const childUri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: child.uri as string });
                 await DatasetFSProvider.instance.remoteLookupForResource(childUri);
-                Gui.showTextDocument(childUri, { preview: false }).then(
+                void Gui.showTextDocument(childUri, { preview: false }).then(
                     (editor) => {
                         const startPosition = new vscode.Position((child.line as number) - 1, (child.column as number) - 1);
                         const endPosition = new vscode.Position(
@@ -1942,20 +1942,21 @@ export class DatasetActions {
         for (const ds of matches) {
             const dsn = ds.dsn as string;
             const member = ds.member as string;
+            const extension = DatasetUtils.getExtension(ds.dsn);
+
+            let name: string = dsn;
+            let uri = generateFullUri ? node.getSessionNode().resourceUri.path + dsn : node.resourceUri.path;
+
+            if (member) {
+                uri = uri + "/" + member;
+                name = name + "(" + member + ")";
+            }
+
+            if (extension != null) {
+                uri += extension;
+            }
+
             for (const match of ds.matchList) {
-                let name: string = dsn;
-                let uri = generateFullUri ? node.getSessionNode().resourceUri.path + dsn : node.resourceUri.path;
-
-                if (member) {
-                    uri = uri + "/" + member;
-                    name = name + "(" + member + ")";
-                }
-
-                const extension = DatasetUtils.getExtension(ds.dsn);
-                if (extension != null) {
-                    uri += extension;
-                }
-
                 newMatches.push({
                     name,
                     line: match.line as number,
