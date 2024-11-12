@@ -122,7 +122,7 @@ export class AuthUtils {
      * Prompts user to log in to authentication service.
      * @param profileName The name of the profile used to log in
      */
-    public static promptUserForSsoLogin(profileName: string): Thenable<string> {
+    public static promptForSsoLogin(profileName: string): Thenable<string> {
         return Gui.showMessage(
             vscode.l10n.t({
                 message:

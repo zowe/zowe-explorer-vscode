@@ -682,10 +682,10 @@ describe("Tree Provider Unit Tests - function checkJwtTokenForProfile", () => {
     it("prompts the user to log in if a JWT token is present and has expired", async () => {
         const blockMocks = getBlockMocks();
         blockMocks.hasTokenExpiredForProfile.mockReturnValueOnce(true);
-        const promptUserForSsoLogin = jest.spyOn(AuthUtils, "promptUserForSsoLogin").mockImplementation();
+        const promptForSsoLogin = jest.spyOn(AuthUtils, "promptForSsoLogin").mockImplementation();
         await (ZoweTreeProvider as any).checkJwtTokenForProfile("zosmf");
         expect(blockMocks.hasTokenExpiredForProfile).toHaveBeenCalledWith("zosmf");
-        expect(promptUserForSsoLogin).toHaveBeenCalled();
+        expect(promptForSsoLogin).toHaveBeenCalled();
     });
 });
 

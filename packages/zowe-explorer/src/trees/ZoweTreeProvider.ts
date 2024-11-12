@@ -351,7 +351,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         const profInfo = await Profiles.getInstance().getProfileInfo();
 
         if (profInfo.hasTokenExpiredForProfile(profileName)) {
-            const userResponse = await AuthUtils.promptUserForSsoLogin(profileName);
+            const userResponse = await AuthUtils.promptForSsoLogin(profileName);
             if (userResponse === vscode.l10n.t("Log in to Authentication Service")) {
                 return true;
             }
