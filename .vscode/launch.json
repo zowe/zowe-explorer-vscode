@@ -39,6 +39,15 @@
     },
     {
       "type": "node",
+      "name": "Current Unit Tests (Jest)",
+      "request": "launch",
+      "runtimeArgs": ["--inspect-brk", "${workspaceFolder}/node_modules/jest/bin/jest", "-i", "${fileBasenameNoExtension}"],
+      "cwd": "${workspaceFolder}/packages/zowe-explorer",
+      "console": "integratedTerminal",
+      "sourceMaps": true
+    },
+    {
+      "type": "node",
       "name": "API Unit Tests (Jest)",
       "request": "launch",
       "runtimeArgs": ["--inspect-brk", "${workspaceFolder}/node_modules/jest/bin/jest", "-i"],
