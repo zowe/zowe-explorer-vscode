@@ -1069,11 +1069,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             // set new search patterns for each child of getChildren
             this.applyPatternsToChildren(response, dsSets, sessionNode);
             this.addSearchHistory(pattern);
+            await TreeViewUtils.expandNode(sessionNode, this);
         }
         if (!SharedContext.isFavorite(sessionNode)) {
             sessionNode.resourceUri = sessionNode.resourceUri.with({ query: `pattern=${pattern}` });
         }
-        await TreeViewUtils.expandNode(sessionNode, this);
         this.refresh();
     }
 
