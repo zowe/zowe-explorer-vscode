@@ -117,8 +117,12 @@ export class Profiles extends ProfilesCache {
                 (profile) => !(profile.name === theProfile.name && profile.status !== "unverified")
             );
             try {
-                await Profiles.getInstance().ssoLogin(null, theProfile.name);
+                const loggedIn = await Profiles.getInstance().ssoLogin(null, theProfile.name);
                 theProfile = Profiles.getInstance().loadNamedProfile(theProfile.name);
+
+                if (!loggedIn) {
+                    return { ...profileStatus, status: "inactive" };
+                }
             } catch (error) {
                 await AuthUtils.errorHandling(error, { profile: theProfile });
                 return profileStatus;
@@ -823,8 +827,6 @@ export class Profiles extends ProfilesCache {
                         comment: ["Service profile name"],
                     })
                 );
-            } else {
-                Gui.showMessage(this.profilesOpCancelled);
             }
             return loginOk;
         } catch (err) {
