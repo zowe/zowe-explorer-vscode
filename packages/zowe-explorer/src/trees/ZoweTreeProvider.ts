@@ -333,7 +333,8 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
      * @returns
      * `true` if:
      * - the user attempted to log in
-     * - the profile's token has not expired
+     * - the profile does not have a token
+     * - the token has not expired on the profile
      *
      * `false` if:
      * - they selected "Cancel" / closed the login prompt

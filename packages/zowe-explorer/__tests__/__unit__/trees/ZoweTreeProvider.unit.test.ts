@@ -311,7 +311,7 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
             testIJob: createIJobObject(),
             testJobsProvider: await JobInit.createJobsTree(imperative.Logger.getAppLogger()),
             jobNode: null,
-            checkJwtTokenForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtTokenForProfile").mockImplementationOnce(() => {}),
+            checkJwtTokenForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtTokenForProfile").mockResolvedValueOnce(true),
         };
 
         newMocks.jobNode = new ZoweJobNode({
@@ -358,6 +358,11 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
     it("Tests that checkCurrentProfile is executed successfully with inactive status", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValueOnce({
+            ds: { setStatusForSession: jest.fn(), mSessionNodes: [createDatasetSessionNode(createISession(), createIProfile())] } as any,
+            uss: { setStatusForSession: jest.fn(), mSessionNodes: [createUSSSessionNode(createISession(), createIProfile())] } as any,
+            job: { setStatusForSession: jest.fn(), mSessionNodes: [createJobSessionNode(createISession(), createIProfile())] } as any,
+        });
         blockMocks.jobNode.contextValue = "session";
         globalMocks.mockCheckCurrentProfile.mockResolvedValueOnce({
             name: globalMocks.testProfile.name,
