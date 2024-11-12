@@ -41,6 +41,12 @@ import { FilterItem } from "../../management/FilterManagement";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { Definitions } from "../../configuration/Definitions";
 
+interface ISearchOptions {
+    node: IZoweDatasetTreeNode;
+    pattern: string;
+    searchString: string;
+}
+
 export class DatasetActions {
     public static typeEnum: zosfiles.CreateDataSetTypeEnum;
     public static newDSProperties;
@@ -1767,7 +1773,7 @@ export class DatasetActions {
     }
 
     public static async search(context: vscode.ExtensionContext, node: IZoweDatasetTreeNode): Promise<void> {
-        const generateFullUri = (SharedContext.isSessionNotFav(node) && node.pattern) || SharedContext.isFavoriteSearch(node);
+        const generateFullUri = (SharedContext.isSessionNotFav(node) && node.pattern != null) || SharedContext.isFavoriteSearch(node);
         const pattern = SharedContext.isSessionNotFav(node) ? node.pattern : node.label.toString();
 
         if (!pattern) {
@@ -1781,89 +1787,18 @@ export class DatasetActions {
             return;
         }
 
-        const profile = node.getProfile();
-        const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
-        let response: zosfiles.IZosFilesResponse;
-
-        await Gui.withProgress(
+        const response: zosfiles.IZosFilesResponse = await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
                 title: vscode.l10n.t('Searching for "{0}"', searchString),
                 cancellable: true,
             },
             async (progress, token) => {
-                if (token.isCancellationRequested) {
-                    Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
-                    return;
-                }
-
-                let realPercentComplete = 0;
-                const task: imperative.ITaskWithStatus = {
-                    set percentComplete(value: number) {
-                        realPercentComplete = value;
-                        // eslint-disable-next-line no-magic-numbers
-                        Gui.reportProgress(progress, 100, value - 1, vscode.l10n.t("Percent Complete"));
-                    },
-                    get percentComplete(): number {
-                        return realPercentComplete;
-                    },
-                    statusMessage: "",
-                    stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
-                };
-
-                try {
-                    response = await mvsApi.searchDataSets({
-                        pattern,
-                        searchString,
-                        progressTask: task,
-                        mainframeSearch: false,
-                        continueSearch: DatasetActions.continueSearchPrompt,
-                    });
-                    if (response.success === false && response.apiResponse == null) {
-                        await AuthUtils.errorHandling(response.errorMessage, {
-                            profile: node.getProfileName(),
-                            scenario: "Error encountered when searching data sets",
-                        });
-                        return;
-                    }
-                } catch (err) {
-                    ZoweLogger.error(err);
-                    await AuthUtils.errorHandling(err);
-                    return;
-                }
+                return this.performSearch(progress, token, { node, pattern, searchString });
             }
         );
-        const matches = response.apiResponse;
-        const newMatches: any = [];
 
-        for (const ds of matches) {
-            const dsn = ds.dsn as string;
-            const member = ds.member as string;
-            for (const match of ds.matchList) {
-                let name: string = dsn;
-                let uri = generateFullUri ? node.getSessionNode().resourceUri.path + dsn : node.resourceUri.path;
-
-                if (member) {
-                    uri = uri + "/" + member;
-                    name = name + "(" + member + ")";
-                }
-
-                const extension = DatasetUtils.getExtension(ds.dsn);
-                if (extension != null) {
-                    uri += extension;
-                }
-
-                newMatches.push({
-                    name,
-                    line: match.line as number,
-                    column: match.column as number,
-                    position: (match.line as number).toString() + ":" + (match.column as number).toString(),
-                    contents: match.contents,
-                    uri,
-                    searchString,
-                });
-            }
-        }
+        const matches = this.getSearchMatches(node, response, generateFullUri, searchString);
 
         const table = new TableBuilder(context)
             .title(vscode.l10n.t('Search Results for "{0}"', searchString))
@@ -1875,7 +1810,7 @@ export class DatasetActions {
                 suppressRowClickSelection: true,
             })
             .isView()
-            .rows(...newMatches)
+            .rows(...matches)
             .columns(
                 ...[
                     {
@@ -1948,5 +1883,90 @@ export class DatasetActions {
         });
 
         return resp === vscode.l10n.t("Yes");
+    }
+
+    private static async performSearch(progress: any, token: vscode.CancellationToken, options: ISearchOptions): Promise<zosfiles.IZosFilesResponse> {
+        const profile = options.node.getProfile();
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
+        let response: zosfiles.IZosFilesResponse;
+        if (token.isCancellationRequested) {
+            Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+            return;
+        }
+
+        let realPercentComplete = 0;
+        const task: imperative.ITaskWithStatus = {
+            set percentComplete(value: number) {
+                realPercentComplete = value;
+                // eslint-disable-next-line no-magic-numbers
+                Gui.reportProgress(progress, 100, value - 1, vscode.l10n.t("Percent Complete"));
+            },
+            get percentComplete(): number {
+                return realPercentComplete;
+            },
+            statusMessage: "",
+            stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
+        };
+
+        try {
+            response = await mvsApi.searchDataSets({
+                pattern: options.pattern,
+                searchString: options.searchString,
+                progressTask: task,
+                mainframeSearch: false,
+                continueSearch: DatasetActions.continueSearchPrompt,
+            });
+            if (response.success === false && response.apiResponse == null) {
+                await AuthUtils.errorHandling(response.errorMessage, {
+                    profile: options.node.getProfileName(),
+                    scenario: "Error encountered when searching data sets",
+                });
+                return;
+            }
+        } catch (err) {
+            ZoweLogger.error(err);
+            await AuthUtils.errorHandling(err);
+            return;
+        }
+    }
+
+    private static getSearchMatches(
+        node: IZoweDatasetTreeNode,
+        response: any,
+        generateFullUri: boolean,
+        searchString: string
+    ): Record<string, any>[] {
+        const matches = response.apiResponse;
+        const newMatches: object[] = [];
+
+        for (const ds of matches) {
+            const dsn = ds.dsn as string;
+            const member = ds.member as string;
+            for (const match of ds.matchList) {
+                let name: string = dsn;
+                let uri = generateFullUri ? node.getSessionNode().resourceUri.path + dsn : node.resourceUri.path;
+
+                if (member) {
+                    uri = uri + "/" + member;
+                    name = name + "(" + member + ")";
+                }
+
+                const extension = DatasetUtils.getExtension(ds.dsn);
+                if (extension != null) {
+                    uri += extension;
+                }
+
+                newMatches.push({
+                    name,
+                    line: match.line as number,
+                    column: match.column as number,
+                    position: (match.line as number).toString() + ":" + (match.column as number).toString(),
+                    contents: match.contents,
+                    uri,
+                    searchString,
+                });
+            }
+        }
+        return newMatches;
     }
 }

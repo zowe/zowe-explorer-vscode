@@ -3009,3 +3009,80 @@ describe("Dataset Actions Unit Tests - function copyName", () => {
         expect(mocked(vscode.env.clipboard.writeText)).toHaveBeenCalledWith("A.DS.MIGRAT");
     });
 });
+
+describe("Dataset Actions Unit Tests - function search", () => {
+    describe("Helper function - continueSearchPrompt", () => {
+        let infoMessageSpy: jest.SpyInstance;
+
+        beforeAll(() => {
+            infoMessageSpy = jest.spyOn(Gui, "infoMessage");
+        });
+
+        beforeEach(() => {
+            infoMessageSpy.mockReset();
+        });
+
+        it("should return true if there are under 50 data sets", async () => {
+            let i = 1;
+            const dataSets: zosfiles.IDataSet[] = [];
+            while (i < 49) {
+                dataSets.push({ dsn: "TEST.DATA.SET." + i.toString() });
+                i++;
+            }
+
+            const result = await (DatasetActions as any).continueSearchPrompt(dataSets);
+
+            expect(infoMessageSpy).toHaveBeenCalledTimes(0);
+            expect(result).toEqual(true);
+        });
+
+        it("should return true if the user responds with yes", async () => {
+            let i = 1;
+            const dataSets: zosfiles.IDataSet[] = [];
+            while (i < 55) {
+                dataSets.push({ dsn: "TEST.DATA.SET." + i.toString() });
+                i++;
+            }
+
+            infoMessageSpy.mockResolvedValue("Yes");
+            const result = await (DatasetActions as any).continueSearchPrompt(dataSets);
+
+            expect(infoMessageSpy).toHaveBeenCalledTimes(1);
+            expect(result).toEqual(true);
+        });
+
+        it("should return false if the user responds with no", async () => {
+            let i = 1;
+            const dataSets: zosfiles.IDataSet[] = [];
+            while (i < 55) {
+                dataSets.push({ dsn: "TEST.DATA.SET." + i.toString() });
+                i++;
+            }
+
+            infoMessageSpy.mockResolvedValue("No");
+            const result = await (DatasetActions as any).continueSearchPrompt(dataSets);
+
+            expect(infoMessageSpy).toHaveBeenCalledTimes(1);
+            expect(result).toEqual(false);
+        });
+
+        it("should return false if the user cancels", async () => {
+            let i = 1;
+            const dataSets: zosfiles.IDataSet[] = [];
+            while (i < 55) {
+                dataSets.push({ dsn: "TEST.DATA.SET." + i.toString() });
+                i++;
+            }
+
+            infoMessageSpy.mockResolvedValue(undefined);
+            const result = await (DatasetActions as any).continueSearchPrompt(dataSets);
+
+            expect(infoMessageSpy).toHaveBeenCalledTimes(1);
+            expect(result).toEqual(false);
+        });
+    });
+    //describe("Helper function - performSearch", async() => {});
+    //describe("Helper function - getSearchMatches", () => {});
+    //describe("Helper function - openSearchAtLocation", () => {});
+    //describe("Main function", async() => {});
+});
