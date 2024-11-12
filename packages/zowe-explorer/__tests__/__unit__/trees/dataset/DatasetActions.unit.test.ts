@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { Gui, imperative, Validation, Types, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, Validation, Types, ZoweExplorerApiType, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import {
@@ -3022,6 +3022,10 @@ describe("Dataset Actions Unit Tests - function search", () => {
             infoMessageSpy.mockReset();
         });
 
+        afterAll(() => {
+            infoMessageSpy.mockRestore();
+        });
+
         it("should return true if there are under 50 data sets", async () => {
             let i = 1;
             const dataSets: zosfiles.IDataSet[] = [];
@@ -3082,7 +3086,453 @@ describe("Dataset Actions Unit Tests - function search", () => {
         });
     });
     //describe("Helper function - performSearch", async() => {});
-    //describe("Helper function - getSearchMatches", () => {});
-    //describe("Helper function - openSearchAtLocation", () => {});
+    describe("Helper function - getSearchMatches", () => {
+        const searchString = "test";
+        let getSessionNodeSpy: jest.SpyInstance;
+        let getExtensionSpy: jest.SpyInstance;
+
+        beforeAll(() => {
+            getExtensionSpy = jest.spyOn(DatasetUtils, "getExtension");
+        });
+
+        afterEach(() => {
+            getSessionNodeSpy.mockClear();
+            getExtensionSpy.mockClear();
+        });
+
+        afterAll(() => {
+            getSessionNodeSpy.mockRestore();
+            getExtensionSpy.mockRestore();
+        });
+
+        it("Should return matches from a response object - generateFullUri (pattern)", () => {
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+            const response = {
+                apiResponse: [
+                    {
+                        dsn: "FAKE.TEST.DS",
+                        member: undefined,
+                        matchList: [
+                            {
+                                line: 1,
+                                column: 1,
+                                contents: "test",
+                            },
+                        ],
+                    },
+                    {
+                        dsn: "FAKE.TEST.PDS",
+                        member: "TEST1",
+                        matchList: [
+                            {
+                                line: 1,
+                                column: 1,
+                                contents: "test",
+                            },
+                            {
+                                line: 2,
+                                column: 1,
+                                contents: "test",
+                            },
+                        ],
+                    },
+                    {
+                        dsn: "FAKE.TEST.JCL",
+                        member: "TEST1",
+                        matchList: [
+                            {
+                                line: 1,
+                                column: 1,
+                                contents: "test",
+                            },
+                        ],
+                    },
+                ],
+            };
+            const expectedMatches = [
+                {
+                    name: "FAKE.TEST.DS",
+                    line: 1,
+                    column: 1,
+                    position: "1:1",
+                    uri: "/sestest/sestestFAKE.TEST.DS",
+                    contents: "test",
+                    searchString,
+                },
+                {
+                    name: "FAKE.TEST.PDS(TEST1)",
+                    line: 1,
+                    column: 1,
+                    position: "1:1",
+                    uri: "/sestest/sestestFAKE.TEST.PDS/TEST1",
+                    contents: "test",
+                    searchString,
+                },
+                {
+                    name: "FAKE.TEST.PDS(TEST1)",
+                    line: 2,
+                    column: 1,
+                    position: "2:1",
+                    uri: "/sestest/sestestFAKE.TEST.PDS/TEST1",
+                    contents: "test",
+                    searchString,
+                },
+                {
+                    name: "FAKE.TEST.JCL(TEST1)",
+                    line: 1,
+                    column: 1,
+                    position: "1:1",
+                    uri: "/sestest/sestestFAKE.TEST.JCL/TEST1.jcl",
+                    contents: "test",
+                    searchString,
+                },
+            ];
+
+            getSessionNodeSpy = jest.spyOn(node, "getSessionNode");
+
+            const matches = (DatasetActions as any).getSearchMatches(node, response, true, searchString);
+
+            expect(getSessionNodeSpy).toHaveBeenCalledTimes(3);
+            expect(getExtensionSpy).toHaveBeenCalledTimes(3);
+            expect(getExtensionSpy).toHaveReturnedWith(".jcl");
+
+            expect(matches).toEqual(expectedMatches);
+        });
+        it("Should return matches from a response object - no generateFullUri (pds)", () => {
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+            const pdsNode = new ZoweDatasetNode({
+                label: "FAKE.TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextOverride: Constants.DS_PDS_CONTEXT,
+                profile,
+                parentNode: node,
+            });
+            const response = {
+                apiResponse: [
+                    {
+                        dsn: "FAKE.TEST.PDS",
+                        member: "TEST1",
+                        matchList: [
+                            {
+                                line: 1,
+                                column: 1,
+                                contents: "test",
+                            },
+                        ],
+                    },
+                    {
+                        dsn: "FAKE.TEST.PDS",
+                        member: "TEST2",
+                        matchList: [
+                            {
+                                line: 1,
+                                column: 1,
+                                contents: "test",
+                            },
+                            {
+                                line: 2,
+                                column: 1,
+                                contents: "test",
+                            },
+                        ],
+                    },
+                    {
+                        dsn: "FAKE.TEST.PDS",
+                        member: "TEST3",
+                        matchList: [
+                            {
+                                line: 1,
+                                column: 1,
+                                contents: "test",
+                            },
+                        ],
+                    },
+                ],
+            };
+            const expectedMatches = [
+                {
+                    name: "FAKE.TEST.PDS(TEST1)",
+                    line: 1,
+                    column: 1,
+                    position: "1:1",
+                    uri: "/sestest/FAKE.TEST.PDS/TEST1",
+                    contents: "test",
+                    searchString,
+                },
+                {
+                    name: "FAKE.TEST.PDS(TEST2)",
+                    line: 1,
+                    column: 1,
+                    position: "1:1",
+                    uri: "/sestest/FAKE.TEST.PDS/TEST2",
+                    contents: "test",
+                    searchString,
+                },
+                {
+                    name: "FAKE.TEST.PDS(TEST2)",
+                    line: 2,
+                    column: 1,
+                    position: "2:1",
+                    uri: "/sestest/FAKE.TEST.PDS/TEST2",
+                    contents: "test",
+                    searchString,
+                },
+                {
+                    name: "FAKE.TEST.PDS(TEST3)",
+                    line: 1,
+                    column: 1,
+                    position: "1:1",
+                    uri: "/sestest/FAKE.TEST.PDS/TEST3",
+                    contents: "test",
+                    searchString,
+                },
+            ];
+
+            getSessionNodeSpy = jest.spyOn(node, "getSessionNode");
+
+            const matches = (DatasetActions as any).getSearchMatches(pdsNode, response, false, searchString);
+
+            expect(getSessionNodeSpy).toHaveBeenCalledTimes(0);
+            expect(getExtensionSpy).toHaveBeenCalledTimes(3);
+            expect(getExtensionSpy).not.toHaveReturnedWith(".jcl");
+
+            expect(matches).toEqual(expectedMatches);
+        });
+        it("Should return matches from a response object - no generateFullUri (pds w/ JCL)", () => {
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+            const pdsNode = new ZoweDatasetNode({
+                label: "FAKE.TEST.JCL",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextOverride: Constants.DS_PDS_CONTEXT,
+                profile,
+                parentNode: node,
+            });
+            const response = {
+                apiResponse: [
+                    {
+                        dsn: "FAKE.TEST.JCL",
+                        member: "TEST1",
+                        matchList: [
+                            {
+                                line: 1,
+                                column: 1,
+                                contents: "test",
+                            },
+                        ],
+                    },
+                    {
+                        dsn: "FAKE.TEST.JCL",
+                        member: "TEST2",
+                        matchList: [
+                            {
+                                line: 1,
+                                column: 1,
+                                contents: "test",
+                            },
+                            {
+                                line: 2,
+                                column: 1,
+                                contents: "test",
+                            },
+                        ],
+                    },
+                    {
+                        dsn: "FAKE.TEST.JCL",
+                        member: "TEST3",
+                        matchList: [
+                            {
+                                line: 1,
+                                column: 1,
+                                contents: "test",
+                            },
+                        ],
+                    },
+                ],
+            };
+            const expectedMatches = [
+                {
+                    name: "FAKE.TEST.JCL(TEST1)",
+                    line: 1,
+                    column: 1,
+                    position: "1:1",
+                    uri: "/sestest/FAKE.TEST.JCL/TEST1.jcl",
+                    contents: "test",
+                    searchString,
+                },
+                {
+                    name: "FAKE.TEST.JCL(TEST2)",
+                    line: 1,
+                    column: 1,
+                    position: "1:1",
+                    uri: "/sestest/FAKE.TEST.JCL/TEST2.jcl",
+                    contents: "test",
+                    searchString,
+                },
+                {
+                    name: "FAKE.TEST.JCL(TEST2)",
+                    line: 2,
+                    column: 1,
+                    position: "2:1",
+                    uri: "/sestest/FAKE.TEST.JCL/TEST2.jcl",
+                    contents: "test",
+                    searchString,
+                },
+                {
+                    name: "FAKE.TEST.JCL(TEST3)",
+                    line: 1,
+                    column: 1,
+                    position: "1:1",
+                    uri: "/sestest/FAKE.TEST.JCL/TEST3.jcl",
+                    contents: "test",
+                    searchString,
+                },
+            ];
+
+            getSessionNodeSpy = jest.spyOn(node, "getSessionNode");
+
+            const matches = (DatasetActions as any).getSearchMatches(pdsNode, response, false, searchString);
+
+            expect(getSessionNodeSpy).toHaveBeenCalledTimes(0);
+            expect(getExtensionSpy).toHaveBeenCalledTimes(3);
+            expect(getExtensionSpy).toHaveReturnedWith(".jcl");
+
+            expect(matches).toEqual(expectedMatches);
+        });
+    });
+    describe("Helper function - openSearchAtLocation", () => {
+        let fakeEditor = { selection: undefined };
+        let dsFsProviderSpy: jest.SpyInstance;
+        let guiShowTextDocumentSpy: jest.SpyInstance;
+        let errorMessageSpy: jest.SpyInstance;
+
+        beforeAll(() => {
+            dsFsProviderSpy = jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockImplementation();
+            guiShowTextDocumentSpy = jest.spyOn(Gui, "showTextDocument");
+            errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+        });
+
+        beforeEach(() => {
+            fakeEditor = { selection: undefined };
+            dsFsProviderSpy.mockClear();
+            guiShowTextDocumentSpy.mockClear().mockResolvedValue(fakeEditor as any);
+            errorMessageSpy.mockClear();
+        });
+
+        afterAll(() => {
+            dsFsProviderSpy.mockRestore();
+            guiShowTextDocumentSpy.mockRestore();
+            errorMessageSpy.mockRestore();
+        });
+
+        it("should try to open one text document", async () => {
+            const data = {
+                1: {
+                    uri: `/test/ZOWE.TEST.T1.DS`,
+                    line: 1,
+                    column: 1,
+                    searchString: "test",
+                },
+            };
+
+            await (DatasetActions as any).openSearchAtLocation(null, data);
+
+            expect(dsFsProviderSpy).toHaveBeenCalledTimes(1);
+            expect(guiShowTextDocumentSpy).toHaveBeenCalledTimes(1);
+            expect(errorMessageSpy).not.toHaveBeenCalled();
+
+            expect(guiShowTextDocumentSpy).toHaveBeenCalledWith(vscode.Uri.from({ scheme: ZoweScheme.DS, path: data[1].uri }), { preview: false });
+            expect(fakeEditor.selection).toEqual(new vscode.Selection(new vscode.Position(0, 0), new vscode.Position(0, 4)));
+        });
+
+        it("should try to open multiple text documents", async () => {
+            const data = {};
+            let i = 1;
+            while (i < 10) {
+                data[i] = {
+                    uri: `/test/ZOWE.TEST.T${i}.DS`,
+                    line: 1,
+                    column: 1,
+                    searchString: "test",
+                };
+                i++;
+                data[i] = {
+                    uri: `/test/ZOWE.TEST.T${i}.PDS/MEMBER`,
+                    line: 1,
+                    column: 1,
+                    searchString: "test",
+                };
+                i++;
+            }
+
+            await (DatasetActions as any).openSearchAtLocation(null, data);
+
+            expect(dsFsProviderSpy).toHaveBeenCalledTimes(10);
+            expect(guiShowTextDocumentSpy).toHaveBeenCalledTimes(10);
+            expect(errorMessageSpy).not.toHaveBeenCalled();
+
+            i = 1;
+            while (i < 10) {
+                expect(guiShowTextDocumentSpy).toHaveBeenCalledWith(vscode.Uri.from({ scheme: ZoweScheme.DS, path: data[i].uri }), {
+                    preview: false,
+                });
+                i++;
+            }
+            expect(fakeEditor.selection).toEqual(new vscode.Selection(new vscode.Position(0, 0), new vscode.Position(0, 4)));
+        });
+
+        it("should do nothing if we try to open zero documents", async () => {
+            const data = {};
+
+            await (DatasetActions as any).openSearchAtLocation(null, data);
+
+            expect(dsFsProviderSpy).not.toHaveBeenCalled();
+            expect(guiShowTextDocumentSpy).not.toHaveBeenCalled();
+            expect(errorMessageSpy).not.toHaveBeenCalled();
+
+            expect(fakeEditor.selection).toEqual(undefined);
+        });
+
+        it("should gracefully handle an error and display the rest", async () => {
+            const data = {};
+            let i = 1;
+            while (i < 10) {
+                data[i] = {
+                    uri: `/test/ZOWE.TEST.T${i}.DS`,
+                    line: 1,
+                    column: 1,
+                    searchString: "test",
+                };
+                i++;
+                data[i] = {
+                    uri: `/test/ZOWE.TEST.T${i}.PDS/MEMBER`,
+                    line: 1,
+                    column: 1,
+                    searchString: "test",
+                };
+                i++;
+            }
+
+            guiShowTextDocumentSpy.mockRejectedValueOnce({ message: "Mock Rejection" });
+
+            await (DatasetActions as any).openSearchAtLocation(null, data);
+
+            expect(dsFsProviderSpy).toHaveBeenCalledTimes(10);
+            expect(guiShowTextDocumentSpy).toHaveBeenCalledTimes(10);
+            expect(errorMessageSpy).toHaveBeenCalledTimes(1);
+
+            i = 1;
+            while (i < 10) {
+                expect(guiShowTextDocumentSpy).toHaveBeenCalledWith(vscode.Uri.from({ scheme: ZoweScheme.DS, path: data[i].uri }), {
+                    preview: false,
+                });
+                i++;
+            }
+            expect(errorMessageSpy).toHaveBeenCalledWith("Mock Rejection");
+            expect(fakeEditor.selection).toEqual(new vscode.Selection(new vscode.Position(0, 0), new vscode.Position(0, 4)));
+        });
+    });
     //describe("Main function", async() => {});
 });
