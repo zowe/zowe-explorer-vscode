@@ -139,6 +139,9 @@ export class Profiles extends ProfilesCache {
             if (values) {
                 theProfile.profile.user = values[0];
                 theProfile.profile.password = values[1];
+            } else {
+                this.validProfile = Validation.ValidationType.INVALID;
+                return { ...profileStatus, status: "inactive" };
             }
         }
 
@@ -611,7 +614,6 @@ export class Profiles extends ProfilesCache {
             ZoweExplorerApiRegister.getInstance()
         );
         if (!promptInfo) {
-            Gui.showMessage(this.profilesOpCancelled);
             return; // See https://github.com/zowe/zowe-explorer-vscode/issues/1827
         }
 

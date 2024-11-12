@@ -221,6 +221,12 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         ZoweLogger.trace("ZoweTreeProvider.checkCurrentProfile called.");
         const profile = node.getProfile();
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
+        const didLogin = await ZoweTreeProvider.checkJwtTokenForProfile(node.getProfileName());
+        if (!didLogin) {
+            // Mark profile as inactive if user dismissed "token expired/login" prompt
+            profileStatus.status = "inactive";
+            Profiles.getInstance().validProfile = Validation.ValidationType.INVALID;
+        }
         if (profileStatus.status === "inactive") {
             if (
                 SharedContext.isSessionNotFav(node) &&
@@ -259,7 +265,6 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
                 Profiles.getInstance().validProfile = Validation.ValidationType.UNVERIFIED;
             }
         }
-        await ZoweTreeProvider.checkJwtTokenForProfile(node.getProfileName());
         this.refresh();
         return profileStatus;
     }
@@ -304,13 +309,27 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
      * If the token has expired, it will prompt the user to log in again.
      *
      * @param profileName The name of the profile to check the JWT token for
+     * @returns
+     * `true` if:
+     * - the user attempted to log in
+     * - the profile's token has not expired
+     *
+     * `false` if:
+     * - they selected "Cancel" / closed the login prompt
      */
-    protected static async checkJwtTokenForProfile(profileName: string): Promise<void> {
+    protected static async checkJwtTokenForProfile(profileName: string): Promise<boolean> {
         const profInfo = await Profiles.getInstance().getProfileInfo();
 
         if (profInfo.hasTokenExpiredForProfile(profileName)) {
-            await AuthUtils.promptUserForSsoLogin(profileName);
+            const userResponse = await AuthUtils.promptUserForSsoLogin(profileName);
+            if (userResponse === vscode.l10n.t("Log in to Authentication Service")) {
+                return true;
+            }
+
+            return false;
         }
+
+        return true;
     }
 
     private async loadProfileBySessionName(

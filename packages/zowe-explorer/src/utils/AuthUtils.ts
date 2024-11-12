@@ -35,7 +35,10 @@ export class AuthUtils {
 
             if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
                 const message = vscode.l10n.t("Log in to Authentication Service");
-                const userResp = await Gui.showMessage(correlation?.message ?? imperativeError.message, { items: [message] });
+                const userResp = await Gui.showMessage(correlation?.message ?? imperativeError.message, {
+                    items: [message],
+                    vsCodeOpts: { modal: true },
+                });
                 return userResp === message ? Constants.PROFILES_CACHE.ssoLogin(null, profile.name) : false;
             }
         }
@@ -119,7 +122,7 @@ export class AuthUtils {
      * Prompts user to log in to authentication service.
      * @param profileName The name of the profile used to log in
      */
-    public static promptUserForSsoLogin(profileName: string): Thenable<void> {
+    public static promptUserForSsoLogin(profileName: string): Thenable<string> {
         return Gui.showMessage(
             vscode.l10n.t({
                 message:
@@ -132,6 +135,7 @@ export class AuthUtils {
             if (selection) {
                 await Constants.PROFILES_CACHE.ssoLogin(null, profileName);
             }
+            return selection;
         });
     }
 
