@@ -1051,7 +1051,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
         environmentSetup(globalMocks);
         setupProfilesCheck(globalMocks);
-        const ssoLoginSpy = jest.spyOn(Profiles.getInstance(), "ssoLogin").mockResolvedValueOnce();
+        const ssoLoginSpy = jest.spyOn(Profiles.getInstance(), "ssoLogin").mockResolvedValueOnce(true);
         jest.spyOn(Profiles.getInstance(), "loadNamedProfile").mockReturnValueOnce(globalMocks.testProfile);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
         expect(ssoLoginSpy).toHaveBeenCalledTimes(1);
