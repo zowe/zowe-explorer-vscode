@@ -223,22 +223,26 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
             return;
         }
         let statusContext: string;
+        let iconId: IconUtils.IconId;
         switch (status) {
             default:
             case Validation.ValidationType.UNVERIFIED:
                 statusContext = Constants.UNVERIFIED_CONTEXT;
+                iconId = IconUtils.IconId.session;
                 break;
             case Validation.ValidationType.VALID:
                 statusContext = Constants.ACTIVE_CONTEXT;
+                iconId = IconUtils.IconId.sessionActive;
                 break;
             case Validation.ValidationType.INVALID:
                 statusContext = Constants.INACTIVE_CONTEXT;
+                iconId = IconUtils.IconId.sessionInactive;
                 break;
         }
 
         node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
         node.contextValue = node.contextValue + statusContext;
-        const inactiveIcon = IconGenerator.getIconById(IconUtils.IconId.sessionInactive);
+        const inactiveIcon = IconGenerator.getIconById(iconId);
         if (inactiveIcon) {
             node.iconPath = inactiveIcon.path;
         }

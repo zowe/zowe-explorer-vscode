@@ -33,9 +33,10 @@ import { createUSSSessionNode } from "../../__mocks__/mockCreators/uss";
 import { USSInit } from "../../../src/trees/uss/USSInit";
 import { JobInit } from "../../../src/trees/job/JobInit";
 import { createIJobObject, createJobSessionNode } from "../../__mocks__/mockCreators/jobs";
-import { createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets";
+import { createDatasetFavoritesNode, createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets";
 import { DatasetInit } from "../../../src/trees/dataset/DatasetInit";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
+import { IconGenerator } from "../../../src/icons/IconGenerator";
 
 async function createGlobalMocks() {
     Object.defineProperty(ZoweLocalStorage, "storage", {
@@ -717,5 +718,46 @@ describe("Tree Provider Unit Tests - function updateSessionContext", () => {
         expect(blockMocks.sharedProviders.ds.setStatusForSession).toHaveBeenCalledWith(blockMocks.sessionNodes.ds, Validation.ValidationType.VALID);
         expect(blockMocks.sharedProviders.uss.setStatusForSession).toHaveBeenCalledWith(blockMocks.sessionNodes.uss, Validation.ValidationType.VALID);
         expect(blockMocks.sharedProviders.job.setStatusForSession).toHaveBeenCalledWith(blockMocks.sessionNodes.job, Validation.ValidationType.VALID);
+    });
+});
+
+describe("Tree Provider Unit Tests - function setStatusInSession", () => {
+    function getBlockMocks() {
+        const profile = createIProfile();
+        const session = createISession();
+        const nodeDataChanged = jest.spyOn(ZoweTreeProvider.prototype, "nodeDataChanged").mockImplementation();
+        const treeProvider = new ZoweTreeProvider(PersistenceSchemaEnum.Dataset, createDatasetFavoritesNode());
+        return {
+            nodeDataChanged,
+            profile,
+            session,
+            sessionNode: createDatasetSessionNode(session, profile),
+            treeProvider,
+        };
+    }
+
+    it("updates the session context - VALID", () => {
+        const { treeProvider, ...blockMocks } = getBlockMocks();
+        (treeProvider as any).setStatusForSession(blockMocks.sessionNode, Validation.ValidationType.VALID);
+        expect(blockMocks.sessionNode.contextValue).toContain(Constants.ACTIVE_CONTEXT);
+        expect(blockMocks.nodeDataChanged).toHaveBeenCalled();
+    });
+    it("updates the session context - INVALID", () => {
+        const { treeProvider, ...blockMocks } = getBlockMocks();
+        (treeProvider as any).setStatusForSession(blockMocks.sessionNode, Validation.ValidationType.INVALID);
+        expect(blockMocks.sessionNode.contextValue).toContain(Constants.INACTIVE_CONTEXT);
+        expect(blockMocks.nodeDataChanged).toHaveBeenCalled();
+    });
+    it("updates the session context - UNVERIFIED", () => {
+        const { treeProvider, ...blockMocks } = getBlockMocks();
+        (treeProvider as any).setStatusForSession(blockMocks.sessionNode, Validation.ValidationType.UNVERIFIED);
+        expect(blockMocks.sessionNode.contextValue).toContain(Constants.UNVERIFIED_CONTEXT);
+        expect(blockMocks.nodeDataChanged).toHaveBeenCalled();
+    });
+    it("returns early when a falsy node is provided", () => {
+        const { treeProvider } = getBlockMocks();
+        const getIconByIdMock = jest.spyOn(IconGenerator, "getIconById").mockClear().mockImplementation();
+        (treeProvider as any).setStatusForSession(null, Validation.ValidationType.VALID);
+        expect(getIconByIdMock).not.toHaveBeenCalled();
     });
 });
