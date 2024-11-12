@@ -218,6 +218,10 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
     }
 
     private setStatusForSession(node: IZoweTreeNode, status: Validation.ValidationType): void {
+        if (node == null) {
+            // If no session node was found for this provider, don't try to update it
+            return;
+        }
         let statusContext: string;
         switch (status) {
             default:
@@ -241,10 +245,10 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         this.nodeDataChanged(node as T);
     }
 
-    private updateSessionContext(profileName: string, status: Validation.ValidationType): void {
+    private static updateSessionContext(profileName: string, status: Validation.ValidationType): void {
         for (const provider of Object.values(SharedTreeProviders.providers)) {
             const session = (provider as IZoweTree<IZoweTreeNode>).mSessionNodes.find((n) => n.getProfileName() === profileName);
-            (provider as ZoweTreeProvider<T>)?.setStatusForSession(session, status);
+            (provider as ZoweTreeProvider<IZoweTreeNode>)?.setStatusForSession(session, status);
         }
     }
 
@@ -264,7 +268,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
                 SharedContext.isSessionNotFav(node) &&
                 (node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))
             ) {
-                this.updateSessionContext(profileName, Validation.ValidationType.INVALID);
+                ZoweTreeProvider.updateSessionContext(profileName, Validation.ValidationType.INVALID);
                 Profiles.getInstance().validProfile = Validation.ValidationType.INVALID;
             }
 
@@ -274,7 +278,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
                 SharedContext.isSessionNotFav(node) &&
                 (node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))
             ) {
-                this.updateSessionContext(profileName, Validation.ValidationType.VALID);
+                ZoweTreeProvider.updateSessionContext(profileName, Validation.ValidationType.VALID);
                 Profiles.getInstance().validProfile = Validation.ValidationType.VALID;
             }
         } else if (profileStatus.status === "unverified") {
@@ -282,7 +286,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
                 SharedContext.isSessionNotFav(node) &&
                 (node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))
             ) {
-                this.updateSessionContext(profileName, Validation.ValidationType.UNVERIFIED);
+                ZoweTreeProvider.updateSessionContext(profileName, Validation.ValidationType.UNVERIFIED);
                 Profiles.getInstance().validProfile = Validation.ValidationType.UNVERIFIED;
             }
         }

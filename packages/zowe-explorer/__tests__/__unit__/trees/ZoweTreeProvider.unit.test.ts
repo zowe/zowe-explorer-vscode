@@ -687,3 +687,35 @@ describe("Tree Provider Unit Tests - function checkJwtTokenForProfile", () => {
         expect(promptUserForSsoLogin).toHaveBeenCalled();
     });
 });
+
+describe("Tree Provider Unit Tests - function updateSessionContext", () => {
+    function getBlockMocks() {
+        const profile = createIProfile();
+        const session = createISession();
+        const sessionNodes = {
+            ds: createDatasetSessionNode(session, profile),
+            uss: createUSSSessionNode(session, profile),
+            job: createJobSessionNode(session, profile),
+        };
+        const sharedProviders = {
+            ds: { setStatusForSession: jest.fn(), mSessionNodes: [sessionNodes.ds] } as any,
+            uss: { setStatusForSession: jest.fn(), mSessionNodes: [sessionNodes.uss] } as any,
+            job: { setStatusForSession: jest.fn(), mSessionNodes: [sessionNodes.job] } as any,
+        };
+        return {
+            profile,
+            session,
+            sessionNodes,
+            sharedProviders,
+            sharedProviderMock: jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValueOnce(sharedProviders),
+        };
+    }
+
+    it("updates the session context across all shared tree providers", () => {
+        const blockMocks = getBlockMocks();
+        (ZoweTreeProvider as any).updateSessionContext(blockMocks.profile.name, Validation.ValidationType.VALID);
+        expect(blockMocks.sharedProviders.ds.setStatusForSession).toHaveBeenCalledWith(blockMocks.sessionNodes.ds, Validation.ValidationType.VALID);
+        expect(blockMocks.sharedProviders.uss.setStatusForSession).toHaveBeenCalledWith(blockMocks.sessionNodes.uss, Validation.ValidationType.VALID);
+        expect(blockMocks.sharedProviders.job.setStatusForSession).toHaveBeenCalledWith(blockMocks.sessionNodes.job, Validation.ValidationType.VALID);
+    });
+});
