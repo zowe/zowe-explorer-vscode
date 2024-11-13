@@ -731,6 +731,15 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         entry.metadata.path = newPath;
         parentDir.entries.set(newName, entry);
 
+        if (FsDatasetsUtils.isPdsEntry(entry)) {
+            for (const [_, member] of entry.entries) {
+                member.metadata.path = path.posix.join(
+                    entry.metadata.path,
+                    member.metadata.path.substring(member.metadata.path.lastIndexOf("/") + 1)
+                );
+            }
+        }
+
         this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri }, { type: vscode.FileChangeType.Created, uri: newUri });
     }
 }
