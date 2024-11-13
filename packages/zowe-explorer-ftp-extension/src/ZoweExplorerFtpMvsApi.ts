@@ -19,6 +19,7 @@ import { CoreUtils, DataSetUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 import * as globals from "./globals";
 import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";
+import { isAbsolute as isAbsolutePath } from "path";
 // The Zowe FTP CLI plugin is written and uses mostly JavaScript, so relax the rules here.
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -128,12 +129,26 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
         const result = this.getDefaultResponse();
         const profile = this.checkedProfile();
 
+        const dsorg = dsAtrribute.apiResponse.items[0]?.dsorg;
+        const isPds = dsorg === "PO" || dsorg === "PO-E";
+
+        /**
+         * Determine the data set name for uploading.
+         *
+         * For PDS: When the input is a file path and the provided data set name doesn't include the member name,
+         * we'll need to generate a member name.
+         */
+        const uploadName =
+            isPds && openParens == -1 && typeof input === "string"
+                ? `${dataSetName}(${zosfiles.ZosFilesUtils.generateMemberName(input)})`
+                : dataSetName;
+
         const inputIsBuffer = input instanceof Buffer;
 
         // Save-Save with FTP requires loading the file first
         // (moved this block above connection request so only one connection is active at a time)
         if (options.returnEtag && options.etag) {
-            const contentsTag = await this.getContentsTag(dataSetName, inputIsBuffer);
+            const contentsTag = await this.getContentsTag(uploadName, inputIsBuffer);
             if (contentsTag && contentsTag !== options.etag) {
                 throw Error("Rest API failure with HTTP(S) status 412: Save conflict");
             }
@@ -174,13 +189,13 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
                     return result;
                 }
             }
-            await DataSetUtils.uploadDataSet(connection, dataSetName, transferOptions);
+            await DataSetUtils.uploadDataSet(connection, uploadName, transferOptions);
             result.success = true;
             if (options.returnEtag) {
                 // release this connection instance because a new one will be made with getContentsTag
                 this.releaseConnection(connection);
                 connection = null;
-                const etag = await this.getContentsTag(dataSetName, inputIsBuffer);
+                const etag = await this.getContentsTag(uploadName, inputIsBuffer);
                 result.apiResponse = {
                     etag,
                 };
