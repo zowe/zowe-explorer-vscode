@@ -670,7 +670,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     fn: this.delete.bind(this),
                     args: [uri, _options],
                 },
-                templateArgs: { profileName: entry.metadata.profile?.name ?? "" },
+                templateArgs: { profileName: entry.metadata.profile.name ?? "" },
             });
             throw err;
         }
@@ -717,7 +717,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     fn: this.rename.bind(this),
                     args: [oldUri, newUri, options],
                 },
-                templateArgs: { profileName: entry.metadata.profile?.name ?? "" },
+                templateArgs: { profileName: entry.metadata.profile.name ?? "" },
             });
             throw err;
         }

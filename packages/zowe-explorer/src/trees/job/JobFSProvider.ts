@@ -246,7 +246,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                         fn: this.readFile.bind(this),
                         args: [uri],
                     },
-                    templateArgs: { profileName: spoolEntry.metadata.profile?.name ?? "" },
+                    templateArgs: { profileName: spoolEntry.metadata.profile.name ?? "" },
                 });
                 throw err;
             }
