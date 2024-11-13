@@ -442,6 +442,7 @@ export interface WebviewOptions {
 }
 
 export namespace window {
+    export let visibleTextEditors = [];
     /**
      * Represents the grid widget within the main editor area
      */
