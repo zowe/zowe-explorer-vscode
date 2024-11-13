@@ -2430,6 +2430,47 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         expect(refreshElementSpy).toHaveBeenCalledWith(child.getParent());
     });
 
+    it("Checking function with PDS", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        // Create nodes in Session section
+        const parent = new ZoweDatasetNode({
+            label: "HLQ.TEST.OLDNAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+            parentNode: testTree.mSessionNodes[1],
+            profile: blockMocks.imperativeProfile,
+            session: blockMocks.session,
+        });
+        const child = new ZoweDatasetNode({
+            label: "mem1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.DS_MEMBER_CONTEXT,
+            parentNode: parent,
+        });
+        // Simulate corresponding nodes in favorites
+        // Push test nodes to respective arrays
+        parent.children.push(child);
+        testTree.mSessionNodes[1].children.push(parent);
+
+        const refreshElementSpy = jest.spyOn(testTree, "refreshElement");
+
+        const renameDataSetSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSet");
+
+        mocked(Gui.showInputBox).mockImplementation((options) => {
+            return Promise.resolve("HLQ.TEST.NEWNAME.NODE");
+        });
+        await testTree.rename(parent);
+        expect(renameDataSetSpy).toHaveBeenLastCalledWith(parent);
+        expect(parent.resourceUri?.path).toBe("/sestest/HLQ.TEST.NEWNAME.NODE");
+        expect(child.resourceUri?.path).toBe("/sestest/HLQ.TEST.NEWNAME.NODE/mem1");
+        expect(refreshElementSpy).toHaveBeenCalled();
+    });
+
     it("Checking function with PDS Member given in lowercase", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
