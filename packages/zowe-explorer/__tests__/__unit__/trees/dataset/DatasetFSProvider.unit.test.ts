@@ -997,12 +997,14 @@ describe("fetchDataset", () => {
         const lookupMock = jest.spyOn(DatasetFSProvider.instance, "lookup").mockImplementation(() => {
             throw new Error("unknown fs error");
         });
-        await expect((DatasetFSProvider.instance as any).fetchDataset(testUris.ps, {
-            isRoot: false,
-            slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
-            profileName: "sestest",
-            profile: testProfile,
-        })).rejects.toThrow();
+        await expect(
+            (DatasetFSProvider.instance as any).fetchDataset(testUris.ps, {
+                isRoot: false,
+                slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                profileName: "sestest",
+                profile: testProfile,
+            })
+        ).rejects.toThrow();
         lookupMock.mockRestore();
     });
 });
@@ -1134,6 +1136,10 @@ describe("rename", () => {
 
     it("renames a PDS", async () => {
         const oldPds = new PdsEntry("USER.DATA.PDS");
+        oldPds.metadata = new DsEntryMetadata({ profile: testProfile, path: "/USER.DATA.PDS" });
+        const exampleMember = new DsEntry("TESTMEM", true);
+        exampleMember.metadata = new DsEntryMetadata({ profile: testProfile, path: "/USER.DATA.PDS/TESTMEM" });
+        oldPds.entries.set("TESTMEM", exampleMember);
         oldPds.metadata = testEntries.pds.metadata;
         const mockMvsApi = {
             renameDataSet: jest.fn(),
@@ -1146,6 +1152,7 @@ describe("rename", () => {
             .spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory")
             .mockReturnValueOnce({ ...testEntries.session });
         await DatasetFSProvider.instance.rename(testUris.pds, testUris.pds.with({ path: "/USER.DATA.PDS2" }), { overwrite: true });
+        expect(exampleMember.metadata.path).toBe("/USER.DATA.PDS2/TESTMEM");
         expect(mockMvsApi.renameDataSet).toHaveBeenCalledWith("USER.DATA.PDS", "USER.DATA.PDS2");
         _lookupMock.mockRestore();
         mvsApiMock.mockRestore();
