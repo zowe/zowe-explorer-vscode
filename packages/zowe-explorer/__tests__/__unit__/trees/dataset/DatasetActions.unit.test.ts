@@ -41,6 +41,7 @@ import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { mocked } from "../../../__mocks__/mockUtils";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
+import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -3085,7 +3086,166 @@ describe("Dataset Actions Unit Tests - function search", () => {
             expect(result).toEqual(false);
         });
     });
-    //describe("Helper function - performSearch", async() => {});
+    describe("Helper function - performSearch", () => {
+        const searchDataSetsMock = jest.fn();
+        let getMvsApiSpy: jest.SpyInstance;
+        let showMessageSpy: jest.SpyInstance;
+        let reportProgressSpy: jest.SpyInstance;
+        let continueSearchPromptSpy: jest.SpyInstance;
+        let authErrorHandlingSpy: jest.SpyInstance;
+        let loggerErrorSpy: jest.SpyInstance;
+
+        const fakeMvsApi = {
+            searchDataSets: searchDataSetsMock,
+        };
+        const token: vscode.CancellationToken = {
+            isCancellationRequested: false,
+            onCancellationRequested: jest.fn(),
+        };
+
+        beforeAll(() => {
+            getMvsApiSpy = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(fakeMvsApi as any);
+            showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
+            reportProgressSpy = jest.spyOn(Gui, "reportProgress").mockImplementation();
+            continueSearchPromptSpy = jest.spyOn(DatasetActions as any, "continueSearchPrompt");
+            authErrorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
+            loggerErrorSpy = jest.spyOn(ZoweLogger, "error").mockImplementation();
+        });
+
+        beforeEach(() => {
+            searchDataSetsMock.mockReset();
+            getMvsApiSpy.mockClear();
+            showMessageSpy.mockClear();
+            reportProgressSpy.mockClear();
+            continueSearchPromptSpy.mockClear();
+            authErrorHandlingSpy.mockClear();
+            loggerErrorSpy.mockClear();
+        });
+
+        afterAll(() => {
+            getMvsApiSpy.mockRestore();
+            showMessageSpy.mockRestore();
+            reportProgressSpy.mockRestore();
+            continueSearchPromptSpy.mockRestore();
+            authErrorHandlingSpy.mockRestore();
+            loggerErrorSpy.mockRestore();
+        });
+
+        it("should show a message if cancellation was requested", async () => {
+            const tokenCancellation: vscode.CancellationToken = {
+                isCancellationRequested: true,
+                onCancellationRequested: jest.fn(),
+            };
+            const myProgress = { test: "test" };
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+
+            await (DatasetActions as any).performSearch(myProgress, tokenCancellation, { node, pattern: "TEST.*", searchString: "test" });
+
+            expect(getMvsApiSpy).toHaveBeenCalledTimes(1);
+            expect(showMessageSpy).toHaveBeenCalledTimes(1);
+            expect(showMessageSpy).toHaveBeenCalledWith(DatasetActions.localizedStrings.opCancelled);
+            expect(reportProgressSpy).not.toHaveBeenCalled();
+            expect(searchDataSetsMock).not.toHaveBeenCalled();
+            expect(continueSearchPromptSpy).not.toHaveBeenCalled();
+            expect(authErrorHandlingSpy).not.toHaveBeenCalled();
+            expect(loggerErrorSpy).not.toHaveBeenCalled();
+        });
+
+        it("should perform the search and succeed", async () => {
+            const myProgress = { test: "test" };
+            const taskExpected = { percentComplete: 51, stageName: 0, statusMessage: "" };
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+
+            searchDataSetsMock.mockImplementation((object) => {
+                object.progressTask.percentComplete = 51;
+                object.continueSearch([]);
+                return Promise.resolve({ success: true, apiResponse: { test: "test" } });
+            });
+
+            const response = await (DatasetActions as any).performSearch(myProgress, token, { node, pattern: "TEST.*", searchString: "test" });
+
+            expect(showMessageSpy).not.toHaveBeenCalled();
+            expect(getMvsApiSpy).toHaveBeenCalledTimes(1);
+            expect(searchDataSetsMock).toHaveBeenCalledWith({
+                pattern: "TEST.*",
+                searchString: "test",
+                progressTask: taskExpected,
+                mainframeSearch: false,
+                continueSearch: continueSearchPromptSpy,
+            });
+            expect(authErrorHandlingSpy).not.toHaveBeenCalled();
+            expect(loggerErrorSpy).not.toHaveBeenCalled();
+            expect(reportProgressSpy).toHaveBeenCalledWith(myProgress, 100, 50, "Percent Complete");
+            expect(continueSearchPromptSpy).toHaveBeenCalled();
+            expect(response).toEqual({ success: true, apiResponse: { test: "test" } });
+        });
+
+        it("should perform the search and fail - graceful failure", async () => {
+            const myProgress = { test: "test" };
+            const taskExpected = { percentComplete: 100, stageName: 0, statusMessage: "" };
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+
+            searchDataSetsMock.mockImplementation((object) => {
+                object.progressTask.percentComplete = 100;
+                object.continueSearch([]);
+                return Promise.resolve({ errorMessage: "test error message", success: false, apiResponse: undefined });
+            });
+
+            const response = await (DatasetActions as any).performSearch(myProgress, token, { node, pattern: "TEST.*", searchString: "test" });
+
+            expect(showMessageSpy).not.toHaveBeenCalled();
+            expect(getMvsApiSpy).toHaveBeenCalledTimes(1);
+            expect(searchDataSetsMock).toHaveBeenCalledWith({
+                pattern: "TEST.*",
+                searchString: "test",
+                progressTask: taskExpected,
+                mainframeSearch: false,
+                continueSearch: continueSearchPromptSpy,
+            });
+            expect(authErrorHandlingSpy).toHaveBeenCalledWith("test error message", {
+                profile: node.getProfileName(),
+                scenario: "Error encountered when searching data sets",
+            });
+            expect(loggerErrorSpy).not.toHaveBeenCalled();
+            expect(reportProgressSpy).toHaveBeenCalledWith(myProgress, 100, 99, "Percent Complete");
+            expect(continueSearchPromptSpy).toHaveBeenCalled();
+            expect(response).toEqual({ errorMessage: "test error message", success: false, apiResponse: undefined });
+        });
+
+        it("should perform the search and fail - catastrophic failure", async () => {
+            const myProgress = { test: "test" };
+            const taskExpected = { percentComplete: 51, stageName: 0, statusMessage: "" };
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+            const error = new Error("Catastrophic Failure");
+
+            searchDataSetsMock.mockImplementation((object) => {
+                object.progressTask.percentComplete = 51;
+                object.continueSearch([]);
+                return Promise.reject(error);
+            });
+
+            const response = await (DatasetActions as any).performSearch(myProgress, token, { node, pattern: "TEST.*", searchString: "test" });
+
+            expect(showMessageSpy).not.toHaveBeenCalled();
+            expect(getMvsApiSpy).toHaveBeenCalledTimes(1);
+            expect(searchDataSetsMock).toHaveBeenCalledWith({
+                pattern: "TEST.*",
+                searchString: "test",
+                progressTask: taskExpected,
+                mainframeSearch: false,
+                continueSearch: continueSearchPromptSpy,
+            });
+            expect(authErrorHandlingSpy).toHaveBeenCalledWith(error);
+            expect(loggerErrorSpy).toHaveBeenCalledWith(error);
+            expect(reportProgressSpy).toHaveBeenCalledWith(myProgress, 100, 50, "Percent Complete");
+            expect(continueSearchPromptSpy).toHaveBeenCalled();
+            expect(response).toBeUndefined();
+        });
+    });
     describe("Helper function - getSearchMatches", () => {
         const searchString = "test";
         let getSessionNodeSpy: jest.SpyInstance;
@@ -3156,7 +3316,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
                     line: 1,
                     column: 1,
                     position: "1:1",
-                    uri: "/sestest/sestestFAKE.TEST.DS",
+                    uri: "/sestest/sestest/FAKE.TEST.DS",
                     contents: "test",
                     searchString,
                 },
@@ -3165,7 +3325,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
                     line: 1,
                     column: 1,
                     position: "1:1",
-                    uri: "/sestest/sestestFAKE.TEST.PDS/TEST1",
+                    uri: "/sestest/sestest/FAKE.TEST.PDS/TEST1",
                     contents: "test",
                     searchString,
                 },
@@ -3174,7 +3334,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
                     line: 2,
                     column: 1,
                     position: "2:1",
-                    uri: "/sestest/sestestFAKE.TEST.PDS/TEST1",
+                    uri: "/sestest/sestest/FAKE.TEST.PDS/TEST1",
                     contents: "test",
                     searchString,
                 },
@@ -3183,7 +3343,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
                     line: 1,
                     column: 1,
                     position: "1:1",
-                    uri: "/sestest/sestestFAKE.TEST.JCL/TEST1.jcl",
+                    uri: "/sestest/sestest/FAKE.TEST.JCL/TEST1.jcl",
                     contents: "test",
                     searchString,
                 },

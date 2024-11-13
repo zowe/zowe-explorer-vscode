@@ -1921,8 +1921,8 @@ export class DatasetActions {
                     profile: options.node.getProfileName(),
                     scenario: "Error encountered when searching data sets",
                 });
-                return;
             }
+            return response;
         } catch (err) {
             ZoweLogger.error(err);
             await AuthUtils.errorHandling(err);
@@ -1945,7 +1945,7 @@ export class DatasetActions {
             const extension = DatasetUtils.getExtension(ds.dsn);
 
             let name: string = dsn;
-            let uri = generateFullUri ? node.getSessionNode().resourceUri.path + dsn : node.resourceUri.path;
+            let uri = generateFullUri ? path.posix.join(node.getSessionNode().resourceUri.path, dsn) : node.resourceUri.path;
 
             if (member) {
                 uri = uri + "/" + member;

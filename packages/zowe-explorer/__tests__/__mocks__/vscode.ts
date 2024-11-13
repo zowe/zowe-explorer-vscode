@@ -1729,7 +1729,7 @@ export class Range {}
 
 export class WorkspaceEdit {
     public delete(uri: Uri, range: Range) {}
-    public insert(uri: Uri, position: Position, newText: string) {}
+    public insert(uri: Uri, position: typeof Position, newText: string) {}
 }
 
 /**
