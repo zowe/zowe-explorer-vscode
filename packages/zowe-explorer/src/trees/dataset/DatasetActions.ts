@@ -1776,21 +1776,24 @@ export class DatasetActions {
         const generateFullUri = (SharedContext.isSessionNotFav(node) && node.pattern != null) || SharedContext.isFavoriteSearch(node);
         const pattern = SharedContext.isSessionNotFav(node) ? node.pattern : node.label.toString();
 
+        // There may not be a pattern on a session node if there is no filter applied. Warn if this is the case.
         if (!pattern) {
             Gui.errorMessage(vscode.l10n.t("No search pattern applied. Search for a pattern and try again."));
             return;
         }
 
-        const searchString = await Gui.showInputBox({ prompt: vscode.l10n.t("Enter the text to search for.") }); // Figure out show input box
+        // Figure out what text we are looking for.
+        const searchString = await Gui.showInputBox({ prompt: vscode.l10n.t("Enter the text to search for.") });
         if (!searchString) {
             Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
             return;
         }
 
+        // Perform the actual search.
         const response: zosfiles.IZosFilesResponse = await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: vscode.l10n.t('Searching for "{0}"', searchString),
+                title: vscode.l10n.t({ message: 'Searching for "{0}"', args: [searchString], comment: "The string to search data sets for." }),
                 cancellable: true,
             },
             async (progress, token) => {
@@ -1798,10 +1801,12 @@ export class DatasetActions {
             }
         );
 
+        // Prepare a list of matches in a format the table expects
         const matches = this.getSearchMatches(node, response, generateFullUri, searchString);
 
+        // Prepare the table for display to the user
         const table = new TableBuilder(context)
-            .title(vscode.l10n.t('Search Results for "{0}"', searchString))
+            .title(vscode.l10n.t({ message: 'Search Results for "{0}"', args: [searchString], comment: "The string to search data sets for." }))
             .options({
                 autoSizeStrategy: { type: "fitCellContents" },
                 pagination: true,
@@ -1845,17 +1850,23 @@ export class DatasetActions {
                 type: "secondary",
             })
             .build();
+
+        // Show the table to the user.
         await TableViewProvider.getInstance().setTableView(table);
     }
 
     private static async openSearchAtLocation(this: void, _view: Table.View, data: Record<number, Table.RowData>): Promise<void> {
         const childrenToOpen = Object.values(data);
+
+        // Each value is a different search result
         if (childrenToOpen.length > 0) {
             for (const child of childrenToOpen) {
+                // Get the URI, look it up so the Filesystem provider is aware of it, then display the document to the user
                 const childUri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: child.uri as string });
                 await DatasetFSProvider.instance.remoteLookupForResource(childUri);
                 void Gui.showTextDocument(childUri, { preview: false }).then(
                     (editor) => {
+                        // Highlight the searched for text so the user can easily find it
                         const startPosition = new vscode.Position((child.line as number) - 1, (child.column as number) - 1);
                         const endPosition = new vscode.Position(
                             (child.line as number) - 1,
@@ -1873,14 +1884,24 @@ export class DatasetActions {
 
     private static async continueSearchPrompt(this: void, dataSets: zosfiles.IDataSet[]): Promise<boolean> {
         const MAX_DATASETS = 50;
+
+        // If there are 50 matches or under, do not prompt the user for confirmation to continue
         if (dataSets.length <= MAX_DATASETS) {
             return true;
         }
 
-        const resp = await Gui.infoMessage(vscode.l10n.t("Are you sure you want to search {0} data sets and members?", dataSets.length.toString()), {
-            items: [vscode.l10n.t("Yes"), vscode.l10n.t("No")],
-            vsCodeOpts: { modal: true },
-        });
+        // There are 51 or more results, which may take a long time. Make sure the user is prepared for that.
+        const resp = await Gui.infoMessage(
+            vscode.l10n.t({
+                message: "Are you sure you want to search {0} data sets and members?",
+                args: [dataSets.length.toString()],
+                comment: "The number of data sets that are about to be searched",
+            }),
+            {
+                items: [vscode.l10n.t("Yes"), vscode.l10n.t("No")],
+                vsCodeOpts: { modal: true },
+            }
+        );
 
         return resp === vscode.l10n.t("Yes");
     }
@@ -1894,6 +1915,8 @@ export class DatasetActions {
             return;
         }
 
+        // Prepare a hacky task object that updates the progress bar on the GUI.
+        // Pass that into the MVS API call.
         let realPercentComplete = 0;
         const task: imperative.ITaskWithStatus = {
             set percentComplete(value: number) {
@@ -1909,6 +1932,7 @@ export class DatasetActions {
         };
 
         try {
+            // Perform the actual search
             response = await mvsApi.searchDataSets({
                 pattern: options.pattern,
                 searchString: options.searchString,
@@ -1916,6 +1940,9 @@ export class DatasetActions {
                 mainframeSearch: false,
                 continueSearch: DatasetActions.continueSearchPrompt,
             });
+
+            // If there is no API response and success is false, the search didn't even begin searching data sets, and stopped during listing.
+            // Return an error to the user since we have no useful data. Otherwise, display partial results.
             if (response.success === false && response.apiResponse == null) {
                 await AuthUtils.errorHandling(response.errorMessage, {
                     profile: options.node.getProfileName(),
@@ -1924,6 +1951,7 @@ export class DatasetActions {
             }
             return response;
         } catch (err) {
+            // Something catastrophic happened that was not handled.
             ZoweLogger.error(err);
             await AuthUtils.errorHandling(err);
             return;
@@ -1939,6 +1967,7 @@ export class DatasetActions {
         const matches = response.apiResponse;
         const newMatches: object[] = [];
 
+        // Take in the API response, and iterate through the list of matched data sets and members
         for (const ds of matches) {
             const dsn = ds.dsn as string;
             const member = ds.member as string;
@@ -1956,6 +1985,7 @@ export class DatasetActions {
                 uri += extension;
             }
 
+            // The data set or member might have multiple matches itself. Display each one as a separate item.
             for (const match of ds.matchList) {
                 newMatches.push({
                     name,

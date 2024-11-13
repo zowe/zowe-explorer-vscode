@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { Gui, imperative, Validation, Types, ZoweExplorerApiType, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, Validation, Types, ZoweExplorerApiType, ZoweScheme, TableViewProvider, TableBuilder, Table } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import {
@@ -3113,22 +3113,12 @@ describe("Dataset Actions Unit Tests - function search", () => {
         });
 
         beforeEach(() => {
+            jest.clearAllMocks();
             searchDataSetsMock.mockReset();
-            getMvsApiSpy.mockClear();
-            showMessageSpy.mockClear();
-            reportProgressSpy.mockClear();
-            continueSearchPromptSpy.mockClear();
-            authErrorHandlingSpy.mockClear();
-            loggerErrorSpy.mockClear();
         });
 
         afterAll(() => {
-            getMvsApiSpy.mockRestore();
-            showMessageSpy.mockRestore();
-            reportProgressSpy.mockRestore();
-            continueSearchPromptSpy.mockRestore();
-            authErrorHandlingSpy.mockRestore();
-            loggerErrorSpy.mockRestore();
+            jest.restoreAllMocks();
         });
 
         it("should show a message if cancellation was requested", async () => {
@@ -3256,13 +3246,11 @@ describe("Dataset Actions Unit Tests - function search", () => {
         });
 
         afterEach(() => {
-            getSessionNodeSpy.mockClear();
-            getExtensionSpy.mockClear();
+            jest.clearAllMocks();
         });
 
         afterAll(() => {
-            getSessionNodeSpy.mockRestore();
-            getExtensionSpy.mockRestore();
+            jest.restoreAllMocks();
         });
 
         it("Should return matches from a response object - generateFullUri (pattern)", () => {
@@ -3575,16 +3563,13 @@ describe("Dataset Actions Unit Tests - function search", () => {
         });
 
         beforeEach(() => {
+            jest.clearAllMocks();
             fakeEditor = { selection: undefined };
-            dsFsProviderSpy.mockClear();
-            guiShowTextDocumentSpy.mockClear().mockResolvedValue(fakeEditor as any);
-            errorMessageSpy.mockClear();
+            guiShowTextDocumentSpy.mockResolvedValue(fakeEditor as any);
         });
 
         afterAll(() => {
-            dsFsProviderSpy.mockRestore();
-            guiShowTextDocumentSpy.mockRestore();
-            errorMessageSpy.mockRestore();
+            jest.restoreAllMocks();
         });
 
         it("should try to open one text document", async () => {
@@ -3694,5 +3679,198 @@ describe("Dataset Actions Unit Tests - function search", () => {
             expect(fakeEditor.selection).toEqual(new vscode.Selection(new vscode.Position(0, 0), new vscode.Position(0, 4)));
         });
     });
-    //describe("Main function", async() => {});
+    describe("Main function - search", () => {
+        let tableViewProviderSetTableViewMock = jest.fn();
+        let tableViewProviderSpy: jest.SpyInstance;
+        let openSearchAtLocationSpy: jest.SpyInstance;
+        let getSearchMatchesSpy: jest.SpyInstance;
+        let performSearchSpy: jest.SpyInstance;
+        let withProgressSpy: jest.SpyInstance;
+        let showMessageSpy: jest.SpyInstance;
+        let showInputBoxSpy: jest.SpyInstance;
+        let errorMessageSpy: jest.SpyInstance;
+        let tableBuilderOptionsSpy: jest.SpyInstance;
+        let tableBuilderTitleSpy: jest.SpyInstance;
+        let tableBuilderIsViewSpy: jest.SpyInstance;
+        let tableBuilderRowsSpy: jest.SpyInstance;
+        let tableBuilderColumnsSpy: jest.SpyInstance;
+        let tableBuilderAddRowActionSpy: jest.SpyInstance;
+        let tableBuilderBuildSpy: jest.SpyInstance;
+
+        beforeAll(() => {
+            tableViewProviderSetTableViewMock = jest.fn();
+            tableViewProviderSpy = jest
+                .spyOn(TableViewProvider, "getInstance")
+                .mockReturnValue({ setTableView: tableViewProviderSetTableViewMock } as any);
+            openSearchAtLocationSpy = jest.spyOn(DatasetActions as any, "openSearchAtLocation");
+            getSearchMatchesSpy = jest.spyOn(DatasetActions as any, "getSearchMatches");
+            performSearchSpy = jest.spyOn(DatasetActions as any, "performSearch");
+            withProgressSpy = jest.spyOn(Gui, "withProgress");
+            showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
+            errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation();
+            showInputBoxSpy = jest.spyOn(Gui, "showInputBox");
+            tableBuilderOptionsSpy = jest.spyOn(TableBuilder.prototype, "options").mockReturnValue(TableBuilder.prototype);
+            tableBuilderTitleSpy = jest.spyOn(TableBuilder.prototype, "title").mockReturnValue(TableBuilder.prototype);
+            tableBuilderIsViewSpy = jest.spyOn(TableBuilder.prototype, "isView").mockReturnValue(TableBuilder.prototype);
+            tableBuilderRowsSpy = jest.spyOn(TableBuilder.prototype, "rows").mockReturnValue(TableBuilder.prototype);
+            tableBuilderColumnsSpy = jest.spyOn(TableBuilder.prototype, "columns").mockReturnValue(TableBuilder.prototype);
+            tableBuilderAddRowActionSpy = jest.spyOn(TableBuilder.prototype, "addRowAction").mockReturnValue(TableBuilder.prototype);
+            tableBuilderBuildSpy = jest.spyOn(TableBuilder.prototype, "build").mockImplementation();
+        });
+
+        beforeEach(() => {
+            jest.clearAllMocks();
+            tableViewProviderSetTableViewMock = jest.fn();
+            tableViewProviderSpy = jest
+                .spyOn(TableViewProvider, "getInstance")
+                .mockReturnValue({ setTableView: tableViewProviderSetTableViewMock } as any);
+        });
+
+        afterAll(() => {
+            jest.restoreAllMocks();
+        });
+
+        it("should fail to perform a search (no pattern on session node)", async () => {
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+            node.pattern = "";
+            const context = { context: "fake" } as any;
+
+            await DatasetActions.search(context, node);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("No search pattern applied. Search for a pattern and try again.");
+            expect(showMessageSpy).not.toHaveBeenCalled();
+            expect(performSearchSpy).not.toHaveBeenCalled();
+            expect(getSearchMatchesSpy).not.toHaveBeenCalled();
+            expect(tableViewProviderSpy).not.toHaveBeenCalled();
+            expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
+            expect(withProgressSpy).not.toHaveBeenCalled();
+            expect(tableBuilderTitleSpy).not.toHaveBeenCalled();
+        });
+
+        it("should fail to perform a search if the user does not specify a search string", async () => {
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+            node.pattern = "FAKE.*.DS";
+            const context = { context: "fake" } as any;
+
+            showInputBoxSpy.mockResolvedValue("");
+
+            await DatasetActions.search(context, node);
+
+            expect(errorMessageSpy).not.toHaveBeenCalled();
+            expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
+            expect(showMessageSpy).toHaveBeenCalledWith("Operation Cancelled");
+            expect(performSearchSpy).not.toHaveBeenCalled();
+            expect(getSearchMatchesSpy).not.toHaveBeenCalled();
+            expect(tableViewProviderSpy).not.toHaveBeenCalled();
+            expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
+            expect(withProgressSpy).not.toHaveBeenCalled();
+            expect(tableBuilderTitleSpy).not.toHaveBeenCalled();
+        });
+
+        it("should attempt to perform the search (session node)", async () => {
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+            node.pattern = "FAKE.*.DS";
+            const context = { context: "fake" } as any;
+            const searchString = "test";
+
+            const expectedResponse = {
+                success: true,
+                apiResponse: [
+                    {
+                        dsn: "FAKE.DATA.SET.DS",
+                        member: undefined,
+                        matchList: [
+                            {
+                                line: 1,
+                                column: 1,
+                                contents: "test",
+                            },
+                        ],
+                    },
+                ],
+            };
+            const expectedMatches = [
+                {
+                    name: "FAKE.DATA.SET.DS",
+                    line: 1,
+                    column: 1,
+                    position: "1:1",
+                    contents: "test",
+                    uri: "/test/FAKE.DATA.SET.DS",
+                    searchString,
+                },
+            ];
+
+            showInputBoxSpy.mockResolvedValue(searchString);
+            withProgressSpy.mockResolvedValue(expectedResponse);
+            getSearchMatchesSpy.mockReturnValue(expectedMatches);
+
+            await DatasetActions.search(context, node);
+
+            expect(errorMessageSpy).not.toHaveBeenCalled();
+            expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
+            expect(showMessageSpy).not.toHaveBeenCalled();
+
+            expect(withProgressSpy.mock.calls[0][0]).toEqual({
+                location: vscode.ProgressLocation.Notification,
+                title: 'Searching for "test"',
+                cancellable: true,
+            });
+
+            expect(getSearchMatchesSpy).toHaveBeenCalledWith(node, expectedResponse, true, searchString);
+
+            expect(performSearchSpy).not.toHaveBeenCalled();
+            expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
+
+            expect(tableBuilderTitleSpy).toHaveBeenCalledWith('Search Results for "test"');
+            expect(tableBuilderOptionsSpy).toHaveBeenCalledWith({
+                autoSizeStrategy: { type: "fitCellContents" },
+                pagination: true,
+                rowSelection: "multiple",
+                selectEverything: true,
+                suppressRowClickSelection: true,
+            });
+            expect(tableBuilderIsViewSpy).toHaveBeenCalled();
+            expect(tableBuilderRowsSpy).toHaveBeenCalledWith(...expectedMatches);
+            expect(tableBuilderColumnsSpy).toHaveBeenCalledWith(
+                ...[
+                    {
+                        field: "name",
+                        headerName: vscode.l10n.t("Data Set Name"),
+                        filter: true,
+                        sort: "asc",
+                    } as Table.ColumnOpts,
+                    {
+                        field: "position",
+                        headerName: vscode.l10n.t("Position"),
+                        filter: false,
+                    },
+                    {
+                        field: "contents",
+                        headerName: vscode.l10n.t("Contents"),
+                        filter: true,
+                    },
+                    {
+                        field: "actions",
+                        hide: true,
+                    },
+                ]
+            );
+            expect(tableBuilderAddRowActionSpy).toHaveBeenCalledWith("all", {
+                title: vscode.l10n.t("Open"),
+                command: "open",
+                callback: {
+                    fn: (DatasetActions as any).openSearchAtLocation,
+                    typ: "multi-row",
+                },
+                type: "secondary",
+            });
+            expect(tableBuilderBuildSpy).toHaveBeenCalled();
+            expect(tableViewProviderSpy).toHaveBeenCalled();
+            expect(tableViewProviderSetTableViewMock).toHaveBeenCalled();
+        });
+    });
 });
