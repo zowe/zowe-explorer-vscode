@@ -33,6 +33,33 @@ describe("ZoweLocalStorage Unit Tests", () => {
         expect(ZoweLocalStorage.getValue("fruit" as PersistenceSchemaEnum)).toEqual("banana");
     });
 
+    it("should get workspace values with no default and fallback to global if not found", () => {
+        const globalStorage = {};
+        const workspaceStorage = {};
+        const mockGlobalState = {
+            get: jest.fn().mockImplementation((key, defaultValue) => globalStorage[key] ?? defaultValue),
+            update: jest.fn().mockImplementation((key, value) => (globalStorage[key] = value)),
+            keys: () => [],
+        };
+        const mockWorkspaceState = {
+            get: jest.fn().mockImplementation((key, defaultValue) => workspaceStorage[key] ?? defaultValue),
+            update: jest.fn().mockImplementation((key, value) => (workspaceStorage[key] = value)),
+            keys: () => [],
+        };
+        ZoweLocalStorage.initializeZoweLocalStorage(mockGlobalState, mockWorkspaceState);
+        // add value into local storage
+        ZoweLocalStorage.setValue("fruit" as PersistenceSchemaEnum, "banana");
+
+        // assert that it can still be retrieved from global storage
+        expect(ZoweLocalStorage.getValue("fruit" as PersistenceSchemaEnum)).toEqual("banana");
+
+        // workspace state access should have default value of undefined
+        // covers `ZoweLocalStorage.workspaceState?.get<T>(key, undefined) ?? ZoweLocalStorage.globalState.get<T>(key, defaultValue);`
+        expect(mockWorkspaceState.get).toHaveBeenCalledWith("fruit" as PersistenceSchemaEnum, undefined);
+        // expect global state to be accessed since key in workspace state was undefined
+        expect(mockGlobalState.get).toHaveBeenCalledWith("fruit" as PersistenceSchemaEnum, undefined);
+    });
+
     it("should set workspace values successfully when setInWorkspace is true", () => {
         const globalState = { get: jest.fn(), update: jest.fn(), keys: () => [] } as vscode.Memento;
         const workspaceState = { get: jest.fn(), update: jest.fn(), keys: () => [] } as vscode.Memento;

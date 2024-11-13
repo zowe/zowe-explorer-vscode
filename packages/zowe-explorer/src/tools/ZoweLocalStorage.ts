@@ -39,7 +39,7 @@ export class ZoweLocalStorage {
     public static getValue<T>(key: keyof LocalStorageACL): T {
         ZoweLogger.trace("ZoweLocalStorage.getValue called");
         const defaultValue = meta.contributes.configuration.properties[key]?.default;
-        return ZoweLocalStorage.workspaceState?.get<T>(key, defaultValue) ?? ZoweLocalStorage.globalState.get<T>(key, defaultValue);
+        return ZoweLocalStorage.workspaceState?.get<T>(key, undefined) ?? ZoweLocalStorage.globalState.get<T>(key, defaultValue);
     }
 
     public static setValue<T>(key: keyof LocalStorageACL, value: T, setInWorkspace?: boolean): Thenable<void> {
