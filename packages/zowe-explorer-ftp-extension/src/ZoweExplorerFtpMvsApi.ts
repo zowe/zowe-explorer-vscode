@@ -19,7 +19,6 @@ import { CoreUtils, DataSetUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 import * as globals from "./globals";
 import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";
-import { isAbsolute as isAbsolutePath } from "path";
 // The Zowe FTP CLI plugin is written and uses mostly JavaScript, so relax the rules here.
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
