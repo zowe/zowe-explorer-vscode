@@ -430,9 +430,9 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
                 parentPath: "/u/user",
             }),
             providerSpy: jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
-                ds: { addSingleSession: jest.fn(), mSessionNodes: [], refresh: jest.fn() } as any,
-                uss: { addSingleSession: jest.fn(), mSessionNodes: [], refresh: jest.fn() } as any,
-                job: { addSingleSession: jest.fn(), mSessionNodes: [], refresh: jest.fn() } as any,
+                ds: { addSingleSession: jest.fn(), mSessionNodes: [], setStatusForSession: jest.fn(), refresh: jest.fn() } as any,
+                uss: { addSingleSession: jest.fn(), mSessionNodes: [], setStatusForSession: jest.fn(), refresh: jest.fn() } as any,
+                job: { addSingleSession: jest.fn(), mSessionNodes: [], setStatusForSession: jest.fn(), refresh: jest.fn() } as any,
             }),
             renameSpy: jest.spyOn(vscode.workspace.fs, "rename").mockImplementation(),
             getEncodingForFile: jest.spyOn(UssFSProvider.instance as any, "getEncodingForFile").mockReturnValue(undefined),

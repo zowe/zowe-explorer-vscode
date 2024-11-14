@@ -1065,7 +1065,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
         environmentSetup(globalMocks);
         setupProfilesCheck(globalMocks);
-        const ssoLoginSpy = jest.spyOn(Profiles.getInstance(), "ssoLogin").mockResolvedValueOnce();
+        const ssoLoginSpy = jest.spyOn(Profiles.getInstance(), "ssoLogin").mockResolvedValueOnce(true);
         jest.spyOn(Profiles.getInstance(), "loadNamedProfile").mockReturnValueOnce(globalMocks.testProfile);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
         expect(ssoLoginSpy).toHaveBeenCalledTimes(1);
@@ -2462,5 +2462,22 @@ describe("Profiles Unit Tests - function tokenAuthClearSecureArray", () => {
         expect(teamCfgMock.save).toHaveBeenCalled();
         getProfileInfoMock.mockRestore();
         getProfileFromConfigMock.mockRestore();
+    });
+});
+
+describe("Profiles unit tests - function showProfilesInactiveMsg", () => {
+    it("should call ZoweLogger.error to log the error", () => {
+        const errorSpy = jest.spyOn(ZoweLogger, "error");
+        Profiles.getInstance().showProfileInactiveMsg("profName");
+        expect(errorSpy).toHaveBeenCalledWith(
+            "Profile profName is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
+        );
+    });
+    it("should call Gui.errorMessage to display the message", () => {
+        const errorMsgSpy = jest.spyOn(Gui, "errorMessage");
+        Profiles.getInstance().showProfileInactiveMsg("profName");
+        expect(errorMsgSpy).toHaveBeenCalledWith(
+            "Profile profName is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
+        );
     });
 });

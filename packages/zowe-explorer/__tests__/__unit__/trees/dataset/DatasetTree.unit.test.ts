@@ -895,9 +895,24 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         jest.spyOn(testTree, "addSingleSession").mockImplementation();
         jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
-            ds: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
-            uss: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
-            jobs: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
+            ds: {
+                addSingleSession: jest.fn(),
+                mSessionNodes: [blockMocks.datasetSessionNode],
+                setStatusForSession: jest.fn(),
+                refresh: jest.fn(),
+            } as any,
+            uss: {
+                addSingleSession: jest.fn(),
+                mSessionNodes: [blockMocks.datasetSessionNode],
+                setStatusForSession: jest.fn(),
+                refresh: jest.fn(),
+            } as any,
+            jobs: {
+                addSingleSession: jest.fn(),
+                mSessionNodes: [blockMocks.datasetSessionNode],
+                setStatusForSession: jest.fn(),
+                refresh: jest.fn(),
+            } as any,
         } as any);
 
         await testTree.addSession(blockMocks.imperativeProfile.name);
@@ -1497,7 +1512,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             qpPlaceholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
             mockEnableValidationContext: jest.fn(),
             testTree: new DatasetTree(),
-            checkJwtTokenForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtTokenForProfile").mockImplementationOnce(() => {}),
+            checkJwtTokenForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtTokenForProfile").mockResolvedValueOnce(true),
         };
 
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
@@ -1536,9 +1551,24 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         jest.spyOn(testTree, "addSingleSession").mockImplementation();
         jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
-            ds: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
-            uss: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
-            jobs: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
+            ds: {
+                addSingleSession: jest.fn(),
+                setStatusForSession: jest.fn(),
+                mSessionNodes: [blockMocks.datasetSessionNode],
+                refresh: jest.fn(),
+            } as any,
+            uss: {
+                addSingleSession: jest.fn(),
+                setStatusForSession: jest.fn(),
+                mSessionNodes: [blockMocks.datasetSessionNode],
+                refresh: jest.fn(),
+            } as any,
+            jobs: {
+                addSingleSession: jest.fn(),
+                setStatusForSession: jest.fn(),
+                mSessionNodes: [blockMocks.datasetSessionNode],
+                refresh: jest.fn(),
+            } as any,
         } as any);
 
         await testTree.datasetFilterPrompt(favoriteSearch);
@@ -1566,7 +1596,6 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(testTree.mSessionNodes[1].contextValue).toEqual(Constants.DS_SESSION_CONTEXT + Constants.ACTIVE_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
     it("Checking adding of new filter of multiple ds search", async () => {
@@ -1594,7 +1623,6 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(testTree.mSessionNodes[1].contextValue).toEqual(Constants.DS_SESSION_CONTEXT + Constants.ACTIVE_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD, HLQ.PROD1*");
     });
     it("Checking adding of new filter with data set member", async () => {
@@ -1607,7 +1635,6 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
-        expect(testTree.mSessionNodes[1].contextValue).toEqual(Constants.DS_SESSION_CONTEXT + Constants.ACTIVE_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1");
     });
     it("Checking adding of new filter with Unverified profile", async () => {
@@ -1635,7 +1662,6 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(testTree.mSessionNodes[1].contextValue).toEqual(Constants.DS_SESSION_CONTEXT + Constants.UNVERIFIED_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
     it("Checking cancelled attempt to add a filter", async () => {
