@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweTreeNode, PersistenceSchemaEnum, Validation, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, PersistenceSchemaEnum, Validation } from "@zowe/zowe-explorer-api";
 import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedContext } from "../trees/shared/SharedContext";
@@ -18,7 +18,6 @@ import { Profiles } from "../configuration/Profiles";
 import { Constants } from "../configuration/Constants";
 import { IconGenerator } from "../icons/IconGenerator";
 import { IconUtils } from "../icons/IconUtils";
-import { AuthUtils } from "../utils/AuthUtils";
 
 export class ZoweCommandProvider {
     // eslint-disable-next-line no-magic-numbers
@@ -69,15 +68,7 @@ export class ZoweCommandProvider {
                 }
             }
 
-            await AuthUtils.errorHandling(
-                vscode.l10n.t({
-                    message:
-                        "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
-                    args: [profile.name],
-                    comment: ["Profile name"],
-                }),
-                { apiType: ZoweExplorerApiType.Command, profile }
-            );
+            Profiles.getInstance().showProfileInactiveMsg(profile.name);
         } else if (profileStatus.status === "active") {
             if (
                 SharedContext.isSessionNotFav(node) &&

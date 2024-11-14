@@ -71,6 +71,7 @@ When("a user clicks search button for the profile", async function () {
 
     // Locate and select the search button on the profile node
     const searchButton = actionButtons[actionButtons.length - 1];
+    await searchButton.wait();
     await expect(searchButton.elem).toBeDefined();
     await searchButton.elem.click();
 });
@@ -86,7 +87,6 @@ Then(/the user will be prompted for (.*) credentials/, async function (authType:
     await browser.keys(Key.Escape);
 });
 Then("the profile node icon will be marked as inactive", async function () {
-    await browser.waitUntil((): Promise<boolean> => this.profileNode.isExpanded());
     const iconElement = await this.profileNode.elem.$(".custom-view-tree-node-item-icon");
     const iconPath = (await iconElement.getCSSProperty("background-image")).value;
     await expect(iconPath).toContain("folder-root-disconnected-closed.svg");
