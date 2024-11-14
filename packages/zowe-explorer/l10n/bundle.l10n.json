@@ -57,10 +57,9 @@
       "Credential manager display name"
     ]
   },
-  "Yes, globally": "Yes, globally",
-  "Only for this workspace": "Only for this workspace",
-  "Zowe Explorer failed to activate since the default credential manager is not supported in your environment.": "Zowe Explorer failed to activate since the default credential manager is not supported in your environment.",
-  "Do you wish to disable credential management? (VS Code window reload will be triggered)": "Do you wish to disable credential management? (VS Code window reload will be triggered)",
+  "Zowe Explorer's default credential manager is not supported in your environment. Consider installing a custom solution for your platform. Click Reload to start Zowe Explorer without a credential manager.": "Zowe Explorer's default credential manager is not supported in your environment. Consider installing a custom solution for your platform. Click Reload to start Zowe Explorer without a credential manager.",
+  "Reload window": "Reload window",
+  "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions.": "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions.",
   "No custom credential managers found, using the default instead.": "No custom credential managers found, using the default instead.",
   "Custom credential manager {0} found/Credential manager display name": {
     "message": "Custom credential manager {0} found",
@@ -163,12 +162,6 @@
   "Required parameter 'host' must not be blank.": "Required parameter 'host' must not be blank.",
   "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection./Profile name": {
     "message": "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
-    "comment": [
-      "Profile name"
-    ]
-  },
-  "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct./Profile name": {
-    "message": "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
     "comment": [
       "Profile name"
     ]
@@ -276,12 +269,6 @@
   "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
   "Failed to move {0}/File path": {
     "message": "Failed to move {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Failed to get contents for {0}/File path": {
-    "message": "Failed to get contents for {0}",
     "comment": [
       "File path"
     ]
@@ -506,12 +493,6 @@
   "Phase Name": "Phase Name",
   "Error Details": "Error Details",
   "Fetching spool file...": "Fetching spool file...",
-  "Failed to get contents for {0}/Spool name": {
-    "message": "Failed to get contents for {0}",
-    "comment": [
-      "Spool name"
-    ]
-  },
   "Failed to delete job {0}/Job name": {
     "message": "Failed to delete job {0}",
     "comment": [
@@ -981,6 +962,12 @@
   },
   "Reload Window": "Reload Window",
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.",
+  "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct./Profile name": {
+    "message": "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
+    "comment": [
+      "Profile name"
+    ]
+  },
   "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree",
   "Choose \"Create new...\" to define or select a profile to add to the JOBS tree": "Choose \"Create new...\" to define or select a profile to add to the JOBS tree",
   "Choose \"Create new...\" to define or select a profile to add to the USS tree": "Choose \"Create new...\" to define or select a profile to add to the USS tree",
