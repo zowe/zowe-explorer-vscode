@@ -1802,6 +1802,11 @@ export class DatasetActions {
             }
         );
 
+        // Either the user cancelled the search, or a catestrophic error occurred and error handling has already been done.
+        if (response === undefined) {
+            return;
+        }
+
         // Prepare a list of matches in a format the table expects
         const matches = this.getSearchMatches(node, response, generateFullUri, searchString);
 
@@ -1941,6 +1946,11 @@ export class DatasetActions {
                 mainframeSearch: false,
                 continueSearch: DatasetActions.continueSearchPrompt,
             });
+
+            // The user cancelled the search
+            if (response.success === false && response.commandResponse?.includes("cancelled")) {
+                return;
+            }
 
             // If there is no API response and success is false, the search didn't even begin searching data sets, and stopped during listing.
             // Return an error to the user since we have no useful data. Otherwise, display partial results.

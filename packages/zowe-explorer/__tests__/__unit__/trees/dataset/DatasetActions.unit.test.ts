@@ -3121,7 +3121,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
             jest.restoreAllMocks();
         });
 
-        it("should show a message if cancellation was requested", async () => {
+        it("should show a message if cancellation was requested 1", async () => {
             const tokenCancellation: vscode.CancellationToken = {
                 isCancellationRequested: true,
                 onCancellationRequested: jest.fn(),
@@ -3138,6 +3138,39 @@ describe("Dataset Actions Unit Tests - function search", () => {
             expect(reportProgressSpy).not.toHaveBeenCalled();
             expect(searchDataSetsMock).not.toHaveBeenCalled();
             expect(continueSearchPromptSpy).not.toHaveBeenCalled();
+            expect(authErrorHandlingSpy).not.toHaveBeenCalled();
+            expect(loggerErrorSpy).not.toHaveBeenCalled();
+        });
+
+        it("should show a message if cancellation was requested 2", async () => {
+            const tokenCancellation: vscode.CancellationToken = {
+                isCancellationRequested: false,
+                onCancellationRequested: jest.fn(),
+            };
+            const myProgress = { test: "test" };
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+            const taskExpected = { percentComplete: 0, stageName: 0, statusMessage: "" };
+
+            searchDataSetsMock.mockImplementation((object) => {
+                object.progressTask.percentComplete = 0;
+                object.continueSearch([]);
+                return Promise.resolve({ success: false, commandResponse: "The search was cancelled." });
+            });
+
+            await (DatasetActions as any).performSearch(myProgress, tokenCancellation, { node, pattern: "TEST.*", searchString: "test" });
+
+            expect(getMvsApiSpy).toHaveBeenCalledTimes(1);
+            expect(showMessageSpy).not.toHaveBeenCalled();
+            expect(reportProgressSpy).toHaveBeenCalledWith(myProgress, 100, -1, "Percent Complete");
+            expect(searchDataSetsMock).toHaveBeenCalledWith({
+                pattern: "TEST.*",
+                searchString: "test",
+                progressTask: taskExpected,
+                mainframeSearch: false,
+                continueSearch: continueSearchPromptSpy,
+            });
+            expect(continueSearchPromptSpy).toHaveBeenCalledTimes(1);
             expect(authErrorHandlingSpy).not.toHaveBeenCalled();
             expect(loggerErrorSpy).not.toHaveBeenCalled();
         });
@@ -3766,6 +3799,42 @@ describe("Dataset Actions Unit Tests - function search", () => {
             expect(tableViewProviderSpy).not.toHaveBeenCalled();
             expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
             expect(withProgressSpy).not.toHaveBeenCalled();
+            expect(tableBuilderTitleSpy).not.toHaveBeenCalled();
+        });
+
+        it("should fail to perform a search if the user responds no to the prompt", async () => {
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+            node.pattern = "FAKE.*.DS";
+            const context = { context: "fake" } as any;
+            const searchString = "test";
+
+            const tokenCancellation: vscode.CancellationToken = {
+                isCancellationRequested: false,
+                onCancellationRequested: jest.fn(),
+            };
+            const myProgress = { test: "test" };
+
+            showInputBoxSpy.mockResolvedValue(searchString);
+            withProgressSpy.mockImplementation((opts: any, fn: any) => {
+                return fn(myProgress, tokenCancellation);
+            });
+            performSearchSpy.mockResolvedValue(undefined);
+
+            await DatasetActions.search(context, node);
+
+            expect(errorMessageSpy).not.toHaveBeenCalled();
+            expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
+            expect(showMessageSpy).not.toHaveBeenCalled();
+            expect(performSearchSpy).toHaveBeenCalledTimes(1);
+            expect(getSearchMatchesSpy).not.toHaveBeenCalled();
+            expect(tableViewProviderSpy).not.toHaveBeenCalled();
+            expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
+            expect(withProgressSpy.mock.calls[0][0]).toEqual({
+                location: vscode.ProgressLocation.Notification,
+                title: 'Searching for "test"',
+                cancellable: true,
+            });
             expect(tableBuilderTitleSpy).not.toHaveBeenCalled();
         });
 
