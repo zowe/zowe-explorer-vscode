@@ -10,7 +10,7 @@
  */
 
 import { Disposable, FilePermission, FileSystemError, FileType, TextEditor, Uri, workspace } from "vscode";
-import { BaseProvider, DirEntry, FileEntry, Gui, UssDirectory, UssFile, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { BaseProvider, DirEntry, FileEntry, Gui, imperative, UssDirectory, UssFile, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
@@ -325,11 +325,12 @@ describe("fetchFileAtUri", () => {
     });
     it("returns early if it failed to fetch contents", async () => {
         const fileEntry = { ...testEntries.file };
+        fileEntry.wasAccessed = false;
         const _fireSoonSpy = jest.spyOn((UssFSProvider as any).prototype, "_fireSoon");
         const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
         const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation();
         const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
-            getContents: jest.fn().mockRejectedValue(new Error("error retrieving contents")),
+            getContents: jest.fn().mockRejectedValue(new imperative.ImperativeError({ msg: "Error fetching contents" })),
         } as any);
         const promptForAuthErrorMock = jest.spyOn(AuthUtils, "promptForAuthError").mockImplementation();
 
