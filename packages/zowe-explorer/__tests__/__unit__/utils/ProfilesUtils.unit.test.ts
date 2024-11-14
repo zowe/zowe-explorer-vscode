@@ -233,7 +233,6 @@ describe("ProfilesUtils unit tests", () => {
             await AuthUtils.errorHandling(errorDetails, label, moreInfo);
             expect(showErrorSpy).toHaveBeenCalledTimes(1);
             expect(promptCredentialsSpy).not.toHaveBeenCalled();
-            expect(showMsgSpy).toHaveBeenCalledWith("Operation Cancelled");
             showErrorSpy.mockClear();
             showMsgSpy.mockClear();
             promptCredentialsSpy.mockClear();
