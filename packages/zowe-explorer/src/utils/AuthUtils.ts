@@ -18,8 +18,8 @@ import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 
 export class AuthUtils {
     public static async promptForAuthentication(
-        profile: string | imperative.IProfileLoaded,
-        imperativeError: imperative.ImperativeError
+        imperativeError: imperative.ImperativeError,
+        profile: string | imperative.IProfileLoaded
     ): Promise<boolean> {
         let profileName = typeof profile === "string" ? profile : profile.name;
         const errMsg = vscode.l10n.t({
@@ -73,7 +73,7 @@ export class AuthUtils {
             httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
             imperativeError.message.includes("All configured authentication methods failed")
         ) {
-            void AuthUtils.promptForAuthentication(profile, imperativeError).catch(
+            void AuthUtils.promptForAuthentication(imperativeError, profile).catch(
                 (error) => error instanceof Error && ZoweLogger.error(error.message)
             );
         }
@@ -108,7 +108,7 @@ export class AuthUtils {
                 httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
                 imperativeError.message.includes("All configured authentication methods failed")
             ) {
-                return AuthUtils.promptForAuthentication(label, imperativeError);
+                return AuthUtils.promptForAuthentication(imperativeError, label);
             }
         }
         if (errorDetails.toString().includes("Could not find profile")) {
