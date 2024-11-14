@@ -286,6 +286,7 @@ export function createTreeView(selection?): vscode.TreeView<ZoweTreeProvider<any
         onDidChangeVisibility: jest.fn(),
         dispose: jest.fn(),
         addSingleSession: jest.fn(),
+        setStatusForSession: jest.fn(),
     } as unknown as vscode.TreeView<ZoweTreeProvider<any>>;
 }
 
@@ -367,6 +368,7 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         convertV1ProfToConfig: jest.fn(),
         getLoadedProfConfig: jest.fn(),
         getSecurePropsForProfile: jest.fn(),
+        showProfileInactiveMsg: jest.fn(),
     } as any;
 }
 
@@ -616,6 +618,7 @@ export function createTreeProviders() {
             removeSession: jest.fn(),
             refresh: jest.fn(),
             addSingleSession: jest.fn(),
+            setStatusForSession: jest.fn(),
             refreshElement: jest.fn(),
         } as any,
         uss: {
@@ -627,6 +630,7 @@ export function createTreeProviders() {
             removeSession: jest.fn(),
             refresh: jest.fn(),
             addSingleSession: jest.fn(),
+            setStatusForSession: jest.fn(),
             refreshElement: jest.fn(),
             addEncodingHistory: jest.fn(),
             getEncodingHistory: jest.fn(),
@@ -640,6 +644,7 @@ export function createTreeProviders() {
             deleteSession: jest.fn(),
             refresh: jest.fn(),
             addSingleSession: jest.fn(),
+            setStatusForSession: jest.fn(),
         } as any,
     };
 }

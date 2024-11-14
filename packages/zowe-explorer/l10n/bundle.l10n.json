@@ -166,12 +166,6 @@
       "Profile name"
     ]
   },
-  "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct./Profile name": {
-    "message": "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
-    "comment": [
-      "Profile name"
-    ]
-  },
   "Use the search button to list USS files": "Use the search button to list USS files",
   "Invalid node": "Invalid node",
   "Delete action was cancelled.": "Delete action was cancelled.",
@@ -202,48 +196,6 @@
   "Profile auth error": "Profile auth error",
   "Profile is not authenticated, please log in to continue": "Profile is not authenticated, please log in to continue",
   "Retrieving response from USS list API": "Retrieving response from USS list API",
-  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
-  "Failed to move {0}/File path": {
-    "message": "Failed to move {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Failed to get contents for {0}/File path": {
-    "message": "Failed to get contents for {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Profile does not exist for this file.": "Profile does not exist for this file.",
-  "Saving USS file...": "Saving USS file...",
-  "Failed to rename {0}/File path": {
-    "message": "Failed to rename {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Failed to delete {0}/File name": {
-    "message": "Failed to delete {0}",
-    "comment": [
-      "File name"
-    ]
-  },
-  "No error details given": "No error details given",
-  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
-    "message": "Error fetching destination {0} for paste action: {1}",
-    "comment": [
-      "USS path",
-      "Error message"
-    ]
-  },
-  "Failed to copy {0} to {1}/Source pathDestination path": {
-    "message": "Failed to copy {0} to {1}",
-    "comment": [
-      "Source path",
-      "Destination path"
-    ]
-  },
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
     "comment": [
@@ -314,6 +266,42 @@
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "Pulling from Mainframe...": "Pulling from Mainframe...",
+  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
+  "Failed to move {0}/File path": {
+    "message": "Failed to move {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Profile does not exist for this file.": "Profile does not exist for this file.",
+  "Saving USS file...": "Saving USS file...",
+  "Failed to rename {0}/File path": {
+    "message": "Failed to rename {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Failed to delete {0}/File name": {
+    "message": "Failed to delete {0}",
+    "comment": [
+      "File name"
+    ]
+  },
+  "No error details given": "No error details given",
+  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
+    "message": "Error fetching destination {0} for paste action: {1}",
+    "comment": [
+      "USS path",
+      "Error message"
+    ]
+  },
+  "Failed to copy {0} to {1}/Source pathDestination path": {
+    "message": "Failed to copy {0} to {1}",
+    "comment": [
+      "Source path",
+      "Destination path"
+    ]
+  },
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -505,12 +493,6 @@
   "Phase Name": "Phase Name",
   "Error Details": "Error Details",
   "Fetching spool file...": "Fetching spool file...",
-  "Failed to get contents for {0}/Spool name": {
-    "message": "Failed to get contents for {0}",
-    "comment": [
-      "Spool name"
-    ]
-  },
   "Failed to delete job {0}/Job name": {
     "message": "Failed to delete job {0}",
     "comment": [
@@ -989,6 +971,12 @@
   },
   "Reload Window": "Reload Window",
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.",
+  "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct./Profile name": {
+    "message": "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
+    "comment": [
+      "Profile name"
+    ]
+  },
   "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree",
   "Choose \"Create new...\" to define or select a profile to add to the JOBS tree": "Choose \"Create new...\" to define or select a profile to add to the JOBS tree",
   "Choose \"Create new...\" to define or select a profile to add to the USS tree": "Choose \"Create new...\" to define or select a profile to add to the USS tree",

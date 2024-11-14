@@ -217,44 +217,72 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         await Profiles.getInstance().editSession(profile);
     }
 
+    private setStatusForSession(node: IZoweTreeNode, status: Validation.ValidationType): void {
+        if (node == null) {
+            // If no session node was found for this provider, don't try to update it
+            return;
+        }
+        let statusContext: string;
+        let iconId: IconUtils.IconId;
+        switch (status) {
+            default:
+            case Validation.ValidationType.UNVERIFIED:
+                statusContext = Constants.UNVERIFIED_CONTEXT;
+                iconId = IconUtils.IconId.session;
+                break;
+            case Validation.ValidationType.VALID:
+                statusContext = Constants.ACTIVE_CONTEXT;
+                iconId = IconUtils.IconId.sessionActive;
+                break;
+            case Validation.ValidationType.INVALID:
+                statusContext = Constants.INACTIVE_CONTEXT;
+                iconId = IconUtils.IconId.sessionInactive;
+                break;
+        }
+
+        node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
+        node.contextValue = node.contextValue + statusContext;
+        const inactiveIcon = IconGenerator.getIconById(iconId);
+        if (inactiveIcon) {
+            node.iconPath = inactiveIcon.path;
+        }
+        this.nodeDataChanged(node as T);
+    }
+
+    private static updateSessionContext(profileName: string, status: Validation.ValidationType): void {
+        for (const provider of Object.values(SharedTreeProviders.providers)) {
+            const session = (provider as IZoweTree<IZoweTreeNode>).mSessionNodes.find((n) => n.getProfileName() === profileName);
+            (provider as ZoweTreeProvider<IZoweTreeNode>)?.setStatusForSession(session, status);
+        }
+    }
+
     public async checkCurrentProfile(node: IZoweTreeNode): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("ZoweTreeProvider.checkCurrentProfile called.");
         const profile = node.getProfile();
+        const profileName = profile.name ?? node.getProfileName();
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
+        const tokenUnusedOrValid = await ZoweTreeProvider.checkJwtTokenForProfile(profileName);
+        if (!tokenUnusedOrValid) {
+            // Mark profile as inactive if user dismissed "token expired/login" prompt
+            profileStatus.status = "inactive";
+            Profiles.getInstance().validProfile = Validation.ValidationType.INVALID;
+        }
         if (profileStatus.status === "inactive") {
             if (
                 SharedContext.isSessionNotFav(node) &&
                 (node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))
             ) {
-                node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
-                node.contextValue = node.contextValue + Constants.INACTIVE_CONTEXT;
-                const inactiveIcon = IconGenerator.getIconById(IconUtils.IconId.sessionInactive);
-                if (inactiveIcon) {
-                    node.iconPath = inactiveIcon.path;
-                }
+                ZoweTreeProvider.updateSessionContext(profileName, Validation.ValidationType.INVALID);
                 Profiles.getInstance().validProfile = Validation.ValidationType.INVALID;
             }
 
-            await AuthUtils.errorHandling(
-                vscode.l10n.t({
-                    message:
-                        "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
-                    args: [profile.name],
-                    comment: ["Profile name"],
-                }),
-                { profile }
-            );
+            Profiles.getInstance().showProfileInactiveMsg(profile.name);
         } else if (profileStatus.status === "active") {
             if (
                 SharedContext.isSessionNotFav(node) &&
                 (node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))
             ) {
-                node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
-                node.contextValue = node.contextValue + Constants.ACTIVE_CONTEXT;
-                const activeIcon = IconGenerator.getIconById(IconUtils.IconId.sessionActive);
-                if (activeIcon) {
-                    node.iconPath = activeIcon.path;
-                }
+                ZoweTreeProvider.updateSessionContext(profileName, Validation.ValidationType.VALID);
                 Profiles.getInstance().validProfile = Validation.ValidationType.VALID;
             }
         } else if (profileStatus.status === "unverified") {
@@ -262,12 +290,10 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
                 SharedContext.isSessionNotFav(node) &&
                 (node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))
             ) {
-                node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
-                node.contextValue = node.contextValue + Constants.UNVERIFIED_CONTEXT;
+                ZoweTreeProvider.updateSessionContext(profileName, Validation.ValidationType.UNVERIFIED);
                 Profiles.getInstance().validProfile = Validation.ValidationType.UNVERIFIED;
             }
         }
-        await ZoweTreeProvider.checkJwtTokenForProfile(node.getProfileName());
         this.refresh();
         return profileStatus;
     }
@@ -312,13 +338,28 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
      * If the token has expired, it will prompt the user to log in again.
      *
      * @param profileName The name of the profile to check the JWT token for
+     * @returns
+     * `true` if:
+     * - the user attempted to log in
+     * - the profile does not have a token
+     * - the token has not expired on the profile
+     *
+     * `false` if:
+     * - they selected "Cancel" / closed the login prompt
      */
-    protected static async checkJwtTokenForProfile(profileName: string): Promise<void> {
+    protected static async checkJwtTokenForProfile(profileName: string): Promise<boolean> {
         const profInfo = await Profiles.getInstance().getProfileInfo();
 
         if (profInfo.hasTokenExpiredForProfile(profileName)) {
-            await AuthUtils.promptUserForSsoLogin(profileName);
+            const userResponse = await AuthUtils.promptForSsoLogin(profileName);
+            if (userResponse === vscode.l10n.t("Log in to Authentication Service")) {
+                return true;
+            }
+
+            return false;
         }
+
+        return true;
     }
 
     private async loadProfileBySessionName(
