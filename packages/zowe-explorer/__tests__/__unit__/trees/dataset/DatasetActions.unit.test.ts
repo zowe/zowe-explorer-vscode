@@ -3833,7 +3833,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
                 selectEverything: true,
                 suppressRowClickSelection: true,
             });
-            expect(tableBuilderIsViewSpy).toHaveBeenCalled();
+            expect(tableBuilderIsViewSpy).toHaveBeenCalledTimes(1);
             expect(tableBuilderRowsSpy).toHaveBeenCalledWith(...expectedMatches);
             expect(tableBuilderColumnsSpy).toHaveBeenCalledWith(
                 ...[
@@ -3868,9 +3868,373 @@ describe("Dataset Actions Unit Tests - function search", () => {
                 },
                 type: "secondary",
             });
-            expect(tableBuilderBuildSpy).toHaveBeenCalled();
-            expect(tableViewProviderSpy).toHaveBeenCalled();
-            expect(tableViewProviderSetTableViewMock).toHaveBeenCalled();
+            expect(tableBuilderBuildSpy).toHaveBeenCalledTimes(1);
+            expect(tableViewProviderSpy).toHaveBeenCalledTimes(1);
+            expect(tableViewProviderSetTableViewMock).toHaveBeenCalledTimes(1);
+        });
+        it("should attempt to perform the search (pds node)", async () => {
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+            const pdsNode = new ZoweDatasetNode({
+                label: "FAKE.DATA.SET.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: node,
+            });
+            pdsNode.contextValue = Constants.DS_PDS_CONTEXT;
+            node.pattern = "FAKE.*.PDS";
+            const context = { context: "fake" } as any;
+            const searchString = "test";
+
+            const expectedResponse = {
+                success: true,
+                apiResponse: [
+                    {
+                        dsn: "FAKE.DATA.SET.PDS",
+                        member: "MEM1",
+                        matchList: [
+                            {
+                                line: 1,
+                                column: 1,
+                                contents: "test",
+                            },
+                        ],
+                    },
+                    {
+                        dsn: "FAKE.DATA.SET.PDS",
+                        member: "MEM2",
+                        matchList: [
+                            {
+                                line: 1,
+                                column: 1,
+                                contents: "test",
+                            },
+                        ],
+                    },
+                ],
+            };
+            const expectedMatches = [
+                {
+                    name: "FAKE.DATA.SET.PDS(MEM1)",
+                    line: 1,
+                    column: 1,
+                    position: "1:1",
+                    contents: "test",
+                    uri: "/test/FAKE.DATA.SET.PDS/MEM1",
+                    searchString,
+                },
+                {
+                    name: "FAKE.DATA.SET.PDS(MEM2)",
+                    line: 1,
+                    column: 1,
+                    position: "1:1",
+                    contents: "test",
+                    uri: "/test/FAKE.DATA.SET.PDS/MEM2",
+                    searchString,
+                },
+            ];
+
+            showInputBoxSpy.mockResolvedValue(searchString);
+            withProgressSpy.mockResolvedValue(expectedResponse);
+            getSearchMatchesSpy.mockReturnValue(expectedMatches);
+
+            await DatasetActions.search(context, pdsNode);
+
+            expect(errorMessageSpy).not.toHaveBeenCalled();
+            expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
+            expect(showMessageSpy).not.toHaveBeenCalled();
+
+            expect(withProgressSpy.mock.calls[0][0]).toEqual({
+                location: vscode.ProgressLocation.Notification,
+                title: 'Searching for "test"',
+                cancellable: true,
+            });
+
+            expect(getSearchMatchesSpy).toHaveBeenCalledWith(pdsNode, expectedResponse, false, searchString);
+
+            expect(performSearchSpy).not.toHaveBeenCalled();
+            expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
+
+            expect(tableBuilderTitleSpy).toHaveBeenCalledWith('Search Results for "test"');
+            expect(tableBuilderOptionsSpy).toHaveBeenCalledWith({
+                autoSizeStrategy: { type: "fitCellContents" },
+                pagination: true,
+                rowSelection: "multiple",
+                selectEverything: true,
+                suppressRowClickSelection: true,
+            });
+            expect(tableBuilderIsViewSpy).toHaveBeenCalledTimes(1);
+            expect(tableBuilderRowsSpy).toHaveBeenCalledWith(...expectedMatches);
+            expect(tableBuilderColumnsSpy).toHaveBeenCalledWith(
+                ...[
+                    {
+                        field: "name",
+                        headerName: vscode.l10n.t("Data Set Name"),
+                        filter: true,
+                        sort: "asc",
+                    } as Table.ColumnOpts,
+                    {
+                        field: "position",
+                        headerName: vscode.l10n.t("Position"),
+                        filter: false,
+                    },
+                    {
+                        field: "contents",
+                        headerName: vscode.l10n.t("Contents"),
+                        filter: true,
+                    },
+                    {
+                        field: "actions",
+                        hide: true,
+                    },
+                ]
+            );
+            expect(tableBuilderAddRowActionSpy).toHaveBeenCalledWith("all", {
+                title: vscode.l10n.t("Open"),
+                command: "open",
+                callback: {
+                    fn: (DatasetActions as any).openSearchAtLocation,
+                    typ: "multi-row",
+                },
+                type: "secondary",
+            });
+            expect(tableBuilderBuildSpy).toHaveBeenCalledTimes(1);
+            expect(tableViewProviderSpy).toHaveBeenCalledTimes(1);
+            expect(tableViewProviderSetTableViewMock).toHaveBeenCalledTimes(1);
+        });
+
+        it("should attempt to perform the search (favorited session node)", async () => {
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+            node.pattern = "FAKE.*.DS";
+            node.contextValue = Constants.DS_SESSION_FAV_CONTEXT;
+            const context = { context: "fake" } as any;
+            const searchString = "test";
+
+            const expectedResponse = {
+                success: true,
+                apiResponse: [
+                    {
+                        dsn: "FAKE.DATA.SET.DS",
+                        member: undefined,
+                        matchList: [
+                            {
+                                line: 1,
+                                column: 1,
+                                contents: "test",
+                            },
+                        ],
+                    },
+                ],
+            };
+            const expectedMatches = [
+                {
+                    name: "FAKE.DATA.SET.DS",
+                    line: 1,
+                    column: 1,
+                    position: "1:1",
+                    contents: "test",
+                    uri: "/test/FAKE.DATA.SET.DS",
+                    searchString,
+                },
+            ];
+
+            showInputBoxSpy.mockResolvedValue(searchString);
+            withProgressSpy.mockResolvedValue(expectedResponse);
+            getSearchMatchesSpy.mockReturnValue(expectedMatches);
+
+            await DatasetActions.search(context, node);
+
+            expect(errorMessageSpy).not.toHaveBeenCalled();
+            expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
+            expect(showMessageSpy).not.toHaveBeenCalled();
+
+            expect(withProgressSpy.mock.calls[0][0]).toEqual({
+                location: vscode.ProgressLocation.Notification,
+                title: 'Searching for "test"',
+                cancellable: true,
+            });
+
+            expect(getSearchMatchesSpy).toHaveBeenCalledWith(node, expectedResponse, true, searchString);
+
+            expect(performSearchSpy).not.toHaveBeenCalled();
+            expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
+
+            expect(tableBuilderTitleSpy).toHaveBeenCalledWith('Search Results for "test"');
+            expect(tableBuilderOptionsSpy).toHaveBeenCalledWith({
+                autoSizeStrategy: { type: "fitCellContents" },
+                pagination: true,
+                rowSelection: "multiple",
+                selectEverything: true,
+                suppressRowClickSelection: true,
+            });
+            expect(tableBuilderIsViewSpy).toHaveBeenCalledTimes(1);
+            expect(tableBuilderRowsSpy).toHaveBeenCalledWith(...expectedMatches);
+            expect(tableBuilderColumnsSpy).toHaveBeenCalledWith(
+                ...[
+                    {
+                        field: "name",
+                        headerName: vscode.l10n.t("Data Set Name"),
+                        filter: true,
+                        sort: "asc",
+                    } as Table.ColumnOpts,
+                    {
+                        field: "position",
+                        headerName: vscode.l10n.t("Position"),
+                        filter: false,
+                    },
+                    {
+                        field: "contents",
+                        headerName: vscode.l10n.t("Contents"),
+                        filter: true,
+                    },
+                    {
+                        field: "actions",
+                        hide: true,
+                    },
+                ]
+            );
+            expect(tableBuilderAddRowActionSpy).toHaveBeenCalledWith("all", {
+                title: vscode.l10n.t("Open"),
+                command: "open",
+                callback: {
+                    fn: (DatasetActions as any).openSearchAtLocation,
+                    typ: "multi-row",
+                },
+                type: "secondary",
+            });
+            expect(tableBuilderBuildSpy).toHaveBeenCalledTimes(1);
+            expect(tableViewProviderSpy).toHaveBeenCalledTimes(1);
+            expect(tableViewProviderSetTableViewMock).toHaveBeenCalledTimes(1);
+        });
+        it("should attempt to perform the search (favorited pds node)", async () => {
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+            const pdsNode = new ZoweDatasetNode({
+                label: "FAKE.DATA.SET.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: node,
+            });
+            pdsNode.contextValue = Constants.PDS_FAV_CONTEXT;
+            node.pattern = "FAKE.*.PDS";
+            node.contextValue = Constants.DS_SESSION_FAV_CONTEXT;
+            const context = { context: "fake" } as any;
+            const searchString = "test";
+
+            const expectedResponse = {
+                success: true,
+                apiResponse: [
+                    {
+                        dsn: "FAKE.DATA.SET.PDS",
+                        member: "MEM1",
+                        matchList: [
+                            {
+                                line: 1,
+                                column: 1,
+                                contents: "test",
+                            },
+                        ],
+                    },
+                    {
+                        dsn: "FAKE.DATA.SET.PDS",
+                        member: "MEM2",
+                        matchList: [
+                            {
+                                line: 1,
+                                column: 1,
+                                contents: "test",
+                            },
+                        ],
+                    },
+                ],
+            };
+            const expectedMatches = [
+                {
+                    name: "FAKE.DATA.SET.PDS(MEM1)",
+                    line: 1,
+                    column: 1,
+                    position: "1:1",
+                    contents: "test",
+                    uri: "/test/FAKE.DATA.SET.PDS/MEM1",
+                    searchString,
+                },
+                {
+                    name: "FAKE.DATA.SET.PDS(MEM2)",
+                    line: 1,
+                    column: 1,
+                    position: "1:1",
+                    contents: "test",
+                    uri: "/test/FAKE.DATA.SET.PDS/MEM2",
+                    searchString,
+                },
+            ];
+
+            showInputBoxSpy.mockResolvedValue(searchString);
+            withProgressSpy.mockResolvedValue(expectedResponse);
+            getSearchMatchesSpy.mockReturnValue(expectedMatches);
+
+            await DatasetActions.search(context, pdsNode);
+
+            expect(errorMessageSpy).not.toHaveBeenCalled();
+            expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
+            expect(showMessageSpy).not.toHaveBeenCalled();
+
+            expect(withProgressSpy.mock.calls[0][0]).toEqual({
+                location: vscode.ProgressLocation.Notification,
+                title: 'Searching for "test"',
+                cancellable: true,
+            });
+
+            expect(getSearchMatchesSpy).toHaveBeenCalledWith(pdsNode, expectedResponse, false, searchString);
+
+            expect(performSearchSpy).not.toHaveBeenCalled();
+            expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
+
+            expect(tableBuilderTitleSpy).toHaveBeenCalledWith('Search Results for "test"');
+            expect(tableBuilderOptionsSpy).toHaveBeenCalledWith({
+                autoSizeStrategy: { type: "fitCellContents" },
+                pagination: true,
+                rowSelection: "multiple",
+                selectEverything: true,
+                suppressRowClickSelection: true,
+            });
+            expect(tableBuilderIsViewSpy).toHaveBeenCalledTimes(1);
+            expect(tableBuilderRowsSpy).toHaveBeenCalledWith(...expectedMatches);
+            expect(tableBuilderColumnsSpy).toHaveBeenCalledWith(
+                ...[
+                    {
+                        field: "name",
+                        headerName: vscode.l10n.t("Data Set Name"),
+                        filter: true,
+                        sort: "asc",
+                    } as Table.ColumnOpts,
+                    {
+                        field: "position",
+                        headerName: vscode.l10n.t("Position"),
+                        filter: false,
+                    },
+                    {
+                        field: "contents",
+                        headerName: vscode.l10n.t("Contents"),
+                        filter: true,
+                    },
+                    {
+                        field: "actions",
+                        hide: true,
+                    },
+                ]
+            );
+            expect(tableBuilderAddRowActionSpy).toHaveBeenCalledWith("all", {
+                title: vscode.l10n.t("Open"),
+                command: "open",
+                callback: {
+                    fn: (DatasetActions as any).openSearchAtLocation,
+                    typ: "multi-row",
+                },
+                type: "secondary",
+            });
+            expect(tableBuilderBuildSpy).toHaveBeenCalledTimes(1);
+            expect(tableViewProviderSpy).toHaveBeenCalledTimes(1);
+            expect(tableViewProviderSetTableViewMock).toHaveBeenCalledTimes(1);
         });
     });
 });

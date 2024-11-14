@@ -1773,8 +1773,9 @@ export class DatasetActions {
     }
 
     public static async search(context: vscode.ExtensionContext, node: IZoweDatasetTreeNode): Promise<void> {
-        const generateFullUri = (SharedContext.isSessionNotFav(node) && node.pattern != null) || SharedContext.isFavoriteSearch(node);
-        const pattern = SharedContext.isSessionNotFav(node) ? node.pattern : node.label.toString();
+        const isSessionNotFav = SharedContext.isSessionNotFav(node);
+        const generateFullUri = (isSessionNotFav && node.pattern != null) || SharedContext.isFavoriteSearch(node);
+        const pattern = isSessionNotFav ? node.pattern : (node.label as string);
 
         // There may not be a pattern on a session node if there is no filter applied. Warn if this is the case.
         if (!pattern) {
