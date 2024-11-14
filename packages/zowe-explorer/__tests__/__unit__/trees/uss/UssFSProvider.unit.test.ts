@@ -16,6 +16,7 @@ import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
+import { AuthUtils } from "../../../../src/utils/AuthUtils";
 
 const testProfile = createIProfile();
 
@@ -321,6 +322,27 @@ describe("fetchFileAtUri", () => {
         expect(fileEntry.etag).toBe("123abc");
         expect(fileEntry.data?.byteLength).toBe(exampleData.length);
         autoDetectEncodingMock.mockRestore();
+    });
+    it("returns early if it failed to fetch contents", async () => {
+        const fileEntry = { ...testEntries.file };
+        const _fireSoonSpy = jest.spyOn((UssFSProvider as any).prototype, "_fireSoon");
+        const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
+        const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation();
+        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
+            getContents: jest.fn().mockRejectedValue(new Error("error retrieving contents")),
+        } as any);
+        const promptForAuthErrorMock = jest.spyOn(AuthUtils, "promptForAuthError").mockImplementation();
+
+        await expect(UssFSProvider.instance.fetchFileAtUri(testUris.file)).resolves.not.toThrow();
+
+        expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.file);
+        expect(promptForAuthErrorMock).toHaveBeenCalled();
+        expect(autoDetectEncodingMock).toHaveBeenCalledWith(fileEntry);
+        expect(_fireSoonSpy).not.toHaveBeenCalled();
+        autoDetectEncodingMock.mockRestore();
+        promptForAuthErrorMock.mockRestore();
+        ussApiMock.mockRestore();
+        lookupAsFileMock.mockRestore();
     });
     it("calls getContents to get the data for a file entry with encoding", async () => {
         const fileEntry = { ...testEntries.file };
