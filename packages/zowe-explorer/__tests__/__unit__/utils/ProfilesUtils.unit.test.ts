@@ -682,7 +682,7 @@ describe("ProfilesUtils unit tests", () => {
         let getCredentialManagerOverrideSpy: jest.SpyInstance;
         let getCredentialManagerMapSpy: jest.SpyInstance;
         let setupCustomCredentialManagerSpy: jest.SpyInstance;
-        let readProfilesFromDiskSpy: jest.SpyInstance;
+        let profileManagerWillLoadSpy: jest.SpyInstance;
         let disableCredentialManagementSpy: jest.SpyInstance;
         let checkDefaultCredentialManagerSpy: jest.SpyInstance;
 
@@ -696,7 +696,7 @@ describe("ProfilesUtils unit tests", () => {
             getCredentialManagerOverrideSpy = jest.spyOn(ProfilesUtils, "getCredentialManagerOverride");
             getCredentialManagerMapSpy = jest.spyOn(ProfilesUtils, "getCredentialManagerMap");
             setupCustomCredentialManagerSpy = jest.spyOn(ProfilesUtils, "setupCustomCredentialManager");
-            readProfilesFromDiskSpy = jest.spyOn(imperative.ProfileInfo.prototype, "readProfilesFromDisk");
+            profileManagerWillLoadSpy = jest.spyOn(imperative.ProfileInfo.prototype, "profileManagerWillLoad");
             disableCredentialManagementSpy = jest.spyOn(ProfilesUtils, "disableCredentialManagement");
             checkDefaultCredentialManagerSpy = jest.spyOn(ProfilesUtils, "checkDefaultCredentialManager");
         });
@@ -726,32 +726,7 @@ describe("ProfilesUtils unit tests", () => {
             await expect(ProfilesUtils.setupProfileInfo()).resolves.toBeInstanceOf(imperative.ProfileInfo);
         });
 
-        it("should throw exception of readProfilesFromDiskSpy fails", async () => {
-            const expectedErrMsg =
-                // eslint-disable-next-line max-len
-                "Failed to load credential manager. This may be related to Zowe Explorer being unable to use the default credential manager in a browser based environment.";
-            checkDefaultCredentialManagerSpy.mockReturnValue(false);
-            getDirectValueSpy.mockReturnValueOnce(false);
-            getCredentialManagerOverrideSpy.mockReturnValue("@zowe/cli");
-            isVSCodeCredentialPluginInstalledSpy.mockReturnValueOnce(false);
-            getDirectValueSpy.mockReturnValueOnce(true);
-            getCredentialManagerMapSpy.mockReturnValueOnce(undefined);
-            setupCustomCredentialManagerSpy.mockReturnValueOnce({});
-            readProfilesFromDiskSpy.mockImplementation(() => {
-                const err = new imperative.ProfInfoErr({
-                    msg: expectedErrMsg,
-                });
-                Object.defineProperty(err, "errorCode", {
-                    value: imperative.ProfInfoErr.LOAD_CRED_MGR_FAILED,
-                    configurable: true,
-                });
-                throw err;
-            });
-            await expect(ProfilesUtils.setupProfileInfo()).rejects.toThrow(expectedErrMsg);
-        });
-
-        it("should ignore  error if it is not an instance of ProfInfoErr", async () => {
-            const expectedErrorMsg = "Another error unrelated to credential management";
+        it("should retrieve the default credential manager and disable credential management if environment not supported", async () => {
             checkDefaultCredentialManagerSpy.mockReturnValue(true);
             getDirectValueSpy.mockReturnValueOnce(false);
             getCredentialManagerOverrideSpy.mockReturnValue("@zowe/cli");
@@ -759,11 +734,9 @@ describe("ProfilesUtils unit tests", () => {
             getDirectValueSpy.mockReturnValueOnce(true);
             getCredentialManagerMapSpy.mockReturnValueOnce(undefined);
             setupCustomCredentialManagerSpy.mockReturnValueOnce({});
-            readProfilesFromDiskSpy.mockImplementation(() => {
-                throw new Error(expectedErrorMsg);
-            });
-            await expect(ProfilesUtils.setupProfileInfo()).resolves.not.toThrow();
-            expect(disableCredentialManagementSpy).toHaveBeenCalledTimes(0);
+            profileManagerWillLoadSpy.mockReturnValueOnce(false);
+            await expect(ProfilesUtils.setupProfileInfo()).resolves.toBeInstanceOf(imperative.ProfileInfo);
+            expect(disableCredentialManagementSpy).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -1348,10 +1321,10 @@ describe("ProfilesUtils unit tests", () => {
 
         it("prompts user to disable credential manager if default fails to load", async () => {
             const profileManagerWillLoadSpy = jest.spyOn(imperative.ProfileInfo.prototype, "profileManagerWillLoad").mockResolvedValueOnce(false);
-            const promptAndDisableCredMgrSpy = jest.spyOn(ProfilesUtils, "disableCredentialManagement").mockImplementation();
+            const disableCredMgmtSpy = jest.spyOn(ProfilesUtils, "disableCredentialManagement").mockImplementation();
             await ProfilesUtils.setupDefaultCredentialManager();
             expect(profileManagerWillLoadSpy).toHaveBeenCalled();
-            expect(promptAndDisableCredMgrSpy).toHaveBeenCalled();
+            expect(disableCredMgmtSpy).toHaveBeenCalled();
         });
     });
 });

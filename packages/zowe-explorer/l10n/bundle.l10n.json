@@ -61,10 +61,29 @@
   "Reload window": "Reload window",
   "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions.": "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions.",
   "No custom credential managers found, using the default instead.": "No custom credential managers found, using the default instead.",
+  "Custom credential manager {0} found/Credential manager display name": {
+    "message": "Custom credential manager {0} found",
+    "comment": [
+      "Credential manager display name"
+    ]
+  },
+  "Do you wish to use this credential manager instead?": "Do you wish to use this credential manager instead?",
+  "Yes": "Yes",
+  "Don't ask again": "Don't ask again",
+  "Plugin of name '{0}' was defined for custom credential management on imperative.json file./Credential manager display name": {
+    "message": "Plugin of name '{0}' was defined for custom credential management on imperative.json file.",
+    "comment": [
+      "Credential manager display name"
+    ]
+  },
+  "Please install associated VS Code extension for custom credential manager or revert to default.": "Please install associated VS Code extension for custom credential manager or revert to default.",
+  "Use Default": "Use Default",
+  "Install": "Install",
   "Reload": "Reload",
   "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.": "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.",
   "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.": "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.",
   "Create New": "Create New",
+  "\"Update Credentials\" operation not supported when \"autoStore\" is false": "\"Update Credentials\" operation not supported when \"autoStore\" is false",
   "Connection Name": "Connection Name",
   "Enter a name for the connection.": "Enter a name for the connection.",
   "Operation cancelled": "Operation cancelled",
@@ -107,6 +126,7 @@
     ]
   },
   "Zowe profiles initialized successfully.": "Zowe profiles initialized successfully.",
+  "Convert existing profiles": "Convert existing profiles",
   "Tree item is not a Zowe Explorer item.": "Tree item is not a Zowe Explorer item.",
   "Zowe Explorer": "Zowe Explorer",
   "Initialized logger for Zowe Explorer": "Initialized logger for Zowe Explorer",
@@ -375,7 +395,6 @@
   "Type the new pattern to add to history": "Type the new pattern to add to history",
   "action is not supported for this property type.": "action is not supported for this property type.",
   "Clear all history items for this persistent property?": "Clear all history items for this persistent property?",
-  "Yes": "Yes",
   "Enter a filter": "Enter a filter",
   "No items are loaded in the tree.": "No items are loaded in the tree.",
   "You must enter a pattern.": "You must enter a pattern.",
