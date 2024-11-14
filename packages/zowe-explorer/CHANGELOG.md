@@ -24,6 +24,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Reduced the number of MVS API calls performed by `vscode.workspace.fs.readFile` when fetching the contents of a data set entry. [#3278](https://github.com/zowe/zowe-explorer-vscode/issues/3278)
 - Fixed an issue to review inconsistent capitalization across translation strings. [#2935](https://github.com/zowe/zowe-explorer-vscode/issues/2935)
 - Updated the test for the default credential manager for better compatibility with Cloud-based platforms such as Eclipse Che and Red Hat OpenShift Dev Spaces. [#3297](https://github.com/zowe/zowe-explorer-vscode/pull/3297)
+- Fixed an issue where editing a team config file or updating credentials in OS vault could trigger multiple events for a single action. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
+- Updated Zowe SDKs to `8.2.2` for technical currency. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
 
 ## `3.0.2`
 
