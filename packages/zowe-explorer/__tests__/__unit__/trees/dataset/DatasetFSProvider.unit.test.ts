@@ -997,12 +997,14 @@ describe("fetchDataset", () => {
         const lookupMock = jest.spyOn(DatasetFSProvider.instance, "lookup").mockImplementation(() => {
             throw new Error("unknown fs error");
         });
-        await expect((DatasetFSProvider.instance as any).fetchDataset(testUris.ps, {
-            isRoot: false,
-            slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
-            profileName: "sestest",
-            profile: testProfile,
-        })).rejects.toThrow();
+        await expect(
+            (DatasetFSProvider.instance as any).fetchDataset(testUris.ps, {
+                isRoot: false,
+                slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                profileName: "sestest",
+                profile: testProfile,
+            })
+        ).rejects.toThrow();
         lookupMock.mockRestore();
     });
 });
