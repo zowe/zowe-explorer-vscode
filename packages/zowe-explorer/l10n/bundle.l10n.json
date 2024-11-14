@@ -166,12 +166,6 @@
       "Profile name"
     ]
   },
-  "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct./Profile name": {
-    "message": "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
-    "comment": [
-      "Profile name"
-    ]
-  },
   "Use the search button to list USS files": "Use the search button to list USS files",
   "Invalid node": "Invalid node",
   "Delete action was cancelled.": "Delete action was cancelled.",
@@ -275,12 +269,6 @@
   "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
   "Failed to move {0}/File path": {
     "message": "Failed to move {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Failed to get contents for {0}/File path": {
-    "message": "Failed to get contents for {0}",
     "comment": [
       "File path"
     ]
@@ -505,12 +493,6 @@
   "Phase Name": "Phase Name",
   "Error Details": "Error Details",
   "Fetching spool file...": "Fetching spool file...",
-  "Failed to get contents for {0}/Spool name": {
-    "message": "Failed to get contents for {0}",
-    "comment": [
-      "Spool name"
-    ]
-  },
   "Failed to delete job {0}/Job name": {
     "message": "Failed to delete job {0}",
     "comment": [
@@ -903,18 +885,6 @@
     ]
   },
   "Error encountered while activating and initializing logger": "Error encountered while activating and initializing logger",
-  "Insufficient read permissions for {0} in local storage./Local storage key": {
-    "message": "Insufficient read permissions for {0} in local storage.",
-    "comment": [
-      "Local storage key"
-    ]
-  },
-  "Insufficient write permissions for {0} in local storage./Local storage key": {
-    "message": "Insufficient write permissions for {0} in local storage.",
-    "comment": [
-      "Local storage key"
-    ]
-  },
   "Add Credentials": "Add Credentials",
   "Add username and password for basic authentication": "Add username and password for basic authentication",
   "Update stored username and password": "Update stored username and password",
@@ -992,6 +962,12 @@
   },
   "Reload Window": "Reload Window",
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.",
+  "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct./Profile name": {
+    "message": "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
+    "comment": [
+      "Profile name"
+    ]
+  },
   "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree",
   "Choose \"Create new...\" to define or select a profile to add to the JOBS tree": "Choose \"Create new...\" to define or select a profile to add to the JOBS tree",
   "Choose \"Create new...\" to define or select a profile to add to the USS tree": "Choose \"Create new...\" to define or select a profile to add to the USS tree",

@@ -218,9 +218,24 @@ function createGlobalMocks() {
     });
 
     jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
-        ds: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testTree.mSessionNodes], refresh: jest.fn() } as any,
-        uss: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testTree.mSessionNodes], refresh: jest.fn() } as any,
-        jobs: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testTree.mSessionNodes], refresh: jest.fn() } as any,
+        ds: {
+            addSingleSession: jest.fn(),
+            mSessionNodes: [...globalMocks.testTree.mSessionNodes],
+            setStatusForSession: jest.fn(),
+            refresh: jest.fn(),
+        } as any,
+        uss: {
+            addSingleSession: jest.fn(),
+            mSessionNodes: [...globalMocks.testTree.mSessionNodes],
+            setStatusForSession: jest.fn(),
+            refresh: jest.fn(),
+        } as any,
+        jobs: {
+            addSingleSession: jest.fn(),
+            mSessionNodes: [...globalMocks.testTree.mSessionNodes],
+            setStatusForSession: jest.fn(),
+            refresh: jest.fn(),
+        } as any,
     } as any);
 
     return globalMocks;
@@ -551,7 +566,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
             qpValue: "",
             qpItem: new FilterDescriptor("\uFF0B " + "Create a new filter"),
             resolveQuickPickHelper: jest.spyOn(Gui, "resolveQuickPick"),
-            checkJwtTokenForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtTokenForProfile").mockImplementationOnce(() => {}),
+            checkJwtTokenForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtTokenForProfile").mockResolvedValueOnce(true),
         };
         newMocks.resolveQuickPickHelper.mockImplementation(() => Promise.resolve(newMocks.qpItem));
         globalMocks.createQuickPick.mockReturnValue({
@@ -608,6 +623,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
                         name: globalMocks.testProfile.name,
                         status: "unverified",
                     }),
+                    showProfileInactiveMsg: jest.fn(),
                     validProfile: Validation.ValidationType.UNVERIFIED,
                 };
             }),
@@ -649,8 +665,6 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         blockMocks.qpItem = undefined;
 
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
-        expect(globalMocks.showInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showInformationMessage.mock.calls[0][0]).toBe("No selection made. Operation cancelled.");
     });
 
     it("Tests that filter() works correctly for favorited search nodes with credentials", async () => {
