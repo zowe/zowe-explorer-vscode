@@ -855,7 +855,7 @@
   "Cannot switch to token-based authentication for profile {0}.": "",
   "Login using token-based authentication service was successful for profile {0}.": "",
   "Unable to switch to token-based authentication for profile {0}.": "",
-  "Login using basic authentication was successful for profile {0}.": "",
+  "Changing authentication to basic was successful for profile {0}.": "",
   "Unable to switch to basic authentication for profile {0}.": "",
   "Unable to switch authentication for profile {0}.": "",
   "Logout from authentication service was successful for {0}.": "",
