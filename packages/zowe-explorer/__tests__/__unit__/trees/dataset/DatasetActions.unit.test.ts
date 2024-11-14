@@ -3803,10 +3803,18 @@ describe("Dataset Actions Unit Tests - function search", () => {
                     searchString,
                 },
             ];
+            const tokenCancellation: vscode.CancellationToken = {
+                isCancellationRequested: false,
+                onCancellationRequested: jest.fn(),
+            };
+            const myProgress = { test: "test" };
 
             showInputBoxSpy.mockResolvedValue(searchString);
-            withProgressSpy.mockResolvedValue(expectedResponse);
+            withProgressSpy.mockImplementation((opts: any, fn: any) => {
+                return fn(myProgress, tokenCancellation);
+            });
             getSearchMatchesSpy.mockReturnValue(expectedMatches);
+            performSearchSpy.mockResolvedValue(expectedResponse);
 
             await DatasetActions.search(context, node);
 
@@ -3822,7 +3830,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
 
             expect(getSearchMatchesSpy).toHaveBeenCalledWith(node, expectedResponse, true, searchString);
 
-            expect(performSearchSpy).not.toHaveBeenCalled();
+            expect(performSearchSpy).toHaveBeenCalledTimes(1);
             expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
 
             expect(tableBuilderTitleSpy).toHaveBeenCalledWith('Search Results for "test"');
@@ -3933,9 +3941,18 @@ describe("Dataset Actions Unit Tests - function search", () => {
                 },
             ];
 
+            const tokenCancellation: vscode.CancellationToken = {
+                isCancellationRequested: false,
+                onCancellationRequested: jest.fn(),
+            };
+            const myProgress = { test: "test" };
+
             showInputBoxSpy.mockResolvedValue(searchString);
-            withProgressSpy.mockResolvedValue(expectedResponse);
+            withProgressSpy.mockImplementation((opts: any, fn: any) => {
+                return fn(myProgress, tokenCancellation);
+            });
             getSearchMatchesSpy.mockReturnValue(expectedMatches);
+            performSearchSpy.mockResolvedValue(expectedResponse);
 
             await DatasetActions.search(context, pdsNode);
 
@@ -3951,7 +3968,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
 
             expect(getSearchMatchesSpy).toHaveBeenCalledWith(pdsNode, expectedResponse, false, searchString);
 
-            expect(performSearchSpy).not.toHaveBeenCalled();
+            expect(performSearchSpy).toHaveBeenCalledTimes(1);
             expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
 
             expect(tableBuilderTitleSpy).toHaveBeenCalledWith('Search Results for "test"');
@@ -4038,9 +4055,18 @@ describe("Dataset Actions Unit Tests - function search", () => {
                 },
             ];
 
+            const tokenCancellation: vscode.CancellationToken = {
+                isCancellationRequested: false,
+                onCancellationRequested: jest.fn(),
+            };
+            const myProgress = { test: "test" };
+
             showInputBoxSpy.mockResolvedValue(searchString);
-            withProgressSpy.mockResolvedValue(expectedResponse);
+            withProgressSpy.mockImplementation((opts: any, fn: any) => {
+                return fn(myProgress, tokenCancellation);
+            });
             getSearchMatchesSpy.mockReturnValue(expectedMatches);
+            performSearchSpy.mockResolvedValue(expectedResponse);
 
             await DatasetActions.search(context, node);
 
@@ -4056,7 +4082,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
 
             expect(getSearchMatchesSpy).toHaveBeenCalledWith(node, expectedResponse, true, searchString);
 
-            expect(performSearchSpy).not.toHaveBeenCalled();
+            expect(performSearchSpy).toHaveBeenCalledTimes(1);
             expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
 
             expect(tableBuilderTitleSpy).toHaveBeenCalledWith('Search Results for "test"');
@@ -4106,6 +4132,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
             expect(tableViewProviderSpy).toHaveBeenCalledTimes(1);
             expect(tableViewProviderSetTableViewMock).toHaveBeenCalledTimes(1);
         });
+
         it("should attempt to perform the search (favorited pds node)", async () => {
             const profile = createIProfile();
             const node = createDatasetSessionNode(createISession(), profile);
@@ -4168,9 +4195,18 @@ describe("Dataset Actions Unit Tests - function search", () => {
                 },
             ];
 
+            const tokenCancellation: vscode.CancellationToken = {
+                isCancellationRequested: false,
+                onCancellationRequested: jest.fn(),
+            };
+            const myProgress = { test: "test" };
+
             showInputBoxSpy.mockResolvedValue(searchString);
-            withProgressSpy.mockResolvedValue(expectedResponse);
+            withProgressSpy.mockImplementation((opts: any, fn: any) => {
+                return fn(myProgress, tokenCancellation);
+            });
             getSearchMatchesSpy.mockReturnValue(expectedMatches);
+            performSearchSpy.mockResolvedValue(expectedResponse);
 
             await DatasetActions.search(context, pdsNode);
 
@@ -4186,7 +4222,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
 
             expect(getSearchMatchesSpy).toHaveBeenCalledWith(pdsNode, expectedResponse, false, searchString);
 
-            expect(performSearchSpy).not.toHaveBeenCalled();
+            expect(performSearchSpy).toHaveBeenCalledTimes(1);
             expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
 
             expect(tableBuilderTitleSpy).toHaveBeenCalledWith('Search Results for "test"');
