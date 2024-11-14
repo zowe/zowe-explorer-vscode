@@ -30,6 +30,7 @@ import { IJob, IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { SharedContext } from "../shared/SharedContext";
+import { AuthUtils } from "../../utils/AuthUtils";
 
 export class JobFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: JobFSProvider;
@@ -193,14 +194,19 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const jesApi = ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile);
 
-        if (jesApi.downloadSingleSpool) {
-            await jesApi.downloadSingleSpool({
-                jobFile: spoolEntry.spool,
-                stream: bufBuilder,
-            });
-        } else {
-            const jobEntry = this._lookupParentDirectory(uri) as JobEntry;
-            bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id));
+        try {
+            if (jesApi.downloadSingleSpool) {
+                await jesApi.downloadSingleSpool({
+                    jobFile: spoolEntry.spool,
+                    stream: bufBuilder,
+                });
+            } else {
+                const jobEntry = this._lookupParentDirectory(uri) as JobEntry;
+                bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id));
+            }
+        } catch (err) {
+            AuthUtils.promptForAuthError(err, spoolEntry.metadata.profile);
+            throw err;
         }
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });

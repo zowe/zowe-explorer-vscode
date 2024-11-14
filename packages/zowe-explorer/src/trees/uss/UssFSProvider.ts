@@ -29,6 +29,7 @@ import { USSFileStructure } from "./USSFileStructure";
 import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../tools/ZoweLogger";
+import { AuthUtils } from "../../utils/AuthUtils";
 
 export class UssFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     // Event objects for provider
@@ -260,15 +261,29 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const bufBuilder = new BufferBuilder();
         const filePath = uri.path.substring(uriInfo.slashAfterProfilePos);
         const metadata = file.metadata;
-        await this.autoDetectEncoding(file as UssFile);
-        const profileEncoding = file.encoding ? null : file.metadata.profile.profile?.encoding;
-        const resp = await ZoweExplorerApiRegister.getUssApi(metadata.profile).getContents(filePath, {
-            binary: file.encoding?.kind === "binary",
-            encoding: file.encoding?.kind === "other" ? file.encoding.codepage : profileEncoding,
-            responseTimeout: metadata.profile.profile?.responseTimeout,
-            returnEtag: true,
-            stream: bufBuilder,
-        });
+
+        let resp: IZosFilesResponse;
+        try {
+            await this.autoDetectEncoding(file as UssFile);
+            const profileEncoding = file.encoding ? null : file.metadata.profile.profile?.encoding;
+            resp = await ZoweExplorerApiRegister.getUssApi(metadata.profile).getContents(filePath, {
+                binary: file.encoding?.kind === "binary",
+                encoding: file.encoding?.kind === "other" ? file.encoding.codepage : profileEncoding,
+                responseTimeout: metadata.profile.profile?.responseTimeout,
+                returnEtag: true,
+                stream: bufBuilder,
+            });
+        } catch (err) {
+            if (err instanceof Error) {
+                ZoweLogger.error(err.message);
+            }
+            AuthUtils.promptForAuthError(err, metadata.profile);
+            return;
+        }
+
+        if (!options?.isConflict) {
+            file.wasAccessed = true;
+        }
 
         const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
         if (options?.isConflict) {
@@ -357,9 +372,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // - fetching a conflict from the remote FS
         if ((!file.wasAccessed && !urlQuery.has("inDiff")) || isConflict) {
             await this.fetchFileAtUri(uri, { isConflict });
-            if (!isConflict) {
-                file.wasAccessed = true;
-            }
         }
 
         return isConflict ? file.conflictData.contents : file.data;
