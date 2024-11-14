@@ -65,6 +65,7 @@ describe("ProfilesUtils unit tests", () => {
         Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
         Object.defineProperty(SettingsConfig, "getDirectValue", { value: newMocks.mockGetDirectValue, configurable: true });
         Object.defineProperty(ProfilesUtils, "PROFILE_SECURITY", { value: Constants.ZOWE_CLI_SCM, configurable: true });
+        Object.defineProperty(ProfilesUtils, "checkDefaultCredentialManager", { value: jest.fn(), configurable: true });
         return newMocks;
     }
 
@@ -91,12 +92,11 @@ describe("ProfilesUtils unit tests", () => {
         it("should log error details", async () => {
             createBlockMocks();
             const errorDetails = new Error("i haz error");
-            const label = "test";
-            const moreInfo = "Task failed successfully";
-            await AuthUtils.errorHandling(errorDetails, label, moreInfo);
-            expect(Gui.errorMessage).toHaveBeenCalledWith(moreInfo + ` Error: ${errorDetails.message}`);
+            const scenario = "Task failed successfully";
+            await AuthUtils.errorHandling(errorDetails, { scenario });
+            expect(Gui.errorMessage).toHaveBeenCalledWith(errorDetails.message, { items: ["Show log", "Troubleshoot"] });
             expect(ZoweLogger.error).toHaveBeenCalledWith(
-                `${errorDetails.toString()}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null })
+                `${errorDetails.toString()}\n` + util.inspect({ errorDetails, ...{ scenario, profile: undefined } }, { depth: null })
             );
         });
 
@@ -108,13 +108,12 @@ describe("ProfilesUtils unit tests", () => {
                 msg: "Circular reference",
                 causeErrors: errorJson,
             });
-            const label = "test";
-            const moreInfo = "Task failed successfully";
-            await AuthUtils.errorHandling(errorDetails, label, moreInfo as unknown as string);
+            const scenario = "Task failed successfully";
+            await AuthUtils.errorHandling(errorDetails, { scenario });
             // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-            expect(Gui.errorMessage).toHaveBeenCalledWith((`${moreInfo} ` + errorDetails) as any);
+            expect(Gui.errorMessage).toHaveBeenCalledWith(errorDetails.message, { items: ["Show log", "Troubleshoot"] });
             expect(ZoweLogger.error).toHaveBeenCalledWith(
-                `Error: ${errorDetails.message}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null })
+                `Error: ${errorDetails.message}\n` + util.inspect({ errorDetails, ...{ scenario, profile: undefined } }, { depth: null })
             );
         });
 
@@ -123,9 +122,8 @@ describe("ProfilesUtils unit tests", () => {
                 msg: "Invalid hostname",
                 errorCode: 404 as unknown as string,
             });
-            const label = "test";
-            const moreInfo = "Task failed successfully";
-            const spyOpenConfigFile = jest.fn();
+            const scenario = "Task failed successfully";
+            const openConfigForMissingHostnameMock = jest.spyOn(AuthUtils, "openConfigForMissingHostname");
             Object.defineProperty(Constants, "PROFILES_CACHE", {
                 value: {
                     getProfileInfo: () => ({
@@ -139,12 +137,12 @@ describe("ProfilesUtils unit tests", () => {
                             },
                         ],
                     }),
-                    openConfigFile: spyOpenConfigFile,
+                    openConfigFile: jest.fn(),
                 },
                 configurable: true,
             });
-            await AuthUtils.errorHandling(errorDetails, label, moreInfo);
-            expect(spyOpenConfigFile).toHaveBeenCalledTimes(1);
+            await AuthUtils.errorHandling(errorDetails, { scenario });
+            expect(openConfigForMissingHostnameMock).toHaveBeenCalled();
         });
 
         it("should handle error for invalid credentials and prompt for authentication", async () => {
@@ -153,21 +151,21 @@ describe("ProfilesUtils unit tests", () => {
                 errorCode: 401 as unknown as string,
                 additionalDetails: "Authentication is not valid or expired.",
             });
-            const label = "test";
-            const moreInfo = "Task failed successfully";
+            const scenario = "Task failed successfully";
             const showMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(() => Promise.resolve("Update Credentials"));
             const promptCredsSpy = jest.fn();
+            const profile = { type: "zosmf" } as any;
             Object.defineProperty(Constants, "PROFILES_CACHE", {
                 value: {
                     promptCredentials: promptCredsSpy,
                     getProfileInfo: profileInfoMock,
-                    getLoadedProfConfig: () => ({ type: "zosmf" }),
+                    getLoadedProfConfig: () => profile,
                     getDefaultProfile: () => ({}),
                     getSecurePropsForProfile: () => [],
                 },
                 configurable: true,
             });
-            await AuthUtils.errorHandling(errorDetails, label, moreInfo);
+            await AuthUtils.errorHandling(errorDetails, { profile, scenario });
             expect(showMessageSpy).toHaveBeenCalledTimes(1);
             expect(promptCredsSpy).toHaveBeenCalledTimes(1);
             showMessageSpy.mockClear();
@@ -176,25 +174,25 @@ describe("ProfilesUtils unit tests", () => {
         it("should handle token error and proceed to login", async () => {
             const errorDetails = new imperative.ImperativeError({
                 msg: "Invalid credentials",
-                errorCode: 401 as unknown as string,
+                errorCode: "401",
                 additionalDetails: "Token is not valid or expired.",
             });
-            const label = "test";
-            const moreInfo = "Task failed successfully";
+            const scenario = "Task failed successfully";
             const showErrorSpy = jest.spyOn(Gui, "errorMessage");
             const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation(() => Promise.resolve("selection"));
             const ssoLoginSpy = jest.fn();
+            const profile = { type: "zosmf" } as any;
             Object.defineProperty(Constants, "PROFILES_CACHE", {
                 value: {
                     getProfileInfo: profileInfoMock,
-                    getLoadedProfConfig: () => ({ type: "zosmf" }),
+                    getLoadedProfConfig: () => profile,
                     getDefaultProfile: () => ({}),
                     getSecurePropsForProfile: () => ["tokenValue"],
                     ssoLogin: ssoLoginSpy,
                 },
                 configurable: true,
             });
-            await AuthUtils.errorHandling(errorDetails, label, moreInfo);
+            await AuthUtils.errorHandling(errorDetails, { profile, scenario });
             expect(showMessageSpy).toHaveBeenCalledTimes(1);
             expect(ssoLoginSpy).toHaveBeenCalledTimes(1);
             expect(showErrorSpy).not.toHaveBeenCalled();
@@ -205,10 +203,9 @@ describe("ProfilesUtils unit tests", () => {
         it("should handle credential error and no selection made for update", async () => {
             const errorDetails = new imperative.ImperativeError({
                 msg: "Invalid credentials",
-                errorCode: String(401),
-                additionalDetails: "Authentication failed.",
+                errorCode: "401",
+                additionalDetails: "All configured authentication methods failed",
             });
-            const label = "test";
             const moreInfo = "Task failed successfully";
             Object.defineProperty(vscode, "env", {
                 value: {
@@ -219,20 +216,21 @@ describe("ProfilesUtils unit tests", () => {
             const showErrorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
             const showMsgSpy = jest.spyOn(Gui, "showMessage");
             const promptCredentialsSpy = jest.fn();
+            const profile = { type: "zosmf" } as any;
             Object.defineProperty(Constants, "PROFILES_CACHE", {
                 value: {
                     promptCredentials: promptCredentialsSpy,
                     getProfileInfo: profileInfoMock,
-                    getLoadedProfConfig: () => ({ type: "zosmf" }),
+                    getLoadedProfConfig: () => profile,
                     getDefaultProfile: () => ({}),
                     getSecurePropsForProfile: () => [],
                 },
                 configurable: true,
             });
-            await AuthUtils.errorHandling(errorDetails, label, moreInfo);
+            await AuthUtils.errorHandling(errorDetails, { profile, scenario: moreInfo });
             expect(showErrorSpy).toHaveBeenCalledTimes(1);
             expect(promptCredentialsSpy).not.toHaveBeenCalled();
-            expect(showMsgSpy).toHaveBeenCalledWith("Operation Cancelled");
+            expect(showMsgSpy).not.toHaveBeenCalledWith("Operation Cancelled");
             showErrorSpy.mockClear();
             showMsgSpy.mockClear();
             promptCredentialsSpy.mockClear();
@@ -373,7 +371,7 @@ describe("ProfilesUtils unit tests", () => {
             });
             jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
             await ProfilesUtils.promptCredentials(null as any);
-            expect(Gui.showMessage).toHaveBeenCalledWith("Operation Cancelled");
+            expect(Gui.showMessage).toHaveBeenCalledWith("Operation cancelled");
         });
 
         it("shows an info message if the profile credentials were updated", async () => {
@@ -460,6 +458,7 @@ describe("ProfilesUtils unit tests", () => {
     describe("initializeZoweFolder", () => {
         it("should create directories and files that do not exist", async () => {
             const blockMocks = createBlockMocks();
+            jest.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(true);
             blockMocks.mockGetDirectValue.mockReturnValue(true);
             blockMocks.mockExistsSync.mockReturnValue(false);
             jest.spyOn(fs, "readFileSync").mockReturnValue(Buffer.from(JSON.stringify({ overrides: { credentialManager: "@zowe/cli" } }), "utf-8"));
@@ -472,6 +471,7 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should skip creating directories and files that already exist", async () => {
             const blockMocks = createBlockMocks();
+            jest.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(true);
             jest.spyOn(ProfilesUtils, "getCredentialManagerOverride").mockReturnValue("@zowe/cli");
             blockMocks.mockGetDirectValue.mockReturnValue("@zowe/cli");
             blockMocks.mockExistsSync.mockReturnValue(true);
@@ -569,17 +569,17 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should handle Imperative error thrown on read config from disk", async () => {
             const testError = new imperative.ImperativeError({ msg: "readConfigFromDisk failed" });
-            const initZoweFolderSpy = jest.spyOn(ProfilesUtils, "initializeZoweFolder").mockReturnValueOnce();
+            const initZoweFolderSpy = jest.spyOn(ProfilesUtils, "initializeZoweFolder").mockResolvedValueOnce();
             const readConfigFromDiskSpy = jest.spyOn(ProfilesUtils, "readConfigFromDisk").mockRejectedValueOnce(testError);
             await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
             expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
             expect(readConfigFromDiskSpy).toHaveBeenCalledTimes(1);
-            expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining(testError.message));
+            expect(Gui.errorMessage).toHaveBeenCalledWith(testError.message, { items: ["Show log", "Troubleshoot"] });
         });
 
         it("should handle JSON parse error thrown on read config from disk", async () => {
             const testError = new Error("readConfigFromDisk failed");
-            const initZoweFolderSpy = jest.spyOn(ProfilesUtils, "initializeZoweFolder").mockReturnValueOnce();
+            const initZoweFolderSpy = jest.spyOn(ProfilesUtils, "initializeZoweFolder").mockResolvedValueOnce();
             const readConfigFromDiskSpy = jest.spyOn(ProfilesUtils, "readConfigFromDisk").mockRejectedValueOnce(testError);
             const showZoweConfigErrorSpy = jest.spyOn(ZoweExplorerExtender, "showZoweConfigError").mockReturnValueOnce();
             await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
@@ -652,6 +652,7 @@ describe("ProfilesUtils unit tests", () => {
         it("should update the credential manager setting if secure value is true", () => {
             jest.spyOn(SettingsConfig, "isConfigSettingSetByUser").mockReturnValue(false);
             jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
+            jest.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(true);
             const loggerInfoSpy = jest.spyOn(ZoweLogger, "info");
             const recordCredMgrInConfigSpy = jest.spyOn(imperative.CredentialManagerOverride, "recordCredMgrInConfig");
             ProfilesUtils.updateCredentialManagerSetting();
@@ -681,8 +682,9 @@ describe("ProfilesUtils unit tests", () => {
         let getCredentialManagerOverrideSpy: jest.SpyInstance;
         let getCredentialManagerMapSpy: jest.SpyInstance;
         let setupCustomCredentialManagerSpy: jest.SpyInstance;
-        let profileManagerWillLoadSpy: jest.SpyInstance;
-        let promptAndDisableCredentialManagementSpy: jest.SpyInstance;
+        let readProfilesFromDiskSpy: jest.SpyInstance;
+        let disableCredentialManagementSpy: jest.SpyInstance;
+        let checkDefaultCredentialManagerSpy: jest.SpyInstance;
 
         beforeEach(() => {
             jest.clearAllMocks();
@@ -694,8 +696,9 @@ describe("ProfilesUtils unit tests", () => {
             getCredentialManagerOverrideSpy = jest.spyOn(ProfilesUtils, "getCredentialManagerOverride");
             getCredentialManagerMapSpy = jest.spyOn(ProfilesUtils, "getCredentialManagerMap");
             setupCustomCredentialManagerSpy = jest.spyOn(ProfilesUtils, "setupCustomCredentialManager");
-            profileManagerWillLoadSpy = jest.spyOn(imperative.ProfileInfo.prototype, "profileManagerWillLoad");
-            promptAndDisableCredentialManagementSpy = jest.spyOn(ProfilesUtils, "promptAndDisableCredentialManagement");
+            readProfilesFromDiskSpy = jest.spyOn(imperative.ProfileInfo.prototype, "readProfilesFromDisk");
+            disableCredentialManagementSpy = jest.spyOn(ProfilesUtils, "disableCredentialManagement");
+            checkDefaultCredentialManagerSpy = jest.spyOn(ProfilesUtils, "checkDefaultCredentialManager");
         });
 
         it("should retrieve the custom credential manager", async () => {
@@ -723,19 +726,44 @@ describe("ProfilesUtils unit tests", () => {
             await expect(ProfilesUtils.setupProfileInfo()).resolves.toBeInstanceOf(imperative.ProfileInfo);
         });
 
-        it("should retrieve the default credential manager and prompt to disable credential management if environment not supported", async () => {
+        it("should throw exception of readProfilesFromDiskSpy fails", async () => {
             const expectedErrMsg =
                 // eslint-disable-next-line max-len
                 "Failed to load credential manager. This may be related to Zowe Explorer being unable to use the default credential manager in a browser based environment.";
-            getDirectValueSpy.mockReturnValueOnce(true);
+            checkDefaultCredentialManagerSpy.mockReturnValue(false);
+            getDirectValueSpy.mockReturnValueOnce(false);
             getCredentialManagerOverrideSpy.mockReturnValue("@zowe/cli");
             isVSCodeCredentialPluginInstalledSpy.mockReturnValueOnce(false);
             getDirectValueSpy.mockReturnValueOnce(true);
             getCredentialManagerMapSpy.mockReturnValueOnce(undefined);
             setupCustomCredentialManagerSpy.mockReturnValueOnce({});
-            profileManagerWillLoadSpy.mockReturnValueOnce(false);
+            readProfilesFromDiskSpy.mockImplementation(() => {
+                const err = new imperative.ProfInfoErr({
+                    msg: expectedErrMsg,
+                });
+                Object.defineProperty(err, "errorCode", {
+                    value: imperative.ProfInfoErr.LOAD_CRED_MGR_FAILED,
+                    configurable: true,
+                });
+                throw err;
+            });
             await expect(ProfilesUtils.setupProfileInfo()).rejects.toThrow(expectedErrMsg);
-            expect(promptAndDisableCredentialManagementSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it("should ignore  error if it is not an instance of ProfInfoErr", async () => {
+            const expectedErrorMsg = "Another error unrelated to credential management";
+            checkDefaultCredentialManagerSpy.mockReturnValue(true);
+            getDirectValueSpy.mockReturnValueOnce(false);
+            getCredentialManagerOverrideSpy.mockReturnValue("@zowe/cli");
+            isVSCodeCredentialPluginInstalledSpy.mockReturnValueOnce(false);
+            getDirectValueSpy.mockReturnValueOnce(true);
+            getCredentialManagerMapSpy.mockReturnValueOnce(undefined);
+            setupCustomCredentialManagerSpy.mockReturnValueOnce({});
+            readProfilesFromDiskSpy.mockImplementation(() => {
+                throw new Error(expectedErrorMsg);
+            });
+            await expect(ProfilesUtils.setupProfileInfo()).resolves.not.toThrow();
+            expect(disableCredentialManagementSpy).toHaveBeenCalledTimes(0);
         });
     });
 
@@ -775,7 +803,7 @@ describe("ProfilesUtils unit tests", () => {
                 Buffer.from(
                     JSON.stringify({
                         overrides: {
-                            credentialManager: "My Custom Credential Manager",
+                            credentialManager: "My Custom credential manager",
                         },
                     })
                 )
@@ -785,7 +813,7 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
 
-            expect(ProfilesUtils.getCredentialManagerOverride()).toBe("My Custom Credential Manager");
+            expect(ProfilesUtils.getCredentialManagerOverride()).toBe("My Custom credential manager");
             expect(zoweLoggerTraceSpy).toHaveBeenCalledTimes(1);
         });
 
@@ -939,10 +967,11 @@ describe("ProfilesUtils unit tests", () => {
         });
     });
 
-    describe("promptAndDisableCredentialManagement", () => {
+    describe("disableCredentialManagement", () => {
         let setDirectValueSpy: jest.SpyInstance;
         let warningMessageSpy: jest.SpyInstance;
         let executeCommandSpy: jest.SpyInstance;
+        let getDirectValueSpy: jest.SpyInstance;
 
         beforeEach(() => {
             jest.clearAllMocks();
@@ -951,32 +980,15 @@ describe("ProfilesUtils unit tests", () => {
             setDirectValueSpy = jest.spyOn(SettingsConfig, "setDirectValue");
             warningMessageSpy = jest.spyOn(Gui, "warningMessage");
             executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand");
+            getDirectValueSpy = jest.spyOn(SettingsConfig, "getDirectValue");
         });
 
-        it("should prompt whether to disable credential management, and disable globally if 'Yes, globally' selected", async () => {
+        it("should show warning that credential management was disabled", async () => {
             warningMessageSpy.mockResolvedValue("Yes, globally");
-            await expect(ProfilesUtils.promptAndDisableCredentialManagement()).resolves.not.toThrow();
+            getDirectValueSpy.mockReturnValueOnce(true);
+            await expect(ProfilesUtils.disableCredentialManagement()).resolves.not.toThrow();
             expect(setDirectValueSpy).toHaveBeenCalledWith(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
             expect(executeCommandSpy).toHaveBeenCalledWith("workbench.action.reloadWindow");
-        });
-
-        it("should prompt whether to disable credential management, and disable on workspace if 'Only for this workspace' selected", async () => {
-            warningMessageSpy.mockResolvedValue("Only for this workspace");
-            await expect(ProfilesUtils.promptAndDisableCredentialManagement()).resolves.not.toThrow();
-            expect(setDirectValueSpy).toHaveBeenCalledWith(
-                Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED,
-                false,
-                vscode.ConfigurationTarget.Workspace
-            );
-            expect(executeCommandSpy).toHaveBeenCalledWith("workbench.action.reloadWindow");
-        });
-
-        it("should prompt whether to disable credential management, and throw error if 'No'", async () => {
-            warningMessageSpy.mockResolvedValue("No");
-            await expect(ProfilesUtils.promptAndDisableCredentialManagement()).rejects.toThrow(
-                // eslint-disable-next-line max-len
-                "Failed to load credential manager. This may be related to Zowe Explorer being unable to use the default credential manager in a browser based environment."
-            );
         });
     });
 
@@ -989,7 +1001,7 @@ describe("ProfilesUtils unit tests", () => {
                 getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
                 onlyV1ProfilesExist: true,
             } as never);
-            const infoMsgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Convert Existing Profiles" as any);
+            const infoMsgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Convert existing profiles" as any);
             Object.defineProperty(imperative, "ConvertMsgFmt", {
                 value: jest.fn().mockReturnValue({
                     REPORT_LINE: 1,
@@ -1336,7 +1348,7 @@ describe("ProfilesUtils unit tests", () => {
 
         it("prompts user to disable credential manager if default fails to load", async () => {
             const profileManagerWillLoadSpy = jest.spyOn(imperative.ProfileInfo.prototype, "profileManagerWillLoad").mockResolvedValueOnce(false);
-            const promptAndDisableCredMgrSpy = jest.spyOn(ProfilesUtils, "promptAndDisableCredentialManagement").mockImplementation();
+            const promptAndDisableCredMgrSpy = jest.spyOn(ProfilesUtils, "disableCredentialManagement").mockImplementation();
             await ProfilesUtils.setupDefaultCredentialManager();
             expect(profileManagerWillLoadSpy).toHaveBeenCalled();
             expect(promptAndDisableCredMgrSpy).toHaveBeenCalled();

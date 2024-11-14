@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as path from "path";
-import { FsJobsUtils, imperative, IZoweJobTreeNode, Sorting, ZoweScheme, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { FsJobsUtils, imperative, IZoweJobTreeNode, Sorting, ZoweExplorerApiType, ZoweScheme, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { JobFSProvider } from "./JobFSProvider";
 import { JobUtils } from "./JobUtils";
 import { Constants } from "../../configuration/Constants";
@@ -262,10 +262,6 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         return this.children;
     }
 
-    public setProfileToChoice(profile: imperative.IProfileLoaded): void {
-        super.setProfileToChoice(profile, JobFSProvider.instance);
-    }
-
     public static sortJobs(sortOpts: Sorting.NodeSort): (x: IZoweJobTreeNode, y: IZoweJobTreeNode) => number {
         return (x, y) => {
             const sortLessThan = sortOpts.direction == Sorting.SortDirection.Ascending ? -1 : 1;
@@ -396,7 +392,11 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 }, []);
             }
         } catch (error) {
-            const updated = await AuthUtils.errorHandling(error, this.getProfileName(), vscode.l10n.t("Retrieving response from JES list API"));
+            const updated = await AuthUtils.errorHandling(error, {
+                apiType: ZoweExplorerApiType.Jes,
+                profile: this.getProfile(),
+                scenario: vscode.l10n.t("Retrieving response from JES list API"),
+            });
             AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode(), updated && this);
             return;
         }
@@ -413,7 +413,11 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             // see an issue #845 for the details
             spools = spools.filter((item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined));
         } catch (error) {
-            const updated = await AuthUtils.errorHandling(error, this.getProfileName(), vscode.l10n.t("Retrieving response from JES list API"));
+            const updated = await AuthUtils.errorHandling(error, {
+                apiType: ZoweExplorerApiType.Jes,
+                profile: this.getProfile(),
+                scenario: vscode.l10n.t("Retrieving response from JES list API"),
+            });
             AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode(), updated && this);
             return;
         }

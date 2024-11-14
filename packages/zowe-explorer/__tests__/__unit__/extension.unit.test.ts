@@ -241,6 +241,8 @@ async function createGlobalMocks() {
             "zowe.compareWithSelectedReadOnly",
             "zowe.compareFileStarted",
             "zowe.copyExternalLink",
+            "zowe.revealOutputChannel",
+            "zowe.troubleshootError",
             "zowe.placeholderCommand",
         ],
     };

@@ -10,6 +10,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added expired JSON web token detection for profiles in each tree view (Data Sets, USS, Jobs). When a user performs a search on a profile, they are prompted to log in if their token expired. [#3175](https://github.com/zowe/zowe-explorer-vscode/issues/3175)
 - Add a data set or USS resource to a virtual workspace with the new "Add to Workspace" context menu option. [#3265](https://github.com/zowe/zowe-explorer-vscode/issues/3265)
 - Power users and developers can now build links to efficiently open mainframe resources in Zowe Explorer. Use the **Copy External Link** option in the context menu to get the URL for a data set or USS resource, or create a link in the format `vscode://Zowe.vscode-extension-for-zowe?<ZoweResourceUri>`. For more information on building resource URIs, see the [FileSystemProvider wiki article](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#file-paths-vs-uris). [#3271](https://github.com/zowe/zowe-explorer-vscode/pull/3271)
+- Implemented more user-friendly error messages for API or network errors within Zowe Explorer. [#3243](https://github.com/zowe/zowe-explorer-vscode/pull/3243)
+- Use the "Troubleshoot" option for certain errors to obtain additional context, tips, and resources for how to resolve the errors. [#3243](https://github.com/zowe/zowe-explorer-vscode/pull/3243)
 
 ### Bug fixes
 
@@ -20,6 +22,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where calling `vscode.workspace.fs.readFile` with a PDS member URI would throw an error when the PDS already existed as a filesystem entry. [#3267](https://github.com/zowe/zowe-explorer-vscode/issues/3267)
 - Fixed issue where Zowe Explorer would present the "No configs detected" notification when initialized in a workspace without a Zowe team configuration. [#3280](https://github.com/zowe/zowe-explorer-vscode/issues/3280)
 - Reduced the number of MVS API calls performed by `vscode.workspace.fs.readFile` when fetching the contents of a data set entry. [#3278](https://github.com/zowe/zowe-explorer-vscode/issues/3278)
+- Fixed an issue to review inconsistent capitalization across translation strings. [#2935](https://github.com/zowe/zowe-explorer-vscode/issues/2935)
+- Updated the test for the default credential manager for better compatibility with Cloud-based platforms such as Eclipse Che and Red Hat OpenShift Dev Spaces. [#3297](https://github.com/zowe/zowe-explorer-vscode/pull/3297)
 
 ## `3.0.2`
 

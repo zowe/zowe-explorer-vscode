@@ -19,6 +19,7 @@ import { SharedActions } from "../../../../src/trees/shared/SharedActions";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
+import { ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 
 async function createGlobalMocks() {
     const newMocks = {
@@ -156,7 +157,7 @@ describe("mvsNodeActions", () => {
         await DatasetActions.uploadDialog(node, testTree);
 
         expect(globalMocks.showOpenDialog).toHaveBeenCalled();
-        expect(globalMocks.showInformationMessage.mock.calls.map((call) => call[0])).toEqual(["Operation Cancelled"]);
+        expect(globalMocks.showInformationMessage.mock.calls.map((call) => call[0])).toEqual(["Operation cancelled"]);
         expect(globalMocks.openTextDocument).not.toHaveBeenCalled();
         expect(testTree.refreshElement).not.toHaveBeenCalled();
     });
@@ -241,8 +242,7 @@ describe("mvsNodeActions", () => {
         jest.spyOn(mockMvsApi2, "putContents").mockRejectedValue(testError);
         const errHandlerSpy = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
         await DatasetActions.uploadDialog(node, testTree);
-
-        expect(errHandlerSpy).toHaveBeenCalledWith(testError, "sestest");
+        expect(errHandlerSpy).toHaveBeenCalledWith(testError, { apiType: ZoweExplorerApiType.Mvs, profile: globalMocks.profileOne });
     });
 });
 

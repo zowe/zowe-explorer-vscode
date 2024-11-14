@@ -20,6 +20,7 @@ import {
     Types,
     Validation,
     ZosEncoding,
+    ZoweExplorerApiType,
     ZoweScheme,
 } from "@zowe/zowe-explorer-api";
 import { UssFSProvider } from "./UssFSProvider";
@@ -333,7 +334,11 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 this.updateFavorites();
             } catch (err) {
                 if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, originalNode.getProfileName(), vscode.l10n.t("Unable to rename node:"));
+                    await AuthUtils.errorHandling(err, {
+                        apiType: ZoweExplorerApiType.Uss,
+                        profile: originalNode.getProfile(),
+                        scenario: vscode.l10n.t("Unable to rename node:"),
+                    });
                 }
                 throw err;
             }
@@ -486,7 +491,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 if (err.toString().includes("hostname")) {
                     ZoweLogger.error(err);
                 } else {
-                    await AuthUtils.errorHandling(err, profile.name);
+                    await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Uss, profile });
                 }
             }
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
@@ -744,11 +749,11 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 const options: vscode.InputBoxOptions = {
                     placeHolder: vscode.l10n.t("New filter"),
                     value: remotepath,
+                    validateInput: (input: string) => (input.length > 0 ? null : vscode.l10n.t("Please enter a valid USS path.")),
                 };
                 // get user input
                 remotepath = await Gui.showInputBox(options);
-                if (!remotepath || remotepath.length === 0) {
-                    Gui.showMessage(vscode.l10n.t("You must enter a path."));
+                if (remotepath == null) {
                     return;
                 }
             } else {

@@ -241,7 +241,8 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
                         "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
                     args: [profile.name],
                     comment: ["Profile name"],
-                })
+                }),
+                { profile }
             );
         } else if (profileStatus.status === "active") {
             if (

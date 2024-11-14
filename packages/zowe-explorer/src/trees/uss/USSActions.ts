@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { Gui, imperative, IZoweUSSTreeNode, Types } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweUSSTreeNode, Types, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import { isBinaryFileSync } from "isbinaryfile";
 import { USSAttributeView } from "./USSAttributeView";
 import { USSFileStructure } from "./USSFileStructure";
@@ -99,7 +99,11 @@ export class USSActions {
                 }
             } catch (err) {
                 if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, node.getProfileName(), vscode.l10n.t("Unable to create node:"));
+                    await AuthUtils.errorHandling(err, {
+                        apiType: ZoweExplorerApiType.Uss,
+                        profile: node.getProfile(),
+                        scenario: vscode.l10n.t("Unable to create node:"),
+                    });
                 }
                 throw err;
             }
@@ -117,7 +121,7 @@ export class USSActions {
             await node.getChildren();
             ussFileProvider.refreshElement(node);
         } catch (err) {
-            await AuthUtils.errorHandling(err, node.getProfileName());
+            await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Uss, profile: node.getProfile() });
         }
     }
 
@@ -177,7 +181,7 @@ export class USSActions {
             ussFileProvider.refreshElement(node);
             ussFileProvider.getTreeView().reveal(node, { expand: true, focus: true });
         } else {
-            Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
+            Gui.showMessage(vscode.l10n.t("Operation cancelled"));
         }
     }
 
@@ -188,7 +192,7 @@ export class USSActions {
             const ussName = `${node.fullPath}/${localFileName}`;
             await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContent(filePath, ussName, { binary: true });
         } catch (e) {
-            await AuthUtils.errorHandling(e, node.getProfileName());
+            await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile: node.getProfile() });
         }
     }
 
@@ -213,7 +217,7 @@ export class USSActions {
             }
             await ZoweExplorerApiRegister.getUssApi(prof).putContent(doc.fileName, ussName, options);
         } catch (e) {
-            await AuthUtils.errorHandling(e, node.getProfileName());
+            await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile: node.getProfile() });
         }
     }
 

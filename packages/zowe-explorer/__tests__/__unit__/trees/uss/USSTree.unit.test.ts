@@ -628,8 +628,6 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         globalMocks.showInputBox.mockReturnValueOnce(undefined);
 
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
-        expect(globalMocks.showInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showInformationMessage.mock.calls[0][0]).toBe("You must enter a path.");
     });
 
     it("Tests that filter() works on a file", async () => {

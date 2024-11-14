@@ -564,7 +564,10 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
         });
         const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
         SharedUtils.addToWorkspace(datasetNode, null as any);
-        expect(updateWorkspaceFoldersMock).toHaveBeenCalledWith(0, null, { uri: datasetNode.resourceUri, name: datasetNode.label as string });
+        expect(updateWorkspaceFoldersMock).toHaveBeenCalledWith(0, null, {
+            uri: datasetNode.resourceUri,
+            name: `[sestest] ${datasetNode.label as string}`,
+        });
     });
     it("adds a USS resource to the workspace", () => {
         const ussNode = new ZoweUSSNode({
@@ -575,7 +578,7 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
         });
         const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
         SharedUtils.addToWorkspace(ussNode, null as any);
-        expect(updateWorkspaceFoldersMock).toHaveBeenCalledWith(0, null, { uri: ussNode.resourceUri, name: ussNode.label as string });
+        expect(updateWorkspaceFoldersMock).toHaveBeenCalledWith(0, null, { uri: ussNode.resourceUri, name: `[sestest] ${ussNode.fullPath}` });
     });
     it("adds a USS session w/ fullPath to the workspace", () => {
         const ussNode = new ZoweUSSNode({
@@ -625,7 +628,10 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
         const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
         updateWorkspaceFoldersMock.mockClear();
         SharedUtils.addToWorkspace(ussNode, null as any);
-        expect(updateWorkspaceFoldersMock).not.toHaveBeenCalledWith(0, null, { uri: ussNode.resourceUri, name: ussNode.label as string });
+        expect(updateWorkspaceFoldersMock).not.toHaveBeenCalledWith(0, null, {
+            uri: ussNode.resourceUri,
+            name: `[sestest] ${ussNode.fullPath}`,
+        });
         workspaceFolders[Symbol.dispose]();
     });
 });

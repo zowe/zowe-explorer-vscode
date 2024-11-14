@@ -28,7 +28,7 @@ export enum ProfilesConvertStatus {
 
 export class ProfilesUtils {
     public static PROFILE_SECURITY: string | boolean = Constants.ZOWE_CLI_SCM;
-    private static noConfigDialogShown: boolean = false;
+    private static noConfigDialogShown = false;
     private static mProfileInfo: imperative.ProfileInfo;
 
     /**
@@ -83,18 +83,22 @@ export class ProfilesUtils {
      */
     public static updateCredentialManagerSetting(credentialManager?: string | false): void {
         ZoweLogger.trace("ProfilesUtils.updateCredentialManagerSetting called.");
+        const currentProfileSecurity = this.PROFILE_SECURITY;
         const settingEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED, true);
+        const defaultCredentialManagerFound = this.checkDefaultCredentialManager();
         if (settingEnabled && credentialManager) {
             this.PROFILE_SECURITY = credentialManager;
             return;
-        } else if (!settingEnabled) {
+        } else if (!settingEnabled || !defaultCredentialManagerFound) {
             this.PROFILE_SECURITY = false;
-            ZoweLogger.info(vscode.l10n.t(`Zowe explorer profiles are being set as unsecured.`));
+            ZoweLogger.info(vscode.l10n.t(`Zowe Explorer profiles are being set as unsecured.`));
         } else {
             this.PROFILE_SECURITY = Constants.ZOWE_CLI_SCM;
-            ZoweLogger.info(vscode.l10n.t(`Zowe explorer profiles are being set as secured.`));
+            ZoweLogger.info(vscode.l10n.t(`Zowe Explorer profiles are being set as secured.`));
         }
-        imperative.CredentialManagerOverride.recordCredMgrInConfig(this.PROFILE_SECURITY);
+        if (currentProfileSecurity !== this.PROFILE_SECURITY) {
+            imperative.CredentialManagerOverride.recordCredMgrInConfig(this.PROFILE_SECURITY);
+        }
     }
 
     /**
@@ -150,35 +154,38 @@ export class ProfilesUtils {
      * Prompt whether to disable credential management setting
      *
      * This will disable credential management on all settings
-     * scopes since order presedence can be hard to predict based on the user's setup
+     * scopes since order precedence can be hard to predict based on the user's setup
      */
-    public static async promptAndDisableCredentialManagement(): Promise<void> {
-        ZoweLogger.trace("ProfilesUtils.promptAndDisableCredentialManagement called.");
-        const noButton = vscode.l10n.t("No");
-        const yesGloballyButton = vscode.l10n.t("Yes, globally");
-        const yesWorkspaceButton = vscode.l10n.t("Only for this workspace");
-        const response = await Gui.warningMessage(
-            vscode.l10n.t("Zowe Explorer failed to activate since the default credential manager is not supported in your environment."),
-            {
-                items: [noButton, yesGloballyButton, yesWorkspaceButton],
-                vsCodeOpts: {
-                    modal: true,
-                    detail: vscode.l10n.t("Do you wish to disable credential management? (VS Code window reload will be triggered)"),
-                },
-            }
-        );
-        if (response === yesGloballyButton || response === yesWorkspaceButton) {
-            const scope = response === yesGloballyButton ? vscode.ConfigurationTarget.Global : vscode.ConfigurationTarget.Workspace;
-            await SettingsConfig.setDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, scope);
-            await vscode.commands.executeCommand("workbench.action.reloadWindow");
-        } else {
-            throw new imperative.ImperativeError({
-                msg: vscode.l10n.t(
-                    // eslint-disable-next-line max-len
-                    "Failed to load credential manager. This may be related to Zowe Explorer being unable to use the default credential manager in a browser based environment."
+    public static async disableCredentialManagement(): Promise<void> {
+        ZoweLogger.trace("ProfilesUtils.disableCredentialManagement called.");
+        const settingEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED, true);
+        if (settingEnabled) {
+            this.PROFILE_SECURITY = false;
+            await SettingsConfig.setDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
+            await Gui.infoMessage(
+                vscode.l10n.t(
+                    "Zowe Explorer's default credential manager is not supported in your environment. Consider installing a custom solution for your platform. Click Reload to start Zowe Explorer without a credential manager."
                 ),
-            });
+                {
+                    items: [vscode.l10n.t("Reload window")],
+                }
+            );
+            await vscode.commands.executeCommand("workbench.action.reloadWindow");
         }
+    }
+
+    public static checkDefaultCredentialManager(): boolean {
+        try {
+            ProfilesCache.requireKeyring();
+        } catch (_error) {
+            ZoweLogger.info(
+                vscode.l10n.t(
+                    "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions."
+                )
+            );
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -198,7 +205,7 @@ export class ProfilesUtils {
         if (await profileInfo.profileManagerWillLoad()) {
             return defaultCredentialManager;
         } else {
-            await ProfilesUtils.promptAndDisableCredentialManagement();
+            await ProfilesUtils.disableCredentialManagement();
         }
     }
 
@@ -295,8 +302,8 @@ export class ProfilesUtils {
      */
     public static async setupProfileInfo(): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
-        const hasSecureCredentialManagerEnabled: boolean = SettingsConfig.getDirectValue<boolean>(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
 
+        const hasSecureCredentialManagerEnabled: boolean = this.checkDefaultCredentialManager();
         if (hasSecureCredentialManagerEnabled) {
             const shouldCheckForCustomCredentialManagers = SettingsConfig.getDirectValue<boolean>(
                 Constants.SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS
@@ -429,7 +436,7 @@ export class ProfilesUtils {
             ).trim();
 
             if (!profile) {
-                Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
+                Gui.showMessage(vscode.l10n.t("Operation cancelled"));
                 return;
             }
         }
@@ -447,7 +454,7 @@ export class ProfilesUtils {
         }
     }
 
-    public static initializeZoweFolder(): void {
+    public static async initializeZoweFolder(): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.initializeZoweFolder called.");
         // Ensure that ~/.zowe folder exists
         const zoweDir = FileManagement.getZoweDir();
@@ -458,6 +465,11 @@ export class ProfilesUtils {
         if (!fs.existsSync(settingsPath)) {
             fs.mkdirSync(settingsPath);
         }
+
+        if (!this.checkDefaultCredentialManager()) {
+            await this.disableCredentialManagement();
+        }
+
         ProfilesUtils.writeOverridesFile();
         // set global variable of security value to existing override
         // this will later get reverted to default in getProfilesInfo.ts if user chooses to
@@ -487,7 +499,7 @@ export class ProfilesUtils {
                 settings = JSON.parse(fileContent);
                 ZoweLogger.debug(
                     vscode.l10n.t({
-                        message: "Reading imperative.json Credential Manager.\n {0}",
+                        message: "Reading imperative.json credential manager.\n {0}",
                         args: [fileContent],
                         comment: ["File content"],
                     })
@@ -520,7 +532,7 @@ export class ProfilesUtils {
         const newData = JSON.stringify(settings, null, 2);
         ZoweLogger.debug(
             vscode.l10n.t({
-                message: "Updating imperative.json Credential Manager to {0}.\n{1}",
+                message: "Updating imperative.json credential manager to {0}.\n{1}",
                 args: [this.PROFILE_SECURITY, newData],
                 comment: ["Default credential override setting", "New credential override setting"],
             })
@@ -534,7 +546,7 @@ export class ProfilesUtils {
     public static async initializeZoweProfiles(errorCallback: (msg: string) => unknown): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.initializeZoweProfiles called.");
         try {
-            ProfilesUtils.initializeZoweFolder();
+            await ProfilesUtils.initializeZoweFolder();
         } catch (err) {
             ZoweLogger.error(err);
             Gui.errorMessage(
@@ -548,10 +560,10 @@ export class ProfilesUtils {
 
         try {
             await ProfilesUtils.readConfigFromDisk(true);
-            ZoweLogger.info(vscode.l10n.t("Zowe Profiles initialized successfully."));
+            ZoweLogger.info(vscode.l10n.t("Zowe profiles initialized successfully."));
         } catch (err) {
             if (err instanceof imperative.ImperativeError) {
-                await AuthUtils.errorHandling(err, undefined, err.mDetails.causeErrors);
+                await AuthUtils.errorHandling(err, { scenario: err.mDetails.causeErrors });
             } else {
                 ZoweLogger.error(err);
                 errorCallback(err.message);
@@ -565,7 +577,7 @@ export class ProfilesUtils {
             "Zowe V1 profiles in use.\nZowe Explorer no longer supports V1 profiles. Choose to convert existing profiles to a team configuration or create new profiles."
         );
         ZoweLogger.warn(v1ProfileErrorMsg);
-        const convertButton = vscode.l10n.t("Convert Existing Profiles");
+        const convertButton = vscode.l10n.t("Convert existing profiles");
         const createButton = vscode.l10n.t("Create New");
         const selection = await Gui.infoMessage(v1ProfileErrorMsg, { items: [convertButton, createButton], vsCodeOpts: { modal: true } });
         switch (selection) {
@@ -611,7 +623,7 @@ export class ProfilesUtils {
         if (node instanceof ZoweTreeNode) {
             return node.getProfile();
         }
-        throw new Error(vscode.l10n.t("Tree Item is not a Zowe Explorer item."));
+        throw new Error(vscode.l10n.t("Tree item is not a Zowe Explorer item."));
     }
 
     private static async convertV1Profs(): Promise<void> {
