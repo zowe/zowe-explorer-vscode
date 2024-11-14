@@ -30,6 +30,7 @@ import { USSFileStructure } from "./USSFileStructure";
 import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../tools/ZoweLogger";
+import { AuthUtils } from "../../utils/AuthUtils";
 
 export class UssFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     // Event objects for provider
@@ -278,11 +279,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const bufBuilder = new BufferBuilder();
         const filePath = uri.path.substring(uriInfo.slashAfterProfilePos);
         const metadata = file.metadata;
-        await this.autoDetectEncoding(file as UssFile);
-        const profileEncoding = file.encoding ? null : file.metadata.profile.profile?.encoding;
 
         let resp: IZosFilesResponse;
         try {
+            await this.autoDetectEncoding(file as UssFile);
+            const profileEncoding = file.encoding ? null : file.metadata.profile.profile?.encoding;
             resp = await ZoweExplorerApiRegister.getUssApi(metadata.profile).getContents(filePath, {
                 binary: file.encoding?.kind === "binary",
                 encoding: file.encoding?.kind === "other" ? file.encoding.codepage : profileEncoding,
@@ -291,21 +292,15 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 stream: bufBuilder,
             });
         } catch (err) {
-            this._handleError(err, {
-                additionalContext: vscode.l10n.t({
-                    message: "Failed to get contents for {0}",
-                    args: [filePath],
-                    comment: ["File path"],
-                }),
-                retry: {
-                    fn: this.fetchFileAtUri.bind(this),
-                    args: [uri, options],
-                },
-                apiType: ZoweExplorerApiType.Uss,
-                profileType: metadata.profile.type,
-                templateArgs: { profileName: metadata.profile.name },
-            });
-            throw err;
+            if (err instanceof Error) {
+                ZoweLogger.error(err.message);
+            }
+            AuthUtils.promptForAuthError(err, metadata.profile);
+            return;
+        }
+
+        if (!options?.isConflict) {
+            file.wasAccessed = true;
         }
 
         const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
@@ -395,9 +390,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // - fetching a conflict from the remote FS
         if ((!file.wasAccessed && !urlQuery.has("inDiff")) || isConflict) {
             await this.fetchFileAtUri(uri, { isConflict });
-            if (!isConflict) {
-                file.wasAccessed = true;
-            }
         }
 
         return isConflict ? file.conflictData.contents : file.data;
@@ -509,8 +501,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                         fn: this.writeFile.bind(this),
                         args: [uri, content, options],
                     },
-                    profileType: parentDir.metadata.profile.type,
-                    templateArgs: { profileName: parentDir.metadata.profile.name ?? "" },
+                    profileType: parentDir.metadata.profile?.type,
+                    templateArgs: { profileName: parentDir.metadata.profile?.name ?? "" },
                 });
                 throw err;
             }
@@ -619,8 +611,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     args: [uri, _options],
                 },
                 apiType: ZoweExplorerApiType.Uss,
-                profileType: parent.metadata.profile.type,
-                templateArgs: { profileName: parent.metadata.profile.name ?? "" },
+                profileType: parent.metadata.profile?.type,
+                templateArgs: { profileName: parent.metadata.profile?.name ?? "" },
             });
             throw err;
         }

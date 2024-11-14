@@ -179,7 +179,7 @@ describe("ProfilesUtils unit tests", () => {
             });
             const scenario = "Task failed successfully";
             const showErrorSpy = jest.spyOn(Gui, "errorMessage");
-            const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation(() => Promise.resolve("selection"));
+            const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation(() => Promise.resolve("Log in to Authentication Service"));
             const ssoLoginSpy = jest.fn();
             const profile = { type: "zosmf" } as any;
             Object.defineProperty(Constants, "PROFILES_CACHE", {
