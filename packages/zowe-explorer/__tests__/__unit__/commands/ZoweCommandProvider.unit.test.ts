@@ -80,13 +80,8 @@ describe("ZoweCommandProvider Unit Tests - function checkCurrentProfile", () => 
         });
         const profileStatus = { name: "test", status: "inactive" };
         jest.spyOn(Profiles.getInstance(), "checkCurrentProfile").mockResolvedValue(profileStatus);
-        const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
+        const showProfileInactiveMsg = jest.spyOn(Profiles.getInstance(), "showProfileInactiveMsg").mockImplementation();
         await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(profileStatus);
-        expect(errorHandlingSpy).toHaveBeenCalledWith(
-            "Profile Name " +
-                globalMocks.testProfile.name +
-                " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
-            { apiType: ZoweExplorerApiType.Command, profile: globalMocks.testProfile }
-        );
+        expect(showProfileInactiveMsg).toHaveBeenCalled();
     });
 });

@@ -33,9 +33,10 @@ import { createUSSSessionNode } from "../../__mocks__/mockCreators/uss";
 import { USSInit } from "../../../src/trees/uss/USSInit";
 import { JobInit } from "../../../src/trees/job/JobInit";
 import { createIJobObject, createJobSessionNode } from "../../__mocks__/mockCreators/jobs";
-import { createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets";
+import { createDatasetFavoritesNode, createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets";
 import { DatasetInit } from "../../../src/trees/dataset/DatasetInit";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
+import { IconGenerator } from "../../../src/icons/IconGenerator";
 
 async function createGlobalMocks() {
     Object.defineProperty(ZoweLocalStorage, "storage", {
@@ -119,6 +120,7 @@ async function createGlobalMocks() {
                     name: globalMocks.testProfile.name,
                     status: "active",
                 }),
+                showProfileInactiveMsg: jest.fn(),
                 getProfileSetting: globalMocks.mockGetProfileSetting.mockReturnValue({
                     name: globalMocks.testProfile.name,
                     status: "active",
@@ -310,7 +312,7 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
             testIJob: createIJobObject(),
             testJobsProvider: await JobInit.createJobsTree(imperative.Logger.getAppLogger()),
             jobNode: null,
-            checkJwtTokenForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtTokenForProfile").mockImplementationOnce(() => {}),
+            checkJwtTokenForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtTokenForProfile").mockResolvedValueOnce(true),
         };
 
         newMocks.jobNode = new ZoweJobNode({
@@ -357,8 +359,13 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
     it("Tests that checkCurrentProfile is executed successfully with inactive status", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValueOnce({
+            ds: { setStatusForSession: jest.fn(), mSessionNodes: [createDatasetSessionNode(createISession(), createIProfile())] } as any,
+            uss: { setStatusForSession: jest.fn(), mSessionNodes: [createUSSSessionNode(createISession(), createIProfile())] } as any,
+            job: { setStatusForSession: jest.fn(), mSessionNodes: [createJobSessionNode(createISession(), createIProfile())] } as any,
+        });
         blockMocks.jobNode.contextValue = "session";
-        globalMocks.mockCheckCurrentProfile.mockReturnValueOnce({
+        globalMocks.mockCheckCurrentProfile.mockResolvedValueOnce({
             name: globalMocks.testProfile.name,
             status: "inactive",
         });
@@ -646,12 +653,14 @@ describe("Tree Provider Unit Tests - function checkJwtTokenForProfile", () => {
         ]);
         const hasTokenExpiredForProfile = jest.fn();
         const mergeArgsForProfile = jest.fn();
+        const showProfileInactiveMsg = jest.fn();
         const profilesGetInstance = jest.spyOn(Profiles, "getInstance").mockReturnValue({
             getProfileInfo: jest.fn().mockResolvedValue({
                 hasTokenExpiredForProfile,
                 getAllProfiles,
                 mergeArgsForProfile,
             } as any),
+            showProfileInactiveMsg,
         } as any);
 
         return {
@@ -673,9 +682,82 @@ describe("Tree Provider Unit Tests - function checkJwtTokenForProfile", () => {
     it("prompts the user to log in if a JWT token is present and has expired", async () => {
         const blockMocks = getBlockMocks();
         blockMocks.hasTokenExpiredForProfile.mockReturnValueOnce(true);
-        const promptUserForSsoLogin = jest.spyOn(AuthUtils, "promptUserForSsoLogin").mockImplementation();
+        const promptForSsoLogin = jest.spyOn(AuthUtils, "promptForSsoLogin").mockImplementation();
         await (ZoweTreeProvider as any).checkJwtTokenForProfile("zosmf");
         expect(blockMocks.hasTokenExpiredForProfile).toHaveBeenCalledWith("zosmf");
-        expect(promptUserForSsoLogin).toHaveBeenCalled();
+        expect(promptForSsoLogin).toHaveBeenCalled();
+    });
+});
+
+describe("Tree Provider Unit Tests - function updateSessionContext", () => {
+    function getBlockMocks() {
+        const profile = createIProfile();
+        const session = createISession();
+        const sessionNodes = {
+            ds: createDatasetSessionNode(session, profile),
+            uss: createUSSSessionNode(session, profile),
+            job: createJobSessionNode(session, profile),
+        };
+        const sharedProviders = {
+            ds: { setStatusForSession: jest.fn(), mSessionNodes: [sessionNodes.ds] } as any,
+            uss: { setStatusForSession: jest.fn(), mSessionNodes: [sessionNodes.uss] } as any,
+            job: { setStatusForSession: jest.fn(), mSessionNodes: [sessionNodes.job] } as any,
+        };
+        return {
+            profile,
+            session,
+            sessionNodes,
+            sharedProviders,
+            sharedProviderMock: jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValueOnce(sharedProviders),
+        };
+    }
+
+    it("updates the session context across all shared tree providers", () => {
+        const blockMocks = getBlockMocks();
+        (ZoweTreeProvider as any).updateSessionContext(blockMocks.profile.name, Validation.ValidationType.VALID);
+        expect(blockMocks.sharedProviders.ds.setStatusForSession).toHaveBeenCalledWith(blockMocks.sessionNodes.ds, Validation.ValidationType.VALID);
+        expect(blockMocks.sharedProviders.uss.setStatusForSession).toHaveBeenCalledWith(blockMocks.sessionNodes.uss, Validation.ValidationType.VALID);
+        expect(blockMocks.sharedProviders.job.setStatusForSession).toHaveBeenCalledWith(blockMocks.sessionNodes.job, Validation.ValidationType.VALID);
+    });
+});
+
+describe("Tree Provider Unit Tests - function setStatusInSession", () => {
+    function getBlockMocks() {
+        const profile = createIProfile();
+        const session = createISession();
+        const nodeDataChanged = jest.spyOn(ZoweTreeProvider.prototype, "nodeDataChanged").mockImplementation();
+        const treeProvider = new ZoweTreeProvider(PersistenceSchemaEnum.Dataset, createDatasetFavoritesNode());
+        return {
+            nodeDataChanged,
+            profile,
+            session,
+            sessionNode: createDatasetSessionNode(session, profile),
+            treeProvider,
+        };
+    }
+
+    it("updates the session context - VALID", () => {
+        const { treeProvider, ...blockMocks } = getBlockMocks();
+        (treeProvider as any).setStatusForSession(blockMocks.sessionNode, Validation.ValidationType.VALID);
+        expect(blockMocks.sessionNode.contextValue).toContain(Constants.ACTIVE_CONTEXT);
+        expect(blockMocks.nodeDataChanged).toHaveBeenCalled();
+    });
+    it("updates the session context - INVALID", () => {
+        const { treeProvider, ...blockMocks } = getBlockMocks();
+        (treeProvider as any).setStatusForSession(blockMocks.sessionNode, Validation.ValidationType.INVALID);
+        expect(blockMocks.sessionNode.contextValue).toContain(Constants.INACTIVE_CONTEXT);
+        expect(blockMocks.nodeDataChanged).toHaveBeenCalled();
+    });
+    it("updates the session context - UNVERIFIED", () => {
+        const { treeProvider, ...blockMocks } = getBlockMocks();
+        (treeProvider as any).setStatusForSession(blockMocks.sessionNode, Validation.ValidationType.UNVERIFIED);
+        expect(blockMocks.sessionNode.contextValue).toContain(Constants.UNVERIFIED_CONTEXT);
+        expect(blockMocks.nodeDataChanged).toHaveBeenCalled();
+    });
+    it("returns early when a falsy node is provided", () => {
+        const { treeProvider } = getBlockMocks();
+        const getIconByIdMock = jest.spyOn(IconGenerator, "getIconById").mockClear().mockImplementation();
+        (treeProvider as any).setStatusForSession(null, Validation.ValidationType.VALID);
+        expect(getIconByIdMock).not.toHaveBeenCalled();
     });
 });
