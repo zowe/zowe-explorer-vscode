@@ -27,6 +27,7 @@ import {
     UriFsInfo,
     FileEntry,
     ZoweExplorerApiType,
+    imperative,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -102,8 +103,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.parse(uri.path).name, { attributes: true });
             }
         } catch (err) {
-            if (err instanceof Error) {
+            if (err instanceof imperative.ImperativeError) {
                 ZoweLogger.error(err.message);
+                AuthUtils.promptForAuthError(err, entry.metadata.profile);
+                entry.wasAccessed = false;
             }
             throw err;
         }
@@ -429,11 +432,15 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             if (options?.editor) {
                 await this._updateResourceInEditor(uri);
             }
+
+            if (!options?.isConflict && dsEntry) {
+                dsEntry.wasAccessed = true;
+            }
             return dsEntry;
         } catch (error) {
             //Response will error if the file is not found
             //Callers of fetchDatasetAtUri() do not expect it to throw an error
-            AuthUtils.promptForAuthError(error, metadata.profile);
+            dsEntry.wasAccessed = false;
             return null;
         }
     }
@@ -474,9 +481,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         if (!ds || (!ds.wasAccessed && !urlQuery.has("inDiff")) || isConflict) {
             //try and fetch its contents from remote
             ds = (await this.fetchDatasetAtUri(uri, { isConflict })) as DsEntry;
-            if (!isConflict && ds) {
-                ds.wasAccessed = true;
-            }
         }
 
         if (FsAbstractUtils.isDirectoryEntry(ds)) {
@@ -486,12 +490,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         //not found on remote, throw error
         if (ds == null) {
             throw vscode.FileSystemError.FileNotFound(uri);
-        }
-
-        const profInfo = this._getInfoFromUri(uri);
-
-        if (profInfo.profile == null) {
-            throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("Profile does not exist for this file."));
         }
 
         return isConflict ? ds.conflictData.contents : ds.data;

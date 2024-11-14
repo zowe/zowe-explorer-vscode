@@ -84,7 +84,17 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         ZoweLogger.trace(`[UssFSProvider] stat is locating resource ${uri.toString()}`);
 
-        const fileResp = await this.listFiles(entry.metadata.profile, uri, true);
+        let fileResp: IZosFilesResponse;
+        try {
+            fileResp = await this.listFiles(entry.metadata.profile, uri, true);
+        } catch (err) {
+            if (err instanceof imperative.ImperativeError) {
+                AuthUtils.promptForAuthError(err, entry.metadata.profile);
+                entry.wasAccessed = false;
+            }
+            throw err;
+        }
+
         if (fileResp.success) {
             // Regardless of the resource type, it will be the first item in a successful response.
             // When listing a folder, the folder's stats will be represented as the "." entry.
@@ -295,7 +305,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             if (err instanceof Error) {
                 ZoweLogger.error(err.message);
             }
-            AuthUtils.promptForAuthError(err, metadata.profile);
+            file.wasAccessed = false;
             return;
         }
 

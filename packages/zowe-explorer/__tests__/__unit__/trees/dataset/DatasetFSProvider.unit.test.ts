@@ -20,6 +20,7 @@ import {
     FsAbstractUtils,
     FsDatasetsUtils,
     Gui,
+    imperative,
     PdsEntry,
     ZoweExplorerApiType,
     ZoweScheme,
@@ -27,6 +28,7 @@ import {
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
+import { AuthUtils } from "../../../../src/utils/AuthUtils";
 const dayjs = require("dayjs");
 
 const testProfile = createIProfile();
@@ -290,23 +292,6 @@ describe("fetchDatasetAtUri", () => {
     });
 });
 describe("readFile", () => {
-    it("throws an error if the entry does not have a profile", async () => {
-        const _lookupAsFileMock = jest
-            .spyOn(DatasetFSProvider.instance as any, "_lookupAsFile")
-            .mockReturnValueOnce({ ...testEntries.ps, metadata: { profile: null } });
-
-        let err;
-        try {
-            await DatasetFSProvider.instance.readFile(testUris.ps);
-        } catch (error) {
-            err = error;
-            expect(err.code).toBe("FileNotFound");
-        }
-        expect(err).toBeDefined();
-        expect(_lookupAsFileMock).toHaveBeenCalledWith(testUris.ps);
-        _lookupAsFileMock.mockRestore();
-    });
-
     it("throws an error if the entry does not exist and the URI is actually a directory", async () => {
         const _lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockImplementationOnce((uri) => {
             throw FileSystemError.FileNotFound(uri as Uri);
@@ -709,7 +694,6 @@ describe("stat", () => {
         lookupParentDirMock.mockRestore();
         mvsApiMock.mockRestore();
     });
-
     describe("error handling", () => {
         it("API response was unsuccessful for remote lookup", async () => {
             const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(testEntries.ps);
@@ -719,12 +703,17 @@ describe("stat", () => {
                 profileName: "sestest",
                 profile: testEntries.ps.metadata.profile,
             });
-            const exampleError = new Error("Response unsuccessful");
+            const exampleError = new imperative.ImperativeError({
+                msg: "Response unsuccessful",
+                errorCode: "401"
+            });
             const dataSetMock = jest.fn().mockRejectedValue(exampleError);
+            const promptForAuthErrorSpy = jest.spyOn(AuthUtils, "promptForAuthError");
             const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
                 dataSet: dataSetMock,
             } as any);
             await expect(DatasetFSProvider.instance.stat(testUris.ps)).rejects.toThrow();
+            expect(promptForAuthErrorSpy).toHaveBeenCalled();
             mvsApiMock.mockRestore();
             getInfoForUriMock.mockRestore();
             lookupMock.mockRestore();

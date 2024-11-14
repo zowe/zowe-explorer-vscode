@@ -100,6 +100,21 @@ describe("stat", () => {
         await expect(UssFSProvider.instance.stat(testUris.file.with({ query: "inDiff=true" }))).resolves.toStrictEqual(testEntries.file);
         expect(lookupMock).toHaveBeenCalledWith(testUris.file, false);
     });
+    it("throws an error if error encountered", async () => {
+        lookupMock.mockReturnValueOnce(testEntries.file);
+        const listFilesMock = jest.spyOn(UssFSProvider.instance, "listFiles").mockRejectedValueOnce(
+            new imperative.ImperativeError({
+                msg: "",
+                errorCode: "401",
+            })
+        );
+        const promptForAuthErrorSpy = jest.spyOn(AuthUtils, "promptForAuthError");
+        await expect(UssFSProvider.instance.stat(testUris.file)).rejects.toThrow();
+        expect(promptForAuthErrorSpy).toHaveBeenCalled();
+        expect(lookupMock).toHaveBeenCalledWith(testUris.file, false);
+        expect(listFilesMock).toHaveBeenCalled();
+        listFilesMock.mockRestore();
+    });
 });
 
 describe("move", () => {
@@ -344,6 +359,7 @@ describe("fetchFileAtUri", () => {
         expect(autoDetectEncodingMock).toHaveBeenCalledWith(fileEntry);
         expect(_fireSoonSpy).not.toHaveBeenCalled();
         autoDetectEncodingMock.mockRestore();
+        lookupAsFileMock.mockRestore();
     });
     it("calls getContents to get the data for a file entry with encoding", async () => {
         const fileEntry = { ...testEntries.file };
