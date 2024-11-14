@@ -62,7 +62,14 @@ export class AuthUtils {
             (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
                 err.message.includes("All configured authentication methods failed"))
         ) {
-            void AuthUtils.promptForAuthentication(err, profile).catch((error) => error instanceof Error && ZoweLogger.error(error.message));
+            const correlation = ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.All, err, {
+                templateArgs: {
+                    profileName: profile.name
+                }
+            });
+            void AuthUtils.promptForAuthentication(err, profile, correlation).catch(
+                (error) => error instanceof Error && ZoweLogger.error(error.message)
+            );
         }
     }
 
