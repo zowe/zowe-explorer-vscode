@@ -398,6 +398,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             //Callers of fetchDatasetAtUri() do not expect it to throw an error
             if (error instanceof imperative.ImperativeError) {
                 AuthUtils.promptForAuthError(error, metadata.profile);
+                dsEntry.wasAccessed = false;
             }
             return null;
         }

@@ -25,6 +25,7 @@ import {
     ZoweScheme,
     FsJobsUtils,
     FsAbstractUtils,
+    imperative,
 } from "@zowe/zowe-explorer-api";
 import { IJob, IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -205,7 +206,10 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                 bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id));
             }
         } catch (err) {
-            AuthUtils.promptForAuthError(err, spoolEntry.metadata.profile);
+            if (err instanceof imperative.ImperativeError) {
+                AuthUtils.promptForAuthError(err, spoolEntry.metadata.profile);
+                spoolEntry.wasAccessed = false;
+            }
             throw err;
         }
 
