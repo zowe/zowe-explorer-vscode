@@ -705,7 +705,7 @@ describe("stat", () => {
             });
             const exampleError = new imperative.ImperativeError({
                 msg: "Response unsuccessful",
-                errorCode: "401"
+                errorCode: "401",
             });
             const dataSetMock = jest.fn().mockRejectedValue(exampleError);
             const promptForAuthErrorSpy = jest.spyOn(AuthUtils, "promptForAuthError");
