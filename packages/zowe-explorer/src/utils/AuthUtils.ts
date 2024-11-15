@@ -17,6 +17,68 @@ import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 
 export class AuthUtils {
+    public static async promptForAuthentication(
+        imperativeError: imperative.ImperativeError,
+        profile: string | imperative.IProfileLoaded
+    ): Promise<boolean> {
+        let profileName = typeof profile === "string" ? profile : profile.name;
+        const errMsg = vscode.l10n.t({
+            message: "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
+            args: [profileName],
+            comment: ["Label"],
+        });
+        const errToken = vscode.l10n.t({
+            message:
+                // eslint-disable-next-line max-len
+                "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
+            args: [profileName],
+            comment: ["Label"],
+        });
+        if (profileName.includes("[")) {
+            profileName = profileName.substring(0, profileName.indexOf(" [")).trim();
+        }
+
+        if (imperativeError.mDetails.additionalDetails) {
+            const tokenError: string = imperativeError.mDetails.additionalDetails;
+            const isTokenAuth = await AuthUtils.isUsingTokenAuth(profileName);
+
+            if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
+                const message = vscode.l10n.t("Log in to Authentication Service");
+                const success = await Gui.showMessage(errToken, { items: [message] }).then(async (selection) => {
+                    if (selection) {
+                        return Constants.PROFILES_CACHE.ssoLogin(null, profileName);
+                    }
+
+                    return false;
+                });
+                return success;
+            }
+        }
+        const checkCredsButton = vscode.l10n.t("Update Credentials");
+        const creds = await Gui.errorMessage(errMsg, {
+            items: [checkCredsButton],
+            vsCodeOpts: { modal: true },
+        }).then(async (selection) => {
+            if (selection !== checkCredsButton) {
+                return;
+            }
+            return Constants.PROFILES_CACHE.promptCredentials(profile, true);
+        });
+        return creds != null ? true : false;
+    }
+
+    public static promptForAuthError(imperativeError: imperative.ImperativeError, profile: string | imperative.IProfileLoaded): void {
+        const httpErrorCode = Number(imperativeError.mDetails.errorCode);
+        if (
+            httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
+            imperativeError.message.includes("All configured authentication methods failed")
+        ) {
+            void AuthUtils.promptForAuthentication(imperativeError, profile).catch(
+                (error) => error instanceof Error && ZoweLogger.error(error.message)
+            );
+        }
+    }
+
     /*************************************************************************************************************
      * Error Handling
      * @param {errorDetails} - string or error object
@@ -46,49 +108,7 @@ export class AuthUtils {
                 httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
                 imperativeError.message.includes("All configured authentication methods failed")
             ) {
-                const errMsg = vscode.l10n.t({
-                    message:
-                        "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
-                    args: [label],
-                    comment: ["Label"],
-                });
-                const errToken = vscode.l10n.t({
-                    message:
-                        // eslint-disable-next-line max-len
-                        "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
-                    args: [label],
-                    comment: ["Label"],
-                });
-                if (label.includes("[")) {
-                    label = label.substring(0, label.indexOf(" [")).trim();
-                }
-
-                if (imperativeError.mDetails.additionalDetails) {
-                    const tokenError: string = imperativeError.mDetails.additionalDetails;
-                    const isTokenAuth = await AuthUtils.isUsingTokenAuth(label);
-
-                    if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
-                        const message = vscode.l10n.t("Log in to Authentication Service");
-                        const success = Gui.showMessage(errToken, { items: [message] }).then(async (selection) => {
-                            if (selection) {
-                                return Constants.PROFILES_CACHE.ssoLogin(null, label);
-                            }
-                        });
-                        return success;
-                    }
-                }
-                const checkCredsButton = vscode.l10n.t("Update Credentials");
-                const creds = await Gui.errorMessage(errMsg, {
-                    items: [checkCredsButton],
-                    vsCodeOpts: { modal: true },
-                }).then(async (selection) => {
-                    if (selection !== checkCredsButton) {
-                        Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
-                        return;
-                    }
-                    return Constants.PROFILES_CACHE.promptCredentials(label.trim(), true);
-                });
-                return creds != null ? true : false;
+                return AuthUtils.promptForAuthentication(imperativeError, label);
             }
         }
         if (errorDetails.toString().includes("Could not find profile")) {

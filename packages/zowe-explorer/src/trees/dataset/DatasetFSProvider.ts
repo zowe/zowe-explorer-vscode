@@ -26,6 +26,7 @@ import {
     ZoweScheme,
     UriFsInfo,
     FileEntry,
+    imperative,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -33,6 +34,7 @@ import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import * as dayjs from "dayjs";
 import { DatasetUtils } from "./DatasetUtils";
+import { AuthUtils } from "../../utils/AuthUtils";
 
 export class DatasetFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: DatasetFSProvider;
@@ -394,6 +396,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         } catch (error) {
             //Response will error if the file is not found
             //Callers of fetchDatasetAtUri() do not expect it to throw an error
+            if (error instanceof imperative.ImperativeError) {
+                AuthUtils.promptForAuthError(error, metadata.profile);
+                dsEntry.wasAccessed = false;
+            }
             return null;
         }
     }
