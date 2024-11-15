@@ -83,21 +83,21 @@ export class ProfilesUtils {
      */
     public static updateCredentialManagerSetting(credentialManager?: string | false): void {
         ZoweLogger.trace("ProfilesUtils.updateCredentialManagerSetting called.");
-        const currentProfileSecurity = this.PROFILE_SECURITY;
+        const currentProfileSecurity = ProfilesUtils.PROFILE_SECURITY;
         const settingEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED, true);
-        const defaultCredentialManagerFound = this.checkDefaultCredentialManager();
+        const defaultCredentialManagerFound = ProfilesUtils.checkDefaultCredentialManager();
         if (settingEnabled && credentialManager) {
-            this.PROFILE_SECURITY = credentialManager;
+            ProfilesUtils.PROFILE_SECURITY = credentialManager;
             return;
         } else if (!settingEnabled || !defaultCredentialManagerFound) {
-            this.PROFILE_SECURITY = false;
+            ProfilesUtils.PROFILE_SECURITY = false;
             ZoweLogger.info(vscode.l10n.t(`Zowe Explorer profiles are being set as unsecured.`));
         } else {
-            this.PROFILE_SECURITY = Constants.ZOWE_CLI_SCM;
+            ProfilesUtils.PROFILE_SECURITY = Constants.ZOWE_CLI_SCM;
             ZoweLogger.info(vscode.l10n.t(`Zowe Explorer profiles are being set as secured.`));
         }
-        if (currentProfileSecurity !== this.PROFILE_SECURITY) {
-            imperative.CredentialManagerOverride.recordCredMgrInConfig(this.PROFILE_SECURITY);
+        if (currentProfileSecurity !== ProfilesUtils.PROFILE_SECURITY) {
+            imperative.CredentialManagerOverride.recordCredMgrInConfig(ProfilesUtils.PROFILE_SECURITY);
         }
     }
 
@@ -160,10 +160,11 @@ export class ProfilesUtils {
         ZoweLogger.trace("ProfilesUtils.disableCredentialManagement called.");
         const settingEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED, true);
         if (settingEnabled) {
-            this.PROFILE_SECURITY = false;
+            ProfilesUtils.PROFILE_SECURITY = false;
             await SettingsConfig.setDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
             await Gui.infoMessage(
                 vscode.l10n.t(
+                    // eslint-disable-next-line max-len
                     "Zowe Explorer's default credential manager is not supported in your environment. Consider installing a custom solution for your platform. Click Reload to start Zowe Explorer without a credential manager."
                 ),
                 {
@@ -180,6 +181,7 @@ export class ProfilesUtils {
         } catch (_error) {
             ZoweLogger.info(
                 vscode.l10n.t(
+                    // eslint-disable-next-line max-len
                     "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions."
                 )
             );
@@ -303,56 +305,59 @@ export class ProfilesUtils {
     public static async setupProfileInfo(): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
 
-        const hasSecureCredentialManagerEnabled: boolean = this.checkDefaultCredentialManager();
+        const hasSecureCredentialManagerEnabled: boolean = ProfilesUtils.checkDefaultCredentialManager();
         if (hasSecureCredentialManagerEnabled) {
             const shouldCheckForCustomCredentialManagers = SettingsConfig.getDirectValue<boolean>(
                 Constants.SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS
             );
             if (shouldCheckForCustomCredentialManagers) {
-                await this.fetchRegisteredPlugins();
+                await ProfilesUtils.fetchRegisteredPlugins();
             }
 
-            const credentialManagerOverride = this.getCredentialManagerOverride();
-            const isVSCodeCredentialPluginInstalled = this.isVSCodeCredentialPluginInstalled(credentialManagerOverride);
+            const credentialManagerOverride = ProfilesUtils.getCredentialManagerOverride();
+            const isVSCodeCredentialPluginInstalled = ProfilesUtils.isVSCodeCredentialPluginInstalled(credentialManagerOverride);
             const isCustomCredentialPluginDefined = credentialManagerOverride !== imperative.CredentialManagerOverride.DEFAULT_CRED_MGR_NAME;
             const credentialManagerMap = ProfilesUtils.getCredentialManagerMap(credentialManagerOverride);
 
             if (isCustomCredentialPluginDefined && !isVSCodeCredentialPluginInstalled && credentialManagerMap) {
-                await this.promptAndHandleMissingCredentialManager(credentialManagerMap);
+                await ProfilesUtils.promptAndHandleMissingCredentialManager(credentialManagerMap);
             }
             if (credentialManagerMap && isVSCodeCredentialPluginInstalled) {
                 return new imperative.ProfileInfo("zowe", {
-                    credMgrOverride: await this.setupCustomCredentialManager(credentialManagerMap),
+                    credMgrOverride: await ProfilesUtils.setupCustomCredentialManager(credentialManagerMap),
                 });
             }
         }
 
         return new imperative.ProfileInfo("zowe", {
-            credMgrOverride: hasSecureCredentialManagerEnabled && (await this.setupDefaultCredentialManager()),
+            credMgrOverride: hasSecureCredentialManagerEnabled ? await ProfilesUtils.setupDefaultCredentialManager() : undefined,
         });
     }
 
     public static async readConfigFromDisk(warnForMissingSchema?: boolean): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.readConfigFromDisk called.");
         let rootPath: string;
-        this.mProfileInfo = await ProfilesUtils.setupProfileInfo();
+        ProfilesUtils.mProfileInfo = await ProfilesUtils.setupProfileInfo();
         const workspacePath = ZoweVsCodeExtension.workspaceRoot?.uri.fsPath;
         if (workspacePath) {
             rootPath = workspacePath;
-            await this.mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: FileManagement.getFullPath(rootPath) });
+            await ProfilesUtils.mProfileInfo.readProfilesFromDisk({
+                homeDir: FileManagement.getZoweDir(),
+                projectDir: FileManagement.getFullPath(rootPath),
+            });
         } else {
-            await this.mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: undefined });
+            await ProfilesUtils.mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: undefined });
         }
-        if (this.mProfileInfo.getTeamConfig().exists) {
-            if (warnForMissingSchema && !this.mProfileInfo.hasValidSchema) {
+        if (ProfilesUtils.mProfileInfo.getTeamConfig().exists) {
+            if (warnForMissingSchema && !ProfilesUtils.mProfileInfo.hasValidSchema) {
                 const schemaWarning = vscode.l10n.t(
                     "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer."
                 );
                 Gui.warningMessage(schemaWarning);
                 ZoweLogger.warn(schemaWarning);
             }
-            ZoweLogger.info(`Zowe Explorer is using the team configuration file "${this.mProfileInfo.getTeamConfig().configName}"`);
-            const layers = this.mProfileInfo.getTeamConfig().layers || [];
+            ZoweLogger.info(`Zowe Explorer is using the team configuration file "${ProfilesUtils.mProfileInfo.getTeamConfig().configName}"`);
+            const layers = ProfilesUtils.mProfileInfo.getTeamConfig().layers || [];
             const layerSummary = layers.map(
                 (config: imperative.IConfigLayer) =>
                     `Path: ${config.path}: ${
@@ -370,19 +375,19 @@ export class ProfilesUtils {
         // VS Code registers our updated TreeView IDs. Otherwise, VS Code's "Refresh Extensions" option will break v3 init.
         const ussPersistentSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent");
         const upgradingFromV1 = ZoweLocalStorage.getValue<Definitions.V1MigrationStatus>(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
-        if (this.mProfileInfo == null) {
+        if (ProfilesUtils.mProfileInfo == null) {
             return;
         }
 
-        if (ussPersistentSettings != null && upgradingFromV1 == null && this.mProfileInfo.onlyV1ProfilesExist) {
+        if (ussPersistentSettings != null && upgradingFromV1 == null && ProfilesUtils.mProfileInfo.onlyV1ProfilesExist) {
             await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, Definitions.V1MigrationStatus.JustMigrated);
             await vscode.commands.executeCommand("workbench.action.reloadWindow");
         }
 
-        if (upgradingFromV1 == null || !this.mProfileInfo.onlyV1ProfilesExist) {
+        if (upgradingFromV1 == null || !ProfilesUtils.mProfileInfo.onlyV1ProfilesExist) {
             return;
         }
-        const userSelection = await this.v1ProfileOptions();
+        const userSelection = await ProfilesUtils.v1ProfileOptions();
 
         // Open the "Add Session" quick pick if the user selected "Create New" in the v1 migration prompt.
         if (userSelection === ProfilesConvertStatus.CreateNewSelected) {
@@ -396,11 +401,11 @@ export class ProfilesUtils {
      * This aims to help direct new Zowe Explorer users to create a new team configuration.
      */
     public static promptUserWithNoConfigs(): void {
-        if (ProfilesUtils.noConfigDialogShown || this.mProfileInfo == null) {
+        if (ProfilesUtils.noConfigDialogShown || ProfilesUtils.mProfileInfo == null) {
             return;
         }
 
-        if (!this.mProfileInfo.getTeamConfig().exists && !this.mProfileInfo.onlyV1ProfilesExist) {
+        if (!ProfilesUtils.mProfileInfo.getTeamConfig().exists && !ProfilesUtils.mProfileInfo.onlyV1ProfilesExist) {
             Gui.showMessage(
                 vscode.l10n.t("No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration."),
                 {
@@ -466,8 +471,8 @@ export class ProfilesUtils {
             fs.mkdirSync(settingsPath);
         }
 
-        if (!this.checkDefaultCredentialManager()) {
-            await this.disableCredentialManagement();
+        if (!ProfilesUtils.checkDefaultCredentialManager()) {
+            await ProfilesUtils.disableCredentialManagement();
         }
 
         ProfilesUtils.writeOverridesFile();
@@ -520,7 +525,7 @@ export class ProfilesUtils {
                     });
                 }
             }
-            if (settings?.overrides?.CredentialManager === this.PROFILE_SECURITY) {
+            if (settings?.overrides?.CredentialManager === ProfilesUtils.PROFILE_SECURITY) {
                 return;
             }
             if (!settings?.overrides?.CredentialManager) {
@@ -533,7 +538,7 @@ export class ProfilesUtils {
         ZoweLogger.debug(
             vscode.l10n.t({
                 message: "Updating imperative.json credential manager to {0}.\n{1}",
-                args: [this.PROFILE_SECURITY, newData],
+                args: [ProfilesUtils.PROFILE_SECURITY, newData],
                 comment: ["Default credential override setting", "New credential override setting"],
             })
         );
@@ -587,7 +592,7 @@ export class ProfilesUtils {
                 return ProfilesConvertStatus.CreateNewSelected;
             case convertButton:
                 ZoweLogger.info("Convert v1 profiles to team configuration chosen.");
-                await this.convertV1Profs();
+                await ProfilesUtils.convertV1Profs();
                 await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, undefined);
                 return ProfilesConvertStatus.ConvertSelected;
             default:
@@ -627,7 +632,7 @@ export class ProfilesUtils {
     }
 
     private static async convertV1Profs(): Promise<void> {
-        const profileInfo = await this.setupProfileInfo();
+        const profileInfo = await ProfilesUtils.setupProfileInfo();
         const convertResult: imperative.IConvertV1ProfResult = await ProfilesCache.convertV1ProfToConfig(profileInfo);
         ZoweLogger.debug(JSON.stringify(convertResult));
         if (convertResult.profilesConverted) {
