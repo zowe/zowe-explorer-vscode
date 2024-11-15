@@ -30,6 +30,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue to update the success message when changing authentication from token to basic through the 'Change Authentication' option. [#3316](https://github.com/zowe/zowe-explorer-vscode/pull/3316)
 - Fixed an issue where editing a team config file or updating credentials in OS vault could trigger multiple events for a single action. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
 - Updated Zowe SDKs to `8.8.2` for technical currency. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
+- Fixed an issue where fetching a USS file using `UssFSProvider.stat()` with a `fetch=true` query would cause Zowe Explorer to get stuck in an infinite loop.
 
 ## `3.0.2`
 
