@@ -21,6 +21,7 @@ import { Gui, imperative } from "@zowe/zowe-explorer-api";
 import * as globals from "../../../src/globals";
 import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
 import { mocked } from "../../../__mocks__/mockUtils";
+import { ZosFilesUtils } from "@zowe/zos-files-for-zowe-sdk";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
@@ -100,7 +101,7 @@ describe("FtpMvsApi", () => {
         expect((response._readableState.buffer.head?.data ?? response._readableState.buffer).toString()).toContain("Hello world");
     });
 
-    it("should upload content to dataset.", async () => {
+    it("should upload content to dataset - sequential data set", async () => {
         const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
         const tmpNameSyncSpy = jest.spyOn(tmp, "tmpNameSync");
         const rmSyncSpy = jest.spyOn(fs, "rmSync");
@@ -114,7 +115,7 @@ describe("FtpMvsApi", () => {
 
         const mockParams = {
             inputFilePath: localFile,
-            dataSetName: "   (IBMUSER).DS2",
+            dataSetName: "IBMUSER.DS2",
             options: { encoding: "", returnEtag: true, etag: "utf8" },
         };
         jest.spyOn(MvsApi as any, "getContents").mockResolvedValueOnce({ apiResponse: { etag: "utf8" } });
@@ -124,6 +125,38 @@ describe("FtpMvsApi", () => {
         expect(result.commandResponse).toContain("Data set uploaded successfully.");
         expect(DataSetUtils.listDataSets).toHaveBeenCalledTimes(1);
         expect(DataSetUtils.uploadDataSet).toHaveBeenCalledTimes(1);
+        expect(MvsApi.releaseConnection).toHaveBeenCalled();
+        // check that correct function is called from node-tmp
+        expect(tmpNameSyncSpy).toHaveBeenCalled();
+        expect(rmSyncSpy).toHaveBeenCalled();
+    });
+
+    it("should generate a member name for PDS upload if one wasn't provided", async () => {
+        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
+        const tmpNameSyncSpy = jest.spyOn(tmp, "tmpNameSync");
+        const rmSyncSpy = jest.spyOn(fs, "rmSync");
+
+        fs.writeFileSync(localFile, "helloPdsMember");
+        const response = TestUtils.getSingleLineStream();
+        const response2 = { success: true, commandResponse: "", apiResponse: { items: [{ dsname: "IBMUSER.PDS", dsorg: "PO", lrecl: 255 }] } };
+        const dataSetMock = jest.spyOn(MvsApi, "dataSet").mockResolvedValue(response2 as any);
+        const uploadDataSetMock = jest.spyOn(DataSetUtils, "uploadDataSet").mockResolvedValue(response);
+        jest.spyOn(MvsApi, "getContents").mockResolvedValue({ apiResponse: { etag: "123" } } as any);
+
+        const mockParams = {
+            inputFilePath: localFile,
+            dataSetName: "IBMUSER.PDS",
+            options: { encoding: "", returnEtag: true, etag: "utf8" },
+        };
+        const generateMemberNameSpy = jest.spyOn(ZosFilesUtils, "generateMemberName");
+        jest.spyOn(MvsApi as any, "getContents").mockResolvedValueOnce({ apiResponse: { etag: "utf8" } });
+        jest.spyOn(fs, "readFileSync").mockReturnValue("test");
+        jest.spyOn(Gui, "warningMessage").mockImplementation();
+        const result = await MvsApi.putContents(mockParams.inputFilePath, mockParams.dataSetName, mockParams.options);
+        expect(generateMemberNameSpy).toHaveBeenCalledWith(localFile);
+        expect(result.commandResponse).toContain("Data set uploaded successfully.");
+        expect(dataSetMock).toHaveBeenCalledTimes(1);
+        expect(uploadDataSetMock).toHaveBeenCalledTimes(1);
         expect(MvsApi.releaseConnection).toHaveBeenCalled();
         // check that correct function is called from node-tmp
         expect(tmpNameSyncSpy).toHaveBeenCalled();
