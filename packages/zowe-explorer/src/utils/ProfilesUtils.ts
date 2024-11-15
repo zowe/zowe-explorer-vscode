@@ -164,7 +164,6 @@ export class ProfilesUtils {
             await SettingsConfig.setDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
             await Gui.infoMessage(
                 vscode.l10n.t(
-                    // eslint-disable-next-line max-len
                     "Zowe Explorer's default credential manager is not supported in your environment. Consider installing a custom solution for your platform. Click Reload to start Zowe Explorer without a credential manager."
                 ),
                 {
@@ -181,7 +180,6 @@ export class ProfilesUtils {
         } catch (_error) {
             ZoweLogger.info(
                 vscode.l10n.t(
-                    // eslint-disable-next-line max-len
                     "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions."
                 )
             );
@@ -285,7 +283,6 @@ export class ProfilesUtils {
                     );
                     if (await vscode.env.openExternal(credentialManagerInstallURL)) {
                         const refreshMessage = vscode.l10n.t(
-                            // eslint-disable-next-line max-len
                             "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager"
                         );
                         const reloadButton = vscode.l10n.t("Reload");
@@ -578,7 +575,6 @@ export class ProfilesUtils {
 
     private static async v1ProfileOptions(): Promise<ProfilesConvertStatus | undefined> {
         const v1ProfileErrorMsg = vscode.l10n.t(
-            // eslint-disable-next-line max-len
             "Zowe V1 profiles in use.\nZowe Explorer no longer supports V1 profiles. Choose to convert existing profiles to a team configuration or create new profiles."
         );
         ZoweLogger.warn(v1ProfileErrorMsg);
