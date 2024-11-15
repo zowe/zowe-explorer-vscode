@@ -410,17 +410,17 @@
   "openWithEncoding": {
     "Open with Encoding": ""
   },
-  "copyExternalLink": {
-    "Copy External Link": ""
-  },
-  "zowe.history.deprecationMsg": {
-    "Changes made here will not be reflected in Zowe Explorer, use right-click Edit History option to access information from local storage.": ""
-  },
   "pdsSearchFor": {
     "Search PDS Members": ""
   },
   "filteredDataSetsSearchFor": {
     "Search Filtered Data Sets": ""
+  },
+  "copyExternalLink": {
+    "Copy External Link": ""
+  },
+  "zowe.history.deprecationMsg": {
+    "Changes made here will not be reflected in Zowe Explorer, use right-click Edit History option to access information from local storage.": ""
   },
   "Enter command here...": "",
   "Page Size:": "",
@@ -803,13 +803,15 @@
   "Unable to copy data set.": "",
   "No search pattern applied. Search for a pattern and try again.": "",
   "Enter the text to search for.": "",
+  "Operation Cancelled": "",
   "Searching for \"{0}\"": "",
-  "Percent Complete": "",
-  "Open": "",
   "Search Results for \"{0}\"": "",
   "Data Set Name": "",
   "Position": "",
   "Contents": "",
+  "Open": "",
+  "Are you sure you want to search {0} data sets and members?": "",
+  "Percent Complete": "",
   "Failed to upload changes for {0}: {1}": "",
   "Error encountered while activating and initializing logger": "",
   "Add Credentials": "",

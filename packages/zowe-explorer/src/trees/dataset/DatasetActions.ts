@@ -1954,16 +1954,13 @@ export class DatasetActions {
 
             // If there is no API response and success is false, the search didn't even begin searching data sets, and stopped during listing.
             // Return an error to the user since we have no useful data. Otherwise, display partial results.
-            if (response.success === false && response.apiResponse == null) {
-                await AuthUtils.errorHandling(response.errorMessage, {
-                    profile: options.node.getProfileName(),
-                    scenario: "Error encountered when searching data sets",
-                });
+            if (response.success === false) {
+                ZoweLogger.error(response.errorMessage);
+                Gui.errorMessage(response.errorMessage);
             }
-            return response;
+            return response.apiResponse != null ? response : undefined;
         } catch (err) {
-            // Something catastrophic happened that was not handled.
-            ZoweLogger.error(err);
+            // Something catastrophic happened that was not handled (i.e. bad credentials).
             await AuthUtils.errorHandling(err);
             return;
         }

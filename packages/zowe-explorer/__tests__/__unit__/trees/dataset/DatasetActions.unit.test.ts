@@ -3205,6 +3205,36 @@ describe("Dataset Actions Unit Tests - function search", () => {
             expect(response).toEqual({ success: true, apiResponse: { test: "test" } });
         });
 
+        it("should perform the search and fail gracefully with a partial response", async () => {
+            const myProgress = { test: "test" };
+            const taskExpected = { percentComplete: 100, stageName: 0, statusMessage: "" };
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+
+            searchDataSetsMock.mockImplementation((object) => {
+                object.progressTask.percentComplete = 100;
+                object.continueSearch([]);
+                return Promise.resolve({ errorMessage: "test error message", success: false, apiResponse: { test: "test" } });
+            });
+
+            const response = await (DatasetActions as any).performSearch(myProgress, token, { node, pattern: "TEST.*", searchString: "test" });
+
+            expect(showMessageSpy).not.toHaveBeenCalled();
+            expect(getMvsApiSpy).toHaveBeenCalledTimes(1);
+            expect(searchDataSetsMock).toHaveBeenCalledWith({
+                pattern: "TEST.*",
+                searchString: "test",
+                progressTask: taskExpected,
+                mainframeSearch: false,
+                continueSearch: continueSearchPromptSpy,
+            });
+            expect(authErrorHandlingSpy).not.toHaveBeenCalled();
+            expect(loggerErrorSpy).toHaveBeenCalledWith("test error message");
+            expect(reportProgressSpy).toHaveBeenCalledWith(myProgress, 100, 99, "Percent Complete");
+            expect(continueSearchPromptSpy).toHaveBeenCalledTimes(1);
+            expect(response).toEqual({ errorMessage: "test error message", success: false, apiResponse: { test: "test" } });
+        });
+
         it("should perform the search and fail - graceful failure", async () => {
             const myProgress = { test: "test" };
             const taskExpected = { percentComplete: 100, stageName: 0, statusMessage: "" };
@@ -3228,14 +3258,11 @@ describe("Dataset Actions Unit Tests - function search", () => {
                 mainframeSearch: false,
                 continueSearch: continueSearchPromptSpy,
             });
-            expect(authErrorHandlingSpy).toHaveBeenCalledWith("test error message", {
-                profile: node.getProfileName(),
-                scenario: "Error encountered when searching data sets",
-            });
-            expect(loggerErrorSpy).not.toHaveBeenCalled();
+            expect(authErrorHandlingSpy).not.toHaveBeenCalled();
+            expect(loggerErrorSpy).toHaveBeenCalledWith("test error message");
             expect(reportProgressSpy).toHaveBeenCalledWith(myProgress, 100, 99, "Percent Complete");
             expect(continueSearchPromptSpy).toHaveBeenCalled();
-            expect(response).toEqual({ errorMessage: "test error message", success: false, apiResponse: undefined });
+            expect(response).toEqual(undefined);
         });
 
         it("should perform the search and fail - catastrophic failure", async () => {
@@ -3263,7 +3290,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
                 continueSearch: continueSearchPromptSpy,
             });
             expect(authErrorHandlingSpy).toHaveBeenCalledWith(error);
-            expect(loggerErrorSpy).toHaveBeenCalledWith(error);
+            expect(loggerErrorSpy).not.toHaveBeenCalled();
             expect(reportProgressSpy).toHaveBeenCalledWith(myProgress, 100, 50, "Percent Complete");
             expect(continueSearchPromptSpy).toHaveBeenCalled();
             expect(response).toBeUndefined();

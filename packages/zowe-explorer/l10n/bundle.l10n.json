@@ -879,13 +879,30 @@
   "Unable to copy data set.": "Unable to copy data set.",
   "No search pattern applied. Search for a pattern and try again.": "No search pattern applied. Search for a pattern and try again.",
   "Enter the text to search for.": "Enter the text to search for.",
-  "Searching for \"{0}\"": "Searching for \"{0}\"",
-  "Percent Complete": "Percent Complete",
-  "Open": "Open",
-  "Search Results for \"{0}\"": "Search Results for \"{0}\"",
+  "Operation Cancelled": "Operation Cancelled",
+  "Searching for \"{0}\"/The string to search data sets for.": {
+    "message": "Searching for \"{0}\"",
+    "comment": [
+      "The string to search data sets for."
+    ]
+  },
+  "Search Results for \"{0}\"/The string to search data sets for.": {
+    "message": "Search Results for \"{0}\"",
+    "comment": [
+      "The string to search data sets for."
+    ]
+  },
   "Data Set Name": "Data Set Name",
   "Position": "Position",
   "Contents": "Contents",
+  "Open": "Open",
+  "Are you sure you want to search {0} data sets and members?/The number of data sets that are about to be searched": {
+    "message": "Are you sure you want to search {0} data sets and members?",
+    "comment": [
+      "The number of data sets that are about to be searched"
+    ]
+  },
+  "Percent Complete": "Percent Complete",
   "Failed to upload changes for {0}: {1}/Build file hyperlinkError message": {
     "message": "Failed to upload changes for {0}: {1}",
     "comment": [
