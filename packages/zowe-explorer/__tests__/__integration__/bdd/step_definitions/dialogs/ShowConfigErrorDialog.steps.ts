@@ -11,7 +11,7 @@
 
 import { Then, When } from "@cucumber/cucumber";
 import { getZoweExplorerContainer } from "../../../../__common__/shared.wdio";
-import { Notification, Workbench } from "wdio-vscode-service";
+import { Notification, NotificationType, Workbench } from "wdio-vscode-service";
 
 When("a user opens Zowe Explorer", async function () {
     this.zoweExplorerPane = await getZoweExplorerContainer();
@@ -22,8 +22,12 @@ Then("the Show Config dialog should appear", async function () {
     this.workbench = await browser.getWorkbench();
 
     let configNotification: Notification;
+    const notificationCenter = await (this.workbench as Workbench).openNotificationsCenter();
     await browser.waitUntil(async () => {
-        const notifications = await (this.workbench as Workbench).getNotifications();
+        const notifications = [
+            ...(await (this.workbench as Workbench).getNotifications()),
+            ...(await notificationCenter.getNotifications(NotificationType.Error)),
+        ];
         for (const n of notifications) {
             const msg = await n.getMessage();
             if (msg.startsWith("Error encountered when loading your Zowe config.")) {
