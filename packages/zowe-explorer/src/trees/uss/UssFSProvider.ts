@@ -129,15 +129,18 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     public async listFiles(profile: imperative.IProfileLoaded, uri: vscode.Uri, keepRelative: boolean = false): Promise<IZosFilesResponse> {
         const queryParams = new URLSearchParams(uri.query);
         const ussPath = queryParams.has("searchPath") ? queryParams.get("searchPath") : uri.path.substring(uri.path.indexOf("/", 1));
-        if (ussPath.length === 0) {
-            throw new imperative.ImperativeError({
-                msg: vscode.l10n.t("Could not list USS files: Empty path provided in URI"),
-            });
-        }
-        const response = await ZoweExplorerApiRegister.getUssApi(profile).fileList(ussPath);
-        // If request was successful, create directories for the path if it doesn't exist
-        if (response.success && !keepRelative && response.apiResponse.items?.[0]?.mode?.startsWith("d") && !this.exists(uri)) {
-            await vscode.workspace.fs.createDirectory(uri);
+        let response: IZosFilesResponse;
+        try {
+            response = await ZoweExplorerApiRegister.getUssApi(profile).fileList(ussPath);
+            // If request was successful, create directories for the path if it doesn't exist
+            if (response.success && !keepRelative && response.apiResponse.items?.[0]?.mode?.startsWith("d") && !this.exists(uri)) {
+                await vscode.workspace.fs.createDirectory(uri.with({ query: "" }));
+            }
+        } catch (err) {
+            if (err instanceof Error) {
+                ZoweLogger.error(err.message);
+            }
+            throw err;
         }
 
         return {
@@ -169,7 +172,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             let parentDir = this._lookupParentDirectory(uri, true);
             if (parentDir == null) {
                 const parentPath = path.posix.join(uri.path, "..");
-                const parentUri = uri.with({ path: parentPath });
+                const parentUri = uri.with({ path: parentPath, query: "" });
                 await vscode.workspace.fs.createDirectory(parentUri);
                 parentDir = this._lookupParentDirectory(uri, false);
                 parentDir.metadata = this._getInfoFromUri(parentUri);
