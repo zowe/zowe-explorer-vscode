@@ -529,7 +529,6 @@
   "Profile is not authenticated, please log in to continue": "",
   "Retrieving response from USS list API": "",
   "The 'move' function is not implemented for this USS API.": "",
-  "Could not list USS files: Empty path provided in URI": "",
   "Profile does not exist for this file.": "",
   "Saving USS file...": "",
   "Renaming {0} failed due to API error: {1}": "",
