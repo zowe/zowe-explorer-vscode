@@ -25,11 +25,13 @@ import {
     ZoweScheme,
     FsJobsUtils,
     FsAbstractUtils,
+    imperative,
 } from "@zowe/zowe-explorer-api";
 import { IJob, IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { SharedContext } from "../shared/SharedContext";
+import { AuthUtils } from "../../utils/AuthUtils";
 
 export class JobFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: JobFSProvider;
@@ -193,14 +195,22 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const jesApi = ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile);
 
-        if (jesApi.downloadSingleSpool) {
-            await jesApi.downloadSingleSpool({
-                jobFile: spoolEntry.spool,
-                stream: bufBuilder,
-            });
-        } else {
-            const jobEntry = this._lookupParentDirectory(uri) as JobEntry;
-            bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id));
+        try {
+            if (jesApi.downloadSingleSpool) {
+                await jesApi.downloadSingleSpool({
+                    jobFile: spoolEntry.spool,
+                    stream: bufBuilder,
+                });
+            } else {
+                const jobEntry = this._lookupParentDirectory(uri) as JobEntry;
+                bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id));
+            }
+        } catch (err) {
+            if (err instanceof imperative.ImperativeError) {
+                AuthUtils.promptForAuthError(err, spoolEntry.metadata.profile);
+                spoolEntry.wasAccessed = false;
+            }
+            throw err;
         }
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
@@ -281,7 +291,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param options Options for deleting the spool file or job
      * - `deleteRemote` - Deletes the job from the remote system if set to true.
      */
-    public async delete(uri: vscode.Uri, options: { readonly recursive: boolean; readonly deleteRemote: boolean }): Promise<void> {
+    public async delete(uri: vscode.Uri, options: { readonly recursive: boolean }): Promise<void> {
         const entry = this.lookup(uri, false);
         const isJob = FsJobsUtils.isJobEntry(entry);
         if (!isJob) {
@@ -291,10 +301,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const parent = this._lookupParentDirectory(uri, false);
 
         const profInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-
-        if (options.deleteRemote) {
-            await ZoweExplorerApiRegister.getJesApi(profInfo.profile).deleteJob(entry.job.jobname, entry.job.jobid);
-        }
+        await ZoweExplorerApiRegister.getJesApi(profInfo.profile).deleteJob(entry.job.jobname, entry.job.jobid);
         parent.entries.delete(entry.name);
         this._fireSoon({ type: vscode.FileChangeType.Deleted, uri });
     }
