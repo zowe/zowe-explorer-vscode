@@ -15,6 +15,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Reduced the number of MVS API calls performed by `vscode.workspace.fs.readFile` when fetching the contents of a data set entry. [#3278](https://github.com/zowe/zowe-explorer-vscode/issues/3278)
 - Fixed an issue to review inconsistent capitalization across translation strings. [#2935](https://github.com/zowe/zowe-explorer-vscode/issues/2935)
 - Updated the test for the default credential manager for better compatibility with Cloud-based platforms such as Eclipse Che and Red Hat OpenShift Dev Spaces. [#3297](https://github.com/zowe/zowe-explorer-vscode/pull/3297)
+- Fixed issue where users were not prompted to enter credentials if a 401 error was encountered when opening files, data sets or spools in the editor. [#3197](https://github.com/zowe/zowe-explorer-vscode/issues/3197)
+- Fixed issue where profile credential updates or token changes were not reflected within the filesystem. [#3289](https://github.com/zowe/zowe-explorer-vscode/issues/3289)
+- Fixed issue to update the success message when changing authentication from token to basic through the 'Change Authentication' option.
+- Fixed an issue where fetching a USS file using `UssFSProvider.stat()` with a `fetch=true` query would cause Zowe Explorer to get stuck in an infinite loop.
 
 ## `3.0.2`
 

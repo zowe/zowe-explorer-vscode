@@ -2,6 +2,10 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ## TBD Release
 
+### Bug fixes
+
+- Fixed issue where the MVS API `putContents` function did not support PDS members when the member was not specified in the data set name. [#3305](https://github.com/zowe/zowe-explorer-vscode/issues/3305)
+
 ## `3.0.2`
 
 ## `3.0.1`

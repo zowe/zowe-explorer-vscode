@@ -821,7 +821,11 @@ describe("ZosJobsProvider - Function searchPrompt", () => {
         const globalMocks = await createGlobalMocks();
         jest.spyOn(globalMocks.testJobsProvider, "applySavedFavoritesSearchLabel").mockReturnValue(undefined);
         const applySearchLabelToNode = jest.spyOn(globalMocks.testJobsProvider, "applySearchLabelToNode");
-        const jobSessionNode = new ZoweJobNode({ label: "sestest", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
+        const jobSessionNode = new ZoweJobNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            profile: createIProfile(),
+        });
         jobSessionNode.contextValue = Constants.JOBS_SESSION_CONTEXT + Constants.FAV_SUFFIX;
         await globalMocks.testJobsProvider.searchPrompt(jobSessionNode);
         expect(applySearchLabelToNode).toHaveBeenCalled();

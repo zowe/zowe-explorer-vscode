@@ -158,7 +158,6 @@
   "Enter the path to the certificate key for authenticating the connection.": "Enter the path to the certificate key for authenticating the connection.",
   "Certificate Keys": "Certificate Keys",
   "Select Certificate Key": "Select Certificate Key",
-  "Required parameter 'host' must not be blank.": "Required parameter 'host' must not be blank.",
   "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out./Label": {
     "message": "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
     "comment": [
@@ -172,6 +171,7 @@
     ]
   },
   "Update Credentials": "Update Credentials",
+  "Required parameter 'host' must not be blank.": "Required parameter 'host' must not be blank.",
   "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct./Profile name": {
     "message": "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
     "comment": [
