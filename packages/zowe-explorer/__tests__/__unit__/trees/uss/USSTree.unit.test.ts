@@ -44,6 +44,7 @@ import { FilterDescriptor } from "../../../../src/management/FilterManagement";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import { Icon } from "../../../../src/icons/Icon";
 import { ZoweTreeProvider } from "../../../../src/trees/ZoweTreeProvider";
+import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -934,6 +935,7 @@ describe("USSTree Unit Tests - Function rename", () => {
         globalMocks.FileSystemProvider.rename.mockClear();
 
         const newMocks = {
+            promptedForUnsavedResource: jest.spyOn(TreeViewUtils, "promptedForUnsavedResource").mockResolvedValue(false),
             ussFavNode,
             ussFavNodeParent,
             setAttributes: jest.spyOn(ZoweUSSNode.prototype, "setAttributes").mockImplementation(),
@@ -1217,7 +1219,6 @@ describe("USSTree Unit Tests - Function getChildren", () => {
                 contextOverride: Constants.USS_SESSION_CONTEXT,
                 session: globalMocks.testSession,
                 profile: globalMocks.testProfile,
-                parentPath: "/",
             }),
         ];
 

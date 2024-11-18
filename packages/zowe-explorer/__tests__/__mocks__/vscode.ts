@@ -918,7 +918,7 @@ export namespace l10n {
             return options;
         }
         options.args?.forEach((arg: string, i: number) => {
-            options.message = options.message.replace(`{${i}}`, arg);
+            options.message = options.message.replaceAll(`{${i}}`, arg);
         });
         return options.message;
     }
@@ -1312,7 +1312,6 @@ export enum FileSystemProviderErrorCode {
  * a file or folder doesn't exist, use them like so: `throw vscode.FileSystemError.FileNotFound(someUri);`
  */
 export const { FileSystemError } = require("jest-mock-vscode").createVSCodeMock(jest);
-
 /**
  * Namespace for dealing with the current workspace. A workspace is the representation
  * of the folder that has been opened. There is no workspace when just a file but not a
