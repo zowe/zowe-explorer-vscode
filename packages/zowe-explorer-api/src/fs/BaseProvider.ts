@@ -428,7 +428,7 @@ export class BaseProvider {
             })
             .then(async ({ userResponse }) => {
                 if (userResponse === "Retry" && opts?.retry?.fn != null) {
-                    await opts.retry.fn(...(opts?.retry.args ?? []));
+                    await opts.retry.fn(...(opts.retry.args ?? []));
                 }
             })
             .catch(() => {

@@ -962,7 +962,7 @@ export class Profiles extends ProfilesCache {
 
                 if (creds !== undefined) {
                     const successMsg = vscode.l10n.t(
-                        "Login using basic authentication was successful for profile {0}.",
+                        "Changing authentication to basic was successful for profile {0}.",
                         typeof profile === "string" ? profile : profile.name
                     );
                     ZoweLogger.info(successMsg);
