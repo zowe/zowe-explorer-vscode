@@ -129,21 +129,17 @@ export class TreeViewUtils {
         }
 
         for (const doc of openedTextDocuments) {
-            const docIsChild = SharedUtils.checkIfChildPath(currentFilePath, doc.fileName);
-            if (doc.fileName === currentFilePath || docIsChild === true) {
-                if (doc.isDirty === true) {
-                    Gui.errorMessage(
-                        l10n.t({
-                            message:
-                                "Unable to rename {0} because you have unsaved changes in this {1}. " +
-                                "Please save your work before renaming the {1}.",
-                            args: [node.label, nodeType],
-                            comment: ["Node path", "Node type (directory, file or data set)"],
-                        }),
-                        { vsCodeOpts: { modal: true } }
-                    );
-                    return true;
-                }
+            if ((doc.fileName === currentFilePath || SharedUtils.checkIfChildPath(currentFilePath, doc.fileName)) && doc.isDirty) {
+                Gui.errorMessage(
+                    l10n.t({
+                        message:
+                            "Unable to rename {0} because you have unsaved changes in this {1}. " + "Please save your work before renaming the {1}.",
+                        args: [node.label, nodeType],
+                        comment: ["Node path", "Node type (directory, file or data set)"],
+                    }),
+                    { vsCodeOpts: { modal: true } }
+                );
+                return true;
             }
         }
 
