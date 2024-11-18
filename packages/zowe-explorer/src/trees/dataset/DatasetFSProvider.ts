@@ -114,12 +114,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const ds = isPdsMember ? items.find((it) => it.member === entry.name) : items?.[0];
             if (ds != null && "m4date" in ds) {
                 const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = ds;
-                const newTime = dayjs(`${m4date} ${mtime}:${msec}`).unix();
+                const newTime = dayjs(`${m4date} ${mtime}:${msec}`).valueOf();
                 if (entry.mtime != newTime) {
+                    entry.mtime = newTime;
                     // if the modification time has changed, invalidate the previous contents to signal to `readFile` that data needs to be fetched
                     entry.wasAccessed = false;
                 }
-                return { ...entry, mtime: newTime };
             }
         }
 
@@ -687,7 +687,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
 
         const entry = this.lookup(oldUri, false) as PdsEntry | DsEntry;
-        const parentDir = this._lookupParentDirectory(oldUri);
+        const oldParent = this._lookupParentDirectory(oldUri);
+        const newParent = this._lookupParentDirectory(newUri);
 
         const oldName = entry.name;
         const newName = path.posix.basename(newUri.path);
@@ -721,14 +722,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             throw err;
         }
 
-        parentDir.entries.delete(entry.name);
+        oldParent.entries.delete(entry.name);
         entry.name = newName;
 
         // Build the new path using the previous path and new file/folder name.
         const newPath = path.posix.join(entry.metadata.path, "..", newName);
 
         entry.metadata.path = newPath;
-        parentDir.entries.set(newName, entry);
+        newParent.entries.set(newName, entry);
 
         if (FsDatasetsUtils.isPdsEntry(entry)) {
             for (const [_, member] of entry.entries) {

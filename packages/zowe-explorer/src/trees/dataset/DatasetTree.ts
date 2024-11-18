@@ -97,7 +97,29 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
      */
     public async rename(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("DatasetTree.rename called.");
+        const currentFilePath = node.resourceUri.path; // The user's complete local file path for the node
         await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+        const openedTextDocuments: readonly vscode.TextDocument[] = vscode.workspace.textDocuments; // Array of all documents open in VS Code
+
+        for (const doc of openedTextDocuments) {
+            const docIsChild = SharedUtils.checkIfChildPath(currentFilePath, doc.fileName);
+            if (doc.fileName === currentFilePath || docIsChild === true) {
+                if (doc.isDirty === true) {
+                    Gui.errorMessage(
+                        vscode.l10n.t({
+                            message:
+                                "Unable to rename {0} because you have unsaved changes in this data set. " +
+                                "Please save your work before renaming the data set.",
+                            args: [node.label],
+                            comment: ["Node path"],
+                        }),
+                        { vsCodeOpts: { modal: true } }
+                    );
+                    return;
+                }
+            }
+        }
+
         if (Profiles.getInstance().validProfile === Validation.ValidationType.VALID || !SharedContext.isValidationEnabled(node)) {
             return SharedContext.isDsMember(node) ? this.renameDataSetMember(node) : this.renameDataSet(node);
         }
