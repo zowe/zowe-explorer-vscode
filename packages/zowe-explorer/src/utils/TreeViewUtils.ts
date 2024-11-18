@@ -9,12 +9,21 @@
  *
  */
 
-import { IZoweNodeType, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, IZoweNodeType, IZoweTree, IZoweTreeNode, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "./LoggerUtils";
-import { TreeViewExpansionEvent } from "vscode";
+import { TextDocument, TreeViewExpansionEvent, workspace } from "vscode";
 import { getIconByNode } from "../generators/icons";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { Profiles } from "../Profiles";
+import { checkIfChildPath, isZoweDatasetTreeNode } from "../shared/utils";
+
+import * as nls from "vscode-nls";
+import { isUssDirectory } from "../shared/context";
+nls.config({
+    messageFormat: nls.MessageFormat.bundle,
+    bundleFormat: nls.BundleFormat.standalone,
+})();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class TreeViewUtils {
     /**
@@ -63,5 +72,50 @@ export class TreeViewUtils {
                 ZoweLogger.warn(error);
             }
         }
+    }
+
+    /**
+     * Shows a modal error message to the user when a file/data set is detected as unsaved in the editor.
+     * @param node The USS file or data set to check for in the editor. Also checks child paths for the node (for PDS members and inner USS files).
+     * @returns Whether a child or the resource itself is open with unsaved changes in the editor
+     */
+    public static async errorForUnsavedResource(
+        node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
+        action: string = localize("uss.renameNode", "Rename").toLocaleLowerCase()
+    ): Promise<boolean> {
+        const isDataset = isZoweDatasetTreeNode(node);
+        // The user's complete local file path for the node
+        const currentFilePath = isDataset ? node.getDsDocumentFilePath() : node.getUSSDocumentFilePath();
+        await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+        const openedTextDocuments: readonly TextDocument[] = workspace.textDocuments; // Array of all documents open in VS Code
+
+        let nodeType: string;
+        if (isDataset) {
+            nodeType = "data set";
+        } else {
+            nodeType = isUssDirectory(node) ? "directory" : "file";
+        }
+
+        for (const doc of openedTextDocuments) {
+            if ((doc.fileName === currentFilePath || checkIfChildPath(currentFilePath, doc.fileName)) && doc.isDirty) {
+                ZoweLogger.error(
+                    `TreeViewUtils.errorForUnsavedResource: detected unsaved changes in ${doc.fileName},` +
+                        `trying to ${action} node: ${node.label as string}`
+                );
+                Gui.errorMessage(
+                    localize(
+                        "unsavedChanges.errorMsg",
+                        "Unable to {0} {1} because you have unsaved changes in this {2}. Please save your work and try again.",
+                        action,
+                        node.label as string,
+                        nodeType
+                    ),
+                    { vsCodeOpts: { modal: true } }
+                );
+                return true;
+            }
+        }
+
+        return false;
     }
 }

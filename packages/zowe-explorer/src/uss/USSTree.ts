@@ -113,8 +113,6 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public async rename(originalNode: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("USSTree.rename called.");
-        const currentFilePath = originalNode.getUSSDocumentFilePath(); // The user's complete local file path for the node
-        const openedTextDocuments: readonly vscode.TextDocument[] = vscode.workspace.textDocuments; // Array of all documents open in VS Code
         const nodeType = contextually.isFolder(originalNode) ? "folder" : "file";
         const parentPath = path.dirname(originalNode.fullPath);
         let originalNodeInFavorites: boolean = false;
@@ -129,23 +127,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             oldFavorite = this.findFavoritedNode(originalNode);
         }
 
-        // If the USS node or any of its children are locally open with unsaved data, prevent rename until user saves their work.
-        for (const doc of openedTextDocuments) {
-            const docIsChild = checkIfChildPath(currentFilePath, doc.fileName);
-            if (doc.fileName === currentFilePath || docIsChild === true) {
-                if (doc.isDirty === true) {
-                    Gui.errorMessage(
-                        localize(
-                            "renameUSS.unsavedWork",
-                            "Unable to rename {0} because you have unsaved changes in this {1}. Please save your work before renaming the {1}.",
-                            originalNode.fullPath,
-                            nodeType
-                        ),
-                        { vsCodeOpts: { modal: true } }
-                    );
-                    return;
-                }
-            }
+        if (await TreeViewUtils.errorForUnsavedResource(originalNode)) {
+            return;
         }
         const loadedNodes = await this.getAllLoadedItems();
         const options: vscode.InputBoxOptions = {
