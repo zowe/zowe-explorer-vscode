@@ -306,6 +306,10 @@ export class SharedUtils {
     ): void {
         const workspaceFolders = vscode.workspace.workspaceFolders;
         const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
+        const urisToAdd: {
+            name: string;
+            uri: vscode.Uri;
+        }[] = [];
         for (const item of selectedNodes) {
             let resourceUri = item.resourceUri;
             const isSession = SharedContext.isSession(item);
@@ -327,10 +331,12 @@ export class SharedUtils {
                 continue;
             }
 
-            vscode.workspace.updateWorkspaceFolders(workspaceFolders?.length ?? 0, null, {
-                uri: resourceUri,
+            urisToAdd.push({
                 name: `[${item.getProfileName()}] ${SharedContext.isDatasetNode(item) ? (item.label as string) : item.fullPath}`,
+                uri: resourceUri,
             });
         }
+
+        vscode.workspace.updateWorkspaceFolders(workspaceFolders?.length ?? 0, null, ...urisToAdd);
     }
 }
