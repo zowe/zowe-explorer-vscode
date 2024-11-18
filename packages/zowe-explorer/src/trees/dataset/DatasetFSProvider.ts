@@ -687,8 +687,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
 
         const entry = this.lookup(oldUri, false) as PdsEntry | DsEntry;
-        const oldParent = this._lookupParentDirectory(oldUri);
-        const newParent = this._lookupParentDirectory(newUri);
+        const parentDir = this._lookupParentDirectory(oldUri);
 
         const oldName = entry.name;
         const newName = path.posix.basename(newUri.path);
@@ -722,14 +721,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             throw err;
         }
 
-        oldParent.entries.delete(entry.name);
+        parentDir.entries.delete(entry.name);
         entry.name = newName;
 
         // Build the new path using the previous path and new file/folder name.
         const newPath = path.posix.join(entry.metadata.path, "..", newName);
 
         entry.metadata.path = newPath;
-        newParent.entries.set(newName, entry);
+        parentDir.entries.set(newName, entry);
 
         if (FsDatasetsUtils.isPdsEntry(entry)) {
             for (const [_, member] of entry.entries) {
