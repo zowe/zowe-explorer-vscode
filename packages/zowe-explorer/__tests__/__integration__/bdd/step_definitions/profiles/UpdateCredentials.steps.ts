@@ -27,7 +27,7 @@ When(/a user who has profile with (.*) auth in team config/, function (authType:
     // See https://github.com/zowe/zowe-cli/issues/2273
     this.authType = authType;
     const testConfig = JSON.parse(fs.readFileSync(USER_CONFIG_FILE.replace(".user", ""), "utf-8"));
-    testConfig.profile[`zosmf_${authType}`] = {
+    testConfig.profiles[`zosmf_${authType}`] = {
         type: "zosmf",
         properties: {},
         secure: authType === "basic" ? ["user", "password"] : ["tokenValue"],
