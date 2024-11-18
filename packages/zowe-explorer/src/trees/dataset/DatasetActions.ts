@@ -1802,7 +1802,7 @@ export class DatasetActions {
             }
         );
 
-        // Either the user cancelled the search, or a catestrophic error occurred and error handling has already been done.
+        // Either the user cancelled the search, or a catastrophic error occurred and error handling has already been done.
         if (response === undefined) {
             return;
         }

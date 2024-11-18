@@ -46,7 +46,7 @@ Review the following use cases and their procedures to understand how to work wi
 - [View and access multiple profiles simultaneously](#view-and-access-multiple-profiles-simultaneously): Work with data sets from multiple profiles.
 - [Submit a JCL](#submit-a-jcl): You can submit a jcl from a chose data set.
 - [Allocate Like](#allocate-like): Create a copy of a chosen data set with the same parameters.
-- [Search a Partitioned Data Set](#search-a-partitioned-data-set): Search all of a partitioned data set's members for a string of text.
+- [Search a Partitioned Data Set](#search-a-partitioned-data-set): Search all of a partitioned data set's members with a string of text.
 
 ## Prerequisite tasks
 
@@ -443,9 +443,9 @@ As a result, VS Code extensions like Zowe Explorer, Zowe Explorer CICS Extension
 1. Navigate to the **Side Bar**
 1. Open the **DATA SETS** bar.
 1. Right-click a partitioned data set and select the **Search PDS Members** option.
-1. When prompted, type in the string to search the PDS members for.
-   - A confirmation dialog will appear if there are a large number of members to search.
-1. A table will appear with the search results.
+1. When prompted, enter the string to be used for the search.
+   - A confirmation dialog appears if there is a large number of members to search.
+1. A table displays the search results.
    - Each search result can be selected to open the member at the location of the search term.
 
 [Back to sample list](#sample-use-cases)
