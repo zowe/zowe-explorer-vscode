@@ -42,7 +42,7 @@ When("the user has a profile in their Data Sets tree", async function () {
     await expect(plusIcon).toBeDefined();
     await plusIcon.elem.click();
     await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());
-    const testProfileEntry = await quickPick.findItem(`zosmf_${this.authType as string}`);
+    const testProfileEntry = await quickPick.findItem(`$(home) zosmf_${this.authType as string}`);
     await expect(testProfileEntry).toBeClickable();
     await testProfileEntry.click();
     this.yesOpt = await quickPick.findItem("Yes, Apply to all trees");

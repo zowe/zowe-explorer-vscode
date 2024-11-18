@@ -38,10 +38,10 @@ async function setFilterForProfile(world: IWorld, profileNode: TreeItem, tree: s
 
     if (isJobs) {
         // Jobs
-        const createFilterSelector = await quickPick.findItem("plus  Create job search filter");
+        const createFilterSelector = await quickPick.findItem("$(plus) Create job search filter");
         await expect(createFilterSelector).toBeClickable();
         await createFilterSelector.click();
-        const submitSelector = await quickPick.findItem("check  Submit this query");
+        const submitSelector = await quickPick.findItem("$(check) Submit this query");
         await expect(submitSelector).toBeClickable();
         await submitSelector.click();
     } else {
@@ -49,8 +49,8 @@ async function setFilterForProfile(world: IWorld, profileNode: TreeItem, tree: s
         if (await quickPick.hasOptions()) {
             // Only click the "Create a new filter" button if there are existing filters and the option is presented
             const filterLabel = isUss
-                ? "plus  Create a new filter"
-                : "plus  Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)";
+                ? "$(plus) Create a new filter"
+                : "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)";
 
             const createFilterSelector = await quickPick.findItem(filterLabel);
             await expect(createFilterSelector).toBeClickable();
