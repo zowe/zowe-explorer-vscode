@@ -103,7 +103,8 @@ export class TreeViewUtils {
                     // check for USS child paths
                     checkIfChildPath(currentFilePath, doc.fileName) ||
                     // check if doc is a PDS member - basename starts with `${PDS name}(`
-                    path.basename(doc.fileName).startsWith(`${node.label as string}(`)) &&
+                    (path.dirname(doc.fileName) === path.dirname(currentFilePath) &&
+                        path.basename(doc.fileName).startsWith(`${node.label as string}(`))) &&
                 doc.isDirty
             ) {
                 ZoweLogger.error(
