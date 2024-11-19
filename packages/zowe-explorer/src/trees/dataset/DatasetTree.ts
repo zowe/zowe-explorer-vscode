@@ -97,6 +97,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
      */
     public async rename(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("DatasetTree.rename called.");
+        await Profiles.getInstance().checkCurrentProfile(node.getProfile());
         if (await TreeViewUtils.errorForUnsavedResource(node)) {
             return;
         }
