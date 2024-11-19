@@ -16,6 +16,7 @@ import { getIconByNode } from "../generators/icons";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { Profiles } from "../Profiles";
 import { checkIfChildPath, isZoweDatasetTreeNode } from "../shared/utils";
+import * as path from "path";
 
 import * as nls from "vscode-nls";
 import { isUssDirectory } from "../shared/context";
@@ -97,7 +98,14 @@ export class TreeViewUtils {
         }
 
         for (const doc of openedTextDocuments) {
-            if ((doc.fileName === currentFilePath || checkIfChildPath(currentFilePath, doc.fileName)) && doc.isDirty) {
+            if (
+                (doc.fileName === currentFilePath ||
+                    // check for USS child paths
+                    checkIfChildPath(currentFilePath, doc.fileName) ||
+                    // check if doc is a PDS member - basename starts with `${PDS name}(`
+                    path.basename(doc.fileName).startsWith(`${node.label as string}(`)) &&
+                doc.isDirty
+            ) {
                 ZoweLogger.error(
                     `TreeViewUtils.errorForUnsavedResource: detected unsaved changes in ${doc.fileName},` +
                         `trying to ${action} node: ${node.label as string}`
