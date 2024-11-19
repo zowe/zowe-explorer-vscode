@@ -29,7 +29,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue where profile credential updates or token changes were not reflected within the filesystem. [#3289](https://github.com/zowe/zowe-explorer-vscode/issues/3289)
 - Fixed issue to update the success message when changing authentication from token to basic through the 'Change Authentication' option.
 - Fixed an issue where fetching a USS file using `UssFSProvider.stat()` with a `fetch=true` query would cause Zowe Explorer to get stuck in an infinite loop.
-- Fixed an issue where renaming a data set with unsaved changes did not cancel the rename operation. Now, when renaming a data set with unsaved changes, you will be prompted to resolve them before continuing.
+- Fixed an issue where renaming a data set with unsaved changes did not cancel the rename operation. Now, when renaming a data set with unsaved changes, you will be prompted to resolve them before continuing. [#3326](https://github.com/zowe/zowe-explorer-vscode/pull/3326)
 
 ## `3.0.2`
 
