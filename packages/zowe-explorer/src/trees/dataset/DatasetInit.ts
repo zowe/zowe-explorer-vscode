@@ -31,9 +31,9 @@ export class DatasetInit {
         return tree;
     }
 
-    public static async datasetTreeVisibilityChanged(this: void, e: vscode.TreeViewVisibilityChangeEvent): Promise<void> {
+    public static datasetTreeVisibilityChanged(this: void, e: vscode.TreeViewVisibilityChangeEvent): void {
         if (e.visible) {
-            await ProfilesUtils.promptUserWithNoConfigs();
+            ProfilesUtils.promptUserWithNoConfigs();
         }
     }
 
