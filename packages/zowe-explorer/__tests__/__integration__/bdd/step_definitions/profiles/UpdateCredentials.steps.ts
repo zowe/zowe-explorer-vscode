@@ -9,32 +9,14 @@
  *
  */
 
-import * as fs from "fs";
-import * as path from "path";
-import { AfterAll, Then, When } from "@cucumber/cucumber";
+import { Then, When } from "@cucumber/cucumber";
 import { paneDivForTree } from "../../../../__common__/shared.wdio";
 import quickPick from "../../../../__pageobjects__/QuickPick";
 import { Key } from "webdriverio";
 import { TreeItem } from "wdio-vscode-service";
 
-const USER_CONFIG_FILE = path.join(process.env.ZOWE_CLI_HOME, "zowe.config.user.json");
-
-AfterAll(() => {
-    fs.rmSync(USER_CONFIG_FILE, { force: true });
-});
-When(/a user who has profile with (.*) auth in team config/, function (authType: string) {
-    // TODO: We need to copy from Global Config until Imperative API is fixed
-    // See https://github.com/zowe/zowe-cli/issues/2273
+When(/the user has a (.*) profile in their Data Sets tree/, async function (authType: string) {
     this.authType = authType;
-    const testConfig = JSON.parse(fs.readFileSync(USER_CONFIG_FILE.replace(".user", ""), "utf-8"));
-    testConfig.profiles[`zosmf_${authType}`] = {
-        type: "zosmf",
-        properties: {},
-        secure: authType === "basic" ? ["user", "password"] : ["tokenValue"],
-    };
-    fs.writeFileSync(USER_CONFIG_FILE, JSON.stringify(testConfig, null, 2));
-});
-When("the user has a profile in their Data Sets tree", async function () {
     // add profile via quick pick
     this.treePane = await paneDivForTree("Data Sets");
     await this.treePane.elem.moveTo();

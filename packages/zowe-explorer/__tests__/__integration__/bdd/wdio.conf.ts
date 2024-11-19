@@ -10,15 +10,13 @@
  */
 
 import type { Options } from "@wdio/types";
-import { join as joinPath, resolve as resolvePath } from "path";
+import { join as joinPath, parse as parsePath, resolve as resolvePath } from "path";
 import { emptyDirSync } from "fs-extra";
 import { baseConfig } from "../../__common__/base.wdio.conf";
-import { renameSync, rmSync, writeFileSync } from "fs";
 
 const dataDir = joinPath(__dirname, "..", "..", "__common__", ".wdio-vscode-service", "data");
 const screenshotDir = joinPath(__dirname, "results", "screenshots");
-
-process.env["ZOWE_CLI_HOME"] = resolvePath("../ci");
+const zoweHomeDir = resolvePath("../ci");
 
 export const config: Options.Testrunner = {
     ...baseConfig,
@@ -154,21 +152,8 @@ export const config: Options.Testrunner = {
     },
 
     beforeFeature: async function (uri, feature) {
-        if (feature.name === "Show Config Error Dialog") {
-            const configPath = joinPath(process.env["ZOWE_CLI_HOME"], "zowe.config.json");
-            const backupConfigPath = joinPath(process.env["ZOWE_CLI_HOME"], "zowe.config.bkp");
-            renameSync(configPath, backupConfigPath);
-            writeFileSync(configPath, "invalidjson");
-        }
-    },
-
-    afterFeature: async function (uri, feature) {
-        if (feature.name === "Show Config Error Dialog") {
-            const backupConfigPath = joinPath(process.env["ZOWE_CLI_HOME"], "zowe.config.bkp");
-            const configPath = joinPath(process.env["ZOWE_CLI_HOME"], "zowe.config.json");
-            rmSync(configPath);
-            renameSync(backupConfigPath, configPath);
-        }
+        const useCustomConfig = feature.tags.find((tag) => tag.name === "CustomConfig") != null;
+        process.env.ZOWE_CLI_HOME = useCustomConfig ? joinPath(zoweHomeDir, parsePath(uri).name) : zoweHomeDir;
     },
 
     afterStep: async function (step, scenario, result, context) {
