@@ -13,10 +13,12 @@ import type { Options } from "@wdio/types";
 import { join as joinPath, parse as parsePath, resolve as resolvePath } from "path";
 import { emptyDirSync } from "fs-extra";
 import { baseConfig } from "../../__common__/base.wdio.conf";
+import { cpSync, existsSync, renameSync } from "fs";
 
 const dataDir = joinPath(__dirname, "..", "..", "__common__", ".wdio-vscode-service", "data");
 const screenshotDir = joinPath(__dirname, "results", "screenshots");
-const zoweHomeDir = resolvePath("../ci");
+
+process.env.ZOWE_CLI_HOME = resolvePath("../ci");
 
 export const config: Options.Testrunner = {
     ...baseConfig,
@@ -79,7 +81,8 @@ export const config: Options.Testrunner = {
     capabilities: [
         {
             browserName: "vscode",
-            browserVersion: "stable", // also possible: "insiders" or a specific version e.g. "1.80.0"
+            // version can be "stable", "insiders", or a specific version e.g. "1.80.0"
+            browserVersion: process.env.ZE_TEST_VSCODE_VER || "stable",
             "wdio:vscodeOptions": {
                 // points to directory where extension package.json is located
                 extensionPath: joinPath(__dirname, "..", "..", ".."),
@@ -153,7 +156,21 @@ export const config: Options.Testrunner = {
 
     beforeFeature: function (uri, feature) {
         const useCustomConfig = feature.tags.find((tag) => tag.name === "@CustomConfig") != null;
-        process.env.ZOWE_CLI_HOME = useCustomConfig ? joinPath(zoweHomeDir, parsePath(uri).name) : zoweHomeDir;
+        if (useCustomConfig) {
+            const configPath = joinPath(process.env.ZOWE_CLI_HOME, "zowe.config.json");
+            if (!existsSync(configPath + ".bak")) {
+                cpSync(configPath, configPath + ".bak");
+            }
+            cpSync(joinPath(process.env.ZOWE_CLI_HOME, `${parsePath(uri).name}.config.json`), configPath);
+        }
+    },
+
+    afterFeature: function (uri, feature) {
+        const useCustomConfig = feature.tags.find((tag) => tag.name === "@CustomConfig") != null;
+        if (useCustomConfig) {
+            const configPath = joinPath(process.env.ZOWE_CLI_HOME, "zowe.config.json");
+            renameSync(configPath + ".bak", configPath);
+        }
     },
 
     afterStep: async function (step, scenario, result, context) {

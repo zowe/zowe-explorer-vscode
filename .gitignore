@@ -26,8 +26,8 @@ prebuilds/
 packages/zowe-explorer/**/.wdio-vscode-service
 packages/zowe-explorer/__tests__/**/.zowe
 packages/zowe-explorer/__tests__/**/.env
-packages/zowe-explorer/__tests__/__integration__/ci/**/.events
-packages/zowe-explorer/__tests__/__integration__/ci/**/settings
+packages/zowe-explorer/__tests__/__integration__/ci
+!packages/zowe-explorer/__tests__/__integration__/ci/*.config.json
 package.nls.*.json
 bundle.l10n.*.json
 bundle.l10n.json.template
