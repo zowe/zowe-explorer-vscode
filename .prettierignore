@@ -9,4 +9,5 @@ node_modules
 pnpm-lock.yaml
 **/bundle.l10n.json
 **/.wdio-vscode-service
+**/__tests__/__integration__/ci
 zedc/target

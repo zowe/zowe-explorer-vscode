@@ -151,8 +151,8 @@ export const config: Options.Testrunner = {
         emptyDirSync(screenshotDir);
     },
 
-    beforeFeature: async function (uri, feature) {
-        const useCustomConfig = feature.tags.find((tag) => tag.name === "CustomConfig") != null;
+    beforeFeature: function (uri, feature) {
+        const useCustomConfig = feature.tags.find((tag) => tag.name === "@CustomConfig") != null;
         process.env.ZOWE_CLI_HOME = useCustomConfig ? joinPath(zoweHomeDir, parsePath(uri).name) : zoweHomeDir;
     },
 
