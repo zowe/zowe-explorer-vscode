@@ -267,6 +267,25 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         return newMocks;
     }
 
+    it("Tests that addSingleSession adds type info to the session", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const jobTree = new JobTree();
+        const profile1 = await createIProfile();
+
+        profile1.name = "test1Profile";
+
+        await jobTree.addSingleSession(profile1);
+
+        const sessionNode = jobTree.mSessionNodes.find((tNode) => tNode.label?.toString() === profile1.name)
+
+        expect(sessionNode).toBeDefined();
+
+        const context = sessionNode?.contextValue;
+        expect(context).toContain("_type=zosmf");
+    });
+
     it("Tests that getChildren returns the Favorites and sessions when called at the root node", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
