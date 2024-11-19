@@ -22,13 +22,8 @@ Then("the Show Config dialog should appear", async function () {
     this.workbench = await browser.getWorkbench();
 
     let configNotification: Notification;
-    const notificationCenter = await (this.workbench as Workbench).openNotificationsCenter();
     await browser.waitUntil(async () => {
-        // Notification may be visible or hidden, handle both cases
-        const notifications = [
-            ...(await (this.workbench as Workbench).getNotifications()),
-            ...(await notificationCenter.getNotifications("error" as any)),
-        ];
+        const notifications = await (this.workbench as Workbench).getNotifications();
         for (const n of notifications) {
             const msg = await n.getMessage();
             if (msg.startsWith("Error encountered when loading your Zowe config.")) {

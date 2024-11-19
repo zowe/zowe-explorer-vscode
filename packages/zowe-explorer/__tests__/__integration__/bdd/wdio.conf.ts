@@ -12,12 +12,10 @@
 import type { Options } from "@wdio/types";
 import { join as joinPath, parse as parsePath, resolve as resolvePath } from "path";
 import { emptyDirSync } from "fs-extra";
-import { baseConfig } from "../../__common__/base.wdio.conf";
+import { baseConfig, dataDir } from "../../__common__/base.wdio.conf";
 import { cpSync, existsSync, readdirSync, renameSync } from "fs";
 
-const dataDir = joinPath(__dirname, "..", "..", "__common__", ".wdio-vscode-service", "data");
 const screenshotDir = joinPath(__dirname, "results", "screenshots");
-
 process.env.ZOWE_CLI_HOME = resolvePath("../ci");
 
 export const config: Options.Testrunner = {
@@ -154,8 +152,8 @@ export const config: Options.Testrunner = {
         emptyDirSync(screenshotDir);
     },
 
-    beforeFeature: function (uri, feature) {
-        const resourceDir = joinPath(__dirname, "resources", parsePath(uri).name);
+    before: function (caps, specs) {
+        const resourceDir = joinPath(__dirname, "resources", parsePath(specs[0]).name);
         if (existsSync(resourceDir)) {
             for (const resourceFile of readdirSync(resourceDir)) {
                 const resourcePath = joinPath(process.env.ZOWE_CLI_HOME, resourceFile);
@@ -167,8 +165,8 @@ export const config: Options.Testrunner = {
         }
     },
 
-    afterFeature: function (uri, feature) {
-        const resourceDir = joinPath(__dirname, "resources", parsePath(uri).name);
+    after: function (result, caps, specs) {
+        const resourceDir = joinPath(__dirname, "resources", parsePath(specs[0]).name);
         if (existsSync(resourceDir)) {
             for (const resourceFile of readdirSync(resourceDir)) {
                 const resourcePath = joinPath(process.env.ZOWE_CLI_HOME, resourceFile);
