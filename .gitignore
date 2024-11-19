@@ -27,7 +27,7 @@ packages/zowe-explorer/**/.wdio-vscode-service
 packages/zowe-explorer/__tests__/**/.zowe
 packages/zowe-explorer/__tests__/**/.env
 packages/zowe-explorer/__tests__/__integration__/ci
-!packages/zowe-explorer/__tests__/__integration__/ci/*.config.json
+!packages/zowe-explorer/__tests__/__integration__/ci/zowe.config.json
 package.nls.*.json
 bundle.l10n.*.json
 bundle.l10n.json.template

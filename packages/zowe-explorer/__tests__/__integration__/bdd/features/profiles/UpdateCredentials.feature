@@ -1,4 +1,3 @@
-@CustomConfig
 Feature: Update credentials for z/OSMF profile
 
 Scenario: Prompt for missing <authType> credentials

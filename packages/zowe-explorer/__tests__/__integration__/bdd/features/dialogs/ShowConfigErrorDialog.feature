@@ -1,4 +1,3 @@
-@CustomConfig
 Feature: Show Config Error Dialog
 
 Scenario: Initializing Zowe Explorer with a broken profile

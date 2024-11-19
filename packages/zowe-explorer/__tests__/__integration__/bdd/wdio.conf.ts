@@ -13,7 +13,7 @@ import type { Options } from "@wdio/types";
 import { join as joinPath, parse as parsePath, resolve as resolvePath } from "path";
 import { emptyDirSync } from "fs-extra";
 import { baseConfig } from "../../__common__/base.wdio.conf";
-import { cpSync, existsSync, renameSync } from "fs";
+import { cpSync, existsSync, readdirSync, renameSync } from "fs";
 
 const dataDir = joinPath(__dirname, "..", "..", "__common__", ".wdio-vscode-service", "data");
 const screenshotDir = joinPath(__dirname, "results", "screenshots");
@@ -155,21 +155,27 @@ export const config: Options.Testrunner = {
     },
 
     beforeFeature: function (uri, feature) {
-        const useCustomConfig = feature.tags.find((tag) => tag.name === "@CustomConfig") != null;
-        if (useCustomConfig) {
-            const configPath = joinPath(process.env.ZOWE_CLI_HOME, "zowe.config.json");
-            if (!existsSync(configPath + ".bak")) {
-                cpSync(configPath, configPath + ".bak");
+        const resourceDir = joinPath(__dirname, "resources", parsePath(uri).name);
+        if (existsSync(resourceDir)) {
+            for (const resourceFile of readdirSync(resourceDir)) {
+                const resourcePath = joinPath(process.env.ZOWE_CLI_HOME, resourceFile);
+                if (!existsSync(resourcePath + ".bak")) {
+                    cpSync(resourcePath, resourcePath + ".bak");
+                }
+                cpSync(joinPath(resourceDir, resourceFile), resourcePath);
             }
-            cpSync(joinPath(process.env.ZOWE_CLI_HOME, `${parsePath(uri).name}.config.json`), configPath);
         }
     },
 
     afterFeature: function (uri, feature) {
-        const useCustomConfig = feature.tags.find((tag) => tag.name === "@CustomConfig") != null;
-        if (useCustomConfig) {
-            const configPath = joinPath(process.env.ZOWE_CLI_HOME, "zowe.config.json");
-            renameSync(configPath + ".bak", configPath);
+        const resourceDir = joinPath(__dirname, "resources", parsePath(uri).name);
+        if (existsSync(resourceDir)) {
+            for (const resourceFile of readdirSync(resourceDir)) {
+                const resourcePath = joinPath(process.env.ZOWE_CLI_HOME, resourceFile);
+                if (existsSync(resourcePath + ".bak")) {
+                    renameSync(resourcePath + ".bak", resourcePath);
+                }
+            }
         }
     },
 
