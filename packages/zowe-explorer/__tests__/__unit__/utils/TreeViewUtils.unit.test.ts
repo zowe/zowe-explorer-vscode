@@ -81,7 +81,7 @@ describe("TreeViewUtils Unit Tests", () => {
         expect(blockMocks.testDatasetTree.removeFileHistory).toHaveBeenCalledTimes(1);
     });
 
-    describe("promptedForUnsavedResource", () => {
+    describe("errorForUnsavedResource", () => {
         function getBlockMocks() {
             return {
                 errorMessage: jest.spyOn(Gui, "errorMessage").mockClear(),
@@ -113,9 +113,9 @@ describe("TreeViewUtils Unit Tests", () => {
                 } as any,
             ]);
 
-            expect(await TreeViewUtils.promptedForUnsavedResource(ussNode)).toBe(true);
+            expect(await TreeViewUtils.errorForUnsavedResource(ussNode)).toBe(true);
             expect(blockMocks.errorMessage).toHaveBeenCalledWith(
-                "Unable to rename testFile.txt because you have unsaved changes in this file. " + "Please save your work before renaming the file.",
+                "Unable to rename testFile.txt because you have unsaved changes in this file. " + "Please save your work and try again.",
                 { vsCodeOpts: { modal: true } }
             );
             textDocumentsMock.restore();
@@ -157,10 +157,9 @@ describe("TreeViewUtils Unit Tests", () => {
                 } as any,
             ]);
 
-            expect(await TreeViewUtils.promptedForUnsavedResource(ussFolder)).toBe(true);
+            expect(await TreeViewUtils.errorForUnsavedResource(ussFolder)).toBe(true);
             expect(blockMocks.errorMessage).toHaveBeenCalledWith(
-                "Unable to rename folder because you have unsaved changes in this directory. " +
-                    "Please save your work before renaming the directory.",
+                "Unable to rename folder because you have unsaved changes in this directory. " + "Please save your work and try again.",
                 { vsCodeOpts: { modal: true } }
             );
             textDocumentsMock.restore();
@@ -189,10 +188,9 @@ describe("TreeViewUtils Unit Tests", () => {
                 } as any,
             ]);
 
-            expect(await TreeViewUtils.promptedForUnsavedResource(ps)).toBe(true);
+            expect(await TreeViewUtils.errorForUnsavedResource(ps)).toBe(true);
             expect(blockMocks.errorMessage).toHaveBeenCalledWith(
-                "Unable to rename TEST.PS because you have unsaved changes in this data set. " +
-                    "Please save your work before renaming the data set.",
+                "Unable to rename TEST.PS because you have unsaved changes in this data set. " + "Please save your work and try again.",
                 { vsCodeOpts: { modal: true } }
             );
             textDocumentsMock.restore();
@@ -221,7 +219,7 @@ describe("TreeViewUtils Unit Tests", () => {
                 } as any,
             ]);
 
-            expect(await TreeViewUtils.promptedForUnsavedResource(ps)).toBe(false);
+            expect(await TreeViewUtils.errorForUnsavedResource(ps)).toBe(false);
             expect(blockMocks.errorMessage).not.toHaveBeenCalled();
             textDocumentsMock.restore();
         });
@@ -262,10 +260,9 @@ describe("TreeViewUtils Unit Tests", () => {
                 } as any,
             ]);
 
-            expect(await TreeViewUtils.promptedForUnsavedResource(pds)).toBe(true);
+            expect(await TreeViewUtils.errorForUnsavedResource(pds)).toBe(true);
             expect(blockMocks.errorMessage).toHaveBeenCalledWith(
-                "Unable to rename TEST.PDS because you have unsaved changes in this data set. " +
-                    "Please save your work before renaming the data set.",
+                "Unable to rename TEST.PDS because you have unsaved changes in this data set. " + "Please save your work and try again.",
                 { vsCodeOpts: { modal: true } }
             );
             textDocumentsMock.restore();

@@ -115,7 +115,7 @@ export class TreeViewUtils {
      * @param node The USS file or data set to check for in the editor. Also checks child paths for the node (for PDS members and inner USS files).
      * @returns Whether a child or the resource itself is open with unsaved changes in the editor
      */
-    public static async promptedForUnsavedResource(node: IZoweTreeNode): Promise<boolean> {
+    public static async errorForUnsavedResource(node: IZoweTreeNode, action = l10n.t("rename")): Promise<boolean> {
         const currentFilePath = node.resourceUri.fsPath; // The user's complete local file path for the node
         await Profiles.getInstance().checkCurrentProfile(node.getProfile());
         const openedTextDocuments: readonly TextDocument[] = workspace.textDocuments; // Array of all documents open in VS Code
@@ -132,10 +132,9 @@ export class TreeViewUtils {
             if ((doc.fileName === currentFilePath || SharedUtils.checkIfChildPath(currentFilePath, doc.fileName)) && doc.isDirty) {
                 Gui.errorMessage(
                     l10n.t({
-                        message:
-                            "Unable to rename {0} because you have unsaved changes in this {1}. " + "Please save your work before renaming the {1}.",
-                        args: [node.label, nodeType],
-                        comment: ["Node path", "Node type (directory, file or data set)"],
+                        message: "Unable to {0} {1} because you have unsaved changes in this {2}. " + "Please save your work and try again.",
+                        args: [action, node.label, nodeType],
+                        comment: ["User action", "Node path", "Node type (directory, file or data set)"],
                     }),
                     { vsCodeOpts: { modal: true } }
                 );

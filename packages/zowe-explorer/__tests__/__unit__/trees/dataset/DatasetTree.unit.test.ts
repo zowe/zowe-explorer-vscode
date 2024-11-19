@@ -2265,7 +2265,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         };
     }
 
-    it("returns early if promptedForUnsavedResource was true", async () => {
+    it("returns early if errorForUnsavedResource was true", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -2280,9 +2280,9 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             profile: testTree.mSessionNodes[1].getProfile(),
         });
         blockMocks.rename.mockClear();
-        const promptedForUnsavedResource = jest.spyOn(TreeViewUtils, "promptedForUnsavedResource").mockResolvedValueOnce(true);
+        const errorForUnsavedResource = jest.spyOn(TreeViewUtils, "errorForUnsavedResource").mockResolvedValueOnce(true);
         await testTree.rename(node);
-        expect(promptedForUnsavedResource).toHaveBeenCalled();
+        expect(errorForUnsavedResource).toHaveBeenCalled();
         expect(blockMocks.rename).not.toHaveBeenLastCalledWith(
             { path: "/sestest/HLQ.TEST.RENAME.NODE", scheme: ZoweScheme.DS },
             { path: "/sestest/HLQ.TEST.RENAME.NODE.NEW", scheme: ZoweScheme.DS },

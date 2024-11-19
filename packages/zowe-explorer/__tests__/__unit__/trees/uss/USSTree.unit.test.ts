@@ -936,7 +936,7 @@ describe("USSTree Unit Tests - Function rename", () => {
         globalMocks.FileSystemProvider.rename.mockClear();
 
         const newMocks = {
-            promptedForUnsavedResource: jest.spyOn(TreeViewUtils, "promptedForUnsavedResource").mockResolvedValueOnce(false),
+            errorForUnsavedResource: jest.spyOn(TreeViewUtils, "errorForUnsavedResource").mockResolvedValueOnce(false),
             ussFavNode,
             ussFavNodeParent,
             setAttributes: jest.spyOn(ZoweUSSNode.prototype, "setAttributes").mockImplementation(),
@@ -951,11 +951,11 @@ describe("USSTree Unit Tests - Function rename", () => {
         getEncodingForFileMock.mockRestore();
     });
 
-    it("returns early if promptedForUnsavedResource was true", async () => {
+    it("returns early if errorForUnsavedResource was true", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
-        blockMocks.promptedForUnsavedResource.mockReset();
-        blockMocks.promptedForUnsavedResource.mockResolvedValueOnce(true);
+        blockMocks.errorForUnsavedResource.mockReset();
+        blockMocks.errorForUnsavedResource.mockResolvedValueOnce(true);
         const testUSSDir = new ZoweUSSNode({
             label: "test",
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,

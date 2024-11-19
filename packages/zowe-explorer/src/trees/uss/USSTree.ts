@@ -253,7 +253,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     public async rename(originalNode: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("USSTree.rename called.");
 
-        if (await TreeViewUtils.promptedForUnsavedResource(originalNode)) {
+        if (await TreeViewUtils.errorForUnsavedResource(originalNode)) {
             return;
         }
 
