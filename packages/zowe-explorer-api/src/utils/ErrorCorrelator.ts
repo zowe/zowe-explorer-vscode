@@ -220,15 +220,15 @@ export class ErrorCorrelator {
                         errorCode: "401",
                         matches: ["Token is not valid or expired"],
                         summary:
-                            // eslint-disable-next-line max-len
-                            "Your connection is no longer active for profile {{profileName}}. Please log in to an authentication service to restore the connection.",
+                            "Your connection is no longer active for profile {{profileName}}. " +
+                            "Please log in to an authentication service to restore the connection.",
                     },
                     {
                         errorCode: "401",
                         matches: ["Username or password are not valid or expired", "All configured authentication methods failed"],
                         summary:
-                            // eslint-disable-next-line max-len
-                            "Invalid credentials for profile {{profileName}}. Please ensure the username and password are valid or this may lead to a lock-out.",
+                            "Invalid credentials for profile {{profileName}}. " +
+                            "Please ensure the username and password are valid or this may lead to a lock-out.",
                     },
                 ],
             },
