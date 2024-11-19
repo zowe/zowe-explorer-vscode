@@ -157,7 +157,7 @@ importers:
         specifier: ^8.1.1
         version: 8.1.1(@zowe/core-for-zowe-sdk@8.1.1)(@zowe/imperative@8.1.0)
       '@zowe/zowe-explorer-api':
-        specifier: 3.0.3-SNAPSHOT
+        specifier: 3.0.3
         version: link:../zowe-explorer-api
       dayjs:
         specifier: ^1.11.10
@@ -212,7 +212,7 @@ importers:
         specifier: ^2.4.1
         version: 2.4.2
       eslint-plugin-zowe-explorer:
-        specifier: 3.0.3-SNAPSHOT
+        specifier: 3.0.3
         version: link:../eslint-plugin-zowe-explorer
       expect-webdriverio:
         specifier: ^4.15.4
@@ -309,7 +309,7 @@ importers:
         specifier: ^8.1.1
         version: 8.1.1(@zowe/core-for-zowe-sdk@8.1.1)(@zowe/imperative@8.1.0)
       '@zowe/zowe-explorer-api':
-        specifier: 3.0.3-SNAPSHOT
+        specifier: 3.0.3
         version: link:../zowe-explorer-api
       tmp:
         specifier: 0.2.3
