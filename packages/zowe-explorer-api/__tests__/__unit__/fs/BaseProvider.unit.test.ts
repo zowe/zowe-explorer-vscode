@@ -544,8 +544,8 @@ describe("_handleConflict", () => {
     });
 });
 describe("_handleError", () => {
-    it("calls ErrorCorrelator.displayError to display error to user - no options provided", async () => {
-        const displayErrorMock = jest.spyOn(ErrorCorrelator.prototype, "displayError").mockReturnValue(new Promise((res, rej) => {}));
+    it("calls ErrorCorrelator.displayError to display error to user - no options provided", () => {
+        const displayErrorMock = jest.spyOn(ErrorCorrelator.prototype, "displayError").mockReturnValue(new Promise((_res, _rej) => {}));
         const prov = new (BaseProvider as any)();
         prov._handleError(new Error("example"));
         expect(displayErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.All, new Error("example"), {
@@ -555,8 +555,8 @@ describe("_handleError", () => {
             templateArgs: undefined,
         });
     });
-    it("calls ErrorCorrelator.displayError to display error to user - options provided", async () => {
-        const displayErrorMock = jest.spyOn(ErrorCorrelator.prototype, "displayError").mockReturnValue(new Promise((res, rej) => {}));
+    it("calls ErrorCorrelator.displayError to display error to user - options provided", () => {
+        const displayErrorMock = jest.spyOn(ErrorCorrelator.prototype, "displayError").mockReturnValue(new Promise((_res, _rej) => {}));
         const prov = new (BaseProvider as any)();
         prov._handleError(new Error("example"), {
             additionalContext: "Failed to list data sets",
