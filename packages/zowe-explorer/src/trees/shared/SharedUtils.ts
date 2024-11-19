@@ -333,4 +333,19 @@ export class SharedUtils {
             });
         }
     }
+
+    /**
+     * Debounces an event handler to prevent duplicate triggers.
+     * @param callback Event handler callback
+     * @param delay Number of milliseconds to delay
+     */
+    public static debounce<T extends (...args: any[]) => void>(callback: T, delay: number): (...args: Parameters<T>) => void {
+        let timeoutId: ReturnType<typeof setTimeout>;
+        return (...args: Parameters<T>): void => {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            timeoutId = setTimeout(() => callback(...args), delay);
+        };
+    }
 }

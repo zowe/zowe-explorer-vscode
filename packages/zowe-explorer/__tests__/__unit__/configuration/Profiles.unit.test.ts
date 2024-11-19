@@ -27,7 +27,6 @@ import {
     createMockNode,
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
-import { createProfileManager } from "../../__mocks__/mockCreators/profiles";
 import {
     imperative,
     Gui,
@@ -83,7 +82,6 @@ function createGlobalMocks(): { [key: string]: any } {
         testUSSTree: null as any as USSTree,
         testNode: createMockNode("test", Constants.DS_SESSION_CONTEXT),
         testSession: createISession(),
-        mockCliProfileManager: createProfileManager(),
         ProgressLocation: jest.fn().mockImplementation(() => {
             return {
                 Notification: 15,
