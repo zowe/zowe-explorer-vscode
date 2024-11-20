@@ -141,6 +141,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         this.collapsibleState =
             this.contextValue === globals.DS_PDS_CONTEXT ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
 
+        if (!isPds) {
+            this.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [this] }; }
+        }
+
         // Replace icon on existing node with new one
         const icon = getIconByNode(this);
         if (icon) {

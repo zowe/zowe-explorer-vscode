@@ -449,6 +449,17 @@ describe("ZoweDatasetNode Unit Tests - function datasetRecalled", () => {
         expect(dsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
     });
 
+    it("adds the open command to the node - PS", async () => {
+        const dsNode = new ZoweDatasetNode({
+            label: "MIGRATED.PS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: globals.DS_MIGRATED_FILE_CONTEXT,
+            profile: createIProfile(),
+        });
+        await (dsNode as any).datasetRecalled(false);
+        expect(dsNode.command).toBe({ command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [dsNode] });
+    });
+
     it("updates the icon to folder - PDS", async () => {
         const dsNode = new ZoweDatasetNode({
             label: "MIGRATED.PDS",
