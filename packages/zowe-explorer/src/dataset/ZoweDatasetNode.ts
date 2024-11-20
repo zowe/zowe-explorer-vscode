@@ -133,14 +133,15 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
     /**
      * Updates an existing data set node that was recalled so it can be interacted with.
-     * @param node The data set node to update (previously marked as migrated)
+     * @param isPds Whether the data set is a PDS
      */
     private datasetRecalled(isPds: boolean): void {
-        // Change context value to match dsorg, update collapsible state and assign resource URI
+        // Change context value to match dsorg, update collapsible state
         this.contextValue = isPds ? globals.DS_PDS_CONTEXT : globals.DS_DS_CONTEXT;
         this.collapsibleState =
             this.contextValue === globals.DS_PDS_CONTEXT ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
 
+        // For sequential data sets, re-apply the command so that they can be opened
         if (!isPds) {
             this.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [this] };
         }
@@ -154,7 +155,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
     /**
      * Updates a data set node so it is marked as migrated.
-     * @param node The data set node to mark as migrated
      */
     private datasetMigrated(): void {
         // Change the context value and collapsible state to represent a migrated data set
