@@ -132,6 +132,42 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     /**
+     * Updates an existing data set node that was recalled so it can be interacted with.
+     * @param node The data set node to update (previously marked as migrated)
+     */
+    private static datasetNodeRecalled(node: ZoweDatasetNode, isPds: boolean): void {
+        // Change context value to match dsorg, update collapsible state and assign resource URI
+        node.contextValue = isPds ? globals.DS_PDS_CONTEXT : globals.DS_DS_CONTEXT;
+        node.collapsibleState =
+            node.contextValue === globals.DS_PDS_CONTEXT ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
+
+        // Replace icon on existing node with new one
+        const icon = getIconByNode(node);
+        if (icon) {
+            node.setIcon(icon.path);
+        }
+    }
+
+    /**
+     * Updates a data set node so it is marked as migrated.
+     * @param node The data set node to mark as migrated
+     */
+    private static datasetNodeMigrated(node: ZoweDatasetNode): void {
+        // Change the context value and collapsible state to represent a migrated data set
+        node.contextValue = globals.DS_MIGRATED_FILE_CONTEXT;
+        node.collapsibleState = vscode.TreeItemCollapsibleState.None;
+
+        // Remove the node's command
+        node.command = undefined;
+
+        // Assign migrated icon to the data set node
+        const icon = getIconByNode(node);
+        if (icon) {
+            node.setIcon(icon.path);
+        }
+    }
+
+    /**
      * Retrieves child nodes of this ZoweDatasetNode
      *
      * @returns {Promise<ZoweDatasetNode[]>}
@@ -182,10 +218,25 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 const dsEntry = item.dsname ?? item.member;
                 const existing = this.children.find((element) => element.label.toString() === dsEntry);
                 if (existing) {
+                    if (contextually.isMigrated(existing) && item.migr?.toUpperCase() !== "YES") {
+                        ZoweDatasetNode.datasetNodeRecalled(existing, item.dsorg === "PO" || item.dsorg === "PO-E");
+                    } else if (!contextually.isMigrated(existing) && item.migr?.toUpperCase() === "YES") {
+                        ZoweDatasetNode.datasetNodeMigrated(existing);
+                    }
                     existing.updateStats(item);
                     elementChildren[existing.label.toString()] = existing;
-                    // Creates a ZoweDatasetNode for a PDS
+                } else if (item.migr && item.migr.toUpperCase() === "YES") {
+                    // Creates a ZoweDatasetNode for a migrated dataset
+                    const temp = new ZoweDatasetNode({
+                        label: item.dsname,
+                        collapsibleState: vscode.TreeItemCollapsibleState.None,
+                        parentNode: this,
+                        contextOverride: globals.DS_MIGRATED_FILE_CONTEXT,
+                        profile: this.getProfile(),
+                    });
+                    elementChildren[temp.label.toString()] = temp;
                 } else if (item.dsorg === "PO" || item.dsorg === "PO-E") {
+                    // Creates a ZoweDatasetNode for a PDS
                     const temp = new ZoweDatasetNode({
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -193,8 +244,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         profile: this.getProfile(),
                     });
                     elementChildren[temp.label.toString()] = temp;
-                    // Creates a ZoweDatasetNode for a dataset with imperative errors
                 } else if (item.error instanceof zowe.imperative.ImperativeError) {
+                    // Creates a ZoweDatasetNode for a dataset with imperative errors
                     const temp = new ZoweDatasetNode({
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -205,18 +256,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     temp.command = { command: "zowe.placeholderCommand", title: "" };
                     temp.errorDetails = item.error; // Save imperative error to avoid extra z/OS requests
                     elementChildren[temp.label.toString()] = temp;
-                    // Creates a ZoweDatasetNode for a migrated dataset
-                } else if (item.migr && item.migr.toUpperCase() === "YES") {
-                    const temp = new ZoweDatasetNode({
-                        label: item.dsname,
-                        collapsibleState: vscode.TreeItemCollapsibleState.None,
-                        parentNode: this,
-                        contextOverride: globals.DS_MIGRATED_FILE_CONTEXT,
-                        profile: this.getProfile(),
-                    });
-                    elementChildren[temp.label.toString()] = temp;
-                    // Creates a ZoweDatasetNode for a VSAM file
                 } else if (item.dsorg === "VS") {
+                    // Creates a ZoweDatasetNode for a VSAM file
                     let altLabel = item.dsname;
                     let endPoint = altLabel.indexOf(".DATA");
                     if (endPoint === -1) {

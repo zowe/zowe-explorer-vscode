@@ -1360,8 +1360,13 @@ export async function hMigrateDataSet(
             const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
             api.Gui.showMessage(localize("hMigrateDataSet.requestSent", "Migration of data set {0} requested.", dataSetName));
             node.contextValue = globals.DS_MIGRATED_FILE_CONTEXT;
+            if (node.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
+                node.children = [];
+            }
+
+            node.collapsibleState = vscode.TreeItemCollapsibleState.None;
             node.setIcon(getIconByNode(node).path);
-            datasetProvider.refresh();
+            datasetProvider.refreshElement(node);
             return response;
         } catch (err) {
             ZoweLogger.error(err);
@@ -1390,13 +1395,7 @@ export async function hRecallDataSet(
         try {
             const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
             api.Gui.showMessage(localize("hRecallDataSet.requestSent", "Recall of data set {0} requested.", dataSetName));
-            if (node.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
-                node.contextValue = globals.DS_PDS_CONTEXT;
-            } else {
-                node.contextValue = node.binary ? globals.DS_DS_BINARY_CONTEXT : globals.DS_DS_CONTEXT;
-            }
-            node.setIcon(getIconByNode(node).path);
-            datasetProvider.refresh();
+            datasetProvider.refreshElement(node.getSessionNode());
             return response;
         } catch (err) {
             ZoweLogger.error(err);
