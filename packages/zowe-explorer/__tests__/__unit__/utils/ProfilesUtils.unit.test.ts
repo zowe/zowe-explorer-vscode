@@ -13,7 +13,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as util from "util";
 import * as vscode from "vscode";
-import { FileManagement, Gui, imperative, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { createAltTypeIProfile, createInstanceOfProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
 import { MockedProperty } from "../../__mocks__/mockUtils";
 import { Constants } from "../../../src/configuration/Constants";
@@ -238,10 +238,6 @@ describe("ProfilesUtils unit tests", () => {
     });
 
     describe("readConfigFromDisk", () => {
-        afterEach(() => {
-            jest.clearAllMocks();
-            jest.resetAllMocks();
-        });
         Object.defineProperty(vscode.workspace, "workspaceFolders", {
             value: [
                 {
@@ -253,9 +249,10 @@ describe("ProfilesUtils unit tests", () => {
             ],
             configurable: true,
         });
-        it("should readConfigFromDisk and log 'Not Available'", async () => {
+
+        it("should readConfigFromDisk and find default profiles", async () => {
             const mockReadProfilesFromDisk = jest.fn();
-            const profInfoSpy = jest.spyOn(ProfilesUtils, "setupProfileInfo").mockReturnValue({
+            jest.spyOn(ProfilesUtils, "setupProfileInfo").mockReturnValueOnce({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
                 getTeamConfig: () => ({
                     exists: true,
@@ -275,36 +272,48 @@ describe("ProfilesUtils unit tests", () => {
                     ],
                 }),
             } as never);
+            const loggerSpy = jest.spyOn(ZoweLogger, "debug");
             await expect(ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
-            profInfoSpy.mockRestore();
+            expect(loggerSpy).toHaveBeenLastCalledWith(expect.stringContaining(`Path: test, Found with the following defaults: "test"`));
         });
 
-        it("should readConfigFromDisk and find with defaults", async () => {
+        it("should readConfigFromDisk and log 'Not Available'", async () => {
             const mockReadProfilesFromDisk = jest.fn();
-            const profInfoSpy = jest.spyOn(ProfilesUtils, "setupProfileInfo").mockReturnValue({
+            jest.spyOn(ProfilesUtils, "setupProfileInfo").mockResolvedValueOnce({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
-                getTeamConfig: () => ({ exists: true, layers: [] }),
+                getTeamConfig: () => ({
+                    exists: true,
+                    layers: [
+                        {
+                            path: "test",
+                            exists: false,
+                            properties: {},
+                        },
+                    ],
+                }),
             } as never);
+            const loggerSpy = jest.spyOn(ZoweLogger, "debug");
             await expect(ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
-            profInfoSpy.mockRestore();
+            expect(loggerSpy).toHaveBeenLastCalledWith(expect.stringContaining("Path: test, Not available"));
         });
 
         it("should keep Imperative error details if readConfigFromDisk fails", async () => {
             const impErr = new imperative.ImperativeError({ msg: "Unexpected Imperative error" });
             const mockReadProfilesFromDisk = jest.fn().mockRejectedValue(impErr);
-            const profInfoSpy = jest.spyOn(ProfilesUtils, "setupProfileInfo").mockResolvedValue({
+            jest.spyOn(ProfilesUtils, "setupProfileInfo").mockResolvedValueOnce({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
                 getTeamConfig: () => ({ exists: true }),
             } as never);
+            (ProfilesUtils as any).mProfileInfo = undefined;
             await expect(ProfilesUtils.readConfigFromDisk()).rejects.toBe(impErr);
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
-            profInfoSpy.mockRestore();
+            expect((ProfilesUtils as any).mProfileInfo).toBeUndefined();
         });
 
         it("should warn the user when using team config with a missing schema", async () => {
-            const profInfoSpy = jest.spyOn(ProfilesUtils, "setupProfileInfo").mockReturnValueOnce({
+            jest.spyOn(ProfilesUtils, "setupProfileInfo").mockResolvedValueOnce({
                 readProfilesFromDisk: jest.fn(),
                 hasValidSchema: false,
                 getTeamConfig: () => ({
@@ -330,7 +339,6 @@ describe("ProfilesUtils unit tests", () => {
             expect(warnMsgSpy).toHaveBeenCalledWith(
                 "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer."
             );
-            profInfoSpy.mockRestore();
         });
     });
 
