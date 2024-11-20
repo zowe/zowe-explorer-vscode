@@ -29,6 +29,7 @@ import * as sharedUtils from "../../../src/shared/utils";
 import { Profiles } from "../../../src/Profiles";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
+import { getIconById, IconId } from "../../../src/generators/icons";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -433,5 +434,77 @@ describe("ZoweDatasetNode Unit Tests - Function node.setIcon()", () => {
         node.setIcon(iconTest);
         expect(node.iconPath).toEqual(iconTest);
         expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("zowe.ds.refreshDataset", node);
+    });
+});
+
+describe("ZoweDatasetNode Unit Tests - function datasetRecalled", () => {
+    it("changes the collapsible state", async () => {
+        const dsNode = new ZoweDatasetNode({
+            label: "MIGRATED.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: globals.DS_MIGRATED_FILE_CONTEXT,
+            profile: createIProfile(),
+        });
+        await (ZoweDatasetNode as any).datasetRecalled(dsNode, true);
+        expect(dsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
+    });
+
+    it("updates the icon to folder - PDS", async () => {
+        const dsNode = new ZoweDatasetNode({
+            label: "MIGRATED.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: globals.DS_MIGRATED_FILE_CONTEXT,
+            profile: createIProfile(),
+        });
+        await (ZoweDatasetNode as any).datasetRecalled(dsNode, true);
+        expect(dsNode.iconPath).toBe(getIconById(IconId.folder).path);
+    });
+
+    it("updates the icon to file - PS", async () => {
+        const dsNode = new ZoweDatasetNode({
+            label: "MIGRATED.PS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: globals.DS_MIGRATED_FILE_CONTEXT,
+            profile: createIProfile(),
+        });
+        await (ZoweDatasetNode as any).datasetRecalled(dsNode, false);
+        expect(dsNode.iconPath).toBe(getIconById(IconId.document).path);
+    });
+});
+
+describe("ZoweDatasetNode Unit Tests - function datasetMigrated", () => {
+    it("changes the collapsible state", () => {
+        const dsNode = new ZoweDatasetNode({
+            label: "SOME.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: globals.DS_PDS_CONTEXT,
+            profile: createIProfile(),
+        });
+        (ZoweDatasetNode as any).datasetMigrated(dsNode, true);
+        expect(dsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
+    });
+
+    it("removes the node command", () => {
+        const dsNode = new ZoweDatasetNode({
+            label: "SOME.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: globals.DS_PDS_CONTEXT,
+            parentNode: createDatasetSessionNode(createISession(), createIProfile()),
+            profile: createIProfile(),
+        });
+        (ZoweDatasetNode as any).datasetMigrated(dsNode);
+        expect(dsNode.resourceUri).toBeUndefined();
+        expect(dsNode.command).toBeUndefined();
+    });
+
+    it("changes the icon to the migrated icon", () => {
+        const dsNode = new ZoweDatasetNode({
+            label: "MIGRATED.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: globals.DS_MIGRATED_FILE_CONTEXT,
+            profile: createIProfile(),
+        });
+        (ZoweDatasetNode as any).datasetMigrated(dsNode);
+        expect(dsNode.iconPath).toBe(getIconById(IconId.migrated).path);
     });
 });
