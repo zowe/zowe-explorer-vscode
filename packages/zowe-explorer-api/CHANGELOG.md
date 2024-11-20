@@ -6,9 +6,9 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
-- Update Zowe SDKs to `8.8.2` to get the latest enhancements from Imperative.
 - Added support for extenders to obtain an updated Session that will includes VS Code proxy settings values if set, `getProfileSessionWithVscProxy`. [#3010](https://github.com/zowe/zowe-explorer-vscode/issues/3010)
 - Added support for VS Code proxy settings with zosmf profile types. [#3010](https://github.com/zowe/zowe-explorer-vscode/issues/3010)
+- Update Zowe SDKs to `8.8.2` to get the latest enhancements from Imperative. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
 
 ### Bug fixes
 

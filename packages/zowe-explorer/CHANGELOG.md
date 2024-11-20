@@ -6,13 +6,24 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-- Update Zowe SDKs to `8.7.0` to get the latest enhancements from Imperative.
+- Update Zowe SDKs to `8.8.2` to get the latest enhancements from Imperative. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
+
+### Bug fixes
+
+- Fixed an issue during initialization where the error dialog shown for a broken team configuration file was missing the "Show Config" action. [#3322](https://github.com/zowe/zowe-explorer-vscode/pull/3322)
+
+## `3.0.3`
+
+### New features and enhancements
+
+- Update Zowe SDKs to `8.2.0` to get the latest enhancements from Imperative.
 - Added expired JSON web token detection for profiles in each tree view (Data Sets, USS, Jobs). When a user performs a search on a profile, they are prompted to log in if their token expired. [#3175](https://github.com/zowe/zowe-explorer-vscode/issues/3175)
 - Add a data set or USS resource to a virtual workspace with the new "Add to Workspace" context menu option. [#3265](https://github.com/zowe/zowe-explorer-vscode/issues/3265)
 - Power users and developers can now build links to efficiently open mainframe resources in Zowe Explorer. Use the **Copy External Link** option in the context menu to get the URL for a data set or USS resource, or create a link in the format `vscode://Zowe.vscode-extension-for-zowe?<ZoweResourceUri>`. For more information on building resource URIs, see the [FileSystemProvider wiki article](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#file-paths-vs-uris). [#3271](https://github.com/zowe/zowe-explorer-vscode/pull/3271)
 - Adopted support for VS Code proxy settings with zosmf profile types. [#3010](https://github.com/zowe/zowe-explorer-vscode/issues/3010)
 - Implemented more user-friendly error messages for API or network errors within Zowe Explorer. [#3243](https://github.com/zowe/zowe-explorer-vscode/pull/3243)
 - Use the "Troubleshoot" option for certain errors to obtain additional context, tips, and resources for how to resolve the errors. [#3243](https://github.com/zowe/zowe-explorer-vscode/pull/3243)
+- You can now add multiple partitioned data sets or USS directories to your workspace at once using the "Add to Workspace" feature. [#3324](https://github.com/zowe/zowe-explorer-vscode/issues/3324)
 
 ### Bug fixes
 
@@ -29,9 +40,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue where users were not prompted to enter credentials if a 401 error was encountered when opening files, data sets or spools in the editor. [#3197](https://github.com/zowe/zowe-explorer-vscode/issues/3197)
 - Fixed issue where profile credential updates or token changes were not reflected within the filesystem. [#3289](https://github.com/zowe/zowe-explorer-vscode/issues/3289)
 - Fixed issue to update the success message when changing authentication from token to basic through the 'Change Authentication' option. [#3316](https://github.com/zowe/zowe-explorer-vscode/pull/3316)
-- Fixed an issue where editing a team config file or updating credentials in OS vault could trigger multiple events for a single action. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
+- Fixed an issue where fetching a USS file using `UssFSProvider.stat()` with a `fetch=true` query would cause Zowe Explorer to get stuck in an infinite loop. [#3321](https://github.com/zowe/zowe-explorer-vscode/pull/3321)
+- Fixed an issue where editing a team config file or updating secrets in the OS credential vault could trigger multiple events for a single action. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
 - Updated Zowe SDKs to `8.8.2` for technical currency. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
-- Fixed an issue where fetching a USS file using `UssFSProvider.stat()` with a `fetch=true` query would cause Zowe Explorer to get stuck in an infinite loop.
 
 ## `3.0.2`
 

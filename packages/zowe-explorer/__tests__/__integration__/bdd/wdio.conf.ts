@@ -10,15 +10,13 @@
  */
 
 import type { Options } from "@wdio/types";
-import { join as joinPath, resolve as resolvePath } from "path";
+import { join as joinPath, parse as parsePath, resolve as resolvePath } from "path";
 import { emptyDirSync } from "fs-extra";
-import { baseConfig } from "../../__common__/base.wdio.conf";
-import { renameSync, rmSync, writeFileSync } from "fs";
+import { baseConfig, dataDir } from "../../__common__/base.wdio.conf";
+import { cpSync, existsSync, readdirSync, renameSync } from "fs";
 
-const dataDir = joinPath(__dirname, "..", "..", "__common__", ".wdio-vscode-service", "data");
 const screenshotDir = joinPath(__dirname, "results", "screenshots");
-
-process.env["ZOWE_CLI_HOME"] = resolvePath("../ci");
+process.env.ZOWE_CLI_HOME = resolvePath("../ci");
 
 export const config: Options.Testrunner = {
     ...baseConfig,
@@ -81,7 +79,8 @@ export const config: Options.Testrunner = {
     capabilities: [
         {
             browserName: "vscode",
-            browserVersion: "stable", // also possible: "insiders" or a specific version e.g. "1.80.0"
+            // version can be "stable", "insiders", or a specific version e.g. "1.80.0"
+            browserVersion: process.env.ZE_TEST_VSCODE_VER || "stable",
             "wdio:vscodeOptions": {
                 // points to directory where extension package.json is located
                 extensionPath: joinPath(__dirname, "..", "..", ".."),
@@ -153,21 +152,28 @@ export const config: Options.Testrunner = {
         emptyDirSync(screenshotDir);
     },
 
-    beforeFeature: async function (uri, feature) {
-        if (feature.name === "Show Config Error Dialog") {
-            const configPath = joinPath(process.env["ZOWE_CLI_HOME"], "zowe.config.json");
-            const backupConfigPath = joinPath(process.env["ZOWE_CLI_HOME"], "zowe.config.bkp");
-            renameSync(configPath, backupConfigPath);
-            writeFileSync(configPath, "invalidjson");
+    before: function (caps, specs) {
+        const resourceDir = joinPath(__dirname, "resources", parsePath(specs[0]).name);
+        if (existsSync(resourceDir)) {
+            for (const resourceFile of readdirSync(resourceDir)) {
+                const resourcePath = joinPath(process.env.ZOWE_CLI_HOME, resourceFile);
+                if (!existsSync(resourcePath + ".bak")) {
+                    cpSync(resourcePath, resourcePath + ".bak");
+                }
+                cpSync(joinPath(resourceDir, resourceFile), resourcePath);
+            }
         }
     },
 
-    afterFeature: async function (uri, feature) {
-        if (feature.name === "Show Config Error Dialog") {
-            const backupConfigPath = joinPath(process.env["ZOWE_CLI_HOME"], "zowe.config.bkp");
-            const configPath = joinPath(process.env["ZOWE_CLI_HOME"], "zowe.config.json");
-            rmSync(configPath);
-            renameSync(backupConfigPath, configPath);
+    after: function (result, caps, specs) {
+        const resourceDir = joinPath(__dirname, "resources", parsePath(specs[0]).name);
+        if (existsSync(resourceDir)) {
+            for (const resourceFile of readdirSync(resourceDir)) {
+                const resourcePath = joinPath(process.env.ZOWE_CLI_HOME, resourceFile);
+                if (existsSync(resourcePath + ".bak")) {
+                    renameSync(resourcePath + ".bak", resourcePath);
+                }
+            }
         }
     },
 
