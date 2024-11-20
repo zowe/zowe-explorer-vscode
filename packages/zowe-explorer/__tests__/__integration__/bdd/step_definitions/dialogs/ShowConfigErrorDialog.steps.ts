@@ -22,20 +22,17 @@ Then("the Show Config dialog should appear", async function () {
     this.workbench = await browser.getWorkbench();
 
     let configNotification: Notification;
-    await browser.waitUntil(
-        async () => {
-            const notifications = await (this.workbench as Workbench).getNotifications();
-            for (const n of notifications) {
-                const msg = await n.getMessage();
-                if (msg.startsWith("Error encountered when loading your Zowe config.")) {
-                    configNotification = n;
-                    return true;
-                }
+    await browser.waitUntil(async () => {
+        const notifications = await (this.workbench as Workbench).getNotifications();
+        for (const n of notifications) {
+            const msg = await n.getMessage();
+            if (msg.startsWith("Error encountered when loading your Zowe config.")) {
+                configNotification = n;
+                return true;
             }
-            return false;
-        },
-        { timeout: 60000 }
-    );
+        }
+        return false;
+    });
 
     await expect(configNotification).toBeDefined();
     this.configErrorDialog = configNotification;
