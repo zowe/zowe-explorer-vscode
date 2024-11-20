@@ -29,8 +29,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue where profile credential updates or token changes were not reflected within the filesystem. [#3289](https://github.com/zowe/zowe-explorer-vscode/issues/3289)
 - Fixed issue to update the success message when changing authentication from token to basic through the 'Change Authentication' option.
 - Fixed an issue where fetching a USS file using `UssFSProvider.stat()` with a `fetch=true` query would cause Zowe Explorer to get stuck in an infinite loop.
-- Fixed an issue where a migrated data set was not usable in the tree after being recalled through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
-- Fixed an issue where a recalled data set would still be usable in the tree after being migrated through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
+- Fixed an issue where a migrated data set is unusable after it is recalled through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
+- Fixed an issue where a recalled PDS is expandable after it is migrated through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
+- Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
 
 ## `3.0.2`
 
