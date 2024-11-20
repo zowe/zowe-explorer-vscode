@@ -457,7 +457,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetRecalled", () => {
             profile: createIProfile(),
         });
         await (dsNode as any).datasetRecalled(false);
-        expect(dsNode.command).toBe({ command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [dsNode] });
+        expect(dsNode.command).toStrictEqual({ command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [dsNode] });
     });
 
     it("updates the icon to folder - PDS", async () => {
