@@ -130,6 +130,10 @@ export class TreeViewUtils {
 
         for (const doc of openedTextDocuments) {
             if ((doc.fileName === currentFilePath || SharedUtils.checkIfChildPath(currentFilePath, doc.fileName)) && doc.isDirty) {
+                ZoweLogger.error(
+                    `TreeViewUtils.errorForUnsavedResource: detected unsaved changes in ${doc.fileName},` +
+                        `trying to ${action} node: ${node.label as string}`
+                );
                 Gui.errorMessage(
                     l10n.t({
                         message: "Unable to {0} {1} because you have unsaved changes in this {2}. " + "Please save your work and try again.",
