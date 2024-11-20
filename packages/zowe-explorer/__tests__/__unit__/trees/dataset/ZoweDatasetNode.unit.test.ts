@@ -783,6 +783,24 @@ describe("ZoweDatasetNode Unit Tests - function datasetRecalled", () => {
         );
     });
 
+    it("adds a command to the node - PS", async () => {
+        const dsNode = new ZoweDatasetNode({
+            label: "MIGRATED.PS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
+            parentNode: createDatasetSessionNode(createISession(), createIProfile()),
+            profile: createIProfile(),
+        });
+        await (dsNode as any).datasetRecalled(false);
+        expect(dsNode.resourceUri).toStrictEqual(
+            vscode.Uri.from({
+                scheme: ZoweScheme.DS,
+                path: "/sestest/MIGRATED.PS",
+            })
+        );
+        expect(dsNode.command).toStrictEqual({ command: "vscode.open", title: "", arguments: [dsNode.resourceUri] });
+    });
+
     it("creates a file system entry - PDS", async () => {
         const dsNode = new ZoweDatasetNode({
             label: "MIGRATED.PDS",
