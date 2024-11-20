@@ -704,7 +704,7 @@ describe("Shared utils unit tests - function debounce", () => {
         const mockEventHandler = jest.fn();
         const debouncedFn = SharedUtils.debounce(mockEventHandler, 100);
         debouncedFn();
-        jest.advanceTimersByTime(0);
+        jest.advanceTimersByTime(10);
         debouncedFn();
         jest.runAllTimers();
         expect(mockEventHandler).toHaveBeenCalledTimes(1);
