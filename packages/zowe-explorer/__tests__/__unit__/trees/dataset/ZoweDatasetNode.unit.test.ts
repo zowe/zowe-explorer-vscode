@@ -754,7 +754,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.setStats", () => {
     });
 });
 
-describe("ZoweDatasetNode Unit Tests - function datasetNodeRecalled", () => {
+describe("ZoweDatasetNode Unit Tests - function datasetRecalled", () => {
     it("changes the collapsible state", async () => {
         const dsNode = new ZoweDatasetNode({
             label: "MIGRATED.PDS",
@@ -762,7 +762,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetNodeRecalled", () => {
             contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
             profile: createIProfile(),
         });
-        await (ZoweDatasetNode as any).datasetNodeRecalled(dsNode, true);
+        await (dsNode as any).datasetRecalled(true);
         expect(dsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
     });
 
@@ -774,7 +774,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetNodeRecalled", () => {
             parentNode: createDatasetSessionNode(createISession(), createIProfile()),
             profile: createIProfile(),
         });
-        await (ZoweDatasetNode as any).datasetNodeRecalled(dsNode, true);
+        await (dsNode as any).datasetRecalled(true);
         expect(dsNode.resourceUri).toStrictEqual(
             vscode.Uri.from({
                 scheme: ZoweScheme.DS,
@@ -791,7 +791,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetNodeRecalled", () => {
             profile: createIProfile(),
         });
         const createDirMock = jest.spyOn(vscode.workspace.fs, "createDirectory").mockImplementation();
-        await await (ZoweDatasetNode as any).datasetNodeRecalled(dsNode, true);
+        await (dsNode as any).datasetRecalled(true);
         expect(createDirMock).toHaveBeenCalledWith(dsNode.resourceUri);
     });
 
@@ -804,7 +804,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetNodeRecalled", () => {
             profile: createIProfile(),
         });
         const writeFileMock = jest.spyOn(vscode.workspace.fs, "writeFile").mockImplementation();
-        await await (ZoweDatasetNode as any).datasetNodeRecalled(dsNode, false);
+        await (dsNode as any).datasetRecalled(false);
         expect(writeFileMock).toHaveBeenCalledWith(dsNode.resourceUri, new Uint8Array());
     });
 
@@ -815,7 +815,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetNodeRecalled", () => {
             contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
             profile: createIProfile(),
         });
-        await (ZoweDatasetNode as any).datasetNodeRecalled(dsNode, true);
+        await (dsNode as any).datasetRecalled(true);
         expect(dsNode.iconPath).toBe(IconGenerator.getIconById(IconUtils.IconId.folder).path);
     });
 
@@ -826,12 +826,12 @@ describe("ZoweDatasetNode Unit Tests - function datasetNodeRecalled", () => {
             contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
             profile: createIProfile(),
         });
-        await (ZoweDatasetNode as any).datasetNodeRecalled(dsNode, false);
+        await (dsNode as any).datasetRecalled(false);
         expect(dsNode.iconPath).toBe(IconGenerator.getIconById(IconUtils.IconId.document).path);
     });
 });
 
-describe("ZoweDatasetNode Unit Tests - function datasetNodeMigrated", () => {
+describe("ZoweDatasetNode Unit Tests - function datasetMigrated", () => {
     it("changes the collapsible state", () => {
         const dsNode = new ZoweDatasetNode({
             label: "SOME.PDS",
@@ -839,7 +839,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetNodeMigrated", () => {
             contextOverride: Constants.DS_PDS_CONTEXT,
             profile: createIProfile(),
         });
-        (ZoweDatasetNode as any).datasetNodeMigrated(dsNode, true);
+        (dsNode as any).datasetMigrated();
         expect(dsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
     });
 
@@ -851,7 +851,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetNodeMigrated", () => {
             parentNode: createDatasetSessionNode(createISession(), createIProfile()),
             profile: createIProfile(),
         });
-        (ZoweDatasetNode as any).datasetNodeMigrated(dsNode);
+        (dsNode as any).datasetMigrated();
         expect(dsNode.resourceUri).toBeUndefined();
         expect(dsNode.command).toBeUndefined();
     });
@@ -865,7 +865,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetNodeMigrated", () => {
         });
         const uri = dsNode.resourceUri;
         const removeEntryMock = jest.spyOn(DatasetFSProvider.instance, "removeEntry").mockImplementation();
-        (ZoweDatasetNode as any).datasetNodeMigrated(dsNode);
+        (dsNode as any).datasetMigrated();
         expect(removeEntryMock).toHaveBeenCalledWith(uri);
     });
 
@@ -876,7 +876,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetNodeMigrated", () => {
             contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
             profile: createIProfile(),
         });
-        (ZoweDatasetNode as any).datasetNodeMigrated(dsNode);
+        (dsNode as any).datasetMigrated();
         expect(dsNode.iconPath).toBe(IconGenerator.getIconById(IconUtils.IconId.migrated).path);
     });
 });

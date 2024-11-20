@@ -191,52 +191,50 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     /**
-     * Updates an existing data set node that was recalled so it can be interacted with.
-     * @param node The data set node to update (previously marked as migrated)
+     * Updates this node so the recalled data set can be interacted with.
      */
-    private static async datasetNodeRecalled(node: ZoweDatasetNode, isPds: boolean): Promise<void> {
+    private async datasetRecalled(isPds: boolean): Promise<void> {
         // Change context value to match dsorg, update collapsible state and assign resource URI
-        node.contextValue = isPds ? Constants.DS_PDS_CONTEXT : Constants.DS_DS_CONTEXT;
-        node.collapsibleState =
-            node.contextValue === Constants.DS_PDS_CONTEXT ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
-        node.resourceUri = vscode.Uri.from({
+        this.contextValue = isPds ? Constants.DS_PDS_CONTEXT : Constants.DS_DS_CONTEXT;
+        this.collapsibleState =
+            this.contextValue === Constants.DS_PDS_CONTEXT ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
+        this.resourceUri = vscode.Uri.from({
             scheme: ZoweScheme.DS,
-            path: `/${SharedUtils.getSessionLabel(node)}/${node.label as string}`,
+            path: `/${SharedUtils.getSessionLabel(this)}/${this.label as string}`,
         });
 
         // Replace icon on existing node with new one
-        const icon = IconGenerator.getIconByNode(node);
+        const icon = IconGenerator.getIconByNode(this);
         if (icon) {
-            node.setIcon(icon.path);
+            this.setIcon(icon.path);
         }
 
         // Create entry in the filesystem to represent the recalled data set
         if (isPds) {
-            await vscode.workspace.fs.createDirectory(node.resourceUri);
+            await vscode.workspace.fs.createDirectory(this.resourceUri);
         } else {
-            await vscode.workspace.fs.writeFile(node.resourceUri, new Uint8Array());
+            await vscode.workspace.fs.writeFile(this.resourceUri, new Uint8Array());
         }
     }
 
     /**
-     * Updates a data set node so it is marked as migrated.
-     * @param node The data set node to mark as migrated
+     * Updates this data set node so it is marked as migrated.
      */
-    private static datasetNodeMigrated(node: ZoweDatasetNode): void {
+    private datasetMigrated(): void {
         // Change the context value and collapsible state to represent a migrated data set
-        node.contextValue = Constants.DS_MIGRATED_FILE_CONTEXT;
-        node.collapsibleState = vscode.TreeItemCollapsibleState.None;
+        this.contextValue = Constants.DS_MIGRATED_FILE_CONTEXT;
+        this.collapsibleState = vscode.TreeItemCollapsibleState.None;
 
         // Remove the entry from the file system
-        DatasetFSProvider.instance.removeEntry(node.resourceUri);
+        DatasetFSProvider.instance.removeEntry(this.resourceUri);
 
         // Remove the node's resource URI and command
-        node.resourceUri = node.command = undefined;
+        this.resourceUri = this.command = undefined;
 
         // Assign migrated icon to the data set node
-        const icon = IconGenerator.getIconByNode(node);
+        const icon = IconGenerator.getIconByNode(this);
         if (icon) {
-            node.setIcon(icon.path);
+            this.setIcon(icon.path);
         }
     }
 
@@ -300,9 +298,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 if (dsNode != null) {
                     elementChildren[dsNode.label.toString()] = dsNode;
                     if (SharedContext.isMigrated(dsNode) && item.migr?.toUpperCase() !== "YES") {
-                        await ZoweDatasetNode.datasetNodeRecalled(dsNode, item.dsorg === "PO" || item.dsorg === "PO-E");
+                        await dsNode.datasetRecalled(item.dsorg === "PO" || item.dsorg === "PO-E");
                     } else if (!SharedContext.isMigrated(dsNode) && item.migr?.toUpperCase() === "YES") {
-                        ZoweDatasetNode.datasetNodeMigrated(dsNode);
+                        dsNode.datasetMigrated();
                     }
                     // Creates a ZoweDatasetNode for a PDS
                 } else if (item.migr && item.migr.toUpperCase() === "YES") {
