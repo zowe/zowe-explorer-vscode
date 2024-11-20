@@ -252,7 +252,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
     private static updateSessionContext(profileName: string, status: Validation.ValidationType): void {
         for (const provider of Object.values(SharedTreeProviders.providers)) {
             const session = (provider as IZoweTree<IZoweTreeNode>).mSessionNodes.find((n) => n.getProfileName() === profileName);
-            (provider as ZoweTreeProvider<IZoweTreeNode>)?.setStatusForSession(session, status);
+            (provider as ZoweTreeProvider<IZoweTreeNode>).setStatusForSession(session, status);
         }
     }
 

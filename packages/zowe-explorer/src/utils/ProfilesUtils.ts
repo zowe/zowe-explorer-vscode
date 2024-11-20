@@ -334,36 +334,37 @@ export class ProfilesUtils {
     public static async readConfigFromDisk(warnForMissingSchema?: boolean): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.readConfigFromDisk called.");
         let rootPath: string;
-        ProfilesUtils.mProfileInfo = await ProfilesUtils.setupProfileInfo();
+        const profInfo = await ProfilesUtils.setupProfileInfo();
         const workspacePath = ZoweVsCodeExtension.workspaceRoot?.uri.fsPath;
         if (workspacePath) {
             rootPath = workspacePath;
-            await ProfilesUtils.mProfileInfo.readProfilesFromDisk({
+            await profInfo.readProfilesFromDisk({
                 homeDir: FileManagement.getZoweDir(),
                 projectDir: FileManagement.getFullPath(rootPath),
             });
         } else {
-            await ProfilesUtils.mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: undefined });
+            await profInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: undefined });
         }
-        if (ProfilesUtils.mProfileInfo.getTeamConfig().exists) {
-            if (warnForMissingSchema && !ProfilesUtils.mProfileInfo.hasValidSchema) {
+        ProfilesUtils.mProfileInfo = profInfo;
+        if (profInfo.getTeamConfig().exists) {
+            if (warnForMissingSchema && !profInfo.hasValidSchema) {
                 const schemaWarning = vscode.l10n.t(
                     "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer."
                 );
                 Gui.warningMessage(schemaWarning);
                 ZoweLogger.warn(schemaWarning);
             }
-            ZoweLogger.info(`Zowe Explorer is using the team configuration file "${ProfilesUtils.mProfileInfo.getTeamConfig().configName}"`);
-            const layers = ProfilesUtils.mProfileInfo.getTeamConfig().layers || [];
+            ZoweLogger.info(`Zowe Explorer is using the team configuration file "${profInfo.getTeamConfig().configName}"`);
+            const layers = profInfo.getTeamConfig().layers || [];
             const layerSummary = layers.map(
                 (config: imperative.IConfigLayer) =>
-                    `Path: ${config.path}: ${
+                    `Path: ${config.path}, ${
                         config.exists
-                            ? "Found, with the following defaults:" + JSON.stringify(config.properties?.defaults || "Undefined default")
+                            ? "Found with the following defaults: " + JSON.stringify(config.properties?.defaults || "Undefined default")
                             : "Not available"
                     } `
             );
-            ZoweLogger.debug(`Summary of team configuration files considered for Zowe Explorer: ${JSON.stringify(layerSummary)}`);
+            ZoweLogger.debug(["Summary of team configuration files considered for Zowe Explorer:", ...layerSummary].join("\t\n"));
         }
     }
 
@@ -564,7 +565,8 @@ export class ProfilesUtils {
             await ProfilesUtils.readConfigFromDisk(true);
             ZoweLogger.info(vscode.l10n.t("Zowe profiles initialized successfully."));
         } catch (err) {
-            if (err instanceof imperative.ImperativeError) {
+            // JSON parsing errors in team config files will have suppressDump=true
+            if (err instanceof imperative.ImperativeError && !err.mDetails.suppressDump) {
                 await AuthUtils.errorHandling(err, { scenario: err.mDetails.causeErrors });
             } else {
                 ZoweLogger.error(err);

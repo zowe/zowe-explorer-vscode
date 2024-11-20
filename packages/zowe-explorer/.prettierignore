@@ -4,3 +4,4 @@ scripts
 src/webviews/dist
 l10n/bundle.l10n.json
 __tests__/__common__/.wdio-vscode-service
+__tests__/__integration__/bdd/resources
