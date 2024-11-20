@@ -445,7 +445,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetRecalled", () => {
             contextOverride: globals.DS_MIGRATED_FILE_CONTEXT,
             profile: createIProfile(),
         });
-        await (ZoweDatasetNode as any).datasetRecalled(dsNode, true);
+        await (dsNode as any).datasetRecalled(true);
         expect(dsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
     });
 
@@ -456,7 +456,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetRecalled", () => {
             contextOverride: globals.DS_MIGRATED_FILE_CONTEXT,
             profile: createIProfile(),
         });
-        await (ZoweDatasetNode as any).datasetRecalled(dsNode, true);
+        await (dsNode as any).datasetRecalled(true);
         expect(dsNode.iconPath).toBe(getIconById(IconId.folder).path);
     });
 
@@ -467,7 +467,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetRecalled", () => {
             contextOverride: globals.DS_MIGRATED_FILE_CONTEXT,
             profile: createIProfile(),
         });
-        await (ZoweDatasetNode as any).datasetRecalled(dsNode, false);
+        await (dsNode as any).datasetRecalled(false);
         expect(dsNode.iconPath).toBe(getIconById(IconId.document).path);
     });
 });
@@ -480,7 +480,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetMigrated", () => {
             contextOverride: globals.DS_PDS_CONTEXT,
             profile: createIProfile(),
         });
-        (ZoweDatasetNode as any).datasetMigrated(dsNode, true);
+        (dsNode as any).datasetMigrated();
         expect(dsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
     });
 
@@ -492,7 +492,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetMigrated", () => {
             parentNode: createDatasetSessionNode(createISession(), createIProfile()),
             profile: createIProfile(),
         });
-        (ZoweDatasetNode as any).datasetMigrated(dsNode);
+        (dsNode as any).datasetMigrated();
         expect(dsNode.resourceUri).toBeUndefined();
         expect(dsNode.command).toBeUndefined();
     });
@@ -504,7 +504,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetMigrated", () => {
             contextOverride: globals.DS_MIGRATED_FILE_CONTEXT,
             profile: createIProfile(),
         });
-        (ZoweDatasetNode as any).datasetMigrated(dsNode);
+        (dsNode as any).datasetMigrated();
         expect(dsNode.iconPath).toBe(getIconById(IconId.migrated).path);
     });
 });
