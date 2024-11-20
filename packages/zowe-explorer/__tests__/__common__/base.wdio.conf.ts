@@ -10,6 +10,8 @@
  */
 
 import type { Options } from "@wdio/types";
+import { tmpdir } from "os";
+import { join as joinPath } from "path";
 
 export const baseConfig: Partial<Options.Testrunner> = {
     //
@@ -207,3 +209,5 @@ export const baseConfig: Partial<Options.Testrunner> = {
     // afterAssertion: function(params) {
     // }
 };
+
+export const dataDir = joinPath(process.platform === "darwin" ? tmpdir() : __dirname, ".wdio-vscode-service", "data");

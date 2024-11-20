@@ -6,7 +6,7 @@ Scenario: User opens and dismisses the Team Configuration quick pick
 
 # Scenario: User creates a global Team Configuration file
 #     Given a user who is looking at the Add Config quick pick
-#     When a user selects "Create a new Team Configuration file"
+#     When a user selects 'Create a new Team Configuration file'
 #     Then a new configuration file will be created and opened in the editor
 #     Then it will ask the user for the desired config location
 #     When the user selects the global option
@@ -14,7 +14,7 @@ Scenario: User opens and dismisses the Team Configuration quick pick
 
 Scenario: User edits Team Configuration file
     Given a user who is looking at the Add Config quick pick
-    When a user selects "Edit Team Configuration File"
+    When a user selects 'Edit Team Configuration File'
     Then it will open the config in the editor
 
 Scenario Outline: User wants to add a profile to the tree views
@@ -23,7 +23,7 @@ Scenario Outline: User wants to add a profile to the tree views
     Then it will prompt the user to add the profile to one or all trees
     When a user selects <opt> to apply to all trees
     Then it will add a tree item for the profile to the correct trees
-    
+
     Examples:
       | opt |
       | No |
