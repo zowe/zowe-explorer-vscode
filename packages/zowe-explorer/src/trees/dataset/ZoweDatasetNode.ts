@@ -192,6 +192,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
     /**
      * Updates this node so the recalled data set can be interacted with.
+     * @param isPds Whether the data set is a PDS
      */
     private async datasetRecalled(isPds: boolean): Promise<void> {
         // Change context value to match dsorg, update collapsible state and assign resource URI
