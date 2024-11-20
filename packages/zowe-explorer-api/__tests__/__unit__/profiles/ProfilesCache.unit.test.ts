@@ -548,22 +548,22 @@ describe("ProfilesCache", () => {
     describe("getProfileSessionWithVscProxy", () => {
         it("should return same session if no VSC proxy values", () => {
             const fakeSession = imperative.Session.createFromUrl(new URL("https://example.com"));
-            jest.spyOn(VscSettings, "getVsCodeProxySettings").mockReturnValue(undefined);
+            jest.spyOn(VscSettings, "getVsCodeProxySettings").mockReturnValue(undefined as any);
             expect(ProfilesCache.getProfileSessionWithVscProxy(fakeSession)).toEqual(fakeSession);
         });
-        // it("should return updated session if VSC proxy values", () => {
-        //     const fakeSession = imperative.Session.createFromUrl(new URL("https://example.com"));
-        //     const proxyValues = {
-        //         http_proxy: "fake.com",
-        //         https_proxy: "fake.com",
-        //         no_proxy: ["zowe.com"],
-        //         proxy_authorization: null,
-        //         proxy_strict_ssl: true,
-        //     };
-        //     fakeSession.ISession.proxy = proxyValues;
-        //     jest.spyOn(VscSettings, "getVsCodeProxySettings").mockReturnValue(proxyValues);
-        //     expect(ProfilesCache.getProfileSessionWithVscProxy(fakeSession)).toEqual(fakeSession);
-        // });
+        it("should return updated session if VSC proxy values", () => {
+            const fakeSession = imperative.Session.createFromUrl(new URL("https://example.com"));
+            const proxyValues = {
+                http_proxy: "fake.com",
+                https_proxy: "fake.com",
+                no_proxy: ["zowe.com"],
+                proxy_authorization: null,
+                proxy_strict_ssl: true,
+            };
+            fakeSession.ISession.proxy = proxyValues as any;
+            jest.spyOn(VscSettings, "getVsCodeProxySettings").mockReturnValue(proxyValues as any);
+            expect(ProfilesCache.getProfileSessionWithVscProxy(fakeSession)).toEqual(fakeSession);
+        });
     });
 
     it("getProfileFromConfig should return profile attributes for given name", async () => {

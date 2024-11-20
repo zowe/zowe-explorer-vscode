@@ -23,7 +23,6 @@ export class VscSettings {
         return vscode.workspace.getConfiguration(first).get(rest.join("."), defaultValue);
     }
 
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     public static getVsCodeProxySettings(): imperative.ProxyVariables {
         const proxySupport = this.getDirectValue("http.proxySupport");
         if (proxySupport !== "on") {
