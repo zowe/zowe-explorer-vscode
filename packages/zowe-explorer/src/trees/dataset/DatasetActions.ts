@@ -1380,11 +1380,7 @@ export class DatasetActions {
                     })
                 );
                 const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
-                node.contextValue = Constants.DS_MIGRATED_FILE_CONTEXT;
-                node.collapsibleState = vscode.TreeItemCollapsibleState.None;
-                node.resourceUri = undefined;
-                node.command = undefined;
-                node.setIcon(IconGenerator.getIconByNode(node).path);
+                node.datasetMigrated();
                 datasetProvider.nodeDataChanged(node);
                 return response;
             } catch (err) {

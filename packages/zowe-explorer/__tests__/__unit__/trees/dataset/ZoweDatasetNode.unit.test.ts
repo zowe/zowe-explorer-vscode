@@ -857,7 +857,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetMigrated", () => {
             contextOverride: Constants.DS_PDS_CONTEXT,
             profile: createIProfile(),
         });
-        (dsNode as any).datasetMigrated();
+        dsNode.datasetMigrated();
         expect(dsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
     });
 
@@ -869,7 +869,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetMigrated", () => {
             parentNode: createDatasetSessionNode(createISession(), createIProfile()),
             profile: createIProfile(),
         });
-        (dsNode as any).datasetMigrated();
+        dsNode.datasetMigrated();
         expect(dsNode.resourceUri).toBeUndefined();
         expect(dsNode.command).toBeUndefined();
     });
@@ -883,7 +883,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetMigrated", () => {
         });
         const uri = dsNode.resourceUri;
         const removeEntryMock = jest.spyOn(DatasetFSProvider.instance, "removeEntry").mockImplementation();
-        (dsNode as any).datasetMigrated();
+        dsNode.datasetMigrated();
         expect(removeEntryMock).toHaveBeenCalledWith(uri);
     });
 
@@ -894,7 +894,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetMigrated", () => {
             contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
             profile: createIProfile(),
         });
-        (dsNode as any).datasetMigrated();
+        dsNode.datasetMigrated();
         expect(dsNode.iconPath).toBe(IconGenerator.getIconById(IconUtils.IconId.migrated).path);
     });
 });
