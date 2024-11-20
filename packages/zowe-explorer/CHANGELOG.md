@@ -6,6 +6,15 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+### Bug fixes
+
+- Fixed an issue during initialization where the error dialog shown for a broken team configuration file was missing the "Show Config" action. [#3322](https://github.com/zowe/zowe-explorer-vscode/pull/3322)
+- Fixed an issue where renaming a data set with unsaved changes did not cancel the rename operation. Now, when renaming a data set with unsaved changes, you are prompted to resolve them before continuing. [#3326](https://github.com/zowe/zowe-explorer-vscode/pull/3326)
+
+## `3.0.3`
+
+### New features and enhancements
+
 - Update Zowe SDKs to `8.2.0` to get the latest enhancements from Imperative.
 - Added expired JSON web token detection for profiles in each tree view (Data Sets, USS, Jobs). When a user performs a search on a profile, they are prompted to log in if their token expired. [#3175](https://github.com/zowe/zowe-explorer-vscode/issues/3175)
 - Add a data set or USS resource to a virtual workspace with the new "Add to Workspace" context menu option. [#3265](https://github.com/zowe/zowe-explorer-vscode/issues/3265)
@@ -29,10 +38,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue where users were not prompted to enter credentials if a 401 error was encountered when opening files, data sets or spools in the editor. [#3197](https://github.com/zowe/zowe-explorer-vscode/issues/3197)
 - Fixed issue where profile credential updates or token changes were not reflected within the filesystem. [#3289](https://github.com/zowe/zowe-explorer-vscode/issues/3289)
 - Fixed issue to update the success message when changing authentication from token to basic through the 'Change Authentication' option. [#3316](https://github.com/zowe/zowe-explorer-vscode/pull/3316)
-- Fixed an issue where editing a team config file or updating credentials in OS vault could trigger multiple events for a single action. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
+- Fixed an issue where fetching a USS file using `UssFSProvider.stat()` with a `fetch=true` query would cause Zowe Explorer to get stuck in an infinite loop. [#3321](https://github.com/zowe/zowe-explorer-vscode/pull/3321)
+- Fixed an issue where editing a team config file or updating secrets in the OS credential vault could trigger multiple events for a single action. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
 - Updated Zowe SDKs to `8.8.2` for technical currency. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
-- Fixed an issue where fetching a USS file using `UssFSProvider.stat()` with a `fetch=true` query would cause Zowe Explorer to get stuck in an infinite loop.
-- Fixed an issue where renaming a data set with unsaved changes did not cancel the rename operation. Now, when renaming a data set with unsaved changes, you are prompted to resolve them before continuing. [#3326](https://github.com/zowe/zowe-explorer-vscode/pull/3326)
 
 ## `3.0.2`
 
