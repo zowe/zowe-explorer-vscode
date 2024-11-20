@@ -1359,10 +1359,7 @@ export async function hMigrateDataSet(
         try {
             const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
             api.Gui.showMessage(localize("hMigrateDataSet.requestSent", "Migration of data set {0} requested.", dataSetName));
-            node.contextValue = globals.DS_MIGRATED_FILE_CONTEXT;
-            node.collapsibleState = vscode.TreeItemCollapsibleState.None;
-            node.command = undefined;
-            node.setIcon(getIconByNode(node).path);
+            node.datasetMigrated();
             datasetProvider.refresh();
             return response;
         } catch (err) {

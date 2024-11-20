@@ -156,7 +156,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     /**
      * Updates a data set node so it is marked as migrated.
      */
-    private datasetMigrated(): void {
+    public datasetMigrated(): void {
         // Change the context value and collapsible state to represent a migrated data set
         this.contextValue = globals.DS_MIGRATED_FILE_CONTEXT;
         this.collapsibleState = vscode.TreeItemCollapsibleState.None;

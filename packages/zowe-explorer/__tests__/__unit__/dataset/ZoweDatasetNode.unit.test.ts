@@ -491,7 +491,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetMigrated", () => {
             contextOverride: globals.DS_PDS_CONTEXT,
             profile: createIProfile(),
         });
-        (dsNode as any).datasetMigrated();
+        dsNode.datasetMigrated();
         expect(dsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
     });
 
@@ -503,7 +503,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetMigrated", () => {
             parentNode: createDatasetSessionNode(createISession(), createIProfile()),
             profile: createIProfile(),
         });
-        (dsNode as any).datasetMigrated();
+        dsNode.datasetMigrated();
         expect(dsNode.resourceUri).toBeUndefined();
         expect(dsNode.command).toBeUndefined();
     });
@@ -515,7 +515,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetMigrated", () => {
             contextOverride: globals.DS_MIGRATED_FILE_CONTEXT,
             profile: createIProfile(),
         });
-        (dsNode as any).datasetMigrated();
+        dsNode.datasetMigrated();
         expect(dsNode.iconPath).toBe(getIconById(IconId.migrated).path);
     });
 });
