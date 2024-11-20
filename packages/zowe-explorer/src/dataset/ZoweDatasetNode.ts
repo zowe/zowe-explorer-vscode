@@ -135,7 +135,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * Updates an existing data set node that was recalled so it can be interacted with.
      * @param node The data set node to update (previously marked as migrated)
      */
-    private static datasetNodeRecalled(node: ZoweDatasetNode, isPds: boolean): void {
+    private static datasetRecalled(node: ZoweDatasetNode, isPds: boolean): void {
         // Change context value to match dsorg, update collapsible state and assign resource URI
         node.contextValue = isPds ? globals.DS_PDS_CONTEXT : globals.DS_DS_CONTEXT;
         node.collapsibleState =
@@ -152,7 +152,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * Updates a data set node so it is marked as migrated.
      * @param node The data set node to mark as migrated
      */
-    private static datasetNodeMigrated(node: ZoweDatasetNode): void {
+    private static datasetMigrated(node: ZoweDatasetNode): void {
         // Change the context value and collapsible state to represent a migrated data set
         node.contextValue = globals.DS_MIGRATED_FILE_CONTEXT;
         node.collapsibleState = vscode.TreeItemCollapsibleState.None;
@@ -219,9 +219,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 const existing = this.children.find((element) => element.label.toString() === dsEntry);
                 if (existing) {
                     if (contextually.isMigrated(existing) && item.migr?.toUpperCase() !== "YES") {
-                        ZoweDatasetNode.datasetNodeRecalled(existing, item.dsorg === "PO" || item.dsorg === "PO-E");
+                        ZoweDatasetNode.datasetRecalled(existing, item.dsorg === "PO" || item.dsorg === "PO-E");
                     } else if (!contextually.isMigrated(existing) && item.migr?.toUpperCase() === "YES") {
-                        ZoweDatasetNode.datasetNodeMigrated(existing);
+                        ZoweDatasetNode.datasetMigrated(existing);
                     }
                     existing.updateStats(item);
                     elementChildren[existing.label.toString()] = existing;
