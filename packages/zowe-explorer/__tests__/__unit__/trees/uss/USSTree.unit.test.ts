@@ -1186,7 +1186,7 @@ describe("USSTree Unit Tests - Function addSingleSession", () => {
 
         await ussTree.addSingleSession(profile1);
 
-        const sessionNode = ussTree.mSessionNodes.find((tNode) => tNode.label?.toString() === profile1.name)
+        const sessionNode = ussTree.mSessionNodes.find((tNode) => tNode.label?.toString() === profile1.name);
 
         expect(sessionNode).toBeDefined();
 

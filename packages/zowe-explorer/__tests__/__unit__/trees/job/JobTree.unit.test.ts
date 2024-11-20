@@ -278,7 +278,7 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
 
         await jobTree.addSingleSession(profile1);
 
-        const sessionNode = jobTree.mSessionNodes.find((tNode) => tNode.label?.toString() === profile1.name)
+        const sessionNode = jobTree.mSessionNodes.find((tNode) => tNode.label?.toString() === profile1.name);
 
         expect(sessionNode).toBeDefined();
 
