@@ -4,7 +4,7 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### New features and enhancements
 
-- Update Zowe SDKs to `8.7.0` to get the latest enhancements from Imperative.
+- Update Zowe SDKs to `8.8.2` to get the latest enhancements from Imperative. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
 
 ### Bug fixes
 
