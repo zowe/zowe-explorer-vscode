@@ -11,6 +11,11 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ### Bug fixes
 
 - Fixed an issue to review inconsistent capitalization across translation strings. [#2935](https://github.com/zowe/zowe-explorer-vscode/issues/2935)
+
+## `3.0.3`
+
+### Bug fixes
+
 - Fixed an issue where the `responseTimeout` profile property was ignored for z/OSMF MVS and USS API calls. [#3225](https://github.com/zowe/zowe-explorer-vscode/issues/3225)
 - Fixed an issue where the assignment of the `profile` property in `ZoweTreeNode.setProfileToChoice` caused references to that object to break elsewhere. [#3289](https://github.com/zowe/zowe-explorer-vscode/issues/3289)
 
