@@ -137,9 +137,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      */
     private datasetRecalled(isPds: boolean): void {
         // Change context value to match dsorg, update collapsible state
-        this.contextValue = isPds ? globals.DS_PDS_CONTEXT : globals.DS_DS_CONTEXT;
-        this.collapsibleState =
-            this.contextValue === globals.DS_PDS_CONTEXT ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
+        // Preserve favorite context and any additional context values
+        this.contextValue = this.contextValue.replace(globals.DS_MIGRATED_FILE_CONTEXT, isPds ? globals.DS_PDS_CONTEXT : globals.DS_DS_CONTEXT);
+        this.collapsibleState = isPds ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
 
         // For sequential data sets, re-apply the command so that they can be opened
         if (!isPds) {
@@ -158,7 +158,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      */
     public datasetMigrated(): void {
         // Change the context value and collapsible state to represent a migrated data set
-        this.contextValue = globals.DS_MIGRATED_FILE_CONTEXT;
+        // Preserve favorite context and any additional context values
+        const isBinary = contextually.isBinary(this);
+        const isPds = this.collapsibleState !== vscode.TreeItemCollapsibleState.None;
+        let previousContext = isBinary ? globals.DS_DS_BINARY_CONTEXT : globals.DS_DS_CONTEXT;
+        if (isPds) {
+            previousContext = globals.DS_PDS_CONTEXT;
+        }
+        this.contextValue = this.contextValue.replace(previousContext, globals.DS_MIGRATED_FILE_CONTEXT);
         this.collapsibleState = vscode.TreeItemCollapsibleState.None;
 
         // Remove the node's command
