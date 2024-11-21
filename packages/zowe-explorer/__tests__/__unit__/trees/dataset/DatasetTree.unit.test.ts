@@ -71,7 +71,7 @@ function createGlobalMocks() {
 
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
 
-    Object.defineProperty(ZoweLocalStorage, "storage", {
+    Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
             update: jest.fn(),
@@ -1022,6 +1022,22 @@ describe("USSTree Unit Tests - Function addSingleSession", () => {
         await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
 
         expect(blockMocks.testTree.mSessionNodes.length).toEqual(2);
+    });
+
+    it("Tests that addSingleSession adds type info to the session", async () => {
+        const dsTree = new DatasetTree();
+        const profile1 = await createIProfile();
+
+        profile1.name = "test1Profile";
+
+        await dsTree.addSingleSession(profile1);
+
+        const sessionNode = dsTree.mSessionNodes.find((tNode) => tNode.label?.toString() === profile1.name);
+
+        expect(sessionNode).toBeDefined();
+
+        const context = sessionNode?.contextValue;
+        expect(context).toContain("_type=zosmf");
     });
 
     it("Tests that addSingleSession successfully adds a session", async () => {

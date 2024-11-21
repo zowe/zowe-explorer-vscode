@@ -38,7 +38,7 @@ describe("TreeViewUtils Unit Tests", () => {
         });
         newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
         newMocks.testDatasetTree.addFileHistory("[profile1]: TEST.NODE");
-        Object.defineProperty(ZoweLocalStorage, "storage", {
+        Object.defineProperty(ZoweLocalStorage, "globalState", {
             value: createPersistentConfig(),
             configurable: true,
         });

@@ -446,7 +446,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 session,
                 profile,
-                contextOverride: Constants.DS_SESSION_CONTEXT,
+                contextOverride: Constants.DS_SESSION_CONTEXT + Constants.TYPE_SUFFIX + profile.type,
             });
             if (profile.type !== "zosmf") {
                 // TODO: Why do we inject profiles in context value only for DS tree?
