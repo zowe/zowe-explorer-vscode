@@ -125,7 +125,6 @@ export class SettingsConfig {
         // Prompt user to reload VS Code window
         const reloadButton = vscode.l10n.t("Reload Window");
         const infoMsg = vscode.l10n.t(
-            // eslint-disable-next-line max-len
             "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window."
         );
         await Gui.showMessage(infoMsg, { items: [reloadButton] })?.then(async (selection) => {

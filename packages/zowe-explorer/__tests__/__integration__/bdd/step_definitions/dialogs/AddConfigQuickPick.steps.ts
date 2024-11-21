@@ -29,7 +29,7 @@ Given("a user who is looking at the Add Config quick pick", async function () {
 //
 // Scenario: User wants to create a new Team Configuration file
 //
-When('a user selects "Create a new Team Configuration file"', async function () {
+When("a user selects 'Create a new Team Configuration file'", async function () {
     const createTeamConfigEntry = await quickPick.findItem("＋ Create a New Team Configuration File");
     await expect(createTeamConfigEntry).toBeClickable();
     await createTeamConfigEntry.click();
@@ -70,7 +70,7 @@ Then("it will open the config in the editor", async function () {
 //
 // Scenario: User wants to edit existing Team Configuration file
 //
-When('a user selects "Edit Team Configuration File"', async function () {
+When("a user selects 'Edit Team Configuration File'", async function () {
     const editTeamConfigEntry = await quickPick.findItem("✏ Edit Team Configuration File");
     await expect(editTeamConfigEntry).toBeClickable();
     await editTeamConfigEntry.click();
