@@ -6,12 +6,26 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
-- Update Zowe SDKs to `8.2.0` to get the latest enhancements from Imperative.
+- Update Zowe SDKs to `8.8.4` to get the latest enhancements from the z/OS Files SDK. [#3306](https://github.com/zowe/zowe-explorer-vscode/pull/3306)
 - Added new `searchDataSets` API to provide the ability to search all data sets and PDS members that match a pattern for a string. [#3306](https://github.com/zowe/zowe-explorer-vscode/pull/3306)
+- Added optional `getLocalStorage` function to the `IApiExplorerExtender` interface to expose local storage access to Zowe Explorer extenders. [#3180](https://github.com/zowe/zowe-explorer-vscode/issues/3180)
+
+### Bug fixes
+
+## `3.0.3`
+
+### New features and enhancements
+
+- Update Zowe SDKs to `8.8.2` to get the latest enhancements from Imperative. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
 
 ### Bug fixes
 
 - Fixed an issue to review inconsistent capitalization across translation strings. [#2935](https://github.com/zowe/zowe-explorer-vscode/issues/2935)
+
+## `3.0.3`
+
+### Bug fixes
+
 - Fixed an issue where the `responseTimeout` profile property was ignored for z/OSMF MVS and USS API calls. [#3225](https://github.com/zowe/zowe-explorer-vscode/issues/3225)
 - Fixed an issue where the assignment of the `profile` property in `ZoweTreeNode.setProfileToChoice` caused references to that object to break elsewhere. [#3289](https://github.com/zowe/zowe-explorer-vscode/issues/3289)
 

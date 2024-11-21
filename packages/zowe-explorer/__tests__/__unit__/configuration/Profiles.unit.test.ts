@@ -27,7 +27,6 @@ import {
     createMockNode,
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
-import { createProfileManager } from "../../__mocks__/mockCreators/profiles";
 import { imperative, Gui, ZoweTreeNode, ZoweVsCodeExtension, IZoweTree, IZoweTreeNode, Validation, FileManagement } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
@@ -73,7 +72,6 @@ function createGlobalMocks(): { [key: string]: any } {
         testUSSTree: null as any as USSTree,
         testNode: createMockNode("test", Constants.DS_SESSION_CONTEXT),
         testSession: createISession(),
-        mockCliProfileManager: createProfileManager(),
         ProgressLocation: jest.fn().mockImplementation(() => {
             return {
                 Notification: 15,
@@ -146,7 +144,7 @@ function createGlobalMocks(): { [key: string]: any } {
         configurable: true,
     });
 
-    Object.defineProperty(ZoweLocalStorage, "storage", {
+    Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: jest.fn(() => ({ persistence: true })),
             update: jest.fn(),

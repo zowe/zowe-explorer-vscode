@@ -597,7 +597,6 @@ export class DatasetActions {
         );
         const deleteButton = vscode.l10n.t("Delete");
         const message = vscode.l10n.t({
-            // eslint-disable-next-line max-len
             message: `Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}`,
             args: [nodesToDelete.length, nodesToDelete.toString().replace(/(,)/g, "\n")],
             comment: ["Data Sets to delete length", "Data Sets to delete"],

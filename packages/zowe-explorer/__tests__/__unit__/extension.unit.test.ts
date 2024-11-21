@@ -81,9 +81,6 @@ async function createGlobalMocks() {
         mockCliHome: jest.fn().mockReturnValue(path.join(os.homedir(), ".zowe")),
         mockIcInstance: jest.fn(),
         mockImperativeConfig: jest.fn(),
-        mockCliProfileManager: jest.fn().mockImplementation(() => {
-            return { GetAllProfileNames: globalMocks.mockGetAllProfileNames, Load: globalMocks.mockLoad };
-        }),
         mockReadProfilesFromDisk: mockReadProfilesFromDisk,
         mockImperativeProfileInfo: jest.fn().mockImplementation(() => {
             return {
@@ -253,10 +250,6 @@ async function createGlobalMocks() {
     };
 
     Object.defineProperty(fs, "mkdirSync", { value: globalMocks.mockMkdirSync, configurable: true });
-    Object.defineProperty(imperative, "CliProfileManager", {
-        value: globalMocks.mockCliProfileManager,
-        configurable: true,
-    });
     Object.defineProperty(vscode.window, "createTreeView", {
         value: globalMocks.mockCreateTreeView,
         configurable: true,
@@ -357,7 +350,7 @@ async function createGlobalMocks() {
             "zowe.automaticProfileValidation": true,
         }),
     });
-    jest.spyOn(ProfilesUtils, "getProfileInfo").mockResolvedValue({
+    jest.spyOn(ProfilesUtils, "setupProfileInfo").mockResolvedValue({
         getTeamConfig: jest.fn().mockReturnValue({
             exists: jest.fn(),
         }),
@@ -397,7 +390,7 @@ async function createGlobalMocks() {
         value: jest.fn(),
         configurable: true,
     });
-    Object.defineProperty(ZoweLocalStorage, "storage", {
+    Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
             update: jest.fn(),

@@ -47,7 +47,6 @@ export class Profiles extends ProfilesCache {
             await Profiles.getInstance().getProfileInfo();
         } catch (err) {
             ZoweLogger.error(err);
-            ZoweExplorerExtender.showZoweConfigError(err.message);
         }
         return Profiles.loader;
     }

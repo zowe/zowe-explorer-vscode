@@ -13,7 +13,7 @@ import type { Options } from "@wdio/types";
 import { existsSync } from "fs";
 import { emptyDirSync, mkdirpSync } from "fs-extra";
 import { join as joinPath, relative as relativePath } from "path";
-import { baseConfig } from "../__common__/base.wdio.conf";
+import { baseConfig, dataDir } from "../__common__/base.wdio.conf";
 
 if (process.env.ZOWE_TEST_DIR) {
     const homeDir = (process.env["ZOWE_CLI_HOME"] = joinPath(__dirname, relativePath(__dirname, process.env.ZOWE_TEST_DIR)));
@@ -99,6 +99,7 @@ export const config: Options.Testrunner = {
             "wdio:vscodeOptions": {
                 // points to directory where extension package.json is located
                 extensionPath: joinPath(__dirname, "..", ".."),
+                storagePath: dataDir,
                 // optional VS Code settings
                 userSettings: {
                     "editor.fontSize": 14,
