@@ -14,15 +14,17 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Use the "Troubleshoot" option for certain errors to obtain additional context, tips, and resources for how to resolve the errors. [#3243](https://github.com/zowe/zowe-explorer-vscode/pull/3243)
 - Allow extenders to add context menu actions to a top level node, i.e. data sets, USS, Jobs, by encoding the profile type in the context value. [#3309](https://github.com/zowe/zowe-explorer-vscode/pull/3309)
 - You can now add multiple partitioned data sets or USS directories to your workspace at once using the "Add to Workspace" feature. [#3324](https://github.com/zowe/zowe-explorer-vscode/issues/3324)
-- Fixed an issue where a migrated data set is unusable after it is recalled through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
-- Fixed an issue where a recalled PDS is expandable after it is migrated through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
-- Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
+- Exposed read and write access to local storage keys for Zowe Explorer extenders. [#3180](https://github.com/zowe/zowe-explorer-vscode/issues/3180)
 
 ### Bug fixes
 
 - Fixed an issue during initialization where the error dialog shown for a broken team configuration file was missing the "Show Config" action. [#3322](https://github.com/zowe/zowe-explorer-vscode/pull/3322)
 - Fixed an issue where editing a team config file or updating secrets in the OS credential vault could trigger multiple events for a single action. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
 - Fixed an issue where opening a PDS member after renaming an expanded PDS resulted in an error. [#3314](https://github.com/zowe/zowe-explorer-vscode/issues/3314)
+- Fixed issue where persistent settings defined at the workspace level were migrated into global storage rather than workspace-specific storage. [#3180](https://github.com/zowe/zowe-explorer-vscode/issues/3180)
+- Fixed an issue where a migrated data set is unusable after it is recalled through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
+- Fixed an issue where a recalled PDS is expandable after it is migrated through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
+- Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
 
 ## `3.0.3`
 
