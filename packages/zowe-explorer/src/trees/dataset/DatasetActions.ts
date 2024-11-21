@@ -1380,8 +1380,7 @@ export class DatasetActions {
                     })
                 );
                 const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
-                node.datasetMigrated();
-                datasetProvider.nodeDataChanged(node);
+                datasetProvider.refreshElement(node.getParent());
                 return response;
             } catch (err) {
                 ZoweLogger.error(err);
