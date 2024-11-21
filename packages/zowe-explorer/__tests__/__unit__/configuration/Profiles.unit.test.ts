@@ -144,7 +144,7 @@ function createGlobalMocks(): { [key: string]: any } {
         configurable: true,
     });
 
-    Object.defineProperty(ZoweLocalStorage, "storage", {
+    Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: jest.fn(() => ({ persistence: true })),
             update: jest.fn(),

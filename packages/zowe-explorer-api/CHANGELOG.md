@@ -6,6 +6,14 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added optional `getLocalStorage` function to the `IApiExplorerExtender` interface to expose local storage access to Zowe Explorer extenders. [#3180](https://github.com/zowe/zowe-explorer-vscode/issues/3180)
+
+### Bug fixes
+
+## `3.0.3`
+
+### New features and enhancements
+
 - Update Zowe SDKs to `8.8.2` to get the latest enhancements from Imperative. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
 
 ### Bug fixes
