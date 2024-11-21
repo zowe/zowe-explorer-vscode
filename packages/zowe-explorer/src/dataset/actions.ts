@@ -1359,8 +1359,7 @@ export async function hMigrateDataSet(
         try {
             const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
             api.Gui.showMessage(localize("hMigrateDataSet.requestSent", "Migration of data set {0} requested.", dataSetName));
-            node.datasetMigrated();
-            datasetProvider.refresh();
+            datasetProvider.refreshElement(node.getParent());
             return response;
         } catch (err) {
             ZoweLogger.error(err);
