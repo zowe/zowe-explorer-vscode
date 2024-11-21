@@ -32,7 +32,7 @@ import { ProfilesUtils } from "./utils/ProfilesUtils";
  * @returns {Promise<ZoweExplorerApiRegister>}
  */
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
-    ZoweLocalStorage.initializeZoweLocalStorage(context.globalState);
+    ZoweLocalStorage.initializeZoweLocalStorage(context.globalState, context.workspaceState);
     await SharedInit.initZoweLogger(context);
 
     await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
