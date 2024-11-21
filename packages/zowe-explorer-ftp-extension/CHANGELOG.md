@@ -4,6 +4,12 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### New features and enhancements
 
+- Updated Zowe SDKs to `8.8.2` for technical currency. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
+
+### Bug fixes
+
+## `3.0.3`
+
 ### Bug fixes
 
 - Fixed issue where the MVS API `putContents` function did not support PDS members when the member was not specified in the data set name. [#3305](https://github.com/zowe/zowe-explorer-vscode/issues/3305)
