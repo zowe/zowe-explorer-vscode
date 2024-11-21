@@ -371,11 +371,11 @@ export namespace MainframeInteraction {
 
         /**
          * Searches dataSets.
-         * 
+         *
          * @param {zosfiles.ISearchOptions} searchOptions
-         * @returns {Promise<zosfiles.IZosFilesResponse>}
+         * @returns {Promise<zosfiles.ISearchResponse>}
          */
-        searchDataSets?(searchOptions: zosfiles.ISearchOptions): Promise<zosfiles.IZosFilesResponse>;
+        searchDataSets?(searchOptions: zosfiles.ISearchOptions): Promise<zosfiles.ISearchResponse>;
     }
 
     /**

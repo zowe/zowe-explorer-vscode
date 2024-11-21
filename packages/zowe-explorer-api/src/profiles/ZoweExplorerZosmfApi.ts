@@ -376,7 +376,7 @@ export namespace ZoweExplorerZosmf {
                 { "from-dataset": { dsn: fromDataSetName }, enq, replace, responseTimeout: this.profile?.profile?.responseTimeout }
             );
         }
-        public searchDataSets(searchOptions: zosfiles.ISearchOptions): Promise<zosfiles.IZosFilesResponse> {
+        public searchDataSets(searchOptions: zosfiles.ISearchOptions): Promise<zosfiles.ISearchResponse> {
             return zosfiles.Search.dataSets(this.getSession(), {
                 ...searchOptions,
                 getOptions: {

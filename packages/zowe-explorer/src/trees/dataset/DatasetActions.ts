@@ -1863,28 +1863,28 @@ export class DatasetActions {
 
     private static async openSearchAtLocation(this: void, _view: Table.View, data: Record<number, Table.RowData>): Promise<void> {
         const childrenToOpen = Object.values(data);
+        if (childrenToOpen.length === 0) {
+            return;
+        }
 
-        // Each value is a different search result
-        if (childrenToOpen.length > 0) {
-            for (const child of childrenToOpen) {
-                // Get the URI, look it up so the Filesystem provider is aware of it, then display the document to the user
-                const childUri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: child.uri as string });
-                await DatasetFSProvider.instance.remoteLookupForResource(childUri);
-                void Gui.showTextDocument(childUri, { preview: false }).then(
-                    (editor) => {
-                        // Highlight the searched for text so the user can easily find it
-                        const startPosition = new vscode.Position((child.line as number) - 1, (child.column as number) - 1);
-                        const endPosition = new vscode.Position(
-                            (child.line as number) - 1,
-                            (child.column as number) - 1 + (child.searchString as string).length
-                        );
-                        editor.selection = new vscode.Selection(startPosition, endPosition);
-                    },
-                    (err) => {
-                        Gui.errorMessage(err.message);
-                    }
-                );
-            }
+        for (const child of childrenToOpen) {
+            // Get the URI, look it up so the Filesystem provider is aware of it, then display the document to the user
+            const childUri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: child.uri as string });
+            await DatasetFSProvider.instance.remoteLookupForResource(childUri);
+            void Gui.showTextDocument(childUri, { preview: false }).then(
+                (editor) => {
+                    // Highlight the searched for text so the user can easily find it
+                    const startPosition = new vscode.Position((child.line as number) - 1, (child.column as number) - 1);
+                    const endPosition = new vscode.Position(
+                        (child.line as number) - 1,
+                        (child.column as number) - 1 + (child.searchString as string).length
+                    );
+                    editor.selection = new vscode.Selection(startPosition, endPosition);
+                },
+                (err) => {
+                    Gui.errorMessage(err.message);
+                }
+            );
         }
     }
 
@@ -1912,10 +1912,10 @@ export class DatasetActions {
         return resp === vscode.l10n.t("Yes");
     }
 
-    private static async performSearch(progress: any, token: vscode.CancellationToken, options: ISearchOptions): Promise<zosfiles.IZosFilesResponse> {
+    private static async performSearch(progress: any, token: vscode.CancellationToken, options: ISearchOptions): Promise<zosfiles.ISearchResponse> {
         const profile = options.node.getProfile();
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
-        let response: zosfiles.IZosFilesResponse;
+        let response: zosfiles.ISearchResponse;
         if (token.isCancellationRequested) {
             Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
             return;
@@ -1945,6 +1945,9 @@ export class DatasetActions {
                 progressTask: task,
                 mainframeSearch: false,
                 continueSearch: DatasetActions.continueSearchPrompt,
+                abortSearch: function abort() {
+                    return token.isCancellationRequested;
+                },
             });
 
             // The user cancelled the search

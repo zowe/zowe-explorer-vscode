@@ -3169,6 +3169,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
                 progressTask: taskExpected,
                 mainframeSearch: false,
                 continueSearch: continueSearchPromptSpy,
+                abortSearch: expect.any(Function),
             });
             expect(continueSearchPromptSpy).toHaveBeenCalledTimes(1);
             expect(authErrorHandlingSpy).not.toHaveBeenCalled();
@@ -3197,6 +3198,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
                 progressTask: taskExpected,
                 mainframeSearch: false,
                 continueSearch: continueSearchPromptSpy,
+                abortSearch: expect.any(Function),
             });
             expect(authErrorHandlingSpy).not.toHaveBeenCalled();
             expect(loggerErrorSpy).not.toHaveBeenCalled();
@@ -3227,6 +3229,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
                 progressTask: taskExpected,
                 mainframeSearch: false,
                 continueSearch: continueSearchPromptSpy,
+                abortSearch: expect.any(Function),
             });
             expect(authErrorHandlingSpy).not.toHaveBeenCalled();
             expect(loggerErrorSpy).toHaveBeenCalledWith("test error message");
@@ -3257,6 +3260,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
                 progressTask: taskExpected,
                 mainframeSearch: false,
                 continueSearch: continueSearchPromptSpy,
+                abortSearch: expect.any(Function),
             });
             expect(authErrorHandlingSpy).not.toHaveBeenCalled();
             expect(loggerErrorSpy).toHaveBeenCalledWith("test error message");
@@ -3288,6 +3292,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
                 progressTask: taskExpected,
                 mainframeSearch: false,
                 continueSearch: continueSearchPromptSpy,
+                abortSearch: expect.any(Function),
             });
             expect(authErrorHandlingSpy).toHaveBeenCalledWith(error);
             expect(loggerErrorSpy).not.toHaveBeenCalled();
