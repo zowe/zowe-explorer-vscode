@@ -196,9 +196,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      */
     private async datasetRecalled(isPds: boolean): Promise<void> {
         // Change context value to match dsorg, update collapsible state and assign resource URI
-        this.contextValue = isPds ? Constants.DS_PDS_CONTEXT : Constants.DS_DS_CONTEXT;
-        this.collapsibleState =
-            this.contextValue === Constants.DS_PDS_CONTEXT ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
+        // Preserve favorite context and any additional context values
+        this.contextValue = this.contextValue.replace(Constants.DS_MIGRATED_FILE_CONTEXT, isPds ? Constants.DS_PDS_CONTEXT : Constants.DS_DS_CONTEXT);
+        this.collapsibleState = isPds ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
         this.resourceUri = vscode.Uri.from({
             scheme: ZoweScheme.DS,
             path: `/${SharedUtils.getSessionLabel(this)}/${this.label as string}`,
@@ -226,7 +226,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      */
     public datasetMigrated(): void {
         // Change the context value and collapsible state to represent a migrated data set
-        this.contextValue = Constants.DS_MIGRATED_FILE_CONTEXT;
+        // Preserve favorite context and any additional context values
+        const isBinary = SharedContext.isBinary(this);
+        const isPds = this.collapsibleState !== vscode.TreeItemCollapsibleState.None;
+        let previousContext = isBinary ? Constants.DS_DS_BINARY_CONTEXT : Constants.DS_DS_CONTEXT;
+        if (isPds) {
+            previousContext = Constants.DS_PDS_CONTEXT;
+        }
+        this.contextValue = this.contextValue.replace(previousContext, Constants.DS_MIGRATED_FILE_CONTEXT);
         this.collapsibleState = vscode.TreeItemCollapsibleState.None;
 
         // Remove the entry from the file system
