@@ -389,10 +389,7 @@ export class ProfilesCache {
         return convertResult;
     }
 
-    public static getProfileSessionWithVscProxy(session: imperative.Session): imperative.Session | undefined {
-        if (!session) {
-            return;
-        }
+    public static getProfileSessionWithVscProxy(session: imperative.Session): imperative.Session {
         const VsCodeProxySettings = VscSettings.getVsCodeProxySettings();
         session.ISession.proxy = VsCodeProxySettings;
         return session;
