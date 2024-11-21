@@ -202,7 +202,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 session,
                 profile,
-                contextOverride: Constants.JOBS_SESSION_CONTEXT,
+                contextOverride: Constants.JOBS_SESSION_CONTEXT + Constants.TYPE_SUFFIX + profile.type,
             });
             await this.refreshHomeProfileContext(node);
             const icon = IconGenerator.getIconByNode(node);
