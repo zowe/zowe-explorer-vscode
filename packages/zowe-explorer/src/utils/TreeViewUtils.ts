@@ -9,13 +9,15 @@
  *
  */
 
-import { Types, IZoweTree, IZoweTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
-import { TreeViewExpansionEvent } from "vscode";
+import { Types, IZoweTree, IZoweTreeNode, PersistenceSchemaEnum, Gui } from "@zowe/zowe-explorer-api";
+import { l10n, TextDocument, TreeViewExpansionEvent, workspace } from "vscode";
 import { IconGenerator } from "../icons/IconGenerator";
 import type { ZoweTreeProvider } from "../trees/ZoweTreeProvider";
 import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { Profiles } from "../configuration/Profiles";
+import { SharedUtils } from "../trees/shared/SharedUtils";
+import { SharedContext } from "../trees/shared/SharedContext";
 
 export class TreeViewUtils {
     /**
@@ -106,5 +108,44 @@ export class TreeViewUtils {
                 ZoweLogger.warn(error);
             }
         }
+    }
+
+    /**
+     * Prompts the user when a file/data set is unsaved in the editor.
+     * @param node The USS file or data set to check for in the editor. Also checks child paths for the node (for PDS members and inner USS files).
+     * @returns Whether a child or the resource itself is open with unsaved changes in the editor
+     */
+    public static async errorForUnsavedResource(node: IZoweTreeNode, action = l10n.t("rename")): Promise<boolean> {
+        const currentFilePath = node.resourceUri.fsPath; // The user's complete local file path for the node
+        await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+        const openedTextDocuments: readonly TextDocument[] = workspace.textDocuments; // Array of all documents open in VS Code
+
+        const isUss = SharedContext.isUssNode(node);
+        let nodeType: string;
+        if (isUss) {
+            nodeType = SharedContext.isUssDirectory(node) ? "directory" : "file";
+        } else {
+            nodeType = "data set";
+        }
+
+        for (const doc of openedTextDocuments) {
+            if ((doc.fileName === currentFilePath || SharedUtils.checkIfChildPath(currentFilePath, doc.fileName)) && doc.isDirty) {
+                ZoweLogger.error(
+                    `TreeViewUtils.errorForUnsavedResource: detected unsaved changes in ${doc.fileName},` +
+                        `trying to ${action} node: ${node.label as string}`
+                );
+                Gui.errorMessage(
+                    l10n.t({
+                        message: "Unable to {0} {1} because you have unsaved changes in this {2}. " + "Please save your work and try again.",
+                        args: [action, node.label, nodeType],
+                        comment: ["User action", "Node path", "Node type (directory, file or data set)"],
+                    }),
+                    { vsCodeOpts: { modal: true } }
+                );
+                return true;
+            }
+        }
+
+        return false;
     }
 }

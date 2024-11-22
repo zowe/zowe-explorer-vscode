@@ -87,6 +87,26 @@ describe("stat", () => {
         expect(listFilesMock).toHaveBeenCalled();
         listFilesMock.mockRestore();
     });
+
+    it("updates a file entry with new modification time and resets wasAccessed flag", async () => {
+        const fakeFile = Object.assign(Object.create(Object.getPrototypeOf(testEntries.file)), testEntries.file);
+        lookupMock.mockReturnValueOnce(fakeFile);
+        const newMtime = Date.now();
+        const listFilesMock = jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [{ name: fakeFile.name, mtime: newMtime }],
+            },
+            commandResponse: "",
+        });
+        await expect(UssFSProvider.instance.stat(testUris.file)).resolves.toStrictEqual(fakeFile);
+        expect(lookupMock).toHaveBeenCalledWith(testUris.file, false);
+        expect(fakeFile.mtime).toBe(newMtime);
+        expect(fakeFile.wasAccessed).toBe(false);
+        expect(listFilesMock).toHaveBeenCalled();
+        listFilesMock.mockRestore();
+    });
+
     it("returns a file as 'read-only' when query has conflict parameter", async () => {
         lookupMock.mockReturnValueOnce(testEntries.file);
         await expect(UssFSProvider.instance.stat(testUris.conflictFile)).resolves.toStrictEqual({
