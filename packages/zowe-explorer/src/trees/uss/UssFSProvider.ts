@@ -91,15 +91,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             const newTime = (fileResp.apiResponse?.items ?? [])?.[0]?.mtime ?? entry.mtime;
 
             if (entry.mtime != newTime) {
+                entry.mtime = newTime;
                 // if the modification time has changed, invalidate the previous contents to signal to `readFile` that data needs to be fetched
                 entry.wasAccessed = false;
             }
-            return {
-                ...entry,
-                // If there isn't a valid mtime on the API response, we cannot determine whether the resource has been updated.
-                // Use the last-known modification time to prevent superfluous updates.
-                mtime: newTime,
-            };
         }
 
         return entry;

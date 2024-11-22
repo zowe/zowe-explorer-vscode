@@ -44,6 +44,8 @@ import { FilterDescriptor } from "../../../../src/management/FilterManagement";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import { Icon } from "../../../../src/icons/Icon";
 import { ZoweTreeProvider } from "../../../../src/trees/ZoweTreeProvider";
+import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
+import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -938,6 +940,7 @@ describe("USSTree Unit Tests - Function rename", () => {
         globalMocks.FileSystemProvider.rename.mockClear();
 
         const newMocks = {
+            errorForUnsavedResource: jest.spyOn(TreeViewUtils, "errorForUnsavedResource").mockResolvedValueOnce(false),
             ussFavNode,
             ussFavNodeParent,
             setAttributes: jest.spyOn(ZoweUSSNode.prototype, "setAttributes").mockImplementation(),
@@ -950,6 +953,23 @@ describe("USSTree Unit Tests - Function rename", () => {
 
     afterAll(() => {
         getEncodingForFileMock.mockRestore();
+    });
+
+    it("returns early if errorForUnsavedResource was true", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        blockMocks.errorForUnsavedResource.mockReset();
+        blockMocks.errorForUnsavedResource.mockResolvedValueOnce(true);
+        const testUSSDir = new ZoweUSSNode({
+            label: "test",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+            parentPath: "/",
+        });
+        const isFolderMock = jest.spyOn(SharedContext, "isFolder");
+        await globalMocks.testTree.rename(testUSSDir);
+        expect(isFolderMock).not.toHaveBeenCalled();
     });
 
     it("Tests that USSTree.rename() shows no error if an open dirty file's fullpath includes that of the node being renamed", async () => {
@@ -1237,7 +1257,6 @@ describe("USSTree Unit Tests - Function getChildren", () => {
                 contextOverride: Constants.USS_SESSION_CONTEXT,
                 session: globalMocks.testSession,
                 profile: globalMocks.testProfile,
-                parentPath: "/",
             }),
         ];
 

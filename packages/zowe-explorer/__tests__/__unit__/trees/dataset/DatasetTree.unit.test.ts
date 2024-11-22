@@ -54,6 +54,7 @@ import { Sorting } from "../../../../../zowe-explorer-api/src/tree";
 import { IconUtils } from "../../../../src/icons/IconUtils";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { ZoweTreeProvider } from "../../../../src/trees/ZoweTreeProvider";
+import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
 
 jest.mock("fs");
 jest.mock("util");
@@ -2280,6 +2281,31 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             rename: jest.spyOn(vscode.workspace.fs, "rename").mockImplementation(),
         };
     }
+
+    it("returns early if errorForUnsavedResource was true", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+        });
+        blockMocks.rename.mockClear();
+        const errorForUnsavedResource = jest.spyOn(TreeViewUtils, "errorForUnsavedResource").mockResolvedValueOnce(true);
+        await testTree.rename(node);
+        expect(errorForUnsavedResource).toHaveBeenCalled();
+        expect(blockMocks.rename).not.toHaveBeenLastCalledWith(
+            { path: "/sestest/HLQ.TEST.RENAME.NODE", scheme: ZoweScheme.DS },
+            { path: "/sestest/HLQ.TEST.RENAME.NODE.NEW", scheme: ZoweScheme.DS },
+            { overwrite: false }
+        );
+    });
 
     it("Tests that rename() renames a node", async () => {
         createGlobalMocks();
