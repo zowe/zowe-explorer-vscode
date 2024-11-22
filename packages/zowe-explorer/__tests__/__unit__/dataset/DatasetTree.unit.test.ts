@@ -56,6 +56,7 @@ import { join } from "path";
 import { mocked } from "../../../__mocks__/mockUtils";
 import * as sharedUtils from "../../../src/shared/utils";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
+import { TreeViewUtils } from "../../../src/utils/TreeViewUtils";
 
 jest.mock("fs");
 jest.mock("util");
@@ -2454,6 +2455,27 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         await testTree.rename(node);
 
         expect(renameDataSetSpy).toHaveBeenLastCalledWith("HLQ.TEST.RENAME.NODE", "HLQ.TEST.RENAME.NODE.NEW");
+    });
+
+    it("returns early if errorForUnsavedResource was true", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+        });
+        const renameDataSet = jest.spyOn(testTree as any, "renameDataSet");
+        const promptedForUnsavedResource = jest.spyOn(TreeViewUtils, "errorForUnsavedResource").mockResolvedValueOnce(true);
+        await testTree.rename(node);
+        expect(promptedForUnsavedResource).toHaveBeenCalled();
+        expect(renameDataSet).not.toHaveBeenCalled();
     });
 
     it("Checking function with PS Dataset using Unverified profile", async () => {
