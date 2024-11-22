@@ -114,12 +114,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const ds = isPdsMember ? items.find((it) => it.member === entry.name) : items?.[0];
             if (ds != null && "m4date" in ds) {
                 const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = ds;
-                const newTime = dayjs(`${m4date} ${mtime}:${msec}`).unix();
+                const newTime = dayjs(`${m4date} ${mtime}:${msec}`).valueOf();
                 if (entry.mtime != newTime) {
+                    entry.mtime = newTime;
                     // if the modification time has changed, invalidate the previous contents to signal to `readFile` that data needs to be fetched
                     entry.wasAccessed = false;
                 }
-                return { ...entry, mtime: newTime };
             }
         }
 

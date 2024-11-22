@@ -703,7 +703,7 @@ describe("stat", () => {
         expect(lookupMock).toHaveBeenCalledWith(testUris.pdsMember, false);
         expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.pdsMember);
         expect(allMembersMock).toHaveBeenCalledWith("USER.DATA.PDS", { attributes: true });
-        expect(res).toStrictEqual({ ...fakePdsMember, mtime: dayjs("2024-08-08 12:30").unix() });
+        expect(res).toStrictEqual({ ...fakePdsMember, mtime: dayjs("2024-08-08 12:30").valueOf() });
         expect(fakePdsMember.wasAccessed).toBe(false);
         lookupMock.mockRestore();
         lookupParentDirMock.mockRestore();
@@ -1126,6 +1126,7 @@ describe("rename", () => {
             .mockImplementation((uri): DirEntry | FileEntry => ((uri as Uri).path.includes("USER.DATA.PS2") ? (null as any) : oldPs));
         const _lookupParentDirectoryMock = jest
             .spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory")
+            .mockReturnValueOnce({ ...testEntries.session })
             .mockReturnValueOnce({ ...testEntries.session });
         await DatasetFSProvider.instance.rename(testUris.ps, testUris.ps.with({ path: "/USER.DATA.PS2" }), { overwrite: true });
         expect(mockMvsApi.renameDataSet).toHaveBeenCalledWith("USER.DATA.PS", "USER.DATA.PS2");
