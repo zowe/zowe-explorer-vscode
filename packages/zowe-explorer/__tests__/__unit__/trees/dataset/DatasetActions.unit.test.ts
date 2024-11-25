@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { Gui, imperative, Validation, Types, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, Validation, Types, ProfilesCache, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import {
@@ -133,6 +133,7 @@ const createBlockMocksShared = () => {
     const mvsApi = createMvsApi(imperativeProfile);
     const fetchDsAtUri = jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockImplementation();
     bindMvsApi(mvsApi);
+    Object.defineProperty(ProfilesCache, "getProfileSessionWithVscProxy", { value: jest.fn().mockReturnValue(zosmfSession), configurable: true });
 
     return {
         session,

@@ -172,6 +172,7 @@ function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ProfilesCache, "getProfileSessionWithVscProxy", { value: jest.fn().mockReturnValue(createISession()), configurable: true });
 
     return globalMocks;
 }
