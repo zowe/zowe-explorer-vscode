@@ -10,7 +10,7 @@
  */
 
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { imperative, ZoweExplorerZosmf } from "@zowe/zowe-explorer-api";
+import { imperative, ProfilesCache, ZoweExplorerZosmf } from "@zowe/zowe-explorer-api";
 
 export declare enum TaskStage {
     IN_PROGRESS = 0,
@@ -20,6 +20,10 @@ export declare enum TaskStage {
 }
 
 describe("Zosmf API tests", () => {
+    Object.defineProperty(ProfilesCache, "getProfileSessionWithVscProxy", {
+        value: jest.fn(),
+        configurable: true,
+    });
     it("should test that copy data set uses default options", async () => {
         const dataSet = jest.fn((_session, _toDataSet, options) => {
             expect(options).toMatchSnapshot();
