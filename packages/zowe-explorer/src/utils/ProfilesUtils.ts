@@ -369,6 +369,7 @@ export class ProfilesUtils {
     }
 
     public static async handleV1MigrationStatus(): Promise<void> {
+        ZoweLogger.trace("ProfilesUtils.handleV1MigrationStatus called");
         // For users upgrading from v1 to v3, we must force a "Reload Window" operation to make sure that
         // VS Code registers our updated TreeView IDs. Otherwise, VS Code's "Refresh Extensions" option will break v3 init.
         const ussPersistentSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent");
