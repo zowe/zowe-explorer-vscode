@@ -444,6 +444,10 @@ export namespace ZoweExplorerZosmf {
             return zostso.IssueTso.issueTsoCommand(this.getSession(), parms.account, command, parms);
         }
 
+        public issueTsoCmdWithParms(command: string, parms: zostso.IStartTsoParms): Promise<zostso.IIssueResponse> {
+            return zostso.IssueTso.issueTsoCmd(this.getSession(), command, { addressSpaceOptions: parms });
+        }
+
         public issueMvsCommand(command: string, consoleName?: string): Promise<zosconsole.IConsoleResponse> {
             return zosconsole.IssueCommand.issue(this.getSession(), { command, consoleName, processResponses: true });
         }
@@ -451,13 +455,24 @@ export namespace ZoweExplorerZosmf {
         public async issueUnixCommand(command: string, cwd: string, sshSession: zosuss.SshSession): Promise<string> {
             let stdout = "";
             if (cwd) {
-                await zosuss.Shell.executeSshCwd(sshSession, command, '"' + cwd + '"', (data: string) => {
-                    stdout += data;
-                });
+                await zosuss.Shell.executeSshCwd(
+                    sshSession,
+                    command,
+                    '"' + cwd + '"',
+                    (data: string) => {
+                        stdout += data;
+                    },
+                    true
+                );
             } else {
-                await zosuss.Shell.executeSsh(sshSession, command, (data: string) => {
-                    stdout += data;
-                });
+                await zosuss.Shell.executeSsh(
+                    sshSession,
+                    command,
+                    (data: string) => {
+                        stdout += data;
+                    },
+                    true
+                );
             }
             return stdout;
         }

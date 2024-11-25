@@ -21,17 +21,19 @@ import * as fs from "fs";
 
 export class SharedHistoryView extends WebView {
     private treeProviders: Definitions.IZoweProviders;
+    private cmdProviders: Definitions.IZoweCommandProviders;
     private currentTab: string;
     private currentSelection: { [type: string]: string };
 
-    public constructor(context: ExtensionContext, treeProviders: Definitions.IZoweProviders) {
+    public constructor(context: ExtensionContext, treeProviders: Definitions.IZoweProviders, cmdProviders?: Definitions.IZoweCommandProviders) {
         const label = "Edit History";
         super(label, "edit-history", context, {
             onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
             retainContext: true,
         });
         this.treeProviders = treeProviders;
-        this.currentSelection = { ds: "search", uss: "search", jobs: "search" };
+        this.cmdProviders = cmdProviders;
+        this.currentSelection = { ds: "search", uss: "search", jobs: "search", cmds: "mvs" };
     }
 
     protected async onDidReceiveMessage(message: any): Promise<void> {
@@ -44,6 +46,11 @@ export class SharedHistoryView extends WebView {
                     ds: this.getHistoryData("ds"),
                     uss: this.getHistoryData("uss"),
                     jobs: this.getHistoryData("job"),
+                    cmds: {
+                        mvs: this.cmdProviders?.mvs.history.getSearchHistory() ?? [],
+                        tso: this.cmdProviders?.tso.history.getSearchHistory() ?? [],
+                        uss: this.cmdProviders?.uss.history.getSearchHistory() ?? [],
+                    },
                     tab: this.currentTab,
                     selection: this.currentSelection,
                 });
@@ -203,6 +210,11 @@ export class SharedHistoryView extends WebView {
             ds: this.getHistoryData("ds"),
             uss: this.getHistoryData("uss"),
             jobs: this.getHistoryData("job"),
+            cmds: {
+                mvs: this.cmdProviders?.mvs.history.getSearchHistory() ?? [],
+                tso: this.cmdProviders?.tso.history.getSearchHistory() ?? [],
+                uss: this.cmdProviders?.uss.history.getSearchHistory() ?? [],
+            },
             tab: this.currentTab,
             selection: this.currentSelection,
         });
