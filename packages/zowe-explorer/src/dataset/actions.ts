@@ -1357,11 +1357,9 @@ export async function hMigrateDataSet(
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         const { dataSetName } = dsUtils.getNodeLabels(node);
         try {
-            const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
             api.Gui.showMessage(localize("hMigrateDataSet.requestSent", "Migration of data set {0} requested.", dataSetName));
-            node.contextValue = globals.DS_MIGRATED_FILE_CONTEXT;
-            node.setIcon(getIconByNode(node).path);
-            datasetProvider.refresh();
+            const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
+            datasetProvider.refreshElement(node.getParent());
             return response;
         } catch (err) {
             ZoweLogger.error(err);
@@ -1388,15 +1386,9 @@ export async function hRecallDataSet(
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         const { dataSetName } = dsUtils.getNodeLabels(node);
         try {
-            const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
             api.Gui.showMessage(localize("hRecallDataSet.requestSent", "Recall of data set {0} requested.", dataSetName));
-            if (node.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
-                node.contextValue = globals.DS_PDS_CONTEXT;
-            } else {
-                node.contextValue = node.binary ? globals.DS_DS_BINARY_CONTEXT : globals.DS_DS_CONTEXT;
-            }
-            node.setIcon(getIconByNode(node).path);
-            datasetProvider.refresh();
+            const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
+            datasetProvider.refreshElement(node.getSessionNode());
             return response;
         } catch (err) {
             ZoweLogger.error(err);
