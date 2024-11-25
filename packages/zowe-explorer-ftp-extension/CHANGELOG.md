@@ -4,9 +4,15 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### New features and enhancements
 
+- Updated Zowe SDKs to `8.8.2` for technical currency. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
+
 ### Bug fixes
 
-- Updated dependencies for technical currency. [#3786](https://github.com/zowe/zowe-explorer-vscode/issues/3786)
+## `3.0.3`
+
+### Bug fixes
+
+- Fixed issue where the MVS API `putContents` function did not support PDS members when the member was not specified in the data set name. [#3305](https://github.com/zowe/zowe-explorer-vscode/issues/3305)
 
 ## `3.0.2`
 
@@ -42,6 +48,7 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 - Fix Windows-specific hangs when saving members that contain JCL via the FTP extension. Thanks @tiantn & @std4lqi. [#2533](https://github.com/zowe/vscode-extension-for-zowe/issues/2533)
 - Removed outdated vscode-nls webpack plug-in [#2253](https://github.com/zowe/vscode-extension-for-zowe/issues/2253)
 - Fixed ECONNRESET error when trying to upload or create an empty data set member. [#2350](https://github.com/zowe/vscode-extension-for-zowe/issues/2350)
+- Updated Zowe SDKs to `8.8.2` for technical currency. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
 - Updated additional dependencies for technical currency purposes.
 
 ## `3.0.0-next.202409251932`

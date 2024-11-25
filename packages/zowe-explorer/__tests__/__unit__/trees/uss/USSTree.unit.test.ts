@@ -44,6 +44,8 @@ import { FilterDescriptor } from "../../../../src/management/FilterManagement";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import { Icon } from "../../../../src/icons/Icon";
 import { ZoweTreeProvider } from "../../../../src/trees/ZoweTreeProvider";
+import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
+import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -175,7 +177,7 @@ function createGlobalMocks() {
         value: jest.fn().mockReturnValue(globalMocks.mockProfilesInstance),
         configurable: true,
     });
-    Object.defineProperty(ZoweLocalStorage, "storage", {
+    Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({
                 persistence: true,
@@ -216,11 +218,30 @@ function createGlobalMocks() {
         value: jest.fn().mockReturnValue(true),
         configurable: true,
     });
+    Object.defineProperty(ProfilesCache, "getProfileSessionWithVscProxy", {
+        value: jest.fn().mockReturnValue(globalMocks.testSession),
+        configurable: true,
+    });
 
     jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
-        ds: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testTree.mSessionNodes], refresh: jest.fn() } as any,
-        uss: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testTree.mSessionNodes], refresh: jest.fn() } as any,
-        jobs: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testTree.mSessionNodes], refresh: jest.fn() } as any,
+        ds: {
+            addSingleSession: jest.fn(),
+            mSessionNodes: [...globalMocks.testTree.mSessionNodes],
+            setStatusForSession: jest.fn(),
+            refresh: jest.fn(),
+        } as any,
+        uss: {
+            addSingleSession: jest.fn(),
+            mSessionNodes: [...globalMocks.testTree.mSessionNodes],
+            setStatusForSession: jest.fn(),
+            refresh: jest.fn(),
+        } as any,
+        jobs: {
+            addSingleSession: jest.fn(),
+            mSessionNodes: [...globalMocks.testTree.mSessionNodes],
+            setStatusForSession: jest.fn(),
+            refresh: jest.fn(),
+        } as any,
     } as any);
 
     return globalMocks;
@@ -551,7 +572,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
             qpValue: "",
             qpItem: new FilterDescriptor("\uFF0B " + "Create a new filter"),
             resolveQuickPickHelper: jest.spyOn(Gui, "resolveQuickPick"),
-            checkJwtTokenForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtTokenForProfile").mockImplementationOnce(() => {}),
+            checkJwtTokenForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtTokenForProfile").mockResolvedValueOnce(true),
         };
         newMocks.resolveQuickPickHelper.mockImplementation(() => Promise.resolve(newMocks.qpItem));
         globalMocks.createQuickPick.mockReturnValue({
@@ -608,6 +629,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
                         name: globalMocks.testProfile.name,
                         status: "unverified",
                     }),
+                    showProfileInactiveMsg: jest.fn(),
                     validProfile: Validation.ValidationType.UNVERIFIED,
                 };
             }),
@@ -649,8 +671,6 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         blockMocks.qpItem = undefined;
 
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
-        expect(globalMocks.showInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showInformationMessage.mock.calls[0][0]).toBe("No selection made. Operation cancelled.");
     });
 
     it("Tests that filter() works correctly for favorited search nodes with credentials", async () => {
@@ -920,6 +940,7 @@ describe("USSTree Unit Tests - Function rename", () => {
         globalMocks.FileSystemProvider.rename.mockClear();
 
         const newMocks = {
+            errorForUnsavedResource: jest.spyOn(TreeViewUtils, "errorForUnsavedResource").mockResolvedValueOnce(false),
             ussFavNode,
             ussFavNodeParent,
             setAttributes: jest.spyOn(ZoweUSSNode.prototype, "setAttributes").mockImplementation(),
@@ -932,6 +953,23 @@ describe("USSTree Unit Tests - Function rename", () => {
 
     afterAll(() => {
         getEncodingForFileMock.mockRestore();
+    });
+
+    it("returns early if errorForUnsavedResource was true", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        blockMocks.errorForUnsavedResource.mockReset();
+        blockMocks.errorForUnsavedResource.mockResolvedValueOnce(true);
+        const testUSSDir = new ZoweUSSNode({
+            label: "test",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+            parentPath: "/",
+        });
+        const isFolderMock = jest.spyOn(SharedContext, "isFolder");
+        await globalMocks.testTree.rename(testUSSDir);
+        expect(isFolderMock).not.toHaveBeenCalled();
     });
 
     it("Tests that USSTree.rename() shows no error if an open dirty file's fullpath includes that of the node being renamed", async () => {
@@ -1164,6 +1202,22 @@ describe("USSTree Unit Tests - Function addSingleSession", () => {
         expect(globalMocks.testTree.mSessionNodes.length).toEqual(2);
     });
 
+    it("Tests that addSingleSession adds type info to the session", async () => {
+        const ussTree = new USSTree();
+        const profile1 = await createIProfile();
+
+        profile1.name = "test1Profile";
+
+        await ussTree.addSingleSession(profile1);
+
+        const sessionNode = ussTree.mSessionNodes.find((tNode) => tNode.label?.toString() === profile1.name);
+
+        expect(sessionNode).toBeDefined();
+
+        const context = sessionNode?.contextValue;
+        expect(context).toContain("_type=zosmf");
+    });
+
     it("Tests that addSingleSession successfully adds a session", async () => {
         const globalMocks = createGlobalMocks();
 
@@ -1203,7 +1257,6 @@ describe("USSTree Unit Tests - Function getChildren", () => {
                 contextOverride: Constants.USS_SESSION_CONTEXT,
                 session: globalMocks.testSession,
                 profile: globalMocks.testProfile,
-                parentPath: "/",
             }),
         ];
 

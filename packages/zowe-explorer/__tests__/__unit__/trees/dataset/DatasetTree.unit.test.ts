@@ -54,6 +54,7 @@ import { Sorting } from "../../../../../zowe-explorer-api/src/tree";
 import { IconUtils } from "../../../../src/icons/IconUtils";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { ZoweTreeProvider } from "../../../../src/trees/ZoweTreeProvider";
+import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
 
 jest.mock("fs");
 jest.mock("util");
@@ -70,7 +71,7 @@ function createGlobalMocks() {
 
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
 
-    Object.defineProperty(ZoweLocalStorage, "storage", {
+    Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
             update: jest.fn(),
@@ -171,6 +172,7 @@ function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ProfilesCache, "getProfileSessionWithVscProxy", { value: jest.fn().mockReturnValue(createISession()), configurable: true });
 
     return globalMocks;
 }
@@ -894,9 +896,24 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         jest.spyOn(testTree, "addSingleSession").mockImplementation();
         jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
-            ds: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
-            uss: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
-            jobs: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
+            ds: {
+                addSingleSession: jest.fn(),
+                mSessionNodes: [blockMocks.datasetSessionNode],
+                setStatusForSession: jest.fn(),
+                refresh: jest.fn(),
+            } as any,
+            uss: {
+                addSingleSession: jest.fn(),
+                mSessionNodes: [blockMocks.datasetSessionNode],
+                setStatusForSession: jest.fn(),
+                refresh: jest.fn(),
+            } as any,
+            jobs: {
+                addSingleSession: jest.fn(),
+                mSessionNodes: [blockMocks.datasetSessionNode],
+                setStatusForSession: jest.fn(),
+                refresh: jest.fn(),
+            } as any,
         } as any);
 
         await testTree.addSession(blockMocks.imperativeProfile.name);
@@ -1006,6 +1023,22 @@ describe("USSTree Unit Tests - Function addSingleSession", () => {
         await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
 
         expect(blockMocks.testTree.mSessionNodes.length).toEqual(2);
+    });
+
+    it("Tests that addSingleSession adds type info to the session", async () => {
+        const dsTree = new DatasetTree();
+        const profile1 = await createIProfile();
+
+        profile1.name = "test1Profile";
+
+        await dsTree.addSingleSession(profile1);
+
+        const sessionNode = dsTree.mSessionNodes.find((tNode) => tNode.label?.toString() === profile1.name);
+
+        expect(sessionNode).toBeDefined();
+
+        const context = sessionNode?.contextValue;
+        expect(context).toContain("_type=zosmf");
     });
 
     it("Tests that addSingleSession successfully adds a session", async () => {
@@ -1496,7 +1529,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             qpPlaceholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
             mockEnableValidationContext: jest.fn(),
             testTree: new DatasetTree(),
-            checkJwtTokenForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtTokenForProfile").mockImplementationOnce(() => {}),
+            checkJwtTokenForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtTokenForProfile").mockResolvedValueOnce(true),
         };
 
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
@@ -1535,9 +1568,24 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         jest.spyOn(testTree, "addSingleSession").mockImplementation();
         jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
-            ds: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
-            uss: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
-            jobs: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
+            ds: {
+                addSingleSession: jest.fn(),
+                setStatusForSession: jest.fn(),
+                mSessionNodes: [blockMocks.datasetSessionNode],
+                refresh: jest.fn(),
+            } as any,
+            uss: {
+                addSingleSession: jest.fn(),
+                setStatusForSession: jest.fn(),
+                mSessionNodes: [blockMocks.datasetSessionNode],
+                refresh: jest.fn(),
+            } as any,
+            jobs: {
+                addSingleSession: jest.fn(),
+                setStatusForSession: jest.fn(),
+                mSessionNodes: [blockMocks.datasetSessionNode],
+                refresh: jest.fn(),
+            } as any,
         } as any);
 
         await testTree.datasetFilterPrompt(favoriteSearch);
@@ -1565,7 +1613,6 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(testTree.mSessionNodes[1].contextValue).toEqual(Constants.DS_SESSION_CONTEXT + Constants.ACTIVE_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
     it("Checking adding of new filter of multiple ds search", async () => {
@@ -1593,7 +1640,6 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(testTree.mSessionNodes[1].contextValue).toEqual(Constants.DS_SESSION_CONTEXT + Constants.ACTIVE_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD, HLQ.PROD1*");
     });
     it("Checking adding of new filter with data set member", async () => {
@@ -1606,7 +1652,6 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
-        expect(testTree.mSessionNodes[1].contextValue).toEqual(Constants.DS_SESSION_CONTEXT + Constants.ACTIVE_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1");
     });
     it("Checking adding of new filter with Unverified profile", async () => {
@@ -1634,7 +1679,6 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(testTree.mSessionNodes[1].contextValue).toEqual(Constants.DS_SESSION_CONTEXT + Constants.UNVERIFIED_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
     it("Checking cancelled attempt to add a filter", async () => {
@@ -2238,6 +2282,31 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         };
     }
 
+    it("returns early if errorForUnsavedResource was true", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+        });
+        blockMocks.rename.mockClear();
+        const errorForUnsavedResource = jest.spyOn(TreeViewUtils, "errorForUnsavedResource").mockResolvedValueOnce(true);
+        await testTree.rename(node);
+        expect(errorForUnsavedResource).toHaveBeenCalled();
+        expect(blockMocks.rename).not.toHaveBeenLastCalledWith(
+            { path: "/sestest/HLQ.TEST.RENAME.NODE", scheme: ZoweScheme.DS },
+            { path: "/sestest/HLQ.TEST.RENAME.NODE.NEW", scheme: ZoweScheme.DS },
+            { overwrite: false }
+        );
+    });
+
     it("Tests that rename() renames a node", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -2428,6 +2497,47 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         expect(findEquivalentNodeSpy).toHaveBeenCalledWith(child.getParent(), false);
         expect(findEquivalentNodeSpy).toHaveBeenCalledWith(child.getParent(), false);
         expect(refreshElementSpy).toHaveBeenCalledWith(child.getParent());
+    });
+
+    it("Checking function with PDS", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        // Create nodes in Session section
+        const parent = new ZoweDatasetNode({
+            label: "HLQ.TEST.OLDNAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+            parentNode: testTree.mSessionNodes[1],
+            profile: blockMocks.imperativeProfile,
+            session: blockMocks.session,
+        });
+        const child = new ZoweDatasetNode({
+            label: "mem1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.DS_MEMBER_CONTEXT,
+            parentNode: parent,
+        });
+        // Simulate corresponding nodes in favorites
+        // Push test nodes to respective arrays
+        parent.children.push(child);
+        testTree.mSessionNodes[1].children.push(parent);
+
+        const refreshElementSpy = jest.spyOn(testTree, "refreshElement");
+
+        const renameDataSetSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSet");
+
+        mocked(Gui.showInputBox).mockImplementation((options) => {
+            return Promise.resolve("HLQ.TEST.NEWNAME.NODE");
+        });
+        await testTree.rename(parent);
+        expect(renameDataSetSpy).toHaveBeenLastCalledWith(parent);
+        expect(parent.resourceUri?.path).toBe("/sestest/HLQ.TEST.NEWNAME.NODE");
+        expect(child.resourceUri?.path).toBe("/sestest/HLQ.TEST.NEWNAME.NODE/mem1");
+        expect(refreshElementSpy).toHaveBeenCalled();
     });
 
     it("Checking function with PDS Member given in lowercase", async () => {

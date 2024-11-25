@@ -557,9 +557,9 @@ describe("Shared utils unit tests - function parseFavorites", () => {
 describe("Shared utils unit tests - function addToWorkspace", () => {
     it("adds a Data Set resource to the workspace", () => {
         const datasetNode = new ZoweDatasetNode({
-            label: "EXAMPLE.DS",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            contextOverride: Constants.DS_DS_CONTEXT,
+            label: "EXAMPLE.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.DS_PDS_CONTEXT,
             profile: createIProfile(),
         });
         const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
@@ -579,6 +579,34 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
         const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
         SharedUtils.addToWorkspace(ussNode, null as any);
         expect(updateWorkspaceFoldersMock).toHaveBeenCalledWith(0, null, { uri: ussNode.resourceUri, name: `[sestest] ${ussNode.fullPath}` });
+    });
+    it("adds multiple resources to the workspace at once", () => {
+        const datasetNode1 = new ZoweDatasetNode({
+            label: "EXAMPLE.PDS1",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+            profile: createIProfile(),
+        });
+        const datasetNode2 = new ZoweDatasetNode({
+            label: "EXAMPLE.PDS2",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+            profile: createIProfile(),
+        });
+        const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
+        SharedUtils.addToWorkspace(null as any, [datasetNode1, datasetNode2]);
+        expect(updateWorkspaceFoldersMock).toHaveBeenCalledWith(
+            0,
+            null,
+            {
+                uri: datasetNode1.resourceUri,
+                name: `[sestest] ${datasetNode1.label as string}`,
+            },
+            {
+                uri: datasetNode2.resourceUri,
+                name: `[sestest] ${datasetNode2.label as string}`,
+            }
+        );
     });
     it("adds a USS session w/ fullPath to the workspace", () => {
         const ussNode = new ZoweUSSNode({
@@ -617,9 +645,9 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
     });
     it("skips adding a resource that's already in the workspace", () => {
         const ussNode = new ZoweUSSNode({
-            label: "textFile.txt",
+            label: "testFolder",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
-            contextOverride: Constants.USS_TEXT_FILE_CONTEXT,
+            contextOverride: Constants.USS_DIR_CONTEXT,
             profile: createIProfile(),
         });
         const workspaceFolders = new MockedProperty(vscode.workspace, "workspaceFolders", {
@@ -650,5 +678,35 @@ describe("Shared utils unit tests - function copyExternalLink", () => {
         const ussNode = createUSSNode(createISession(), createIProfile());
         await SharedUtils.copyExternalLink({ extension: { id: "Zowe.vscode-extension-for-zowe" } } as any, ussNode);
         expect(copyClipboardMock).toHaveBeenCalledWith(`vscode://Zowe.vscode-extension-for-zowe?${ussNode.resourceUri?.toString()}`);
+    });
+});
+
+describe("Shared utils unit tests - function debounce", () => {
+    beforeAll(() => {
+        jest.useFakeTimers();
+    });
+
+    afterAll(() => {
+        jest.useRealTimers();
+    });
+
+    it("executes a function twice when time between calls is long", () => {
+        const mockEventHandler = jest.fn();
+        const debouncedFn = SharedUtils.debounce(mockEventHandler, 100);
+        debouncedFn();
+        jest.runAllTimers();
+        debouncedFn();
+        jest.runAllTimers();
+        expect(mockEventHandler).toHaveBeenCalledTimes(2);
+    });
+
+    it("executes a function only once when time between calls is short", () => {
+        const mockEventHandler = jest.fn();
+        const debouncedFn = SharedUtils.debounce(mockEventHandler, 100);
+        debouncedFn();
+        jest.advanceTimersByTime(10);
+        debouncedFn();
+        jest.runAllTimers();
+        expect(mockEventHandler).toHaveBeenCalledTimes(1);
     });
 });

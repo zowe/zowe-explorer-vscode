@@ -31,6 +31,7 @@ import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
+import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
@@ -325,7 +326,6 @@ describe("Test src/shared/extension", () => {
         let context: any;
         let watcherPromise: any;
         const fakeUri = { fsPath: "fsPath" };
-        const spyReadFile = jest.fn().mockReturnValue(Buffer.from("test"));
         const mockEmitter = jest.fn();
         const watcher: any = {
             onDidCreate: jest.fn(),
@@ -336,13 +336,9 @@ describe("Test src/shared/extension", () => {
             context = { subscriptions: [] };
             jest.clearAllMocks();
             Object.defineProperty(vscode.workspace, "workspaceFolders", { value: [{ uri: fakeUri }], configurable: true });
-            Object.defineProperty(vscode.workspace, "fs", { value: { readFile: spyReadFile }, configurable: true });
-            Object.defineProperty(Constants, "SAVED_PROFILE_CONTENTS", {
-                value: new Map(Object.entries({ [fakeUri.fsPath]: Buffer.from("test") })),
-                configurable: true,
-            });
             jest.spyOn(vscode.workspace, "createFileSystemWatcher").mockReturnValue(watcher);
             jest.spyOn(ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter, "fire").mockImplementation(mockEmitter);
+            jest.spyOn(SharedUtils, "debounce").mockImplementation((cb: any) => cb);
         });
 
         afterAll(() => {
@@ -375,19 +371,6 @@ describe("Test src/shared/extension", () => {
             SharedInit.watchConfigProfile(context);
             await watcherPromise;
             expect(context.subscriptions).toContain(watcher);
-            expect(spyReadFile).toHaveBeenCalledWith(fakeUri);
-            expect(spyRefreshAll).not.toHaveBeenCalled();
-            expect(mockEmitter).not.toHaveBeenCalled();
-        });
-
-        it("should be able to trigger onDidChange listener with changes", async () => {
-            const spyRefreshAll = jest.spyOn(SharedActions, "refreshAll").mockImplementation();
-            spyReadFile.mockReturnValueOnce(Buffer.from("other"));
-            watcher.onDidChange.mockImplementationOnce((fun) => (watcherPromise = fun(fakeUri)));
-            SharedInit.watchConfigProfile(context);
-            await watcherPromise;
-            expect(context.subscriptions).toContain(watcher);
-            expect(spyReadFile).toHaveBeenCalledWith(fakeUri);
             expect(spyRefreshAll).toHaveBeenCalledTimes(1);
             expect(mockEmitter).toHaveBeenCalledTimes(1);
         });
@@ -409,7 +392,7 @@ describe("Test src/shared/extension", () => {
 
             // Spy callback behavior
             const spyTranslatedLog = jest.spyOn(vscode.l10n, "t");
-            const spyGetProfileInfo = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockImplementationOnce(jest.fn());
+            const spyGetProfileInfo = jest.spyOn(profUtils.ProfilesUtils, "setupProfileInfo").mockImplementationOnce(jest.fn());
             const spyReadConfigFromDisk = jest.spyOn(profUtils.ProfilesUtils, "readConfigFromDisk").mockImplementationOnce(jest.fn());
             const spyRefreshAll = jest.spyOn(SharedActions, "refreshAll").mockImplementation(jest.fn());
 
@@ -448,39 +431,6 @@ describe("Test src/shared/extension", () => {
             expect(spyGuiError.mock.calls[0][0]).toContain(testError);
             expect(spyGuiError.mock.calls[1][0]).toContain("credential manager changes");
             expect(spyGuiError.mock.calls[1][0]).toContain(testError);
-        });
-
-        it("should replace the function signature for EventProcessor.emitZoweEvent to set Constant.IGNORE_VAULT_CHANGE", async () => {
-            const emitZoweEventOverride = jest.fn();
-            const emitZoweEventMock = new MockedProperty(imperative.EventProcessor.prototype, "emitZoweEvent", {
-                set: emitZoweEventOverride,
-                configurable: true,
-            });
-            SharedInit.watchConfigProfile(context);
-            expect(emitZoweEventOverride).toHaveBeenCalled();
-            emitZoweEventMock[Symbol.dispose]();
-        });
-
-        it("should replace the function signature for EventProcessor.emitZoweEvent to set Constant.IGNORE_VAULT_CHANGE", async () => {
-            const emitZoweEventOverride = jest.fn();
-            const emitZoweEventMock = new MockedProperty(imperative.EventProcessor.prototype, "emitZoweEvent", {
-                set: emitZoweEventOverride,
-                configurable: true,
-            });
-            SharedInit.watchConfigProfile(context);
-            expect(emitZoweEventOverride).toHaveBeenCalled();
-            emitZoweEventMock[Symbol.dispose]();
-        });
-
-        it("should subscribe to the ON_VAULT_CHANGED event using EventProcessor.subscribeUser", async () => {
-            const subscribeUser = jest.fn();
-            const getWatcherMock = jest.spyOn(imperative.EventOperator, "getWatcher").mockReturnValue({
-                subscribeUser,
-            } as any);
-
-            SharedInit.watchConfigProfile(context);
-            expect(getWatcherMock).toHaveBeenCalled();
-            expect(subscribeUser).toHaveBeenCalledWith(imperative.ZoweUserEvents.ON_VAULT_CHANGED, SharedInit.onVaultChanged);
         });
     });
 
@@ -565,35 +515,6 @@ describe("Test src/shared/extension", () => {
             expect(errorMock).toHaveBeenCalledWith(sampleError.message);
             expect(remoteLookupMock).toHaveBeenCalled();
             remoteLookupMock.mockRestore();
-        });
-    });
-
-    describe("emitZoweEventHook", () => {
-        it("sets Constants.IGNORE_VAULT_CHANGE to true if emitZoweEvent is called and calls the original function", () => {
-            const originalEmitZoweEvent = new MockedProperty(SharedInit, "originalEmitZoweEvent", undefined, jest.fn());
-            SharedInit.emitZoweEventHook({} as any, imperative.ZoweUserEvents.ON_VAULT_CHANGED);
-            expect(Constants.IGNORE_VAULT_CHANGE).toBe(true);
-            expect(originalEmitZoweEvent.mock).toHaveBeenCalled();
-            originalEmitZoweEvent[Symbol.dispose]();
-        });
-    });
-    describe("onVaultChanged", () => {
-        it("resets Constants.IGNORE_VAULT_CHANGE if it is true and returns early", async () => {
-            const infoSpy = jest.spyOn(ZoweLogger, "info");
-            Constants.IGNORE_VAULT_CHANGE = true;
-            await SharedInit.onVaultChanged();
-            expect(Constants.IGNORE_VAULT_CHANGE).toBe(false);
-            expect(infoSpy).not.toHaveBeenCalled();
-        });
-
-        it("calls SharedActions.refreshAll and ProfilesUtils.readConfigFromDisk on vault change", async () => {
-            const loggerInfo = jest.spyOn(ZoweLogger, "info").mockImplementation();
-            const readCfgFromDisk = jest.spyOn(profUtils.ProfilesUtils, "readConfigFromDisk").mockImplementation();
-            const refreshAll = jest.spyOn(SharedActions, "refreshAll").mockImplementation();
-            await SharedInit.onVaultChanged();
-            expect(loggerInfo).toHaveBeenCalledWith("Changes in the credential vault detected, refreshing Zowe Explorer.");
-            expect(readCfgFromDisk).toHaveBeenCalled();
-            expect(refreshAll).toHaveBeenCalled();
         });
     });
 });

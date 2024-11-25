@@ -19,7 +19,7 @@ import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreator
 import { createJobsTree, createIJobObject } from "../../__mocks__/mockCreators/jobs";
 import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
-import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
+import { LocalStorageAccess, ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { UssFSProvider } from "../../../src/trees/uss/UssFSProvider";
 import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
@@ -71,7 +71,7 @@ describe("ZoweExplorerExtender unit tests", () => {
             value: newMocks.mockTextDocument,
             configurable: true,
         });
-        Object.defineProperty(ZoweLocalStorage, "storage", {
+        Object.defineProperty(ZoweLocalStorage, "globalState", {
             value: {
                 get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
                 update: jest.fn(),
@@ -242,7 +242,7 @@ describe("ZoweExplorerExtender unit tests", () => {
 
         const readProfilesFromDiskSpy = jest.fn();
         const refreshProfilesQueueAddSpy = jest.spyOn((ZoweExplorerExtender as any).refreshProfilesQueue, "add");
-        jest.spyOn(ProfilesUtils, "getProfileInfo").mockReturnValueOnce({
+        jest.spyOn(ProfilesUtils, "setupProfileInfo").mockReturnValueOnce({
             readProfilesFromDisk: readProfilesFromDiskSpy,
         } as any);
         await expect(blockMocks.instTest.initForZowe("USS", ["" as any])).resolves.not.toThrow();
@@ -322,6 +322,13 @@ describe("ZoweExplorerExtender unit tests", () => {
         it("returns the singleton instance of ErrorCorrelator", () => {
             const blockMocks = createBlockMocks();
             expect(blockMocks.instTest.getErrorCorrelator()).toBe(ErrorCorrelator.getInstance());
+        });
+    });
+
+    describe("getLocalStorage", () => {
+        it("returns the singleton instance of LocalStorageAccess", () => {
+            const blockMocks = createBlockMocks();
+            expect(blockMocks.instTest.getLocalStorage()).toBe(LocalStorageAccess);
         });
     });
 });

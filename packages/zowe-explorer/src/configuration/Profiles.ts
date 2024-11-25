@@ -47,7 +47,6 @@ export class Profiles extends ProfilesCache {
             await Profiles.getInstance().getProfileInfo();
         } catch (err) {
             ZoweLogger.error(err);
-            ZoweExplorerExtender.showZoweConfigError(err.message);
         }
         return Profiles.loader;
     }
@@ -88,6 +87,16 @@ export class Profiles extends ProfilesCache {
         return this.mProfileInfo;
     }
 
+    public showProfileInactiveMsg(profileName: string): void {
+        const inactiveMsg = vscode.l10n.t({
+            message: "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
+            args: [profileName],
+            comment: ["Profile name"],
+        });
+        ZoweLogger.error(inactiveMsg);
+        void Gui.errorMessage(inactiveMsg);
+    }
+
     public async checkCurrentProfile(theProfile: imperative.IProfileLoaded): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
         let profileStatus: Validation.IValidationProfile = { name: theProfile.name, status: "unverified" };
@@ -107,8 +116,12 @@ export class Profiles extends ProfilesCache {
                 (profile) => !(profile.name === theProfile.name && profile.status !== "unverified")
             );
             try {
-                await Profiles.getInstance().ssoLogin(null, theProfile.name);
+                const loggedIn = await Profiles.getInstance().ssoLogin(null, theProfile.name);
                 theProfile = Profiles.getInstance().loadNamedProfile(theProfile.name);
+
+                if (!loggedIn) {
+                    return { ...profileStatus, status: "inactive" };
+                }
             } catch (error) {
                 await AuthUtils.errorHandling(error, { profile: theProfile });
                 return profileStatus;
@@ -129,6 +142,9 @@ export class Profiles extends ProfilesCache {
             if (values) {
                 theProfile.profile.user = values[0];
                 theProfile.profile.password = values[1];
+            } else {
+                this.validProfile = Validation.ValidationType.INVALID;
+                return { ...profileStatus, status: "inactive" };
             }
         }
 
@@ -601,7 +617,6 @@ export class Profiles extends ProfilesCache {
             ZoweExplorerApiRegister.getInstance()
         );
         if (!promptInfo) {
-            Gui.showMessage(this.profilesOpCancelled);
             return; // See https://github.com/zowe/zowe-explorer-vscode/issues/1827
         }
 
@@ -815,8 +830,6 @@ export class Profiles extends ProfilesCache {
                         comment: ["Service profile name"],
                     })
                 );
-            } else {
-                Gui.showMessage(this.profilesOpCancelled);
             }
             return loginOk;
         } catch (err) {
@@ -952,7 +965,7 @@ export class Profiles extends ProfilesCache {
 
                 if (creds !== undefined) {
                     const successMsg = vscode.l10n.t(
-                        "Login using basic authentication was successful for profile {0}.",
+                        "Changing authentication to basic was successful for profile {0}.",
                         typeof profile === "string" ? profile : profile.name
                     );
                     ZoweLogger.info(successMsg);

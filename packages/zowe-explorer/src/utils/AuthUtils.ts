@@ -26,8 +26,8 @@ interface ErrorContext {
 export class AuthUtils {
     public static async promptForAuthentication(
         imperativeError: imperative.ImperativeError,
-        correlation: CorrelatedError,
-        profile: imperative.IProfileLoaded
+        profile: imperative.IProfileLoaded,
+        correlation?: CorrelatedError
     ): Promise<boolean> {
         if (imperativeError.mDetails.additionalDetails) {
             const tokenError: string = imperativeError.mDetails.additionalDetails;
@@ -35,16 +35,15 @@ export class AuthUtils {
 
             if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
                 const message = vscode.l10n.t("Log in to Authentication Service");
-                const success = Gui.showMessage(correlation.message, { items: [message] }).then(async (selection) => {
-                    if (selection) {
-                        return Constants.PROFILES_CACHE.ssoLogin(null, profile.name);
-                    }
+                const userResp = await Gui.showMessage(correlation?.message ?? imperativeError.message, {
+                    items: [message],
+                    vsCodeOpts: { modal: true },
                 });
-                return success;
+                return userResp === message ? Constants.PROFILES_CACHE.ssoLogin(null, profile.name) : false;
             }
         }
         const checkCredsButton = vscode.l10n.t("Update Credentials");
-        const creds = await Gui.errorMessage(correlation.message, {
+        const creds = await Gui.errorMessage(correlation?.message ?? imperativeError.message, {
             items: [checkCredsButton],
             vsCodeOpts: { modal: true },
         }).then(async (selection) => {
@@ -54,6 +53,24 @@ export class AuthUtils {
             return Constants.PROFILES_CACHE.promptCredentials(profile, true);
         });
         return creds != null ? true : false;
+    }
+
+    public static promptForAuthError(err: Error, profile: imperative.IProfileLoaded): void {
+        if (
+            err instanceof imperative.ImperativeError &&
+            profile != null &&
+            (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
+                err.message.includes("All configured authentication methods failed"))
+        ) {
+            const correlation = ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.All, err, {
+                templateArgs: {
+                    profileName: profile.name
+                }
+            });
+            void AuthUtils.promptForAuthentication(err, profile, correlation).catch(
+                (error) => error instanceof Error && ZoweLogger.error(error.message)
+            );
+        }
     }
 
     public static async openConfigForMissingHostname(profile: imperative.IProfileLoaded): Promise<void> {
@@ -97,14 +114,14 @@ export class AuthUtils {
                 (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
                     imperativeError.message.includes("All configured authentication methods failed"))
             ) {
-                return AuthUtils.promptForAuthentication(imperativeError, correlation, profile);
+                return AuthUtils.promptForAuthentication(imperativeError, profile, correlation);
             }
         }
         if (errorDetails.toString().includes("Could not find profile")) {
             return false;
         }
 
-        await ErrorCorrelator.getInstance().displayCorrelatedError(correlation, { templateArgs: { profileName: profile?.name ?? "" } });
+        void ErrorCorrelator.getInstance().displayCorrelatedError(correlation, { templateArgs: { profileName: profile?.name ?? "" } });
         return false;
     }
 
@@ -112,7 +129,7 @@ export class AuthUtils {
      * Prompts user to log in to authentication service.
      * @param profileName The name of the profile used to log in
      */
-    public static promptUserForSsoLogin(profileName: string): Thenable<void> {
+    public static promptForSsoLogin(profileName: string): Thenable<string> {
         return Gui.showMessage(
             vscode.l10n.t({
                 message:
@@ -125,6 +142,7 @@ export class AuthUtils {
             if (selection) {
                 await Constants.PROFILES_CACHE.ssoLogin(null, profileName);
             }
+            return selection;
         });
     }
 

@@ -28,6 +28,8 @@ import {
 import { Constants } from "../configuration/Constants";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
 import { ZoweLogger } from "../tools/ZoweLogger";
+import { LocalStorageAccess } from "../tools/ZoweLocalStorage";
+import { ILocalStorageAccess } from "@zowe/zowe-explorer-api/src/extend/ILocalStorageAccess";
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
@@ -171,7 +173,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
          */
         let profileInfo: imperative.ProfileInfo;
         try {
-            profileInfo = await ProfilesUtils.getProfileInfo();
+            profileInfo = await ProfilesUtils.setupProfileInfo();
             await profileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir });
         } catch (error) {
             ZoweLogger.warn(error);
@@ -219,6 +221,10 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
                 }
             }
         }
+    }
+
+    public getLocalStorage(): ILocalStorageAccess {
+        return LocalStorageAccess;
     }
 
     /**

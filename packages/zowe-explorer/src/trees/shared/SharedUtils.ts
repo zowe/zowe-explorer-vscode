@@ -306,6 +306,10 @@ export class SharedUtils {
     ): void {
         const workspaceFolders = vscode.workspace.workspaceFolders;
         const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
+        const urisToAdd: {
+            name: string;
+            uri: vscode.Uri;
+        }[] = [];
         for (const item of selectedNodes) {
             let resourceUri = item.resourceUri;
             const isSession = SharedContext.isSession(item);
@@ -327,10 +331,27 @@ export class SharedUtils {
                 continue;
             }
 
-            vscode.workspace.updateWorkspaceFolders(workspaceFolders?.length ?? 0, null, {
-                uri: resourceUri,
+            urisToAdd.push({
                 name: `[${item.getProfileName()}] ${SharedContext.isDatasetNode(item) ? (item.label as string) : item.fullPath}`,
+                uri: resourceUri,
             });
         }
+
+        vscode.workspace.updateWorkspaceFolders(workspaceFolders?.length ?? 0, null, ...urisToAdd);
+    }
+
+    /**
+     * Debounces an event handler to prevent duplicate triggers.
+     * @param callback Event handler callback
+     * @param delay Number of milliseconds to delay
+     */
+    public static debounce<T extends (...args: any[]) => void>(callback: T, delay: number): (...args: Parameters<T>) => void {
+        let timeoutId: ReturnType<typeof setTimeout>;
+        return (...args: Parameters<T>): void => {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            timeoutId = setTimeout(() => callback(...args), delay);
+        };
     }
 }

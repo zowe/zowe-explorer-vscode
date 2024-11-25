@@ -48,6 +48,7 @@
   "Submit": "Submit",
   "Cancel": "Cancel",
   "Troubleshoot Error": "Troubleshoot Error",
+  "rename": "rename",
   "Zowe Explorer profiles are being set as unsecured.": "Zowe Explorer profiles are being set as unsecured.",
   "Zowe Explorer profiles are being set as secured.": "Zowe Explorer profiles are being set as secured.",
   "Custom credential manager failed to activate": "Custom credential manager failed to activate",
@@ -57,10 +58,9 @@
       "Credential manager display name"
     ]
   },
-  "Yes, globally": "Yes, globally",
-  "Only for this workspace": "Only for this workspace",
-  "Zowe Explorer failed to activate since the default credential manager is not supported in your environment.": "Zowe Explorer failed to activate since the default credential manager is not supported in your environment.",
-  "Do you wish to disable credential management? (VS Code window reload will be triggered)": "Do you wish to disable credential management? (VS Code window reload will be triggered)",
+  "Zowe Explorer's default credential manager is not supported in your environment. Consider installing a custom solution for your platform. Click Reload to start Zowe Explorer without a credential manager.": "Zowe Explorer's default credential manager is not supported in your environment. Consider installing a custom solution for your platform. Click Reload to start Zowe Explorer without a credential manager.",
+  "Reload window": "Reload window",
+  "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions.": "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions.",
   "No custom credential managers found, using the default instead.": "No custom credential managers found, using the default instead.",
   "Custom credential manager {0} found/Credential manager display name": {
     "message": "Custom credential manager {0} found",
@@ -80,6 +80,7 @@
   "Please install associated VS Code extension for custom credential manager or revert to default.": "Please install associated VS Code extension for custom credential manager or revert to default.",
   "Use Default": "Use Default",
   "Install": "Install",
+  "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager": "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager",
   "Reload": "Reload",
   "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.": "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.",
   "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.": "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.",
@@ -127,6 +128,7 @@
     ]
   },
   "Zowe profiles initialized successfully.": "Zowe profiles initialized successfully.",
+  "Zowe V1 profiles in use.\nZowe Explorer no longer supports V1 profiles. Choose to convert existing profiles to a team configuration or create new profiles.": "Zowe V1 profiles in use.\nZowe Explorer no longer supports V1 profiles. Choose to convert existing profiles to a team configuration or create new profiles.",
   "Convert existing profiles": "Convert existing profiles",
   "Tree item is not a Zowe Explorer item.": "Tree item is not a Zowe Explorer item.",
   "Zowe Explorer": "Zowe Explorer",
@@ -167,12 +169,6 @@
       "Profile name"
     ]
   },
-  "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct./Profile name": {
-    "message": "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
-    "comment": [
-      "Profile name"
-    ]
-  },
   "Use the search button to list USS files": "Use the search button to list USS files",
   "Invalid node": "Invalid node",
   "Delete action was cancelled.": "Delete action was cancelled.",
@@ -206,12 +202,6 @@
   "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
   "Failed to move {0}/File path": {
     "message": "Failed to move {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Failed to get contents for {0}/File path": {
-    "message": "Failed to get contents for {0}",
     "comment": [
       "File path"
     ]
@@ -263,13 +253,6 @@
   "Confirm": "Confirm",
   "One or more items may be overwritten from this drop operation. Confirm or cancel?": "One or more items may be overwritten from this drop operation. Confirm or cancel?",
   "Moving USS files...": "Moving USS files...",
-  "Unable to rename {0} because you have unsaved changes in this {1}. Please save your work before renaming the {1}./Node pathNode type": {
-    "message": "Unable to rename {0} because you have unsaved changes in this {1}. Please save your work before renaming the {1}.",
-    "comment": [
-      "Node path",
-      "Node type"
-    ]
-  },
   "Enter a new name for the {0}/Node type": {
     "message": "Enter a new name for the {0}",
     "comment": [
@@ -387,10 +370,10 @@
       "Name of USS session"
     ]
   },
-  "Changes in the credential vault detected, refreshing Zowe Explorer.": "Changes in the credential vault detected, refreshing Zowe Explorer.",
   "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",
   "Team config file deleted, refreshing Zowe Explorer.": "Team config file deleted, refreshing Zowe Explorer.",
-  "Team config file updated.": "Team config file updated.",
+  "Team config file updated, refreshing Zowe Explorer.": "Team config file updated, refreshing Zowe Explorer.",
+  "Changes in the credential vault detected, refreshing Zowe Explorer.": "Changes in the credential vault detected, refreshing Zowe Explorer.",
   "Changes in credential management detected, refreshing Zowe Explorer.": "Changes in credential management detected, refreshing Zowe Explorer.",
   "Zowe Explorer has activated successfully.": "Zowe Explorer has activated successfully.",
   "Type the new pattern to add to history": "Type the new pattern to add to history",
@@ -506,12 +489,6 @@
   "Phase Name": "Phase Name",
   "Error Details": "Error Details",
   "Fetching spool file...": "Fetching spool file...",
-  "Failed to get contents for {0}/Spool name": {
-    "message": "Failed to get contents for {0}",
-    "comment": [
-      "Spool name"
-    ]
-  },
   "Failed to delete job {0}/Job name": {
     "message": "Failed to delete job {0}",
     "comment": [
@@ -904,6 +881,18 @@
     ]
   },
   "Error encountered while activating and initializing logger": "Error encountered while activating and initializing logger",
+  "Insufficient read permissions for {0} in local storage./Local storage key": {
+    "message": "Insufficient read permissions for {0} in local storage.",
+    "comment": [
+      "Local storage key"
+    ]
+  },
+  "Insufficient write permissions for {0} in local storage./Local storage key": {
+    "message": "Insufficient write permissions for {0} in local storage.",
+    "comment": [
+      "Local storage key"
+    ]
+  },
   "Add Credentials": "Add Credentials",
   "Add username and password for basic authentication": "Add username and password for basic authentication",
   "Update stored username and password": "Update stored username and password",
@@ -980,7 +969,14 @@
     ]
   },
   "Reload Window": "Reload Window",
+  "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.": "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.",
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.",
+  "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct./Profile name": {
+    "message": "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
+    "comment": [
+      "Profile name"
+    ]
+  },
   "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree",
   "Choose \"Create new...\" to define or select a profile to add to the JOBS tree": "Choose \"Create new...\" to define or select a profile to add to the JOBS tree",
   "Choose \"Create new...\" to define or select a profile to add to the USS tree": "Choose \"Create new...\" to define or select a profile to add to the USS tree",
@@ -1052,7 +1048,7 @@
   "Cannot switch to token-based authentication for profile {0}.": "Cannot switch to token-based authentication for profile {0}.",
   "Login using token-based authentication service was successful for profile {0}.": "Login using token-based authentication service was successful for profile {0}.",
   "Unable to switch to token-based authentication for profile {0}.": "Unable to switch to token-based authentication for profile {0}.",
-  "Login using basic authentication was successful for profile {0}.": "Login using basic authentication was successful for profile {0}.",
+  "Changing authentication to basic was successful for profile {0}.": "Changing authentication to basic was successful for profile {0}.",
   "Unable to switch to basic authentication for profile {0}.": "Unable to switch to basic authentication for profile {0}.",
   "Unable to switch authentication for profile {0}.": "Unable to switch authentication for profile {0}.",
   "Logout from authentication service was successful for {0}./Service profile name": {

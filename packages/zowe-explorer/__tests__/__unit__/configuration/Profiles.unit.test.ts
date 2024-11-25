@@ -27,8 +27,17 @@ import {
     createMockNode,
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
-import { createProfileManager } from "../../__mocks__/mockCreators/profiles";
-import { imperative, Gui, ZoweTreeNode, ZoweVsCodeExtension, IZoweTree, IZoweTreeNode, Validation, FileManagement } from "@zowe/zowe-explorer-api";
+import {
+    imperative,
+    Gui,
+    ZoweTreeNode,
+    ZoweVsCodeExtension,
+    IZoweTree,
+    IZoweTreeNode,
+    Validation,
+    FileManagement,
+    ProfilesCache,
+} from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
@@ -73,7 +82,6 @@ function createGlobalMocks(): { [key: string]: any } {
         testUSSTree: null as any as USSTree,
         testNode: createMockNode("test", Constants.DS_SESSION_CONTEXT),
         testSession: createISession(),
-        mockCliProfileManager: createProfileManager(),
         ProgressLocation: jest.fn().mockImplementation(() => {
             return {
                 Notification: 15,
@@ -146,7 +154,7 @@ function createGlobalMocks(): { [key: string]: any } {
         configurable: true,
     });
 
-    Object.defineProperty(ZoweLocalStorage, "storage", {
+    Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: jest.fn(() => ({ persistence: true })),
             update: jest.fn(),
@@ -194,6 +202,10 @@ function createGlobalMocks(): { [key: string]: any } {
         value: jest.fn(() => {
             return true;
         }),
+        configurable: true,
+    });
+    Object.defineProperty(ProfilesCache, "getProfileSessionWithVscProxy", {
+        value: jest.fn().mockReturnValue(newMocks.testSession),
         configurable: true,
     });
 
@@ -1051,7 +1063,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
         environmentSetup(globalMocks);
         setupProfilesCheck(globalMocks);
-        const ssoLoginSpy = jest.spyOn(Profiles.getInstance(), "ssoLogin").mockResolvedValueOnce();
+        const ssoLoginSpy = jest.spyOn(Profiles.getInstance(), "ssoLogin").mockResolvedValueOnce(true);
         jest.spyOn(Profiles.getInstance(), "loadNamedProfile").mockReturnValueOnce(globalMocks.testProfile);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
         expect(ssoLoginSpy).toHaveBeenCalledTimes(1);
@@ -2448,5 +2460,22 @@ describe("Profiles Unit Tests - function tokenAuthClearSecureArray", () => {
         expect(teamCfgMock.save).toHaveBeenCalled();
         getProfileInfoMock.mockRestore();
         getProfileFromConfigMock.mockRestore();
+    });
+});
+
+describe("Profiles unit tests - function showProfilesInactiveMsg", () => {
+    it("should call ZoweLogger.error to log the error", () => {
+        const errorSpy = jest.spyOn(ZoweLogger, "error");
+        Profiles.getInstance().showProfileInactiveMsg("profName");
+        expect(errorSpy).toHaveBeenCalledWith(
+            "Profile profName is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
+        );
+    });
+    it("should call Gui.errorMessage to display the message", () => {
+        const errorMsgSpy = jest.spyOn(Gui, "errorMessage");
+        Profiles.getInstance().showProfileInactiveMsg("profName");
+        expect(errorMsgSpy).toHaveBeenCalledWith(
+            "Profile profName is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
+        );
     });
 });

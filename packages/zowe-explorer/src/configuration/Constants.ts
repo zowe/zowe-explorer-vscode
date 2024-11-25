@@ -26,6 +26,7 @@ export class Constants {
     public static readonly HOME_SUFFIX = Constants.CONTEXT_PREFIX + "home";
     public static readonly FAV_PROFILE_CONTEXT = "profile_fav";
     public static readonly RC_SUFFIX = Constants.CONTEXT_PREFIX + "rc=";
+    public static readonly TYPE_SUFFIX = Constants.CONTEXT_PREFIX + "type=";
     public static readonly VALIDATE_SUFFIX = Constants.CONTEXT_PREFIX + "validate";
     public static readonly NO_VALIDATE_SUFFIX = Constants.CONTEXT_PREFIX + "noValidate";
     public static readonly INFORMATION_CONTEXT = "information";
@@ -82,8 +83,6 @@ export class Constants {
     public static DS_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7}(\.[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7})*$/;
     public static MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$]{0,7}$/;
     public static ACTIVATED = false;
-    public static SAVED_PROFILE_CONTENTS = new Map<string, Buffer>();
-    public static IGNORE_VAULT_CHANGE = false;
     public static readonly JOBS_MAX_PREFIX = 8;
     public static PROFILES_CACHE: Profiles;
     public static readonly WORKSPACE_UTIL_TAB_SWITCH_DELAY = 200;

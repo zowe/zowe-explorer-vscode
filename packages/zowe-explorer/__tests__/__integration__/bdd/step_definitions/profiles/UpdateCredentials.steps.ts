@@ -9,61 +9,28 @@
  *
  */
 
-import * as fs from "fs";
-import * as path from "path";
-import { AfterAll, Then, When } from "@cucumber/cucumber";
+import { Then, When } from "@cucumber/cucumber";
 import { paneDivForTree } from "../../../../__common__/shared.wdio";
 import quickPick from "../../../../__pageobjects__/QuickPick";
 import { Key } from "webdriverio";
+import { TreeItem } from "wdio-vscode-service";
 
-const USER_CONFIG_FILE = path.join(process.env.ZOWE_CLI_HOME, "zowe.config.user.json");
-
-AfterAll(() => {
-    fs.rmSync(USER_CONFIG_FILE, { force: true });
-});
-When(/a user who has profile with (.*) auth in team config/, function (authType: string) {
-    // TODO: We need to copy from Global Config until Imperative API is fixed
-    // See https://github.com/zowe/zowe-cli/issues/2273
+When(/the user has a (.*) profile in their Data Sets tree/, async function (authType: string) {
     this.authType = authType;
-    const tempCfg = JSON.parse(fs.readFileSync(USER_CONFIG_FILE.replace(".user", ""), "utf-8"));
-    const testConfig = {
-        $schema: "./zowe.schema.json",
-        profiles: {
-            ...tempCfg.profiles,
-            zosmf1: {
-                type: null, // Disable default global zosmf profile
-            },
-            [`zosmf_${authType}`]: {
-                type: "zosmf",
-                properties: {},
-                secure: [],
-            },
-        },
-        defaults: {
-            ...tempCfg.defaults,
-            zosmf: `zosmf_${authType}`,
-        },
-    };
-    if (authType === "basic") {
-        testConfig.profiles.zosmf_basic.secure.push("user", "password");
-    } else if (authType === "token") {
-        testConfig.profiles.zosmf_token.secure.push("tokenValue");
-    }
-    fs.writeFileSync(USER_CONFIG_FILE, JSON.stringify(testConfig, null, 2));
-});
-When("the user has a profile in their Data Sets tree", async function () {
+    // add profile via quick pick
     this.treePane = await paneDivForTree("Data Sets");
-    await browser.waitUntil(async () => {
-        const visibleItems = await this.treePane.getVisibleItems();
-        for (const item of visibleItems) {
-            if ((await item.getLabel()) === `zosmf_${this.authType as string}`) {
-                this.profileNode = item;
-                return true;
-            }
-        }
-
-        return false;
-    });
+    await this.treePane.elem.moveTo();
+    const plusIcon = await this.treePane.getAction(`Add Profile to Data Sets View`);
+    await expect(plusIcon).toBeDefined();
+    await plusIcon.elem.click();
+    await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());
+    const testProfileEntry = await quickPick.findItem(`$(home) zosmf_${this.authType as string}`);
+    await expect(testProfileEntry).toBeClickable();
+    await testProfileEntry.click();
+    this.yesOpt = await quickPick.findItem("Yes, Apply to all trees");
+    await expect(this.yesOpt).toBeClickable();
+    await this.yesOpt.click();
+    this.profileNode = (await this.treePane.findItem(`zosmf_${this.authType as string}`)) as TreeItem;
 });
 When("a user clicks search button for the profile", async function () {
     await this.profileNode.elem.moveTo();
@@ -71,6 +38,7 @@ When("a user clicks search button for the profile", async function () {
 
     // Locate and select the search button on the profile node
     const searchButton = actionButtons[actionButtons.length - 1];
+    await searchButton.wait();
     await expect(searchButton.elem).toBeDefined();
     await searchButton.elem.click();
 });
@@ -86,7 +54,6 @@ Then(/the user will be prompted for (.*) credentials/, async function (authType:
     await browser.keys(Key.Escape);
 });
 Then("the profile node icon will be marked as inactive", async function () {
-    await browser.waitUntil((): Promise<boolean> => this.profileNode.isExpanded());
     const iconElement = await this.profileNode.elem.$(".custom-view-tree-node-item-icon");
     const iconPath = (await iconElement.getCSSProperty("background-image")).value;
     await expect(iconPath).toContain("folder-root-disconnected-closed.svg");

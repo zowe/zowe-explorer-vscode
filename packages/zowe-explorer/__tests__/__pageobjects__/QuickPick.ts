@@ -44,6 +44,8 @@ class QuickPick {
     }
 
     public async findItem(label: string): Promise<ChainablePromiseElement> {
+        // Handle labels that start with a codicon
+        label = label.replace(/^\$\(([^)]+)\)\s/, "$1  ");
         return this.elem.$(`.monaco-list-row[role="option"][aria-label="${label}"]`);
     }
 

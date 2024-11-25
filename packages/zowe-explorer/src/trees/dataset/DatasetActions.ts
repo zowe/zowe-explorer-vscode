@@ -579,7 +579,6 @@ export class DatasetActions {
         );
         const deleteButton = vscode.l10n.t("Delete");
         const message = vscode.l10n.t({
-            // eslint-disable-next-line max-len
             message: `Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}`,
             args: [nodesToDelete.length, nodesToDelete.toString().replace(/(,)/g, "\n")],
             comment: ["Data Sets to delete length", "Data Sets to delete"],
@@ -1372,7 +1371,6 @@ export class DatasetActions {
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             const { dataSetName } = DatasetUtils.getNodeLabels(node);
             try {
-                const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
                 Gui.showMessage(
                     vscode.l10n.t({
                         message: "Migration of data set {0} requested.",
@@ -1380,9 +1378,8 @@ export class DatasetActions {
                         comment: ["Data Set name"],
                     })
                 );
-                node.contextValue = Constants.DS_MIGRATED_FILE_CONTEXT;
-                node.setIcon(IconGenerator.getIconByNode(node).path);
-                datasetProvider.refresh();
+                const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
+                datasetProvider.refreshElement(node.getParent());
                 return response;
             } catch (err) {
                 ZoweLogger.error(err);
@@ -1406,7 +1403,6 @@ export class DatasetActions {
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             const { dataSetName } = DatasetUtils.getNodeLabels(node);
             try {
-                const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
                 Gui.showMessage(
                     vscode.l10n.t({
                         message: "Recall of data set {0} requested.",
@@ -1414,13 +1410,8 @@ export class DatasetActions {
                         comment: ["Data Set name"],
                     })
                 );
-                if (node.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
-                    node.contextValue = Constants.DS_PDS_CONTEXT;
-                } else {
-                    node.contextValue = (await node.getEncoding())?.kind === "binary" ? Constants.DS_DS_BINARY_CONTEXT : Constants.DS_DS_CONTEXT;
-                }
-                node.setIcon(IconGenerator.getIconByNode(node).path);
-                datasetProvider.refresh();
+                const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
+                datasetProvider.refreshElement(node.getParent());
                 return response;
             } catch (err) {
                 ZoweLogger.error(err);

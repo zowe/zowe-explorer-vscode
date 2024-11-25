@@ -244,7 +244,6 @@ export class USSActions {
         const deleteButton = vscode.l10n.t("Delete");
         const message = vscode.l10n.t({
             message:
-                // eslint-disable-next-line max-len
                 "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
             args: [fileNames.toString()],
             comment: ["File names"],

@@ -17,6 +17,7 @@ import { ZosmfProfile } from "@zowe/zosmf-for-zowe-sdk";
 import { ZosTsoProfile } from "@zowe/zos-tso-for-zowe-sdk";
 import { ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
 import { Types } from "../Types";
+import { VscSettings } from "../vscode/doc/VscSettings";
 
 export class ProfilesCache {
     public profilesForValidation: Validation.IValidationProfile[] = [];
@@ -386,6 +387,12 @@ export class ProfilesCache {
     ): Promise<imperative.IConvertV1ProfResult> {
         const convertResult = await imperative.ConvertV1Profiles.convert({ deleteV1Profs, profileInfo });
         return convertResult;
+    }
+
+    public static getProfileSessionWithVscProxy(session: imperative.Session): imperative.Session {
+        const VsCodeProxySettings = VscSettings.getVsCodeProxySettings();
+        session.ISession.proxy = VsCodeProxySettings;
+        return session;
     }
 
     protected getCoreProfileTypes(): imperative.IProfileTypeConfiguration[] {

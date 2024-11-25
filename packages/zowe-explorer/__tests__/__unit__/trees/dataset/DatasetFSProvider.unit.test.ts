@@ -703,7 +703,7 @@ describe("stat", () => {
         expect(lookupMock).toHaveBeenCalledWith(testUris.pdsMember, false);
         expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.pdsMember);
         expect(allMembersMock).toHaveBeenCalledWith("USER.DATA.PDS", { attributes: true });
-        expect(res).toStrictEqual({ ...fakePdsMember, mtime: dayjs("2024-08-08 12:30").unix() });
+        expect(res).toStrictEqual({ ...fakePdsMember, mtime: dayjs("2024-08-08 12:30").valueOf() });
         expect(fakePdsMember.wasAccessed).toBe(false);
         lookupMock.mockRestore();
         lookupParentDirMock.mockRestore();
@@ -1126,6 +1126,7 @@ describe("rename", () => {
             .mockImplementation((uri): DirEntry | FileEntry => ((uri as Uri).path.includes("USER.DATA.PS2") ? (null as any) : oldPs));
         const _lookupParentDirectoryMock = jest
             .spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory")
+            .mockReturnValueOnce({ ...testEntries.session })
             .mockReturnValueOnce({ ...testEntries.session });
         await DatasetFSProvider.instance.rename(testUris.ps, testUris.ps.with({ path: "/USER.DATA.PS2" }), { overwrite: true });
         expect(mockMvsApi.renameDataSet).toHaveBeenCalledWith("USER.DATA.PS", "USER.DATA.PS2");
@@ -1136,6 +1137,10 @@ describe("rename", () => {
 
     it("renames a PDS", async () => {
         const oldPds = new PdsEntry("USER.DATA.PDS");
+        oldPds.metadata = new DsEntryMetadata({ profile: testProfile, path: "/USER.DATA.PDS" });
+        const exampleMember = new DsEntry("TESTMEM", true);
+        exampleMember.metadata = new DsEntryMetadata({ profile: testProfile, path: "/USER.DATA.PDS/TESTMEM" });
+        oldPds.entries.set("TESTMEM", exampleMember);
         oldPds.metadata = testEntries.pds.metadata;
         const mockMvsApi = {
             renameDataSet: jest.fn(),
@@ -1148,6 +1153,7 @@ describe("rename", () => {
             .spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory")
             .mockReturnValueOnce({ ...testEntries.session });
         await DatasetFSProvider.instance.rename(testUris.pds, testUris.pds.with({ path: "/USER.DATA.PDS2" }), { overwrite: true });
+        expect(exampleMember.metadata.path).toBe("/USER.DATA.PDS2/TESTMEM");
         expect(mockMvsApi.renameDataSet).toHaveBeenCalledWith("USER.DATA.PDS", "USER.DATA.PDS2");
         _lookupMock.mockRestore();
         mvsApiMock.mockRestore();

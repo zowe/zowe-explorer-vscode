@@ -252,29 +252,14 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      */
     public async rename(originalNode: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("USSTree.rename called.");
-        const currentFilePath = originalNode.resourceUri.path; // The user's complete local file path for the node
-        const openedTextDocuments: readonly vscode.TextDocument[] = vscode.workspace.textDocuments; // Array of all documents open in VS Code
+        await Profiles.getInstance().checkCurrentProfile(originalNode.getProfile());
+        if (await TreeViewUtils.errorForUnsavedResource(originalNode)) {
+            return;
+        }
+
         const nodeType = SharedContext.isFolder(originalNode) ? "folder" : "file";
         const parentPath = path.dirname(originalNode.fullPath);
 
-        // If the USS node or any of its children are locally open with unsaved data, prevent rename until user saves their work.
-        for (const doc of openedTextDocuments) {
-            const docIsChild = SharedUtils.checkIfChildPath(currentFilePath, doc.fileName);
-            if (doc.fileName === currentFilePath || docIsChild === true) {
-                if (doc.isDirty === true) {
-                    Gui.errorMessage(
-                        vscode.l10n.t({
-                            message:
-                                "Unable to rename {0} because you have unsaved changes in this {1}. Please save your work before renaming the {1}.",
-                            args: [originalNode.fullPath, nodeType],
-                            comment: ["Node path", "Node type"],
-                        }),
-                        { vsCodeOpts: { modal: true } }
-                    );
-                    return;
-                }
-            }
-        }
         const loadedNodes = await this.getAllLoadedItems();
         const options: vscode.InputBoxOptions = {
             prompt: vscode.l10n.t({
@@ -500,7 +485,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 session,
                 profile,
-                contextOverride: Constants.USS_SESSION_CONTEXT,
+                contextOverride: Constants.USS_SESSION_CONTEXT + Constants.TYPE_SUFFIX + profile.type,
             });
             await this.refreshHomeProfileContext(node);
             const icon = IconGenerator.getIconByNode(node);

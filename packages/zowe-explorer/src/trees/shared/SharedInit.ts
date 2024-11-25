@@ -51,8 +51,6 @@ import { ZoweUriHandler } from "../../utils/UriHandler";
 import { TroubleshootError } from "../../utils/TroubleshootError";
 
 export class SharedInit {
-    private static originalEmitZoweEvent: typeof imperative.EventProcessor.prototype.emitEvent;
-
     public static registerCommonCommands(context: vscode.ExtensionContext, providers: Definitions.IZoweProviders): void {
         ZoweLogger.trace("shared.init.registerCommonCommands called.");
 
@@ -311,24 +309,6 @@ export class SharedInit {
         }
     }
 
-    public static emitZoweEventHook(this: void, processor: imperative.EventProcessor, eventName: string): void {
-        if (eventName === imperative.ZoweUserEvents.ON_VAULT_CHANGED) {
-            Constants.IGNORE_VAULT_CHANGE = true;
-        }
-        SharedInit.originalEmitZoweEvent.call(processor, eventName);
-    }
-
-    public static async onVaultChanged(this: void): Promise<void> {
-        if (Constants.IGNORE_VAULT_CHANGE) {
-            Constants.IGNORE_VAULT_CHANGE = false;
-            return;
-        }
-        ZoweLogger.info(vscode.l10n.t("Changes in the credential vault detected, refreshing Zowe Explorer."));
-        await ProfilesUtils.readConfigFromDisk();
-        await SharedActions.refreshAll();
-        ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter.fire(Validation.EventType.UPDATE);
-    }
-
     public static watchConfigProfile(context: vscode.ExtensionContext): void {
         ZoweLogger.trace("shared.init.watchConfigProfile called.");
         const watchers: vscode.FileSystemWatcher[] = [];
@@ -344,40 +324,36 @@ export class SharedInit {
         context.subscriptions.push(...watchers);
 
         watchers.forEach((watcher) => {
-            watcher.onDidCreate(() => {
-                ZoweLogger.info(vscode.l10n.t("Team config file created, refreshing Zowe Explorer."));
-                void SharedActions.refreshAll();
-                ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.CREATE);
-            });
-            watcher.onDidDelete(() => {
-                ZoweLogger.info(vscode.l10n.t("Team config file deleted, refreshing Zowe Explorer."));
-                void SharedActions.refreshAll();
-                ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.DELETE);
-            });
-            watcher.onDidChange(async (uri: vscode.Uri) => {
-                ZoweLogger.info(vscode.l10n.t("Team config file updated."));
-                const newProfileContents = Buffer.from(await vscode.workspace.fs.readFile(uri));
-                if (Constants.SAVED_PROFILE_CONTENTS.get(uri.fsPath)?.equals(newProfileContents)) {
-                    return;
-                }
-                Constants.SAVED_PROFILE_CONTENTS.set(uri.fsPath, newProfileContents);
-                void SharedActions.refreshAll();
-                ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
-            });
+            watcher.onDidCreate(
+                SharedUtils.debounce(() => {
+                    ZoweLogger.info(vscode.l10n.t("Team config file created, refreshing Zowe Explorer."));
+                    void SharedActions.refreshAll();
+                    ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.CREATE);
+                }, 100) // eslint-disable-line no-magic-numbers
+            );
+            watcher.onDidDelete(
+                SharedUtils.debounce(() => {
+                    ZoweLogger.info(vscode.l10n.t("Team config file deleted, refreshing Zowe Explorer."));
+                    void SharedActions.refreshAll();
+                    ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.DELETE);
+                }, 100) // eslint-disable-line no-magic-numbers
+            );
+            watcher.onDidChange(
+                SharedUtils.debounce(() => {
+                    ZoweLogger.info(vscode.l10n.t("Team config file updated, refreshing Zowe Explorer."));
+                    void SharedActions.refreshAll();
+                    ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
+                }, 100) // eslint-disable-line no-magic-numbers
+            );
         });
 
         try {
-            // Workaround to skip ON_VAULT_CHANGED events triggered by ZE and not by external app
-            // TODO: Remove this hack once https://github.com/zowe/zowe-cli/issues/2279 is implemented
-            SharedInit.originalEmitZoweEvent = (imperative.EventProcessor.prototype as any).emitZoweEvent;
-            (imperative.EventProcessor.prototype as any).emitZoweEvent = function (eventName: string): void {
-                SharedInit.emitZoweEventHook(this, eventName);
-            };
-
-            const zoweWatcher = imperative.EventOperator.getWatcher().subscribeUser(
-                imperative.ZoweUserEvents.ON_VAULT_CHANGED,
-                SharedInit.onVaultChanged
-            );
+            const zoweWatcher = imperative.EventOperator.getWatcher().subscribeUser(imperative.ZoweUserEvents.ON_VAULT_CHANGED, async () => {
+                ZoweLogger.info(vscode.l10n.t("Changes in the credential vault detected, refreshing Zowe Explorer."));
+                await ProfilesUtils.readConfigFromDisk();
+                await SharedActions.refreshAll();
+                ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter.fire(Validation.EventType.UPDATE);
+            });
             context.subscriptions.push(new vscode.Disposable(zoweWatcher.close.bind(zoweWatcher)));
         } catch (err) {
             Gui.errorMessage("Unable to watch for vault changes. " + JSON.stringify(err));
@@ -388,7 +364,7 @@ export class SharedInit {
                 imperative.ZoweSharedEvents.ON_CREDENTIAL_MANAGER_CHANGED,
                 async () => {
                     ZoweLogger.info(vscode.l10n.t("Changes in credential management detected, refreshing Zowe Explorer."));
-                    await ProfilesUtils.getProfileInfo();
+                    await ProfilesUtils.setupProfileInfo();
                     await SharedActions.refreshAll();
                     ZoweExplorerApiRegister.getInstance().onCredMgrUpdateEmitter.fire(Validation.EventType.UPDATE);
                 }

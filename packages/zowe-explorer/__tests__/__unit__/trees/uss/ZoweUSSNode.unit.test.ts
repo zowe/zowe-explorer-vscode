@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
-import { Gui, imperative, UssDirectory, UssFile, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, ProfilesCache, UssDirectory, UssFile, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
@@ -159,12 +159,16 @@ function createGlobalMocks() {
         value: globalMocks.fileExistsCaseSensitveSync,
         configurable: true,
     });
-    Object.defineProperty(ZoweLocalStorage, "storage", {
+    Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
             update: jest.fn(),
             keys: () => [],
         },
+        configurable: true,
+    });
+    Object.defineProperty(ProfilesCache, "getProfileSessionWithVscProxy", {
+        value: jest.fn().mockReturnValue(globalMocks.session),
         configurable: true,
     });
     return globalMocks;
@@ -426,9 +430,9 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
                 parentPath: "/u/user",
             }),
             providerSpy: jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
-                ds: { addSingleSession: jest.fn(), mSessionNodes: [], refresh: jest.fn() } as any,
-                uss: { addSingleSession: jest.fn(), mSessionNodes: [], refresh: jest.fn() } as any,
-                job: { addSingleSession: jest.fn(), mSessionNodes: [], refresh: jest.fn() } as any,
+                ds: { addSingleSession: jest.fn(), mSessionNodes: [], setStatusForSession: jest.fn(), refresh: jest.fn() } as any,
+                uss: { addSingleSession: jest.fn(), mSessionNodes: [], setStatusForSession: jest.fn(), refresh: jest.fn() } as any,
+                job: { addSingleSession: jest.fn(), mSessionNodes: [], setStatusForSession: jest.fn(), refresh: jest.fn() } as any,
             }),
             renameSpy: jest.spyOn(vscode.workspace.fs, "rename").mockImplementation(),
             getEncodingForFile: jest.spyOn(UssFSProvider.instance as any, "getEncodingForFile").mockReturnValue(undefined),

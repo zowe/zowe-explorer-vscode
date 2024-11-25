@@ -87,6 +87,26 @@ describe("stat", () => {
         expect(listFilesMock).toHaveBeenCalled();
         listFilesMock.mockRestore();
     });
+
+    it("updates a file entry with new modification time and resets wasAccessed flag", async () => {
+        const fakeFile = Object.assign(Object.create(Object.getPrototypeOf(testEntries.file)), testEntries.file);
+        lookupMock.mockReturnValueOnce(fakeFile);
+        const newMtime = Date.now();
+        const listFilesMock = jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [{ name: fakeFile.name, mtime: newMtime }],
+            },
+            commandResponse: "",
+        });
+        await expect(UssFSProvider.instance.stat(testUris.file)).resolves.toStrictEqual(fakeFile);
+        expect(lookupMock).toHaveBeenCalledWith(testUris.file, false);
+        expect(fakeFile.mtime).toBe(newMtime);
+        expect(fakeFile.wasAccessed).toBe(false);
+        expect(listFilesMock).toHaveBeenCalled();
+        listFilesMock.mockRestore();
+    });
+
     it("returns a file as 'read-only' when query has conflict parameter", async () => {
         lookupMock.mockReturnValueOnce(testEntries.file);
         await expect(UssFSProvider.instance.stat(testUris.conflictFile)).resolves.toStrictEqual({
@@ -330,22 +350,20 @@ describe("fetchFileAtUri", () => {
         expect(fileEntry.data?.byteLength).toBe(exampleData.length);
         autoDetectEncodingMock.mockRestore();
     });
-    it("throws an error if it failed to fetch contents", async () => {
+    it("returns early if it failed to fetch contents", async () => {
         const fileEntry = { ...testEntries.file };
+        const _fireSoonSpy = jest.spyOn((UssFSProvider as any).prototype, "_fireSoon");
         const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
         const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation();
         jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
             getContents: jest.fn().mockRejectedValue(new Error("error retrieving contents")),
         } as any);
 
-        const _handleErrorMock = jest.spyOn(UssFSProvider.instance as any, "_handleError").mockImplementation();
-        await expect(UssFSProvider.instance.fetchFileAtUri(testUris.file)).rejects.toThrow();
-
+        await UssFSProvider.instance.fetchFileAtUri(testUris.file);
         expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.file);
         expect(autoDetectEncodingMock).toHaveBeenCalledWith(fileEntry);
-        expect(_handleErrorMock).toHaveBeenCalled();
+        expect(_fireSoonSpy).not.toHaveBeenCalled();
         autoDetectEncodingMock.mockRestore();
-        _handleErrorMock.mockRestore();
     });
     it("calls getContents to get the data for a file entry with encoding", async () => {
         const fileEntry = { ...testEntries.file };

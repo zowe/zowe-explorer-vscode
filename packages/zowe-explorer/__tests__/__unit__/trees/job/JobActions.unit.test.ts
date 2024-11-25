@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as zosconsole from "@zowe/zos-console-for-zowe-sdk";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
-import { Gui, IZoweJobTreeNode, Sorting, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, ProfilesCache, Sorting, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
 import {
     createISession,
     createIProfile,
@@ -123,7 +123,7 @@ function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLocalStorage, "storage", {
+    Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
             update: jest.fn(),
@@ -133,6 +133,10 @@ function createGlobalMocks() {
     });
     Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
         value: jest.fn().mockReturnValue([newMocks.imperativeProfile.name]),
+        configurable: true,
+    });
+    Object.defineProperty(ProfilesCache, "getProfileSessionWithVscProxy", {
+        value: jest.fn().mockReturnValue(newMocks.session),
         configurable: true,
     });
     function settingJobObjects(

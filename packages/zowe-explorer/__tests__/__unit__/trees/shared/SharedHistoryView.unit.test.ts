@@ -61,7 +61,7 @@ function createGlobalMocks(): any {
         configurable: true,
     });
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn().mockReturnValue(globalMocks.treeView), configurable: true });
-    Object.defineProperty(ZoweLocalStorage, "storage", {
+    Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
             update: jest.fn(),

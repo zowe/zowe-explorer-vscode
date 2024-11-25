@@ -190,10 +190,6 @@ export interface ICredentialManagerNameMap {
     credMgrZEName?: string;
 }
 
-export class BrightProfile {
-    constructor(public profile: Profile) {}
-}
-
 export class Session {
     constructor(public ISession: ISessionOptions) {}
 }
@@ -202,73 +198,16 @@ export class Profile {
     constructor(public name: string, public type: string) {}
 }
 
-export class CliProfileManager {
-    constructor(options: ICliOptions) {}
-
-    public load(opts: ILoadOptions) {
-        return { name: "profile1", profile: {}, type: "zosmf" };
-    }
-    public loadAll() {
-        return [
-            { name: "sestest", profile: {}, type: "zosmf" },
-            { name: "profile1", profile: {}, type: "zosmf" },
-            { name: "profile2", profile: {}, type: "zosmf" },
-        ];
-    }
-    public getAllProfileNames() {
-        return ["name1", "name2"];
-    }
-    public save() {
-        return { name: "profile1", profile: {}, type: "zosmf" };
-    }
-    public update() {
-        return { name: "profile1", profile: {}, type: "zosmf" };
-    }
-    public delete() {
-        return { name: "profile1", profile: {}, type: "zosmf" };
-    }
-    public get configurations() {
-        return [
-            {
-                type: "zosmf",
-                schema: {
-                    type: "object",
-                    title: "test profile",
-                    description: "test profile",
-                    properties: {
-                        sum: {
-                            type: "number",
-                        },
-                    },
-                    required: ["sum"],
-                },
-            },
-            {
-                type: "banana",
-                schema: {
-                    type: "object",
-                    title: "test banana",
-                    description: "test banana",
-                    properties: {
-                        sum: {
-                            type: "number",
-                        },
-                    },
-                    required: ["sum"],
-                },
-            },
-        ];
-    }
-
-    public static initialize() {}
-}
-
 export class ProfileInfo {
-    public static onlyV1ProfilesExist = false;
+    public onlyV1ProfilesExist = false;
     constructor(appName: string, profInfoOpts?: IProfOpts) {}
 
     public readProfilesFromDisk(teamCfgOpts?: IConfigOpts) {
         return;
+    }
+
+    public profileManagerWillLoad(): boolean {
+        return true;
     }
 
     public addProfileTypeToSchema(

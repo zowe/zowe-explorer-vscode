@@ -20,12 +20,12 @@
     "disposablestack": "^1.1.6"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.14",
-    "@types/mocha": "^10.0.9",
-    "@types/node": "^18.19.64",
-    "@types/vscode": "^1.95.0",
-    "@typescript-eslint/eslint-plugin": "^5.62.0",
-    "@typescript-eslint/parser": "^5.62.0",
+    "@types/jest": "^29.2.3",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^20.14.8",
+    "@types/vscode": "^1.73.0",
+    "@typescript-eslint/eslint-plugin": "^5.53.0",
+    "@typescript-eslint/parser": "^5.53.0",
     "@vscode/l10n-dev": "^0.0.35",
     "@vscode/test-electron": "^1.6.2",
     "@vscode/vsce": "^3.2.1",

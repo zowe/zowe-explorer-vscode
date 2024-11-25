@@ -1096,7 +1096,7 @@ export class FileSystemError extends Error {
  */
 export namespace workspace {
     export const textDocuments: TextDocument[] = [];
-    export function getConfiguration(_configuration: string): { update: () => void; inspect: () => void } {
+    export function getConfiguration(_configuration: string) {
         return {
             update: () => {
                 return;
@@ -1104,6 +1104,7 @@ export namespace workspace {
             inspect: () => {
                 return {};
             },
+            get: () => {},
         };
     }
 

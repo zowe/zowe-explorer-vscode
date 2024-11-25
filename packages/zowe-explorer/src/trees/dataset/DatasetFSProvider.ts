@@ -34,6 +34,7 @@ import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import * as dayjs from "dayjs";
 import { DatasetUtils } from "./DatasetUtils";
+import { AuthUtils } from "../../utils/AuthUtils";
 
 export class DatasetFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: DatasetFSProvider;
@@ -113,12 +114,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const ds = isPdsMember ? items.find((it) => it.member === entry.name) : items?.[0];
             if (ds != null && "m4date" in ds) {
                 const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = ds;
-                const newTime = dayjs(`${m4date} ${mtime}:${msec}`).unix();
+                const newTime = dayjs(`${m4date} ${mtime}:${msec}`).valueOf();
                 if (entry.mtime != newTime) {
+                    entry.mtime = newTime;
                     // if the modification time has changed, invalidate the previous contents to signal to `readFile` that data needs to be fetched
                     entry.wasAccessed = false;
                 }
-                return { ...entry, mtime: newTime };
             }
         }
 
@@ -432,9 +433,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         } catch (error) {
             //Response will error if the file is not found
             //Callers of fetchDatasetAtUri() do not expect it to throw an error
-            if (error instanceof Error) {
-                ZoweLogger.error(error.message);
-            }
+            AuthUtils.promptForAuthError(error, metadata.profile);
             return null;
         }
     }
@@ -606,12 +605,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         comment: ["Data set name"],
                     }),
                     apiType: ZoweExplorerApiType.Mvs,
-                    profileType: entry.metadata.profile.type,
+                    profileType: entry.metadata.profile?.type,
                     retry: {
                         fn: this.writeFile.bind(this),
                         args: [uri, content, options],
                     },
-                    templateArgs: { profileName: entry.metadata.profile.name ?? "" },
+                    templateArgs: { profileName: entry.metadata.profile?.name ?? "" },
                 });
                 throw err;
             }
@@ -665,7 +664,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     comment: ["File path"],
                 }),
                 apiType: ZoweExplorerApiType.Mvs,
-                profileType: entry.metadata.profile.type,
+                profileType: entry.metadata.profile?.type,
                 retry: {
                     fn: this.delete.bind(this),
                     args: [uri, _options],
@@ -712,7 +711,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     comment: ["Data set name"],
                 }),
                 apiType: ZoweExplorerApiType.Mvs,
-                profileType: entry.metadata.profile.type,
+                profileType: entry.metadata.profile?.type,
                 retry: {
                     fn: this.rename.bind(this),
                     args: [oldUri, newUri, options],
@@ -730,6 +729,15 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         entry.metadata.path = newPath;
         parentDir.entries.set(newName, entry);
+
+        if (FsDatasetsUtils.isPdsEntry(entry)) {
+            for (const [_, member] of entry.entries) {
+                member.metadata.path = path.posix.join(
+                    entry.metadata.path,
+                    member.metadata.path.substring(member.metadata.path.lastIndexOf("/") + 1)
+                );
+            }
+        }
 
         this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri }, { type: vscode.FileChangeType.Created, uri: newUri });
     }
