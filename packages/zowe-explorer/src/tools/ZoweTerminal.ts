@@ -72,7 +72,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     }
     protected clear() {
         this.write(ZoweTerminal.Keys.CLEAR_ALL);
-        this.writeLine(this.mMessage);
+        this.writeLine(imperative.TextUtils.chalk.dim.italic(this.mMessage));
     }
 
     protected command: string;
