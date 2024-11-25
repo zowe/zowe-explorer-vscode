@@ -24,6 +24,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where opening a PDS member after renaming an expanded PDS resulted in an error. [#3314](https://github.com/zowe/zowe-explorer-vscode/issues/3314)
 - Fixed issue where persistent settings defined at the workspace level were migrated into global storage rather than workspace-specific storage. [#3180](https://github.com/zowe/zowe-explorer-vscode/issues/3180)
 - Fixed an issue where renaming a data set with unsaved changes did not cancel the rename operation. Now, when renaming a data set with unsaved changes, you are prompted to resolve them before continuing. [#3326](https://github.com/zowe/zowe-explorer-vscode/pull/3326)
+- Fixed an issue where a migrated data set is unusable after it is recalled through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
+- Fixed an issue where a recalled PDS is expandable after it is migrated through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
+- Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
 
 ## `3.0.3`
 
