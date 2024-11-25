@@ -12,7 +12,6 @@
 import * as vscode from "vscode";
 import * as imperative from "@zowe/imperative";
 import { IZoweTreeNode } from "./IZoweTreeNode";
-import type { BaseProvider } from "../fs/BaseProvider";
 
 /**
  * Common implementation of functions and methods associated with the
@@ -98,9 +97,9 @@ export class ZoweTreeNode extends vscode.TreeItem {
     /**
      * Sets the imperative.IProfileLoaded profile for this node to the one chosen in parameters.
      *
-     * @param {imperative.IProfileLoaded} The profile you will set the node to use
+     * @param {imperative.IProfileLoaded} aProfile The profile you will set the node to use
      */
-    public setProfileToChoice(aProfile: imperative.IProfileLoaded, fsProvider?: BaseProvider): void {
+    public setProfileToChoice(aProfile: imperative.IProfileLoaded): void {
         // Don't reassign profile if its already defined, as we want to keep the reference valid for other nodes and filesystems
         this.profile = Object.assign(this.profile ?? {}, aProfile);
     }
