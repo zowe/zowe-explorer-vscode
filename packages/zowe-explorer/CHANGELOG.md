@@ -10,6 +10,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added expired JSON web token detection for profiles in each tree view (Data Sets, USS, Jobs). When a user performs a search on a profile, they are prompted to log in if their token expired. [#3175](https://github.com/zowe/zowe-explorer-vscode/issues/3175)
 - Add a data set or USS resource to a virtual workspace with the new "Add to Workspace" context menu option. [#3265](https://github.com/zowe/zowe-explorer-vscode/issues/3265)
 - Power users and developers can now build links to efficiently open mainframe resources in Zowe Explorer. Use the **Copy External Link** option in the context menu to get the URL for a data set or USS resource, or create a link in the format `vscode://Zowe.vscode-extension-for-zowe?<ZoweResourceUri>`. For more information on building resource URIs, see the [FileSystemProvider wiki article](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#file-paths-vs-uris). [#3271](https://github.com/zowe/zowe-explorer-vscode/pull/3271)
+- Adopted support for VS Code proxy settings with zosmf profile types. [#3010](https://github.com/zowe/zowe-explorer-vscode/issues/3010)
 - Implemented more user-friendly error messages for API or network errors within Zowe Explorer. [#3243](https://github.com/zowe/zowe-explorer-vscode/pull/3243)
 - Use the "Troubleshoot" option for certain errors to obtain additional context, tips, and resources for how to resolve the errors. [#3243](https://github.com/zowe/zowe-explorer-vscode/pull/3243)
 - Easily search for data in filtered data sets and partitioned data sets with the new `Search Filtered Data Sets` and `Search PDS Members` functionality. [#3306](https://github.com/zowe/zowe-explorer-vscode/pull/3306)
@@ -23,6 +24,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where editing a team config file or updating secrets in the OS credential vault could trigger multiple events for a single action. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
 - Fixed an issue where opening a PDS member after renaming an expanded PDS resulted in an error. [#3314](https://github.com/zowe/zowe-explorer-vscode/issues/3314)
 - Fixed issue where persistent settings defined at the workspace level were migrated into global storage rather than workspace-specific storage. [#3180](https://github.com/zowe/zowe-explorer-vscode/issues/3180)
+- Fixed an issue where renaming a data set with unsaved changes did not cancel the rename operation. Now, when renaming a data set with unsaved changes, you are prompted to resolve them before continuing. [#3326](https://github.com/zowe/zowe-explorer-vscode/pull/3326)
+- Fixed an issue where a migrated data set is unusable after it is recalled through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
+- Fixed an issue where a recalled PDS is expandable after it is migrated through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
+- Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
 
 ## `3.0.3`
 

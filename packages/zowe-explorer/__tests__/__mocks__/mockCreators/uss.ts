@@ -76,7 +76,6 @@ export function createUSSSessionNode(session: imperative.Session, profile: imper
         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
         session,
         profile,
-        parentPath: "/",
     });
     zoweUSSNode.fullPath = "/test";
     zoweUSSNode.contextValue = Constants.USS_SESSION_CONTEXT;

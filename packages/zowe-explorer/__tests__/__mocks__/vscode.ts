@@ -918,7 +918,7 @@ export namespace l10n {
             return options;
         }
         options.args?.forEach((arg: string, i: number) => {
-            options.message = options.message.replace(`{${i}}`, arg);
+            options.message = options.message.replaceAll(`{${i}}`, arg);
         });
         return options.message;
     }

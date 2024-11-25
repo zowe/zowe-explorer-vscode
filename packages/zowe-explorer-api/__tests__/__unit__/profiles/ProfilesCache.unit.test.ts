@@ -15,6 +15,7 @@ import * as imperative from "@zowe/imperative";
 import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
 import { FileManagement, Types } from "../../../src";
 import { mocked } from "../../../__mocks__/mockUtils";
+import { VscSettings } from "../../../src/vscode/doc/VscSettings";
 
 jest.mock("fs");
 
@@ -541,6 +542,27 @@ describe("ProfilesCache", () => {
                 throw new Error("Error converting config");
             });
             await expect(ProfilesCache.convertV1ProfToConfig(profInfo)).rejects.toThrow("Error converting config");
+        });
+    });
+
+    describe("getProfileSessionWithVscProxy", () => {
+        it("should return same session if no VSC proxy values", () => {
+            const fakeSession = imperative.Session.createFromUrl(new URL("https://example.com"));
+            jest.spyOn(VscSettings, "getVsCodeProxySettings").mockReturnValue(undefined as any);
+            expect(ProfilesCache.getProfileSessionWithVscProxy(fakeSession)).toEqual(fakeSession);
+        });
+        it("should return updated session if VSC proxy values", () => {
+            const fakeSession = imperative.Session.createFromUrl(new URL("https://example.com"));
+            const proxyValues = {
+                http_proxy: "fake.com",
+                https_proxy: "fake.com",
+                no_proxy: ["zowe.com"],
+                proxy_authorization: null,
+                proxy_strict_ssl: true,
+            };
+            fakeSession.ISession.proxy = proxyValues as any;
+            jest.spyOn(VscSettings, "getVsCodeProxySettings").mockReturnValue(proxyValues as any);
+            expect(ProfilesCache.getProfileSessionWithVscProxy(fakeSession)).toEqual(fakeSession);
         });
     });
 

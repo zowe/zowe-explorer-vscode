@@ -1389,7 +1389,6 @@ export class DatasetActions {
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             const { dataSetName } = DatasetUtils.getNodeLabels(node);
             try {
-                const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
                 Gui.showMessage(
                     vscode.l10n.t({
                         message: "Migration of data set {0} requested.",
@@ -1397,9 +1396,8 @@ export class DatasetActions {
                         comment: ["Data Set name"],
                     })
                 );
-                node.contextValue = Constants.DS_MIGRATED_FILE_CONTEXT;
-                node.setIcon(IconGenerator.getIconByNode(node).path);
-                datasetProvider.refresh();
+                const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
+                datasetProvider.refreshElement(node.getParent());
                 return response;
             } catch (err) {
                 ZoweLogger.error(err);
@@ -1423,7 +1421,6 @@ export class DatasetActions {
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             const { dataSetName } = DatasetUtils.getNodeLabels(node);
             try {
-                const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
                 Gui.showMessage(
                     vscode.l10n.t({
                         message: "Recall of data set {0} requested.",
@@ -1431,13 +1428,8 @@ export class DatasetActions {
                         comment: ["Data Set name"],
                     })
                 );
-                if (node.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
-                    node.contextValue = Constants.DS_PDS_CONTEXT;
-                } else {
-                    node.contextValue = (await node.getEncoding())?.kind === "binary" ? Constants.DS_DS_BINARY_CONTEXT : Constants.DS_DS_CONTEXT;
-                }
-                node.setIcon(IconGenerator.getIconByNode(node).path);
-                datasetProvider.refresh();
+                const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
+                datasetProvider.refreshElement(node.getParent());
                 return response;
             } catch (err) {
                 ZoweLogger.error(err);
