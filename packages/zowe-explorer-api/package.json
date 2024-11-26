@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@types/vscode": "^1.53.2",
-    "@zowe/cli": "^7.29.1",
+    "@zowe/cli": "^7.29.7",
     "@zowe/secrets-for-zowe-sdk": "^7.18.6",
     "mustache": "^4.2.0",
     "semver": "^7.5.3"
