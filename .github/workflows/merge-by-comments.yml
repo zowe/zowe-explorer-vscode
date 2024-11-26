@@ -10,6 +10,6 @@ jobs:
         permissions:
             pull-requests: write
         steps:
-            - uses: zowe-actions/shared-actions/merge-by@feat/merge-by
+            - uses: zowe-actions/shared-actions/merge-by@main
               with:
                 operation: "bump-dates"
