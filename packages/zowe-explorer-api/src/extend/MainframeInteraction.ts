@@ -368,6 +368,14 @@ export namespace MainframeInteraction {
          * @returns {Promise<zosfiles.IZosFilesResponse>}
          */
         copyDataSet?(fromDataSetName: string, toDataSetName: string, enq?: string, replace?: boolean): Promise<zosfiles.IZosFilesResponse>;
+
+        /**
+         * Searches dataSets.
+         *
+         * @param {zosfiles.ISearchOptions} searchOptions
+         * @returns {Promise<zosfiles.ISearchResponse>}
+         */
+        searchDataSets?(searchOptions: zosfiles.ISearchOptions): Promise<zosfiles.ISearchResponse>;
     }
 
     /**

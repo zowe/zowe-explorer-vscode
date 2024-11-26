@@ -317,6 +317,16 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.ds.pdsSearchFor",
+        "title": "%pdsSearchFor%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.ds.filteredDataSetsSearchFor",
+        "title": "%filteredDataSetsSearchFor%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.ds.uploadDialog",
         "title": "%uploadDialog%",
         "category": "Zowe Explorer"
@@ -985,6 +995,11 @@
           "group": "001_zowe_dsCreate@2"
         },
         {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
+          "command": "zowe.ds.filteredDataSetsSearchFor",
+          "group": "001_zowe_dsCreate@3"
+        },
+        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(ds|pds).*/ && !listMultiSelection",
           "command": "zowe.ds.allocateLike",
           "group": "001_zowe_dsCreate@3"
@@ -1000,14 +1015,19 @@
           "group": "001_zowe_dsCreate@5"
         },
         {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/ && !listMultiSelection",
+          "command": "zowe.ds.pdsSearchFor",
+          "group": "001_zowe_dsCreate@6"
+        },
+        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*profile=zftp.*)(ds|member|pds).*/",
           "command": "zowe.ds.copyDataSets",
-          "group": "001_zowe_dsCreate@6"
+          "group": "001_zowe_dsCreate@7"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*profile=zftp.*)(session|pds).*/ && !listMultiSelection",
           "command": "zowe.ds.pasteDataSets",
-          "group": "001_zowe_dsCreate@7"
+          "group": "001_zowe_dsCreate@8"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
@@ -1033,6 +1053,11 @@
           "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/",
           "command": "zowe.addToWorkspace",
           "group": "002_zowe_dsWorkspace@2"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^session.*_fav.*/ && !listMultiSelection",
+          "command": "zowe.ds.filteredDataSetsSearchFor",
+          "group": "002_zowe_dsWorkspace@3"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem == profile_fav && !listMultiSelection",
@@ -1559,6 +1584,14 @@
         {
           "command": "zowe.jobs.stopPolling",
           "when": "never"
+        },
+        {
+          "command": "zowe.ds.pdsSearchFor",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.filteredDataSetsSearchFor",
+          "when": "never"
         }
       ]
     },
@@ -1864,11 +1897,11 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "@zowe/core-for-zowe-sdk": "^8.8.2",
+    "@zowe/core-for-zowe-sdk": "^8.8.3",
     "@zowe/secrets-for-zowe-sdk": "^8.1.2",
-    "@zowe/zos-files-for-zowe-sdk": "^8.8.2",
-    "@zowe/zos-jobs-for-zowe-sdk": "^8.8.2",
-    "@zowe/zosmf-for-zowe-sdk": "^8.8.2",
+    "@zowe/zos-files-for-zowe-sdk": "^8.8.4",
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.8.4",
+    "@zowe/zosmf-for-zowe-sdk": "^8.8.3",
     "@zowe/zowe-explorer-api": "3.1.0-SNAPSHOT",
     "dayjs": "^1.11.10",
     "fs-extra": "8.0.1",

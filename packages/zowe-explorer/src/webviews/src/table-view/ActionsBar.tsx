@@ -82,7 +82,7 @@ export const ActionsBar = (props: ActionsProps) => {
       <span style={{ display: "flex", alignItems: "center", marginBottom: "0.25em" }}>
         <p style={{ fontSize: "0.9em", paddingTop: "2px", marginRight: "0.75em" }}>
           {props.selectionCount === 0 ? l10n.t("No") : props.selectionCount}
-          {props.selectionCount > 1 || props.selectionCount === 0 ? l10n.t("items") : l10n.t("item")} {l10n.t("selected")}
+          &nbsp;{props.selectionCount > 1 || props.selectionCount === 0 ? l10n.t("items") : l10n.t("item")} {l10n.t("selected")}
         </p>
         {props.actions
           .filter((action) => (props.itemCount > 1 ? action.callback.typ === "multi-row" : action.callback.typ.endsWith("row")))
