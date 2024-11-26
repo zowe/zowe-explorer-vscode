@@ -3053,7 +3053,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
             expect(result).toEqual(true);
         });
 
-        it("should return true if the user responds with yes", async () => {
+        it("should return true if the user responds with continue", async () => {
             let i = 1;
             const dataSets: zosfiles.IDataSet[] = [];
             while (i < 55) {
@@ -3061,7 +3061,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
                 i++;
             }
 
-            infoMessageSpy.mockResolvedValue("Yes");
+            infoMessageSpy.mockResolvedValue("Continue");
             const result = await (DatasetActions as any).continueSearchPrompt(dataSets);
 
             expect(infoMessageSpy).toHaveBeenCalledTimes(1);

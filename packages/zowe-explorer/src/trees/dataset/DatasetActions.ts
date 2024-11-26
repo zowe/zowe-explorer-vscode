@@ -1895,12 +1895,12 @@ export class DatasetActions {
                 comment: "The number of data sets that are about to be searched",
             }),
             {
-                items: [vscode.l10n.t("Yes"), vscode.l10n.t("No")],
+                items: [vscode.l10n.t("Continue")],
                 vsCodeOpts: { modal: true },
             }
         );
 
-        return resp === vscode.l10n.t("Yes");
+        return resp === vscode.l10n.t("Continue");
     }
 
     private static async performSearch(progress: any, token: vscode.CancellationToken, options: ISearchOptions): Promise<zosfiles.ISearchResponse> {
