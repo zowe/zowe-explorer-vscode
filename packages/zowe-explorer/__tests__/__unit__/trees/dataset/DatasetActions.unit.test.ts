@@ -3174,13 +3174,13 @@ describe("Dataset Actions Unit Tests - function search", () => {
 
             expect(getMvsApiSpy).toHaveBeenCalledTimes(1);
             expect(showMessageSpy).not.toHaveBeenCalled();
-            expect(reportProgressSpy).toHaveBeenCalledWith(myProgress, 100, -1, "Percent Complete");
+            expect(reportProgressSpy).toHaveBeenCalledWith(myProgress, 100, 0, "");
             expect(searchDataSetsMock).toHaveBeenCalledWith({
                 pattern: "TEST.*",
                 searchString: "test",
                 progressTask: taskExpected,
                 mainframeSearch: false,
-                continueSearch: continueSearchPromptSpy,
+                continueSearch: expect.any(Function),
                 abortSearch: expect.any(Function),
             });
             expect(continueSearchPromptSpy).toHaveBeenCalledTimes(1);
@@ -3209,12 +3209,12 @@ describe("Dataset Actions Unit Tests - function search", () => {
                 searchString: "test",
                 progressTask: taskExpected,
                 mainframeSearch: false,
-                continueSearch: continueSearchPromptSpy,
+                continueSearch: expect.any(Function),
                 abortSearch: expect.any(Function),
             });
             expect(authErrorHandlingSpy).not.toHaveBeenCalled();
             expect(loggerErrorSpy).not.toHaveBeenCalled();
-            expect(reportProgressSpy).toHaveBeenCalledWith(myProgress, 100, 50, "Percent Complete");
+            expect(reportProgressSpy).toHaveBeenCalledWith(myProgress, 100, 51, "");
             expect(continueSearchPromptSpy).toHaveBeenCalled();
             expect(response).toEqual({ success: true, apiResponse: { test: "test" } });
         });
@@ -3240,12 +3240,12 @@ describe("Dataset Actions Unit Tests - function search", () => {
                 searchString: "test",
                 progressTask: taskExpected,
                 mainframeSearch: false,
-                continueSearch: continueSearchPromptSpy,
+                continueSearch: expect.any(Function),
                 abortSearch: expect.any(Function),
             });
             expect(authErrorHandlingSpy).not.toHaveBeenCalled();
             expect(loggerErrorSpy).toHaveBeenCalledWith("test error message");
-            expect(reportProgressSpy).toHaveBeenCalledWith(myProgress, 100, 99, "Percent Complete");
+            expect(reportProgressSpy).toHaveBeenCalledWith(myProgress, 100, 100, "");
             expect(continueSearchPromptSpy).toHaveBeenCalledTimes(1);
             expect(response).toEqual({ errorMessage: "test error message", success: false, apiResponse: { test: "test" } });
         });
@@ -3271,12 +3271,12 @@ describe("Dataset Actions Unit Tests - function search", () => {
                 searchString: "test",
                 progressTask: taskExpected,
                 mainframeSearch: false,
-                continueSearch: continueSearchPromptSpy,
+                continueSearch: expect.any(Function),
                 abortSearch: expect.any(Function),
             });
             expect(authErrorHandlingSpy).not.toHaveBeenCalled();
             expect(loggerErrorSpy).toHaveBeenCalledWith("test error message");
-            expect(reportProgressSpy).toHaveBeenCalledWith(myProgress, 100, 99, "Percent Complete");
+            expect(reportProgressSpy).toHaveBeenCalledWith(myProgress, 100, 100, "");
             expect(continueSearchPromptSpy).toHaveBeenCalled();
             expect(response).toEqual(undefined);
         });
@@ -3303,12 +3303,12 @@ describe("Dataset Actions Unit Tests - function search", () => {
                 searchString: "test",
                 progressTask: taskExpected,
                 mainframeSearch: false,
-                continueSearch: continueSearchPromptSpy,
+                continueSearch: expect.any(Function),
                 abortSearch: expect.any(Function),
             });
             expect(authErrorHandlingSpy).toHaveBeenCalledWith(error);
             expect(loggerErrorSpy).not.toHaveBeenCalled();
-            expect(reportProgressSpy).toHaveBeenCalledWith(myProgress, 100, 50, "Percent Complete");
+            expect(reportProgressSpy).toHaveBeenCalledWith(myProgress, 100, 51, "");
             expect(continueSearchPromptSpy).toHaveBeenCalled();
             expect(response).toBeUndefined();
         });

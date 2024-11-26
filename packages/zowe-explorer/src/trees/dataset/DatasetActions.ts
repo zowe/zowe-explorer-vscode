@@ -1915,11 +1915,12 @@ export class DatasetActions {
         // Prepare a hacky task object that updates the progress bar on the GUI.
         // Pass that into the MVS API call.
         let realPercentComplete = 0;
+        let realTotalEntries = 100;
         const task: imperative.ITaskWithStatus = {
             set percentComplete(value: number) {
                 realPercentComplete = value;
                 // eslint-disable-next-line no-magic-numbers
-                Gui.reportProgress(progress, 100, value - 1, vscode.l10n.t("Percent Complete"));
+                Gui.reportProgress(progress, realTotalEntries, Math.floor((value * realTotalEntries) / 100), "");
             },
             get percentComplete(): number {
                 return realPercentComplete;
@@ -1935,7 +1936,10 @@ export class DatasetActions {
                 searchString: options.searchString,
                 progressTask: task,
                 mainframeSearch: false,
-                continueSearch: DatasetActions.continueSearchPrompt,
+                continueSearch: function intercept(dataSets: zosfiles.IDataSet[]) {
+                    realTotalEntries = dataSets.length;
+                    return DatasetActions.continueSearchPrompt(dataSets);
+                },
                 abortSearch: function abort() {
                     return token.isCancellationRequested;
                 },
