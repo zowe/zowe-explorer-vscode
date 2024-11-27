@@ -41,6 +41,7 @@ export namespace ZoweExplorerZosmf {
         }
 
         public getSessionFromCommandArgument(cmdArgs: imperative.ICommandArguments): imperative.Session {
+            console.log("What are the command arguments that came here", cmdArgs);
             const sessCfg = zosmf.ZosmfSession.createSessCfgFromArgs(cmdArgs);
             imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
             const sessionToUse = new imperative.Session(sessCfg);
@@ -48,18 +49,18 @@ export namespace ZoweExplorerZosmf {
         }
 
         public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
-            if (!this.session) {
-                try {
-                    this.session = this._getSession(profile || this.profile);
-                } catch (error) {
-                    // todo: initialize and use logging
-                    imperative.Logger.getAppLogger().error(error as string);
-                }
+            try {
+                console.log("in get session", profile);
+                this.session = this._getSession(profile || this.profile);
+            } catch (error) {
+                // todo: initialize and use logging
+                imperative.Logger.getAppLogger().error(error as string);
             }
             return this.session;
         }
 
         private _getSession(serviceProfile: imperative.IProfileLoaded): imperative.Session {
+            console.log("Service Profile", serviceProfile);
             let cmdArgs: imperative.ICommandArguments = {
                 $0: "zowe",
                 _: [""],
@@ -375,6 +376,19 @@ export namespace ZoweExplorerZosmf {
                 { dsn: toDataSetName },
                 { "from-dataset": { dsn: fromDataSetName }, enq, replace, responseTimeout: this.profile?.profile?.responseTimeout }
             );
+        }
+        public copyDataSetCrossLpar(
+            toDataSetName: string,
+            toMemberName: string,
+            options: zosfiles.ICrossLparCopyDatasetOptions,
+            sourceOptions: zosfiles.IGetOptions,
+            targetProfile: imperative.IProfileLoaded
+        ): Promise<zosfiles.IZosFilesResponse> {
+            const sourceSession = this.getSession();
+            console.log("This is target profile", targetProfile);
+            const targetSession = this.getSession(targetProfile);
+            console.log("This is sourceSession,targetSession", sourceSession, targetSession);
+            return zosfiles.Copy.dataSetCrossLPAR(sourceSession, { dsn: toDataSetName, member: toMemberName }, options, sourceOptions, targetSession);
         }
     }
 

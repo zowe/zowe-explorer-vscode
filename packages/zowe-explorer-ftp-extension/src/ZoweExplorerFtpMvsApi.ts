@@ -303,6 +303,16 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
         throw new ZoweFtpExtensionError("Copy dataset is not supported in ftp extension.");
     }
 
+    public copyDataSetCrossLpar(
+        toDataSetName: string,
+        toMemberName: string,
+        options: zosfiles.ICrossLparCopyDatasetOptions,
+        sourceOptions: zosfiles.IGetOptions,
+        targetProfile: imperative.IProfileLoaded
+    ): Promise<zosfiles.IZosFilesResponse> {
+        throw new ZoweFtpExtensionError("Copy dataset cross lpar is not supported in ftp extension.");
+    }
+
     public async renameDataSet(currentDataSetName: string, newDataSetName: string): Promise<zosfiles.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         let connection;

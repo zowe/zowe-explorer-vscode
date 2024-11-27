@@ -138,6 +138,11 @@ export class DatasetInit {
             )
         );
         context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.ds.copyDataSetsCrossLpar", async (node, nodeList) =>
+                DatasetActions.copyDataSetsCrossLpar(node, nodeList, datasetProvider)
+            )
+        );
+        context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.pasteDataSets", async (node: ZoweDatasetNode) => {
                 if (!node) {
                     node = datasetProvider.getTreeView().selection[0] as ZoweDatasetNode;

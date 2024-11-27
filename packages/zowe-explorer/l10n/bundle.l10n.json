@@ -858,6 +858,7 @@
     ]
   },
   "Cannot perform the copy operation as the data sets selected have different types": "Cannot perform the copy operation as the data sets selected have different types",
+  "Copying data sets cross lpars is not yet supported for this profile.": "Copying data sets cross lpars is not yet supported for this profile.",
   "Migration of data set {0} requested./Data Set name": {
     "message": "Migration of data set {0} requested.",
     "comment": [

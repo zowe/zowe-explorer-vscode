@@ -1360,6 +1360,77 @@ export class DatasetActions {
     }
 
     /**
+     * Copy data sets cross lpars
+     *
+     * @export
+     * @param {ZoweDatasetNode} node Node to copy,
+     * @param {ZoweDatasetNode[]} nodeList - Multiple selected Nodes to copy
+     * @param datasetProvider
+     */
+    public static async copyDataSetsCrossLpar(node, nodeList: ZoweDatasetNode[], datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
+        ZoweLogger.trace("dataset.actions.copyDataSetsCrossLpar called.");
+        let selectedNodes: ZoweDatasetNode[] = [];
+        if (!(node || nodeList)) {
+            selectedNodes = datasetProvider.getTreeView().selection as ZoweDatasetNode[];
+        } else {
+            selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as ZoweDatasetNode[];
+        }
+        const unique = [...new Set(selectedNodes.map((item) => item.contextValue))];
+        if (unique.length > 1) {
+            Gui.showMessage(vscode.l10n.t("Cannot perform the copy operation as the data sets selected have different types"));
+            return;
+        }
+        const inputBoxOptions: vscode.InputBoxOptions = {
+            placeHolder: "Enter the name of cross lpar profile",
+        };
+        const crossProfileName = await Gui.showInputBox(inputBoxOptions);
+        if (crossProfileName != null) {
+            const allProfiles = Profiles.getInstance().allProfiles;
+            const crossProfile = allProfiles.find((profile) => profile.name === crossProfileName);
+            if (crossProfile === undefined) {
+                Gui.errorMessage("There is no such profile that you wanna copy to please create one such to copy");
+                return;
+            }
+            const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
+            if (mvsApi?.copyDataSetCrossLpar == null) {
+                await Gui.errorMessage(vscode.l10n.t("Copying data sets cross lpars is not yet supported for this profile."));
+            } else {
+                //Actually it should be from here the loop for multiselect
+                await Gui.withProgress(
+                    {
+                        location: vscode.ProgressLocation.Notification,
+                        title: DatasetActions.localizedStrings.copyingFiles,
+                    },
+                    async (progress) => {
+                        return new Promise<void>((resolve) => {
+                            for (const [index, currNode] of selectedNodes.entries()) {
+                                Gui.reportProgress(progress, selectedNodes.length, index, "Copying Files");
+                                const options: zosfiles.ICrossLparCopyDatasetOptions = {
+                                    "from-dataset": { dsn: currNode.label as string },
+                                    responseTimeout: currNode.getProfile()?.profile?.responseTimeout,
+                                };
+                                const sourceOptions: zosfiles.IGetOptions = {
+                                    volume: undefined,
+                                };
+                                try {
+                                    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                                    mvsApi.copyDataSetCrossLpar(currNode.getLabel() as string, null, options, sourceOptions, crossProfile);
+                                } catch (err) {
+                                    ZoweLogger.error(err);
+                                }
+                            }
+                            resolve();
+                        });
+                    }
+                );
+            }
+        } else {
+            await Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
+            return;
+        }
+    }
+
+    /**
      * Migrate data sets
      *
      * @export
@@ -1605,6 +1676,28 @@ export class DatasetActions {
             }
         });
     }
+
+    // public static async copySequentialDatasetscrossLpar(nodes: ZoweDatasetNode[]): Promise<void> {
+    //     await DatasetActions.copyProcessor(nodes, "ps", async (node: ZoweDatasetNode, dsname: string, replace: Definitions.ShouldReplace) => {
+    //         const lbl = node.getLabel().toString();
+    //         const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
+    //         if (mvsApi?.copyDataSetCrossLpar == null) {
+    //             await Gui.errorMessage(vscode.l10n.t("Copying data sets cross lpars is not supported."));
+    //         } else {
+    //             await Gui.withProgress(
+    //                 {
+    //                     location: vscode.ProgressLocation.Window,
+    //                     title: DatasetActions.localizedStrings.copyingFiles,
+    //                 },
+    //                 () => {
+    //                     // return mvsApi.copyDataSet(lbl, dsname, null, replace === "replace");
+    //                     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    //                     return mvsApi.copyDataSetCrossLpar(lbl, null, options, sourceOptions, crossProfile[0]);
+    //                 }
+    //             );
+    //         }
+    //     });
+    // }
 
     /**
      * copies given partitioned dataset nodes

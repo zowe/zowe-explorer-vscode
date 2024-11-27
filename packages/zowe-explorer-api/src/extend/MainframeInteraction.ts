@@ -368,6 +368,18 @@ export namespace MainframeInteraction {
          * @returns {Promise<zosfiles.IZosFilesResponse>}
          */
         copyDataSet?(fromDataSetName: string, toDataSetName: string, enq?: string, replace?: boolean): Promise<zosfiles.IZosFilesResponse>;
+
+        /**
+         * Copies a dataSet to cross Lpar
+         *
+         */
+        copyDataSetCrossLpar(
+            toDataSetName: string,
+            toMemberName: string,
+            options: zosfiles.ICrossLparCopyDatasetOptions,
+            sourceOptions: zosfiles.IGetOptions,
+            targetProfile: imperative.IProfileLoaded
+        ): Promise<zosfiles.IZosFilesResponse>;
     }
 
     /**
