@@ -1395,27 +1395,26 @@ export class DatasetActions {
             if (mvsApi?.copyDataSetCrossLpar == null) {
                 await Gui.errorMessage(vscode.l10n.t("Copying data sets cross lpars is not yet supported for this profile."));
             } else {
-                //Actually it should be from here the loop for multiselect
-                // const sessionnode = datasetProvider.mSessionNodes.find((node)=> node.label === crossProfile);
-                // const parent = sessionnode.children
-                // if (SharedContext.isPds(selectedNodes[0])) {
-                //     await DatasetActions.copyPartitionedDatasetsCrossLpar(selectedNodes, crossProfile);
-                //     return;
-                // }
+                if (SharedContext.isPds(selectedNodes[0])) {
+                    await DatasetActions.copyPartitionedDatasetsCrossLpar(selectedNodes, crossProfile);
+                    return;
+                }
                 await Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,
                         title: DatasetActions.localizedStrings.copyingFiles,
+                        cancellable: true,
                     },
-                    async (progress) => {
+                    async (progress, token) => {
                         for (const [index, currNode] of selectedNodes.entries()) {
+                            if (token.isCancellationRequested) {
+                                Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+                                return;
+                            }
                             Gui.reportProgress(progress, selectedNodes.length, index, "Copying Files");
                             let datasetName = currNode.getLabel();
                             let member = undefined;
-                            if (SharedContext.isPds(selectedNodes[0])) {
-                                await DatasetActions.copyPartitionedDatasetsCrossLpar(selectedNodes, crossProfile);
-                                return;
-                            } else if (SharedContext.isDsMember(selectedNodes[0])) {
+                            if (SharedContext.isDsMember(selectedNodes[0])) {
                                 datasetName = currNode.getParent().getLabel();
                                 member = currNode.getLabel();
                             }
@@ -1444,35 +1443,37 @@ export class DatasetActions {
 
     public static async copyPartitionedDatasetsCrossLpar(nodes: ZoweDatasetNode[], targetProfile: imperative.IProfileLoaded): Promise<void> {
         ZoweLogger.trace("dataset.actions.copyPartitionedDatasetsCrossLpar called.");
-        for (const node of nodes) {
-            const lbl = node.getLabel().toString();
-            const children = await node.getChildren();
-            // await Gui.withProgress(
-            //     {
-            //         location: vscode.ProgressLocation.Notification,
-            //         title: DatasetActions.localizedStrings.copyingFiles,
-            //     },
-            //     () => {
-            //         return Promise.all(
-            //             children.map(async (child) => {
-            for (const child of children) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetCrossLpar(
-                    lbl,
-                    child.getLabel().toString(),
-                    {
-                        "from-dataset": { dsn: lbl, member: child.getLabel().toString() },
-                        responseTimeout: node.getProfile()?.profile?.responseTimeout,
-                    },
-                    { volume: undefined },
-                    targetProfile
-                );
+        await Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: DatasetActions.localizedStrings.copyingFiles,
+                cancellable: true,
+            },
+            async (progress, token) => {
+                for (const [index, node] of nodes.entries()) {
+                    if (token.isCancellationRequested) {
+                        Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+                        return;
+                    }
+                    Gui.reportProgress(progress, nodes.length, index, "Copying Files");
+                    const lbl = node.getLabel().toString();
+                    const children = await node.getChildren();
+                    for (const child of children) {
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                        await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetCrossLpar(
+                            lbl,
+                            child.getLabel().toString(),
+                            {
+                                "from-dataset": { dsn: lbl, member: child.getLabel().toString() },
+                                responseTimeout: node.getProfile()?.profile?.responseTimeout,
+                            },
+                            { volume: undefined },
+                            targetProfile
+                        );
+                    }
+                }
             }
-            //                 })
-            //             );
-        }
-        //     );
-        // }
+        );
     }
 
     /**
