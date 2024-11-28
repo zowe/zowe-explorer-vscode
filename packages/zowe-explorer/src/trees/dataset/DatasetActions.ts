@@ -1396,31 +1396,43 @@ export class DatasetActions {
                 await Gui.errorMessage(vscode.l10n.t("Copying data sets cross lpars is not yet supported for this profile."));
             } else {
                 //Actually it should be from here the loop for multiselect
+                // const sessionnode = datasetProvider.mSessionNodes.find((node)=> node.label === crossProfile);
+                // const parent = sessionnode.children
+                // if (SharedContext.isPds(selectedNodes[0])) {
+                //     await DatasetActions.copyPartitionedDatasetsCrossLpar(selectedNodes, crossProfile);
+                //     return;
+                // }
                 await Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,
                         title: DatasetActions.localizedStrings.copyingFiles,
                     },
                     async (progress) => {
-                        return new Promise<void>((resolve) => {
-                            for (const [index, currNode] of selectedNodes.entries()) {
-                                Gui.reportProgress(progress, selectedNodes.length, index, "Copying Files");
-                                const options: zosfiles.ICrossLparCopyDatasetOptions = {
-                                    "from-dataset": { dsn: currNode.label as string },
-                                    responseTimeout: currNode.getProfile()?.profile?.responseTimeout,
-                                };
-                                const sourceOptions: zosfiles.IGetOptions = {
-                                    volume: undefined,
-                                };
-                                try {
-                                    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                                    mvsApi.copyDataSetCrossLpar(currNode.getLabel() as string, null, options, sourceOptions, crossProfile);
-                                } catch (err) {
-                                    ZoweLogger.error(err);
-                                }
+                        for (const [index, currNode] of selectedNodes.entries()) {
+                            Gui.reportProgress(progress, selectedNodes.length, index, "Copying Files");
+                            let datasetName = currNode.getLabel();
+                            let member = undefined;
+                            if (SharedContext.isPds(selectedNodes[0])) {
+                                await DatasetActions.copyPartitionedDatasetsCrossLpar(selectedNodes, crossProfile);
+                                return;
+                            } else if (SharedContext.isDsMember(selectedNodes[0])) {
+                                datasetName = currNode.getParent().getLabel();
+                                member = currNode.getLabel();
                             }
-                            resolve();
-                        });
+                            const options: zosfiles.ICrossLparCopyDatasetOptions = {
+                                "from-dataset": { dsn: datasetName as string, member: member },
+                                responseTimeout: currNode.getProfile()?.profile?.responseTimeout,
+                            };
+                            const sourceOptions: zosfiles.IGetOptions = {
+                                volume: undefined,
+                            };
+                            try {
+                                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                                await mvsApi.copyDataSetCrossLpar(datasetName as string, member, options, sourceOptions, crossProfile);
+                            } catch (err) {
+                                ZoweLogger.error(err);
+                            }
+                        }
                     }
                 );
             }
@@ -1428,6 +1440,39 @@ export class DatasetActions {
             await Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
             return;
         }
+    }
+
+    public static async copyPartitionedDatasetsCrossLpar(nodes: ZoweDatasetNode[], targetProfile: imperative.IProfileLoaded): Promise<void> {
+        ZoweLogger.trace("dataset.actions.copyPartitionedDatasetsCrossLpar called.");
+        for (const node of nodes) {
+            const lbl = node.getLabel().toString();
+            const children = await node.getChildren();
+            // await Gui.withProgress(
+            //     {
+            //         location: vscode.ProgressLocation.Notification,
+            //         title: DatasetActions.localizedStrings.copyingFiles,
+            //     },
+            //     () => {
+            //         return Promise.all(
+            //             children.map(async (child) => {
+            for (const child of children) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetCrossLpar(
+                    lbl,
+                    child.getLabel().toString(),
+                    {
+                        "from-dataset": { dsn: lbl, member: child.getLabel().toString() },
+                        responseTimeout: node.getProfile()?.profile?.responseTimeout,
+                    },
+                    { volume: undefined },
+                    targetProfile
+                );
+            }
+            //                 })
+            //             );
+        }
+        //     );
+        // }
     }
 
     /**
@@ -1676,28 +1721,6 @@ export class DatasetActions {
             }
         });
     }
-
-    // public static async copySequentialDatasetscrossLpar(nodes: ZoweDatasetNode[]): Promise<void> {
-    //     await DatasetActions.copyProcessor(nodes, "ps", async (node: ZoweDatasetNode, dsname: string, replace: Definitions.ShouldReplace) => {
-    //         const lbl = node.getLabel().toString();
-    //         const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
-    //         if (mvsApi?.copyDataSetCrossLpar == null) {
-    //             await Gui.errorMessage(vscode.l10n.t("Copying data sets cross lpars is not supported."));
-    //         } else {
-    //             await Gui.withProgress(
-    //                 {
-    //                     location: vscode.ProgressLocation.Window,
-    //                     title: DatasetActions.localizedStrings.copyingFiles,
-    //                 },
-    //                 () => {
-    //                     // return mvsApi.copyDataSet(lbl, dsname, null, replace === "replace");
-    //                     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    //                     return mvsApi.copyDataSetCrossLpar(lbl, null, options, sourceOptions, crossProfile[0]);
-    //                 }
-    //             );
-    //         }
-    //     });
-    // }
 
     /**
      * copies given partitioned dataset nodes
