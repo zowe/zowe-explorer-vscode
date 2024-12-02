@@ -112,7 +112,7 @@ export class ZoweVsCodeExtension {
         options: IPromptCredentialsOptions,
         apiRegister: ZoweExplorerApi.IApiRegisterClient
     ): Promise<imperative.IProfileLoaded> {
-        const cache = ZoweVsCodeExtension.profilesCache;
+        const cache = options.zeProfiles ?? ZoweVsCodeExtension.profilesCache;
         const profInfo = await cache.getProfileInfo();
         const setSecure = options.secure ?? profInfo.isSecured();
 
@@ -143,7 +143,7 @@ export class ZoweVsCodeExtension {
                 await profInfo.updateProperty({ ...upd, property: "user", value: creds[0], setSecure });
                 await profInfo.updateProperty({ ...upd, property: "password", value: creds[1], setSecure });
             }
-            await cache.refresh(apiRegister);
+            await cache.updateCachedProfile(loadProfile, undefined, apiRegister);
 
             return loadProfile;
         }
@@ -228,23 +228,11 @@ export class ZoweVsCodeExtension {
             // If base profile already has a token type stored, then we check whether or not the connection details are the same
             (serviceProfile.profile.host === baseProfile.profile.host && serviceProfile.profile.port === baseProfile.profile.port);
         // If the connection details do not match, then we MUST forcefully store the token in the service profile
-        let profileToUpdate: imperative.IProfileLoaded;
-        if (connOk) {
-            profileToUpdate = baseProfile;
-        } else {
-            profileToUpdate = serviceProfile;
-        }
+        const profileToUpdate = connOk ? baseProfile : serviceProfile;
 
         await cache.updateBaseProfileFileLogin(profileToUpdate, updBaseProfile, !connOk);
-        const baseIndex = cache.allProfiles.findIndex((profile) => profile.name === profileToUpdate.name);
-        cache.allProfiles[baseIndex] = { ...profileToUpdate, profile: { ...profileToUpdate.profile, ...updBaseProfile } };
-
-        if (node) {
-            node.setProfileToChoice({
-                ...node.getProfile(),
-                profile: { ...node.getProfile().profile, ...updBaseProfile },
-            });
-        }
+        serviceProfile.profile = { ...serviceProfile.profile, ...updBaseProfile };
+        await cache.updateCachedProfile(serviceProfile, node);
         return true;
     }
 
@@ -283,11 +271,9 @@ export class ZoweVsCodeExtension {
             await (zeRegister?.getCommonApi(serviceProfile).logout ?? Logout.apimlLogout)(updSession);
 
             const connOk = serviceProfile.profile.host === baseProfile.profile.host && serviceProfile.profile.port === baseProfile.profile.port;
-            if (connOk) {
-                await cache.updateBaseProfileFileLogout(baseProfile);
-            } else {
-                await cache.updateBaseProfileFileLogout(serviceProfile);
-            }
+            await cache.updateBaseProfileFileLogout(connOk ? baseProfile : serviceProfile);
+            serviceProfile.profile = { ...serviceProfile.profile, tokenType: undefined, tokenValue: undefined };
+            await cache.updateCachedProfile(serviceProfile);
         }
     }
 

@@ -219,6 +219,7 @@ describe("ZoweVsCodeExtension", () => {
                 mergeArgsForProfile: jest.fn().mockReturnValue({ knownArgs: [] }),
             }),
             refresh: jest.fn(),
+            updateCachedProfile: jest.fn(),
         };
 
         beforeEach(() => {
@@ -460,6 +461,7 @@ describe("ZoweVsCodeExtension", () => {
                     updateProperty: mockUpdateProperty,
                 }),
                 refresh: jest.fn(),
+                updateCachedProfile: jest.fn(),
             });
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
@@ -485,6 +487,7 @@ describe("ZoweVsCodeExtension", () => {
                     updateProperty: mockUpdateProperty,
                 }),
                 refresh: jest.fn(),
+                updateCachedProfile: jest.fn(),
             });
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
@@ -513,6 +516,7 @@ describe("ZoweVsCodeExtension", () => {
                     updateProperty: mockUpdateProperty,
                 }),
                 refresh: jest.fn(),
+                updateCachedProfile: jest.fn(),
             });
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("yes");
@@ -539,6 +543,7 @@ describe("ZoweVsCodeExtension", () => {
                     updateProperty: mockUpdateProperty,
                 }),
                 refresh: jest.fn(),
+                updateCachedProfile: jest.fn(),
             });
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             jest.spyOn(Gui, "showMessage").mockResolvedValueOnce(undefined);
