@@ -168,6 +168,8 @@ async function createGlobalMocks() {
             "zowe.ds.sortBy",
             "zowe.ds.filterBy",
             "zowe.ds.copyName",
+            "zowe.ds.pdsSearchFor",
+            "zowe.ds.filteredDataSetsSearchFor",
             "zowe.uss.addSession",
             "zowe.uss.refreshAll",
             "zowe.uss.refreshUSS",

@@ -1307,11 +1307,14 @@ export enum FileSystemProviderErrorCode {
 
 /**
  * A type that filesystem providers should use to signal errors.
+ * A type that will allow Text Document selection.
+ * A type that will allow positions to be used.
  *
  * This class has factory methods for common error-cases, like `FileNotFound` when
  * a file or folder doesn't exist, use them like so: `throw vscode.FileSystemError.FileNotFound(someUri);`
  */
-export const { FileSystemError } = require("jest-mock-vscode").createVSCodeMock(jest);
+export const { FileSystemError, Selection, Position } = require("jest-mock-vscode").createVSCodeMock(jest);
+
 /**
  * Namespace for dealing with the current workspace. A workspace is the representation
  * of the folder that has been opened. There is no workspace when just a file but not a
@@ -1722,13 +1725,11 @@ export interface Clipboard {
     writeText(value: string): Thenable<void>;
 }
 
-export class Position {}
-
 export class Range {}
 
 export class WorkspaceEdit {
     public delete(uri: Uri, range: Range) {}
-    public insert(uri: Uri, position: Position, newText: string) {}
+    public insert(uri: Uri, position: typeof Position, newText: string) {}
 }
 
 /**
@@ -1749,5 +1750,3 @@ export namespace env {
         },
     };
 }
-
-export class Selection {}
