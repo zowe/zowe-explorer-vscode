@@ -124,9 +124,6 @@ describe("ZoweDatasetNode Unit Tests", () => {
         expect(testNode.getSession()).toBeDefined();
     });
 
-    /*************************************************************************************************************
-     * Creates an ZoweDatasetNode and checks that its members are all initialized by the constructor
-     *************************************************************************************************************/
     it("calls setEncoding when constructing a node with encoding", () => {
         jest.spyOn(BaseProvider.prototype, "setEncodingForFile").mockImplementationOnce(() => {});
         const makeEmptyDsWithEncodingMock = jest.spyOn(DatasetFSProvider.instance, "makeEmptyDsWithEncoding").mockImplementationOnce(() => {});
