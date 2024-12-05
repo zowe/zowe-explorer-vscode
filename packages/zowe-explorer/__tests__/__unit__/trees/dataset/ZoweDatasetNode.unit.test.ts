@@ -658,9 +658,16 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 });
 
 describe("ZoweDatasetNode Unit Tests - Function node.setEncoding()", () => {
-    const setEncodingForFileMock = jest.spyOn(DatasetFSProvider.instance, "setEncodingForFile").mockImplementation();
+    let setEncodingForFileMock: jest.SpyInstance;
+    let existsMock: jest.SpyInstance;
+
+    beforeAll(() => {
+        setEncodingForFileMock = jest.spyOn(DatasetFSProvider.instance, "setEncodingForFile").mockImplementation();
+        existsMock = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(true);
+    });
 
     afterAll(() => {
+        existsMock.mockRestore();
         setEncodingForFileMock.mockRestore();
     });
 
