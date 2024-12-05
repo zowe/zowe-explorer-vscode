@@ -71,9 +71,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
     public constructor(opts: Definitions.IZoweDatasetTreeOpts) {
         super(opts.label, opts.collapsibleState, opts.parentNode, opts.session, opts.profile);
-        if (opts.encoding != null) {
-            this.setEncoding(opts.encoding);
-        }
         const isBinary = opts.encoding?.kind === "binary";
         if (opts.contextOverride) {
             this.contextValue = opts.contextOverride;
@@ -83,6 +80,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.contextValue = isBinary ? Constants.DS_MEMBER_BINARY_CONTEXT : Constants.DS_MEMBER_CONTEXT;
         } else {
             this.contextValue = isBinary ? Constants.DS_DS_BINARY_CONTEXT : Constants.DS_DS_CONTEXT;
+        }
+        if (opts.encoding != null) {
+            this.setEncoding(opts.encoding);
         }
         this.tooltip = this.label as string;
         const icon = IconGenerator.getIconByNode(this);
