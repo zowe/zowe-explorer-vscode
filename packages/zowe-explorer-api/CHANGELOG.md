@@ -10,6 +10,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Fixed an issue where the `responseTimeout` profile property was ignored for z/OSMF MVS and USS API calls. [#3225](https://github.com/zowe/zowe-explorer-vscode/issues/3225)
 - Deprecated the method `ProfilesCache.updateProfilesArrays`. Use `ProfilesCache.updateCachedProfile` instead, which handles updating credentials cached in memory when `autoStore` is false. [#3120](https://github.com/zowe/zowe-explorer-vscode/issues/3120)
+- Updated the `@zowe/cli` dependency to v7.29.7 for technical currency. [#3342](https://github.com/zowe/zowe-explorer-vscode/pull/3342)
 
 ## `2.18.0`
 
