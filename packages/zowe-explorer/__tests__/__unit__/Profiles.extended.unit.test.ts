@@ -30,7 +30,7 @@ import * as vscode from "vscode";
 import * as utils from "../../src/utils/ProfilesUtils";
 import * as globals from "../../src/globals";
 import * as zowe from "@zowe/cli";
-import { Gui, ProfilesCache, ZoweTreeNode, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { Gui, IProfileValidation, ProfilesCache, ZoweTreeNode, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { ZoweExplorerApiRegister } from "../../../zowe-explorer/src/ZoweExplorerApiRegister";
@@ -46,7 +46,7 @@ jest.mock("child_process");
 jest.mock("fs");
 jest.mock("fs-extra");
 
-async function createGlobalMocks() {
+function createGlobalMocks() {
     const newMocks = {
         log: zowe.imperative.Logger.getAppLogger(),
         mockShowInputBox: jest.fn(),
@@ -73,8 +73,6 @@ async function createGlobalMocks() {
                 Notification: 15,
             };
         }),
-        withProgress: null,
-        mockCallback: null,
         mockUrlInfo: {
             valid: true,
             protocol: "https",
@@ -82,14 +80,22 @@ async function createGlobalMocks() {
             port: 143,
         },
         mockProfileInstance: null,
-        mockProfilesCache: null,
         mockConfigInstance: createConfigInstance(),
         mockConfigLoad: null,
     };
 
-    newMocks.mockProfilesCache = new ProfilesCache(zowe.imperative.Logger.getAppLogger());
-    newMocks.withProgress = jest.fn().mockImplementation((_progLocation, _callback) => {
-        return newMocks.mockCallback;
+    Object.defineProperty(vscode.window, "withProgress", {
+        value: jest.fn().mockImplementation((progLocation, callback) => {
+            const progress = {
+                report: jest.fn(),
+            };
+            const token = {
+                isCancellationRequested: false,
+                onCancellationRequested: jest.fn(),
+            };
+            return callback(progress, token);
+        }),
+        configurable: true,
     });
 
     Object.defineProperty(vscode.window, "showInformationMessage", {
@@ -128,8 +134,6 @@ async function createGlobalMocks() {
         value: newMocks.mockConfigurationTarget,
         configurable: true,
     });
-    Object.defineProperty(vscode, "ProgressLocation", { value: newMocks.ProgressLocation, configurable: true });
-    Object.defineProperty(vscode.window, "withProgress", { value: newMocks.withProgress, configurable: true });
     Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
@@ -248,7 +252,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
     });
 
     it("Tests that createInstance catches error and logs it", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         jest.spyOn(Profiles.prototype, "refresh").mockRejectedValueOnce(new Error("test error"));
         jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("");
         const errorSpy = jest.spyOn(ZoweLogger, "error");
@@ -260,7 +264,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
 });
 
 describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", () => {
-    async function createBlockMocks(globalMocks) {
+    function createBlockMocks(globalMocks) {
         const newMocks = {
             testSchemas: newTestSchemas(),
             inputBox: createInputBox("input"),
@@ -275,7 +279,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
     });
 
     it("Tests that createNewConnection fails if profileName is missing", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
 
         await Profiles.getInstance().createNewConnection("");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
@@ -283,7 +287,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
     });
 
     it("Tests that createNewConnection fails if profileType is missing", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         jest.spyOn(globalMocks.mockProfileInstance, "getProfileType").mockImplementation(undefined);
 
         await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, undefined);
@@ -292,8 +296,8 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
     });
 
     it("Tests that createNewConnection fails if zOSMF URL is missing", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
         globalMocks.mockCreateInputBox.mockResolvedValue(undefined);
@@ -304,8 +308,8 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
     });
 
     it("Tests that createNewConnection fails if user escapes create at username", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
         jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
@@ -316,8 +320,8 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
     });
 
     it("Tests that createNewConnection fails if user escapes create at password", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
         jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
@@ -329,8 +333,8 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
     });
 
     it("Tests that createNewConnection fails if user escapes create at rejectUnauthorized", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
         jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
@@ -343,8 +347,8 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
     });
 
     it("Tests that createNewConnection fails if profileName is a duplicate", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
         jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
@@ -357,8 +361,8 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
     });
 
     it("Tests that createNewConnection creates a new profile", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
 
@@ -373,8 +377,8 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
     });
 
     it("Tests that createNewConnection throws an exception and shows a config error", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
         const testError = new Error("saveProfile error");
 
         const mockSaveProfile = jest.spyOn(ProfilesCache.prototype as any, "saveProfile").mockImplementationOnce(async (_values, _name, _type) => {
@@ -397,8 +401,8 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
     });
 
     it("Tests that createNewConnection returns 'fake' if the port is undefined and portInfo() returns correct port", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
         jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
         const customURLInfo = {
             valid: true,
@@ -421,8 +425,8 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
     });
 
     it("Tests that createNewConnection returns undefined if the port is undefined and portInfo() returns NaN", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
         const customURLInfo = {
             valid: true,
             protocol: "https",
@@ -444,8 +448,8 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
     });
 
     it("Tests that createNewConnection enters default case when encoding is present in schema and value is the number 0", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
@@ -468,8 +472,8 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
     });
 
     it("Tests that createNewConnection enters default case when encoding is present in schema and value is NaN", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
@@ -493,8 +497,8 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
     });
 
     it("Tests that createNewConnection enters default case when boolean is present in schema and returns undefined", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
         jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValueOnce(globalMocks.mockUrlInfo);
@@ -521,8 +525,8 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
     });
 
     it("Tests that createNewConnection enters default case when string is present in schema and returns 'fake'", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
@@ -551,7 +555,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 });
 
 describe("Profiles Unit Tests - Function createZoweSession", () => {
-    async function createBlockMocks(globalMocks) {
+    function createBlockMocks(globalMocks) {
         const newMocks = {
             session: createISessionWithoutCredentials(),
             treeView: createTreeView(),
@@ -566,8 +570,8 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         return newMocks;
     }
     it("Tests that createZoweSession presents correct message when escaping selection of quickpick", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
         const spy = jest.spyOn(Gui, "createQuickPick");
         const spyDebug = jest.spyOn(ZoweLogger, "debug");
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
@@ -580,7 +584,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
     });
 
     it("Tests that createZoweSession runs successfully", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const spyInfo = jest.spyOn(ZoweLogger, "info");
         jest.spyOn(Gui, "createQuickPick").mockReturnValue({
             show: jest.fn(),
@@ -611,7 +615,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
     });
 
     it("Tests that createZoweSession runs successfully and uses the chosenProfile", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         jest.spyOn(Gui, "createQuickPick").mockReturnValue({
             show: jest.fn(),
             hide: jest.fn(),
@@ -626,7 +630,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
     });
 
     it("Tests that createZoweSession catches error and logs it", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         jest.spyOn(Gui, "createQuickPick").mockReturnValue({
             show: jest.fn(),
             hide: jest.fn(),
@@ -645,7 +649,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
 
 describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
     it("Tests that editZoweConfigFile presents correct message when escaping selection of quickpick", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
 
         const spy = jest.spyOn(Gui, "showQuickPick");
         spy.mockResolvedValueOnce(undefined);
@@ -655,7 +659,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
         spy.mockClear();
     });
     it("Tests that editZoweConfigFile opens correct file when Global is selected", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
 
         const spyQuickPick = jest.spyOn(Gui, "showQuickPick");
         spyQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory" as any);
@@ -667,7 +671,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
         spyOpenFile.mockClear();
     });
     it("Tests that editZoweConfigFile opens correct file when only Global config available", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         globalMocks.mockConfigLoad.load.mockResolvedValueOnce({
             layers: [
                 {
@@ -685,7 +689,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
         spyOpenFile.mockClear();
     });
     it("Tests that editZoweConfigFile opens correct file when Project is selected", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
 
         const spyQuickPick = jest.spyOn(Gui, "showQuickPick");
         spyQuickPick.mockResolvedValueOnce("Project: in the current working directory" as any);
@@ -697,7 +701,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
         spyOpenFile.mockClear();
     });
     it("Tests that editZoweConfigFile opens correct file when only Project config available", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         globalMocks.mockConfigLoad.load.mockResolvedValueOnce({
             layers: [
                 {
@@ -717,7 +721,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
 });
 
 describe("Profiles Unit Tests - Function createZoweSchema", () => {
-    async function createBlockMocks(globalMocks) {
+    function createBlockMocks(globalMocks) {
         const newMocks = {
             session: createISessionWithoutCredentials(),
             treeView: createTreeView(),
@@ -741,8 +745,8 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         return newMocks;
     }
     it("Tests that createZoweSchema presents correct message when escaping selection of config location prompt", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
 
         const spy = jest.spyOn(Gui, "showQuickPick");
         spy.mockResolvedValueOnce(undefined);
@@ -752,8 +756,8 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         spy.mockClear();
     });
     it("Tests that createZoweSchema will open correct config file when cancelling creation in location with existing config file", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
 
         const spyQuickPick = jest.spyOn(Gui, "showQuickPick");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory");
@@ -774,8 +778,8 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         spyOpenFile.mockClear();
     });
     it("Test that createZoweSchema will open config on error if error deals with parsing file", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
 
         const spyQuickPick = jest.spyOn(Gui, "showQuickPick");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory");
@@ -792,8 +796,8 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         spyZoweConfigError.mockClear();
     });
     it("Test that createZoweSchema will auto create global if VSC not in project and config doesn't exist", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
         Object.defineProperty(vscode.workspace, "workspaceFolders", {
             value: undefined,
             configurable: true,
@@ -820,8 +824,8 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
     });
 
     it("Tests that createZoweSchema will return the config file path", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
 
         Object.defineProperty(globals, "ISTHEIA", { value: true, configurable: true });
         Object.defineProperty(vscode.workspace, "workspaceFolders", {
@@ -1102,15 +1106,14 @@ describe("Profiles Unit Tests - function promptCredentials", () => {
             profile: {
                 user: "test",
                 password: "12345",
-                base64EncodedAuth: "encodedAuth",
             } as zowe.imperative.IProfile,
         } as zowe.imperative.IProfileLoaded);
         jest.spyOn(Profiles.getInstance(), "updateProfilesArrays").mockImplementation();
-        await expect(Profiles.getInstance().promptCredentials("secure_config_props")).resolves.toEqual(["test", "12345", "encodedAuth"]);
+        await expect(Profiles.getInstance().promptCredentials("secure_config_props")).resolves.toEqual(["test", "12345"]);
     });
 
     it("Tests that promptCredentials catches error and logs it", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockRejectedValueOnce(new Error("test error"));
         jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("");
         const errorSpy = jest.spyOn(ZoweLogger, "error");
@@ -1196,23 +1199,30 @@ describe("Profiles Unit Tests - function getDeleteProfile", () => {
 });
 
 describe("Profiles Unit Tests - function validateProfile", () => {
-    it("should return an object with profile validation status if validated profiles exist", async () => {
+    function createBlockMocks() {
+        createGlobalMocks();
+        const newMocks = {
+            profilesForValidation: [] as IProfileValidation[],
+            getStatusSpy: jest.fn(),
+        };
+
         Object.defineProperty(Profiles.getInstance(), "profilesForValidation", {
-            value: [
-                {
-                    name: "test1",
-                    message: "",
-                    type: "",
-                    status: "active",
-                    failNotFound: false,
-                },
-            ],
+            get: () => newMocks.profilesForValidation,
             configurable: true,
         });
-        jest.spyOn(Gui, "withProgress").mockResolvedValue(undefined);
-        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockResolvedValueOnce({
-            getStatus: () => "active",
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValueOnce({
+            getStatus: newMocks.getStatusSpy,
         } as never);
+
+        return newMocks;
+    }
+
+    it("should return an object with profile validation status if validated profiles exist", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.profilesForValidation.push({
+            name: "test1",
+            status: "active",
+        });
         await expect(
             Profiles.getInstance().validateProfiles({
                 name: "test1",
@@ -1224,16 +1234,11 @@ describe("Profiles Unit Tests - function validateProfile", () => {
             name: "test1",
             status: "active",
         });
+        expect(blockMocks.getStatusSpy).not.toHaveBeenCalled();
     });
     it("should return an object with profile validation status of 'active' from session status if validated profiles does not exist", async () => {
-        Object.defineProperty(Profiles.getInstance(), "profilesForValidation", {
-            value: [],
-            configurable: true,
-        });
-        jest.spyOn(Gui, "withProgress").mockResolvedValue("active");
-        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockResolvedValueOnce({
-            getStatus: () => "active",
-        } as never);
+        const blockMocks = createBlockMocks();
+        blockMocks.getStatusSpy.mockResolvedValue("active");
         await expect(
             Profiles.getInstance().validateProfiles({
                 name: "test1",
@@ -1245,16 +1250,11 @@ describe("Profiles Unit Tests - function validateProfile", () => {
             name: "test1",
             status: "active",
         });
+        expect(blockMocks.getStatusSpy).toHaveBeenCalledTimes(1);
     });
     it("should return an object with profile validation status of 'inactive' from session status if validated profiles does not exist", async () => {
-        Object.defineProperty(Profiles.getInstance(), "profilesForValidation", {
-            value: [],
-            configurable: true,
-        });
-        jest.spyOn(Gui, "withProgress").mockResolvedValue("inactive");
-        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockResolvedValueOnce({
-            getStatus: () => "inactive",
-        } as never);
+        const blockMocks = createBlockMocks();
+        blockMocks.getStatusSpy.mockResolvedValue("inactive");
         await expect(
             Profiles.getInstance().validateProfiles({
                 name: "test1",
@@ -1266,36 +1266,25 @@ describe("Profiles Unit Tests - function validateProfile", () => {
             name: "test1",
             status: "inactive",
         });
+        expect(blockMocks.getStatusSpy).toHaveBeenCalledTimes(1);
     });
     it("should handle the error if call to getStatus fails", async () => {
-        Object.defineProperty(Profiles.getInstance(), "profilesForValidation", {
-            value: [],
-            configurable: true,
-        });
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+        const blockMocks = createBlockMocks();
         const testError = new Error("failed to validate profile");
-        jest.spyOn(Gui, "withProgress").mockImplementation(() => {
+        blockMocks.getStatusSpy.mockImplementation(() => {
             throw testError;
         });
-        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockResolvedValueOnce({
-            getStatus: () => "inactive",
-        } as never);
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
         await Profiles.getInstance().validateProfiles({
             name: "test1",
             message: "",
             type: "",
             failNotFound: false,
         });
-        expect(errorHandlingSpy).toBeCalledWith(testError, "test1");
+        expect(errorHandlingSpy).toHaveBeenCalledWith(testError, "test1");
     });
     it("should return an object with profile validation status of 'unverified' from session status if validated profiles doesn't exist", async () => {
-        Object.defineProperty(Profiles.getInstance(), "profilesForValidation", {
-            value: [],
-            configurable: true,
-        });
-        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockResolvedValueOnce({
-            getStatus: undefined,
-        } as never);
+        createBlockMocks();
         await expect(
             Profiles.getInstance().validateProfiles({
                 name: "test1",
@@ -1312,7 +1301,7 @@ describe("Profiles Unit Tests - function validateProfile", () => {
 
 describe("Profiles Unit Tests - function deleteProfile", () => {
     it("should delete profile", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
 
         const datasetSessionNode = createDatasetSessionNode(globalMocks.testSession, globalMocks.testProfile);
         const datasetTree = createDatasetTree(datasetSessionNode, globalMocks.testProfile);
@@ -1364,7 +1353,7 @@ describe("Profiles Unit Tests - function deleteProfile", () => {
     });
 
     it("Tests that deleteProfile catches error and logs it", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const datasetSessionNode = createDatasetSessionNode(globalMocks.testSession, globalMocks.testProfile);
         const datasetTree = createDatasetTree(datasetSessionNode, globalMocks.testProfile);
         const ussSessionNode = [createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile)];
@@ -1433,35 +1422,57 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         jest.spyOn(Profiles.getInstance(), "getSecurePropsForProfile").mockResolvedValue([]);
     };
 
-    it("should show as active in status of profile", async () => {
-        const globalMocks = await createGlobalMocks();
+    it("should show as active in status of profile using basic auth", async () => {
+        const globalMocks = createGlobalMocks();
         environmentSetup(globalMocks);
         setupProfilesCheck(globalMocks);
-        jest.spyOn(Profiles.getInstance(), "validateProfiles").mockReturnValue({ status: "active", name: "sestest" } as any);
-        jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValue(["sestest", "12345", "base64Auth"]);
+        jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
+        const promptCredentialsSpy = jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValueOnce(["sestest", "12345"]);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
+        expect(promptCredentialsSpy).toHaveBeenCalledTimes(1);
+    });
+    it("should show as active in status of profile using token auth", async () => {
+        const globalMocks = createGlobalMocks();
+        jest.spyOn(utils.ProfilesUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
+        environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks);
+        const ssoLoginSpy = jest.spyOn(Profiles.getInstance(), "ssoLogin").mockResolvedValueOnce();
+        jest.spyOn(Profiles.getInstance(), "loadNamedProfile").mockReturnValueOnce(globalMocks.testProfile);
+        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
+        expect(ssoLoginSpy).toHaveBeenCalledTimes(1);
     });
     it("should show as unverified in status of profile", async () => {
-        const globalMocks = await createGlobalMocks();
-        environmentSetup(globalMocks);
+        const globalMocks = createGlobalMocks();
         setupProfilesCheck(globalMocks);
-        jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValue(undefined);
+        jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "unverified", name: "sestest" });
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
     });
     it("should show as inactive in status of profile", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         setupProfilesCheck(globalMocks);
+        jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "inactive", name: "sestest" });
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "inactive" });
     });
-    it("should show as unverified if using token auth and is logged out or has expired token", async () => {
-        const globalMocks = await createGlobalMocks();
-        jest.spyOn(utils, "errorHandling").mockImplementation();
-        jest.spyOn(utils.ProfilesUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
+    it("should show as unverified if using basic auth and has expired password", async () => {
+        const globalMocks = createGlobalMocks();
+        environmentSetup(globalMocks);
         setupProfilesCheck(globalMocks);
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling").mockImplementation();
+        jest.spyOn(Profiles.getInstance(), "promptCredentials").mockRejectedValueOnce(new Error("Failed to login"));
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
+        expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
+    });
+    it("should show as unverified if using token auth and is logged out or has expired token", async () => {
+        const globalMocks = createGlobalMocks();
+        environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks);
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling").mockImplementation();
+        jest.spyOn(utils.ProfilesUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
+        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
+        expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
     });
     it("should show as unverified if profiles fail to load", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockRejectedValueOnce(new Error("test error"));
         jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("");
         const errorSpy = jest.spyOn(ZoweLogger, "error");
@@ -1474,7 +1485,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
 
 describe("Profiles Unit Tests - function editSession", () => {
     it("should successfully return the edited session", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const testSchema = newTestSchemas();
         testSchema["encoding"] = {
             type: "string",
@@ -1541,7 +1552,7 @@ describe("Profiles Unit Tests - function editSession", () => {
     });
 
     it("Tests that editSession catches error and logs it", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockRejectedValueOnce(new Error("test error"));
         jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("");
         const errorSpy = jest.spyOn(ZoweLogger, "error");
@@ -1554,7 +1565,7 @@ describe("Profiles Unit Tests - function editSession", () => {
 
 describe("Profiles Unit Tests - function getProfileSetting", () => {
     it("should retrive the profile with a status of unverified", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         Object.defineProperty(Profiles.getInstance(), "profilesValidationSetting", {
             value: [
                 {
@@ -1597,7 +1608,7 @@ describe("Profiles Unit Tests - function getProfileSetting", () => {
 
 describe("Profiles Unit Tests - function disableValidationContext", () => {
     it("should disable validation context and return updated node", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const spy = jest.spyOn(ZoweLogger, "trace");
         const testNode = new (ZoweTreeNode as any)(
             "test",
@@ -1624,7 +1635,7 @@ describe("Profiles Unit Tests - function disableValidationContext", () => {
 
 describe("Profiles Unit Tests - function enableValidationContext", () => {
     it("should enable validation context and return updated node", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const spy = jest.spyOn(ZoweLogger, "trace");
         const testNode = new (ZoweTreeNode as any)(
             "test",
@@ -1652,7 +1663,7 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
     let testNode;
     let globalMocks;
     beforeEach(async () => {
-        globalMocks = await createGlobalMocks();
+        globalMocks = createGlobalMocks();
         testNode = new (ZoweTreeNode as any)(
             "fake",
             vscode.TreeItemCollapsibleState.None,
@@ -1728,7 +1739,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
     });
 
     beforeEach(async () => {
-        globalMocks = await createGlobalMocks();
+        globalMocks = createGlobalMocks();
         testNode = new (ZoweTreeNode as any)(
             "test",
             vscode.TreeItemCollapsibleState.None,
@@ -2293,7 +2304,7 @@ describe("Profiles Unit Tests - function ssoLogout", () => {
     let testNode;
     let globalMocks;
     beforeEach(async () => {
-        globalMocks = await createGlobalMocks();
+        globalMocks = createGlobalMocks();
         testNode = new (ZoweTreeNode as any)(
             "fake",
             vscode.TreeItemCollapsibleState.None,
@@ -2341,7 +2352,7 @@ describe("Profiles Unit Tests - function ssoLogout", () => {
 describe("Profiles Unit Tests - function updateBaseProfileFileLogin", () => {
     it("should update the property of mProfileInfo", async () => {
         const privateProfile = Profiles.getInstance() as any;
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const updatePropertyMock = jest.fn();
         jest.spyOn(privateProfile, "getProfileInfo").mockReturnValue({
             isSecured: () => true,
@@ -2355,7 +2366,7 @@ describe("Profiles Unit Tests - function updateBaseProfileFileLogin", () => {
 describe("Profiles Unit Tests - function updateBaseProfileFileLogout", () => {
     it("should update the property of mProfileInfo", async () => {
         const privateProfile = Profiles.getInstance() as any;
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const updateKnownPropertyMock = jest.fn();
         jest.spyOn(privateProfile, "getProfileInfo").mockReturnValue({
             isSecured: () => true,
@@ -2374,7 +2385,7 @@ describe("Profiles Unit Tests - function updateBaseProfileFileLogout", () => {
 
 describe("Profiles Unit Tests - function createNonSecureProfile", () => {
     it("should create an unsecured profile by removing secure arrays and setting autoStore to false", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const privateProfile = Profiles.getInstance() as any;
         jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(false);
         expect(privateProfile.createNonSecureProfile(globalMocks.testTeamConfigProfile)).toEqual(undefined);
@@ -2384,7 +2395,7 @@ describe("Profiles Unit Tests - function createNonSecureProfile", () => {
 
 describe("Profiles Unit Tests - function updateProfile", () => {
     it("should throw an error when getting the CliManager", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const privateProfile = Profiles.getInstance() as any;
         jest.spyOn(Profiles.getInstance(), "getCliProfileManager").mockReturnValue({
             load: () => globalMocks.testProfile,
@@ -2408,7 +2419,7 @@ describe("Profiles Unit Tests - function updateProfile", () => {
 
 describe("Profiles Unit Tests - function validationArraySetup", () => {
     it("should setup the validation array", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         Object.defineProperty(Profiles.getInstance(), "profilesValidationSetting", {
             value: [
                 {
@@ -2464,7 +2475,7 @@ describe("Profiles Unit Tests - function getSecurePropsForProfile", () => {
         jest.resetAllMocks();
     });
     it("should retrieve the secure properties of a profile", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             mergeArgsForProfile: () => ({
                 knownArgs: [
@@ -2489,7 +2500,7 @@ describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
     });
 
     it("should fail to clear filter if no session nodes are available", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const testNode = new (ZoweTreeNode as any)(
             "fake",
             vscode.TreeItemCollapsibleState.None,
@@ -2516,7 +2527,7 @@ describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
     });
 
     it("should fail to clear filters if the session node is not listed in the tree", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const testNode = new (ZoweTreeNode as any)(
             "fake",
             vscode.TreeItemCollapsibleState.None,
@@ -2553,7 +2564,7 @@ describe("Profiles Unit Tests - function disableValidation", () => {
     });
 
     it("should disable validation for the profile on all trees", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         jest.spyOn(TreeProviders, "getSessionForAllTrees").mockReturnValue([globalMocks.testNode]);
         expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT);
         expect(Profiles.getInstance().disableValidation(globalMocks.testNode)).toEqual(globalMocks.testNode);
@@ -2561,7 +2572,7 @@ describe("Profiles Unit Tests - function disableValidation", () => {
     });
 
     it("should disable validation for the profile on the current tree", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         jest.spyOn(TreeProviders, "getSessionForAllTrees").mockReturnValue([globalMocks.testNode]);
         const disableValidationContextSpy = jest.spyOn(Profiles.getInstance(), "disableValidationContext");
         expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT);
@@ -2579,7 +2590,7 @@ describe("Profiles Unit Tests - function enableValidation", () => {
     });
 
     it("should enable validation for the profile on all trees", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         jest.spyOn(TreeProviders, "getSessionForAllTrees").mockReturnValue([
             createMockNode("test2", globals.DS_SESSION_CONTEXT),
             globalMocks.testNode,
@@ -2590,7 +2601,7 @@ describe("Profiles Unit Tests - function enableValidation", () => {
     });
 
     it("should enable validation for the profile on the current tree", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const enableValidationContextSpy = jest.spyOn(Profiles.getInstance(), "enableValidationContext");
         jest.spyOn(TreeProviders, "getSessionForAllTrees").mockReturnValue([globalMocks.testNode]);
         expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT);

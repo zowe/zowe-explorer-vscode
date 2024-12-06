@@ -11,6 +11,7 @@
 
 import { imperative } from "@zowe/cli";
 import { InputBoxOptions, OpenDialogOptions } from "vscode";
+import { ProfilesCache } from "../../profiles";
 
 export interface IPromptCredentialsCommonOptions {
     rePrompt?: boolean;
@@ -23,6 +24,7 @@ export interface IPromptCredentialsOptions extends IPromptCredentialsCommonOptio
     sessionName?: string;
     sessionType?: string;
     secure?: boolean;
+    zeProfiles?: ProfilesCache;
 }
 
 export interface IPromptUserPassOptions extends IPromptCredentialsCommonOptions {

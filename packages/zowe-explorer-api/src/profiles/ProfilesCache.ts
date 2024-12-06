@@ -16,6 +16,7 @@ import { URL } from "url";
 
 import * as zowe from "@zowe/cli";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
+import { IZoweNodeType } from "../tree";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
@@ -127,9 +128,8 @@ export class ProfilesCache {
 
     /**
      * Updates profile in allProfiles array and if default updates defaultProfileByType
-     *
+     * @deprecated Use `updateCachedProfile` instead
      * @param {string} profileLoaded
-     *
      * @returns {void}
      */
     public updateProfilesArrays(profileLoaded: zowe.imperative.IProfileLoaded): void {
@@ -143,6 +143,25 @@ export class ProfilesCache {
         if (defaultProf?.name === profileLoaded?.name) {
             this.defaultProfileByType.set(profileLoaded?.type, profileLoaded);
         }
+    }
+
+    public async updateCachedProfile(
+        profileLoaded: zowe.imperative.IProfileLoaded,
+        profileNode?: IZoweNodeType,
+        zeRegister?: ZoweExplorerApi.IApiRegisterClient
+    ): Promise<void> {
+        if ((await this.getProfileInfo()).getTeamConfig().properties.autoStore) {
+            await this.refresh(zeRegister);
+        } else {
+            // Note: When autoStore is disabled, nested profiles within this service profile may not have their credentials updated.
+            const profIndex = this.allProfiles.findIndex((profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name);
+            this.allProfiles[profIndex].profile = profileLoaded.profile;
+            const defaultProf = this.defaultProfileByType.get(profileLoaded.type);
+            if (defaultProf != null && defaultProf.name === profileLoaded.name) {
+                this.defaultProfileByType.set(profileLoaded.type, profileLoaded);
+            }
+        }
+        profileNode?.setProfileToChoice(profileLoaded);
     }
 
     /**

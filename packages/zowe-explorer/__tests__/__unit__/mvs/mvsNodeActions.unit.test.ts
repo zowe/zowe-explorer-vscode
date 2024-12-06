@@ -43,17 +43,14 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showInformationMessage", { value: newMocks.showInformationMessage, configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: newMocks.openTextDocument, configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.window, "withProgress", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "withProgress", {
         value: jest.fn().mockImplementation((progLocation, callback) => {
             const progress = {
-                report: (message) => {
-                    return;
-                },
+                report: jest.fn(),
             };
             const token = {
                 isCancellationRequested: false,
-                onCancellationRequested: undefined,
+                onCancellationRequested: jest.fn(),
             };
             return callback(progress, token);
         }),
@@ -186,22 +183,6 @@ describe("mvsNodeActions", () => {
         testTree.getTreeView.mockReturnValueOnce(createTreeView());
         const fileUri = { fsPath: "/tmp/foo" };
         globalMocks.showOpenDialog.mockReturnValueOnce([fileUri]);
-        Object.defineProperty(vscode.window, "withProgress", {
-            value: jest.fn().mockImplementation((progLocation, callback) => {
-                const progress = {
-                    report: (message) => {
-                        return;
-                    },
-                };
-                const token = {
-                    isCancellationRequested: true,
-                    onCancellationRequested: undefined,
-                };
-                return callback(progress, token);
-            }),
-            configurable: true,
-        });
-
         await dsActions.uploadDialog(node, testTree);
 
         expect(globalMocks.showOpenDialog).toBeCalled();
