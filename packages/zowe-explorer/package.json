@@ -2061,7 +2061,7 @@
     ]
   },
   "scripts": {
-    "build": "gulp build && yarn license && webpack --mode development",
+    "build": "yarn copy-secrets && gulp build && yarn license && webpack --mode development",
     "build:integration": "yarn createTestProfileData && yarn license && tsc --pretty --project tsconfig-tests.json",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000 --reporter mocha-multi-reporters --reporter-options configFile=.mocharc.json",
@@ -2085,7 +2085,8 @@
     "fresh-clone": "yarn clean && rimraf node_modules",
     "pretty": "prettier --write .",
     "createTestProfileData": "ts-node ./scripts/createTestProfileData.ts",
-    "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts"
+    "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts",
+    "copy-secrets": "ts-node ./scripts/getSecretsPrebuilds.ts"
   },
   "engines": {
     "vscode": "^1.53.2"
@@ -2101,7 +2102,6 @@
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
-    "copy-webpack-plugin": "^6.4.1",
     "cross-env": "^5.2.0",
     "del": "^4.1.1",
     "eslint-plugin-zowe-explorer": "2.19.0-SNAPSHOT",
