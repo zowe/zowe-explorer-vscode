@@ -297,7 +297,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
     it("Tests that createNewConnection fails if zOSMF URL is missing", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks((globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
         globalMocks.mockCreateInputBox.mockResolvedValue(undefined);
@@ -309,7 +309,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
     it("Tests that createNewConnection fails if user escapes create at username", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks((globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
         jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
@@ -321,7 +321,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
     it("Tests that createNewConnection fails if user escapes create at password", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks((globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
         jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
@@ -334,7 +334,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
     it("Tests that createNewConnection fails if user escapes create at rejectUnauthorized", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks((globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
         jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
@@ -348,7 +348,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
     it("Tests that createNewConnection fails if profileName is a duplicate", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks((globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
         jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
@@ -362,7 +362,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
     it("Tests that createNewConnection creates a new profile", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks((globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
 
@@ -378,7 +378,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
     it("Tests that createNewConnection throws an exception and shows a config error", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks((globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         const testError = new Error("saveProfile error");
 
         const mockSaveProfile = jest.spyOn(ProfilesCache.prototype as any, "saveProfile").mockImplementationOnce(async (_values, _name, _type) => {
@@ -402,7 +402,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
     it("Tests that createNewConnection returns 'fake' if the port is undefined and portInfo() returns correct port", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks((globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
         const customURLInfo = {
             valid: true,
@@ -426,7 +426,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
     it("Tests that createNewConnection returns undefined if the port is undefined and portInfo() returns NaN", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks((globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         const customURLInfo = {
             valid: true,
             protocol: "https",
@@ -449,7 +449,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
     it("Tests that createNewConnection enters default case when encoding is present in schema and value is the number 0", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks((globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
@@ -473,7 +473,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
     it("Tests that createNewConnection enters default case when encoding is present in schema and value is NaN", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks((globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
@@ -498,7 +498,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
     it("Tests that createNewConnection enters default case when boolean is present in schema and returns undefined", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks((globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
         jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValueOnce(globalMocks.mockUrlInfo);
@@ -526,7 +526,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
     it("Tests that createNewConnection enters default case when string is present in schema and returns 'fake'", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks((globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
@@ -571,7 +571,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
     }
     it("Tests that createZoweSession presents correct message when escaping selection of quickpick", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks((globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         const spy = jest.spyOn(Gui, "createQuickPick");
         const spyDebug = jest.spyOn(ZoweLogger, "debug");
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
@@ -746,7 +746,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
     }
     it("Tests that createZoweSchema presents correct message when escaping selection of config location prompt", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks((globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         const spy = jest.spyOn(Gui, "showQuickPick");
         spy.mockResolvedValueOnce(undefined);
@@ -757,7 +757,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
     });
     it("Tests that createZoweSchema will open correct config file when cancelling creation in location with existing config file", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks((globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         const spyQuickPick = jest.spyOn(Gui, "showQuickPick");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory");
@@ -779,7 +779,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
     });
     it("Test that createZoweSchema will open config on error if error deals with parsing file", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks((globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         const spyQuickPick = jest.spyOn(Gui, "showQuickPick");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory");
@@ -797,7 +797,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
     });
     it("Test that createZoweSchema will auto create global if VSC not in project and config doesn't exist", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks((globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         Object.defineProperty(vscode.workspace, "workspaceFolders", {
             value: undefined,
             configurable: true,
@@ -825,7 +825,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
 
     it("Tests that createZoweSchema will return the config file path", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks((globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         Object.defineProperty(globals, "ISTHEIA", { value: true, configurable: true });
         Object.defineProperty(vscode.workspace, "workspaceFolders", {

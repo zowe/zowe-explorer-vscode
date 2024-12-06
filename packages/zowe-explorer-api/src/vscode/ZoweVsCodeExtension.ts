@@ -232,7 +232,7 @@ export class ZoweVsCodeExtension {
 
         await cache.updateBaseProfileFileLogin(profileToUpdate, updBaseProfile, !connOk);
         serviceProfile.profile = { ...serviceProfile.profile, ...updBaseProfile };
-        await cache.updateCachedProfile(serviceProfile, node);
+        await cache.updateCachedProfile(serviceProfile, node, zeRegister);
         return true;
     }
 
@@ -273,7 +273,7 @@ export class ZoweVsCodeExtension {
             const connOk = serviceProfile.profile.host === baseProfile.profile.host && serviceProfile.profile.port === baseProfile.profile.port;
             await cache.updateBaseProfileFileLogout(connOk ? baseProfile : serviceProfile);
             serviceProfile.profile = { ...serviceProfile.profile, tokenType: undefined, tokenValue: undefined };
-            await cache.updateCachedProfile(serviceProfile);
+            await cache.updateCachedProfile(serviceProfile, undefined, zeRegister);
         }
     }
 

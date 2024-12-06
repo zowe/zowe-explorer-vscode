@@ -376,7 +376,7 @@ describe("ZoweVsCodeExtension", () => {
                 expect(loginSpy).not.toHaveBeenCalled();
                 expect(testSpy).not.toHaveBeenCalled();
                 expect(testCache.updateBaseProfileFileLogin).toHaveBeenCalledWith(baseProfile, updProfile, false);
-                expect(testNode.setProfileToChoice).toHaveBeenCalled();
+                expect(testCache.updateCachedProfile).toHaveBeenCalledWith(serviceProfile, testNode, testRegister);
                 quickPickMock.mockRestore();
             });
         });
