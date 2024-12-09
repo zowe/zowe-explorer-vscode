@@ -1067,6 +1067,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         expect(globalMocks.existsSync.mock.calls.length).toBe(1);
         expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, node.getProfileName(), node.fullPath));
         expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Opening USS file...");
+        expect(blockMocks.testUSSTree.getTreeView().reveal).not.toHaveBeenCalled();
 
         // Tests that correct file is opened in editor
         globalMocks.withProgress(globalMocks.downloadUSSFile);
