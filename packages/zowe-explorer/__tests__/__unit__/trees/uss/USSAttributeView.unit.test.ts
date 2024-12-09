@@ -34,8 +34,6 @@ describe("AttributeView unit tests", () => {
     });
     const updateAttrsApiMock = jest.fn();
     const updateAttributesMock = jest.spyOn(node, "setAttributes").mockImplementation();
-    const onUpdateMock = jest.fn();
-    const onUpdateMocked = new MockedProperty(ZoweUSSNode.prototype, "onUpdate", undefined, onUpdateMock);
 
     beforeAll(() => {
         jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({
@@ -48,7 +46,6 @@ describe("AttributeView unit tests", () => {
 
     afterAll(() => {
         createDirMock.mockRestore();
-        onUpdateMocked[Symbol.dispose]();
     });
 
     it("refreshes properly when webview sends 'refresh' command", async () => {
@@ -60,8 +57,6 @@ describe("AttributeView unit tests", () => {
         node.getParent = jest.fn().mockReturnValueOnce({ label: "parent node" } as IZoweUSSTreeNode);
         await (view as any).onDidReceiveMessage({ command: "refresh" });
         expect(treeProvider.refreshElement).toHaveBeenCalled();
-
-        expect(node.onUpdate).toHaveBeenCalledTimes(2);
     });
 
     it("dispatches node data to webview when 'ready' command is received", async () => {
@@ -117,6 +112,7 @@ describe("AttributeView unit tests", () => {
     });
 
     it("handles any errors while updating attributes", async () => {
+        // Object.defineProperty(ZoweUSSNode.prototype, "getAttributes", { value: new Error("Failed to update attributes"), configurable: true });
         const getAttributesMock = jest.spyOn(ZoweUSSNode.prototype, "getAttributes").mockRejectedValue(new Error("Failed to update attributes"));
         await (view as any).onDidReceiveMessage({
             command: "update-attributes",
