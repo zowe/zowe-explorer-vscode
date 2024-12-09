@@ -17,7 +17,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where a migrated data set is unusable after it is recalled through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
 - Fixed an issue where a recalled PDS is expandable after it is migrated through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
 - Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
-- Fixed an issue where clicking on a file in the Unix System Services tree caused the tree to change focus to the selected item. [#2486](https://github.com/zowe/zowe-explorer-vscode/issues/2486)
+- Fixed an issue where clicking on a file in the Unix System Services tree caused the tree to abruptly change focus to the selected item. [#2486](https://github.com/zowe/zowe-explorer-vscode/issues/2486)
 
 ## `2.18.0`
 
