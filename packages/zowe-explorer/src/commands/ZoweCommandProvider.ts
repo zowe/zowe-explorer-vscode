@@ -158,7 +158,6 @@ export abstract class ZoweCommandProvider {
             };
             const sesName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
             if (sesName === undefined) {
-                ZoweLogger.info(this.operationCancelled);
                 return;
             }
             const profile = this.profileInstance.allProfiles.find((tempProfile) => tempProfile.name === sesName);
@@ -169,9 +168,7 @@ export abstract class ZoweCommandProvider {
             }
             return profile;
         } else {
-            const noProfAvailable = vscode.l10n.t("No profiles available");
-            ZoweLogger.info(noProfAvailable);
-            Gui.showMessage(noProfAvailable);
+            Gui.showMessage(vscode.l10n.t("No profiles available"));
         }
     }
 
