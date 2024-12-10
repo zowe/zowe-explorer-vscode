@@ -17,6 +17,8 @@ import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { AuthUtils } from "../utils/AuthUtils";
 import { Definitions } from "../configuration/Definitions";
 import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
+import { SettingsConfig } from "../configuration/SettingsConfig";
+import { Constants } from "../configuration/Constants";
 
 /**
  * Provides a class that manages submitting a command on the server
@@ -96,10 +98,11 @@ export class MvsCommandHandler extends ZoweCommandProvider {
             if (this.profileInstance.validProfile !== Validation.ValidationType.INVALID) {
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
                 if (commandApi) {
-                    if (!command) {
+                    const iTerms = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS) ?? true;
+                    if (!command && !iTerms) {
                         command = await this.getQuickPick([session && session.ISession ? session.ISession.hostname : "unknown"]);
                     }
-                    await this.issueCommand(profile, command);
+                    await this.issueCommand(profile, command ?? "");
                 }
             } else {
                 Gui.errorMessage(vscode.l10n.t("Profile is invalid"));

@@ -18,6 +18,8 @@ import { ZoweLogger } from "../tools/ZoweLogger";
 import { AuthUtils } from "../utils/AuthUtils";
 import { Definitions } from "../configuration/Definitions";
 import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
+import { SettingsConfig } from "../configuration/SettingsConfig";
+import { Constants } from "../configuration/Constants";
 
 /**
  * Provides a class that manages submitting a Unix command on the server
@@ -182,10 +184,11 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     return;
                 }
             }
-            if (!command) {
+            const iTerms = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS) ?? true;
+            if (!command && !iTerms) {
                 command = await this.getQuickPick([this.sshCwd]);
             }
-            await this.issueCommand(this.nodeProfile, command);
+            await this.issueCommand(this.nodeProfile, command ?? "");
         } catch (error) {
             if (error.toString().includes("non-existing")) {
                 ZoweLogger.error(error);

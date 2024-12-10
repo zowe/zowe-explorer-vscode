@@ -66,10 +66,12 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.mHistory = options?.history ?? [];
         this.historyIndex = this.mHistory.length;
         this.command = options?.startup ?? "";
-        this.cursorPosition = Array.from(this.command).length;
+        this.charArrayCmd = [];
+        this.cursorPosition = this.charArrayCmd.length;
         this.formatCommandLine = options?.formatCommandLine ?? ((cmd: string) => `${ZoweTerminal.Keys.EMPTY_LINE}${cmd}`);
     }
 
+    private charArrayCmd: string[];
     private mMessage: string;
     protected mTerminalName: string = "";
     protected mHistory: string[];
@@ -92,11 +94,19 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.write(this.formatCommandLine ? this.formatCommandLine(cmd ?? this.command) : cmd ?? this.command);
     }
     protected refreshCmd() {
+        if (!this.charArrayCmd.length || this.charArrayCmd.join("") !== this.command) {
+            this.charArrayCmd = Array.from(this.command);
+        }
         this.clearLine();
         this.writeCmd();
-        if (this.command.length !== this.cursorPosition) {
-            const offset = Buffer.from(Array.from(this.command).slice(this.cursorPosition).join("")).length;
-            this.write(`\x1B[${offset}D`);
+        if (this.charArrayCmd.length > this.cursorPosition) {
+            const getPos = (char: string) => {
+                const charBytes = Buffer.from(char).length;
+                return charBytes > 2 ? 2 : 1;
+            };
+            const offset = this.charArrayCmd.slice(this.cursorPosition).reduce((total, curr) => total + getPos(curr), 0);
+            console.log(offset);
+            [...Array(offset)].map(() => this.write(ZoweTerminal.Keys.LEFT));
         }
     }
     protected clear() {
@@ -127,27 +137,25 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     private navigateHistory(offset: number): void {
         this.historyIndex = Math.max(0, Math.min(this.mHistory.length, this.historyIndex + offset));
         this.command = this.mHistory[this.historyIndex] ?? "";
-        this.cursorPosition = Array.from(this.command).length;
+        this.charArrayCmd = Array.from(this.command);
+        this.cursorPosition = this.charArrayCmd.length;
         this.refreshCmd();
     }
 
     private moveCursor(offset: number): void {
-        this.cursorPosition = Math.max(0, Math.min(this.command.length, this.cursorPosition + offset));
-
-        // const getPos = (val: number) => Math.max(0, Math.min(Array.from(this.command).length, this.cursorPosition + val));
-        // const currChar = Buffer.from(Array.from(this.command)[getPos(offset)] ?? " ");
-        // // offset *= currChar.length > 3 ? 2 : 1;
-        // this.cursorPosition = getPos(offset);
+        const newPos = Math.max(0, Math.min(this.charArrayCmd.length, this.cursorPosition + offset));
+        this.cursorPosition = newPos;
+        const posChar = this.charArrayCmd[newPos];
+        console.log(posChar, this.cursorPosition);
         this.refreshCmd();
     }
 
     private deleteCharacter(offset: number): void {
-        const charArray = Array.from(this.command);
         const deleteIndex = this.cursorPosition + offset;
 
-        if (deleteIndex >= 0 && deleteIndex < charArray.length) {
-            charArray.splice(deleteIndex, 1);
-            this.command = charArray.join("");
+        if (deleteIndex >= 0 && deleteIndex < this.charArrayCmd.length) {
+            this.charArrayCmd.splice(deleteIndex, 1);
+            this.command = this.charArrayCmd.join("");
 
             if (offset === -1) {
                 this.cursorPosition--;
@@ -237,9 +245,9 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                 // Do nothing
                 break;
             default: {
-                const charArray = Array.from(this.command);
+                const charArray = this.charArrayCmd;
                 this.command = charArray.slice(0, Math.max(0, this.cursorPosition)).join("") + data + charArray.slice(this.cursorPosition).join("");
-                this.cursorPosition = Math.min(Array.from(this.command).length, this.cursorPosition + Array.from(data).length);
+                this.cursorPosition = Math.min(this.charArrayCmd.length, this.cursorPosition + Array.from(data).length);
 
                 this.write(data);
                 this.refreshCmd();
