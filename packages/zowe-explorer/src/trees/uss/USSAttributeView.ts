@@ -10,7 +10,7 @@
  */
 
 import { Types, Gui, MainframeInteraction, IZoweUSSTreeNode, WebView } from "@zowe/zowe-explorer-api";
-import { Disposable, ExtensionContext } from "vscode";
+import { ExtensionContext } from "vscode";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { SharedContext } from "../shared/SharedContext";
 import * as vscode from "vscode";
@@ -21,8 +21,6 @@ export class USSAttributeView extends WebView {
     private readonly ussNode: IZoweUSSTreeNode;
     private readonly ussApi: MainframeInteraction.IUss;
     private readonly canUpdate: boolean;
-
-    private onUpdateDisposable: Disposable;
 
     public constructor(context: ExtensionContext, treeProvider: Types.IZoweUSSTreeType, node: IZoweUSSTreeNode) {
         const label = node.label ? `Edit Attributes: ${node.label as string}` : "Edit Attributes";
@@ -42,17 +40,15 @@ export class USSAttributeView extends WebView {
     }
 
     protected async onDidReceiveMessage(message: any): Promise<void> {
+        const actualAtts = await this.ussNode.getAttributes();
         switch (message.command) {
             case "refresh":
                 if (this.canUpdate) {
-                    this.onUpdateDisposable = this.ussNode.onUpdate(async (node) => {
-                        await this.attachTag(node);
-                        await this.panel.webview.postMessage({
-                            attributes: await this.ussNode.getAttributes(),
-                            name: node.fullPath,
-                            readonly: this.ussApi.updateAttributes == null,
-                        });
-                        this.onUpdateDisposable.dispose();
+                    await this.attachTag(this.ussNode);
+                    await this.panel.webview.postMessage({
+                        attributes: actualAtts,
+                        name: this.ussNode.fullPath,
+                        readonly: this.ussApi.updateAttributes == null,
                     });
 
                     if (this.ussNode.getParent()) {
@@ -65,7 +61,7 @@ export class USSAttributeView extends WebView {
             case "ready":
                 await this.attachTag(this.ussNode);
                 await this.panel.webview.postMessage({
-                    attributes: await this.ussNode.getAttributes(),
+                    attributes: actualAtts,
                     name: this.ussNode.fullPath,
                     readonly: this.ussApi.updateAttributes == null,
                 });
