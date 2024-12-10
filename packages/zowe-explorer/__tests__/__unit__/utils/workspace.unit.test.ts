@@ -12,6 +12,9 @@
 import * as vscode from "vscode";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import { workspaceUtilMaxEmptyWindowsInTheRow } from "../../../src/config/constants";
+import { SettingsConfig } from "../../../src/utils/SettingsConfig";
+import { ZoweSaveQueue } from "../../../src/abstract/ZoweSaveQueue";
+import { Gui } from "@zowe/zowe-explorer-api";
 
 function createGlobalMocks() {
     const activeTextEditor = jest.fn();
@@ -214,5 +217,63 @@ describe("Workspace Utils Unit Tests - function awaitForDocumentBeingSaved", () 
             testCount++;
         });
         await expect(workspaceUtils.awaitForDocumentBeingSaved()).resolves.not.toThrow();
+    });
+});
+
+describe("Workspace Utils Unit Tests - function checkAutoSaveForError", () => {
+    function getBlockMocks(autoSaveEnabled: boolean = true, userResponse?: string): Record<string, jest.SpyInstance> {
+        const executeCommand = jest.spyOn(vscode.commands, "executeCommand").mockClear();
+        const getDirectValue = jest.spyOn(SettingsConfig, "getDirectValue");
+        if (autoSaveEnabled) {
+            executeCommand.mockResolvedValueOnce(undefined);
+            getDirectValue.mockReturnValueOnce("afterDelay");
+        } else {
+            getDirectValue.mockReturnValueOnce("off");
+        }
+
+        if (userResponse === "Enable Auto Save") {
+            executeCommand.mockResolvedValueOnce(undefined);
+        }
+
+        return {
+            errorMessage: jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce(userResponse),
+            executeCommand,
+            getDirectValue,
+            markAllUnsaved: jest.spyOn(ZoweSaveQueue, "markAllUnsaved"),
+        };
+    }
+
+    it("returns early if Auto Save is disabled", async () => {
+        const blockMocks = getBlockMocks(false);
+        await workspaceUtils.checkAutoSaveForError();
+        expect(blockMocks.getDirectValue).toHaveBeenCalledWith("files.autoSave");
+        expect(blockMocks.executeCommand).not.toHaveBeenCalled();
+    });
+
+    it("toggles off auto save if enabled", async () => {
+        const blockMocks = getBlockMocks(true);
+        await workspaceUtils.checkAutoSaveForError();
+        expect(blockMocks.executeCommand).toHaveBeenCalledWith("workbench.action.toggleAutoSave");
+    });
+
+    it("calls ZoweSaveQueue.markAllUnsaved to mark documents unsaved and clear queue", async () => {
+        const blockMocks = getBlockMocks(true);
+        await workspaceUtils.checkAutoSaveForError();
+        expect(blockMocks.markAllUnsaved).toHaveBeenCalled();
+    });
+
+    it("prompts the user to reactivate Auto Save in event of save error", async () => {
+        const blockMocks = getBlockMocks(true);
+        await workspaceUtils.checkAutoSaveForError();
+        expect(blockMocks.errorMessage).toHaveBeenCalledWith(
+            "Zowe Explorer encountered a save error and has disabled Auto Save. Once the issue is addressed, enable Auto Save and try again.",
+            { items: ["Enable Auto Save"] }
+        );
+    });
+
+    it("reactivates Auto Save if 'Enable Auto Save' clicked", async () => {
+        const blockMocks = getBlockMocks(true, "Enable Auto Save");
+        await workspaceUtils.checkAutoSaveForError();
+        expect(blockMocks.executeCommand).toHaveBeenCalledWith("workbench.action.toggleAutoSave");
     });
 });
