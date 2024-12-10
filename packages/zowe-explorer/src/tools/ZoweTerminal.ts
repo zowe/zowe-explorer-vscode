@@ -19,6 +19,8 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         CLEAR_ALL: "\x1b[2J\x1b[3J\x1b[;H",
         CLEAR_LINE: `\x1b[2K\r`,
         CTRL_C: "\x03",
+        HOME: "\x01",
+        END: "\x05",
         DEL: "\x1b[3~",
         ENTER: "\r",
         NEW_LINE: "\r\n",
@@ -142,9 +144,11 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     }
 
     private moveCursor(offset: number): void {
-        const newPos = Math.max(0, Math.min(this.charArrayCmd.length, this.cursorPosition + offset));
-        this.cursorPosition = newPos;
-        const posChar = this.charArrayCmd[newPos];
+        this.cursorPosition = Math.max(0, Math.min(this.charArrayCmd.length, this.cursorPosition + offset));
+        this.refreshCmd();
+    }
+    private moveCursorTo(position: number): void {
+        this.cursorPosition = Math.max(0, Math.min(this.charArrayCmd.length, position));
         this.refreshCmd();
     }
 
@@ -165,9 +169,50 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         }
     }
 
+    private async handleEnter() {
+        this.write(ZoweTerminal.Keys.NEW_LINE);
+        const cmd = this.command;
+        this.command = "";
+        this.charArrayCmd = [];
+        if (cmd.length === 0) {
+            this.writeCmd();
+            return;
+        }
+
+        if (cmd[0] === ":") {
+            if (cmd === ":clear") {
+                this.clear();
+            } else if (cmd === ":exit") {
+                this.close();
+            }
+        } else {
+            this.isCommandRunning = true;
+
+            const output = await Promise.race([
+                this.processCmd(cmd),
+                new Promise<null>((resolve, _reject) => {
+                    this.controller.signal.addEventListener("abort", () => {
+                        this.isCommandRunning = false;
+                        resolve(null);
+                    });
+                    if (!this.isCommandRunning) resolve(null);
+                }),
+            ]);
+            this.isCommandRunning = false;
+            if (output === null) {
+                this.writeLine(imperative.TextUtils.chalk.italic.red("Operation cancelled!"));
+            } else {
+                this.writeLine(output.trim().split("\n").join("\r\n"));
+            }
+        }
+        this.mHistory.push(cmd);
+        this.historyIndex = this.mHistory.length;
+        this.cursorPosition = 0;
+    }
+
     // Handle input from the terminal
     public async handleInput(data: string): Promise<void> {
-        console.log(Buffer.from(data));
+        // console.log(Buffer.from(data));
         if (this.isCommandRunning) {
             if (data === ZoweTerminal.Keys.CTRL_C) this.controller.abort();
             return;
@@ -185,55 +230,21 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
             case ZoweTerminal.Keys.RIGHT:
                 this.moveCursor(1);
                 break;
-            case ZoweTerminal.Keys.DEL: {
+            case ZoweTerminal.Keys.HOME:
+                this.moveCursorTo(0);
+                break;
+            case ZoweTerminal.Keys.END:
+                this.moveCursorTo(this.charArrayCmd.length);
+                break;
+            case ZoweTerminal.Keys.DEL:
                 this.deleteCharacter(0);
                 break;
-            }
-            case ZoweTerminal.Keys.BACKSPACE: {
+            case ZoweTerminal.Keys.BACKSPACE:
                 this.deleteCharacter(-1);
                 break;
-            }
-            case ZoweTerminal.Keys.ENTER: {
-                this.write(ZoweTerminal.Keys.NEW_LINE);
-                const cmd = this.command;
-                this.command = "";
-                this.charArrayCmd = [];
-                if (cmd.length === 0) {
-                    this.writeCmd();
-                    return;
-                }
-
-                if (cmd[0] === ":") {
-                    if (cmd === ":clear") {
-                        this.clear();
-                    } else if (cmd === ":exit") {
-                        this.close();
-                    }
-                } else {
-                    this.isCommandRunning = true;
-
-                    const output = await Promise.race([
-                        this.processCmd(cmd),
-                        new Promise<null>((resolve, _reject) => {
-                            this.controller.signal.addEventListener("abort", () => {
-                                this.isCommandRunning = false;
-                                resolve(null);
-                            });
-                            if (!this.isCommandRunning) resolve(null);
-                        }),
-                    ]);
-                    this.isCommandRunning = false;
-                    if (output === null) {
-                        this.writeLine(imperative.TextUtils.chalk.italic.red("Operation cancelled!"));
-                    } else {
-                        this.writeLine(output.trim().split("\n").join("\r\n"));
-                    }
-                }
-                this.mHistory.push(cmd);
-                this.historyIndex = this.mHistory.length;
-                this.cursorPosition = 0;
+            case ZoweTerminal.Keys.ENTER:
+                await this.handleEnter();
                 break;
-            }
             case ZoweTerminal.Keys.SHIFT_UP:
             case ZoweTerminal.Keys.SHIFT_DOWN:
             case ZoweTerminal.Keys.SHIFT_RIGHT:
