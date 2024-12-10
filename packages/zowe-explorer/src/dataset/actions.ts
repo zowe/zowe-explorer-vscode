@@ -33,7 +33,7 @@ import { Profiles } from "../Profiles";
 import { getIconByNode } from "../generators/icons";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import * as contextually from "../shared/context";
-import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
+import { checkAutoSaveForError, markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { ProfileManagement } from "../utils/ProfileManagement";
@@ -1566,6 +1566,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             return;
         }
     } catch (err) {
+        await checkAutoSaveForError();
         await markDocumentUnsaved(doc);
         await errorHandling(err, sesName);
         return;
@@ -1610,10 +1611,12 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
             resolveFileConflict(node, prof, doc, label);
         } else {
+            await checkAutoSaveForError();
             await markDocumentUnsaved(doc);
             api.Gui.errorMessage(uploadResponse.commandResponse);
         }
     } catch (err) {
+        await checkAutoSaveForError();
         await markDocumentUnsaved(doc);
         await errorHandling(err, sesName);
     }

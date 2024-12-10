@@ -1,0 +1,4 @@
+{
+  "zowe.autoSaveToggled": "Zowe Explorer encountered a save error and has disabled Auto Save. Once the issue is addressed, enable Auto Save and try again.",
+  "zowe.enableAutoSave": "Enable Auto Save"
+}
