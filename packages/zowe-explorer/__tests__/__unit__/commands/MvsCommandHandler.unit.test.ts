@@ -19,6 +19,7 @@ import { ProfileManagement } from "../../../src/management/ProfileManagement";
 import { FilterDescriptor, FilterItem } from "../../../src/management/FilterManagement";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { MvsCommandHandler } from "../../../src/commands/MvsCommandHandler";
+import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 
 jest.mock("Session");
 
@@ -28,6 +29,7 @@ describe("mvsCommandActions unit testing", () => {
     const showInformationMessage = jest.fn();
     const showQuickPick = jest.fn();
     const createQuickPick = jest.fn();
+    const createTerminal = jest.fn();
     const getConfiguration = jest.fn();
     const createOutputChannel = jest.fn();
 
@@ -94,10 +96,7 @@ describe("mvsCommandActions unit testing", () => {
     });
 
     const withProgress = jest.fn().mockImplementation((progLocation, callback) => {
-        return {
-            success: true,
-            commandResponse: callback(),
-        };
+        return callback();
     });
 
     const session = new imperative.Session({
@@ -129,6 +128,7 @@ describe("mvsCommandActions unit testing", () => {
     Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
     Object.defineProperty(vscode.window, "createQuickPick", { value: createQuickPick });
+    Object.defineProperty(vscode.window, "createTerminal", { value: createTerminal });
     Object.defineProperty(vscode.window, "createOutputChannel", { value: createOutputChannel });
     Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
     Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
@@ -141,13 +141,20 @@ describe("mvsCommandActions unit testing", () => {
         }),
     });
 
+    beforeEach(() => {
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
+    });
+
     afterEach(() => {
+        (MvsCommandHandler as any).instance = undefined;
         jest.clearAllMocks();
     });
 
     const apiRegisterInstance = ZoweExplorerApiRegister.getInstance();
-    const mvsActions = MvsCommandHandler.getInstance();
     const profilesForValidation = { status: "active", name: "fake" };
+    const getMvsActions = () => {
+        return MvsCommandHandler.getInstance();
+    };
 
     it("tests the issueMvsCommand function", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
@@ -180,16 +187,16 @@ describe("mvsCommandActions unit testing", () => {
 
         showInputBox.mockReturnValueOnce("/d iplinfo1");
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
-        jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValue("iplinfo1" as any);
+        jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValue({ commandResponse: "iplinfo1" } as any);
 
-        await mvsActions.issueMvsCommand();
+        await getMvsActions().issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the profile to use to submit the command",
+            placeHolder: "Select the profile to use to submit the MVS command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(appendLine.mock.calls.length).toBe(2);
@@ -223,16 +230,19 @@ describe("mvsCommandActions unit testing", () => {
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem2));
-        jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValue("iplinfo0" as any);
+        jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValue({ commandResponse: "iplinfo0" } as any);
 
-        await mvsActions.issueMvsCommand();
+        const actions = getMvsActions();
+        (actions.history as any).mSearchHistory = [qpItem2.label];
+
+        await actions.issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the profile to use to submit the command",
+            placeHolder: "Select the profile to use to submit the MVS command",
         });
         expect(showInputBox.mock.calls.length).toBe(0);
         expect(appendLine.mock.calls.length).toBe(2);
@@ -267,16 +277,16 @@ describe("mvsCommandActions unit testing", () => {
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
-        jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValue("iplinfo3" as any);
+        jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValue({ commandResponse: "iplinfo3" } as any);
 
-        await mvsActions.issueMvsCommand();
+        await getMvsActions().issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the profile to use to submit the command",
+            placeHolder: "Select the profile to use to submit the MVS command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls.length).toBe(1);
@@ -309,7 +319,10 @@ describe("mvsCommandActions unit testing", () => {
 
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(undefined));
 
-        await mvsActions.issueMvsCommand();
+        const actions = getMvsActions();
+        (actions.history as any).mSearchHistory = [qpItem2.label];
+
+        await actions.issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showInputBox.mock.calls.length).toBe(0);
@@ -317,13 +330,12 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the profile to use to submit the command",
+            placeHolder: "Select the profile to use to submit the MVS command",
         });
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made. Operation cancelled.");
+        expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
-    it("tests the issueMvsCommand function user escapes the command box", async () => {
+    it("tests the issueMvsCommand function user escapes the MVS command box", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -349,18 +361,17 @@ describe("mvsCommandActions unit testing", () => {
 
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
 
-        await mvsActions.issueMvsCommand();
+        await getMvsActions().issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the profile to use to submit the command",
+            placeHolder: "Select the profile to use to submit the MVS command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No command entered.");
+        expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
     it("tests the issueMvsCommand function user starts typing a value in quick pick", async () => {
@@ -406,14 +417,17 @@ describe("mvsCommandActions unit testing", () => {
 
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
 
-        await mvsActions.issueMvsCommand();
+        const actions = getMvsActions();
+        (actions.history as any).mSearchHistory = [qpItem2.label];
+
+        await actions.issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the profile to use to submit the command",
+            placeHolder: "Select the profile to use to submit the MVS command",
         });
         expect(showInputBox.mock.calls.length).toBe(0);
     });
@@ -450,14 +464,14 @@ describe("mvsCommandActions unit testing", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
         jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValueOnce({ commandResponse: "fake response" } as any);
 
-        await mvsActions.issueMvsCommand();
+        await getMvsActions().issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the profile to use to submit the command",
+            placeHolder: "Select the profile to use to submit the MVS command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
     });
@@ -492,14 +506,14 @@ describe("mvsCommandActions unit testing", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
         jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValueOnce({ commandResponse: "fake response" } as any);
 
-        await mvsActions.issueMvsCommand();
+        await getMvsActions().issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the profile to use to submit the command",
+            placeHolder: "Select the profile to use to submit the MVS command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
     });
@@ -523,7 +537,7 @@ describe("mvsCommandActions unit testing", () => {
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce("fake");
 
-        await mvsActions.issueMvsCommand();
+        await getMvsActions().issueMvsCommand();
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
     });
@@ -544,10 +558,9 @@ describe("mvsCommandActions unit testing", () => {
 
         showQuickPick.mockReturnValueOnce(undefined);
 
-        await mvsActions.issueMvsCommand();
+        await getMvsActions().issueMvsCommand();
 
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled");
+        expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
     it("tests the issueMvsCommand function from a session", async () => {
@@ -564,7 +577,7 @@ describe("mvsCommandActions unit testing", () => {
             }),
         });
 
-        jest.spyOn(mvsActions, "checkCurrentProfile").mockReturnValue(undefined as any);
+        jest.spyOn(getMvsActions(), "checkCurrentProfile").mockReturnValue(undefined as any);
 
         const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
         const getCommandApiMock = jest.fn();
@@ -574,7 +587,7 @@ describe("mvsCommandActions unit testing", () => {
         showInputBox.mockReturnValueOnce("/d iplinfo1");
         jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValueOnce({ commandResponse: "fake response" } as any);
 
-        await mvsActions.issueMvsCommand(session, null as any, testNode);
+        await getMvsActions().issueMvsCommand(session, null as any, testNode);
 
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(0);
@@ -608,14 +621,14 @@ describe("mvsCommandActions unit testing", () => {
             throw testError;
         });
 
-        await mvsActions.issueMvsCommand();
+        await getMvsActions().issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the profile to use to submit the command",
+            placeHolder: "Select the profile to use to submit the MVS command",
         });
         expect(showInputBox.mock.calls.length).toBe(0);
         expect(showErrorMessage.mock.calls.length).toBe(1);
@@ -641,7 +654,7 @@ describe("mvsCommandActions unit testing", () => {
             value: jest.fn().mockReturnValue([]),
             configurable: true,
         });
-        await mvsActions.issueMvsCommand();
+        await getMvsActions().issueMvsCommand();
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles available");
     });
 });

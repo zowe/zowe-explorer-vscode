@@ -192,7 +192,7 @@ export class DatasetInit {
                 await datasetProvider.onDidChangeConfiguration(e);
             })
         );
-        
+
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.pdsSearchFor", async (node: IZoweDatasetTreeNode) => DatasetActions.search(context, node))
         );
