@@ -19,19 +19,46 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         CLEAR_ALL: "\x1b[2J\x1b[3J\x1b[;H",
         CLEAR_LINE: `\x1b[2K\r`,
         CTRL_C: "\x03",
-        DEL: "\x1b[P",
+        DEL: "\x1b[3~",
         ENTER: "\r",
         NEW_LINE: "\r\n",
         UP: "\x1b[A",
         DOWN: "\x1b[B",
         RIGHT: "\x1b[C",
         LEFT: "\x1b[D",
+        SHIFT: "\x1b[1;2",
+        ALT: "\x1b[1;3",
+        get SHIFT_UP() {
+            return this.SHIFT + "A";
+        },
+        get SHIFT_DOWN() {
+            return this.SHIFT + "B";
+        },
+        get SHIFT_RIGHT() {
+            return this.SHIFT + "C";
+        },
+        get SHIFT_LEFT() {
+            return this.SHIFT + "D";
+        },
+        get ALT_UP() {
+            return this.ALT + "A";
+        },
+        get ALT_DOWN() {
+            return this.ALT + "B";
+        },
+        get ALT_RIGHT() {
+            return this.ALT + "C";
+        },
+        get ALT_LEFT() {
+            return this.ALT + "D";
+        },
         BACKSPACE: "\x7f",
     };
 
     public constructor(
         terminalName: string,
         private processCmd: (cmd: string) => Promise<string>,
+        private controller: AbortController,
         options?: { startup?: string; message?: string; history?: string[]; formatCommandLine?: (cmd: string) => string }
     ) {
         this.mTerminalName = terminalName;
@@ -39,7 +66,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.mHistory = options?.history ?? [];
         this.historyIndex = this.mHistory.length;
         this.command = options?.startup ?? "";
-        this.cursorPosition = this.command.length;
+        this.cursorPosition = Array.from(this.command).length;
         this.formatCommandLine = options?.formatCommandLine ?? ((cmd: string) => `${ZoweTerminal.Keys.EMPTY_LINE}${cmd}`);
     }
 
@@ -47,6 +74,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     protected mTerminalName: string = "";
     protected mHistory: string[];
     private historyIndex: number;
+    private isCommandRunning = false;
 
     private writeEmitter = new vscode.EventEmitter<string>();
     protected write(text: string) {
@@ -67,7 +95,8 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.clearLine();
         this.writeCmd();
         if (this.command.length !== this.cursorPosition) {
-            this.write(`\x1B[${this.command.length - this.cursorPosition}D`);
+            const offset = Buffer.from(Array.from(this.command).slice(this.cursorPosition).join("")).length;
+            this.write(`\x1B[${offset}D`);
         }
     }
     protected clear() {
@@ -84,7 +113,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     private closeEmitter = new vscode.EventEmitter<void>();
     public onDidClose?: vscode.Event<void> = this.closeEmitter.event;
 
-    public open(initialDimensions?: vscode.TerminalDimensions | undefined): void {
+    public open(_initialDimensions?: vscode.TerminalDimensions | undefined): void {
         this.writeLine(imperative.TextUtils.chalk.dim.italic(this.mMessage));
         if (this.command.length > 0) {
             this.handleInput(ZoweTerminal.Keys.ENTER);
@@ -98,21 +127,45 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     private navigateHistory(offset: number): void {
         this.historyIndex = Math.max(0, Math.min(this.mHistory.length, this.historyIndex + offset));
         this.command = this.mHistory[this.historyIndex] ?? "";
-        this.cursorPosition = this.command.length;
+        this.cursorPosition = Array.from(this.command).length;
         this.refreshCmd();
     }
 
     private moveCursor(offset: number): void {
         this.cursorPosition = Math.max(0, Math.min(this.command.length, this.cursorPosition + offset));
+
+        // const getPos = (val: number) => Math.max(0, Math.min(Array.from(this.command).length, this.cursorPosition + val));
+        // const currChar = Buffer.from(Array.from(this.command)[getPos(offset)] ?? " ");
+        // // offset *= currChar.length > 3 ? 2 : 1;
+        // this.cursorPosition = getPos(offset);
         this.refreshCmd();
+    }
+
+    private deleteCharacter(offset: number): void {
+        const charArray = Array.from(this.command);
+        const deleteIndex = this.cursorPosition + offset;
+
+        if (deleteIndex >= 0 && deleteIndex < charArray.length) {
+            charArray.splice(deleteIndex, 1);
+            this.command = charArray.join("");
+
+            if (offset === -1) {
+                this.cursorPosition--;
+                this.write(ZoweTerminal.Keys.LEFT);
+            } else if (offset === 0) {
+                this.write(ZoweTerminal.Keys.DEL);
+            }
+            this.refreshCmd();
+        }
     }
 
     // Handle input from the terminal
     public async handleInput(data: string): Promise<void> {
+        if (this.isCommandRunning) {
+            if (data === ZoweTerminal.Keys.CTRL_C) this.controller.abort();
+            return;
+        }
         switch (data) {
-            case ZoweTerminal.Keys.CTRL_C:
-                this.close();
-                break;
             case ZoweTerminal.Keys.UP:
                 this.navigateHistory(-1);
                 break;
@@ -125,17 +178,12 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
             case ZoweTerminal.Keys.RIGHT:
                 this.moveCursor(1);
                 break;
+            case ZoweTerminal.Keys.DEL: {
+                this.deleteCharacter(0);
+                break;
+            }
             case ZoweTerminal.Keys.BACKSPACE: {
-                if (this.command.length === 0 || this.cursorPosition === 0) {
-                    return;
-                }
-                this.write(ZoweTerminal.Keys.LEFT);
-                this.write(ZoweTerminal.Keys.DEL);
-
-                const charArray = Array.from(this.command);
-                charArray.splice(this.cursorPosition - 1, 1);
-                this.command = charArray.join("");
-                this.cursorPosition--;
+                this.deleteCharacter(-1);
                 break;
             }
             case ZoweTerminal.Keys.ENTER: {
@@ -154,14 +202,40 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                         this.close();
                     }
                 } else {
-                    const output = await this.processCmd(cmd);
-                    this.writeLine(output.trim().split("\n").join("\r\n"));
+                    this.isCommandRunning = true;
+
+                    const output = await Promise.race([
+                        this.processCmd(cmd),
+                        new Promise<null>((resolve, _reject) => {
+                            this.controller.signal.addEventListener("abort", () => {
+                                this.isCommandRunning = false;
+                                resolve(null);
+                            });
+                            if (!this.isCommandRunning) resolve(null);
+                        }),
+                    ]);
+                    this.isCommandRunning = false;
+                    if (output === null) {
+                        this.writeLine(imperative.TextUtils.chalk.italic.red("Command cancelled!"));
+                    } else {
+                        this.writeLine(output.trim().split("\n").join("\r\n"));
+                    }
                 }
                 this.mHistory.push(cmd);
                 this.historyIndex = this.mHistory.length;
                 this.cursorPosition = 0;
                 break;
             }
+            case ZoweTerminal.Keys.SHIFT_UP:
+            case ZoweTerminal.Keys.SHIFT_DOWN:
+            case ZoweTerminal.Keys.SHIFT_RIGHT:
+            case ZoweTerminal.Keys.SHIFT_LEFT:
+            case ZoweTerminal.Keys.ALT_UP:
+            case ZoweTerminal.Keys.ALT_DOWN:
+            case ZoweTerminal.Keys.ALT_RIGHT:
+            case ZoweTerminal.Keys.ALT_LEFT:
+                // Do nothing
+                break;
             default: {
                 const charArray = Array.from(this.command);
                 this.command = charArray.slice(0, Math.max(0, this.cursorPosition)).join("") + data + charArray.slice(this.cursorPosition).join("");

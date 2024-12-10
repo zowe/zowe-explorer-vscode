@@ -66,6 +66,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     public sshProfile: imperative.IProfileLoaded;
     public isSshRequiredForProf: boolean = false;
 
+    public readonly controller: AbortController = new AbortController();
     public readonly dialogs: ICommandProviderDialogs = {
         commandSubmitted: vscode.l10n.t("Unix command submitted."),
         defaultText: vscode.l10n.t("$(plus) Create a new Unix command"),

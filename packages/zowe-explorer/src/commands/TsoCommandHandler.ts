@@ -42,6 +42,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
     public history: ZowePersistentFilters;
     private static instance: TsoCommandHandler;
 
+    public readonly controller: AbortController = new AbortController();
     public readonly dialogs: ICommandProviderDialogs = {
         commandSubmitted: vscode.l10n.t("TSO command submitted."),
         defaultText: `$(plus) ${vscode.l10n.t("Create a new TSO command")}`,
