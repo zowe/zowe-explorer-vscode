@@ -2,7 +2,7 @@ name: Merge-by
 
 on:
     pull_request:
-      types: [opened, ready_for_review]
+      types: [opened, ready_for_review, converted_to_draft]
     pull_request_review:
       types: [submitted]
     push:
@@ -20,22 +20,6 @@ jobs:
             discussions: write
             pull-requests: write
         steps:
-            - uses: actions/checkout@v3
-            - uses: pnpm/action-setup@v4
+            - uses: zowe-actions/shared-actions/merge-by@main
               with:
-                version: 8
-                run_install: false
-
-            - uses: actions/setup-node@v4
-              with:
-                node-version: 22
-                cache: 'pnpm'
-
-            - name: Install dependencies
-              run: pnpm install
-
-            - uses: actions/github-script@v7
-              with:
-                script: |
-                    const script = require("./.github/workflows/merge-by/build-table-and-notify.js");
-                    await script({ github, context });
+                operation: "build-table"

@@ -528,7 +528,9 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             parentNode,
             contextOverride: Constants.DS_MEMBER_CONTEXT,
         });
+        const existsMock = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(true);
         node.setEncoding(otherEncoding);
+        expect(existsMock).toHaveBeenCalled();
         blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
         await SharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();

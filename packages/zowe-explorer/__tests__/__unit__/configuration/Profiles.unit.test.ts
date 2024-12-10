@@ -27,7 +27,17 @@ import {
     createMockNode,
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
-import { imperative, Gui, ZoweTreeNode, ZoweVsCodeExtension, IZoweTree, IZoweTreeNode, Validation, FileManagement } from "@zowe/zowe-explorer-api";
+import {
+    imperative,
+    Gui,
+    ZoweTreeNode,
+    ZoweVsCodeExtension,
+    IZoweTree,
+    IZoweTreeNode,
+    Validation,
+    FileManagement,
+    ProfilesCache,
+} from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
@@ -144,7 +154,7 @@ function createGlobalMocks(): { [key: string]: any } {
         configurable: true,
     });
 
-    Object.defineProperty(ZoweLocalStorage, "storage", {
+    Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: jest.fn(() => ({ persistence: true })),
             update: jest.fn(),
@@ -192,6 +202,10 @@ function createGlobalMocks(): { [key: string]: any } {
         value: jest.fn(() => {
             return true;
         }),
+        configurable: true,
+    });
+    Object.defineProperty(ProfilesCache, "getProfileSessionWithVscProxy", {
+        value: jest.fn().mockReturnValue(newMocks.testSession),
         configurable: true,
     });
 

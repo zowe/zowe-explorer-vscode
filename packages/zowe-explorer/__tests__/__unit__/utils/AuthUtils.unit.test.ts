@@ -9,7 +9,7 @@
  *
  */
 
-import { Gui, imperative } from "@zowe/zowe-explorer-api";
+import { ErrorCorrelator, Gui, imperative, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { Constants } from "../../../src/configuration/Constants";
 import { MockedProperty } from "../../__mocks__/mockUtils";
@@ -21,12 +21,23 @@ describe("AuthUtils", () => {
                 errorCode: 401 as unknown as string,
                 msg: "All configured authentication methods failed",
             });
-            const profile = { type: "zosmf" } as any;
+            const profile = { name: "aProfile", type: "zosmf" } as any;
+            const correlateErrorMock = jest.spyOn(ErrorCorrelator.getInstance(), "correlateError");
+            const correlatedError = ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.All, errorDetails, {
+                templateArgs: {
+                    profileName: profile.name,
+                },
+            });
             const promptForAuthenticationMock = jest
                 .spyOn(AuthUtils, "promptForAuthentication")
                 .mockImplementation(async () => Promise.resolve(true));
             AuthUtils.promptForAuthError(errorDetails, profile);
-            expect(promptForAuthenticationMock).toHaveBeenCalledWith(errorDetails, profile);
+            expect(correlateErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.All, errorDetails, {
+                templateArgs: {
+                    profileName: profile.name,
+                },
+            });
+            expect(promptForAuthenticationMock).toHaveBeenCalledWith(errorDetails, profile, correlatedError);
         });
     });
     describe("promptForSsoLogin", () => {

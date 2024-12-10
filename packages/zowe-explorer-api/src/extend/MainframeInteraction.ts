@@ -370,6 +370,14 @@ export namespace MainframeInteraction {
         copyDataSet?(fromDataSetName: string, toDataSetName: string, enq?: string, replace?: boolean): Promise<zosfiles.IZosFilesResponse>;
 
         /**
+         * Searches dataSets.
+         *
+         * @param {zosfiles.ISearchOptions} searchOptions
+         * @returns {Promise<zosfiles.ISearchResponse>}
+         */
+        searchDataSets?(searchOptions: zosfiles.ISearchOptions): Promise<zosfiles.ISearchResponse>;
+
+        /**
          * Copies a dataSet to cross Lpar
          *
          */

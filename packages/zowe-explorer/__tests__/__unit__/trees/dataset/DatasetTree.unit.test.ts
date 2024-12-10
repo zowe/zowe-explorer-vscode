@@ -54,6 +54,7 @@ import { Sorting } from "../../../../../zowe-explorer-api/src/tree";
 import { IconUtils } from "../../../../src/icons/IconUtils";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { ZoweTreeProvider } from "../../../../src/trees/ZoweTreeProvider";
+import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
 
 jest.mock("fs");
 jest.mock("util");
@@ -70,7 +71,7 @@ function createGlobalMocks() {
 
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
 
-    Object.defineProperty(ZoweLocalStorage, "storage", {
+    Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
             update: jest.fn(),
@@ -171,6 +172,7 @@ function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ProfilesCache, "getProfileSessionWithVscProxy", { value: jest.fn().mockReturnValue(createISession()), configurable: true });
 
     return globalMocks;
 }
@@ -1021,6 +1023,22 @@ describe("USSTree Unit Tests - Function addSingleSession", () => {
         await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
 
         expect(blockMocks.testTree.mSessionNodes.length).toEqual(2);
+    });
+
+    it("Tests that addSingleSession adds type info to the session", async () => {
+        const dsTree = new DatasetTree();
+        const profile1 = await createIProfile();
+
+        profile1.name = "test1Profile";
+
+        await dsTree.addSingleSession(profile1);
+
+        const sessionNode = dsTree.mSessionNodes.find((tNode) => tNode.label?.toString() === profile1.name);
+
+        expect(sessionNode).toBeDefined();
+
+        const context = sessionNode?.contextValue;
+        expect(context).toContain("_type=zosmf");
     });
 
     it("Tests that addSingleSession successfully adds a session", async () => {
@@ -2264,6 +2282,31 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         };
     }
 
+    it("returns early if errorForUnsavedResource was true", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+        });
+        blockMocks.rename.mockClear();
+        const errorForUnsavedResource = jest.spyOn(TreeViewUtils, "errorForUnsavedResource").mockResolvedValueOnce(true);
+        await testTree.rename(node);
+        expect(errorForUnsavedResource).toHaveBeenCalled();
+        expect(blockMocks.rename).not.toHaveBeenLastCalledWith(
+            { path: "/sestest/HLQ.TEST.RENAME.NODE", scheme: ZoweScheme.DS },
+            { path: "/sestest/HLQ.TEST.RENAME.NODE.NEW", scheme: ZoweScheme.DS },
+            { overwrite: false }
+        );
+    });
+
     it("Tests that rename() renames a node", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -3254,30 +3297,31 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
 
 describe("Dataset Tree Unit Tests - Function openWithEncoding", () => {
     it("sets binary encoding if selection was made", async () => {
-        const setEncodingMock = jest.spyOn(DatasetFSProvider.instance, "setEncodingForFile").mockImplementation();
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const setEncodingMock = jest.spyOn(node, "setEncoding").mockImplementation();
         node.openDs = jest.fn();
         jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "binary" });
         await DatasetTree.prototype.openWithEncoding(node);
-        expect(setEncodingMock).toHaveBeenCalledWith(node.resourceUri, { kind: "binary" });
+        expect(setEncodingMock).toHaveBeenCalledWith({ kind: "binary" });
         expect(node.openDs).toHaveBeenCalledTimes(1);
         setEncodingMock.mockRestore();
     });
 
     it("sets text encoding if selection was made", async () => {
-        const setEncodingMock = jest.spyOn(DatasetFSProvider.instance, "setEncodingForFile").mockImplementation();
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(true);
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const setEncodingMock = jest.spyOn(node, "setEncoding").mockImplementation();
         node.openDs = jest.fn();
         jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "text" });
         await DatasetTree.prototype.openWithEncoding(node);
-        expect(setEncodingMock).toHaveBeenCalledWith(node.resourceUri, { kind: "text" });
+        expect(setEncodingMock).toHaveBeenCalledWith({ kind: "text" });
         expect(node.openDs).toHaveBeenCalledTimes(1);
         setEncodingMock.mockRestore();
     });
 
     it("does not set encoding if prompt was cancelled", async () => {
-        const setEncodingSpy = jest.spyOn(DatasetFSProvider.instance, "setEncodingForFile");
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const setEncodingSpy = jest.spyOn(node, "setEncoding");
         node.openDs = jest.fn();
         jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValueOnce(undefined);
         await DatasetTree.prototype.openWithEncoding(node);

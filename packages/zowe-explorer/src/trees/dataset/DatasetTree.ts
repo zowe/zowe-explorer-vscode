@@ -98,6 +98,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public async rename(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("DatasetTree.rename called.");
         await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+        if (await TreeViewUtils.errorForUnsavedResource(node)) {
+            return;
+        }
+
         if (Profiles.getInstance().validProfile === Validation.ValidationType.VALID || !SharedContext.isValidationEnabled(node)) {
             return SharedContext.isDsMember(node) ? this.renameDataSetMember(node) : this.renameDataSet(node);
         }
@@ -442,7 +446,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 session,
                 profile,
-                contextOverride: Constants.DS_SESSION_CONTEXT,
+                contextOverride: Constants.DS_SESSION_CONTEXT + Constants.TYPE_SUFFIX + profile.type,
             });
             if (profile.type !== "zosmf") {
                 // TODO: Why do we inject profiles in context value only for DS tree?

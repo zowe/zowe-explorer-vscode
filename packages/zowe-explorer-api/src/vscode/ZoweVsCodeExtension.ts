@@ -11,13 +11,13 @@
 
 import * as semver from "semver";
 import * as vscode from "vscode";
-import { ProfilesCache } from "../profiles";
+import { ProfilesCache } from "../profiles/ProfilesCache";
 import { Login, Logout } from "@zowe/core-for-zowe-sdk";
 import * as imperative from "@zowe/imperative";
 import { Gui } from "../globals/Gui";
 import { PromptCredentialsOptions } from "./doc/PromptCredentials";
 import { Types } from "../Types";
-import { BaseProfileAuthOptions } from "./doc";
+import { BaseProfileAuthOptions } from "./doc/BaseProfileAuth";
 
 /**
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.

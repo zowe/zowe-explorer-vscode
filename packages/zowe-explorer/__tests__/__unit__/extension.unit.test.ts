@@ -168,6 +168,8 @@ async function createGlobalMocks() {
             "zowe.ds.sortBy",
             "zowe.ds.filterBy",
             "zowe.ds.copyName",
+            "zowe.ds.pdsSearchFor",
+            "zowe.ds.filteredDataSetsSearchFor",
             "zowe.uss.addSession",
             "zowe.uss.refreshAll",
             "zowe.uss.refreshUSS",
@@ -388,7 +390,7 @@ async function createGlobalMocks() {
         value: jest.fn(),
         configurable: true,
     });
-    Object.defineProperty(ZoweLocalStorage, "storage", {
+    Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
             update: jest.fn(),

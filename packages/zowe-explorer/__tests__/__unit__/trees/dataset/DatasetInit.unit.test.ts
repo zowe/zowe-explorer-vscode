@@ -97,6 +97,14 @@ describe("Test src/dataset/extension", () => {
                 mock: [{ spy: jest.spyOn(DatasetActions, "allocateLike"), arg: [dsProvider, test.value] }],
             },
             {
+                name: "zowe.ds.pdsSearchFor",
+                mock: [{ spy: jest.spyOn(DatasetActions, "search"), arg: [test.context, test.value] }],
+            },
+            {
+                name: "zowe.ds.filteredDataSetsSearchFor",
+                mock: [{ spy: jest.spyOn(DatasetActions, "search"), arg: [test.context, test.value] }],
+            },
+            {
                 name: "zowe.ds.uploadDialog",
                 mock: [{ spy: jest.spyOn(DatasetActions, "uploadDialog"), arg: [test.value, dsProvider] }],
             },

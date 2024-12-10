@@ -20,6 +20,7 @@ import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import { MainframeInteraction } from "../extend/MainframeInteraction";
 import { FileManagement } from "../utils";
 import { Types } from "../Types";
+import { ProfilesCache } from "../profiles/ProfilesCache";
 
 /**
  * Implementations of Zowe Explorer API for z/OSMF profiles
@@ -44,17 +45,17 @@ export namespace ZoweExplorerZosmf {
             const sessCfg = zosmf.ZosmfSession.createSessCfgFromArgs(cmdArgs);
             imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
             const sessionToUse = new imperative.Session(sessCfg);
-            return sessionToUse;
+            return ProfilesCache.getProfileSessionWithVscProxy(sessionToUse);
         }
 
         public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
-            try {
-                this.session = this._getSession(profile || this.profile);
-            } catch (error) {
-                // todo: initialize and use logging
-                imperative.Logger.getAppLogger().error(error as string);
-            }
-            return this.session;
+                try {
+                    this.session = this._getSession(profile || this.profile);
+                } catch (error) {
+                    // todo: initialize and use logging
+                    imperative.Logger.getAppLogger().error(error as string);
+                }
+            return ProfilesCache.getProfileSessionWithVscProxy(this.session);
         }
 
         private _getSession(serviceProfile: imperative.IProfileLoaded): imperative.Session {
@@ -374,6 +375,19 @@ export namespace ZoweExplorerZosmf {
                 { dsn: toDataSetName },
                 { "from-dataset": { dsn: fromDataSetName }, enq, replace, responseTimeout: this.profile?.profile?.responseTimeout }
             );
+        }
+        public searchDataSets(searchOptions: zosfiles.ISearchOptions): Promise<zosfiles.ISearchResponse> {
+            return zosfiles.Search.dataSets(this.getSession(), {
+                ...searchOptions,
+                getOptions: {
+                    responseTimeout: this.profile?.profile?.responseTimeout,
+                    ...searchOptions.getOptions,
+                },
+                listOptions: {
+                    responseTimeout: this.profile?.profile?.responseTimeout,
+                    ...searchOptions.listOptions,
+                },
+            });
         }
 
         public async copyDataSetCrossLpar(

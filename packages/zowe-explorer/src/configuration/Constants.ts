@@ -16,7 +16,7 @@ import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import type { Profiles } from "./Profiles";
 
 export class Constants {
-    public static readonly COMMAND_COUNT = 103;
+    public static readonly COMMAND_COUNT = 105;
     public static readonly MAX_SEARCH_HISTORY = 5;
     public static readonly MAX_FILE_HISTORY = 10;
     public static readonly MS_PER_SEC = 1000;
@@ -26,6 +26,7 @@ export class Constants {
     public static readonly HOME_SUFFIX = Constants.CONTEXT_PREFIX + "home";
     public static readonly FAV_PROFILE_CONTEXT = "profile_fav";
     public static readonly RC_SUFFIX = Constants.CONTEXT_PREFIX + "rc=";
+    public static readonly TYPE_SUFFIX = Constants.CONTEXT_PREFIX + "type=";
     public static readonly VALIDATE_SUFFIX = Constants.CONTEXT_PREFIX + "validate";
     public static readonly NO_VALIDATE_SUFFIX = Constants.CONTEXT_PREFIX + "noValidate";
     public static readonly INFORMATION_CONTEXT = "information";
