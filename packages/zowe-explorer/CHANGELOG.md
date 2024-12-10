@@ -6,6 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Updated Zowe SDKs to `8.8.4` for technical currency. [#3306](https://github.com/zowe/zowe-explorer-vscode/pull/3306)
 - Added expired JSON web token detection for profiles in each tree view (Data Sets, USS, Jobs). When a user performs a search on a profile, they are prompted to log in if their token expired. [#3175](https://github.com/zowe/zowe-explorer-vscode/issues/3175)
 - Added integrated terminals for z/OS Unix, TSO, and MVS commands which can be enabled via the `Zowe › Commands: Use Integrated Terminals` setting. [#3079](https://github.com/zowe/zowe-explorer-vscode/pull/3079)
 - Add a data set or USS resource to a virtual workspace with the new "Add to Workspace" context menu option. [#3265](https://github.com/zowe/zowe-explorer-vscode/issues/3265)
@@ -13,7 +14,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Adopted support for VS Code proxy settings with zosmf profile types. [#3010](https://github.com/zowe/zowe-explorer-vscode/issues/3010)
 - Implemented more user-friendly error messages for API or network errors within Zowe Explorer. [#3243](https://github.com/zowe/zowe-explorer-vscode/pull/3243)
 - Use the "Troubleshoot" option for certain errors to obtain additional context, tips, and resources for how to resolve the errors. [#3243](https://github.com/zowe/zowe-explorer-vscode/pull/3243)
-- Updated Zowe SDKs to `8.8.2` for technical currency. [#3296](https://github.com/zowe/zowe-explorer-vscode/pull/3296)
+- Easily search for data in filtered data sets and partitioned data sets with the new `Search Filtered Data Sets` and `Search PDS Members` functionality. [#3306](https://github.com/zowe/zowe-explorer-vscode/pull/3306)
 - Allow extenders to add context menu actions to a top level node, i.e. data sets, USS, Jobs, by encoding the profile type in the context value. [#3309](https://github.com/zowe/zowe-explorer-vscode/pull/3309)
 - You can now add multiple partitioned data sets or USS directories to your workspace at once using the "Add to Workspace" feature. [#3324](https://github.com/zowe/zowe-explorer-vscode/issues/3324)
 - Exposed read and write access to local storage keys for Zowe Explorer extenders. [#3180](https://github.com/zowe/zowe-explorer-vscode/issues/3180)
@@ -28,6 +29,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where a migrated data set is unusable after it is recalled through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
 - Fixed an issue where a recalled PDS is expandable after it is migrated through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
 - Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
+- Fixed an issue where listing data sets resulted in an error after opening a data set with an encoding. [#3347](https://github.com/zowe/zowe-explorer-vscode/issues/3347)
 
 ## `3.0.3`
 

@@ -544,6 +544,11 @@ describe("ZosmfMvsApi", () => {
             args: [["SAMPLE.A*", "SAMPLE.B*"], fakeProperties],
         },
         {
+            name: "searchDataSets",
+            spy: jest.spyOn(zosfiles.Search, "dataSets"),
+            args: [{ pattern: "SAMPLE.A*", searchString: "test", listOptions: { ...fakeProperties }, getOptions: { ...fakeProperties } }],
+        },
+        {
             name: "copyDataSet",
             spy: jest.spyOn(zosfiles.Copy, "dataSet"),
             args: ["FROM.NAME", "TO.NAME", undefined, undefined, fakeProperties],

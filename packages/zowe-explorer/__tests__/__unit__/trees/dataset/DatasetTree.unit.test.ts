@@ -3297,30 +3297,31 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
 
 describe("Dataset Tree Unit Tests - Function openWithEncoding", () => {
     it("sets binary encoding if selection was made", async () => {
-        const setEncodingMock = jest.spyOn(DatasetFSProvider.instance, "setEncodingForFile").mockImplementation();
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const setEncodingMock = jest.spyOn(node, "setEncoding").mockImplementation();
         node.openDs = jest.fn();
         jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "binary" });
         await DatasetTree.prototype.openWithEncoding(node);
-        expect(setEncodingMock).toHaveBeenCalledWith(node.resourceUri, { kind: "binary" });
+        expect(setEncodingMock).toHaveBeenCalledWith({ kind: "binary" });
         expect(node.openDs).toHaveBeenCalledTimes(1);
         setEncodingMock.mockRestore();
     });
 
     it("sets text encoding if selection was made", async () => {
-        const setEncodingMock = jest.spyOn(DatasetFSProvider.instance, "setEncodingForFile").mockImplementation();
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(true);
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const setEncodingMock = jest.spyOn(node, "setEncoding").mockImplementation();
         node.openDs = jest.fn();
         jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "text" });
         await DatasetTree.prototype.openWithEncoding(node);
-        expect(setEncodingMock).toHaveBeenCalledWith(node.resourceUri, { kind: "text" });
+        expect(setEncodingMock).toHaveBeenCalledWith({ kind: "text" });
         expect(node.openDs).toHaveBeenCalledTimes(1);
         setEncodingMock.mockRestore();
     });
 
     it("does not set encoding if prompt was cancelled", async () => {
-        const setEncodingSpy = jest.spyOn(DatasetFSProvider.instance, "setEncodingForFile");
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const setEncodingSpy = jest.spyOn(node, "setEncoding");
         node.openDs = jest.fn();
         jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValueOnce(undefined);
         await DatasetTree.prototype.openWithEncoding(node);

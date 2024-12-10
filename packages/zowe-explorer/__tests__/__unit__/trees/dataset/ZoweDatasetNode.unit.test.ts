@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { DsEntry, Gui, imperative, PdsEntry, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { BaseProvider, DsEntry, Gui, imperative, PdsEntry, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import {
     createSessCfgFromArgs,
@@ -122,6 +122,26 @@ describe("ZoweDatasetNode Unit Tests", () => {
         expect(testNode.label).toBeDefined();
         expect(testNode.getParent()).toBeUndefined();
         expect(testNode.getSession()).toBeDefined();
+    });
+
+    it("calls setEncoding when constructing a node with encoding", () => {
+        jest.spyOn(BaseProvider.prototype, "setEncodingForFile").mockImplementationOnce(() => {});
+        const makeEmptyDsWithEncodingMock = jest.spyOn(DatasetFSProvider.instance, "makeEmptyDsWithEncoding").mockImplementationOnce(() => {});
+        const setEncodingSpy = jest.spyOn(ZoweDatasetNode.prototype, "setEncoding");
+        const testNode = new ZoweDatasetNode({
+            label: "BRTVS99",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.DS_DS_CONTEXT,
+            encoding: { kind: "binary" },
+            profile: createIProfile(),
+            parentNode: createDatasetSessionNode(createISession(), createIProfile()),
+        });
+
+        expect(testNode.label).toBe("BRTVS99");
+        expect(testNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
+        expect(setEncodingSpy).toHaveBeenCalled();
+        expect(makeEmptyDsWithEncodingMock).toHaveBeenCalled();
+        setEncodingSpy.mockRestore();
     });
 
     /*************************************************************************************************************
@@ -635,9 +655,16 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 });
 
 describe("ZoweDatasetNode Unit Tests - Function node.setEncoding()", () => {
-    const setEncodingForFileMock = jest.spyOn(DatasetFSProvider.instance, "setEncodingForFile").mockImplementation();
+    let setEncodingForFileMock: jest.SpyInstance;
+    let existsMock: jest.SpyInstance;
+
+    beforeAll(() => {
+        setEncodingForFileMock = jest.spyOn(DatasetFSProvider.instance, "setEncodingForFile").mockImplementation();
+        existsMock = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(true);
+    });
 
     afterAll(() => {
+        existsMock.mockRestore();
         setEncodingForFileMock.mockRestore();
     });
 
