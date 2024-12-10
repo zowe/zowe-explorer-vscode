@@ -63,7 +63,7 @@ export abstract class ZoweCommandProvider {
             return;
         }
         try {
-            const iTerms = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS) ?? true;
+            const iTerms = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS);
             if (iTerms) {
                 this.pseudoTerminal = new ZoweTerminal(
                     this.terminalName,

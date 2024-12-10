@@ -107,7 +107,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                             return;
                         }
                     }
-                    const iTerms = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS) ?? true;
+                    const iTerms = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS);
                     if (!command && !iTerms) {
                         command = await this.getQuickPick([session && session.ISession ? session.ISession.hostname : "unknown"]);
                     }

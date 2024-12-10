@@ -105,7 +105,6 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                 return charBytes > 2 ? 2 : 1;
             };
             const offset = this.charArrayCmd.slice(this.cursorPosition).reduce((total, curr) => total + getPos(curr), 0);
-            console.log(offset);
             [...Array(offset)].map(() => this.write(ZoweTerminal.Keys.LEFT));
         }
     }
@@ -146,7 +145,6 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         const newPos = Math.max(0, Math.min(this.charArrayCmd.length, this.cursorPosition + offset));
         this.cursorPosition = newPos;
         const posChar = this.charArrayCmd[newPos];
-        console.log(posChar, this.cursorPosition);
         this.refreshCmd();
     }
 
@@ -169,6 +167,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
 
     // Handle input from the terminal
     public async handleInput(data: string): Promise<void> {
+        console.log(Buffer.from(data));
         if (this.isCommandRunning) {
             if (data === ZoweTerminal.Keys.CTRL_C) this.controller.abort();
             return;
@@ -198,6 +197,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                 this.write(ZoweTerminal.Keys.NEW_LINE);
                 const cmd = this.command;
                 this.command = "";
+                this.charArrayCmd = [];
                 if (cmd.length === 0) {
                     this.writeCmd();
                     return;
@@ -247,6 +247,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
             default: {
                 const charArray = this.charArrayCmd;
                 this.command = charArray.slice(0, Math.max(0, this.cursorPosition)).join("") + data + charArray.slice(this.cursorPosition).join("");
+                this.charArrayCmd = Array.from(this.command);
                 this.cursorPosition = Math.min(this.charArrayCmd.length, this.cursorPosition + Array.from(data).length);
 
                 this.write(data);

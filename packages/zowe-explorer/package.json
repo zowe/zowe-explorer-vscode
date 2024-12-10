@@ -1748,7 +1748,7 @@
         },
         "zowe.commands.useIntegratedTerminals": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "%zowe.commands.useIntegratedTerminals%",
           "scope": "window"
         },

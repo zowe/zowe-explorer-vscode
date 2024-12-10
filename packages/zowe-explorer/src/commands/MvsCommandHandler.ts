@@ -98,7 +98,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
             if (this.profileInstance.validProfile !== Validation.ValidationType.INVALID) {
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
                 if (commandApi) {
-                    const iTerms = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS) ?? true;
+                    const iTerms = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS);
                     if (!command && !iTerms) {
                         command = await this.getQuickPick([session && session.ISession ? session.ISession.hostname : "unknown"]);
                     }
