@@ -14,13 +14,12 @@ import * as vscode from "vscode";
 
 export class ZoweTerminal implements vscode.Pseudoterminal {
     public static readonly mTermX = ">";
+    public static readonly invalidChar = "�";
     public static readonly Keys = {
         EMPTY_LINE: `${this.mTermX} `,
         CLEAR_ALL: "\x1b[2J\x1b[3J\x1b[;H",
         CLEAR_LINE: `\x1b[2K\r`,
         CTRL_C: "\x03",
-        // END: "\x23",
-        // HOME: "\x24",
         END: "\x1b[F",
         HOME: "\x1b[H",
         CMD_LEFT: "\x01", // MacOS HOME
@@ -100,6 +99,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.write(this.formatCommandLine ? this.formatCommandLine(cmd ?? this.command) : cmd ?? this.command);
     }
     protected refreshCmd() {
+        this.command = this.sanitizeInput(this.command);
         if (!this.charArrayCmd.length || this.charArrayCmd.join("") !== this.command) {
             this.charArrayCmd = Array.from(this.command);
         }
@@ -107,6 +107,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.writeCmd();
         if (this.charArrayCmd.length > this.cursorPosition) {
             const getPos = (char: string) => {
+                if (char === ZoweTerminal.invalidChar) return 1;
                 const charBytes = Buffer.from(char).length;
                 return charBytes > 2 ? 2 : 1;
             };
@@ -151,9 +152,26 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.cursorPosition = Math.max(0, Math.min(this.charArrayCmd.length, this.cursorPosition + offset));
         this.refreshCmd();
     }
+
     private moveCursorTo(position: number): void {
         this.cursorPosition = position < 0 ? 0 : Math.min(this.charArrayCmd.length, position);
         this.refreshCmd();
+    }
+
+    private isPrintable(char: string): boolean {
+        const codePoint = char.codePointAt(0);
+        if (codePoint === undefined) return false;
+        if (codePoint >= 0x20 && codePoint <= 0x7e) return true;
+        if (codePoint >= 0xa0 && codePoint <= 0xd7ff) return true; // Control characters
+        if (codePoint >= 0xe000 && codePoint <= 0xfffd) return true; // Private use area
+        if (codePoint >= 0x10000 && codePoint <= 0x10ffff) return true; // Supplemental planes
+        return false;
+    }
+
+    private sanitizeInput(input: string): string {
+        return Array.from(input)
+            .map((char) => (this.isPrintable(char) ? char : ZoweTerminal.invalidChar))
+            .join("");
     }
 
     private deleteCharacter(offset: number): void {
