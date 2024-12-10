@@ -19,8 +19,12 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         CLEAR_ALL: "\x1b[2J\x1b[3J\x1b[;H",
         CLEAR_LINE: `\x1b[2K\r`,
         CTRL_C: "\x03",
-        HOME: "\x01",
-        END: "\x05",
+        // END: "\x23",
+        // HOME: "\x24",
+        END: "\x1b[F",
+        HOME: "\x1b[H",
+        CMD_LEFT: "\x01", // MacOS HOME
+        CMD_RIGHT: "\x05", // MacOS END
         DEL: "\x1b[3~",
         ENTER: "\r",
         NEW_LINE: "\r\n",
@@ -148,7 +152,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.refreshCmd();
     }
     private moveCursorTo(position: number): void {
-        this.cursorPosition = Math.max(0, Math.min(this.charArrayCmd.length, position));
+        this.cursorPosition = position < 0 ? 0 : Math.min(this.charArrayCmd.length, position);
         this.refreshCmd();
     }
 
@@ -212,7 +216,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
 
     // Handle input from the terminal
     public async handleInput(data: string): Promise<void> {
-        // console.log(Buffer.from(data));
+        console.log(Buffer.from(data));
         if (this.isCommandRunning) {
             if (data === ZoweTerminal.Keys.CTRL_C) this.controller.abort();
             return;
@@ -231,9 +235,11 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                 this.moveCursor(1);
                 break;
             case ZoweTerminal.Keys.HOME:
+            case ZoweTerminal.Keys.CMD_LEFT:
                 this.moveCursorTo(0);
                 break;
             case ZoweTerminal.Keys.END:
+            case ZoweTerminal.Keys.CMD_RIGHT:
                 this.moveCursorTo(this.charArrayCmd.length);
                 break;
             case ZoweTerminal.Keys.DEL:
