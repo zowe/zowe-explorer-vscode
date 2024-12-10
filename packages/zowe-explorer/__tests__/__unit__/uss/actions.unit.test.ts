@@ -32,6 +32,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../../../src/globals";
 import * as sharedUtils from "../../../src/shared/utils";
+import * as workspaceUtils from "../../../src/utils/workspace";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as isbinaryfile from "isbinaryfile";
 import * as fs from "fs";
@@ -41,6 +42,7 @@ import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { AttributeView } from "../../../src/uss/AttributeView";
 import { mocked } from "../../../__mocks__/mockUtils";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
+import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -461,6 +463,9 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
             ussNode: createUSSNode(globalMocks.testSession, globalMocks.testProfile),
             ussFavoriteNode: createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile),
             putUSSPayload: jest.fn().mockResolvedValue(`{"stdout":[""]}`),
+            checkAutoSaveForError: jest.spyOn(workspaceUtils, "checkAutoSaveForError"),
+            // Disable auto save for most of the test cases
+            getDirectValue: jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce("off"),
         };
 
         newMocks.node = new ZoweUSSNode({
@@ -544,6 +549,21 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         );
     });
 
+    it("calls checkForAutoSave in the event of an error", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
+        globalMocks.fileToUSSFile.mockResolvedValue(blockMocks.testResponse);
+        blockMocks.testResponse.success = false;
+        blockMocks.testResponse.commandResponse = "Save failed";
+
+        globalMocks.withProgress.mockReturnValueOnce(blockMocks.testResponse);
+
+        await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
+        expect(blockMocks.checkAutoSaveForError).toHaveBeenCalled();
+    });
+
     it("Tests that saveUSSFile fails when save fails", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
@@ -570,6 +590,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         globalMocks.withProgress.mockRejectedValueOnce(Error("Test Error"));
 
         await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
+        expect(blockMocks.checkAutoSaveForError).toHaveBeenCalled();
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Error: Test Error");
         expect(mocked(vscode.workspace.applyEdit)).toHaveBeenCalledTimes(2);
