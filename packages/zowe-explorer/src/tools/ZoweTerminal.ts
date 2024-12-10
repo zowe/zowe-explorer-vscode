@@ -216,7 +216,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                     ]);
                     this.isCommandRunning = false;
                     if (output === null) {
-                        this.writeLine(imperative.TextUtils.chalk.italic.red("Command cancelled!"));
+                        this.writeLine(imperative.TextUtils.chalk.italic.red("Operation cancelled!"));
                     } else {
                         this.writeLine(output.trim().split("\n").join("\r\n"));
                     }
