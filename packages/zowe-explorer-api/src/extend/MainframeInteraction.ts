@@ -505,6 +505,7 @@ export namespace MainframeInteraction {
          * @param {zostso.IStartTsoParms} parms
          * @returns {Promise<zostso.IIssueResponse>}
          * @memberof ICommand
+         * @deprecated Please use `issueTsoCmdWithParms`
          */
         issueTsoCommandWithParms?(command: string, parms?: zostso.IStartTsoParms): Promise<zostso.IIssueResponse>;
 
