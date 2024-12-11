@@ -162,7 +162,7 @@ export async function markDocumentUnsaved(document: vscode.TextDocument): Promis
  *
  * The user can either dismiss the message or click the "Enable Auto Save" button to reactivate the `Auto Save` feature.
  */
-export async function checkAutoSaveForError(): Promise<void> {
+export async function handleAutoSaveOnError(): Promise<void> {
     // If auto save is disabled, return. Otherwise, toggle it off
     if (SettingsConfig.getDirectValue("files.autoSave") === "off") {
         return;

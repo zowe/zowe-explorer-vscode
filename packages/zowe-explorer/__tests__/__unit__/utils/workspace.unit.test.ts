@@ -220,7 +220,7 @@ describe("Workspace Utils Unit Tests - function awaitForDocumentBeingSaved", () 
     });
 });
 
-describe("Workspace Utils Unit Tests - function checkAutoSaveForError", () => {
+describe("Workspace Utils Unit Tests - function handleAutoSaveOnError", () => {
     function getBlockMocks(autoSaveEnabled: boolean = true, userResponse?: string): Record<string, jest.SpyInstance> {
         const executeCommand = jest.spyOn(vscode.commands, "executeCommand").mockClear();
         const getDirectValue = jest.spyOn(SettingsConfig, "getDirectValue");
@@ -245,26 +245,26 @@ describe("Workspace Utils Unit Tests - function checkAutoSaveForError", () => {
 
     it("returns early if Auto Save is disabled", async () => {
         const blockMocks = getBlockMocks(false);
-        await workspaceUtils.checkAutoSaveForError();
+        await workspaceUtils.handleAutoSaveOnError();
         expect(blockMocks.getDirectValue).toHaveBeenCalledWith("files.autoSave");
         expect(blockMocks.executeCommand).not.toHaveBeenCalled();
     });
 
     it("toggles off auto save if enabled", async () => {
         const blockMocks = getBlockMocks(true);
-        await workspaceUtils.checkAutoSaveForError();
+        await workspaceUtils.handleAutoSaveOnError();
         expect(blockMocks.executeCommand).toHaveBeenCalledWith("workbench.action.toggleAutoSave");
     });
 
     it("calls ZoweSaveQueue.markAllUnsaved to mark documents unsaved and clear queue", async () => {
         const blockMocks = getBlockMocks(true);
-        await workspaceUtils.checkAutoSaveForError();
+        await workspaceUtils.handleAutoSaveOnError();
         expect(blockMocks.markAllUnsaved).toHaveBeenCalled();
     });
 
     it("prompts the user to reactivate Auto Save in event of save error", async () => {
         const blockMocks = getBlockMocks(true);
-        await workspaceUtils.checkAutoSaveForError();
+        await workspaceUtils.handleAutoSaveOnError();
         expect(blockMocks.errorMessage).toHaveBeenCalledWith(
             "Zowe Explorer encountered a save error and has disabled Auto Save. Once the issue is addressed, enable Auto Save and try again.",
             { items: ["Enable Auto Save"] }
@@ -273,7 +273,7 @@ describe("Workspace Utils Unit Tests - function checkAutoSaveForError", () => {
 
     it("reactivates Auto Save if 'Enable Auto Save' clicked", async () => {
         const blockMocks = getBlockMocks(true, "Enable Auto Save");
-        await workspaceUtils.checkAutoSaveForError();
+        await workspaceUtils.handleAutoSaveOnError();
         expect(blockMocks.executeCommand).toHaveBeenCalledWith("workbench.action.toggleAutoSave");
     });
 });

@@ -463,7 +463,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
             ussNode: createUSSNode(globalMocks.testSession, globalMocks.testProfile),
             ussFavoriteNode: createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile),
             putUSSPayload: jest.fn().mockResolvedValue(`{"stdout":[""]}`),
-            checkAutoSaveForError: jest.spyOn(workspaceUtils, "checkAutoSaveForError"),
+            handleAutoSaveOnError: jest.spyOn(workspaceUtils, "handleAutoSaveOnError"),
             // Disable auto save for most of the test cases
             getDirectValue: jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce("off"),
         };
@@ -549,7 +549,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         );
     });
 
-    it("calls checkForAutoSave in the event of an error", async () => {
+    it("calls handleAutoSaveOnError in the event of an error", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -561,7 +561,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         globalMocks.withProgress.mockReturnValueOnce(blockMocks.testResponse);
 
         await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
-        expect(blockMocks.checkAutoSaveForError).toHaveBeenCalled();
+        expect(blockMocks.handleAutoSaveOnError).toHaveBeenCalled();
     });
 
     it("Tests that saveUSSFile fails when save fails", async () => {
@@ -590,7 +590,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         globalMocks.withProgress.mockRejectedValueOnce(Error("Test Error"));
 
         await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
-        expect(blockMocks.checkAutoSaveForError).toHaveBeenCalled();
+        expect(blockMocks.handleAutoSaveOnError).toHaveBeenCalled();
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Error: Test Error");
         expect(mocked(vscode.workspace.applyEdit)).toHaveBeenCalledTimes(2);

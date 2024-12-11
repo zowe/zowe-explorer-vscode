@@ -23,7 +23,7 @@ describe("ZoweSaveQueue - unit tests", () => {
         const globalMocks = {
             errorMessageSpy: jest.spyOn(Gui, "errorMessage"),
             markDocumentUnsavedSpy: jest.spyOn(workspaceUtils, "markDocumentUnsaved"),
-            checkAutoSaveForErrorMock: jest.spyOn(workspaceUtils, "checkAutoSaveForError").mockImplementation(),
+            handleAutoSaveOnErrorMock: jest.spyOn(workspaceUtils, "handleAutoSaveOnError").mockImplementation(),
             processNextSpy: jest.spyOn(ZoweSaveQueue as any, "processNext"),
             allSpy: jest.spyOn(ZoweSaveQueue, "all"),
             trees: {

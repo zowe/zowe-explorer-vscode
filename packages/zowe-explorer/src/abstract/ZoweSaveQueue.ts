@@ -12,7 +12,7 @@
 import * as path from "path";
 import * as vscode from "vscode";
 import { Gui, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
-import { checkAutoSaveForError, markDocumentUnsaved } from "../utils/workspace";
+import { handleAutoSaveOnError, markDocumentUnsaved } from "../utils/workspace";
 import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
@@ -85,7 +85,7 @@ export class ZoweSaveQueue {
         } catch (err) {
             ZoweLogger.error(err);
             await markDocumentUnsaved(nextRequest.savedFile);
-            await checkAutoSaveForError();
+            await handleAutoSaveOnError();
             await Gui.errorMessage(
                 localize(
                     "processNext.error.uploadFailed",
