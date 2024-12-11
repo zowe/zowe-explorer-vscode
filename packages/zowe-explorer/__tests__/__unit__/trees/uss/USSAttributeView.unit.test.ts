@@ -141,7 +141,7 @@ describe("AttributeView unit tests", () => {
             command: "update-attributes",
             attrs: { owner: "someowner" },
         });
-        // expect(getAttributesMock).toHaveBeenCalled();
+
         expect(view.panel.webview.postMessage).toHaveBeenCalledWith({
             updated: false,
         });
