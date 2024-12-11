@@ -16,6 +16,7 @@ import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { USSInit } from "../../../../src/trees/uss/USSInit";
 import { SharedActions } from "../../../../src/trees/shared/SharedActions";
 import { SharedInit } from "../../../../src/trees/shared/SharedInit";
+import { Gui } from "@zowe/zowe-explorer-api";
 
 describe("Test src/uss/extension", () => {
     describe("initUSSProvider", () => {
@@ -26,6 +27,7 @@ describe("Test src/uss/extension", () => {
             context: { subscriptions: new Array() },
             value: { test: "uss", refreshUSS: jest.fn(), openUSS: jest.fn(), deleteUSSNode: jest.fn(), getUSSDocumentFilePath: jest.fn() },
             _: { _: "_" },
+            statusMsg: { dispose: jest.fn() },
         };
         const ussFileProvider: { [key: string]: jest.Mock } = {
             createZoweSession: jest.fn(),
@@ -52,6 +54,8 @@ describe("Test src/uss/extension", () => {
                 mock: [
                     { spy: jest.spyOn(SharedContext, "isDocument"), arg: [test.value], ret: true },
                     { spy: jest.spyOn(SharedContext, "isUssDirectory"), arg: [test.value], ret: false },
+                    { spy: jest.spyOn(Gui, "setStatusBarMessage"), arg: ["$(sync~spin) Pulling from Mainframe..."], ret: test.statusMsg },
+                    { spy: jest.spyOn(test.statusMsg, "dispose"), arg: [] },
                 ],
             },
             {
