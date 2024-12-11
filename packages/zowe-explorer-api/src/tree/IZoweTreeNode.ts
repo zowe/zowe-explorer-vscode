@@ -503,4 +503,18 @@ export interface IZoweJobTreeNode extends IZoweTreeNode {
      * @returns {Promise<IZoweJobTreeNode[]>}
      */
     getChildren(): Promise<IZoweJobTreeNode[]>;
+
+    /**
+     * Sets the encoding of the job node
+     *
+     * @returns {void}
+     */
+    setEncoding?(encoding: ZosEncoding): void;
+
+    /**
+     * Gets the encoding of the job node
+     *
+     * @returns {ZosEncoding}
+     */
+    getEncoding?(): ZosEncoding;
 }

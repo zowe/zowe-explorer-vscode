@@ -12,7 +12,16 @@
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as path from "path";
-import { FsJobsUtils, imperative, IZoweJobTreeNode, Sorting, ZoweExplorerApiType, ZoweScheme, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import {
+    FsJobsUtils,
+    imperative,
+    IZoweJobTreeNode,
+    Sorting,
+    ZosEncoding,
+    ZoweExplorerApiType,
+    ZoweScheme,
+    ZoweTreeNode,
+} from "@zowe/zowe-explorer-api";
 import { JobFSProvider } from "./JobFSProvider";
 import { JobUtils } from "./JobUtils";
 import { Constants } from "../../configuration/Constants";
@@ -303,6 +312,40 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
     public getSessionNode(): IZoweJobTreeNode {
         ZoweLogger.trace("ZoweJobNode.getSessionNode called.");
         return this.session ? this : this.getParent()?.getSessionNode() ?? this;
+    }
+
+    public getEncodingInMap(uriPath: string): ZosEncoding {
+        return JobFSProvider.instance.encodingMap[uriPath];
+    }
+
+    public updateEncodingInMap(uriPath: string, encoding: ZosEncoding): void {
+        JobFSProvider.instance.encodingMap[uriPath] = encoding;
+    }
+
+    public getEncoding(): ZosEncoding {
+        return JobFSProvider.instance.getEncodingForFile(this.resourceUri);
+    }
+
+    public setEncoding(encoding: ZosEncoding): void {
+        ZoweLogger.trace("ZoweJobNode.setEncoding called.");
+        if (!this.contextValue.startsWith(Constants.JOBS_SPOOL_CONTEXT)) {
+            throw new Error(`Cannot set encoding for node with context ${this.contextValue}`);
+        }
+
+        if (JobFSProvider.instance.exists(this.resourceUri)) {
+            JobFSProvider.instance.setEncodingForFile(this.resourceUri, encoding);
+        } else {
+            throw new Error(`Cannot set encoding for non-existent node`);
+        }
+
+        const fullPath = path.posix.basename(this.resourceUri.path);
+        if (encoding != null) {
+            this.updateEncodingInMap(fullPath, encoding);
+        } else {
+            delete JobFSProvider.instance.encodingMap[fullPath];
+        }
+
+        this.dirty = true;
     }
 
     public set owner(newOwner: string) {

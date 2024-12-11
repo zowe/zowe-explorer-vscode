@@ -12,7 +12,18 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { IJob } from "@zowe/zos-jobs-for-zowe-sdk";
-import { Gui, Validation, imperative, IZoweJobTreeNode, PersistenceSchemaEnum, Poller, Types, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import {
+    Gui,
+    Validation,
+    imperative,
+    IZoweJobTreeNode,
+    PersistenceSchemaEnum,
+    Poller,
+    Types,
+    ZoweExplorerApiType,
+    ZosEncoding,
+    FsAbstractUtils,
+} from "@zowe/zowe-explorer-api";
 import { ZoweJobNode } from "./ZoweJobNode";
 import { JobFSProvider } from "./JobFSProvider";
 import { JobUtils } from "./JobUtils";
@@ -1161,6 +1172,17 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         });
         inputBox.show();
         return inputBox;
+    }
+
+    public async openWithEncoding(node: IZoweJobTreeNode, encoding?: ZosEncoding): Promise<void> {
+        encoding ??= await SharedUtils.promptForEncoding(node);
+        if (encoding !== undefined) {
+            if (!(await FsAbstractUtils.confirmForUnsavedDoc(node.resourceUri))) {
+                return;
+            }
+            node.setEncoding(encoding);
+            await vscode.commands.executeCommand("vscode.open", node.resourceUri);
+        }
     }
 }
 
