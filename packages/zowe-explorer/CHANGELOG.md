@@ -17,6 +17,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where a migrated data set is unusable after it is recalled through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
 - Fixed an issue where a recalled PDS is expandable after it is migrated through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
 - Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
+- Fixed an issue when Auto Save is enabled where a failed UNIX file or data set save operation resulted in an indefinite loop of additional save requests. [#2406](https://github.com/zowe/zowe-explorer-vscode/issues/2406), [#2627](https://github.com/zowe/zowe-explorer-vscode/issues/2627)
 
 ## `2.18.0`
 
