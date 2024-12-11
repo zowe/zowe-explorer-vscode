@@ -199,6 +199,42 @@
   "Profile auth error": "Profile auth error",
   "Profile is not authenticated, please log in to continue": "Profile is not authenticated, please log in to continue",
   "Retrieving response from USS list API": "Retrieving response from USS list API",
+  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
+  "Failed to move {0}/File path": {
+    "message": "Failed to move {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Profile does not exist for this file.": "Profile does not exist for this file.",
+  "Saving USS file...": "Saving USS file...",
+  "Failed to rename {0}/File path": {
+    "message": "Failed to rename {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Failed to delete {0}/File name": {
+    "message": "Failed to delete {0}",
+    "comment": [
+      "File name"
+    ]
+  },
+  "No error details given": "No error details given",
+  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
+    "message": "Error fetching destination {0} for paste action: {1}",
+    "comment": [
+      "USS path",
+      "Error message"
+    ]
+  },
+  "Failed to copy {0} to {1}/Source pathDestination path": {
+    "message": "Failed to copy {0} to {1}",
+    "comment": [
+      "Source path",
+      "Destination path"
+    ]
+  },
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
     "comment": [
@@ -262,42 +298,6 @@
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "Pulling from Mainframe...": "Pulling from Mainframe...",
-  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
-  "Failed to move {0}/File path": {
-    "message": "Failed to move {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Profile does not exist for this file.": "Profile does not exist for this file.",
-  "Saving USS file...": "Saving USS file...",
-  "Failed to rename {0}/File path": {
-    "message": "Failed to rename {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Failed to delete {0}/File name": {
-    "message": "Failed to delete {0}",
-    "comment": [
-      "File name"
-    ]
-  },
-  "No error details given": "No error details given",
-  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
-    "message": "Error fetching destination {0} for paste action: {1}",
-    "comment": [
-      "USS path",
-      "Error message"
-    ]
-  },
-  "Failed to copy {0} to {1}/Source pathDestination path": {
-    "message": "Failed to copy {0} to {1}",
-    "comment": [
-      "Source path",
-      "Destination path"
-    ]
-  },
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -852,7 +852,6 @@
     ]
   },
   "Cannot perform the copy operation as the data sets selected have different types": "Cannot perform the copy operation as the data sets selected have different types",
-  "Copying data sets cross lpars is not yet supported for this profile.": "Copying data sets cross lpars is not yet supported for this profile.",
   "Migration of data set {0} requested./Data Set name": {
     "message": "Migration of data set {0} requested.",
     "comment": [
@@ -869,6 +868,7 @@
   "Invalid paste. Copy data set(s) first.": "Invalid paste. Copy data set(s) first.",
   "Name of data set member": "Name of data set member",
   "Copying data sets is not supported.": "Copying data sets is not supported.",
+  "Copying data sets cross lpars is not yet supported for this profile.": "Copying data sets cross lpars is not yet supported for this profile.",
   "Replace": "Replace",
   "The data set member already exists.\nDo you want to replace it?": "The data set member already exists.\nDo you want to replace it?",
   "The physical sequential (PS) data set already exists.\nDo you want to replace it?": "The physical sequential (PS) data set already exists.\nDo you want to replace it?",
@@ -899,7 +899,6 @@
       "The number of data sets that are about to be searched"
     ]
   },
-  "Percent Complete": "Percent Complete",
   "Failed to upload changes for {0}: {1}/Build file hyperlinkError message": {
     "message": "Failed to upload changes for {0}: {1}",
     "comment": [
@@ -908,6 +907,18 @@
     ]
   },
   "Error encountered while activating and initializing logger": "Error encountered while activating and initializing logger",
+  "Insufficient read permissions for {0} in local storage./Local storage key": {
+    "message": "Insufficient read permissions for {0} in local storage.",
+    "comment": [
+      "Local storage key"
+    ]
+  },
+  "Insufficient write permissions for {0} in local storage./Local storage key": {
+    "message": "Insufficient write permissions for {0} in local storage.",
+    "comment": [
+      "Local storage key"
+    ]
+  },
   "Add Credentials": "Add Credentials",
   "Add username and password for basic authentication": "Add username and password for basic authentication",
   "Update stored username and password": "Update stored username and password",

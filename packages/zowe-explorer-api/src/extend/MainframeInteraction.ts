@@ -385,8 +385,7 @@ export namespace MainframeInteraction {
             toDataSetName: string,
             toMemberName: string,
             options: zosfiles.ICrossLparCopyDatasetOptions,
-            sourceOptions: zosfiles.IGetOptions,
-            targetProfile: imperative.IProfileLoaded
+            sourceprofile: imperative.IProfileLoaded
         ): Promise<zosfiles.IZosFilesResponse>;
     }
 

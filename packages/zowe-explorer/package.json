@@ -144,12 +144,6 @@
         "command": "zowe.manualPoll",
         "key": "f5",
         "when": "editorIsOpen && resourceScheme == zosspool"
-      },
-      {
-        "command": "zowe.ds.copyDataSetsCrossLpar",
-        "key": "ctrl+c",
-        "mac": "cmd+c",
-        "when": "focusedView == zowe.ds.explorer"
       }
     ],
     "commands": [
@@ -280,11 +274,6 @@
       {
         "command": "zowe.ds.copyDataSets",
         "title": "%copyFile%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.ds.copyDataSetsCrossLpar",
-        "title": "%copyDataSetsCrossLpar%",
         "category": "Zowe Explorer"
       },
       {
@@ -1036,11 +1025,6 @@
           "group": "001_zowe_dsCreate@7"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*profile=zftp.*)(ds|member|pds).*/",
-          "command": "zowe.ds.copyDataSetsCrossLpar",
-          "group": "001_zowe_dsCreate@7"
-        },
-        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*profile=zftp.*)(session|pds).*/ && !listMultiSelection",
           "command": "zowe.ds.pasteDataSets",
           "group": "001_zowe_dsCreate@8"
@@ -1375,10 +1359,6 @@
         },
         {
           "command": "zowe.ds.copyDataSets",
-          "when": "never"
-        },
-        {
-          "command": "zowe.ds.copyDataSetsCrossLpar",
           "when": "never"
         },
         {

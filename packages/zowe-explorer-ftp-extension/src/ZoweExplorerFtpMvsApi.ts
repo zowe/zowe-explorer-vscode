@@ -307,8 +307,7 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
         toDataSetName: string,
         toMemberName: string,
         options: zosfiles.ICrossLparCopyDatasetOptions,
-        sourceOptions: zosfiles.IGetOptions,
-        targetProfile: imperative.IProfileLoaded
+        sourceprofile: imperative.IProfileLoaded
     ): Promise<zosfiles.IZosFilesResponse> {
         throw new ZoweFtpExtensionError("Copy dataset cross lpar is not supported in ftp extension.");
     }

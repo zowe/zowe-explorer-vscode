@@ -98,7 +98,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
 
     private async crossLparMove(sourceNode: IZoweUSSTreeNode, sourceUri: vscode.Uri, destUri: vscode.Uri, recursiveCall?: boolean): Promise<void> {
         const destinationInfo = FsAbstractUtils.getInfoForUri(destUri, Profiles.getInstance());
-
+        console.log("This is destinationInfo", destinationInfo);
         if (SharedContext.isUssDirectory(sourceNode)) {
             if (!UssFSProvider.instance.exists(destUri)) {
                 // create directory on remote FS

@@ -139,6 +139,5 @@
   "pdsSearchFor": "Search PDS Members",
   "filteredDataSetsSearchFor": "Search Filtered Data Sets",
   "copyExternalLink": "Copy External Link",
-  "zowe.history.deprecationMsg": "Changes made here will not be reflected in Zowe Explorer, use right-click Edit History option to access information from local storage.",
-  "copyDataSetsCrossLpar": "Copy Cross Lpar"
+  "zowe.history.deprecationMsg": "Changes made here will not be reflected in Zowe Explorer, use right-click Edit History option to access information from local storage."
 }

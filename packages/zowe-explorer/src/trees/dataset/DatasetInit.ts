@@ -138,17 +138,12 @@ export class DatasetInit {
             )
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.copyDataSetsCrossLpar", async (node, nodeList) =>
-                DatasetActions.copyDataSetsCrossLpar(node, nodeList, datasetProvider)
-            )
-        );
-        context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.pasteDataSets", async (node: ZoweDatasetNode) => {
                 if (!node) {
                     node = datasetProvider.getTreeView().selection[0] as ZoweDatasetNode;
                 }
-                await DatasetActions.pasteDataSetMembers(datasetProvider, node);
-                await DatasetActions.refreshDataset(node.getParent() as IZoweDatasetTreeNode, datasetProvider);
+                await DatasetActions.pasteDataSet(datasetProvider, node);
+                // await DatasetActions.refreshDataset(node.getParent() as IZoweDatasetTreeNode, datasetProvider);
             })
         );
         context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.renameDataSetMember", (node) => datasetProvider.rename(node)));

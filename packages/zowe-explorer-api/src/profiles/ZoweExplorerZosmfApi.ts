@@ -49,12 +49,12 @@ export namespace ZoweExplorerZosmf {
         }
 
         public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
-                try {
-                    this.session = this._getSession(profile || this.profile);
-                } catch (error) {
-                    // todo: initialize and use logging
-                    imperative.Logger.getAppLogger().error(error as string);
-                }
+            try {
+                this.session = this._getSession(profile || this.profile);
+            } catch (error) {
+                // todo: initialize and use logging
+                imperative.Logger.getAppLogger().error(error as string);
+            }
             return ProfilesCache.getProfileSessionWithVscProxy(this.session);
         }
 
@@ -394,12 +394,15 @@ export namespace ZoweExplorerZosmf {
             toDataSetName: string,
             toMemberName: string,
             options: zosfiles.ICrossLparCopyDatasetOptions,
-            sourceOptions: zosfiles.IGetOptions,
-            targetProfile: imperative.IProfileLoaded
+            sourceprofile: imperative.IProfileLoaded
         ): Promise<zosfiles.IZosFilesResponse> {
-            const sourceSession = this.getSession();
-            const targetSession = this.getSession(targetProfile);
-            return zosfiles.Copy.dataSetCrossLPAR(sourceSession, { dsn: toDataSetName, member: toMemberName }, options, sourceOptions, targetSession);
+            return zosfiles.Copy.dataSetCrossLPAR(
+                this.getSession(sourceprofile),
+                { dsn: toDataSetName, member: toMemberName },
+                options,
+                { volume: undefined },
+                this.getSession()
+            );
         }
     }
 

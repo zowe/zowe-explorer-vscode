@@ -13,7 +13,6 @@ import * as vscode from "vscode";
 import { DS_EXTENSION_MAP, Types } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../configuration/Constants";
 import { ZoweLogger } from "../../tools/ZoweLogger";
-
 export class DatasetUtils {
     public static readonly DATASET_SORT_OPTS = [
         `$(case-sensitive) ${vscode.l10n.t("Name (default)")}`,
@@ -34,12 +33,12 @@ export class DatasetUtils {
         return { profileName: node.getParent().getLabel() as string, dataSetName: node.label as string };
     }
 
-    public static getNodeLabels(node: Types.IZoweNodeType): {
+    public static async getNodeLabels(node: Types.IZoweNodeType): Promise<{
         memberName: string;
         contextValue: string;
         profileName: string;
         dataSetName: string;
-    } {
+    }> {
         ZoweLogger.trace("dataset.utils.getNodeLabels called.");
         if (node.contextValue.includes(Constants.DS_MEMBER_CONTEXT)) {
             return {
@@ -47,10 +46,27 @@ export class DatasetUtils {
                 memberName: node.getLabel() as string,
                 contextValue: node.contextValue,
             };
+        } else if (node.contextValue.includes(Constants.DS_PDS_CONTEXT)) {
+            const children = await node.getChildren();
+            for (const item of children) {
+                return {
+                    profileName: node.getParent().label as string,
+                    dataSetName: node.label as string,
+                    memberName: item.getLabel() as string,
+                    contextValue: node.contextValue,
+                };
+            }
+            // return children.map((item) => ({
+            //     profileName: node.getParent().label as string,
+            //     dataSetName: node.label as string,
+            //     memberName: item.getLabel() as string,
+            //     contextValue: node.contextValue,
+            // }));
         } else {
             return { ...DatasetUtils.getProfileAndDataSetName(node), memberName: undefined, contextValue: node.contextValue };
         }
     }
+
     public static validateDataSetName(dsName: string): boolean {
         ZoweLogger.trace("dataset.utils.validateDataSetName called.");
         if (dsName.length > Constants.MAX_DATASET_LENGTH) {

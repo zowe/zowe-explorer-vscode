@@ -67,6 +67,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public dragMimeTypes: string[] = ["application/vnd.code.tree.zowe.ds.explorer"];
     public dropMimeTypes: string[] = ["application/vnd.code.tree.zowe.ds.explorer"];
 
+    private draggedNodes: Record<string, IZoweDatasetTreeNode> = {};
+
     public constructor() {
         super(
             DatasetTree.persistenceSchema,
@@ -83,11 +85,41 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         this.mSessionNodes = [this.mFavoriteSession];
         this.treeView = Gui.createTreeView<IZoweDatasetTreeNode>("zowe.ds.explorer", {
             treeDataProvider: this,
+            dragAndDropController: this,
             canSelectMany: true,
         });
         // eslint-disable-next-line @typescript-eslint/unbound-method
         this.treeView.onDidCollapseElement(TreeViewUtils.refreshIconOnCollapse([SharedContext.isPds, SharedContext.isDsSession], this));
     }
+
+    public handleDrag(
+        source: readonly IZoweDatasetTreeNode[],
+        dataTransfer: vscode.DataTransfer,
+        token: vscode.CancellationToken
+    ): Thenable<void> | void {
+        const items = [];
+        for (const srcItem of source) {
+            this.draggedNodes[srcItem.resourceUri.path] = srcItem;
+            items.push({
+                label: srcItem.label,
+                uri: srcItem.resourceUri,
+            });
+        }
+        dataTransfer.set("application/vnd.code.tree.zowe.ds.explorer", new vscode.DataTransferItem(items));
+    }
+
+    // private async crossLparMove(sourceNode: IZoweDatasetTreeNode, sourceUri: vscode.Uri, destUri: vscode.Uri, recursiveCall?: boolean): Promise<void> {
+    //     const destinationInfo = FsAbstractUtils.getInfoForUri(destUri, Profiles.getInstance());
+
+    //     if(SharedContext.isPds(sourceNode)) {
+    //         if(!DatasetFSProvider.instance.exists(destUri)){
+    //             //create PDS on remote FS
+    //             try {
+    //                 await
+    //             }
+    //         }
+    //     }
+    // }
 
     /**
      * Rename data set
