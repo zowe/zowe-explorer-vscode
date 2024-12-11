@@ -71,8 +71,8 @@ export class USSInit {
                         });
                         statusMsg2.dispose();
                     }
-                    statusMsg.dispose();
                 }
+                statusMsg.dispose();
             })
         );
         context.subscriptions.push(
