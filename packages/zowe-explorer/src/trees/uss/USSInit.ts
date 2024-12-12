@@ -55,7 +55,7 @@ export class USSInit {
             vscode.commands.registerCommand("zowe.uss.refreshUSS", async (node, nodeList) => {
                 const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Pulling from Mainframe...")}`);
                 let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
-                selectedNodes = selectedNodes.filter((x) => SharedContext.isDocument(x));
+                selectedNodes = selectedNodes.filter((x) => SharedContext.isDocument(x) || SharedContext.isBinary(node));
                 for (const item of selectedNodes) {
                     if (SharedContext.isUssDirectory(item)) {
                         // just refresh item to grab latest files
