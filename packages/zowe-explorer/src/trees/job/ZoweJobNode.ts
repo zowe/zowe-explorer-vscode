@@ -314,18 +314,36 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         return this.session ? this : this.getParent()?.getSessionNode() ?? this;
     }
 
+    /**
+     * Get the encoding from the JobFSProvider encoding map for a URI
+     * @param {string} uriPath The URI to look up in the encoding map
+     * @returns {ZosEncoding}
+     */
     public getEncodingInMap(uriPath: string): ZosEncoding {
         return JobFSProvider.instance.encodingMap[uriPath];
     }
 
+    /**
+     * Update the encoding for a URI in the JobFSProvider encoding map
+     * @param {string} uriPath The URI to update in the encoding map
+     * @param {ZosEncoding} encoding The encoding to associate with the URI
+     */
     public updateEncodingInMap(uriPath: string, encoding: ZosEncoding): void {
         JobFSProvider.instance.encodingMap[uriPath] = encoding;
     }
 
+    /**
+     * Get the encoding for a particular Job node
+     * @returns {ZosEncoding}
+     */
     public getEncoding(): ZosEncoding {
         return JobFSProvider.instance.getEncodingForFile(this.resourceUri);
     }
 
+    /**
+     * Update the encoding for a particular Job node
+     * @param {ZosEncoding} encoding The encoding to use for the Job node
+     */
     public setEncoding(encoding: ZosEncoding): void {
         ZoweLogger.trace("ZoweJobNode.setEncoding called.");
         if (!this.contextValue.startsWith(Constants.JOBS_SPOOL_CONTEXT)) {
