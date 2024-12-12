@@ -842,6 +842,10 @@ export class Disposable {
      * @param callOnDispose Function that disposes something.
      */
     constructor() {}
+    /**
+     * Dispose this object.
+     */
+    public dispose(): any {}
 }
 
 export function RelativePattern(base: string, pattern: string) {
