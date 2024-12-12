@@ -12,14 +12,7 @@
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { Gui, imperative, IZoweJobTreeNode, ProfilesCache, Validation, Poller, ZosEncoding } from "@zowe/zowe-explorer-api";
-import {
-    createIJobFile,
-    createIJobObject,
-    createJobFavoritesNode,
-    createJobNode,
-    createJobSessionNode,
-    MockJobDetail,
-} from "../../../__mocks__/mockCreators/jobs";
+import { createIJobFile, createIJobObject, createJobFavoritesNode, createJobSessionNode, MockJobDetail } from "../../../__mocks__/mockCreators/jobs";
 import {
     createIProfile,
     createISession,
