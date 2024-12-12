@@ -539,7 +539,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
                     // Add document name to recently-opened files
                     ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
-                    ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
 
                     updateOpenFiles(ussFileProvider, documentFilePath, this);
                     await initializeFileOpening(this, documentFilePath, shouldPreview);
