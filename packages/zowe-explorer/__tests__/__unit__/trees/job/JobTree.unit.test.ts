@@ -11,8 +11,15 @@
 
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
-import { Gui, imperative, IZoweJobTreeNode, ProfilesCache, Validation, Poller } from "@zowe/zowe-explorer-api";
-import { createIJobFile, createIJobObject, createJobFavoritesNode, createJobSessionNode, MockJobDetail } from "../../../__mocks__/mockCreators/jobs";
+import { Gui, imperative, IZoweJobTreeNode, ProfilesCache, Validation, Poller, ZosEncoding } from "@zowe/zowe-explorer-api";
+import {
+    createIJobFile,
+    createIJobObject,
+    createJobFavoritesNode,
+    createJobNode,
+    createJobSessionNode,
+    MockJobDetail,
+} from "../../../__mocks__/mockCreators/jobs";
 import {
     createIProfile,
     createISession,
@@ -1165,5 +1172,149 @@ describe("ZosJobsProvider Unit Test - Filter Jobs", () => {
         await testTree.filterJobsDialog(node1);
         expect(filterJobsSpy).toHaveBeenCalled();
         expect(filterJobsSpy).toHaveBeenCalledWith(node1);
+    });
+});
+
+describe("openWithEncoding", () => {
+    beforeEach(async () => {
+        await createGlobalMocks();
+        jest.restoreAllMocks();
+    });
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+    it("should open a Job Spool file with an encoding (binary, prompted)", async () => {
+        const testTree = new JobTree();
+
+        const spoolNode = new ZoweSpoolNode({ label: "SPOOL", collapsibleState: vscode.TreeItemCollapsibleState.None, spool: createIJobFile() });
+
+        const encoding: ZosEncoding = { kind: "binary" };
+
+        const promptMock = jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue(encoding);
+        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+        const fetchSpoolAtUriMock = jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation();
+        const setEncodingSpy = jest.spyOn(spoolNode, "setEncoding").mockImplementation();
+
+        await testTree.openWithEncoding(spoolNode);
+        expect(promptMock).toHaveBeenCalledWith(spoolNode);
+        expect(promptMock).toHaveBeenCalledTimes(1);
+        expect(setEncodingSpy).toHaveBeenCalledWith(encoding);
+        expect(fetchSpoolAtUriMock).toHaveBeenCalledTimes(1);
+        expect(executeCommandMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("should open a Job Spool file with an encoding (binary, provided)", async () => {
+        const testTree = new JobTree();
+
+        const spoolNode = new ZoweSpoolNode({ label: "SPOOL", collapsibleState: vscode.TreeItemCollapsibleState.None, spool: createIJobFile() });
+
+        const encoding: ZosEncoding = { kind: "binary" };
+
+        const promptMock = jest.spyOn(SharedUtils, "promptForEncoding");
+        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+        const setEncodingSpy = jest.spyOn(spoolNode, "setEncoding").mockImplementation();
+        const fetchSpoolAtUriMock = jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation();
+
+        await testTree.openWithEncoding(spoolNode, encoding);
+        expect(promptMock).toHaveBeenCalledTimes(0);
+        expect(setEncodingSpy).toHaveBeenCalledWith(encoding);
+        expect(fetchSpoolAtUriMock).toHaveBeenCalledTimes(1);
+        expect(executeCommandMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("should open a Job Spool file with an encoding (ascii, prompted)", async () => {
+        const testTree = new JobTree();
+
+        const spoolNode = new ZoweSpoolNode({ label: "SPOOL", collapsibleState: vscode.TreeItemCollapsibleState.None, spool: createIJobFile() });
+
+        const encoding: ZosEncoding = { kind: "text" };
+
+        const promptMock = jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue(encoding);
+        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+        const fetchSpoolAtUriMock = jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation();
+        const setEncodingSpy = jest.spyOn(spoolNode, "setEncoding").mockImplementation();
+
+        await testTree.openWithEncoding(spoolNode);
+        expect(promptMock).toHaveBeenCalledWith(spoolNode);
+        expect(promptMock).toHaveBeenCalledTimes(1);
+        expect(setEncodingSpy).toHaveBeenCalledWith(encoding);
+        expect(fetchSpoolAtUriMock).toHaveBeenCalledTimes(1);
+        expect(executeCommandMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("should open a Job Spool file with an encoding (ascii, provided)", async () => {
+        const testTree = new JobTree();
+
+        const spoolNode = new ZoweSpoolNode({ label: "SPOOL", collapsibleState: vscode.TreeItemCollapsibleState.None, spool: createIJobFile() });
+
+        const encoding: ZosEncoding = { kind: "text" };
+
+        const promptMock = jest.spyOn(SharedUtils, "promptForEncoding");
+        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+        const setEncodingSpy = jest.spyOn(spoolNode, "setEncoding").mockImplementation();
+        const fetchSpoolAtUriMock = jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation();
+
+        await testTree.openWithEncoding(spoolNode, encoding);
+        expect(promptMock).toHaveBeenCalledTimes(0);
+        expect(setEncodingSpy).toHaveBeenCalledWith(encoding);
+        expect(fetchSpoolAtUriMock).toHaveBeenCalledTimes(1);
+        expect(executeCommandMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("should open a Job Spool file with an encoding (other, prompted)", async () => {
+        const testTree = new JobTree();
+
+        const spoolNode = new ZoweSpoolNode({ label: "SPOOL", collapsibleState: vscode.TreeItemCollapsibleState.None, spool: createIJobFile() });
+
+        const encoding: ZosEncoding = { kind: "other", codepage: "IBM-1147" };
+
+        const promptMock = jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue(encoding);
+        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+        const fetchSpoolAtUriMock = jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation();
+        const setEncodingSpy = jest.spyOn(spoolNode, "setEncoding").mockImplementation();
+
+        await testTree.openWithEncoding(spoolNode);
+        expect(promptMock).toHaveBeenCalledWith(spoolNode);
+        expect(promptMock).toHaveBeenCalledTimes(1);
+        expect(setEncodingSpy).toHaveBeenCalledWith(encoding);
+        expect(fetchSpoolAtUriMock).toHaveBeenCalledTimes(1);
+        expect(executeCommandMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("should open a Job Spool file with an encoding (other, provided)", async () => {
+        const testTree = new JobTree();
+
+        const spoolNode = new ZoweSpoolNode({ label: "SPOOL", collapsibleState: vscode.TreeItemCollapsibleState.None, spool: createIJobFile() });
+
+        const encoding: ZosEncoding = { kind: "other", codepage: "IBM-1147" };
+
+        const promptMock = jest.spyOn(SharedUtils, "promptForEncoding");
+        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+        const setEncodingSpy = jest.spyOn(spoolNode, "setEncoding").mockImplementation();
+        const fetchSpoolAtUriMock = jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation();
+
+        await testTree.openWithEncoding(spoolNode, encoding);
+        expect(promptMock).toHaveBeenCalledTimes(0);
+        expect(setEncodingSpy).toHaveBeenCalledWith(encoding);
+        expect(fetchSpoolAtUriMock).toHaveBeenCalledTimes(1);
+        expect(executeCommandMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("should open a Job Spool file with an encoding (undefined, prompted)", async () => {
+        const testTree = new JobTree();
+
+        const spoolNode = new ZoweSpoolNode({ label: "SPOOL", collapsibleState: vscode.TreeItemCollapsibleState.None, spool: createIJobFile() });
+
+        const promptMock = jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue(undefined);
+        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+        const fetchSpoolAtUriMock = jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation();
+        const setEncodingSpy = jest.spyOn(spoolNode, "setEncoding").mockImplementation();
+
+        await testTree.openWithEncoding(spoolNode);
+        expect(promptMock).toHaveBeenCalledWith(spoolNode);
+        expect(promptMock).toHaveBeenCalledTimes(1);
+        expect(setEncodingSpy).toHaveBeenCalledTimes(0);
+        expect(fetchSpoolAtUriMock).toHaveBeenCalledTimes(0);
+        expect(executeCommandMock).toHaveBeenCalledTimes(0);
     });
 });
