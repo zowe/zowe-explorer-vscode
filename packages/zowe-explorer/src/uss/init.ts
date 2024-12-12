@@ -66,7 +66,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
         vscode.commands.registerCommand("zowe.uss.refreshUSS", async (node, nodeList) => {
             const statusMsg = Gui.setStatusBarMessage(localize("uss.refreshUSS", "$(sync~spin) Pulling from Mainframe..."));
             let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
-            selectedNodes = selectedNodes.filter((x) => contextuals.isDocument(x));
+            selectedNodes = selectedNodes.filter((x) => contextuals.isDocument(x) || contextuals.isBinary(x));
             for (const item of selectedNodes) {
                 await item.refreshUSS();
             }
