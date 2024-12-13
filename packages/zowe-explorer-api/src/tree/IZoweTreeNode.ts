@@ -507,22 +507,31 @@ export interface IZoweJobTreeNode extends IZoweTreeNode {
     /**
      * Sets the encoding of the job node
      *
-     * @returns {void}
+     * @returns {void | PromiseLike<void>}
      */
-    setEncoding?(encoding: ZosEncoding): void;
+    setEncoding?(encoding: ZosEncoding): void | PromiseLike<void>;
 
     /**
      * Gets the encoding of the job node
      *
-     * @returns {ZosEncoding}
+     * @returns {ZosEncoding | PromiseLike<ZosEncoding>}
      */
-    getEncoding?(): ZosEncoding;
+    getEncoding?(): ZosEncoding | PromiseLike<ZosEncoding>;
 
     /**
      * Gets the encoding of a job node given a path
      *
-     * @param {string} uriPath the basepath of the node
-     * @returns {ZosEncoding}
+     * @param {string} uriPath the path of the node
+     * @returns {ZosEncoding | PromiseLike<ZosEncoding>}
      */
     getEncodingInMap?(uriPath: string): ZosEncoding | PromiseLike<ZosEncoding>;
+
+    /**
+     * Updates the encoding of a job node given a path
+     *
+     * @param {string} uriPath the path of the node
+     * @param {ZosEncoding} encoding the encoding to apply
+     * @returns {void | PromiseLike<void>}
+     */
+    updateEncodingInMap?(uriPath: string, encoding: ZosEncoding): void | PromiseLike<void>;
 }
