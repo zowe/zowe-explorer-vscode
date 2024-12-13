@@ -143,7 +143,7 @@ export class SharedUtils {
     public static async getCachedEncoding(node: IZoweTreeNode): Promise<string | undefined> {
         let cachedEncoding: ZosEncoding;
         if (SharedUtils.isZoweUSSTreeNode(node)) {
-            cachedEncoding = await node.getEncodingInMap(node.fullPath);
+            cachedEncoding = await node.getEncodingInMap(node.resourceUri.path);
         } else {
             cachedEncoding = await (node as IZoweDatasetTreeNode).getEncodingInMap(node.resourceUri.path);
         }
