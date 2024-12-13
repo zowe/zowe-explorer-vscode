@@ -507,7 +507,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             profile: blockMocks.profile,
             parentNode: sessionNode,
         });
-        DatasetFSProvider.instance.encodingMap["TEST.PS"] = { kind: "text" };
+        DatasetFSProvider.instance.encodingMap[node.resourceUri.path] = { kind: "text" };
         blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
         await SharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
