@@ -35,7 +35,6 @@ import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { JobInit } from "../../../../src/trees/job/JobInit";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
-import * as path from "path";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -913,10 +912,10 @@ describe("ZoweJobNode unit tests - Function setEncoding", () => {
             parentNode: testParentNode,
         });
         const updateEncodingSpy = jest.spyOn(testNode, "updateEncodingInMap").mockImplementation();
-        const basename = path.posix.basename(testNode.resourceUri.path);
+        const nodePath = testNode.resourceUri.path;
 
         testNode.dirty = false;
-        JobFSProvider.instance.encodingMap[basename] = { kind: "text" };
+        JobFSProvider.instance.encodingMap[nodePath] = { kind: "text" };
         existsSpy.mockReturnValueOnce(true);
 
         let e: Error;
@@ -930,7 +929,7 @@ describe("ZoweJobNode unit tests - Function setEncoding", () => {
         expect(existsSpy).toHaveBeenCalledWith(testNode.resourceUri);
         expect(setEncodingForFileSpy).toHaveBeenCalledWith(testNode.resourceUri, null);
         expect(updateEncodingSpy).not.toHaveBeenCalled();
-        expect(JobFSProvider.instance.encodingMap[basename]).not.toBeDefined();
+        expect(JobFSProvider.instance.encodingMap[nodePath]).not.toBeDefined();
         expect(testNode.dirty).toEqual(true);
     });
 
@@ -942,7 +941,7 @@ describe("ZoweJobNode unit tests - Function setEncoding", () => {
             spool: createIJobFile(),
             parentNode: testParentNode,
         });
-        const basename = path.posix.basename(testNode.resourceUri.path);
+        const nodePath = testNode.resourceUri.path;
         const updateEncodingSpy = jest.spyOn(testNode, "updateEncodingInMap").mockImplementation();
 
         testNode.dirty = false;
@@ -958,7 +957,7 @@ describe("ZoweJobNode unit tests - Function setEncoding", () => {
         expect(e).not.toBeDefined();
         expect(existsSpy).toHaveBeenCalledWith(testNode.resourceUri);
         expect(setEncodingForFileSpy).toHaveBeenCalledWith(testNode.resourceUri, { kind: "binary" });
-        expect(updateEncodingSpy).toHaveBeenCalledWith(basename, { kind: "binary" });
+        expect(updateEncodingSpy).toHaveBeenCalledWith(nodePath, { kind: "binary" });
         expect(testNode.dirty).toEqual(true);
     });
 });

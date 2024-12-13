@@ -29,7 +29,6 @@ import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProv
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { createIJobFile, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
-import * as path from "path";
 
 function createGlobalMocks() {
     const newMocks = {
@@ -556,7 +555,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             spool: createIJobFile(),
             parentNode: jobNode,
         });
-        JobFSProvider.instance.encodingMap[path.posix.basename(spoolNode.resourceUri.path)] = { kind: "text" };
+        JobFSProvider.instance.encodingMap[spoolNode.resourceUri.path] = { kind: "text" };
         blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
         await SharedUtils.promptForEncoding(spoolNode);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
@@ -695,7 +694,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             const encodingMapSpy = jest.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(node);
 
-            expect(encodingMapSpy).toHaveBeenCalledWith(path.posix.basename(node.resourceUri.path));
+            expect(encodingMapSpy).toHaveBeenCalledWith(node.resourceUri.path);
             expect(response).toEqual(encoding.kind);
         });
 
@@ -721,7 +720,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             const encodingMapSpy = jest.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(node);
 
-            expect(encodingMapSpy).toHaveBeenCalledWith(path.posix.basename(node.resourceUri.path));
+            expect(encodingMapSpy).toHaveBeenCalledWith(node.resourceUri.path);
             expect(response).toEqual(encoding.kind);
         });
 
@@ -747,7 +746,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             const encodingMapSpy = jest.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(node);
 
-            expect(encodingMapSpy).toHaveBeenCalledWith(path.posix.basename(node.resourceUri.path));
+            expect(encodingMapSpy).toHaveBeenCalledWith(node.resourceUri.path);
             expect(response).toEqual(encoding.codepage);
         });
 
@@ -773,7 +772,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             const encodingMapSpy = jest.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(node);
 
-            expect(encodingMapSpy).toHaveBeenCalledWith(path.posix.basename(node.resourceUri.path));
+            expect(encodingMapSpy).toHaveBeenCalledWith(node.resourceUri.path);
             expect(response).toEqual(encoding);
         });
     });

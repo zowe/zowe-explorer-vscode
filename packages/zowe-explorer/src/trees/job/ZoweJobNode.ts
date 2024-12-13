@@ -356,11 +356,10 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             throw new Error(`Cannot set encoding for non-existent node`);
         }
 
-        const fullPath = path.posix.basename(this.resourceUri.path);
         if (encoding != null) {
-            this.updateEncodingInMap(fullPath, encoding);
+            this.updateEncodingInMap(this.resourceUri.path, encoding);
         } else {
-            delete JobFSProvider.instance.encodingMap[fullPath];
+            delete JobFSProvider.instance.encodingMap[this.resourceUri.path];
         }
 
         this.dirty = true;
