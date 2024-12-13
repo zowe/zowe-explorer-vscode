@@ -271,9 +271,18 @@ describe("Workspace Utils Unit Tests - function handleAutoSaveOnError", () => {
         );
     });
 
-    it("reactivates Auto Save if 'Enable Auto Save' clicked", async () => {
+    it("does nothing if 'Enable Auto Save' clicked and Auto Save is already on", async () => {
         const blockMocks = getBlockMocks(true, "Enable Auto Save");
         await workspaceUtils.handleAutoSaveOnError();
+        expect(blockMocks.executeCommand).toHaveBeenCalledWith("workbench.action.toggleAutoSave");
+        expect(blockMocks.executeCommand).toHaveBeenCalledTimes(1);
+    });
+
+    it("reactivates Auto Save if 'Enable Auto Save' clicked", async () => {
+        const blockMocks = getBlockMocks(true, "Enable Auto Save");
+        blockMocks.getDirectValue.mockReturnValueOnce("off");
+        await workspaceUtils.handleAutoSaveOnError();
+        expect(blockMocks.executeCommand).toHaveBeenCalledTimes(2);
         expect(blockMocks.executeCommand).toHaveBeenCalledWith("workbench.action.toggleAutoSave");
     });
 });
