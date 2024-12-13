@@ -517,4 +517,12 @@ export interface IZoweJobTreeNode extends IZoweTreeNode {
      * @returns {ZosEncoding}
      */
     getEncoding?(): ZosEncoding;
+
+    /**
+     * Gets the encoding of a job node given a path
+     *
+     * @param {string} uriPath the basepath of the node
+     * @returns {ZosEncoding}
+     */
+    getEncodingInMap?(uriPath: string): ZosEncoding | PromiseLike<ZosEncoding>;
 }

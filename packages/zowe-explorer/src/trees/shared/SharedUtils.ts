@@ -144,6 +144,8 @@ export class SharedUtils {
         let cachedEncoding: ZosEncoding;
         if (SharedUtils.isZoweUSSTreeNode(node)) {
             cachedEncoding = await node.getEncodingInMap(node.fullPath);
+        } else if (SharedUtils.isZoweJobTreeNode(node)) {
+            cachedEncoding = await node.getEncodingInMap(path.posix.basename(node.resourceUri.path));
         } else {
             const isMemberNode = node.contextValue.startsWith(Constants.DS_MEMBER_CONTEXT);
             const dsKey = isMemberNode ? `${node.getParent().label as string}(${node.label as string})` : (node.label as string);
