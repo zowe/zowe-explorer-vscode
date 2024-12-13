@@ -145,9 +145,7 @@ export class SharedUtils {
         if (SharedUtils.isZoweUSSTreeNode(node)) {
             cachedEncoding = await node.getEncodingInMap(node.fullPath);
         } else {
-            const isMemberNode = node.contextValue.startsWith(Constants.DS_MEMBER_CONTEXT);
-            const dsKey = isMemberNode ? `${node.getParent().label as string}(${node.label as string})` : (node.label as string);
-            cachedEncoding = await (node as IZoweDatasetTreeNode).getEncodingInMap(dsKey);
+            cachedEncoding = await (node as IZoweDatasetTreeNode).getEncodingInMap(node.resourceUri.path);
         }
         return cachedEncoding?.kind === "other" ? cachedEncoding.codepage : cachedEncoding?.kind;
     }
