@@ -11,6 +11,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added support for extenders to obtain an updated Session that will includes VS Code proxy settings values if set, `getProfileSessionWithVscProxy`. [#3010](https://github.com/zowe/zowe-explorer-vscode/issues/3010)
 - Added support for VS Code proxy settings with zosmf profile types. [#3010](https://github.com/zowe/zowe-explorer-vscode/issues/3010)
 - Added optional `getLocalStorage` function to the `IApiExplorerExtender` interface to expose local storage access to Zowe Explorer extenders. [#3180](https://github.com/zowe/zowe-explorer-vscode/issues/3180)
+- Added optional `setEncoding`, `getEncoding`, and `getEncodingInMap` functions to the `IZoweJobTreeNode` interface. [#3361](https://github.com/zowe/zowe-explorer-vscode/pull/3361)
 
 ### Bug fixes
 
