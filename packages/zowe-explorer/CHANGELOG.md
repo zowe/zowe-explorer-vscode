@@ -19,6 +19,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
 - Fixed an issue where clicking on a file in the Unix System Services tree caused the tree to abruptly change focus to the selected item. [#2486](https://github.com/zowe/zowe-explorer-vscode/issues/2486)
 - Fixed an issue where binary USS files were not fetched using the "Pull from Mainframe" context menu option. [#3355](https://github.com/zowe/zowe-explorer-vscode/issues/3355)
+- Fixed an issue with Auto Save where a failed UNIX file or data set save operation caused an infinite loop of save requests. [#2406](https://github.com/zowe/zowe-explorer-vscode/issues/2406), [#2627](https://github.com/zowe/zowe-explorer-vscode/issues/2627)
 
 ## `2.18.0`
 

@@ -16,6 +16,17 @@ import {
     workspaceUtilFileSaveInterval,
     workspaceUtilFileSaveMaxIterationCount,
 } from "../config/constants";
+import { SettingsConfig } from "./SettingsConfig";
+import { Gui } from "@zowe/zowe-explorer-api";
+
+// Set up localization
+import * as nls from "vscode-nls";
+import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
+nls.config({
+    messageFormat: nls.MessageFormat.bundle,
+    bundleFormat: nls.BundleFormat.standalone,
+})();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 interface IExtTextEditor extends vscode.TextEditor {
     id: string;
@@ -142,4 +153,44 @@ export async function markDocumentUnsaved(document: vscode.TextDocument): Promis
     const edits2 = new vscode.WorkspaceEdit();
     edits2.delete(document.uri, new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 1)));
     await vscode.workspace.applyEdit(edits2);
+}
+
+/**
+ * Call in the event of a save error. This function checks if `Auto Save` is enabled:
+ * - If enabled, it is toggled off to prevent an error loop and an error message is shown to inform the user.
+ * - If disabled, the function returns.
+ *
+ * The user can either dismiss the message or click the "Enable Auto Save" button to reactivate the `Auto Save` feature.
+ */
+export async function handleAutoSaveOnError(): Promise<void> {
+    // If auto save is disabled, return. Otherwise, toggle it off
+    if (SettingsConfig.getDirectValue("files.autoSave") === "off") {
+        return;
+    }
+    await vscode.commands.executeCommand("workbench.action.toggleAutoSave");
+
+    // Mark remaining documents in queue as unsaved and clear the queue
+    await ZoweSaveQueue.markAllUnsaved();
+
+    // Inform the user that `Auto Save` was disabled and offer a button to re-enable it
+    Gui.errorMessage(
+        localize(
+            "zowe.autoSaveToggled",
+            "Zowe Explorer encountered a save error and has disabled Auto Save. Once the issue is addressed, enable Auto Save and try again."
+        ),
+        {
+            items: [localize("zowe.enableAutoSave", "Enable Auto Save")],
+        }
+    ).then(async (value) => {
+        if (!value) {
+            // User dismissed the message
+            return;
+        }
+
+        // Toggle auto save back on IFF it wasn't already reactivated
+        // (the prompt can be answered or dismissed at any point after its shown)
+        if (SettingsConfig.getDirectValue("files.autoSave") === "off") {
+            await vscode.commands.executeCommand("workbench.action.toggleAutoSave");
+        }
+    });
 }

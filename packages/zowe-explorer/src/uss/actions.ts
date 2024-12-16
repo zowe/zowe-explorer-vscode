@@ -21,7 +21,7 @@ import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
 import * as contextually from "../shared/context";
-import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
+import { handleAutoSaveOnError, markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { refreshAll } from "../shared/refresh";
 import { autoDetectEncoding, fileExistsCaseSensitiveSync } from "./utils";
@@ -319,6 +319,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
             LocalFileManagement.removeRecoveredFile(doc);
             // this part never runs! zowe.Upload.fileToUSSFile doesn't return success: false, it just throws the error which is caught below!!!!!
         } else {
+            await handleAutoSaveOnError();
             await markDocumentUnsaved(doc);
             Gui.errorMessage(uploadResponse.commandResponse);
         }
@@ -328,6 +329,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         if (errorMessage.includes("Rest API failure with HTTP(S) status 412")) {
             resolveFileConflict(node, prof, doc, remote);
         } else {
+            await handleAutoSaveOnError();
             await markDocumentUnsaved(doc);
             await errorHandling(err, sesName);
         }

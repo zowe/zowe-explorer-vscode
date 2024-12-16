@@ -12,7 +12,7 @@
 import * as path from "path";
 import * as vscode from "vscode";
 import { Gui, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
-import { markDocumentUnsaved } from "../utils/workspace";
+import { handleAutoSaveOnError, markDocumentUnsaved } from "../utils/workspace";
 import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
@@ -57,6 +57,20 @@ export class ZoweSaveQueue {
     private static savingQueue: SaveRequest[] = [];
 
     /**
+     * Marks all documents in the save queue as unsaved.
+     * @param clearQueue Whether to clear the queue after marking the documents as unsaved (default: `true`)
+     */
+    public static async markAllUnsaved(clearQueue: boolean = true): Promise<void> {
+        for (const { savedFile } of this.savingQueue) {
+            await markDocumentUnsaved(savedFile);
+        }
+
+        if (clearQueue) {
+            this.savingQueue = [];
+        }
+    }
+
+    /**
      * Iterate over the queue and process next item until it is empty.
      */
     private static async processNext(): Promise<void> {
@@ -71,6 +85,7 @@ export class ZoweSaveQueue {
         } catch (err) {
             ZoweLogger.error(err);
             await markDocumentUnsaved(nextRequest.savedFile);
+            await handleAutoSaveOnError();
             await Gui.errorMessage(
                 localize(
                     "processNext.error.uploadFailed",
