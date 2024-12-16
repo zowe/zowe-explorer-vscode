@@ -1205,6 +1205,11 @@
           "group": "000_zowe_jobsMainframeInteraction@3"
         },
         {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(spool.*)/",
+          "command": "zowe.openWithEncoding",
+          "group": "000_zowe_jobsMainframeInteraction@4"
+        },
+        {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)job.*/",
           "command": "zowe.jobs.refreshJob",
           "group": "000_zowe_jobsMainframeInteraction@0"
