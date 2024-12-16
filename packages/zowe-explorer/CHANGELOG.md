@@ -30,7 +30,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
 - Fixed an issue where listing data sets resulted in an error after opening a data set with an encoding. [#3347](https://github.com/zowe/zowe-explorer-vscode/issues/3347)
 - Fixed an issue where binary USS files were not fetched using the "Pull from Mainframe" context menu option. [#3355](https://github.com/zowe/zowe-explorer-vscode/issues/3355)
-- Fixed an issue where cached encoding was applied for all profiles with the same dataset or USS path in the "Open with Encoding" menu. [#3363](https://github.com/zowe/zowe-explorer-vscode/pull/3363)
+- Fixed an issue where cached encoding was applied for all profiles with the same data set or USS path in the "Open with Encoding" menu. [#3363](https://github.com/zowe/zowe-explorer-vscode/pull/3363)
 
 ## `3.0.3`
 
