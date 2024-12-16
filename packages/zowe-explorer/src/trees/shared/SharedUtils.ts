@@ -144,6 +144,8 @@ export class SharedUtils {
         let cachedEncoding: ZosEncoding;
         if (SharedUtils.isZoweUSSTreeNode(node)) {
             cachedEncoding = await node.getEncodingInMap(node.fullPath);
+        } else if (SharedUtils.isZoweJobTreeNode(node)) {
+            cachedEncoding = await node.getEncodingInMap(node.resourceUri.path);
         } else {
             const isMemberNode = node.contextValue.startsWith(Constants.DS_MEMBER_CONTEXT);
             const dsKey = isMemberNode ? `${node.getParent().label as string}(${node.label as string})` : (node.label as string);
@@ -190,7 +192,10 @@ export class SharedUtils {
             .filter(Boolean);
     }
 
-    public static async promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, taggedEncoding?: string): Promise<ZosEncoding | undefined> {
+    public static async promptForEncoding(
+        node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode,
+        taggedEncoding?: string
+    ): Promise<ZosEncoding | undefined> {
         const ebcdicItem: vscode.QuickPickItem = {
             label: vscode.l10n.t("EBCDIC"),
             description: vscode.l10n.t("z/OS default codepage"),

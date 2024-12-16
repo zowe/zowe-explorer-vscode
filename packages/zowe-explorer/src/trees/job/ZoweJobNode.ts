@@ -12,7 +12,16 @@
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as path from "path";
-import { FsJobsUtils, imperative, IZoweJobTreeNode, Sorting, ZoweExplorerApiType, ZoweScheme, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import {
+    FsJobsUtils,
+    imperative,
+    IZoweJobTreeNode,
+    Sorting,
+    ZosEncoding,
+    ZoweExplorerApiType,
+    ZoweScheme,
+    ZoweTreeNode,
+} from "@zowe/zowe-explorer-api";
 import { JobFSProvider } from "./JobFSProvider";
 import { JobUtils } from "./JobUtils";
 import { Constants } from "../../configuration/Constants";
@@ -303,6 +312,57 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
     public getSessionNode(): IZoweJobTreeNode {
         ZoweLogger.trace("ZoweJobNode.getSessionNode called.");
         return this.session ? this : this.getParent()?.getSessionNode() ?? this;
+    }
+
+    /**
+     * Get the encoding from the JobFSProvider encoding map for a URI
+     * @param {string} uriPath The URI to look up in the encoding map
+     * @returns {ZosEncoding}
+     */
+    public getEncodingInMap(uriPath: string): ZosEncoding {
+        return JobFSProvider.instance.encodingMap[uriPath];
+    }
+
+    /**
+     * Update the encoding for a URI in the JobFSProvider encoding map
+     * @param {string} uriPath The URI to update in the encoding map
+     * @param {ZosEncoding} encoding The encoding to associate with the URI
+     */
+    public updateEncodingInMap(uriPath: string, encoding: ZosEncoding): void {
+        JobFSProvider.instance.encodingMap[uriPath] = encoding;
+    }
+
+    /**
+     * Get the encoding for a particular Job node
+     * @returns {ZosEncoding}
+     */
+    public getEncoding(): ZosEncoding {
+        return JobFSProvider.instance.getEncodingForFile(this.resourceUri);
+    }
+
+    /**
+     * Update the encoding for a particular Job node
+     * @param {ZosEncoding} encoding The encoding to use for the Job node
+     */
+    public setEncoding(encoding: ZosEncoding): void {
+        ZoweLogger.trace("ZoweJobNode.setEncoding called.");
+        if (!this.contextValue.startsWith(Constants.JOBS_SPOOL_CONTEXT)) {
+            throw new Error(`Cannot set encoding for node with context ${this.contextValue}`);
+        }
+
+        if (JobFSProvider.instance.exists(this.resourceUri)) {
+            JobFSProvider.instance.setEncodingForFile(this.resourceUri, encoding);
+        } else {
+            throw new Error(`Cannot set encoding for non-existent node`);
+        }
+
+        if (encoding != null) {
+            this.updateEncodingInMap(this.resourceUri.path, encoding);
+        } else {
+            delete JobFSProvider.instance.encodingMap[this.resourceUri.path];
+        }
+
+        this.dirty = true;
     }
 
     public set owner(newOwner: string) {

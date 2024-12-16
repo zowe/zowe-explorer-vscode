@@ -26,8 +26,9 @@ import {
     FsJobsUtils,
     FsAbstractUtils,
     ZoweExplorerApiType,
+    ZosEncoding,
 } from "@zowe/zowe-explorer-api";
-import { IJob, IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
+import { IDownloadSpoolContentParms, IJob, IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { SharedContext } from "../shared/SharedContext";
@@ -35,11 +36,14 @@ import { AuthUtils } from "../../utils/AuthUtils";
 
 export class JobFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: JobFSProvider;
+
     private constructor() {
         super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.Jobs, this.onDidChangeFile);
         this.root = new DirEntry("");
     }
+
+    public encodingMap: Record<string, ZosEncoding> = {};
 
     public static get instance(): JobFSProvider {
         if (!JobFSProvider._instance) {
@@ -205,10 +209,19 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const jesApi = ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile);
         try {
             if (jesApi.downloadSingleSpool) {
-                await jesApi.downloadSingleSpool({
+                const spoolDownloadObject: IDownloadSpoolContentParms = {
                     jobFile: spoolEntry.spool,
                     stream: bufBuilder,
-                });
+                };
+
+                // Handle encoding and binary options
+                if (spoolEntry.encoding) {
+                    spoolDownloadObject.binary = spoolEntry.encoding.kind === "binary";
+                    if (spoolEntry.encoding.kind === "other") {
+                        spoolDownloadObject.encoding = spoolEntry.encoding.codepage;
+                    }
+                }
+                await jesApi.downloadSingleSpool(spoolDownloadObject);
             } else {
                 const jobEntry = this._lookupParentDirectory(uri) as JobEntry;
                 bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id));
