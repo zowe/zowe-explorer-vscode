@@ -299,9 +299,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
         UssFSProvider.instance.setEncodingForFile(this.resourceUri, encoding);
         if (encoding != null) {
-            this.updateEncodingInMap(this.fullPath, encoding);
+            this.updateEncodingInMap(this.resourceUri.path, encoding);
         } else {
-            delete UssFSProvider.instance.encodingMap[this.fullPath];
+            delete UssFSProvider.instance.encodingMap[this.resourceUri.path];
         }
         if (this.getParent() && this.getParent().contextValue === Constants.FAV_PROFILE_CONTEXT) {
             this.contextValue =

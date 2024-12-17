@@ -18,6 +18,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Allow extenders to add context menu actions to a top level node, i.e. data sets, USS, Jobs, by encoding the profile type in the context value. [#3309](https://github.com/zowe/zowe-explorer-vscode/pull/3309)
 - You can now add multiple partitioned data sets or USS directories to your workspace at once using the "Add to Workspace" feature. [#3324](https://github.com/zowe/zowe-explorer-vscode/issues/3324)
 - Exposed read and write access to local storage keys for Zowe Explorer extenders. [#3180](https://github.com/zowe/zowe-explorer-vscode/issues/3180)
+- Added `Open with Encoding` to the context menu of Job Spool files. [#1941](https://github.com/zowe/zowe-explorer-vscode/issues/1941)
 
 ### Bug fixes
 
@@ -30,6 +31,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where a recalled PDS is expandable after it is migrated through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
 - Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
 - Fixed an issue where listing data sets resulted in an error after opening a data set with an encoding. [#3347](https://github.com/zowe/zowe-explorer-vscode/issues/3347)
+- Fixed an issue where binary USS files were not fetched using the "Pull from Mainframe" context menu option. [#3355](https://github.com/zowe/zowe-explorer-vscode/issues/3355)
+- Fixed an issue where cached encoding was applied for all profiles with the same data set or USS path in the "Open with Encoding" menu. [#3363](https://github.com/zowe/zowe-explorer-vscode/pull/3363)
 
 ## `3.0.3`
 

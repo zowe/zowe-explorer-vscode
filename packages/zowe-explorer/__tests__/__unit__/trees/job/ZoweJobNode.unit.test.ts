@@ -13,7 +13,7 @@ jest.mock("@zowe/zos-jobs-for-zowe-sdk");
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
-import { createIJobFile, createIJobObject, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
+import { createIJobFile, createIJobObject, createJobNode, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { imperative, IZoweJobTreeNode, ProfilesCache, Gui, Sorting } from "@zowe/zowe-explorer-api";
 import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
 import {
@@ -34,6 +34,7 @@ import { ZoweJobNode, ZoweSpoolNode } from "../../../../src/trees/job/ZoweJobNod
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { JobInit } from "../../../../src/trees/job/JobInit";
+import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -810,6 +811,154 @@ describe("ZoweJobNode unit tests - Function saveSearch", () => {
 
         globalMocks.testJobsProvider.saveSearch(favJob);
         expect(expectedJob.contextValue).toEqual(favJob.contextValue);
+    });
+});
+
+describe("ZoweJobNode unit tests - Function getEncodingInMap", () => {
+    it("should get the encoding in the map", async () => {
+        const globalMocks = await createGlobalMocks();
+        JobFSProvider.instance.encodingMap["fakePath"] = { kind: "text" };
+        const encoding = globalMocks.testJobNode.getEncodingInMap("fakePath");
+        expect(encoding).toEqual({ kind: "text" });
+    });
+});
+
+describe("ZoweJobNode unit tests - Function updateEncodingInMap", () => {
+    it("should update the encoding in the map", async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.testJobNode.updateEncodingInMap("fakePath", { kind: "binary" });
+        expect(JobFSProvider.instance.encodingMap["fakePath"]).toEqual({ kind: "binary" });
+    });
+});
+
+describe("ZoweJobNode unit tests - Function getEncoding", () => {
+    it("should update the encoding of the node", () => {
+        const testNode = createJobNode(createJobSessionNode(createISession(), createIProfile()), createIProfile());
+        const getEncodingForFileSpy = jest
+            .spyOn(JobFSProvider.instance, "getEncodingForFile")
+            .mockReturnValue({ kind: "other", codepage: "IBM-1147" });
+        const encoding = testNode.getEncoding();
+        expect(getEncodingForFileSpy).toHaveBeenCalledTimes(1);
+        expect(getEncodingForFileSpy).toHaveBeenCalledWith(testNode.resourceUri);
+        expect(encoding).toEqual({ kind: "other", codepage: "IBM-1147" });
+    });
+});
+
+describe("ZoweJobNode unit tests - Function setEncoding", () => {
+    const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace").mockImplementation();
+    const setEncodingForFileSpy = jest.spyOn(JobFSProvider.instance, "setEncodingForFile").mockImplementation();
+    const existsSpy = jest.spyOn(JobFSProvider.instance, "exists");
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        JobFSProvider.instance.encodingMap = {};
+    });
+
+    afterAll(() => {
+        zoweLoggerTraceSpy.mockRestore();
+        setEncodingForFileSpy.mockRestore();
+        existsSpy.mockRestore();
+    });
+
+    it("should error if set encoding is called on a non-spool node", () => {
+        const testNode = createJobNode(createJobSessionNode(createISession(), createIProfile()), createIProfile());
+        const updateEncodingSpy = jest.spyOn(testNode, "updateEncodingInMap");
+
+        testNode.dirty = false;
+
+        let e: Error;
+        try {
+            testNode.setEncoding({ kind: "text" });
+        } catch (err) {
+            e = err;
+        }
+
+        expect(e).toBeDefined();
+        expect(e.message).toEqual("Cannot set encoding for node with context job");
+        expect(existsSpy).not.toHaveBeenCalled();
+        expect(setEncodingForFileSpy).not.toHaveBeenCalled();
+        expect(updateEncodingSpy).not.toHaveBeenCalled();
+        expect(testNode.dirty).toEqual(false);
+    });
+
+    it("should error if the resource does not exist", () => {
+        const testNode = new ZoweSpoolNode({ label: "SPOOL", collapsibleState: vscode.TreeItemCollapsibleState.None, spool: createIJobFile() });
+        const updateEncodingSpy = jest.spyOn(testNode, "updateEncodingInMap");
+        testNode.dirty = false;
+
+        existsSpy.mockReturnValueOnce(false);
+
+        let e: Error;
+        try {
+            testNode.setEncoding({ kind: "text" });
+        } catch (err) {
+            e = err;
+        }
+
+        expect(e).toBeDefined();
+        expect(e.message).toEqual("Cannot set encoding for non-existent node");
+        expect(existsSpy).toHaveBeenCalledWith(testNode.resourceUri);
+        expect(setEncodingForFileSpy).not.toHaveBeenCalled();
+        expect(updateEncodingSpy).not.toHaveBeenCalled();
+        expect(testNode.dirty).toEqual(false);
+    });
+
+    it("should delete a null encoding from the provider", () => {
+        const testParentNode = createJobNode(createJobSessionNode(createISession(), createIProfile()), createIProfile());
+        const testNode = new ZoweSpoolNode({
+            label: "SPOOL",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            spool: createIJobFile(),
+            parentNode: testParentNode,
+        });
+        const updateEncodingSpy = jest.spyOn(testNode, "updateEncodingInMap").mockImplementation();
+        const nodePath = testNode.resourceUri.path;
+
+        testNode.dirty = false;
+        JobFSProvider.instance.encodingMap[nodePath] = { kind: "text" };
+        existsSpy.mockReturnValueOnce(true);
+
+        let e: Error;
+        try {
+            testNode.setEncoding(null);
+        } catch (err) {
+            e = err;
+        }
+
+        expect(e).not.toBeDefined();
+        expect(existsSpy).toHaveBeenCalledWith(testNode.resourceUri);
+        expect(setEncodingForFileSpy).toHaveBeenCalledWith(testNode.resourceUri, null);
+        expect(updateEncodingSpy).not.toHaveBeenCalled();
+        expect(JobFSProvider.instance.encodingMap[nodePath]).not.toBeDefined();
+        expect(testNode.dirty).toEqual(true);
+    });
+
+    it("should update the encoding in the provider map", () => {
+        const testParentNode = createJobNode(createJobSessionNode(createISession(), createIProfile()), createIProfile());
+        const testNode = new ZoweSpoolNode({
+            label: "SPOOL",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            spool: createIJobFile(),
+            parentNode: testParentNode,
+        });
+        const nodePath = testNode.resourceUri.path;
+        const updateEncodingSpy = jest.spyOn(testNode, "updateEncodingInMap").mockImplementation();
+
+        testNode.dirty = false;
+        existsSpy.mockReturnValueOnce(true);
+
+        let e: Error;
+        try {
+            testNode.setEncoding({ kind: "binary" });
+        } catch (err) {
+            e = err;
+        }
+
+        expect(e).not.toBeDefined();
+        expect(existsSpy).toHaveBeenCalledWith(testNode.resourceUri);
+        expect(setEncodingForFileSpy).toHaveBeenCalledWith(testNode.resourceUri, { kind: "binary" });
+        expect(updateEncodingSpy).toHaveBeenCalledWith(nodePath, { kind: "binary" });
+        expect(testNode.dirty).toEqual(true);
     });
 });
 
