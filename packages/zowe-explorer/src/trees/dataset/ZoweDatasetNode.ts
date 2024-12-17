@@ -715,11 +715,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         } else {
             DatasetFSProvider.instance.makeEmptyDsWithEncoding(this.resourceUri, encoding);
         }
-        const fullPath = isMemberNode ? `${this.getParent().label as string}(${this.label as string})` : (this.label as string);
         if (encoding != null) {
-            this.updateEncodingInMap(fullPath, encoding);
+            this.updateEncodingInMap(this.resourceUri.path, encoding);
         } else {
-            delete DatasetFSProvider.instance.encodingMap[fullPath];
+            delete DatasetFSProvider.instance.encodingMap[this.resourceUri.path];
         }
         if (this.getParent() && this.getParent().contextValue === Constants.FAV_PROFILE_CONTEXT) {
             this.contextValue += Constants.FAV_SUFFIX;

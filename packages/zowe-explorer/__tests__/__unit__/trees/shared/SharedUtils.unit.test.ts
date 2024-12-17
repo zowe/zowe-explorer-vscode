@@ -509,7 +509,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             profile: blockMocks.profile,
             parentNode: sessionNode,
         });
-        DatasetFSProvider.instance.encodingMap["TEST.PS"] = { kind: "text" };
+        DatasetFSProvider.instance.encodingMap[node.resourceUri?.path] = { kind: "text" };
         blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
         await SharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
@@ -555,7 +555,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             spool: createIJobFile(),
             parentNode: jobNode,
         });
-        JobFSProvider.instance.encodingMap[spoolNode.resourceUri.path] = { kind: "text" };
+        JobFSProvider.instance.encodingMap[spoolNode.resourceUri?.path] = { kind: "text" };
         blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
         await SharedUtils.promptForEncoding(spoolNode);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
@@ -694,7 +694,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             const encodingMapSpy = jest.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(node);
 
-            expect(encodingMapSpy).toHaveBeenCalledWith(node.resourceUri.path);
+            expect(encodingMapSpy).toHaveBeenCalledWith(node.resourceUri?.path);
             expect(response).toEqual(encoding.kind);
         });
 
@@ -720,7 +720,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             const encodingMapSpy = jest.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(node);
 
-            expect(encodingMapSpy).toHaveBeenCalledWith(node.resourceUri.path);
+            expect(encodingMapSpy).toHaveBeenCalledWith(node.resourceUri?.path);
             expect(response).toEqual(encoding.kind);
         });
 
@@ -746,7 +746,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             const encodingMapSpy = jest.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(node);
 
-            expect(encodingMapSpy).toHaveBeenCalledWith(node.resourceUri.path);
+            expect(encodingMapSpy).toHaveBeenCalledWith(node.resourceUri?.path);
             expect(response).toEqual(encoding.codepage);
         });
 
@@ -772,7 +772,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             const encodingMapSpy = jest.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(node);
 
-            expect(encodingMapSpy).toHaveBeenCalledWith(node.resourceUri.path);
+            expect(encodingMapSpy).toHaveBeenCalledWith(node.resourceUri?.path);
             expect(response).toEqual(encoding);
         });
     });
@@ -793,7 +793,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             const encodingMapSpy = jest.spyOn(ussNode, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(ussNode);
 
-            expect(encodingMapSpy).toHaveBeenCalledWith(ussNode.fullPath);
+            expect(encodingMapSpy).toHaveBeenCalledWith(ussNode.resourceUri?.path);
             expect(response).toEqual(encoding.kind);
         });
 
@@ -812,7 +812,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             const encodingMapSpy = jest.spyOn(ussNode, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(ussNode);
 
-            expect(encodingMapSpy).toHaveBeenCalledWith(ussNode.fullPath);
+            expect(encodingMapSpy).toHaveBeenCalledWith(ussNode.resourceUri?.path);
             expect(response).toEqual(encoding.kind);
         });
 
@@ -831,7 +831,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             const encodingMapSpy = jest.spyOn(ussNode, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(ussNode);
 
-            expect(encodingMapSpy).toHaveBeenCalledWith(ussNode.fullPath);
+            expect(encodingMapSpy).toHaveBeenCalledWith(ussNode.resourceUri?.path);
             expect(response).toEqual(encoding.codepage);
         });
 
@@ -850,7 +850,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             const encodingMapSpy = jest.spyOn(ussNode, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(ussNode);
 
-            expect(encodingMapSpy).toHaveBeenCalledWith(ussNode.fullPath);
+            expect(encodingMapSpy).toHaveBeenCalledWith(ussNode.resourceUri?.path);
             expect(response).toEqual(encoding);
         });
     });
@@ -872,7 +872,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 const encodingMapSpy = jest.spyOn(dsNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(dsNode);
 
-                expect(encodingMapSpy).toHaveBeenCalledWith(dsNode.label);
+                expect(encodingMapSpy).toHaveBeenCalledWith(dsNode.resourceUri?.path);
                 expect(response).toEqual(encoding.kind);
             });
 
@@ -891,7 +891,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 const encodingMapSpy = jest.spyOn(dsNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(dsNode);
 
-                expect(encodingMapSpy).toHaveBeenCalledWith(dsNode.label);
+                expect(encodingMapSpy).toHaveBeenCalledWith(dsNode.resourceUri?.path);
                 expect(response).toEqual(encoding.kind);
             });
 
@@ -910,7 +910,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 const encodingMapSpy = jest.spyOn(dsNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(dsNode);
 
-                expect(encodingMapSpy).toHaveBeenCalledWith(dsNode.label);
+                expect(encodingMapSpy).toHaveBeenCalledWith(dsNode.resourceUri?.path);
                 expect(response).toEqual(encoding.codepage);
             });
 
@@ -929,7 +929,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 const encodingMapSpy = jest.spyOn(dsNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(dsNode);
 
-                expect(encodingMapSpy).toHaveBeenCalledWith(dsNode.label);
+                expect(encodingMapSpy).toHaveBeenCalledWith(dsNode.resourceUri?.path);
                 expect(response).toEqual(encoding);
             });
         });
@@ -958,7 +958,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 const encodingMapSpy = jest.spyOn(memNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(memNode);
 
-                expect(encodingMapSpy).toHaveBeenCalledWith(`${dsNode.label as string}(${memNode.label as string})`);
+                expect(encodingMapSpy).toHaveBeenCalledWith(memNode.resourceUri?.path);
                 expect(response).toEqual(encoding.kind);
             });
 
@@ -985,7 +985,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 const encodingMapSpy = jest.spyOn(memNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(memNode);
 
-                expect(encodingMapSpy).toHaveBeenCalledWith(`${dsNode.label as string}(${memNode.label as string})`);
+                expect(encodingMapSpy).toHaveBeenCalledWith(memNode.resourceUri?.path);
                 expect(response).toEqual(encoding.kind);
             });
 
@@ -1012,7 +1012,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 const encodingMapSpy = jest.spyOn(memNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(memNode);
 
-                expect(encodingMapSpy).toHaveBeenCalledWith(`${dsNode.label as string}(${memNode.label as string})`);
+                expect(encodingMapSpy).toHaveBeenCalledWith(memNode.resourceUri?.path);
                 expect(response).toEqual(encoding.codepage);
             });
 
@@ -1039,7 +1039,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 const encodingMapSpy = jest.spyOn(memNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(memNode);
 
-                expect(encodingMapSpy).toHaveBeenCalledWith(`${dsNode.label as string}(${memNode.label as string})`);
+                expect(encodingMapSpy).toHaveBeenCalledWith(memNode.resourceUri?.path);
                 expect(response).toEqual(encoding);
             });
         });

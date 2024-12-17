@@ -143,13 +143,11 @@ export class SharedUtils {
     public static async getCachedEncoding(node: IZoweTreeNode): Promise<string | undefined> {
         let cachedEncoding: ZosEncoding;
         if (SharedUtils.isZoweUSSTreeNode(node)) {
-            cachedEncoding = await node.getEncodingInMap(node.fullPath);
+            cachedEncoding = await node.getEncodingInMap(node.resourceUri.path);
         } else if (SharedUtils.isZoweJobTreeNode(node)) {
             cachedEncoding = await node.getEncodingInMap(node.resourceUri.path);
         } else {
-            const isMemberNode = node.contextValue.startsWith(Constants.DS_MEMBER_CONTEXT);
-            const dsKey = isMemberNode ? `${node.getParent().label as string}(${node.label as string})` : (node.label as string);
-            cachedEncoding = await (node as IZoweDatasetTreeNode).getEncodingInMap(dsKey);
+            cachedEncoding = await (node as IZoweDatasetTreeNode).getEncodingInMap(node.resourceUri.path);
         }
         return cachedEncoding?.kind === "other" ? cachedEncoding.codepage : cachedEncoding?.kind;
     }
