@@ -227,7 +227,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                 bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id));
             }
         } catch (err) {
-            await AuthUtils.promptForAuthOnError(err, spoolEntry.metadata.profile);
+            await AuthUtils.lockProfileOnAuthError(err, spoolEntry.metadata.profile);
             throw err;
         }
 

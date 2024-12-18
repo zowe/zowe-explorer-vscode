@@ -24,7 +24,7 @@ interface ErrorContext {
 }
 
 export class AuthUtils {
-    public static async promptForAuthOnError(err: Error, profile: imperative.IProfileLoaded): Promise<void> {
+    public static async lockProfileOnAuthError(err: Error, profile: imperative.IProfileLoaded): Promise<void> {
         if (
             err instanceof imperative.ImperativeError &&
             profile != null &&
@@ -36,12 +36,12 @@ export class AuthUtils {
                     profileName: profile.name,
                 },
             });
-            await AuthHandler.promptForAuthentication(err, profile, {
+            await AuthHandler.lockProfile(profile, err, {
                 ssoLogin: Constants.PROFILES_CACHE.ssoLogin.bind(Constants.PROFILES_CACHE),
                 promptCredentials: Constants.PROFILES_CACHE.promptCredentials.bind(Constants.PROFILES_CACHE),
                 isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
                 errorCorrelation,
-            }).catch((error) => error instanceof Error && ZoweLogger.error(error.message));
+            });
         }
     }
 
