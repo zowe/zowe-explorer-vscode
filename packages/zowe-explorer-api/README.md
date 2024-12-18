@@ -7,7 +7,7 @@ Extensibility API for Zowe Explorer is a collection of APIs that can be used to 
 
 Extensibility API for Zowe Explorer is used by several open source Zowe Explorer extensions, including the [IBM z/OS FTP for Zowe Explorer](../zowe-explorer-ftp-extension) and [IBM CICS for Zowe Explorer](https://github.com/zowe/cics-for-zowe-client/tree/main/packages/vsce) VS Code extensions, as well as a several commercial extensions.
 
-Currently, the API is organized into modules that are exposed through the top-level `index.ts` file for convenient access.
+The API is organized into modules that are exposed through the top-level `index.ts` file for convenient access.
 
 - `/profiles`: Provides access to common Zowe CLI profile management APIs, as well as abstractions for providing alternative z/OS interactions that use protocols other than z/OSMF, based on alternative Zowe CLI profile types.
 - `/tree`: Provides abstractions for accessing and extending the Zowe Explorer VS Code tree views.
