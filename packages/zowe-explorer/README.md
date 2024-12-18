@@ -5,8 +5,6 @@
 [![codecov](https://codecov.io/gh/zowe/zowe-explorer-vscode/branch/main/graph/badge.svg)](https://codecov.io/gh/zowe/zowe-explorer-vscode)
 [![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
-> ## v3 Pre-release is now available in our [Github Releases](https://github.com/zowe/zowe-explorer-vscode/releases) with the removal of v1 profile support. Keep an eye on [changes affecting users and extenders](https://github.com/zowe/zowe-explorer-vscode/wiki/v3-Changes-for-Users-and-Extenders) for the full list of changes
-
 ## Introduction
 
 [Zowe Explorer](https://github.com/zowe/community#zowe-explorer) is a sub-project of Zowe, focusing on modernizing the mainframe experience. [Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
@@ -155,6 +153,8 @@ Your token has been successfully invalidated.
 - **Hide a profile**: You can hide a profile from the profile tree by right-clicking the profile and selecting the **Manage Profile** and then select **Hide Profile** option from the drop down menu. Finally, if the profile is in multiple trees, choose whether the to hide from all trees or just the tree the action was started in. To unhide the profile, click the **+** button and select the profile from the quick pick list.
 
 - **Open recent members**: Zowe Explorer lets you open a list of members you worked on earlier. You can access the list by pressing `Ctrl`+`Alt`+`R` (Windows) or `Command`+`Option`+`R` (Mac).
+
+- **Insert/overtype mode**: Visual Studio Code v1.96 introduced the ability to toggle between insert and overtype mode by pressing the `Insert` key. Overtype mode can be helpful when working with data sets and members with fixed record lengths.
 
 For the comprehensive Zowe Explorer documentation that also includes information about USS and Jobs interactions, see [the Zowe Explorer documentation](https://docs.zowe.org/stable/user-guide/ze-install.html) in Zowe Docs.
 
