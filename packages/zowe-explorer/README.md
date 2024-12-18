@@ -154,7 +154,7 @@ Your token has been successfully invalidated.
 
 - **Open recent members**: Zowe Explorer lets you open a list of members you worked on earlier. You can access the list by pressing `Ctrl`+`Alt`+`R` (Windows) or `Command`+`Option`+`R` (Mac).
 
-- **Insert/overtype mode**: Visual Studio Code v1.96 introduced the ability to toggle between insert and overtype mode by pressing the `Insert` key. Overtype mode can be helpful when working with data sets and members with fixed record lengths.
+- **Insert/overtype modes**: Visual Studio Code v1.96 introduced the ability to toggle between insert and overtype modes by pressing the `Insert` key. Overtype mode can be helpful when working with data sets and members with fixed record lengths.
 
 For the comprehensive Zowe Explorer documentation that also includes information about USS and Jobs interactions, see [the Zowe Explorer documentation](https://docs.zowe.org/stable/user-guide/ze-install.html) in Zowe Docs.
 
