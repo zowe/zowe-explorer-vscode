@@ -18,7 +18,7 @@ describe("ZoweTerminal Unit Tests", () => {
 
     it("should send the entered command to the callback function", async () => {
         const spyCb = jest.fn().mockImplementation(async (cmd: string) => Promise.resolve("test-output"));
-        const iTerm = new ZoweTerminal("test", spyCb, { history: ["old"] });
+        const iTerm = new ZoweTerminal("test", spyCb, { signal: { addEventListener: jest.fn() } } as any, { history: ["old"] });
         iTerm.open();
 
         await iTerm.handleInput("testABC");

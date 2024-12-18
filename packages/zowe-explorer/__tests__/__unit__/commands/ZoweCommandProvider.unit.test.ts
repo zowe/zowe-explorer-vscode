@@ -19,6 +19,8 @@ import { SharedContext } from "../../../src/trees/shared/SharedContext";
 import { createIJobFile } from "../../__mocks__/mockCreators/jobs";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
+import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
+import { Constants } from "../../../src/configuration/Constants";
 
 const globalMocks = {
     testSession: createISession(),
@@ -79,18 +81,20 @@ describe("ZoweCommandProvider Unit Tests", () => {
             });
             const profileStatus = { name: "test", status: "inactive" };
             jest.spyOn(Profiles.getInstance(), "checkCurrentProfile").mockResolvedValue(profileStatus);
-            const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
+            const profileInactive = jest.spyOn(Profiles.getInstance(), "showProfileInactiveMsg").mockImplementation();
             await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(profileStatus);
-            expect(errorHandlingSpy).toHaveBeenCalledWith(
-                "Profile Name " +
-                    globalMocks.testProfile.name +
-                    " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
-                { apiType: "cmd", profile: globalMocks.testProfile }
-            );
+            expect(profileInactive).toHaveBeenCalledWith(globalMocks.testProfile.name);
         });
     });
 
     describe("integrated terminals", () => {
+        beforeEach(() => {
+            // Simulate that the setting is enabled : )
+            jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation(
+                (setting) => setting === Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS
+            );
+        });
+
         describe("function issueCommand", () => {
             it("should create an integrated terminal", async () => {
                 const createTerminal = jest.fn().mockReturnValue({ show: jest.fn() });

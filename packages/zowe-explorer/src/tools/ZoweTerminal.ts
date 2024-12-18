@@ -19,45 +19,32 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         EMPTY_LINE: `${this.mTermX} `,
         CLEAR_ALL: "\x1b[2J\x1b[3J\x1b[;H",
         CLEAR_LINE: `\x1b[2K\r`,
-        CTRL_C: "\x03",
         END: "\x1b[F",
         HOME: "\x1b[H",
         CMD_LEFT: "\x01", // MacOS HOME
+        CTRL_C: "\x03",
+        CTRL_D: "\x04",
         CMD_RIGHT: "\x05", // MacOS END
+        CTRL_BACKSPACE: "\x08",
+        TAB: "\x09",
+        CMD_BACKSPACE: "\x15",
+        OPT_BACKSPACE: "\x17",
+        OPT_CMD_BACKSPACE: "\x1b\x7F",
+        BACKSPACE: "\x7f",
+        INSERT: "\x1b[2~",
         DEL: "\x1b[3~",
+        PAGE_UP: "\x1b[5~",
+        PAGE_DOWN: "\x1b[6~",
         ENTER: "\r",
         NEW_LINE: "\r\n",
         UP: "\x1b[A",
         DOWN: "\x1b[B",
         RIGHT: "\x1b[C",
         LEFT: "\x1b[D",
-        SHIFT: "\x1b[1;2",
-        ALT: "\x1b[1;3",
-        get SHIFT_UP() {
-            return this.SHIFT + "A";
+        hasModKey: (key: string): boolean => {
+            if (key.startsWith("\x1b[1;") || key.startsWith("\x1b[3;")) return true;
+            return false;
         },
-        get SHIFT_DOWN() {
-            return this.SHIFT + "B";
-        },
-        get SHIFT_RIGHT() {
-            return this.SHIFT + "C";
-        },
-        get SHIFT_LEFT() {
-            return this.SHIFT + "D";
-        },
-        get ALT_UP() {
-            return this.ALT + "A";
-        },
-        get ALT_DOWN() {
-            return this.ALT + "B";
-        },
-        get ALT_RIGHT() {
-            return this.ALT + "C";
-        },
-        get ALT_LEFT() {
-            return this.ALT + "D";
-        },
-        BACKSPACE: "\x7f",
     };
 
     public constructor(
@@ -74,6 +61,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.charArrayCmd = [];
         this.cursorPosition = this.charArrayCmd.length;
         this.formatCommandLine = options?.formatCommandLine ?? ((cmd: string) => `${ZoweTerminal.Keys.EMPTY_LINE}${cmd}`);
+        this.chalk = imperative.TextUtils.chalk;
     }
 
     private charArrayCmd: string[];
@@ -82,6 +70,8 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     protected mHistory: string[];
     private historyIndex: number;
     private isCommandRunning = false;
+    private pressedCtrlC = false;
+    private chalk;
 
     private writeEmitter = new vscode.EventEmitter<string>();
     protected write(text: string) {
@@ -100,6 +90,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     }
     protected refreshCmd() {
         this.command = this.sanitizeInput(this.command);
+        this.pressedCtrlC = false;
         if (!this.charArrayCmd.length || this.charArrayCmd.join("") !== this.command) {
             this.charArrayCmd = Array.from(this.command);
         }
@@ -117,7 +108,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     }
     protected clear() {
         this.write(ZoweTerminal.Keys.CLEAR_ALL);
-        this.writeLine(imperative.TextUtils.chalk.dim.italic(this.mMessage));
+        this.writeLine(this.chalk.dim.italic(this.mMessage));
     }
 
     protected command: string;
@@ -130,7 +121,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     public onDidClose?: vscode.Event<void> = this.closeEmitter.event;
 
     public open(_initialDimensions?: vscode.TerminalDimensions | undefined): void {
-        this.writeLine(imperative.TextUtils.chalk.dim.italic(this.mMessage));
+        this.writeLine(this.chalk.dim.italic(this.mMessage));
         if (this.command.length > 0) {
             this.handleInput(ZoweTerminal.Keys.ENTER);
         }
@@ -222,7 +213,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
             ]);
             this.isCommandRunning = false;
             if (output === null) {
-                this.writeLine(imperative.TextUtils.chalk.italic.red("Operation cancelled!"));
+                this.writeLine(this.chalk.italic.red("Operation cancelled!"));
             } else {
                 this.writeLine(output.trim().split("\n").join("\r\n"));
             }
@@ -234,16 +225,34 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
 
     // Handle input from the terminal
     public async handleInput(data: string): Promise<void> {
-        console.log(Buffer.from(data));
+        console.log("data", data, Buffer.from(data));
         if (this.isCommandRunning) {
-            if (data === ZoweTerminal.Keys.CTRL_C) this.controller.abort();
+            if ([ZoweTerminal.Keys.CTRL_C, ZoweTerminal.Keys.CTRL_D].includes(data)) this.controller.abort();
+            if (data === ZoweTerminal.Keys.CTRL_D) this.close();
+            else this.pressedCtrlC = true;
             return;
         }
+        if (ZoweTerminal.Keys.hasModKey(data)) return;
         switch (data) {
+            case ZoweTerminal.Keys.CTRL_C:
+                if (this.pressedCtrlC) this.close();
+                if (this.command.length > 0) {
+                    this.command = "";
+                    this.handleEnter();
+                } else {
+                    this.writeLine(this.chalk.italic("(To exit, press Ctrl+C again or Ctrl+D or type :exit)"));
+                    this.pressedCtrlC = true;
+                }
+                break;
+            case ZoweTerminal.Keys.CTRL_D:
+                this.close();
+                break;
             case ZoweTerminal.Keys.UP:
+            case ZoweTerminal.Keys.PAGE_UP:
                 this.navigateHistory(-1);
                 break;
             case ZoweTerminal.Keys.DOWN:
+            case ZoweTerminal.Keys.PAGE_DOWN:
                 this.navigateHistory(1);
                 break;
             case ZoweTerminal.Keys.LEFT:
@@ -264,19 +273,17 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                 this.deleteCharacter(0);
                 break;
             case ZoweTerminal.Keys.BACKSPACE:
+            case ZoweTerminal.Keys.CTRL_BACKSPACE:
+            case ZoweTerminal.Keys.CMD_BACKSPACE:
+            case ZoweTerminal.Keys.OPT_BACKSPACE:
+            case ZoweTerminal.Keys.OPT_CMD_BACKSPACE:
                 this.deleteCharacter(-1);
                 break;
             case ZoweTerminal.Keys.ENTER:
                 await this.handleEnter();
                 break;
-            case ZoweTerminal.Keys.SHIFT_UP:
-            case ZoweTerminal.Keys.SHIFT_DOWN:
-            case ZoweTerminal.Keys.SHIFT_RIGHT:
-            case ZoweTerminal.Keys.SHIFT_LEFT:
-            case ZoweTerminal.Keys.ALT_UP:
-            case ZoweTerminal.Keys.ALT_DOWN:
-            case ZoweTerminal.Keys.ALT_RIGHT:
-            case ZoweTerminal.Keys.ALT_LEFT:
+            case ZoweTerminal.Keys.TAB:
+            case ZoweTerminal.Keys.INSERT:
                 // Do nothing
                 break;
             default: {
@@ -284,7 +291,6 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                 this.command = charArray.slice(0, Math.max(0, this.cursorPosition)).join("") + data + charArray.slice(this.cursorPosition).join("");
                 this.charArrayCmd = Array.from(this.command);
                 this.cursorPosition = Math.min(this.charArrayCmd.length, this.cursorPosition + Array.from(data).length);
-
                 this.write(data);
                 this.refreshCmd();
             }

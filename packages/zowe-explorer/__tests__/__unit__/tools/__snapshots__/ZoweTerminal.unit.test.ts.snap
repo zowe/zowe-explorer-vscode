@@ -6,16 +6,30 @@ exports[`ZoweTerminal Unit Tests should not change the keys 1`] = `
   "CLEAR_ALL": "[2J[3J[;H",
   "CLEAR_LINE": "[2K
 ",
+  "CMD_BACKSPACE": "",
+  "CMD_LEFT": "",
+  "CMD_RIGHT": "",
+  "CTRL_BACKSPACE": "",
   "CTRL_C": "",
-  "DEL": "[P",
+  "CTRL_D": "",
+  "DEL": "[3~",
   "DOWN": "[B",
   "EMPTY_LINE": "> ",
+  "END": "[F",
   "ENTER": "
 ",
+  "HOME": "[H",
+  "INSERT": "[2~",
   "LEFT": "[D",
   "NEW_LINE": "
 ",
+  "OPT_BACKSPACE": "",
+  "OPT_CMD_BACKSPACE": "",
+  "PAGE_DOWN": "[6~",
+  "PAGE_UP": "[5~",
   "RIGHT": "[C",
+  "TAB": "	",
   "UP": "[A",
+  "hasModKey": [Function],
 }
 `;
