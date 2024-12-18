@@ -13,6 +13,7 @@ export const panelId: { [key: string]: string } = {
     ds: "ds-panel-view",
     uss: "uss-panel-view",
     jobs: "jobs-panel-view",
+    cmds: "cmds-panel-view",
 };
 
 export type DataPanelContextType = {
