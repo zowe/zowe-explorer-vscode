@@ -290,7 +290,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             if (err instanceof Error) {
                 ZoweLogger.error(err.message);
             }
-            AuthUtils.promptForAuthError(err, metadata.profile);
+            await AuthUtils.promptForAuthOnError(err, metadata.profile);
             return;
         }
 

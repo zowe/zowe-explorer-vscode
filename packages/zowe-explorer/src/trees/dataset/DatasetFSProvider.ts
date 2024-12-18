@@ -433,7 +433,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         } catch (error) {
             //Response will error if the file is not found
             //Callers of fetchDatasetAtUri() do not expect it to throw an error
-            AuthUtils.promptForAuthError(error, metadata.profile);
+            await AuthUtils.promptForAuthOnError(error, metadata.profile);
             return null;
         }
     }
