@@ -10,7 +10,7 @@
  */
 
 import { Gui } from "../globals";
-import { CorrelatedError } from "../utils";
+import { CorrelatedError, reloadWorkspacesForProfile } from "../utils";
 import * as imperative from "@zowe/imperative";
 import { DeferredPromise } from "../utils";
 import { IZoweTreeNode } from "../tree";
@@ -48,6 +48,8 @@ export class AuthHandler {
         if (deferred) {
             deferred.resolve();
             this.lockedProfiles.delete(profileName);
+            // reload virtual workspaces for the profile now that its usable
+            await reloadWorkspacesForProfile(profileName);
         }
     }
 

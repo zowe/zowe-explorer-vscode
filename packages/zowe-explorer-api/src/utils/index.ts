@@ -9,6 +9,7 @@
  *
  */
 
+import { ZoweScheme } from "../fs";
 import { IZoweTreeNode } from "../tree";
 import { workspace } from "vscode";
 
@@ -25,4 +26,15 @@ export * from "./FileManagement";
  */
 export function isNodeInEditor(node: IZoweTreeNode): boolean {
     return workspace.textDocuments.some(({ uri, isDirty }) => uri.path === node.resourceUri?.path && isDirty);
+}
+
+export async function reloadWorkspacesForProfile(profileName: string): Promise<void> {
+    const foldersWithProfile = (workspace.workspaceFolders ?? []).filter(
+        (f) => (f.uri.scheme === ZoweScheme.DS || f.uri.scheme === ZoweScheme.USS) && f.uri.path.startsWith(`/${profileName}/`)
+    );
+    for (const folder of foldersWithProfile) {
+        try {
+            await workspace.fs.stat(folder.uri.with({ query: "fetch=true" }));
+        } catch (err) {}
+    }
 }
