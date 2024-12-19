@@ -5,7 +5,7 @@
 
 Extensibility API for Zowe Explorer is a collection of APIs that can be used to extend the [Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode) VS Code extension with alternative z/OS interaction protocols and new capabilities.
 
-Extensibility API for Zowe Explorer is used by open source Zowe Explorer extensions, including the [IBM z/OS FTP for Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode/tree/main/packages/zowe-explorer-ftp-extension) and [IBM CICS for Zowe Explorer](https://github.com/zowe/cics-for-zowe-client/tree/main/packages/vsce) VS Code extensions, as well as several commercial extensions.
+The API is used by extenders of the Zowe Explorer VS Code extension, including the [IBM z/OS FTP for Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode/tree/main/packages/zowe-explorer-ftp-extension) and [IBM CICS for Zowe Explorer](https://github.com/zowe/cics-for-zowe-client/tree/main/packages/vsce) VS Code extensions, as well as several commercial extensions.
 
 The API is organized into modules that are exposed through the top-level `index.ts` file for convenient access.
 
@@ -51,4 +51,4 @@ See this [special extension document](https://github.com/zowe/zowe-explorer-vsco
 
 Extensibility API for Zowe Explorer is part of the [Zowe Explorer monorepo on Github](https://github.com/zowe/zowe-explorer-vscode). You find the sources there in the `/packages/zowe-explorer-api` sub-folder.
 
-To file issues, use the [Zowe Explorer issue list](https://github.com/zowe/zowe-explorer-vscode/issues).
+To submit a bug report or enhancement request, open an issue in the [Zowe Explorer repository](https://github.com/zowe/zowe-explorer-vscode/issues).
