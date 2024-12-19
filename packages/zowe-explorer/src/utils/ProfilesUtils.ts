@@ -452,6 +452,9 @@ export class ProfilesUtils {
                 args: [typeof profile === "string" ? profile : profile.name],
                 comment: ["Profile name"],
             });
+            if (typeof profile !== "string") {
+                await Constants.PROFILES_CACHE.updateCachedProfile(profile, node);
+            }
             ZoweLogger.info(successMsg);
             Gui.showMessage(successMsg);
         }

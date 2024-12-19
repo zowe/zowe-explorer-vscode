@@ -27,6 +27,7 @@ import {
     UriFsInfo,
     FileEntry,
     ZoweExplorerApiType,
+    AuthHandler,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -388,6 +389,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const metadata = dsEntry?.metadata ?? this._getInfoFromUri(uri);
         const profileEncoding = dsEntry?.encoding ? null : dsEntry?.metadata.profile.profile?.encoding;
         try {
+            await AuthHandler.waitIfLocked(metadata.profile);
+            await AuthHandler.lockProfile(metadata.profile);
             const resp = await ZoweExplorerApiRegister.getMvsApi(metadata.profile).getContents(metadata.dsName, {
                 binary: dsEntry?.encoding?.kind === "binary",
                 encoding: dsEntry?.encoding?.kind === "other" ? dsEntry?.encoding.codepage : profileEncoding,
@@ -395,6 +398,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 returnEtag: true,
                 stream: bufBuilder,
             });
+            AuthHandler.unlockProfile(metadata.profile);
             const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
             //if an entry does not exist for the dataset, create it
             if (!dsEntry) {
@@ -470,6 +474,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
         }
 
+        if (ds && ds.metadata?.profile == null) {
+            throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("Profile does not exist for this file."));
+        }
+
         // we need to fetch the contents from the mainframe if the file hasn't been accessed yet
         if (!ds || (!ds.wasAccessed && !urlQuery.has("inDiff")) || isConflict) {
             //try and fetch its contents from remote
@@ -486,12 +494,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         //not found on remote, throw error
         if (ds == null) {
             throw vscode.FileSystemError.FileNotFound(uri);
-        }
-
-        const profInfo = this._getInfoFromUri(uri);
-
-        if (profInfo.profile == null) {
-            throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("Profile does not exist for this file."));
         }
 
         return isConflict ? ds.conflictData.contents : ds.data;

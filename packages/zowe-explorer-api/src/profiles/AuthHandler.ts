@@ -10,10 +10,10 @@
  */
 
 import { Gui } from "../globals";
-import { CorrelatedError, reloadWorkspacesForProfile } from "../utils";
+import { CorrelatedError, DeferredPromise, reloadWorkspacesForProfile } from "../utils";
 import * as imperative from "@zowe/imperative";
-import { DeferredPromise } from "../utils";
-import { IZoweTreeNode } from "../tree";
+import { IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTree, IZoweTreeNode, IZoweUSSTreeNode } from "../tree";
+import { commands } from "vscode";
 
 export interface IAuthMethods {
     ssoLogin: (node?: IZoweTreeNode, profileName?: string) => PromiseLike<boolean>;
@@ -23,6 +23,10 @@ export interface IAuthMethods {
 export interface AuthPromptOpts extends IAuthMethods {
     isUsingTokenAuth?: boolean;
     errorCorrelation?: CorrelatedError;
+}
+
+export interface LockProfileOpts extends AuthPromptOpts {
+    waitAfterLock?: boolean;
 }
 
 type ProfileLike = string | imperative.IProfileLoaded;
@@ -35,7 +39,7 @@ export class AuthHandler {
      * @param {string[]} baseSecureProfileProps Base profile's secure properties (optional)
      * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not
      */
-    public static async isUsingTokenAuth(secureProfileProps: string[], baseSecureProfileProps?: string[]): Promise<boolean> {
+    public static isUsingTokenAuth(secureProfileProps: string[], baseSecureProfileProps?: string[]): boolean {
         const profileUsesBasicAuth = secureProfileProps.includes("user") && secureProfileProps.includes("password");
         if (secureProfileProps.includes("tokenValue")) {
             return secureProfileProps.includes("tokenValue") && !profileUsesBasicAuth;
@@ -43,13 +47,14 @@ export class AuthHandler {
         return baseSecureProfileProps?.includes("tokenValue") && !profileUsesBasicAuth;
     }
 
-    public static async unlockProfile(profileName: string) {
+    public static unlockProfile(profile: ProfileLike): void {
+        const profileName = typeof profile === "string" ? profile : profile.name;
         const deferred = this.lockedProfiles.get(profileName);
         if (deferred) {
             deferred.resolve();
             this.lockedProfiles.delete(profileName);
             // reload virtual workspaces for the profile now that its usable
-            await reloadWorkspacesForProfile(profileName);
+            reloadWorkspacesForProfile(profileName);
         }
     }
 
@@ -89,14 +94,28 @@ export class AuthHandler {
         });
 
         if (creds != null) {
-            // New creds were provided, unlock profile
+            // New creds were provided
+            // Propagate new creds to other profiles
+            const treeProviders = (await commands.executeCommand("zowe.getTreeProviders")) as any;
+            const dsNode = (await (treeProviders.ds as IZoweTree<IZoweDatasetTreeNode>).getChildren()).find((n) => n.label === profileName);
+            if (dsNode && typeof profile !== "string") {
+                dsNode.setProfileToChoice(profile);
+            }
+            const ussNode = (await (treeProviders.uss as IZoweTree<IZoweUSSTreeNode>).getChildren()).find((n) => n.label === profileName);
+            if (ussNode && typeof profile !== "string") {
+                ussNode.setProfileToChoice(profile);
+            }
+            const jobsNode = (await (treeProviders.job as IZoweTree<IZoweJobTreeNode>).getChildren()).find((n) => n.label === profileName);
+            if (jobsNode && typeof profile !== "string") {
+                jobsNode.setProfileToChoice(profile);
+            }
             AuthHandler.unlockProfile(profileName);
             return true;
         }
         return false;
     }
 
-    public static async lockProfile(profile: ProfileLike, imperativeError: imperative.ImperativeError, opts: AuthPromptOpts): Promise<void> {
+    public static async lockProfile(profile: ProfileLike, imperativeError?: imperative.ImperativeError, opts?: LockProfileOpts): Promise<void> {
         const profileName = typeof profile === "string" ? profile : profile.name;
         if (this.lockedProfiles.has(profileName)) {
             return this.lockedProfiles.get(profileName)!.promise;
@@ -105,18 +124,22 @@ export class AuthHandler {
         this.lockedProfiles.set(profileName, deferred);
 
         // Prompt the user to re-authenticate
-        const credsEntered = await AuthHandler.promptForAuthentication(imperativeError, profile, opts);
+        if (imperativeError && opts) {
+            const credsEntered = await AuthHandler.promptForAuthentication(imperativeError, profile, opts);
 
-        // If the user failed to re-authenticate, reject the promise
-        // TODO: more manual testing
-        if (!credsEntered) {
-            deferred.reject();
+            // If the user failed to re-authenticate, reject the promise
+            // TODO: more manual testing
+            if (!credsEntered) {
+                deferred.reject();
+            }
         }
 
-        return deferred.promise;
+        if (opts?.waitAfterLock) {
+            return deferred.promise;
+        }
     }
 
-    public static async isLocked(profile: ProfileLike) {
+    public static isLocked(profile: ProfileLike): boolean {
         return this.lockedProfiles.has(typeof profile === "string" ? profile : profile.name);
     }
 

@@ -36,12 +36,23 @@ export class AuthUtils {
                     profileName: profile.name,
                 },
             });
-            await AuthHandler.lockProfile(profile, err, {
-                ssoLogin: Constants.PROFILES_CACHE.ssoLogin.bind(Constants.PROFILES_CACHE),
-                promptCredentials: Constants.PROFILES_CACHE.promptCredentials.bind(Constants.PROFILES_CACHE),
-                isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
-                errorCorrelation,
-            });
+            if (AuthHandler.isLocked(profile)) {
+                await AuthHandler.promptForAuthentication(err, profile, {
+                    ssoLogin: Constants.PROFILES_CACHE.ssoLogin.bind(Constants.PROFILES_CACHE),
+                    promptCredentials: Constants.PROFILES_CACHE.promptCredentials.bind(Constants.PROFILES_CACHE),
+                    isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
+                    errorCorrelation,
+                });
+            } else {
+                await AuthHandler.lockProfile(profile, err, {
+                    ssoLogin: Constants.PROFILES_CACHE.ssoLogin.bind(Constants.PROFILES_CACHE),
+                    promptCredentials: Constants.PROFILES_CACHE.promptCredentials.bind(Constants.PROFILES_CACHE),
+                    isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
+                    errorCorrelation,
+                });
+            }
+        } else {
+            AuthHandler.unlockProfile(profile);
         }
     }
 

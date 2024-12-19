@@ -292,6 +292,7 @@ export class SharedInit {
                     (error: CorrelatedError, stackTrace?: string) => new TroubleshootError(context, { error, stackTrace })
                 )
             );
+            context.subscriptions.push(vscode.commands.registerCommand("zowe.getTreeProviders", () => SharedTreeProviders));
             context.subscriptions.push(vscode.window.registerUriHandler(ZoweUriHandler.getInstance()));
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.placeholderCommand", () => {
