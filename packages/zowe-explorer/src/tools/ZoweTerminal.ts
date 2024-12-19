@@ -37,6 +37,8 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         PAGE_DOWN: "\x1b[6~",
         ENTER: "\r",
         NEW_LINE: "\r\n",
+        OPT_LEFT: "\x1bb",
+        OPT_RIGHT: "\x1bf",
         UP: "\x1b[A",
         DOWN: "\x1b[B",
         RIGHT: "\x1b[C",
@@ -225,7 +227,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
 
     // Handle input from the terminal
     public async handleInput(data: string): Promise<void> {
-        console.log("data", data, Buffer.from(data));
+        // console.log("data", data, Buffer.from(data));
         if (this.isCommandRunning) {
             if ([ZoweTerminal.Keys.CTRL_C, ZoweTerminal.Keys.CTRL_D].includes(data)) this.controller.abort();
             if (data === ZoweTerminal.Keys.CTRL_D) this.close();
@@ -256,9 +258,11 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                 this.navigateHistory(1);
                 break;
             case ZoweTerminal.Keys.LEFT:
+            case ZoweTerminal.Keys.OPT_LEFT:
                 this.moveCursor(-1);
                 break;
             case ZoweTerminal.Keys.RIGHT:
+            case ZoweTerminal.Keys.OPT_RIGHT:
                 this.moveCursor(1);
                 break;
             case ZoweTerminal.Keys.HOME:

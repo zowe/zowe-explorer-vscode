@@ -25,6 +25,8 @@ exports[`ZoweTerminal Unit Tests should not change the keys 1`] = `
 ",
   "OPT_BACKSPACE": "",
   "OPT_CMD_BACKSPACE": "",
+  "OPT_LEFT": "b",
+  "OPT_RIGHT": "f",
   "PAGE_DOWN": "[6~",
   "PAGE_UP": "[5~",
   "RIGHT": "[C",

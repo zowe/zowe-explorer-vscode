@@ -96,23 +96,34 @@ describe("ZoweCommandProvider Unit Tests", () => {
         });
 
         describe("function issueCommand", () => {
+            const testError = new imperative.ImperativeError({
+                msg: "test-msg",
+                causeErrors: "test-causeErrors",
+                additionalDetails: "test-additionalDetails",
+            });
+            const mockCmdProvider: any = {
+                useIntegratedTerminals: true,
+                terminalName: "test-terminal",
+                pseudoTerminal: {},
+                formatCommandLine: (cmd: string) => "test-" + cmd,
+                history: { getSearchHistory: () => ["old-cmd-01", "old-cmd-02"], addSearchHistory: jest.fn() },
+                runCommand: jest.fn().mockRejectedValue(testError),
+            };
+            const testProfile: any = { name: "test", profile: { user: "firstName", password: "12345" } };
+
+            it("should not create a terminal if the profile or the command is undefined", async () => {
+                const createTerminal = jest.fn().mockReturnValue({ show: jest.fn() });
+                Object.defineProperty(vscode.window, "createTerminal", { value: createTerminal, configurable: true });
+                await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, null, "test");
+                await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, undefined, "test");
+                await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, testProfile, null);
+                await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, testProfile, undefined);
+                expect(createTerminal).not.toHaveBeenCalled();
+            });
+
             it("should create an integrated terminal", async () => {
                 const createTerminal = jest.fn().mockReturnValue({ show: jest.fn() });
-                Object.defineProperty(vscode.window, "createTerminal", { value: createTerminal });
-                const testError = new imperative.ImperativeError({
-                    msg: "test-msg",
-                    causeErrors: "test-causeErrors",
-                    additionalDetails: "test-additionalDetails",
-                });
-                const mockCmdProvider: any = {
-                    useIntegratedTerminals: true,
-                    terminalName: "test-terminal",
-                    pseudoTerminal: {},
-                    formatCommandLine: (cmd: string) => "test-" + cmd,
-                    history: { getSearchHistory: () => ["old-cmd-01", "old-cmd-02"], addSearchHistory: jest.fn() },
-                    runCommand: jest.fn().mockRejectedValue(testError),
-                };
-                const testProfile: any = { name: "test", profile: { user: "firstName", password: "12345" } };
+                Object.defineProperty(vscode.window, "createTerminal", { value: createTerminal, configurable: true });
 
                 await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, testProfile, "test");
                 expect(createTerminal).toHaveBeenCalled();

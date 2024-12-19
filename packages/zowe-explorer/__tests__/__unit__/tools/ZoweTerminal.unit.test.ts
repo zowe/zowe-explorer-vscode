@@ -16,6 +16,22 @@ describe("ZoweTerminal Unit Tests", () => {
         expect(ZoweTerminal.Keys).toMatchSnapshot();
     });
 
+    it("should handle ctrl_c to cancel a running command", async () => {
+        const spyCb = jest.fn().mockImplementation(async (cmd: string) => Promise.resolve("test-output"));
+        const signalSpy = jest.fn().mockImplementation((_event, cb) => cb());
+        const iTerm = new ZoweTerminal("test", spyCb, { abort: jest.fn(), signal: { addEventListener: signalSpy } } as any, { history: ["old"] });
+        (iTerm as any).command = "open";
+        iTerm.open();
+
+        await iTerm.handleInput(ZoweTerminal.Keys.ENTER);
+        (iTerm as any).isCommandRunning = true;
+        await iTerm.handleInput(ZoweTerminal.Keys.CTRL_D);
+        expect(spyCb).toHaveBeenCalledWith("open");
+        spyCb.mockClear();
+
+        expect((iTerm as any).mHistory as string[]).toEqual(["old", "open"]);
+    });
+
     it("should send the entered command to the callback function", async () => {
         const spyCb = jest.fn().mockImplementation(async (cmd: string) => Promise.resolve("test-output"));
         const iTerm = new ZoweTerminal("test", spyCb, { signal: { addEventListener: jest.fn() } } as any, { history: ["old"] });
@@ -26,6 +42,10 @@ describe("ZoweTerminal Unit Tests", () => {
         expect(spyCb).toHaveBeenCalledWith("testABC");
         spyCb.mockClear();
 
+        await iTerm.handleInput(ZoweTerminal.Keys.HOME); // |testABC
+        await iTerm.handleInput(ZoweTerminal.Keys.END); // testABC|
+        await iTerm.handleInput(ZoweTerminal.Keys.CMD_LEFT); // |testABC
+        await iTerm.handleInput(ZoweTerminal.Keys.CMD_RIGHT); // testABC|
         await iTerm.handleInput(ZoweTerminal.Keys.UP); // testABC|
         await iTerm.handleInput(ZoweTerminal.Keys.UP); // old|
         await iTerm.handleInput(ZoweTerminal.Keys.DOWN); // testABC|
@@ -40,20 +60,29 @@ describe("ZoweTerminal Unit Tests", () => {
         // Handle double byte characters
         await iTerm.handleInput("🙏🙏"); // test1🙏🙏|C
         await iTerm.handleInput(ZoweTerminal.Keys.BACKSPACE); // test1🙏|C
-        // Handle unicode "hello"
+        // Handle unicode "Hello"
         await iTerm.handleInput("\u0048\u0065\u006C\u006C\u006F"); // test1🙏Hello|C
+        await iTerm.handleInput(ZoweTerminal.Keys.DEL); // test1🙏Hello|
         await iTerm.handleInput(ZoweTerminal.Keys.ENTER);
-        expect(spyCb).toHaveBeenCalledWith("test1🙏HelloC");
+        expect(spyCb).toHaveBeenCalledWith("test1🙏Hello");
         spyCb.mockClear();
 
         (iTerm as any).command = "";
+        await iTerm.handleInput(ZoweTerminal.Keys.INSERT); // do nothing
+        await iTerm.handleInput(ZoweTerminal.Keys.TAB); // do nothing
+        await iTerm.handleInput("\x1b[1;A"); // Shift+Up // do nothing
+        await iTerm.handleInput("\x1b[3;A"); // fn+option+shift+up // do nothing
         await iTerm.handleInput(ZoweTerminal.Keys.ENTER);
-        await iTerm.handleInput(ZoweTerminal.Keys.CTRL_C);
+        await iTerm.handleInput(ZoweTerminal.Keys.UP); // "test1🙏Hello"
+        await iTerm.handleInput(ZoweTerminal.Keys.CTRL_C); // Clear the terminal
+        await iTerm.handleInput(ZoweTerminal.Keys.CTRL_C); // Present the "(to exit ...)" message
+        await iTerm.handleInput(ZoweTerminal.Keys.CTRL_C); // close
+        await iTerm.handleInput(ZoweTerminal.Keys.CTRL_D); // close
         await iTerm.handleInput(":clear");
         await iTerm.handleInput(ZoweTerminal.Keys.ENTER);
         await iTerm.handleInput(":exit");
         await iTerm.handleInput(ZoweTerminal.Keys.ENTER);
 
-        expect((iTerm as any).mHistory as string[]).toEqual(["old", "testABC", "test1🙏HelloC", ":clear", ":exit"]);
+        expect((iTerm as any).mHistory as string[]).toEqual(["old", "testABC", "test1🙏Hello", ":clear", ":exit"]);
     });
 });
