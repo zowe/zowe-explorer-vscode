@@ -154,10 +154,12 @@ describe("ProfilesUtils unit tests", () => {
             const scenario = "Task failed successfully";
             const showMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(() => Promise.resolve("Update Credentials"));
             const promptCredsSpy = jest.fn();
+            const ssoLoginSpy = jest.fn();
             const profile = { type: "zosmf" } as any;
             Object.defineProperty(Constants, "PROFILES_CACHE", {
                 value: {
                     promptCredentials: promptCredsSpy,
+                    ssoLogin: ssoLoginSpy,
                     getProfileInfo: profileInfoMock,
                     getLoadedProfConfig: () => profile,
                     getDefaultProfile: () => ({}),
@@ -168,6 +170,7 @@ describe("ProfilesUtils unit tests", () => {
             await AuthUtils.errorHandling(errorDetails, { profile, scenario });
             expect(showMessageSpy).toHaveBeenCalledTimes(1);
             expect(promptCredsSpy).toHaveBeenCalledTimes(1);
+            expect(ssoLoginSpy).not.toHaveBeenCalled();
             showMessageSpy.mockClear();
             promptCredsSpy.mockClear();
         });
@@ -181,6 +184,7 @@ describe("ProfilesUtils unit tests", () => {
             const showErrorSpy = jest.spyOn(Gui, "errorMessage");
             const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation(() => Promise.resolve("Log in to Authentication Service"));
             const ssoLoginSpy = jest.fn();
+            const promptCredentialsSpy = jest.fn();
             const profile = { type: "zosmf" } as any;
             Object.defineProperty(Constants, "PROFILES_CACHE", {
                 value: {
@@ -189,6 +193,7 @@ describe("ProfilesUtils unit tests", () => {
                     getDefaultProfile: () => ({}),
                     getSecurePropsForProfile: () => ["tokenValue"],
                     ssoLogin: ssoLoginSpy,
+                    promptCredentials: promptCredentialsSpy,
                 },
                 configurable: true,
             });
@@ -196,6 +201,7 @@ describe("ProfilesUtils unit tests", () => {
             expect(showMessageSpy).toHaveBeenCalledTimes(1);
             expect(ssoLoginSpy).toHaveBeenCalledTimes(1);
             expect(showErrorSpy).not.toHaveBeenCalled();
+            expect(promptCredentialsSpy).not.toHaveBeenCalled();
             showErrorSpy.mockClear();
             showMessageSpy.mockClear();
             ssoLoginSpy.mockClear();
@@ -216,10 +222,12 @@ describe("ProfilesUtils unit tests", () => {
             const showErrorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
             const showMsgSpy = jest.spyOn(Gui, "showMessage");
             const promptCredentialsSpy = jest.fn();
+            const ssoLogin = jest.fn();
             const profile = { type: "zosmf" } as any;
             Object.defineProperty(Constants, "PROFILES_CACHE", {
                 value: {
                     promptCredentials: promptCredentialsSpy,
+                    ssoLogin,
                     getProfileInfo: profileInfoMock,
                     getLoadedProfConfig: () => profile,
                     getDefaultProfile: () => ({}),
@@ -230,6 +238,7 @@ describe("ProfilesUtils unit tests", () => {
             await AuthUtils.errorHandling(errorDetails, { profile, scenario: moreInfo });
             expect(showErrorSpy).toHaveBeenCalledTimes(1);
             expect(promptCredentialsSpy).not.toHaveBeenCalled();
+            expect(ssoLogin).not.toHaveBeenCalled();
             expect(showMsgSpy).not.toHaveBeenCalledWith("Operation Cancelled");
             showErrorSpy.mockClear();
             showMsgSpy.mockClear();
@@ -456,6 +465,7 @@ describe("ProfilesUtils unit tests", () => {
             const updCredsMock = jest.spyOn(Constants.PROFILES_CACHE, "promptCredentials").mockResolvedValueOnce(["test", "test"]);
             await ProfilesUtils.promptCredentials({
                 getProfile: () => testConfig,
+                setProfileToChoice: jest.fn(),
             } as any);
             expect(updCredsMock).toHaveBeenCalled();
             expect(Gui.showMessage).toHaveBeenCalledWith("Credentials for testConfig were successfully updated");
