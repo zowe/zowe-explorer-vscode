@@ -245,6 +245,7 @@ async function createGlobalMocks() {
             "zowe.copyExternalLink",
             "zowe.revealOutputChannel",
             "zowe.troubleshootError",
+            "zowe.getTreeProviders",
             "zowe.placeholderCommand",
         ],
     };

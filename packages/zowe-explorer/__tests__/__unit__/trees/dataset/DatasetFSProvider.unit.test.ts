@@ -293,7 +293,7 @@ describe("readFile", () => {
     it("throws an error if the entry does not have a profile", async () => {
         const _lookupAsFileMock = jest
             .spyOn(DatasetFSProvider.instance as any, "_lookupAsFile")
-            .mockReturnValueOnce({ ...testEntries.ps, metadata: { profile: null } });
+            .mockReturnValueOnce({ ...testEntries.ps, metadata: { profile: undefined } });
 
         let err;
         try {

@@ -291,7 +291,7 @@ describe("fetchSpoolAtUri", () => {
                 throw new Error("Failed to download spool");
             }),
         };
-        const promptForAuthErrorMock = jest.spyOn(AuthUtils, "promptForAuthError").mockImplementation();
+        const promptForAuthErrorMock = jest.spyOn(AuthUtils, "lockProfileOnAuthError").mockImplementation();
         const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
         await expect(JobFSProvider.instance.fetchSpoolAtUri(testUris.spool)).rejects.toThrow();
         expect(promptForAuthErrorMock).toHaveBeenCalled();
