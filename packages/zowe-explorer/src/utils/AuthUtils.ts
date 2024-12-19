@@ -64,8 +64,8 @@ export class AuthUtils {
         ) {
             const correlation = ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.All, err, {
                 templateArgs: {
-                    profileName: profile.name
-                }
+                    profileName: profile.name,
+                },
             });
             void AuthUtils.promptForAuthentication(err, profile, correlation).catch(
                 (error) => error instanceof Error && ZoweLogger.error(error.message)

@@ -16,5 +16,7 @@ export enum PersistenceSchemaEnum {
     Dataset = "zowe.ds.history",
     USS = "zowe.uss.history",
     Job = "zowe.jobs.history",
-    Commands = "zowe.commands.history",
+    MvsCommands = "zowe.commands.mvs.history",
+    TsoCommands = "zowe.commands.tso.history",
+    UssCommands = "zowe.commands.uss.history",
 }

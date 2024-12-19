@@ -374,7 +374,6 @@ export class USSActions {
      */
     public static async pasteUss(ussFileProvider: Types.IZoweUSSTreeType, node: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("uss.actions.pasteUss called.");
-        /* eslint-disable-next-line deprecation/deprecation */
         if (node.pasteUssTree == null) {
             await Gui.infoMessage(vscode.l10n.t("The paste operation is not supported for this node."));
             return;
@@ -385,7 +384,6 @@ export class USSActions {
                 title: vscode.l10n.t("Pasting files..."),
             },
             async () => {
-                /* eslint-disable-next-line deprecation/deprecation */
                 await node.pasteUssTree();
             }
         );

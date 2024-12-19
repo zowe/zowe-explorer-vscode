@@ -60,9 +60,13 @@ export function App(): JSXInternal.Element {
         <VSCodePanelTab id="jobs-panel-tab">
           <h2>{l10n.t("Jobs")}</h2>
         </VSCodePanelTab>
+        <VSCodePanelTab id="cmds-panel-tab">
+          <h2>Zowe Commands</h2>
+        </VSCodePanelTab>
         <PersistentDataPanel type="ds" />
         <PersistentDataPanel type="uss" />
         <PersistentDataPanel type="jobs" />
+        <PersistentDataPanel type="cmds" />
       </VSCodePanels>
     </div>
   );
