@@ -10,7 +10,7 @@
  */
 
 import { Gui } from "../globals";
-import { CorrelatedError, refreshActiveEditorForProfile, refreshWorkspacesForProfile } from "../utils";
+import { CorrelatedError, reloadActiveEditorForProfile, reloadWorkspacesForProfile } from "../utils";
 import * as imperative from "@zowe/imperative";
 import { IZoweTree, IZoweTreeNode } from "../tree";
 import { commands } from "vscode";
@@ -59,10 +59,10 @@ export class AuthHandler {
         if (deferred) {
             deferred.unlock();
             if (refreshResources) {
-                // refresh an active, unsaved editor if it contains the profile
-                refreshActiveEditorForProfile(profileName);
+                // refresh an active, unsaved editor if it uses the profile
+                reloadActiveEditorForProfile(profileName);
                 // refresh virtual workspaces for the profile
-                refreshWorkspacesForProfile(profileName);
+                reloadWorkspacesForProfile(profileName);
             }
         }
     }

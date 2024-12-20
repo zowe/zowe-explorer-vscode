@@ -9,9 +9,9 @@
  *
  */
 
-import { ZoweScheme } from "../fs";
+import { IFileSystemEntry, ZoweScheme } from "../fs";
 import { IZoweTreeNode } from "../tree";
-import { workspace } from "vscode";
+import { window, workspace } from "vscode";
 
 export * from "./DeferredPromise";
 export * from "./ErrorCorrelator";
@@ -26,6 +26,18 @@ export * from "./FileManagement";
  */
 export function isNodeInEditor(node: IZoweTreeNode): boolean {
     return workspace.textDocuments.some(({ uri, isDirty }) => uri.path === node.resourceUri?.path && isDirty);
+}
+
+export async function reloadActiveEditorForProfile(profileName: string): Promise<void> {
+    if (
+        (Object.values(ZoweScheme) as string[]).includes(window.activeTextEditor.document.uri.scheme) &&
+        window.activeTextEditor.document.uri.path.startsWith(`/${profileName}/`) &&
+        !window.activeTextEditor.document.isDirty
+    ) {
+        const fsEntry = (await workspace.fs.stat(window.activeTextEditor.document.uri)) as IFileSystemEntry;
+        fsEntry.wasAccessed = false;
+        await workspace.fs.readFile(window.activeTextEditor.document.uri);
+    }
 }
 
 export async function reloadWorkspacesForProfile(profileName: string): Promise<void> {
