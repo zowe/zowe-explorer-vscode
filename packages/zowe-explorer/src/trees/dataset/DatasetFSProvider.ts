@@ -389,7 +389,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const metadata = dsEntry?.metadata ?? this._getInfoFromUri(uri);
         const profileEncoding = dsEntry?.encoding ? null : dsEntry?.metadata.profile.profile?.encoding;
         try {
-            await AuthHandler.waitIfLocked(metadata.profile);
             await AuthHandler.lockProfile(metadata.profile);
             const resp = await ZoweExplorerApiRegister.getMvsApi(metadata.profile).getContents(metadata.dsName, {
                 binary: dsEntry?.encoding?.kind === "binary",
@@ -437,7 +436,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         } catch (error) {
             //Response will error if the file is not found
             //Callers of fetchDatasetAtUri() do not expect it to throw an error
-            await AuthUtils.lockProfileOnAuthError(error, metadata.profile);
+            await AuthUtils.handleProfileAuthOnError(error, metadata.profile);
             return null;
         }
     }

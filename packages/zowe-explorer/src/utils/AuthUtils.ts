@@ -24,18 +24,27 @@ interface ErrorContext {
 }
 
 export class AuthUtils {
-    public static async lockProfileOnAuthError(err: Error, profile: imperative.IProfileLoaded): Promise<void> {
+    /**
+     * Locks the profile if an authentication error has occurred (prevents further requests in filesystem until unlocked).
+     * If the error is not an authentication error, the profile is unlocked for further use.
+     *
+     * @param err {Error} The error that occurred
+     * @param profile {imperative.IProfileLoaded} The profile used when the error occurred
+     */
+    public static async handleProfileAuthOnError(err: Error, profile: imperative.IProfileLoaded): Promise<void> {
         if (
             err instanceof imperative.ImperativeError &&
             profile != null &&
             (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
                 err.message.includes("All configured authentication methods failed"))
         ) {
+            // In the case of an authentication error, find a more user-friendly error message if available.
             const errorCorrelation = ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.All, err, {
                 templateArgs: {
                     profileName: profile.name,
                 },
             });
+            // If the profile is already locked, prompt the user to re-authenticate.
             if (AuthHandler.isLocked(profile)) {
                 await AuthHandler.promptForAuthentication(err, profile, {
                     ssoLogin: Constants.PROFILES_CACHE.ssoLogin.bind(Constants.PROFILES_CACHE),
@@ -44,6 +53,7 @@ export class AuthUtils {
                     errorCorrelation,
                 });
             } else {
+                // Lock the profile and prompt the user to authenticate by providing login/credential prompt callbacks.
                 await AuthHandler.lockProfile(profile, err, {
                     ssoLogin: Constants.PROFILES_CACHE.ssoLogin.bind(Constants.PROFILES_CACHE),
                     promptCredentials: Constants.PROFILES_CACHE.promptCredentials.bind(Constants.PROFILES_CACHE),
@@ -51,7 +61,8 @@ export class AuthUtils {
                     errorCorrelation,
                 });
             }
-        } else {
+        } else if (AuthHandler.isLocked(profile)) {
+            // Error doesn't mean criteria to continue holding the lock. Unlock the profile to allow further use
             AuthHandler.unlockProfile(profile);
         }
     }
@@ -97,7 +108,7 @@ export class AuthUtils {
                 (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
                     imperativeError.message.includes("All configured authentication methods failed"))
             ) {
-                return AuthHandler.promptForAuthentication(imperativeError, profile, {
+                await AuthHandler.lockProfile(profile, imperativeError, {
                     ssoLogin: Constants.PROFILES_CACHE.ssoLogin.bind(Constants.PROFILES_CACHE),
                     promptCredentials: Constants.PROFILES_CACHE.promptCredentials.bind(Constants.PROFILES_CACHE),
                     isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),

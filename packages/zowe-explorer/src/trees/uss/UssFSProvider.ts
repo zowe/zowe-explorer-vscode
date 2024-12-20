@@ -280,7 +280,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         try {
             await this.autoDetectEncoding(file as UssFile);
             const profileEncoding = file.encoding ? null : file.metadata.profile.profile?.encoding;
-            await AuthHandler.waitIfLocked(metadata.profile);
             await AuthHandler.lockProfile(metadata.profile);
             resp = await ZoweExplorerApiRegister.getUssApi(metadata.profile).getContents(filePath, {
                 binary: file.encoding?.kind === "binary",
@@ -294,7 +293,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             if (err instanceof Error) {
                 ZoweLogger.error(err.message);
             }
-            await AuthUtils.lockProfileOnAuthError(err, metadata.profile);
+            await AuthUtils.handleProfileAuthOnError(err, metadata.profile);
             return;
         }
 
@@ -325,8 +324,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         if (entry.encoding !== undefined) {
             return;
         }
-
-        await AuthHandler.waitIfLocked(entry.metadata.profile);
         await AuthHandler.lockProfile(entry.metadata.profile);
         const ussApi = ZoweExplorerApiRegister.getUssApi(entry.metadata.profile);
         if (ussApi.getTag != null) {
