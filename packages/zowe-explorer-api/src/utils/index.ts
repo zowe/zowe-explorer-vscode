@@ -14,6 +14,7 @@ import { IZoweTreeNode } from "../tree";
 import { window, workspace } from "vscode";
 
 export * from "./DeferredPromise";
+export * from "./Mutex";
 export * from "./ErrorCorrelator";
 export * from "./Poller";
 export * from "./FileManagement";

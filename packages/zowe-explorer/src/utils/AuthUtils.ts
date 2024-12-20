@@ -108,7 +108,7 @@ export class AuthUtils {
                 (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
                     imperativeError.message.includes("All configured authentication methods failed"))
             ) {
-                await AuthHandler.lockProfile(profile, imperativeError, {
+                return await AuthHandler.lockProfile(profile, imperativeError, {
                     ssoLogin: Constants.PROFILES_CACHE.ssoLogin.bind(Constants.PROFILES_CACHE),
                     promptCredentials: Constants.PROFILES_CACHE.promptCredentials.bind(Constants.PROFILES_CACHE),
                     isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),

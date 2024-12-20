@@ -15,7 +15,7 @@ import { Constants } from "../../../src/configuration/Constants";
 import { MockedProperty } from "../../__mocks__/mockUtils";
 
 describe("AuthUtils", () => {
-    describe("lockProfileOnAuthError", () => {
+    describe("handleProfileAuthOnError", () => {
         it("should prompt for authentication", async () => {
             const errorDetails = new imperative.ImperativeError({
                 errorCode: 401 as unknown as string,
@@ -37,7 +37,7 @@ describe("AuthUtils", () => {
             });
             const isUsingTokenAuthMock = jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
             const promptForAuthenticationMock = jest.spyOn(AuthHandler, "promptForAuthentication").mockResolvedValueOnce(true);
-            await AuthUtils.lockProfileOnAuthError(errorDetails, profile);
+            await AuthUtils.handleProfileAuthOnError(errorDetails, profile);
             expect(correlateErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.All, errorDetails, {
                 templateArgs: {
                     profileName: profile.name,

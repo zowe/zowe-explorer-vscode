@@ -13,7 +13,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as util from "util";
 import * as vscode from "vscode";
-import { Gui, imperative, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { Mutex, Gui, imperative, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { createAltTypeIProfile, createInstanceOfProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
 import { MockedProperty } from "../../__mocks__/mockUtils";
 import { Constants } from "../../../src/configuration/Constants";
@@ -145,7 +145,7 @@ describe("ProfilesUtils unit tests", () => {
             expect(openConfigForMissingHostnameMock).toHaveBeenCalled();
         });
 
-        it("should handle error for invalid credentials and prompt for authentication", async () => {
+        it("should handle error for invalid credentials and prompt for authentication - credentials entered", async () => {
             const errorDetails = new imperative.ImperativeError({
                 msg: "Invalid credentials",
                 errorCode: 401 as unknown as string,
@@ -155,7 +155,11 @@ describe("ProfilesUtils unit tests", () => {
             const showMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(() => Promise.resolve("Update Credentials"));
             const promptCredsSpy = jest.fn();
             const ssoLoginSpy = jest.fn();
-            const profile = { type: "zosmf" } as any;
+            const profile = { name: "lpar.zosmf", type: "zosmf" } as any;
+            // disable locking mechanism for this test, will be tested in separate test cases
+            const lockMock = jest.spyOn(Mutex.prototype, "lock").mockImplementation();
+            const unlockMock = jest.spyOn(Mutex.prototype, "unlock").mockImplementation();
+
             Object.defineProperty(Constants, "PROFILES_CACHE", {
                 value: {
                     promptCredentials: promptCredsSpy,
@@ -174,6 +178,7 @@ describe("ProfilesUtils unit tests", () => {
             showMessageSpy.mockClear();
             promptCredsSpy.mockClear();
         });
+
         it("should handle token error and proceed to login", async () => {
             const errorDetails = new imperative.ImperativeError({
                 msg: "Invalid credentials",
@@ -197,6 +202,8 @@ describe("ProfilesUtils unit tests", () => {
                 },
                 configurable: true,
             });
+            const lockMock = jest.spyOn(Mutex.prototype, "lock").mockImplementation();
+            const unlockMock = jest.spyOn(Mutex.prototype, "unlock").mockImplementation();
             await AuthUtils.errorHandling(errorDetails, { profile, scenario });
             expect(showMessageSpy).toHaveBeenCalledTimes(1);
             expect(ssoLoginSpy).toHaveBeenCalledTimes(1);
