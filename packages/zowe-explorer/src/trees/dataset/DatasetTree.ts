@@ -1304,7 +1304,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         const isSession = SharedContext.isSession(node);
 
         // Read default options from settings if a user hasn't selected any sort options yet
-        const sortOpts = node.sort ?? DatasetUtils.getDefaultSortOptions();
+        const sortOpts =
+            node.sort ??
+            SharedUtils.getDefaultSortOptions(DatasetUtils.DATASET_SORT_OPTS, Constants.SETTINGS_DS_DEFAULT_SORT, Sorting.DatasetSortOpts);
 
         // Adapt menus to user based on the node that was interacted with
         const specifier = isSession

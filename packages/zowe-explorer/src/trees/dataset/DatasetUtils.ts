@@ -10,9 +10,8 @@
  */
 
 import * as vscode from "vscode";
-import { DS_EXTENSION_MAP, Types, Sorting } from "@zowe/zowe-explorer-api";
+import { DS_EXTENSION_MAP, Types } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../configuration/Constants";
-import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 
 export class DatasetUtils {
@@ -26,31 +25,6 @@ export class DatasetUtils {
 
     // eslint-disable-next-line no-magic-numbers
     public static readonly DATASET_FILTER_OPTS = [this.DATASET_SORT_OPTS[2], this.DATASET_SORT_OPTS[3]];
-
-    public static updateSortOptionsWithDefault(sortMethod: Sorting.DatasetSortOpts): void {
-        this.DATASET_SORT_OPTS = this.DATASET_SORT_OPTS.map((opt) => opt.replace(` ${vscode.l10n.t("(default)")}`, ""));
-        this.DATASET_SORT_OPTS = this.DATASET_SORT_OPTS.map((opt, index) => {
-            if (index === sortMethod) {
-                return `${opt} ${vscode.l10n.t("(default)")}`;
-            }
-            return opt;
-        });
-    }
-
-    public static getDefaultSortOptions(): Sorting.NodeSort {
-        const sortSetting = SettingsConfig.getDirectValue<Sorting.NodeSort>(Constants.SETTINGS_DS_DEFAULT_SORT);
-        if (typeof sortSetting.method === "string") {
-            sortSetting.method = Sorting.DatasetSortOpts[sortSetting.method as keyof typeof Sorting.DatasetSortOpts];
-            DatasetUtils.updateSortOptionsWithDefault(sortSetting.method);
-        }
-        if (typeof sortSetting.direction === "string") {
-            sortSetting.direction = Sorting.SortDirection[sortSetting.direction as keyof typeof Sorting.SortDirection];
-        }
-        return {
-            method: sortSetting?.method ?? Sorting.DatasetSortOpts.Name,
-            direction: sortSetting?.direction ?? Sorting.SortDirection.Ascending,
-        };
-    }
 
     public static getProfileAndDataSetName(node: Types.IZoweNodeType): {
         profileName: string;

@@ -106,7 +106,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
 
         if (SharedContext.isSession(this)) {
             // read sort options from settings file
-            const sortSetting = JobUtils.getDefaultSortOptions();
+            const sortSetting = SharedUtils.getDefaultSortOptions(JobUtils.JOB_SORT_OPTS, Constants.SETTINGS_JOBS_DEFAULT_SORT, Sorting.JobSortOpts);
             this.sort = {
                 method: sortSetting.method,
                 direction: sortSetting.direction,
