@@ -1429,7 +1429,7 @@ describe("sortJobs function", () => {
         testtree.mSessionNodes[0].children = [...[globalMocks.mockJobArray[2], globalMocks.mockJobArray[1], globalMocks.mockJobArray[0]]];
         expected.mSessionNodes[0].children = [...[globalMocks.mockJobArray[1], globalMocks.mockJobArray[0], globalMocks.mockJobArray[2]]];
         const sortbyidspy = jest.spyOn(JobTree.prototype, "sortBy");
-        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce({ label: "$(list-ordered) Job ID (default)" });
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce({ label: "$(list-ordered) Job ID" });
         //act
         await JobActions.sortJobs(testtree.mSessionNodes[0], testtree);
         //asert

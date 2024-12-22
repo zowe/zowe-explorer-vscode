@@ -389,7 +389,7 @@
   "No spool files found": "No spool files found",
   "No jobs found": "No jobs found",
   "Retrieving response from JES list API": "Retrieving response from JES list API",
-  "Job ID (default)": "Job ID (default)",
+  "Job ID": "Job ID",
   "Date Submitted": "Date Submitted",
   "Date Completed": "Date Completed",
   "Job Name": "Job Name",
@@ -397,6 +397,7 @@
   "Sort Direction": "Sort Direction",
   "Go to Local Filtering": "Go to Local Filtering",
   "Clear filter for profile": "Clear filter for profile",
+  "(default)": "(default)",
   "Create new...": "Create new...",
   "Submit this query": "Submit this query",
   "Enter job owner ID": "Enter job owner ID",
@@ -577,7 +578,6 @@
   "No data sets found": "No data sets found",
   "Retrieving response from MVS list API": "Retrieving response from MVS list API",
   "Cannot download, item invalid.": "Cannot download, item invalid.",
-  "Name (default)": "Name (default)",
   "Date Created": "Date Created",
   "Date Modified": "Date Modified",
   "User ID": "User ID",
@@ -898,7 +898,6 @@
       "The number of data sets that are about to be searched"
     ]
   },
-  "Percent Complete": "Percent Complete",
   "Failed to upload changes for {0}: {1}/Build file hyperlinkError message": {
     "message": "Failed to upload changes for {0}: {1}",
     "comment": [
@@ -907,6 +906,18 @@
     ]
   },
   "Error encountered while activating and initializing logger": "Error encountered while activating and initializing logger",
+  "Insufficient read permissions for {0} in local storage./Local storage key": {
+    "message": "Insufficient read permissions for {0} in local storage.",
+    "comment": [
+      "Local storage key"
+    ]
+  },
+  "Insufficient write permissions for {0} in local storage./Local storage key": {
+    "message": "Insufficient write permissions for {0} in local storage.",
+    "comment": [
+      "Local storage key"
+    ]
+  },
   "Add Credentials": "Add Credentials",
   "Add username and password for basic authentication": "Add username and password for basic authentication",
   "Update stored username and password": "Update stored username and password",

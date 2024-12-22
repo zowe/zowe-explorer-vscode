@@ -105,10 +105,13 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         }
 
         if (SharedContext.isSession(this)) {
+            // read sort options from settings file
+            const sortSetting = JobUtils.getDefaultSortOptions();
             this.sort = {
-                method: Sorting.JobSortOpts.Id,
-                direction: Sorting.SortDirection.Ascending,
+                method: sortSetting.method,
+                direction: sortSetting.direction,
             };
+
             if (this.getParent()?.label !== vscode.l10n.t("Favorites") && !SharedContext.isFavorite(this)) {
                 this.id = this.label as string;
             }

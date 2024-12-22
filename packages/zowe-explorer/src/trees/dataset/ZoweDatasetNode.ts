@@ -38,7 +38,7 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedContext } from "../shared/SharedContext";
 import { AuthUtils } from "../../utils/AuthUtils";
 import type { Definitions } from "../../configuration/Definitions";
-import type { DatasetTree } from "./DatasetTree";
+import { DatasetTree } from "./DatasetTree";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetUtils } from "./DatasetUtils";
 
@@ -88,10 +88,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         if (this.getParent() == null || this.getParent().label === vscode.l10n.t("Favorites")) {
-            // set default sort options for session nodes
+            // read sort options from settings file
+            const sortSetting = DatasetUtils.getDefaultSortOptions();
             this.sort = {
-                method: Sorting.DatasetSortOpts.Name,
-                direction: Sorting.SortDirection.Ascending,
+                method: sortSetting.method,
+                direction: sortSetting.direction,
             };
         }
 

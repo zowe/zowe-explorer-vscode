@@ -1303,11 +1303,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public async sortPdsMembersDialog(node: IZoweDatasetTreeNode): Promise<void> {
         const isSession = SharedContext.isSession(node);
 
-        // Assume defaults if a user hasn't selected any sort options yet
-        const sortOpts = node.sort ?? {
-            method: Sorting.DatasetSortOpts.Name,
-            direction: Sorting.SortDirection.Ascending,
-        };
+        // Read default options from settings if a user hasn't selected any sort options yet
+        const sortOpts = node.sort ?? DatasetUtils.getDefaultSortOptions();
 
         // Adapt menus to user based on the node that was interacted with
         const specifier = isSession
@@ -1348,6 +1345,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     ...sortOpts,
                     direction: Constants.SORT_DIRS.indexOf(dir),
                 };
+                // TODO: Update sort order as persistence setting maybe
             }
             await this.sortPdsMembersDialog(node);
             return;
