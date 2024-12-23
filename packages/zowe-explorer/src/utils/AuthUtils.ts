@@ -45,7 +45,7 @@ export class AuthUtils {
                 },
             });
             // If the profile is already locked, prompt the user to re-authenticate.
-            if (AuthHandler.isLocked(profile)) {
+            if (AuthHandler.isProfileLocked(profile)) {
                 await AuthHandler.promptForAuthentication(err, profile, {
                     ssoLogin: Constants.PROFILES_CACHE.ssoLogin.bind(Constants.PROFILES_CACHE),
                     promptCredentials: Constants.PROFILES_CACHE.promptCredentials.bind(Constants.PROFILES_CACHE),
@@ -61,7 +61,7 @@ export class AuthUtils {
                     errorCorrelation,
                 });
             }
-        } else if (AuthHandler.isLocked(profile)) {
+        } else if (AuthHandler.isProfileLocked(profile)) {
             // Error doesn't mean criteria to continue holding the lock. Unlock the profile to allow further use
             AuthHandler.unlockProfile(profile);
         }

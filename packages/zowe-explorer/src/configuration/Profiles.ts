@@ -26,6 +26,7 @@ import {
     FileManagement,
     IRegisterClient,
     Types,
+    AuthHandler,
 } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "./SettingsConfig";
 import { Constants } from "./Constants";
@@ -826,6 +827,9 @@ export class Profiles extends ProfilesCache {
                         comment: ["Service profile name"],
                     })
                 );
+                if (AuthHandler.isProfileLocked(serviceProfile)) {
+                    AuthHandler.unlockProfile(serviceProfile);
+                }
             }
             return loginOk;
         } catch (err) {

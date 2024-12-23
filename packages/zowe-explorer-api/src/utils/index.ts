@@ -27,33 +27,3 @@ export * from "./FileManagement";
 export function isNodeInEditor(node: IZoweTreeNode): boolean {
     return workspace.textDocuments.some(({ uri, isDirty }) => uri.path === node.resourceUri?.path && isDirty);
 }
-
-export async function reloadActiveEditorForProfile(profileName: string): Promise<void> {
-    if (
-        (Object.values(ZoweScheme) as string[]).includes(window.activeTextEditor.document.uri.scheme) &&
-        window.activeTextEditor.document.uri.path.startsWith(`/${profileName}/`) &&
-        !window.activeTextEditor.document.isDirty
-    ) {
-        const fsEntry = (await workspace.fs.stat(window.activeTextEditor.document.uri)) as IFileSystemEntry;
-        fsEntry.wasAccessed = false;
-        await workspace.fs.readFile(window.activeTextEditor.document.uri);
-    }
-}
-
-export async function reloadWorkspacesForProfile(profileName: string): Promise<void> {
-    const foldersWithProfile = (workspace.workspaceFolders ?? []).filter(
-        (f) => (f.uri.scheme === ZoweScheme.DS || f.uri.scheme === ZoweScheme.USS) && f.uri.path.startsWith(`/${profileName}/`)
-    );
-    for (const folder of foldersWithProfile) {
-        try {
-            await workspace.fs.stat(folder.uri.with({ query: "fetch=true" }));
-        } catch (err) {
-            if (err instanceof Error) {
-                // TODO: Remove console.error in favor of logger
-                // (need to move logger to ZE API)
-                // eslint-disable-next-line no-console
-                console.error("reloadWorkspacesForProfile:", err.message);
-            }
-        }
-    }
-}

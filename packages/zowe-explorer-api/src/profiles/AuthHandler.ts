@@ -10,7 +10,7 @@
  */
 
 import { Gui } from "../globals";
-import { CorrelatedError, reloadActiveEditorForProfile, reloadWorkspacesForProfile } from "../utils";
+import { CorrelatedError, FileManagement } from "../utils";
 import * as imperative from "@zowe/imperative";
 import { IZoweTree, IZoweTreeNode } from "../tree";
 import { commands } from "vscode";
@@ -55,21 +55,23 @@ export class AuthHandler {
      */
     public static unlockProfile(profile: ProfileLike, refreshResources?: boolean): void {
         const profileName = typeof profile === "string" ? profile : profile.name;
-        const deferred = this.lockedProfiles.get(profileName);
-        if (deferred) {
-            deferred.release();
-            if (refreshResources) {
-                // TODO: Log errors using ZoweLogger once available in ZE API
-                // refresh an active, unsaved editor if it uses the profile
-                reloadActiveEditorForProfile(profileName)
-                    // eslint-disable-next-line no-console
-                    .catch((err) => err instanceof Error && console.error(err.message));
+        const mutex = this.lockedProfiles.get(profileName);
+        if (mutex == null || !mutex.isLocked()) {
+            return;
+        }
 
-                // refresh virtual workspaces for the profile
-                reloadWorkspacesForProfile(profileName)
-                    // eslint-disable-next-line no-console
-                    .catch((err) => err instanceof Error && console.error(err.message));
-            }
+        mutex.release();
+        if (refreshResources) {
+            // TODO: Log errors using ZoweLogger once available in ZE API
+            // refresh an active, unsaved editor if it uses the profile
+            FileManagement.reloadActiveEditorForProfile(profileName)
+                // eslint-disable-next-line no-console
+                .catch((err) => err instanceof Error && console.error(err.message));
+
+            // refresh virtual workspaces for the profile
+            FileManagement.reloadWorkspacesForProfile(profileName)
+                // eslint-disable-next-line no-console
+                .catch((err) => err instanceof Error && console.error(err.message));
         }
     }
 
@@ -175,7 +177,7 @@ export class AuthHandler {
      * @param profile The profile to check
      * @returns {boolean} `true` if the given profile is locked, `false` otherwise
      */
-    public static isLocked(profile: ProfileLike): boolean {
+    public static isProfileLocked(profile: ProfileLike): boolean {
         const mutex = this.lockedProfiles.get(typeof profile === "string" ? profile : profile.name);
         if (mutex == null) {
             return false;
