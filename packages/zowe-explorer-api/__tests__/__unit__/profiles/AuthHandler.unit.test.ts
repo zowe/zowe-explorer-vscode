@@ -72,11 +72,12 @@ describe("AuthHandler.lockProfile", () => {
 });
 
 describe("AuthHandler.promptForAuthentication", () => {
-    it("handles a token-based authentication error - login successful", async () => {
+    it("handles a token-based authentication error - login successful, profile is string", async () => {
         const tokenNotValidMsg = "Token is not valid or expired.";
         const impError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
         const ssoLogin = jest.fn().mockResolvedValue(true);
         const promptCredentials = jest.fn();
+        const updateTreeProvidersWithProfileMock = jest.spyOn(AuthHandler as any, "updateTreeProvidersWithProfile").mockImplementation();
         const showMessageMock = jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Log in to Authentication Service");
         const unlockProfileSpy = jest.spyOn(AuthHandler, "unlockProfile");
         await expect(AuthHandler.promptForAuthentication(impError, "lpar.zosmf", { promptCredentials, ssoLogin })).resolves.toBe(true);
@@ -86,6 +87,25 @@ describe("AuthHandler.promptForAuthentication", () => {
         expect(unlockProfileSpy).toHaveBeenCalledTimes(1);
         expect(unlockProfileSpy).toHaveBeenCalledWith("lpar.zosmf", true);
         expect(showMessageMock).toHaveBeenCalledTimes(1);
+        expect(updateTreeProvidersWithProfileMock).not.toHaveBeenCalled();
+    });
+
+    it("handles a standard authentication error - credentials provided, profile is string", async () => {
+        const tokenNotValidMsg = "Invalid credentials";
+        const impError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
+        const ssoLogin = jest.fn().mockResolvedValue(true);
+        const updateTreeProvidersWithProfileMock = jest.spyOn(AuthHandler as any, "updateTreeProvidersWithProfile").mockImplementation();
+        const promptCredentials = jest.fn().mockResolvedValue(["us3r", "p4ssw0rd"]);
+        const errorMessageMock = jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("Update Credentials");
+        const unlockProfileSpy = jest.spyOn(AuthHandler, "unlockProfile").mockClear();
+        await expect(AuthHandler.promptForAuthentication(impError, "lpar.zosmf", { promptCredentials, ssoLogin })).resolves.toBe(true);
+        expect(unlockProfileSpy).toHaveBeenCalledTimes(1);
+        expect(unlockProfileSpy).toHaveBeenCalledWith("lpar.zosmf", true);
+        expect(ssoLogin).not.toHaveBeenCalled();
+        expect(errorMessageMock).toHaveBeenCalledTimes(1);
+        expect(promptCredentials).toHaveBeenCalledTimes(1);
+        expect(promptCredentials).toHaveBeenCalledWith("lpar.zosmf", true);
+        expect(updateTreeProvidersWithProfileMock).not.toHaveBeenCalled();
     });
 });
 

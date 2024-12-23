@@ -76,6 +76,16 @@ export class AuthHandler {
         }
     }
 
+    private static async updateTreeProvidersWithProfile(profile: imperative.IProfileLoaded) {
+        // TODO: If we can access extender tree providers (e.g. CICS), it would help to propagate profile updates here.
+        // For now we will propagate profile changes to core providers (Data Sets, USS, Jobs)
+        const treeProviders = (await commands.executeCommand("zowe.getTreeProviders")) as any;
+        for (const provider of [treeProviders.ds, treeProviders.uss, treeProviders.job]) {
+            const node = (await (provider as IZoweTree<IZoweTreeNode>).getChildren()).find((n) => n.label === profile?.name);
+            node?.setProfileToChoice?.(profile);
+        }
+    }
+
     /**
      * Prompts the user to authenticate over SSO or a credential prompt in the event of an error.
      * @param imperativeError The authentication error that was encountered
@@ -100,6 +110,9 @@ export class AuthHandler {
                 });
                 if (userResp === message) {
                     if (await opts.ssoLogin(null, profileName)) {
+                        if (typeof profile !== "string") {
+                            AuthHandler.updateTreeProvidersWithProfile(profile);
+                        }
                         // SSO login was successful, unlock profile so it can be used again
                         AuthHandler.unlockProfile(profileName, true);
                         return true;
@@ -123,15 +136,8 @@ export class AuthHandler {
 
         if (creds != null) {
             // New creds were set, directly propagate new profile to other tree providers.
-
-            // TODO: If we can access extender tree providers (e.g. CICS), it would help to propagate profile updates here.
-            // For now we will propagate profile changes to core providers (Data Sets, USS, Jobs)
-            const treeProviders = (await commands.executeCommand("zowe.getTreeProviders")) as any;
-            for (const provider of [treeProviders.ds, treeProviders.uss, treeProviders.job]) {
-                const node = (await (provider as IZoweTree<IZoweTreeNode>).getChildren()).find((n) => n.label === profileName);
-                if (node && typeof profile !== "string") {
-                    node.setProfileToChoice(profile);
-                }
+            if (typeof profile !== "string") {
+                AuthHandler.updateTreeProvidersWithProfile(profile);
             }
             // Unlock profile so it can be used again
             AuthHandler.unlockProfile(profileName, true);
