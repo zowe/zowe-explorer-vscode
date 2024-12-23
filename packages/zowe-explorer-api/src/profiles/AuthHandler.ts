@@ -76,7 +76,7 @@ export class AuthHandler {
         }
     }
 
-    private static async updateTreeProvidersWithProfile(profile: imperative.IProfileLoaded) {
+    private static async updateTreeProvidersWithProfile(profile: imperative.IProfileLoaded): Promise<void> {
         // TODO: If we can access extender tree providers (e.g. CICS), it would help to propagate profile updates here.
         // For now we will propagate profile changes to core providers (Data Sets, USS, Jobs)
         const treeProviders = (await commands.executeCommand("zowe.getTreeProviders")) as any;
@@ -111,7 +111,7 @@ export class AuthHandler {
                 if (userResp === message) {
                     if (await opts.ssoLogin(null, profileName)) {
                         if (typeof profile !== "string") {
-                            AuthHandler.updateTreeProvidersWithProfile(profile);
+                            await AuthHandler.updateTreeProvidersWithProfile(profile);
                         }
                         // SSO login was successful, unlock profile so it can be used again
                         AuthHandler.unlockProfile(profileName, true);
@@ -137,7 +137,7 @@ export class AuthHandler {
         if (creds != null) {
             // New creds were set, directly propagate new profile to other tree providers.
             if (typeof profile !== "string") {
-                AuthHandler.updateTreeProvidersWithProfile(profile);
+                await AuthHandler.updateTreeProvidersWithProfile(profile);
             }
             // Unlock profile so it can be used again
             AuthHandler.unlockProfile(profileName, true);
