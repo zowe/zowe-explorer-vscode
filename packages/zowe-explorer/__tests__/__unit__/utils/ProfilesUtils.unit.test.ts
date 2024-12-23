@@ -390,9 +390,7 @@ describe("ProfilesUtils unit tests", () => {
             const promptCredentialsProfilesMock = jest.spyOn(mockProfileInstance, "promptCredentials").mockResolvedValueOnce(["someusername", "pw"]);
             const updateCachedProfileMock = jest.spyOn(mockProfileInstance, "updateCachedProfile").mockResolvedValueOnce(undefined);
             const profile = createIProfile();
-            jest.spyOn(mockProfileInstance, "getLoadedProfConfig").mockResolvedValue(profile);
             Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
-            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
             const unlockProfileSpy = jest.spyOn(AuthHandler, "unlockProfile");
             const mockNode = createDatasetSessionNode(createISession(), profile);
             await ProfilesUtils.promptCredentials(mockNode);

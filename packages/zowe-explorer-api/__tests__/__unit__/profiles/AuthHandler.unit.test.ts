@@ -35,8 +35,8 @@ describe("AuthHandler.isProfileLocked", () => {
 describe("AuthHandler.lockProfile", () => {
     it("assigns and acquires a Mutex to the profile in the profile map", async () => {
         await AuthHandler.lockProfile(TEST_PROFILE_NAME);
-        expect((AuthHandler as any).lockedProfiles.has(TEST_PROFILE_NAME)).toBe(true);
-        expect((AuthHandler as any).lockedProfiles.get(TEST_PROFILE_NAME)).toBeInstanceOf(Mutex);
+        expect((AuthHandler as any).profileLocks.has(TEST_PROFILE_NAME)).toBe(true);
+        expect((AuthHandler as any).profileLocks.get(TEST_PROFILE_NAME)).toBeInstanceOf(Mutex);
         AuthHandler.unlockProfile(TEST_PROFILE_NAME);
     });
 
@@ -58,15 +58,15 @@ describe("AuthHandler.lockProfile", () => {
 
     it("reuses the same Mutex for the profile if it already exists", async () => {
         await AuthHandler.lockProfile(TEST_PROFILE_NAME);
-        expect((AuthHandler as any).lockedProfiles.has(TEST_PROFILE_NAME)).toBe(true);
+        expect((AuthHandler as any).profileLocks.has(TEST_PROFILE_NAME)).toBe(true);
         // cache initial mutex for comparison
-        const mutex = (AuthHandler as any).lockedProfiles.get(TEST_PROFILE_NAME);
+        const mutex = (AuthHandler as any).profileLocks.get(TEST_PROFILE_NAME);
         expect(mutex).toBeInstanceOf(Mutex);
         AuthHandler.unlockProfile(TEST_PROFILE_NAME);
 
         // same mutex is still present in map since lock/unlock sequence was used
         await AuthHandler.lockProfile(TEST_PROFILE_NAME);
-        expect(mutex).toBe((AuthHandler as any).lockedProfiles.get(TEST_PROFILE_NAME));
+        expect(mutex).toBe((AuthHandler as any).profileLocks.get(TEST_PROFILE_NAME));
         AuthHandler.unlockProfile(TEST_PROFILE_NAME);
     });
 });
@@ -75,7 +75,7 @@ describe("AuthHandler.unlockProfile", () => {
     it("releases the Mutex for the profile in the profile map", async () => {
         await AuthHandler.lockProfile(TEST_PROFILE_NAME);
         AuthHandler.unlockProfile(TEST_PROFILE_NAME);
-        expect((AuthHandler as any).lockedProfiles.get(TEST_PROFILE_NAME)!.isLocked()).toBe(false);
+        expect((AuthHandler as any).profileLocks.get(TEST_PROFILE_NAME)!.isLocked()).toBe(false);
     });
 
     it("does nothing if there is no mutex in the profile map", async () => {
@@ -96,14 +96,14 @@ describe("AuthHandler.unlockProfile", () => {
     it("reuses the same Mutex for the profile if it already exists", async () => {
         await AuthHandler.lockProfile(TEST_PROFILE_NAME);
         AuthHandler.unlockProfile(TEST_PROFILE_NAME);
-        expect((AuthHandler as any).lockedProfiles.has(TEST_PROFILE_NAME)).toBe(true);
+        expect((AuthHandler as any).profileLocks.has(TEST_PROFILE_NAME)).toBe(true);
         // cache initial mutex for comparison
-        const mutex = (AuthHandler as any).lockedProfiles.get(TEST_PROFILE_NAME);
+        const mutex = (AuthHandler as any).profileLocks.get(TEST_PROFILE_NAME);
 
         // same mutex is still present in map since lock/unlock sequence was used
         await AuthHandler.lockProfile(TEST_PROFILE_NAME);
         AuthHandler.unlockProfile(TEST_PROFILE_NAME);
-        expect(mutex).toBe((AuthHandler as any).lockedProfiles.get(TEST_PROFILE_NAME));
+        expect(mutex).toBe((AuthHandler as any).profileLocks.get(TEST_PROFILE_NAME));
     });
 
     it("refreshes resources if refreshResources parameter is true", async () => {

@@ -54,14 +54,16 @@ export class FileManagement {
     }
 
     public static async reloadActiveEditorForProfile(profileName: string): Promise<void> {
+        const document = window.activeTextEditor?.document;
         if (
-            (Object.values(ZoweScheme) as string[]).includes(window.activeTextEditor.document.uri.scheme) &&
-            window.activeTextEditor.document.uri.path.startsWith(`/${profileName}/`) &&
-            !window.activeTextEditor.document.isDirty
+            document != null &&
+            (Object.values(ZoweScheme) as string[]).includes(document.uri.scheme) &&
+            document.uri.path.startsWith(`/${profileName}/`) &&
+            !document.isDirty
         ) {
-            const fsEntry = (await workspace.fs.stat(window.activeTextEditor.document.uri)) as IFileSystemEntry;
+            const fsEntry = (await workspace.fs.stat(document.uri)) as IFileSystemEntry;
             fsEntry.wasAccessed = false;
-            await workspace.fs.readFile(window.activeTextEditor.document.uri);
+            await workspace.fs.readFile(document.uri);
         }
     }
 
