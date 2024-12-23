@@ -59,10 +59,16 @@ export class AuthHandler {
         if (deferred) {
             deferred.unlock();
             if (refreshResources) {
+                // TODO: Log errors using ZoweLogger once available in ZE API
                 // refresh an active, unsaved editor if it uses the profile
-                reloadActiveEditorForProfile(profileName);
+                reloadActiveEditorForProfile(profileName)
+                    // eslint-disable-next-line no-console
+                    .catch((err) => err instanceof Error && console.error(err.message));
+
                 // refresh virtual workspaces for the profile
-                reloadWorkspacesForProfile(profileName);
+                reloadWorkspacesForProfile(profileName)
+                    // eslint-disable-next-line no-console
+                    .catch((err) => err instanceof Error && console.error(err.message));
             }
         }
     }
@@ -149,13 +155,13 @@ export class AuthHandler {
 
         // Attempt to acquire the lock
         const mutex = this.lockedProfiles.get(profileName);
-        await mutex!.lock();
+        await mutex.lock();
 
         // Prompt the user to re-authenticate if an error and options were provided
         if (imperativeError && opts) {
             const credsEntered = await AuthHandler.promptForAuthentication(imperativeError, profile, opts);
             if (!credsEntered) {
-                mutex!.unlock();
+                mutex.unlock();
             }
             // Return `true` as the mutex was still locked successfully.
             return true;
@@ -192,7 +198,7 @@ export class AuthHandler {
     }
 }
 
-export function withCredentialManagement<T extends (...args: any[]) => any | PromiseLike<any>>(
+export function withCredentialManagement<T extends (...args: any[]) => unknown | PromiseLike<unknown>>(
     authMethods: IAuthMethods,
     profile: ProfileLike,
     apiMethod: T
@@ -205,13 +211,12 @@ export function withCredentialManagement<T extends (...args: any[]) => any | Pro
             return res;
         } catch (error) {
             if (error instanceof imperative.ImperativeError) {
-                const imperativeError: imperative.ImperativeError = error as imperative.ImperativeError;
-                const httpErrorCode = Number(imperativeError.mDetails.errorCode);
+                const httpErrorCode = Number(error.mDetails.errorCode);
                 if (
                     httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
-                    imperativeError.message.includes("All configured authentication methods failed")
+                    error.message.includes("All configured authentication methods failed")
                 ) {
-                    await AuthHandler.promptForAuthentication(imperativeError, profile, { ...authMethods });
+                    await AuthHandler.promptForAuthentication(error, profile, { ...authMethods });
                     return await apiMethod(...args);
                 } else {
                     throw error;

@@ -29,11 +29,11 @@ export class DeferredPromise<T> {
 
     public constructor() {
         this.promise = new Promise<T>((resolve, reject) => {
-            this.resolve = (value) => {
+            this.resolve = (value): void => {
                 this.mStatus = "fulfilled";
                 resolve(value);
             };
-            this.reject = (err) => {
+            this.reject = (err): void => {
                 this.mStatus = "rejected";
                 reject(err);
             };

@@ -48,6 +48,13 @@ export async function reloadWorkspacesForProfile(profileName: string): Promise<v
     for (const folder of foldersWithProfile) {
         try {
             await workspace.fs.stat(folder.uri.with({ query: "fetch=true" }));
-        } catch (err) {}
+        } catch (err) {
+            if (err instanceof Error) {
+                // TODO: Remove console.error in favor of logger
+                // (need to move logger to ZE API)
+                // eslint-disable-next-line no-console
+                console.error("reloadWorkspacesForProfile:", err.message);
+            }
+        }
     }
 }
