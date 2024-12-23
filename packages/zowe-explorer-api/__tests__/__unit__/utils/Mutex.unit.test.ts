@@ -1,4 +1,4 @@
-import { DeferredPromise, Mutex } from "../../../src";
+import { Mutex } from "../../../src";
 
 function getBlockMock(): Mutex {
     return new Mutex();
