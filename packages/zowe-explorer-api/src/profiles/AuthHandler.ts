@@ -185,32 +185,3 @@ export class AuthHandler {
         return mutex.isLocked();
     }
 }
-
-export function withCredentialManagement<T extends (...args: any[]) => unknown | PromiseLike<unknown>>(
-    authMethods: IAuthMethods,
-    profile: ProfileLike,
-    apiMethod: T
-): T {
-    return async function (...args: any[]) {
-        await AuthHandler.lockProfile(profile);
-        try {
-            const res = await apiMethod(...args);
-            AuthHandler.unlockProfile(profile);
-            return res;
-        } catch (error) {
-            if (error instanceof imperative.ImperativeError) {
-                const httpErrorCode = Number(error.mDetails.errorCode);
-                if (
-                    httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
-                    error.message.includes("All configured authentication methods failed")
-                ) {
-                    await AuthHandler.promptForAuthentication(error, profile, { ...authMethods });
-                    return await apiMethod(...args);
-                } else {
-                    throw error;
-                }
-            }
-            throw error;
-        }
-    } as T;
-}
