@@ -177,6 +177,8 @@ describe("ProfilesUtils unit tests", () => {
             expect(ssoLoginSpy).not.toHaveBeenCalled();
             showMessageSpy.mockClear();
             promptCredsSpy.mockClear();
+            lockMock.mockRestore();
+            unlockMock.mockRestore();
         });
 
         it("should handle token error and proceed to login", async () => {
@@ -212,6 +214,8 @@ describe("ProfilesUtils unit tests", () => {
             showErrorSpy.mockClear();
             showMessageSpy.mockClear();
             ssoLoginSpy.mockClear();
+            lockMock.mockRestore();
+            unlockMock.mockRestore();
         });
         it("should handle credential error and no selection made for update", async () => {
             const errorDetails = new imperative.ImperativeError({

@@ -52,6 +52,7 @@ describe("AuthUtils", () => {
                 })
             );
             profilesCacheMock[Symbol.dispose]();
+            isUsingTokenAuthMock.mockRestore();
         });
     });
     describe("promptForSsoLogin", () => {
