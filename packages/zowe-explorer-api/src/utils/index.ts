@@ -9,9 +9,8 @@
  *
  */
 
-import { IFileSystemEntry, ZoweScheme } from "../fs";
 import { IZoweTreeNode } from "../tree";
-import { window, workspace } from "vscode";
+import { workspace } from "vscode";
 
 export * from "./DeferredPromise";
 export * from "./ErrorCorrelator";

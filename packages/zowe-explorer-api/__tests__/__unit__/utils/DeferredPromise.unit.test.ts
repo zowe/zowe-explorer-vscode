@@ -31,4 +31,17 @@ describe("DeferredPromise.status", () => {
         deferred.resolve(null);
         expect(deferred.status).toBe("fulfilled");
     });
+
+    it("returns rejected when rejected", async () => {
+        const deferred = new DeferredPromise();
+        let errorCaught = false;
+        setImmediate(() => deferred.reject());
+        try {
+            await deferred.promise;
+        } catch (err) {
+            errorCaught = true;
+        }
+        expect(deferred.status).toBe("rejected");
+        expect(errorCaught).toBe(true);
+    });
 });

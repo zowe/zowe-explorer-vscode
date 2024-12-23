@@ -162,9 +162,7 @@ export class AuthHandler {
         // Prompt the user to re-authenticate if an error and options were provided
         if (imperativeError && opts) {
             const credsEntered = await AuthHandler.promptForAuthentication(imperativeError, profile, opts);
-            if (!credsEntered) {
-                mutex.release();
-            }
+            mutex.release();
             // Return `true` as the mutex was still locked successfully.
             return true;
         }
