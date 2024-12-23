@@ -13,8 +13,14 @@ import * as fs from "fs";
 import * as path from "path";
 import * as util from "util";
 import * as vscode from "vscode";
-import { Gui, imperative, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
-import { createAltTypeIProfile, createInstanceOfProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
+import { AuthHandler, Gui, imperative, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import {
+    createAltTypeIProfile,
+    createInstanceOfProfile,
+    createIProfile,
+    createISession,
+    createValidIProfile,
+} from "../../__mocks__/mockCreators/shared";
 import { MockedProperty } from "../../__mocks__/mockUtils";
 import { Constants } from "../../../src/configuration/Constants";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
@@ -26,6 +32,7 @@ import { ProfilesConvertStatus, ProfilesUtils } from "../../../src/utils/Profile
 import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { Definitions } from "../../../src/configuration/Definitions";
+import { createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets";
 
 jest.mock("../../../src/tools/ZoweLogger");
 jest.mock("fs");
@@ -376,6 +383,25 @@ describe("ProfilesUtils unit tests", () => {
             jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
             await ProfilesUtils.promptCredentials(null as any);
             expect(getProfileInfoSpy).toHaveBeenCalled();
+        });
+
+        it("calls unlockProfile once credentials are provided", async () => {
+            const mockProfileInstance = new Profiles(imperative.Logger.getAppLogger());
+            const promptCredentialsProfilesMock = jest.spyOn(mockProfileInstance, "promptCredentials").mockResolvedValueOnce(["someusername", "pw"]);
+            const updateCachedProfileMock = jest.spyOn(mockProfileInstance, "updateCachedProfile").mockResolvedValueOnce(undefined);
+            const profile = createIProfile();
+            jest.spyOn(mockProfileInstance, "getLoadedProfConfig").mockResolvedValue(profile);
+            Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
+            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
+            const unlockProfileSpy = jest.spyOn(AuthHandler, "unlockProfile");
+            const mockNode = createDatasetSessionNode(createISession(), profile);
+            await ProfilesUtils.promptCredentials(mockNode);
+            expect(promptCredentialsProfilesMock).toHaveBeenCalledTimes(1);
+            expect(promptCredentialsProfilesMock).toHaveBeenCalledWith(profile, true);
+            expect(unlockProfileSpy).toHaveBeenCalledTimes(1);
+            expect(unlockProfileSpy).toHaveBeenCalledWith(profile);
+            expect(updateCachedProfileMock).toHaveBeenCalledTimes(1);
+            expect(updateCachedProfileMock).toHaveBeenCalledWith(profile, mockNode);
         });
 
         it("shows an error message if the profile input is undefined", async () => {

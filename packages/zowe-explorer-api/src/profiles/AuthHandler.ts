@@ -32,7 +32,7 @@ export interface AuthPromptParams extends IAuthMethods {
 
 type ProfileLike = string | imperative.IProfileLoaded;
 export class AuthHandler {
-    private static lockedProfiles: Map<string, Mutex> = new Map();
+    private static profileLocks: Map<string, Mutex> = new Map();
 
     /**
      * Function that checks whether a profile is using token based authentication
@@ -55,7 +55,8 @@ export class AuthHandler {
      */
     public static unlockProfile(profile: ProfileLike, refreshResources?: boolean): void {
         const profileName = typeof profile === "string" ? profile : profile.name;
-        const mutex = this.lockedProfiles.get(profileName);
+        const mutex = this.profileLocks.get(profileName);
+        // If a mutex doesn't exist for this profile or the mutex is no longer locked, return
         if (mutex == null || !mutex.isLocked()) {
             return;
         }
@@ -151,12 +152,12 @@ export class AuthHandler {
         const profileName = typeof profile === "string" ? profile : profile.name;
 
         // If the mutex does not exist, make one for the profile and acquire the lock
-        if (!this.lockedProfiles.has(profileName)) {
-            this.lockedProfiles.set(profileName, new Mutex());
+        if (!this.profileLocks.has(profileName)) {
+            this.profileLocks.set(profileName, new Mutex());
         }
 
         // Attempt to acquire the lock
-        const mutex = this.lockedProfiles.get(profileName);
+        const mutex = this.profileLocks.get(profileName);
         await mutex.acquire();
 
         // Prompt the user to re-authenticate if an error and options were provided
@@ -176,7 +177,7 @@ export class AuthHandler {
      * @returns {boolean} `true` if the given profile is locked, `false` otherwise
      */
     public static isProfileLocked(profile: ProfileLike): boolean {
-        const mutex = this.lockedProfiles.get(typeof profile === "string" ? profile : profile.name);
+        const mutex = this.profileLocks.get(typeof profile === "string" ? profile : profile.name);
         if (mutex == null) {
             return false;
         }
