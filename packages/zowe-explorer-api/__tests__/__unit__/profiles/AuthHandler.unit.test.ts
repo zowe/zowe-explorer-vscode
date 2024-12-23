@@ -10,7 +10,7 @@
  */
 
 import { Mutex } from "async-mutex";
-import { AuthHandler } from "../../../src";
+import { AuthHandler, Gui } from "../../../src";
 import { FileManagement } from "../../../src/utils/FileManagement";
 import { ImperativeError } from "@zowe/imperative";
 
@@ -68,6 +68,24 @@ describe("AuthHandler.lockProfile", () => {
         await AuthHandler.lockProfile(TEST_PROFILE_NAME);
         expect(mutex).toBe((AuthHandler as any).profileLocks.get(TEST_PROFILE_NAME));
         AuthHandler.unlockProfile(TEST_PROFILE_NAME);
+    });
+});
+
+describe("AuthHandler.promptForAuthentication", () => {
+    it("handles a token-based authentication error - login successful", async () => {
+        const tokenNotValidMsg = "Token is not valid or expired.";
+        const impError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
+        const ssoLogin = jest.fn().mockResolvedValue(true);
+        const promptCredentials = jest.fn();
+        const showMessageMock = jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Log in to Authentication Service");
+        const unlockProfileSpy = jest.spyOn(AuthHandler, "unlockProfile");
+        await expect(AuthHandler.promptForAuthentication(impError, "lpar.zosmf", { promptCredentials, ssoLogin })).resolves.toBe(true);
+        expect(promptCredentials).not.toHaveBeenCalled();
+        expect(ssoLogin).toHaveBeenCalledTimes(1);
+        expect(ssoLogin).toHaveBeenCalledWith(null, "lpar.zosmf");
+        expect(unlockProfileSpy).toHaveBeenCalledTimes(1);
+        expect(unlockProfileSpy).toHaveBeenCalledWith("lpar.zosmf", true);
+        expect(showMessageMock).toHaveBeenCalledTimes(1);
     });
 });
 
