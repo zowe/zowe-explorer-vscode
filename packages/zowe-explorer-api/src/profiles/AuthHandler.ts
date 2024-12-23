@@ -14,7 +14,7 @@ import { CorrelatedError, reloadActiveEditorForProfile, reloadWorkspacesForProfi
 import * as imperative from "@zowe/imperative";
 import { IZoweTree, IZoweTreeNode } from "../tree";
 import { commands } from "vscode";
-import { Mutex } from "../utils/Mutex";
+import { Mutex } from "async-mutex";
 
 export interface IAuthMethods {
     /* Method for establishing SSO login with a given profile name */
@@ -57,7 +57,7 @@ export class AuthHandler {
         const profileName = typeof profile === "string" ? profile : profile.name;
         const deferred = this.lockedProfiles.get(profileName);
         if (deferred) {
-            deferred.unlock();
+            deferred.release();
             if (refreshResources) {
                 // TODO: Log errors using ZoweLogger once available in ZE API
                 // refresh an active, unsaved editor if it uses the profile
@@ -155,13 +155,13 @@ export class AuthHandler {
 
         // Attempt to acquire the lock
         const mutex = this.lockedProfiles.get(profileName);
-        await mutex.lock();
+        await mutex.acquire();
 
         // Prompt the user to re-authenticate if an error and options were provided
         if (imperativeError && opts) {
             const credsEntered = await AuthHandler.promptForAuthentication(imperativeError, profile, opts);
             if (!credsEntered) {
-                mutex.unlock();
+                mutex.release();
             }
             // Return `true` as the mutex was still locked successfully.
             return true;
@@ -181,20 +181,7 @@ export class AuthHandler {
             return false;
         }
 
-        return mutex.locked;
-    }
-
-    /**
-     * Non-blocking operation that attempts to acquire the lock for a profile if it can be acquired.
-     * @param profile The profile to acquire the lock for
-     * @returns {boolean} `true` if the lock was acquired, `false` otherwise
-     */
-    public static tryToLockProfile(profile: ProfileLike): boolean {
-        const mutex = this.lockedProfiles.get(typeof profile === "string" ? profile : profile.name);
-        if (mutex) {
-            return mutex.tryLock();
-        }
-        return true;
+        return mutex.isLocked();
     }
 }
 

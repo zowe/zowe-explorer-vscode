@@ -13,7 +13,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as util from "util";
 import * as vscode from "vscode";
-import { Mutex, Gui, imperative, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { createAltTypeIProfile, createInstanceOfProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
 import { MockedProperty } from "../../__mocks__/mockUtils";
 import { Constants } from "../../../src/configuration/Constants";
@@ -157,8 +157,6 @@ describe("ProfilesUtils unit tests", () => {
             const ssoLoginSpy = jest.fn();
             const profile = { name: "lpar.zosmf", type: "zosmf" } as any;
             // disable locking mechanism for this test, will be tested in separate test cases
-            const lockMock = jest.spyOn(Mutex.prototype, "lock").mockImplementation();
-            const unlockMock = jest.spyOn(Mutex.prototype, "unlock").mockImplementation();
 
             Object.defineProperty(Constants, "PROFILES_CACHE", {
                 value: {
@@ -177,8 +175,6 @@ describe("ProfilesUtils unit tests", () => {
             expect(ssoLoginSpy).not.toHaveBeenCalled();
             showMessageSpy.mockClear();
             promptCredsSpy.mockClear();
-            lockMock.mockRestore();
-            unlockMock.mockRestore();
         });
 
         it("should handle token error and proceed to login", async () => {
@@ -204,8 +200,6 @@ describe("ProfilesUtils unit tests", () => {
                 },
                 configurable: true,
             });
-            const lockMock = jest.spyOn(Mutex.prototype, "lock").mockImplementation();
-            const unlockMock = jest.spyOn(Mutex.prototype, "unlock").mockImplementation();
             await AuthUtils.errorHandling(errorDetails, { profile, scenario });
             expect(showMessageSpy).toHaveBeenCalledTimes(1);
             expect(ssoLoginSpy).toHaveBeenCalledTimes(1);
@@ -214,8 +208,6 @@ describe("ProfilesUtils unit tests", () => {
             showErrorSpy.mockClear();
             showMessageSpy.mockClear();
             ssoLoginSpy.mockClear();
-            lockMock.mockRestore();
-            unlockMock.mockRestore();
         });
         it("should handle credential error and no selection made for update", async () => {
             const errorDetails = new imperative.ImperativeError({
