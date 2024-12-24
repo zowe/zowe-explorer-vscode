@@ -10,9 +10,10 @@
  */
 
 import { Mutex } from "async-mutex";
-import { AuthHandler, Gui } from "../../../src";
+import { AuthHandler, Gui, imperative } from "../../../src";
 import { FileManagement } from "../../../src/utils/FileManagement";
 import { ImperativeError } from "@zowe/imperative";
+import { commands } from "vscode";
 
 const TEST_PROFILE_NAME = "lpar.zosmf";
 
@@ -68,6 +69,59 @@ describe("AuthHandler.lockProfile", () => {
         await AuthHandler.lockProfile(TEST_PROFILE_NAME);
         expect(mutex).toBe((AuthHandler as any).profileLocks.get(TEST_PROFILE_NAME));
         AuthHandler.unlockProfile(TEST_PROFILE_NAME);
+    });
+});
+
+describe("AuthHandler.updateTreeProvidersWithProfile", () => {
+    function getBlockMocks(nodeInChildren: boolean = false) {
+        const setProfileToChoice = jest.fn();
+        const dummyNode = nodeInChildren
+            ? {
+                  label: "lpar.zosmf",
+                  setProfileToChoice,
+              }
+            : undefined;
+        const children = [dummyNode].filter(Boolean);
+        const getChildren = jest.fn().mockReturnValue(children);
+        const treeProviders = {
+            ds: {
+                getChildren,
+            },
+            uss: {
+                getChildren,
+            },
+            job: {
+                getChildren,
+            },
+        };
+        return {
+            children,
+            dummyNode,
+            executeCommand: jest.spyOn(commands, "executeCommand").mockResolvedValueOnce(treeProviders),
+            getChildren,
+            setProfileToChoice,
+            treeProviders,
+        };
+    }
+    it("calls node.setProfileToChoice on matching profile nodes in each provider", async () => {
+        const blockMocks = getBlockMocks(true);
+        const profile: imperative.IProfileLoaded = { name: "lpar.zosmf", type: "zosmf", message: "", failNotFound: true };
+        await (AuthHandler as any).updateTreeProvidersWithProfile(profile);
+        // getChildren called for each tree provider
+        expect(blockMocks.getChildren).toHaveBeenCalledTimes(3);
+        // setProfileToChoice called once for each matching profile node per provider (3 providers, 3 calls)
+        expect(blockMocks.setProfileToChoice).toHaveBeenCalledTimes(3);
+        expect(blockMocks.setProfileToChoice).toHaveBeenCalledWith(profile);
+    });
+
+    it("does nothing if the profile node does not exist for a provider", async () => {
+        const blockMocks = getBlockMocks();
+        const profile: imperative.IProfileLoaded = { name: "lpar.zosmf", type: "zosmf", message: "", failNotFound: true };
+        await (AuthHandler as any).updateTreeProvidersWithProfile(profile);
+        // getChildren called for each tree provider
+        expect(blockMocks.getChildren).toHaveBeenCalledTimes(3);
+        // if no matching nodes were found, setProfileToChoice should never be called
+        expect(blockMocks.setProfileToChoice).not.toHaveBeenCalled();
     });
 });
 
