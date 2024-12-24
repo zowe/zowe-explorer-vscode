@@ -827,9 +827,7 @@ export class Profiles extends ProfilesCache {
                         comment: ["Service profile name"],
                     })
                 );
-                if (AuthHandler.isProfileLocked(serviceProfile)) {
-                    AuthHandler.unlockProfile(serviceProfile);
-                }
+                AuthHandler.unlockProfile(serviceProfile, true);
             }
             return loginOk;
         } catch (err) {

@@ -461,7 +461,7 @@ export class ProfilesUtils {
                 args: [typeof profile === "string" ? profile : profile.name],
                 comment: ["Profile name"],
             });
-            AuthHandler.unlockProfile(profile);
+            AuthHandler.unlockProfile(profile, true);
             if (typeof profile !== "string") {
                 await Constants.PROFILES_CACHE.updateCachedProfile(profile, node);
             }

@@ -397,7 +397,7 @@ describe("ProfilesUtils unit tests", () => {
             expect(promptCredentialsProfilesMock).toHaveBeenCalledTimes(1);
             expect(promptCredentialsProfilesMock).toHaveBeenCalledWith(profile, true);
             expect(unlockProfileSpy).toHaveBeenCalledTimes(1);
-            expect(unlockProfileSpy).toHaveBeenCalledWith(profile);
+            expect(unlockProfileSpy).toHaveBeenCalledWith(profile, true);
             expect(updateCachedProfileMock).toHaveBeenCalledTimes(1);
             expect(updateCachedProfileMock).toHaveBeenCalledWith(profile, mockNode);
         });
