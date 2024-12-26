@@ -128,8 +128,10 @@ export class ProfilesCache {
 
     /**
      * Updates profile in allProfiles array and if default updates defaultProfileByType
+     *
      * @param {string} profileLoaded
      * @param {IZoweNodeType} profileNode
+     *
      * @returns {void}
      */
     public updateProfilesArrays(profileLoaded: zowe.imperative.IProfileLoaded, profileNode?: IZoweNodeType): void {
