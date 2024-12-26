@@ -14,7 +14,6 @@ import { createUSSTree } from "../../../__mocks__/mockCreators/uss";
 import { saveUSSFile } from "../../../src/uss/actions";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import { Gui } from "@zowe/zowe-explorer-api";
-import * as globals from "../../../src/globals";
 import * as vscode from "vscode";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
@@ -24,6 +23,7 @@ describe("ZoweSaveQueue - unit tests", () => {
         const globalMocks = {
             errorMessageSpy: jest.spyOn(Gui, "errorMessage"),
             markDocumentUnsavedSpy: jest.spyOn(workspaceUtils, "markDocumentUnsaved"),
+            handleAutoSaveOnErrorMock: jest.spyOn(workspaceUtils, "handleAutoSaveOnError").mockImplementation(),
             processNextSpy: jest.spyOn(ZoweSaveQueue as any, "processNext"),
             allSpy: jest.spyOn(ZoweSaveQueue, "all"),
             trees: {
@@ -117,5 +117,47 @@ describe("ZoweSaveQueue - unit tests", () => {
                 'Failed to upload changes for [failingFile](command:vscode.open?["/some/failing/path"]): Example error'
             );
         }
+    });
+
+    describe("markAllUnsaved", () => {
+        function getBlockMocks(): Record<string, jest.SpyInstance> {
+            return {
+                markDocumentUnsaved: jest.spyOn(workspaceUtils, "markDocumentUnsaved").mockClear().mockImplementation(),
+            };
+        }
+
+        it("marks all documents as unsaved in the queue", async () => {
+            const blockMocks = getBlockMocks();
+            (ZoweSaveQueue as any).savingQueue = [
+                {
+                    savedFile: { fileName: "some.jcl" },
+                } as any,
+                {
+                    savedFile: { fileName: "SOME.C.DS(MEM).c" } as any,
+                } as any,
+            ];
+            await ZoweSaveQueue.markAllUnsaved();
+            expect(blockMocks.markDocumentUnsaved).toHaveBeenCalledTimes(2);
+        });
+
+        it("clears the queue if clearQueue is true", async () => {
+            (ZoweSaveQueue as any).savingQueue = [
+                {
+                    savedFile: { fileName: "some.jcl" },
+                } as any,
+            ];
+            await ZoweSaveQueue.markAllUnsaved();
+            expect((ZoweSaveQueue as any).savingQueue.length).toBe(0);
+        });
+
+        it("does not clear the queue if clearQueue is false", async () => {
+            (ZoweSaveQueue as any).savingQueue = [
+                {
+                    savedFile: { fileName: "some.jcl" },
+                } as any,
+            ];
+            await ZoweSaveQueue.markAllUnsaved(false);
+            expect((ZoweSaveQueue as any).savingQueue.length).toBe(1);
+        });
     });
 });

@@ -43,6 +43,7 @@ import { getNodeLabels } from "../../../src/dataset/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { mocked } from "../../../__mocks__/mockUtils";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
+import * as workspaceUtils from "../../../src/utils/workspace";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -1071,6 +1072,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
             profileInstance,
             testDatasetTree,
             uploadContentSpy,
+            handleAutoSaveOnError: jest.spyOn(workspaceUtils, "handleAutoSaveOnError").mockImplementation(),
         };
     }
 
@@ -1236,6 +1238,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         (testDocument as any).fileName = path.join(globals.DS_DIR, testDocument.fileName);
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
+        expect(blockMocks.handleAutoSaveOnError).toHaveBeenCalled();
 
         expect(globalMocks.concatChildNodes).toBeCalled();
         expect(mocked(Gui.errorMessage)).toBeCalledWith("failed");

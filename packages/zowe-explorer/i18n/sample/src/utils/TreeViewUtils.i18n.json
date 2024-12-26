@@ -1,0 +1,4 @@
+{
+  "uss.renameNode": "Rename",
+  "unsavedChanges.errorMsg": "Unable to {0} {1} because you have unsaved changes in this {2}. Please save your work and try again."
+}
