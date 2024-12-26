@@ -230,35 +230,6 @@ describe("ProfilesCache", () => {
         expect((profCache as any).defaultProfileByType.get("zosmf").profile).toMatchObject(lpar2Profile.profile);
     });
 
-    it("updateCachedProfile should refresh all profiles when autoStore is true", async () => {
-        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValueOnce({
-            getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: true } }),
-        } as unknown as zowe.imperative.ProfileInfo);
-        const refreshSpy = jest.spyOn(profCache, "refresh").mockImplementation();
-        await profCache.updateCachedProfile({
-            ...lpar1Profile,
-            profile: lpar2Profile.profile,
-        } as zowe.imperative.IProfileLoaded);
-        expect(refreshSpy).toHaveBeenCalledTimes(1);
-    });
-
-    it("updateCachedProfile should update cached profile when autoStore is false", async () => {
-        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
-        profCache.allProfiles = [lpar1Profile as zowe.imperative.IProfileLoaded];
-        (profCache as any).defaultProfileByType = new Map([["zosmf", { ...profCache.allProfiles[0] }]]);
-        expect(profCache.allProfiles[0].profile).toMatchObject(lpar1Profile.profile);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValueOnce({
-            getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: false } }),
-        } as unknown as zowe.imperative.ProfileInfo);
-        await profCache.updateCachedProfile({
-            ...lpar1Profile,
-            profile: lpar2Profile.profile,
-        } as zowe.imperative.IProfileLoaded);
-        expect(profCache.allProfiles[0].profile).toMatchObject(lpar2Profile.profile);
-        expect((profCache as any).defaultProfileByType.get("zosmf").profile).toMatchObject(lpar2Profile.profile);
-    });
-
     it("getDefaultProfile should find default profile given type", () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
         (profCache as any).defaultProfileByType = new Map([["zosmf", lpar1Profile]]);

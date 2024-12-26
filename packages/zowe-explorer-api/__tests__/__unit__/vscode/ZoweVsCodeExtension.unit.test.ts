@@ -219,7 +219,7 @@ describe("ZoweVsCodeExtension", () => {
                 mergeArgsForProfile: jest.fn().mockReturnValue({ knownArgs: [] }),
             }),
             refresh: jest.fn(),
-            updateCachedProfile: jest.fn(),
+            updateProfilesArrays: jest.fn(),
         };
 
         beforeEach(() => {
@@ -376,7 +376,7 @@ describe("ZoweVsCodeExtension", () => {
                 expect(loginSpy).not.toHaveBeenCalled();
                 expect(testSpy).not.toHaveBeenCalled();
                 expect(testCache.updateBaseProfileFileLogin).toHaveBeenCalledWith(baseProfile, updProfile, false);
-                expect(testCache.updateCachedProfile).toHaveBeenCalledWith(serviceProfile, testNode, testRegister);
+                expect(testCache.updateProfilesArrays).toHaveBeenCalledWith(serviceProfile, testNode);
                 quickPickMock.mockRestore();
             });
         });
@@ -461,7 +461,6 @@ describe("ZoweVsCodeExtension", () => {
                     updateProperty: mockUpdateProperty,
                 }),
                 refresh: jest.fn(),
-                updateCachedProfile: jest.fn(),
             });
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
@@ -487,7 +486,6 @@ describe("ZoweVsCodeExtension", () => {
                     updateProperty: mockUpdateProperty,
                 }),
                 refresh: jest.fn(),
-                updateCachedProfile: jest.fn(),
             });
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
@@ -516,7 +514,6 @@ describe("ZoweVsCodeExtension", () => {
                     updateProperty: mockUpdateProperty,
                 }),
                 refresh: jest.fn(),
-                updateCachedProfile: jest.fn(),
             });
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("yes");
@@ -543,7 +540,6 @@ describe("ZoweVsCodeExtension", () => {
                     updateProperty: mockUpdateProperty,
                 }),
                 refresh: jest.fn(),
-                updateCachedProfile: jest.fn(),
             });
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             jest.spyOn(Gui, "showMessage").mockResolvedValueOnce(undefined);

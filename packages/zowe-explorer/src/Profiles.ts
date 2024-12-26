@@ -970,7 +970,8 @@ export class Profiles extends ProfilesCache {
             return; // See https://github.com/zowe/zowe-explorer-vscode/issues/1827
         }
 
-        const returnValue: string[] = [promptInfo.profile.user, promptInfo.profile.password];
+        const returnValue: string[] = [promptInfo.profile.user, promptInfo.profile.password, promptInfo.profile.base64EncodedAuth];
+        this.updateProfilesArrays(promptInfo);
         return returnValue;
     }
 
@@ -1264,6 +1265,7 @@ export class Profiles extends ProfilesCache {
             }
             if (loginOk) {
                 Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
+                await Profiles.getInstance().refresh(zeInstance);
             } else {
                 Gui.showMessage(this.profilesOpCancelled);
             }
@@ -1503,11 +1505,11 @@ export class Profiles extends ProfilesCache {
                 !serviceProfile.profile.tokenType?.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)
             ) {
                 await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(node.getSession());
-                await Profiles.getInstance().updateCachedProfile(serviceProfile, node);
             } else {
                 await ZoweVsCodeExtension.logoutWithBaseProfile(serviceProfile, ZoweExplorerApiRegister.getInstance(), this);
             }
             Gui.showMessage(localize("ssoLogout.successful", "Logout from authentication service was successful for {0}.", serviceProfile.name));
+            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
         } catch (error) {
             const message = localize("ssoLogout.error", "Unable to log out with {0}. {1}", serviceProfile.name, error?.message);
             ZoweLogger.error(message);
@@ -1558,7 +1560,7 @@ export class Profiles extends ProfilesCache {
         session.ISession.user = creds[0];
         session.ISession.password = creds[1];
         await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(session);
-        await Profiles.getInstance().updateCachedProfile(serviceProfile, node);
+        Profiles.getInstance().updateProfilesArrays(serviceProfile, node);
         return true;
     }
 
