@@ -146,11 +146,7 @@ Your token has been successfully invalidated.
 
 - **Syntax Highlighting:** Zowe Explorer supports syntax highlighting for data sets. You can search for and install such extensions in VS Code Marketplace.
 
-- **Update a profile**: Right-click a profile, select the **Manage Profile** option then select **Edit Profile** option from drop down list, and modify the information inside the profile.
-
-- **Delete a profile**: Right-click a profile, select the **Manage Profile** option then select **Delete Profile** option from drop down list, which opens the `zowe.config.json` file for the user to delete the profile manually:
-
-  ![Delete a V2 profile](/docs/images/ZE-v2-delete-profile.gif)
+- **Update or delete a profile**: Right-click a profile, select the **Manage Profile** option then select **Edit Profile** option from drop down list. This opens the `zowe.config.json` file for the user to modify properties in the profile or delete it.
 
 - **Hide a profile**: You can hide a profile from the profile tree by right-clicking the profile and selecting the **Manage Profile** and then select **Hide Profile** option from the drop down menu. Finally, if the profile is in multiple trees, choose whether the to hide from all trees or just the tree the action was started in. To unhide the profile, click the **+** button and select the profile from the quick pick list.
 
