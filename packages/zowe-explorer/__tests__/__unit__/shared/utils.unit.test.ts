@@ -1355,3 +1355,33 @@ describe("Shared utils unit tests - function initializeFileOpening", () => {
         expect(globalMocks.mockShowTextDocument).toBeCalledWith(globalMocks.mockTextDocument, { preview: false });
     });
 });
+
+describe("Shared utils unit tests - function debounce", () => {
+    beforeAll(() => {
+        jest.useFakeTimers();
+    });
+
+    afterAll(() => {
+        jest.useRealTimers();
+    });
+
+    it("executes a function twice when time between calls is long", () => {
+        const mockEventHandler = jest.fn();
+        const debouncedFn = sharedUtils.debounce(mockEventHandler, 100);
+        debouncedFn();
+        jest.runAllTimers();
+        debouncedFn();
+        jest.runAllTimers();
+        expect(mockEventHandler).toHaveBeenCalledTimes(2);
+    });
+
+    it("executes a function only once when time between calls is short", () => {
+        const mockEventHandler = jest.fn();
+        const debouncedFn = sharedUtils.debounce(mockEventHandler, 100);
+        debouncedFn();
+        jest.advanceTimersByTime(10);
+        debouncedFn();
+        jest.runAllTimers();
+        expect(mockEventHandler).toHaveBeenCalledTimes(1);
+    });
+});
