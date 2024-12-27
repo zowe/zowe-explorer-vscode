@@ -9,7 +9,7 @@
  *
  */
 
-import { DeferredPromise } from "../../../src";
+import { DeferredPromise, DeferredPromiseStatus } from "../../../src";
 
 describe("DeferredPromise constructor", () => {
     it("sets resolve and reject functions", () => {
@@ -23,13 +23,13 @@ describe("DeferredPromise constructor", () => {
 describe("DeferredPromise.status", () => {
     it("returns pending when not yet resolved", () => {
         const deferred = new DeferredPromise();
-        expect(deferred.status).toBe("pending");
+        expect(deferred.status).toBe(DeferredPromiseStatus.Pending);
     });
 
     it("returns fulfilled when resolved", () => {
         const deferred = new DeferredPromise();
         deferred.resolve(null);
-        expect(deferred.status).toBe("fulfilled");
+        expect(deferred.status).toBe(DeferredPromiseStatus.Fulfilled);
     });
 
     it("returns rejected when rejected", async () => {
@@ -41,7 +41,7 @@ describe("DeferredPromise.status", () => {
         } catch (err) {
             errorCaught = true;
         }
-        expect(deferred.status).toBe("rejected");
+        expect(deferred.status).toBe(DeferredPromiseStatus.Rejected);
         expect(errorCaught).toBe(true);
     });
 });

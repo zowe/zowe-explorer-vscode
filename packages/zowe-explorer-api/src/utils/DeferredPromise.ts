@@ -10,7 +10,11 @@
  */
 
 /* Status of the deferred promise */
-export type DeferredPromiseStatus = "pending" | "fulfilled" | "rejected";
+export enum DeferredPromiseStatus {
+    Pending = "pending",
+    Fulfilled = "fulfilled",
+    Rejected = "rejected",
+}
 
 /**
  * @brief Externally control the resolution and rejection of a promise.
@@ -21,7 +25,7 @@ export type DeferredPromiseStatus = "pending" | "fulfilled" | "rejected";
  * the promise's outcome depends on factors outside the immediate context.
  */
 export class DeferredPromise<T> {
-    private mStatus: DeferredPromiseStatus = "pending";
+    private mStatus: DeferredPromiseStatus = DeferredPromiseStatus.Pending;
 
     public promise: Promise<T>;
     public resolve: (value: T | PromiseLike<T>) => void;
@@ -30,11 +34,11 @@ export class DeferredPromise<T> {
     public constructor() {
         this.promise = new Promise<T>((resolve, reject) => {
             this.resolve = (value): void => {
-                this.mStatus = "fulfilled";
+                this.mStatus = DeferredPromiseStatus.Fulfilled;
                 resolve(value);
             };
             this.reject = (err): void => {
-                this.mStatus = "rejected";
+                this.mStatus = DeferredPromiseStatus.Rejected;
                 reject(err);
             };
         });
