@@ -1832,13 +1832,13 @@
         "zowe.pagination.enabled": {
           "type": "boolean",
           "default": false,
-          "description": "%zowe.pagination.enabled%",
+          "description": "%zowe.pagination.enabled.desc%",
           "scope": "window"
         },
         "zowe.pagination.numRecords": {
           "type": "integer",
           "default": 250,
-          "description": "%zowe.pagination.numRecords%",
+          "description": "%zowe.pagination.numRecords.desc%",
           "scope": "window"
         }
       }
