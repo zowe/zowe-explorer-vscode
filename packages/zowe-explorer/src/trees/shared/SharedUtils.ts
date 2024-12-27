@@ -23,11 +23,7 @@ import { SharedContext } from "./SharedContext";
 import { Definitions } from "../../configuration/Definitions";
 
 export class LoadMoreCodeLens implements vscode.CodeLensProvider {
-    private commandId: string;
-
-    public constructor(commandId: string) {
-        this.commandId = commandId;
-    }
+    public constructor(private commandId: string) {}
 
     public provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CodeLens[]> {
         const lineCount = document.lineCount;
