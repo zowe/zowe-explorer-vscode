@@ -18,7 +18,7 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedActions } from "../shared/SharedActions";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedInit } from "../shared/SharedInit";
-import { FetchMoreCodeLens, SharedUtils } from "../shared/SharedUtils";
+import { LoadMoreCodeLens, SharedUtils } from "../shared/SharedUtils";
 import { JobFSProvider } from "./JobFSProvider";
 import { PollProvider } from "./JobPollProvider";
 import { JobTableView } from "./JobTableView";
@@ -164,10 +164,13 @@ export class JobInit {
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.jobs.fetchMore", async (document: vscode.TextDocument) => {
-                await JobFSProvider.instance.fetchSpoolAtUri(document.uri.with({ query: `?startRecord=${document.lineCount - 1}` }));
+                await JobFSProvider.instance.fetchSpoolAtUri(
+                    document.uri.with({ query: `?startRecord=${document.lineCount - 1}` }),
+                    vscode.window.activeTextEditor
+                );
             })
         );
-        const codeLensProvider = new FetchMoreCodeLens("zowe.jobs.fetchMore");
+        const codeLensProvider = new LoadMoreCodeLens("zowe.jobs.fetchMore");
         const disposableCodeLens = vscode.languages.registerCodeLensProvider({ scheme: ZoweScheme.Jobs }, codeLensProvider);
         context.subscriptions.push(disposableCodeLens);
 

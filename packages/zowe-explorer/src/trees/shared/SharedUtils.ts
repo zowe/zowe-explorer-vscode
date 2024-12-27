@@ -22,20 +22,20 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedContext } from "./SharedContext";
 import { Definitions } from "../../configuration/Definitions";
 
-export class FetchMoreCodeLens implements vscode.CodeLensProvider {
+export class LoadMoreCodeLens implements vscode.CodeLensProvider {
     private commandId: string;
 
-    constructor(commandId: string) {
+    public constructor(commandId: string) {
         this.commandId = commandId;
     }
 
-    provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CodeLens[]> {
+    public provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CodeLens[]> {
         const lineCount = document.lineCount;
         const lastLine = lineCount - 1;
         const lastLineRange = new vscode.Range(lastLine, 0, lastLine, 0);
 
         const codelens = new vscode.CodeLens(lastLineRange, {
-            title: vscode.l10n.t("Load more content..."),
+            title: vscode.l10n.t("$(chevron-down) Load more..."),
             command: this.commandId,
             arguments: [document],
         });
@@ -43,7 +43,7 @@ export class FetchMoreCodeLens implements vscode.CodeLensProvider {
         return [codelens];
     }
 
-    resolveCodeLens(codeLens: vscode.CodeLens, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CodeLens> {
+    public resolveCodeLens(codeLens: vscode.CodeLens, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CodeLens> {
         return codeLens;
     }
 }
