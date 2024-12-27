@@ -10,10 +10,9 @@
  */
 
 import { Mutex } from "async-mutex";
-import { AuthHandler, Gui, imperative } from "../../../src";
+import { AuthHandler, Gui } from "../../../src";
 import { FileManagement } from "../../../src/utils/FileManagement";
 import { ImperativeError } from "@zowe/imperative";
-import { commands } from "vscode";
 
 const TEST_PROFILE_NAME = "lpar.zosmf";
 
@@ -72,66 +71,12 @@ describe("AuthHandler.lockProfile", () => {
     });
 });
 
-describe("AuthHandler.updateTreeProvidersWithProfile", () => {
-    function getBlockMocks(nodeInChildren: boolean = false) {
-        const setProfileToChoice = jest.fn();
-        const dummyNode = nodeInChildren
-            ? {
-                  label: "lpar.zosmf",
-                  setProfileToChoice,
-              }
-            : undefined;
-        const children = [dummyNode].filter(Boolean);
-        const getChildren = jest.fn().mockReturnValue(children);
-        const treeProviders = {
-            ds: {
-                getChildren,
-            },
-            uss: {
-                getChildren,
-            },
-            job: {
-                getChildren,
-            },
-        };
-        return {
-            children,
-            dummyNode,
-            executeCommand: jest.spyOn(commands, "executeCommand").mockResolvedValueOnce(treeProviders),
-            getChildren,
-            setProfileToChoice,
-            treeProviders,
-        };
-    }
-    it("calls node.setProfileToChoice on matching profile nodes in each provider", async () => {
-        const blockMocks = getBlockMocks(true);
-        const profile: imperative.IProfileLoaded = { name: "lpar.zosmf", type: "zosmf", message: "", failNotFound: true };
-        await (AuthHandler as any).updateTreeProvidersWithProfile(profile);
-        // getChildren called for each tree provider
-        expect(blockMocks.getChildren).toHaveBeenCalledTimes(3);
-        // setProfileToChoice called once for each matching profile node per provider (3 providers, 3 calls)
-        expect(blockMocks.setProfileToChoice).toHaveBeenCalledTimes(3);
-        expect(blockMocks.setProfileToChoice).toHaveBeenCalledWith(profile);
-    });
-
-    it("does nothing if the profile node does not exist for a provider", async () => {
-        const blockMocks = getBlockMocks();
-        const profile: imperative.IProfileLoaded = { name: "lpar.zosmf", type: "zosmf", message: "", failNotFound: true };
-        await (AuthHandler as any).updateTreeProvidersWithProfile(profile);
-        // getChildren called for each tree provider
-        expect(blockMocks.getChildren).toHaveBeenCalledTimes(3);
-        // if no matching nodes were found, setProfileToChoice should never be called
-        expect(blockMocks.setProfileToChoice).not.toHaveBeenCalled();
-    });
-});
-
 describe("AuthHandler.promptForAuthentication", () => {
     it("handles a token-based authentication error - login successful, profile is string", async () => {
         const tokenNotValidMsg = "Token is not valid or expired.";
         const impError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
         const ssoLogin = jest.fn().mockResolvedValue(true);
         const promptCredentials = jest.fn();
-        const updateTreeProvidersWithProfileMock = jest.spyOn(AuthHandler as any, "updateTreeProvidersWithProfile").mockImplementation();
         const showMessageMock = jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Log in to Authentication Service");
         const unlockProfileSpy = jest.spyOn(AuthHandler, "unlockProfile");
         await expect(AuthHandler.promptForAuthentication(impError, "lpar.zosmf", { promptCredentials, ssoLogin })).resolves.toBe(true);
@@ -141,14 +86,12 @@ describe("AuthHandler.promptForAuthentication", () => {
         expect(unlockProfileSpy).toHaveBeenCalledTimes(1);
         expect(unlockProfileSpy).toHaveBeenCalledWith("lpar.zosmf", true);
         expect(showMessageMock).toHaveBeenCalledTimes(1);
-        expect(updateTreeProvidersWithProfileMock).not.toHaveBeenCalled();
     });
 
     it("handles a standard authentication error - credentials provided, profile is string", async () => {
         const tokenNotValidMsg = "Invalid credentials";
         const impError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
         const ssoLogin = jest.fn().mockResolvedValue(true);
-        const updateTreeProvidersWithProfileMock = jest.spyOn(AuthHandler as any, "updateTreeProvidersWithProfile").mockImplementation();
         const promptCredentials = jest.fn().mockResolvedValue(["us3r", "p4ssw0rd"]);
         const errorMessageMock = jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("Update Credentials");
         const unlockProfileSpy = jest.spyOn(AuthHandler, "unlockProfile").mockClear();
@@ -159,7 +102,6 @@ describe("AuthHandler.promptForAuthentication", () => {
         expect(errorMessageMock).toHaveBeenCalledTimes(1);
         expect(promptCredentials).toHaveBeenCalledTimes(1);
         expect(promptCredentials).toHaveBeenCalledWith("lpar.zosmf", true);
-        expect(updateTreeProvidersWithProfileMock).not.toHaveBeenCalled();
     });
 });
 

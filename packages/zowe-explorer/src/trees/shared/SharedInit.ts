@@ -141,6 +141,23 @@ export class SharedInit {
             })
         );
 
+        context.subscriptions.push(
+            ZoweVsCodeExtension.onProfileUpdated(async (profile) => {
+                const providers = Object.values(SharedTreeProviders.providers);
+                for (const provider of providers) {
+                    try {
+                        const node = (await provider.getChildren()).find((n) => n.label === profile?.name);
+                        node?.setProfileToChoice?.(profile);
+                    } catch (err) {
+                        if (err instanceof Error) {
+                            ZoweLogger.error(err.message);
+                        }
+                        return;
+                    }
+                }
+            })
+        );
+
         if (providers.ds || providers.uss) {
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.openRecentMember", () => SharedActions.openRecentMemberPrompt(providers.ds, providers.uss))
@@ -292,7 +309,6 @@ export class SharedInit {
                     (error: CorrelatedError, stackTrace?: string) => new TroubleshootError(context, { error, stackTrace })
                 )
             );
-            context.subscriptions.push(vscode.commands.registerCommand("zowe.getTreeProviders", () => SharedTreeProviders));
             context.subscriptions.push(vscode.window.registerUriHandler(ZoweUriHandler.getInstance()));
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.placeholderCommand", () => {

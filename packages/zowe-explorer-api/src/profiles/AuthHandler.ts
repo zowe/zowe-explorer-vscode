@@ -12,9 +12,9 @@
 import { Gui } from "../globals";
 import { CorrelatedError, FileManagement } from "../utils";
 import * as imperative from "@zowe/imperative";
-import { IZoweTree, IZoweTreeNode } from "../tree";
-import { commands } from "vscode";
+import { IZoweTreeNode } from "../tree";
 import { Mutex } from "async-mutex";
+import { ZoweVsCodeExtension } from "../vscode/ZoweVsCodeExtension";
 
 export interface IAuthMethods {
     /* Method for establishing SSO login with a given profile name */
@@ -76,16 +76,6 @@ export class AuthHandler {
         }
     }
 
-    private static async updateTreeProvidersWithProfile(profile: imperative.IProfileLoaded): Promise<void> {
-        // TODO: If we can access extender tree providers (e.g. CICS), it would help to propagate profile updates here.
-        // For now we will propagate profile changes to core providers (Data Sets, USS, Jobs)
-        const treeProviders = (await commands.executeCommand("zowe.getTreeProviders")) as any;
-        for (const provider of [treeProviders.ds, treeProviders.uss, treeProviders.job]) {
-            const node = (await (provider as IZoweTree<IZoweTreeNode>).getChildren()).find((n) => n.label === profile?.name);
-            node?.setProfileToChoice?.(profile);
-        }
-    }
-
     /**
      * Prompts the user to authenticate over SSO or a credential prompt in the event of an error.
      * @param imperativeError The authentication error that was encountered
@@ -110,10 +100,11 @@ export class AuthHandler {
                 });
                 if (userResp === message) {
                     if (await opts.ssoLogin(null, profileName)) {
+                        // SSO login was successful, propagate new profile properties to other tree providers
                         if (typeof profile !== "string") {
-                            await AuthHandler.updateTreeProvidersWithProfile(profile);
+                            ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(profile);
                         }
-                        // SSO login was successful, unlock profile so it can be used again
+                        // Unlock profile so it can be used again
                         AuthHandler.unlockProfile(profileName, true);
                         return true;
                     }
@@ -135,9 +126,9 @@ export class AuthHandler {
         });
 
         if (creds != null) {
-            // New creds were set, directly propagate new profile to other tree providers.
+            // New creds were set, propagate new profile properties to other tree providers.
             if (typeof profile !== "string") {
-                await AuthHandler.updateTreeProvidersWithProfile(profile);
+                ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(profile);
             }
             // Unlock profile so it can be used again
             AuthHandler.unlockProfile(profileName, true);
