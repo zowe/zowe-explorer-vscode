@@ -209,7 +209,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const jesApi = ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile);
 
         const queryParams = new URLSearchParams(uri.query);
-        const startRecord = Number(queryParams.get("startRecord"));
+        const startRecord = queryParams.has("startRecord") ? Number(queryParams.get("startRecord")) : undefined;
 
         try {
             if (jesApi.downloadSingleSpool) {
@@ -217,6 +217,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                     jobFile: spoolEntry.spool,
                     stream: bufBuilder,
                     startRecord,
+                    numRecords: 250,
                 };
 
                 // Handle encoding and binary options

@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweJobTreeNode, IZoweTreeNode, ZoweScheme, imperative, Gui, FsJobsUtils } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, IZoweTreeNode, ZoweScheme, imperative, Gui } from "@zowe/zowe-explorer-api";
 import { JobTree } from "./JobTree";
 import { JobActions } from "./JobActions";
 import { ZoweJobNode } from "./ZoweJobNode";
@@ -18,7 +18,7 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedActions } from "../shared/SharedActions";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedInit } from "../shared/SharedInit";
-import { SharedUtils } from "../shared/SharedUtils";
+import { FetchMoreCodeLens, SharedUtils } from "../shared/SharedUtils";
 import { JobFSProvider } from "./JobFSProvider";
 import { PollProvider } from "./JobPollProvider";
 import { JobTableView } from "./JobTableView";
@@ -163,28 +163,14 @@ export class JobInit {
             })
         );
         context.subscriptions.push(
-            vscode.window.onDidChangeTextEditorVisibleRanges(async (e) => {
-                const documentUri = e.textEditor.document.uri;
-                if (documentUri.scheme !== ZoweScheme.Jobs) {
-                    return;
-                }
-                const spool = JobFSProvider.instance.lookup(documentUri, true);
-                if (spool == null || !FsJobsUtils.isSpoolEntry(spool)) {
-                    return;
-                }
-
-                for (const range of e.visibleRanges) {
-                    // if range contains line count of document the line count is
-                    // less than the record count of the spool, attempt to fetch more records
-                    if (
-                        range.contains(new vscode.Position(e.textEditor.document.lineCount, 1)) &&
-                        e.textEditor.document.lineCount < spool.spool?.["record-count"]
-                    ) {
-                        await JobFSProvider.instance.fetchSpoolAtUri(documentUri.with({ query: `?startRecord=${e.textEditor.document.lineCount}` }));
-                    }
-                }
+            vscode.commands.registerCommand("zowe.jobs.fetchMore", async (document: vscode.TextDocument) => {
+                await JobFSProvider.instance.fetchSpoolAtUri(document.uri.with({ query: `?startRecord=${document.lineCount - 1}` }));
             })
         );
+        const codeLensProvider = new FetchMoreCodeLens("zowe.jobs.fetchMore");
+        const disposableCodeLens = vscode.languages.registerCodeLensProvider({ scheme: ZoweScheme.Jobs }, codeLensProvider);
+        context.subscriptions.push(disposableCodeLens);
+
         SharedInit.initSubscribers(context, jobsProvider);
         return jobsProvider;
     }
