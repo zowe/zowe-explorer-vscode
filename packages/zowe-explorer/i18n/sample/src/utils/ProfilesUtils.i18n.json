@@ -36,7 +36,7 @@
   "writeOverridesFile.jsonParse.error": "Failed to parse JSON file {0}. Will try to re-create the file.",
   "writeOverridesFile.updateFile": "Updating imperative.json Credential Manager to {0}.\n{1}",
   "initializeZoweFolder.error": "Failed to initialize Zowe folder: {0}",
-  "initializeZoweProfiles.success": "Zowe Profiles initialized successfully.",
+  "initializeZoweProfiles.success": "Zowe profiles initialized successfully.",
   "initializeZoweTempFolder.success": "Zowe Temp folder initialized successfully.",
   "getProfile.notTreeItem": "Tree Item is not a Zowe Explorer item."
 }

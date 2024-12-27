@@ -286,7 +286,9 @@ export class ProfilesUtils {
      * @param credentialManagerMap The map with associated names of the custom credential manager
      * @returns Promise<imperative.ProfileInfo> the object of profileInfo using the custom credential manager
      */
-    public static async setupCustomCredentialManager(credentialManagerMap: imperative.ICredentialManagerNameMap): Promise<imperative.ProfileInfo> {
+    public static async setupCustomCredentialManager(
+        credentialManagerMap: imperative.ICredentialManagerNameMap
+    ): Promise<imperative.ICredentialManagerInit | undefined> {
         ZoweLogger.trace("ProfilesUtils.setupCustomCredentialManager called.");
         ZoweLogger.info(
             localize(
@@ -301,12 +303,10 @@ export class ProfilesUtils {
         if (credentialManager) {
             Object.setPrototypeOf(credentialManager.prototype, imperative.AbstractCredentialManager.prototype);
             await ProfilesUtils.updateCredentialManagerSetting(credentialManagerMap.credMgrDisplayName);
-            return new imperative.ProfileInfo("zowe", {
-                credMgrOverride: {
-                    Manager: credentialManager,
-                    service: credentialManagerMap.credMgrDisplayName,
-                },
-            });
+            return {
+                Manager: credentialManager,
+                service: credentialManagerMap.credMgrDisplayName,
+            };
         }
     }
 
@@ -357,32 +357,21 @@ export class ProfilesUtils {
      * Use the default credential manager in Zowe Explorer and setup before use
      * @returns Promise<imperative.ProfileInfo> the object of profileInfo using the default credential manager
      */
-    public static async setupDefaultCredentialManager(): Promise<imperative.ProfileInfo> {
-        try {
-            ZoweLogger.trace("ProfilesUtils.setupDefaultCredentialManager called.");
-            ZoweLogger.info(
-                localize(
-                    "ProfilesUtils.setupDefaultCredentialManager.usingDefault",
-                    "No custom credential managers found, using the default instead."
-                )
-            );
-            await ProfilesUtils.updateCredentialManagerSetting(globals.ZOWE_CLI_SCM);
-            const defaultCredentialManager = imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring);
-            const profileInfo = new imperative.ProfileInfo("zowe", {
-                credMgrOverride: defaultCredentialManager,
-            });
-            const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-            // Trigger initialize() function of credential manager to throw an error early if failed to load
-            await profileInfo.readProfilesFromDisk({
-                homeDir: getZoweDir(),
-                projectDir: workspaceFolder ? getFullPath(workspaceFolder) : undefined,
-            });
-            return profileInfo;
-        } catch (err) {
-            if (err instanceof imperative.ProfInfoErr && err.errorCode === imperative.ProfInfoErr.LOAD_CRED_MGR_FAILED) {
-                await ProfilesUtils.promptAndDisableCredentialManagement();
-            }
-            // Ignore other types of errors since they will be handled later
+    public static async setupDefaultCredentialManager(): Promise<imperative.ICredentialManagerInit | undefined> {
+        ZoweLogger.trace("ProfilesUtils.setupDefaultCredentialManager called.");
+        ZoweLogger.info(
+            localize("ProfilesUtils.setupDefaultCredentialManager.usingDefault", "No custom credential managers found, using the default instead.")
+        );
+        await ProfilesUtils.updateCredentialManagerSetting(globals.ZOWE_CLI_SCM);
+        const defaultCredentialManager = imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring);
+        const profileInfo = new imperative.ProfileInfo("zowe", {
+            credMgrOverride: defaultCredentialManager,
+        });
+
+        if (await profileInfo.profileManagerWillLoad()) {
+            return defaultCredentialManager;
+        } else {
+            await ProfilesUtils.promptAndDisableCredentialManagement();
         }
     }
 
@@ -417,7 +406,7 @@ export class ProfilesUtils {
             await Gui.infoMessage(header, { items: [optionYes, optionDontAskAgain], vsCodeOpts: { modal: true, detail: message } }).then(
                 async (selection) => {
                     if (selection === optionYes) {
-                        await this.updateCredentialManagerSetting(credentialManager.credMgrDisplayName);
+                        await ProfilesUtils.updateCredentialManagerSetting(credentialManager.credMgrDisplayName);
                         SettingsConfig.setDirectValue(
                             globals.SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS,
                             false,
@@ -477,36 +466,44 @@ export class ProfilesUtils {
         );
     }
 
-    public static async getProfileInfo(envTheia: boolean): Promise<imperative.ProfileInfo> {
-        ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
+    /**
+     * Creates an instance of ProfileInfo with the configured credential manager override.
+     * @returns An instance of `ProfileInfo`, or `undefined` if there was an error.
+     */
+    public static async setupProfileInfo(_envTheia: boolean): Promise<imperative.ProfileInfo> {
+        ZoweLogger.trace("ProfilesUtils.setupProfileInfo called.");
         const hasSecureCredentialManagerEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
 
         if (hasSecureCredentialManagerEnabled) {
             const shouldCheckForCustomCredentialManagers = SettingsConfig.getDirectValue(globals.SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS);
             if (shouldCheckForCustomCredentialManagers) {
-                await this.fetchRegisteredPlugins();
+                await ProfilesUtils.fetchRegisteredPlugins();
             }
 
-            const credentialManagerOverride = this.getCredentialManagerOverride();
-            const isVSCodeCredentialPluginInstalled = this.isVSCodeCredentialPluginInstalled(credentialManagerOverride);
+            const credentialManagerOverride = ProfilesUtils.getCredentialManagerOverride();
+            const isVSCodeCredentialPluginInstalled = ProfilesUtils.isVSCodeCredentialPluginInstalled(credentialManagerOverride);
             const isCustomCredentialPluginDefined = credentialManagerOverride !== imperative.CredentialManagerOverride.DEFAULT_CRED_MGR_NAME;
             const credentialManagerMap = ProfilesUtils.getCredentialManagerMap(credentialManagerOverride);
 
             if (isCustomCredentialPluginDefined && !isVSCodeCredentialPluginInstalled && credentialManagerMap) {
-                await this.promptAndHandleMissingCredentialManager(credentialManagerMap);
+                await ProfilesUtils.promptAndHandleMissingCredentialManager(credentialManagerMap);
             }
             if (credentialManagerMap && isVSCodeCredentialPluginInstalled) {
-                return this.setupCustomCredentialManager(credentialManagerMap);
+                return new imperative.ProfileInfo("zowe", {
+                    credMgrOverride: await ProfilesUtils.setupCustomCredentialManager(credentialManagerMap),
+                });
             }
         }
 
-        return this.setupDefaultCredentialManager();
+        return new imperative.ProfileInfo("zowe", {
+            credMgrOverride: hasSecureCredentialManagerEnabled ? await ProfilesUtils.setupDefaultCredentialManager() : undefined,
+        });
     }
 
     public static async readConfigFromDisk(warnForMissingSchema?: boolean): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.readConfigFromDisk called.");
         let rootPath: string;
-        const mProfileInfo = await ProfilesUtils.getProfileInfo(globals.ISTHEIA);
+        const mProfileInfo = await ProfilesUtils.setupProfileInfo(globals.ISTHEIA);
         if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
             rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
             await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: getFullPath(rootPath) });
@@ -527,13 +524,13 @@ export class ProfilesUtils {
             const layers = mProfileInfo.getTeamConfig().layers || [];
             const layerSummary = layers.map(
                 (config: imperative.IConfigLayer) =>
-                    `Path: ${config.path}: ${
+                    `Path: ${config.path}, ${
                         config.exists
-                            ? "Found, with the following defaults:" + JSON.stringify(config.properties?.defaults || "Undefined default")
+                            ? "Found with the following defaults: " + JSON.stringify(config.properties?.defaults || "Undefined default")
                             : "Not available"
                     } `
             );
-            ZoweLogger.debug(`Summary of team configuration files considered for Zowe Explorer: ${JSON.stringify(layerSummary)}`);
+            ZoweLogger.debug(["Summary of team configuration files considered for Zowe Explorer:", ...layerSummary].join("\t\n"));
         }
     }
 
@@ -701,9 +698,10 @@ export class ProfilesUtils {
 
         try {
             await ProfilesUtils.readConfigFromDisk(true);
-            ZoweLogger.info(localize("initializeZoweProfiles.success", "Zowe Profiles initialized successfully."));
+            ZoweLogger.info(localize("initializeZoweProfiles.success", "Zowe profiles initialized successfully."));
         } catch (err) {
-            if (err instanceof imperative.ImperativeError) {
+            // JSON parsing errors in team config files will have suppressDump=true
+            if (err instanceof imperative.ImperativeError && !err.mDetails.suppressDump) {
                 await errorHandling(err, undefined, err.mDetails.causeErrors);
             } else {
                 ZoweLogger.error(err);

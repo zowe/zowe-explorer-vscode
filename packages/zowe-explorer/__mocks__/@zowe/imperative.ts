@@ -256,6 +256,10 @@ export class ProfileInfo {
         return;
     }
 
+    public profileManagerWillLoad(): boolean {
+        return true;
+    }
+
     public addProfileTypeToSchema(
         profileType: string,
         typeInfo: {

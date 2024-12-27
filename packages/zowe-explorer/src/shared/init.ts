@@ -34,6 +34,7 @@ import { USSTree } from "../uss/USSTree";
 import { ZosJobsProvider } from "../job/ZosJobsProvider";
 import { CertificateWizard } from "../utils/CertificateWizard";
 import { ZosConsoleViewProvider } from "../zosconsole/ZosConsolePanel";
+import * as sharedUtils from "./utils";
 
 // Set up localization
 nls.config({
@@ -243,26 +244,32 @@ export function watchConfigProfile(context: vscode.ExtensionContext): void {
     context.subscriptions.push(...watchers);
 
     watchers.forEach((watcher) => {
-        watcher.onDidCreate(() => {
-            ZoweLogger.info(localize("watchConfigProfile.create", "Team config file created, refreshing Zowe Explorer."));
-            void refreshActions.refreshAll();
-            ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.CREATE);
-        });
-        watcher.onDidDelete(() => {
-            ZoweLogger.info(localize("watchConfigProfile.delete", "Team config file deleted, refreshing Zowe Explorer."));
-            void refreshActions.refreshAll();
-            ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.DELETE);
-        });
-        watcher.onDidChange(async (uri: vscode.Uri) => {
-            ZoweLogger.info(localize("watchConfigProfile.update", "Team config file updated."));
-            const newProfileContents = await vscode.workspace.fs.readFile(uri);
-            if (newProfileContents.toString() === globals.SAVED_PROFILE_CONTENTS.toString()) {
-                return;
-            }
-            globals.setSavedProfileContents(newProfileContents);
-            void refreshActions.refreshAll();
-            ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.UPDATE);
-        });
+        watcher.onDidCreate(
+            sharedUtils.debounce(() => {
+                ZoweLogger.info(localize("watchConfigProfile.create", "Team config file created, refreshing Zowe Explorer."));
+                void refreshActions.refreshAll();
+                ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.CREATE);
+            }, 100) // eslint-disable-line no-magic-numbers
+        );
+        watcher.onDidDelete(
+            sharedUtils.debounce(() => {
+                ZoweLogger.info(localize("watchConfigProfile.delete", "Team config file deleted, refreshing Zowe Explorer."));
+                void refreshActions.refreshAll();
+                ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.DELETE);
+            }, 100) // eslint-disable-line no-magic-numbers
+        );
+        watcher.onDidChange(
+            sharedUtils.debounce(async (uri: vscode.Uri) => {
+                ZoweLogger.info(localize("watchConfigProfile.update", "Team config file updated."));
+                const newProfileContents = await vscode.workspace.fs.readFile(uri);
+                if (newProfileContents.toString() === globals.SAVED_PROFILE_CONTENTS.toString()) {
+                    return;
+                }
+                globals.setSavedProfileContents(newProfileContents);
+                void refreshActions.refreshAll();
+                ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.UPDATE);
+            }, 100) // eslint-disable-line no-magic-numbers
+        );
     });
 }
 

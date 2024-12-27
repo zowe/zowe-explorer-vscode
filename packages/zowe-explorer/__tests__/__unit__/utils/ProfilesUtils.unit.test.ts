@@ -277,19 +277,20 @@ describe("ProfilesUtils unit tests", () => {
     });
 
     describe("readConfigFromDisk", () => {
-        it("should readConfigFromDisk and log 'Not Available'", async () => {
-            Object.defineProperty(vscode.workspace, "workspaceFolders", {
-                value: [
-                    {
-                        uri: {
-                            fsPath: "./test",
-                        },
+        Object.defineProperty(vscode.workspace, "workspaceFolders", {
+            value: [
+                {
+                    uri: {
+                        fsPath: "./test",
                     },
-                ],
-                configurable: true,
-            });
+                },
+            ],
+            configurable: true,
+        });
+
+        it("should readConfigFromDisk and find default profiles", async () => {
             const mockReadProfilesFromDisk = jest.fn();
-            const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValue({
+            jest.spyOn(profUtils.ProfilesUtils, "setupProfileInfo").mockReturnValueOnce({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
                 usingTeamConfig: true,
                 getTeamConfig: () => ({
@@ -309,66 +310,48 @@ describe("ProfilesUtils unit tests", () => {
                     ],
                 }),
             } as never);
-            Object.defineProperty(globals.LOG, "debug", {
-                value: jest.fn(),
-                configurable: true,
-            });
+            const loggerSpy = jest.spyOn(ZoweLogger, "debug");
             await expect(profUtils.ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
-            profInfoSpy.mockRestore();
+            expect(loggerSpy).toHaveBeenLastCalledWith(expect.stringContaining(`Path: test, Found with the following defaults: "test"`));
         });
 
-        it("should readConfigFromDisk and find with defaults", async () => {
-            Object.defineProperty(vscode.workspace, "workspaceFolders", {
-                value: [
-                    {
-                        uri: {
-                            fsPath: "./test",
-                        },
-                    },
-                ],
-                configurable: true,
-            });
+        it("should readConfigFromDisk and log 'Not Available'", async () => {
             const mockReadProfilesFromDisk = jest.fn();
-            const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValue({
+            jest.spyOn(profUtils.ProfilesUtils, "setupProfileInfo").mockResolvedValueOnce({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
                 usingTeamConfig: true,
-                getTeamConfig: () => [],
+                getTeamConfig: () => ({
+                    exists: true,
+                    layers: [
+                        {
+                            path: "test",
+                            exists: false,
+                            properties: {},
+                        },
+                    ],
+                }),
             } as never);
-            Object.defineProperty(globals.LOG, "debug", {
-                value: jest.fn(),
-                configurable: true,
-            });
+            const loggerSpy = jest.spyOn(ZoweLogger, "debug");
             await expect(profUtils.ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
-            profInfoSpy.mockRestore();
+            expect(loggerSpy).toHaveBeenLastCalledWith(expect.stringContaining("Path: test, Not available"));
         });
 
         it("should keep Imperative error details if readConfigFromDisk fails", async () => {
-            Object.defineProperty(vscode.workspace, "workspaceFolders", {
-                value: [
-                    {
-                        uri: {
-                            fsPath: "./test",
-                        },
-                    },
-                ],
-                configurable: true,
-            });
             const impErr = new zowe.imperative.ImperativeError({ msg: "Unexpected Imperative error" });
             const mockReadProfilesFromDisk = jest.fn().mockRejectedValue(impErr);
-            const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValue({
+            jest.spyOn(profUtils.ProfilesUtils, "setupProfileInfo").mockResolvedValueOnce({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
                 usingTeamConfig: true,
                 getTeamConfig: () => [],
             } as never);
             await expect(profUtils.ProfilesUtils.readConfigFromDisk()).rejects.toBe(impErr);
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
-            profInfoSpy.mockRestore();
         });
 
         it("should warn the user when using team config with a missing schema", async () => {
-            const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValueOnce({
+            jest.spyOn(profUtils.ProfilesUtils, "setupProfileInfo").mockResolvedValueOnce({
                 readProfilesFromDisk: jest.fn(),
                 usingTeamConfig: true,
                 hasValidSchema: false,
@@ -394,7 +377,6 @@ describe("ProfilesUtils unit tests", () => {
             expect(warnMsgSpy).toHaveBeenCalledWith(
                 "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer."
             );
-            profInfoSpy.mockRestore();
         });
     });
 
@@ -736,14 +718,14 @@ describe("ProfilesUtils unit tests", () => {
         });
     });
 
-    describe("getProfilesInfo", () => {
+    describe("setupProfileInfo", () => {
         let isVSCodeCredentialPluginInstalledSpy: jest.SpyInstance;
         let getDirectValueSpy: jest.SpyInstance;
         let fetchRegisteredPluginsSpy: jest.SpyInstance;
         let getCredentialManagerOverrideSpy: jest.SpyInstance;
         let getCredentialManagerMapSpy: jest.SpyInstance;
         let setupCustomCredentialManagerSpy: jest.SpyInstance;
-        let readProfilesFromDiskSpy: jest.SpyInstance;
+        let profileManagerWillLoadSpy: jest.SpyInstance;
         let promptAndDisableCredentialManagementSpy: jest.SpyInstance;
 
         beforeEach(() => {
@@ -756,7 +738,7 @@ describe("ProfilesUtils unit tests", () => {
             getCredentialManagerOverrideSpy = jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerOverride");
             getCredentialManagerMapSpy = jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerMap");
             setupCustomCredentialManagerSpy = jest.spyOn((profUtils as any).ProfilesUtils, "setupCustomCredentialManager");
-            readProfilesFromDiskSpy = jest.spyOn(zowe.imperative.ProfileInfo.prototype, "readProfilesFromDisk");
+            profileManagerWillLoadSpy = jest.spyOn(zowe.imperative.ProfileInfo.prototype, "profileManagerWillLoad");
             promptAndDisableCredentialManagementSpy = jest.spyOn(profUtils.ProfilesUtils, "promptAndDisableCredentialManagement");
         });
 
@@ -772,7 +754,7 @@ describe("ProfilesUtils unit tests", () => {
                 credMgrZEName: "test",
             });
             setupCustomCredentialManagerSpy.mockReturnValueOnce({});
-            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).resolves.toEqual({});
+            await expect(profUtils.ProfilesUtils.setupProfileInfo(false)).resolves.toBeInstanceOf(zowe.imperative.ProfileInfo);
             expect(isVSCodeCredentialPluginInstalledSpy).toBeCalledTimes(1);
         });
 
@@ -788,56 +770,30 @@ describe("ProfilesUtils unit tests", () => {
                 credMgrZEName: "test",
             });
             setupCustomCredentialManagerSpy.mockReturnValueOnce({});
-            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).resolves.toEqual({});
+            await expect(profUtils.ProfilesUtils.setupProfileInfo(false)).resolves.toBeInstanceOf(zowe.imperative.ProfileInfo);
         });
 
         it("should retrieve the default credential manager if no custom credential manager is found", async () => {
-            getDirectValueSpy.mockReturnValueOnce(false);
+            getDirectValueSpy.mockReturnValueOnce(true).mockReturnValueOnce(false);
             getCredentialManagerOverrideSpy.mockReturnValue("@zowe/cli");
             isVSCodeCredentialPluginInstalledSpy.mockReturnValueOnce(false);
             getDirectValueSpy.mockReturnValueOnce(true);
             getCredentialManagerMapSpy.mockReturnValueOnce(undefined);
             setupCustomCredentialManagerSpy.mockReturnValueOnce({});
-            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).resolves.toEqual({});
+            await expect(profUtils.ProfilesUtils.setupProfileInfo(false)).resolves.toBeInstanceOf(zowe.imperative.ProfileInfo);
         });
 
         it("should retrieve the default credential manager and prompt to disable credential management if environment not supported", async () => {
-            const expectedErrMsg =
-                // eslint-disable-next-line max-len
-                "Failed to load credential manager. This may be related to Zowe Explorer being unable to use the default credential manager in a browser based environment.";
-            getDirectValueSpy.mockReturnValueOnce(false);
+            getDirectValueSpy.mockReturnValueOnce(true).mockReturnValueOnce(false);
             getCredentialManagerOverrideSpy.mockReturnValue("@zowe/cli");
             isVSCodeCredentialPluginInstalledSpy.mockReturnValueOnce(false);
             getDirectValueSpy.mockReturnValueOnce(true);
             getCredentialManagerMapSpy.mockReturnValueOnce(undefined);
             setupCustomCredentialManagerSpy.mockReturnValueOnce({});
-            readProfilesFromDiskSpy.mockImplementation(() => {
-                const err = new zowe.imperative.ProfInfoErr({
-                    msg: expectedErrMsg,
-                });
-                Object.defineProperty(err, "errorCode", {
-                    value: zowe.imperative.ProfInfoErr.LOAD_CRED_MGR_FAILED,
-                    configurable: true,
-                });
-                throw err;
-            });
-            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).rejects.toThrow(expectedErrMsg);
+            profileManagerWillLoadSpy.mockReturnValueOnce(false);
+            promptAndDisableCredentialManagementSpy.mockResolvedValueOnce(undefined);
+            await expect(profUtils.ProfilesUtils.setupProfileInfo(false)).resolves.toBeInstanceOf(zowe.imperative.ProfileInfo);
             expect(promptAndDisableCredentialManagementSpy).toHaveBeenCalledTimes(1);
-        });
-
-        it("should ignore error if it is not an instance of ProfInfoErr", async () => {
-            const expectedErrorMsg = "Another error unrelated to credential management";
-            getDirectValueSpy.mockReturnValueOnce(false);
-            getCredentialManagerOverrideSpy.mockReturnValue("@zowe/cli");
-            isVSCodeCredentialPluginInstalledSpy.mockReturnValueOnce(false);
-            getDirectValueSpy.mockReturnValueOnce(true);
-            getCredentialManagerMapSpy.mockReturnValueOnce(undefined);
-            setupCustomCredentialManagerSpy.mockReturnValueOnce({});
-            readProfilesFromDiskSpy.mockImplementation(() => {
-                throw new Error(expectedErrorMsg);
-            });
-            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).resolves.not.toThrow();
-            expect(promptAndDisableCredentialManagementSpy).toHaveBeenCalledTimes(0);
         });
     });
 
@@ -916,7 +872,7 @@ describe("ProfilesUtils unit tests", () => {
             jest.restoreAllMocks();
         });
 
-        it("should return the profileInfo object with the custom credential manager constructor", async () => {
+        it("should return the credential manager override with the custom credential manager constructor", async () => {
             const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
             const zoweLoggerInfoSpy = jest.spyOn(ZoweLogger, "info");
 
@@ -929,7 +885,7 @@ describe("ProfilesUtils unit tests", () => {
                     credMgrPluginName: "test",
                     credMgrZEName: "test",
                 })
-            ).resolves.toEqual({} as zowe.imperative.ProfileInfo);
+            ).resolves.toMatchObject({ service: "test" });
             expect(zoweLoggerTraceSpy).toBeCalledTimes(2);
             expect(zoweLoggerInfoSpy).toBeCalledTimes(1);
         });
@@ -1079,13 +1035,20 @@ describe("ProfilesUtils unit tests", () => {
     });
 
     describe("setupDefaultCredentialManager", () => {
-        it("calls readProfilesFromDisk with homeDir and projectDir", async () => {
-            const readProfilesFromDiskMock = jest.spyOn(zowe.imperative.ProfileInfo.prototype, "readProfilesFromDisk").mockImplementation();
+        it("calls profileManagerWillLoad to load default credential manager", async () => {
+            const profileManagerWillLoadSpy = jest.spyOn(zowe.imperative.ProfileInfo.prototype, "profileManagerWillLoad");
             await profUtils.ProfilesUtils.setupDefaultCredentialManager();
-            expect(readProfilesFromDiskMock).toHaveBeenCalledWith({
-                homeDir: zowe.getZoweDir(),
-                projectDir: vscode.workspace.workspaceFolders?.[0].uri.fsPath,
-            });
+            expect(profileManagerWillLoadSpy).toHaveBeenCalled();
+        });
+
+        it("prompts user to disable credential manager if default fails to load", async () => {
+            const profileManagerWillLoadSpy = jest
+                .spyOn(zowe.imperative.ProfileInfo.prototype, "profileManagerWillLoad")
+                .mockResolvedValueOnce(false);
+            const disableCredMgmtSpy = jest.spyOn(profUtils.ProfilesUtils, "promptAndDisableCredentialManagement").mockImplementation();
+            await profUtils.ProfilesUtils.setupDefaultCredentialManager();
+            expect(profileManagerWillLoadSpy).toHaveBeenCalled();
+            expect(disableCredMgmtSpy).toHaveBeenCalled();
         });
     });
 });
