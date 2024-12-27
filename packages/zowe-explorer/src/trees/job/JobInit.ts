@@ -154,6 +154,14 @@ export class JobInit {
             vscode.commands.registerCommand("zowe.jobs.tableView", async (node, nodeList) => JobTableView.handleCommand(context, node, nodeList))
         );
         context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.jobs.loadMoreRecords", async (document: vscode.TextDocument) => {
+                await JobFSProvider.instance.fetchSpoolAtUri(
+                    document.uri.with({ query: `?startRecord=${document.lineCount - 1}` }),
+                    vscode.window.activeTextEditor
+                );
+            })
+        );
+        context.subscriptions.push(
             vscode.workspace.onDidOpenTextDocument((doc) => {
                 if (doc.uri.scheme !== ZoweScheme.Jobs) {
                     return;
@@ -163,16 +171,8 @@ export class JobInit {
             })
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.jobs.fetchMore", async (document: vscode.TextDocument) => {
-                await JobFSProvider.instance.fetchSpoolAtUri(
-                    document.uri.with({ query: `?startRecord=${document.lineCount - 1}` }),
-                    vscode.window.activeTextEditor
-                );
-            })
+            vscode.languages.registerCodeLensProvider({ scheme: ZoweScheme.Jobs }, new LoadMoreCodeLens("zowe.jobs.loadMoreRecords"))
         );
-        const codeLensProvider = new LoadMoreCodeLens("zowe.jobs.fetchMore");
-        const disposableCodeLens = vscode.languages.registerCodeLensProvider({ scheme: ZoweScheme.Jobs }, codeLensProvider);
-        context.subscriptions.push(disposableCodeLens);
 
         SharedInit.initSubscribers(context, jobsProvider);
         return jobsProvider;
