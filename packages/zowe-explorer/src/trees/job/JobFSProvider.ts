@@ -207,11 +207,16 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const bufBuilder = new BufferBuilder();
 
         const jesApi = ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile);
+
+        const queryParams = new URLSearchParams(uri.query);
+        const startRecord = Number(queryParams.get("startRecord"));
+
         try {
             if (jesApi.downloadSingleSpool) {
                 const spoolDownloadObject: IDownloadSpoolContentParms = {
                     jobFile: spoolEntry.spool,
                     stream: bufBuilder,
+                    startRecord,
                 };
 
                 // Handle encoding and binary options
@@ -232,7 +237,17 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
-        spoolEntry.data = bufBuilder.read() ?? new Uint8Array();
+        if (startRecord > 0) {
+            const newContents: Uint8Array | null = bufBuilder.read();
+            if (newContents != null) {
+                const combined = new Uint8Array(spoolEntry.data.length + newContents.length);
+                combined.set(spoolEntry.data, 0);
+                combined.set(newContents, spoolEntry.data.length);
+                spoolEntry.data = combined;
+            }
+        } else {
+            spoolEntry.data = bufBuilder.read() ?? new Uint8Array();
+        }
         spoolEntry.mtime = Date.now();
         spoolEntry.size = spoolEntry.data.byteLength;
         if (editor) {

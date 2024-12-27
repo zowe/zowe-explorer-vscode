@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweJobTreeNode, IZoweTreeNode, ZoweScheme, imperative, Gui } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, IZoweTreeNode, ZoweScheme, imperative, Gui, FsJobsUtils } from "@zowe/zowe-explorer-api";
 import { JobTree } from "./JobTree";
 import { JobActions } from "./JobActions";
 import { ZoweJobNode } from "./ZoweJobNode";
@@ -160,6 +160,29 @@ export class JobInit {
                 }
 
                 JobFSProvider.instance.cacheOpenedUri(doc.uri);
+            })
+        );
+        context.subscriptions.push(
+            vscode.window.onDidChangeTextEditorVisibleRanges(async (e) => {
+                const documentUri = e.textEditor.document.uri;
+                if (documentUri.scheme !== ZoweScheme.Jobs) {
+                    return;
+                }
+                const spool = JobFSProvider.instance.lookup(documentUri, true);
+                if (spool == null || !FsJobsUtils.isSpoolEntry(spool)) {
+                    return;
+                }
+
+                for (const range of e.visibleRanges) {
+                    // if range contains line count of document the line count is
+                    // less than the record count of the spool, attempt to fetch more records
+                    if (
+                        range.contains(new vscode.Position(e.textEditor.document.lineCount, 1)) &&
+                        e.textEditor.document.lineCount < spool.spool?.["record-count"]
+                    ) {
+                        await JobFSProvider.instance.fetchSpoolAtUri(documentUri.with({ query: `?startRecord=${e.textEditor.document.lineCount}` }));
+                    }
+                }
             })
         );
         SharedInit.initSubscribers(context, jobsProvider);
