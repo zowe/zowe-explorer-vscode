@@ -33,6 +33,7 @@ import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { SharedContext } from "../shared/SharedContext";
 import { AuthUtils } from "../../utils/AuthUtils";
+import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 export class JobFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: JobFSProvider;
@@ -210,6 +211,12 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const queryParams = new URLSearchParams(uri.query);
         const startRecord = queryParams.has("startRecord") ? Number(queryParams.get("startRecord")) : undefined;
+        let numRecords: number;
+        if (queryParams.has("numRecords")) {
+            numRecords = Number(queryParams.get("numRecords"));
+        } else if (SettingsConfig.getDirectValue("zowe.pagination.enabled")) {
+            numRecords = SettingsConfig.getDirectValue("zowe.pagination.numRecords");
+        }
 
         try {
             if (jesApi.downloadSingleSpool) {
@@ -217,7 +224,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                     jobFile: spoolEntry.spool,
                     stream: bufBuilder,
                     startRecord,
-                    numRecords: 250,
+                    numRecords,
                 };
 
                 // Handle encoding and binary options

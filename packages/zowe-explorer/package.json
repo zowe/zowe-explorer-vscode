@@ -1828,6 +1828,18 @@
           "default": 5000,
           "description": "%zowe.pollInterval.info%",
           "scope": "window"
+        },
+        "zowe.pagination.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "%zowe.pagination.enabled%",
+          "scope": "window"
+        },
+        "zowe.pagination.numRecords": {
+          "type": "integer",
+          "default": 250,
+          "description": "%zowe.pagination.numRecords%",
+          "scope": "window"
         }
       }
     },
