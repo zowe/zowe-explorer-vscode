@@ -193,7 +193,7 @@ export class BaseProvider {
         }
         // NOTE: This does not work for editors that aren't the active one, so...
         // Make VS Code switch to this editor, and then "revert the file" to show the latest contents
-        await vscode.commands.executeCommand("vscode.open", uri);
+        await vscode.commands.executeCommand("vscode.open", uri.with({ query: "" }));
         await BaseProvider.revertFileInEditor();
     }
 
