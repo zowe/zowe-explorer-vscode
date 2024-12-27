@@ -595,7 +595,7 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
             break;
         default:
             if (response != null) {
-                encoding = { kind: "other", codepage: response };
+                encoding = response === "binary" ? { kind: "binary" } : { kind: "other", codepage: response };
             }
             break;
     }
