@@ -256,8 +256,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 session,
                 profile,
+                contextOverride: globals.JOBS_SESSION_CONTEXT,
             });
-            node.contextValue = globals.JOBS_SESSION_CONTEXT;
             await this.refreshHomeProfileContext(node);
             const icon = getIconByNode(node);
             if (icon) {

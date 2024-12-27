@@ -333,7 +333,7 @@ describe("ProfilesUtils unit tests", () => {
             const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValue({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
                 usingTeamConfig: true,
-                getTeamConfig: () => [],
+                getTeamConfig: () => ({ exists: true, layers: [] }),
             } as never);
             Object.defineProperty(globals.LOG, "debug", {
                 value: jest.fn(),
