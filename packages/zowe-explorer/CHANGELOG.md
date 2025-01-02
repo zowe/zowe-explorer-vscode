@@ -20,6 +20,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where clicking on a file in the Unix System Services tree caused the tree to abruptly change focus to the selected item. [#2486](https://github.com/zowe/zowe-explorer-vscode/issues/2486)
 - Fixed an issue where binary USS files were not fetched using the "Pull from Mainframe" context menu option. [#3355](https://github.com/zowe/zowe-explorer-vscode/issues/3355)
 - Fixed an issue with Auto Save where a failed UNIX file or data set save operation caused an infinite loop of save requests. [#2406](https://github.com/zowe/zowe-explorer-vscode/issues/2406), [#2627](https://github.com/zowe/zowe-explorer-vscode/issues/2627)
+- Fixed an issue where invalid credentials could trigger "Update Credentials" prompt twice in new VS Code session. [#3376](https://github.com/zowe/zowe-explorer-vscode/pull/3376)
+- Fixed an issue where expanding job node to show spool doesn't trigger "Update Credentials" prompt when credentials are invalid. [#3376](https://github.com/zowe/zowe-explorer-vscode/pull/3376)
 
 ## `2.18.0`
 

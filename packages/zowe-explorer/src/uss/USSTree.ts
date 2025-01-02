@@ -346,8 +346,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 session,
                 profile,
+                contextOverride: globals.USS_SESSION_CONTEXT,
             });
-            node.contextValue = globals.USS_SESSION_CONTEXT;
             await this.refreshHomeProfileContext(node);
             const icon = getIconByNode(node);
             if (icon) {
@@ -525,9 +525,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public async getAllLoadedItems(): Promise<IZoweUSSTreeNode[]> {
         ZoweLogger.trace("USSTree.getAllLoadedItems called.");
-        if (this.log) {
-            ZoweLogger.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
-        }
+        ZoweLogger.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
         const loadedNodes: IZoweUSSTreeNode[] = [];
         const sessions = await this.getChildren();
 
@@ -564,14 +562,12 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public async filterPrompt(node: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("USSTree.filterPrompt called.");
-        if (this.log) {
-            ZoweLogger.debug(localize("filterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
-        }
         await this.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
             let sessionNode;
             let remotepath: string;
             if (contextually.isSessionNotFav(node)) {
+                ZoweLogger.debug(localize("filterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
                 sessionNode = node;
                 if (this.mHistory.getSearchHistory().length > 0) {
                     const createPick = new FilterDescriptor(USSTree.defaultDialogText);
@@ -632,7 +628,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
             }
             // Get session for sessionNode
-            syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(node);
+            syncSessionNode((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue), node);
             // Sanitization: Replace multiple forward slashes with just one forward slash
             const sanitizedPath = remotepath.replace(/\/+/g, "/").replace(/(\/*)$/, "");
             sessionNode.tooltip = sessionNode.fullPath = sanitizedPath;
@@ -793,9 +789,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode,
                         parentPath: parentNode.fullPath,
+                        contextOverride: globals.INFORMATION_CONTEXT,
                     });
-                    infoNode.contextValue = globals.INFORMATION_CONTEXT;
-                    infoNode.iconPath = undefined;
                     return [infoNode];
                 }
             } catch (error) {

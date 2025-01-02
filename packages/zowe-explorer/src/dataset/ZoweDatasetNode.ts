@@ -12,7 +12,7 @@
 import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { errorHandling } from "../utils/ProfilesUtils";
+import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import {
     DatasetFilter,
     DatasetFilterOpts,
@@ -106,6 +106,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 method: DatasetSortOpts.Name,
                 direction: SortDirection.Ascending,
             };
+        } else if (this.contextValue === globals.INFORMATION_CONTEXT) {
+            this.command = { command: "zowe.placeholderCommand", title: "Placeholder" };
         }
 
         if (!globals.ISTHEIA && contextually.isSession(this)) {
@@ -184,16 +186,15 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @returns {Promise<ZoweDatasetNode[]>}
      */
     public async getChildren(): Promise<ZoweDatasetNode[]> {
-        ZoweLogger.trace("ZoweDatasetNode.getChildren called.");
+        ZoweLogger.trace(`ZoweDatasetNode.getChildren called for ${this.label as string}.`);
         if (!this.pattern && contextually.isSessionNotFav(this)) {
-            return [
-                new ZoweDatasetNode({
-                    label: localize("getChildren.search", "Use the search button to display data sets"),
-                    collapsibleState: vscode.TreeItemCollapsibleState.None,
-                    parentNode: this,
-                    contextOverride: globals.INFORMATION_CONTEXT,
-                }),
-            ];
+            const placeholder = new ZoweDatasetNode({
+                label: localize("getChildren.search", "Use the search button to display data sets"),
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: this,
+                contextOverride: globals.INFORMATION_CONTEXT,
+            });
+            return (this.children = [placeholder]);
         }
         if (contextually.isDocument(this) || contextually.isInformation(this)) {
             return [];
@@ -209,9 +210,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors
-        const responses = await this.getDatasets();
-        if (responses.length === 0) {
-            return;
+        const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+        const responses = await this.getDatasets(cachedProfile);
+        if (responses == null) {
+            return [];
         }
 
         // push nodes to an object with property names to avoid duplicates
@@ -221,7 +223,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             // The dataSetsMatchingPattern API may return success=false and apiResponse=[] when no data sets found
             if (!response.success && !(Array.isArray(response.apiResponse) && response.apiResponse.length === 0)) {
                 await errorHandling(localize("getChildren.responses.error", "The response from Zowe CLI was not successful"));
-                return;
+                return [];
             }
 
             // Loops through all the returned dataset members and creates nodes for them
@@ -524,46 +526,51 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         LocalFileManagement.storeFileInfo(this);
     }
 
-    private async getDatasets(): Promise<zowe.IZosFilesResponse[]> {
+    private async getDatasets(profile: imperative.IProfileLoaded): Promise<zowe.IZosFilesResponse[] | undefined> {
         ZoweLogger.trace("ZoweDatasetNode.getDatasets called.");
         const responses: zowe.IZosFilesResponse[] = [];
-        const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         const options: zowe.IListOptions = {
             attributes: true,
-            responseTimeout: cachedProfile.profile.responseTimeout,
+            responseTimeout: profile.profile.responseTimeout,
         };
-        if (contextually.isSessionNotFav(this)) {
-            const dsPatterns = [
-                ...new Set(
-                    this.pattern
-                        .toUpperCase()
-                        .split(",")
-                        .map((p) => p.trim())
-                ),
-            ];
-            const mvsApi = ZoweExplorerApiRegister.getMvsApi(cachedProfile);
-            if (!mvsApi.getSession(cachedProfile)) {
-                throw new zowe.imperative.ImperativeError({
-                    msg: localize("getDataSets.error.sessionMissing", "Profile auth error"),
-                    additionalDetails: localize("getDataSets.error.additionalDetails", "Profile is not authenticated, please log in to continue"),
-                    errorCode: `${zowe.imperative.RestConstants.HTTP_STATUS_401}`,
-                });
-            }
-            if (mvsApi.dataSetsMatchingPattern) {
-                responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
-            } else {
-                for (const dsp of dsPatterns) {
-                    responses.push(await mvsApi.dataSet(dsp));
+        try {
+            if (contextually.isSessionNotFav(this)) {
+                const dsPatterns = [
+                    ...new Set(
+                        this.pattern
+                            .toUpperCase()
+                            .split(",")
+                            .map((p) => p.trim())
+                    ),
+                ];
+                const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
+                if (!mvsApi.getSession(profile)) {
+                    throw new zowe.imperative.ImperativeError({
+                        msg: localize("getDataSets.error.sessionMissing", "Profile auth error"),
+                        additionalDetails: localize("getDataSets.error.additionalDetails", "Profile is not authenticated, please log in to continue"),
+                        errorCode: `${zowe.imperative.RestConstants.HTTP_STATUS_401}`,
+                    });
                 }
+                if (mvsApi.dataSetsMatchingPattern) {
+                    responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
+                } else {
+                    for (const dsp of dsPatterns) {
+                        responses.push(await mvsApi.dataSet(dsp));
+                    }
+                }
+            } else if (this.memberPattern) {
+                this.memberPattern = this.memberPattern.toUpperCase();
+                for (const memPattern of this.memberPattern.split(",")) {
+                    options.pattern = memPattern;
+                    responses.push(await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(this.label as string, options));
+                }
+            } else {
+                responses.push(await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(this.label as string, options));
             }
-        } else if (this.memberPattern) {
-            this.memberPattern = this.memberPattern.toUpperCase();
-            for (const memPattern of this.memberPattern.split(",")) {
-                options.pattern = memPattern;
-                responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(this.label as string, options));
-            }
-        } else {
-            responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(this.label as string, options));
+        } catch (error) {
+            const updated = await errorHandling(error, this.getProfileName(), localize("getDatasets.error", "Retrieving response from MVS list API"));
+            syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
+            return;
         }
         return responses;
     }

@@ -1,6 +1,5 @@
 {
   "Favorites": "Favorites",
-  "getChildren.noDataset": "No data sets found",
   "initializeFavorites.log.debug": "Initializing profiles with data set favorites.",
   "initializeFavorites.no.favorites": "No data set favorites found.",
   "initializeFavorites.invalidDsFavorite1": "Invalid Data Sets favorite: {0}.",

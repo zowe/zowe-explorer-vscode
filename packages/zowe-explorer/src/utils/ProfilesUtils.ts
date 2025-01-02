@@ -16,7 +16,7 @@ import * as globals from "../globals";
 import * as path from "path";
 import * as fs from "fs";
 import * as util from "util";
-import { IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath, Gui, ProfilesCache, EventTypes } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath, Gui, ProfilesCache, EventTypes, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 import { imperative, getImperativeConfig } from "@zowe/cli";
@@ -24,6 +24,7 @@ import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
 import { ZoweLogger } from "./LoggerUtils";
 import { SettingsConfig } from "./SettingsConfig";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
+import { TreeProviders } from "../shared/TreeProviders";
 
 // Set up localization
 nls.config({
@@ -38,7 +39,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param {label} - additional information such as profile name, credentials, messageID etc
  * @param {moreInfo} - additional/customized error messages
  *************************************************************************************************************/
-export async function errorHandling(errorDetails: Error | string, label?: string, moreInfo?: string): Promise<void> {
+export async function errorHandling(errorDetails: Error | string, label?: string, moreInfo?: string): Promise<boolean> {
     // Use util.inspect instead of JSON.stringify to handle circular references
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     ZoweLogger.error(`${errorDetails.toString()}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null }));
@@ -55,7 +56,7 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                     if (prof.profName === label.trim()) {
                         const filePath = prof.profLoc.osLoc[0];
                         await Profiles.getInstance().openConfigFile(filePath);
-                        return;
+                        return false;
                     }
                 }
             }
@@ -81,25 +82,24 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                 if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
                     if (globals.ISTHEIA) {
                         Gui.errorMessage(errToken);
-                        await Profiles.getInstance().ssoLogin(null, label);
-                        return;
+                        return Profiles.getInstance().ssoLogin(null, label);
                     }
                     const message = localize("errorHandling.authentication.login", "Log in to Authentication Service");
-                    Gui.showMessage(errToken, { items: [message] }).then(async (selection) => {
+                    const success = Gui.showMessage(errToken, { items: [message] }).then(async (selection) => {
                         if (selection) {
-                            await Profiles.getInstance().ssoLogin(null, label);
+                            return Profiles.getInstance().ssoLogin(null, label);
                         }
                     });
-                    return;
+                    return success;
                 }
             }
 
             if (globals.ISTHEIA) {
                 Gui.errorMessage(errMsg);
-                return;
+                return false;
             }
             const checkCredsButton = localize("errorHandling.checkCredentials.button", "Update Credentials");
-            await Gui.errorMessage(errMsg, {
+            const creds = await Gui.errorMessage(errMsg, {
                 items: [checkCredsButton],
                 vsCodeOpts: { modal: true },
             }).then(async (selection) => {
@@ -107,9 +107,9 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                     Gui.showMessage(localize("errorHandling.checkCredentials.cancelled", "Operation Cancelled"));
                     return;
                 }
-                await Profiles.getInstance().promptCredentials(label.trim(), true);
+                return Profiles.getInstance().promptCredentials(label.trim(), true);
             });
-            return;
+            return creds != null ? true : false;
         }
     }
 
@@ -120,6 +120,7 @@ export async function errorHandling(errorDetails: Error | string, label?: string
     }
     // Try to keep message readable since VS Code doesn't support newlines in error messages
     Gui.errorMessage(moreInfo + errorDetails.toString().replace(/\n/g, " | "));
+    return false;
 }
 
 /**
@@ -128,27 +129,31 @@ export async function errorHandling(errorDetails: Error | string, label?: string
  * @param getSessionForProfile is a function to build a valid specific session based on provided profile
  * @param sessionNode is a tree node, containing session information
  */
-type SessionForProfile = (_profile: imperative.IProfileLoaded) => imperative.Session;
-export const syncSessionNode =
-    (_profiles: Profiles) =>
-    (getSessionForProfile: SessionForProfile) =>
-    (sessionNode: IZoweTreeNode): void => {
-        ZoweLogger.trace("ProfilesUtils.syncSessionNode called.");
+export function syncSessionNode(
+    getCommonApi: (profile: imperative.IProfileLoaded) => ZoweExplorerApi.ICommon,
+    sessionNode: IZoweTreeNode,
+    nodeToRefresh?: IZoweTreeNode
+): void {
+    ZoweLogger.trace("ProfilesUtils.syncSessionNode called.");
 
-        const profileType = sessionNode.getProfile()?.type;
-        const profileName = sessionNode.getProfileName();
+    const profileType = sessionNode.getProfile()?.type;
+    const profileName = sessionNode.getProfileName();
 
-        let profile: imperative.IProfileLoaded;
-        try {
-            profile = Profiles.getInstance().loadNamedProfile(profileName, profileType);
-        } catch (e) {
-            ZoweLogger.warn(e);
-            return;
-        }
-        sessionNode.setProfileToChoice(profile);
-        const session = getSessionForProfile(profile);
-        sessionNode.setSessionToChoice(session);
-    };
+    let profile: imperative.IProfileLoaded;
+    try {
+        profile = Profiles.getInstance().loadNamedProfile(profileName, profileType);
+    } catch (e) {
+        ZoweLogger.warn(e);
+        return;
+    }
+    sessionNode.setProfileToChoice(profile);
+    const session = getCommonApi(profile).getSession();
+    sessionNode.setSessionToChoice(session);
+    if (nodeToRefresh) {
+        nodeToRefresh.dirty = true;
+        void nodeToRefresh.getChildren().then(() => TreeProviders.getProviderForNode(nodeToRefresh).refreshElement(nodeToRefresh));
+    }
+}
 
 /**
  * @deprecated Use `Gui.resolveQuickPick` instead
@@ -477,7 +482,7 @@ export class ProfilesUtils {
         );
     }
 
-    public static async getProfileInfo(envTheia: boolean): Promise<imperative.ProfileInfo> {
+    public static async getProfileInfo(_envTheia: boolean): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
         const hasSecureCredentialManagerEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
 
@@ -523,6 +528,12 @@ export class ProfilesUtils {
                 ZoweLogger.warn(schemaWarning);
             }
             globals.setConfigPath(rootPath);
+            globals.SAVED_PROFILE_CONTENTS.clear();
+            for (const layer of mProfileInfo.getTeamConfig().layers) {
+                if (layer.exists) {
+                    globals.SAVED_PROFILE_CONTENTS.set(vscode.Uri.file(layer.path).fsPath, fs.readFileSync(layer.path));
+                }
+            }
             ZoweLogger.info(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName}"`);
             const layers = mProfileInfo.getTeamConfig().layers || [];
             const layerSummary = layers.map(

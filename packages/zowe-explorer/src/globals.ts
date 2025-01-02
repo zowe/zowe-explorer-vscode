@@ -107,7 +107,7 @@ export const DS_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7}(\.[a-zA-Z#@
 export const MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$]{0,7}$/;
 export let ACTIVATED = false;
 export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
-export let SAVED_PROFILE_CONTENTS = new Uint8Array();
+export let SAVED_PROFILE_CONTENTS = new Map<string, Buffer>();
 export const JOBS_MAX_PREFIX = 8;
 export const ZE_EXT_NAME = "zowe.vscode-extension-for-zowe";
 
@@ -367,10 +367,6 @@ export function setActivated(value: boolean): void {
         ZoweLogger.info(localize("globals.setActivated.success", "Zowe Explorer has activated successfully."));
     }
     ACTIVATED = value;
-}
-
-export function setSavedProfileContents(value: Uint8Array): void {
-    SAVED_PROFILE_CONTENTS = value;
 }
 
 export async function setGlobalSecurityValue(credentialManager?: string): Promise<void> {

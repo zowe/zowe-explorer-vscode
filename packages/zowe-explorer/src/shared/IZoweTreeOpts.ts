@@ -19,10 +19,10 @@ export interface IZoweTreeOpts {
     parentNode?: IZoweTreeNode;
     session?: imperative.Session;
     profile?: imperative.IProfileLoaded;
+    contextOverride?: string;
 }
 
 export interface IZoweDatasetTreeOpts extends IZoweTreeOpts {
-    contextOverride?: string;
     encoding?: ZosEncoding;
     etag?: string;
 }

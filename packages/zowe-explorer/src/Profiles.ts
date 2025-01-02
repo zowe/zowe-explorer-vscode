@@ -1235,7 +1235,7 @@ export class Profiles extends ProfilesCache {
         return filteredProfile;
     }
 
-    public async ssoLogin(node?: IZoweNodeType, label?: string): Promise<void> {
+    public async ssoLogin(node?: IZoweNodeType, label?: string): Promise<boolean> {
         ZoweLogger.trace("Profiles.ssoLogin called.");
         let loginTokenType: string;
         let serviceProfile: zowe.imperative.IProfileLoaded;
@@ -1249,7 +1249,7 @@ export class Profiles extends ProfilesCache {
             Gui.showMessage(
                 localize("ssoAuth.usingBasicAuth", "This profile is using basic authentication and does not support token authentication.")
             );
-            return;
+            return false;
         }
 
         const zeInstance = ZoweExplorerApiRegister.getInstance();
@@ -1258,7 +1258,7 @@ export class Profiles extends ProfilesCache {
         } catch (error) {
             ZoweLogger.warn(error);
             Gui.showMessage(localize("ssoLogin.tokenType.error", "Error getting supported tokenType value for profile {0}", serviceProfile.name));
-            return;
+            return false;
         }
         try {
             let loginOk = false;
@@ -1273,11 +1273,12 @@ export class Profiles extends ProfilesCache {
             } else {
                 Gui.showMessage(this.profilesOpCancelled);
             }
+            return loginOk;
         } catch (err) {
             const message = localize("ssoLogin.error", "Unable to log in with {0}. {1}", serviceProfile.name, err?.message);
             ZoweLogger.error(message);
             Gui.errorMessage(message);
-            return;
+            return false;
         }
     }
 

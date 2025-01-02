@@ -106,12 +106,19 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.tooltip = this.fullPath;
         }
         this.etag = opts.etag ? opts.etag : "";
+
+        if (opts.contextOverride) {
+            this.contextValue = opts.contextOverride;
+        }
+
         const icon = getIconByNode(this);
         if (icon) {
             this.iconPath = icon.path;
         }
         if (!globals.ISTHEIA && contextually.isSession(this)) {
             this.id = `uss.${this.label.toString()}`;
+        } else if (this.contextValue === globals.INFORMATION_CONTEXT) {
+            this.command = { command: "zowe.placeholderCommand", title: "Placeholder" };
         }
         this.onUpdateEmitter = new vscode.EventEmitter<IZoweUSSTreeNode>();
     }
@@ -131,9 +138,15 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @returns {Promise<IZoweUSSTreeNode[]>}
      */
     public async getChildren(): Promise<IZoweUSSTreeNode[]> {
-        ZoweLogger.trace("ZoweUSSNode.getChildren called.");
+        ZoweLogger.trace(`ZoweUSSNode.getChildren called for ${this.label as string}.`);
         if ((!this.fullPath && contextually.isSession(this)) || contextually.isDocument(this)) {
-            return [];
+            const placeholder = new ZoweUSSNode({
+                label: localize("getChildren.search", "Use the search button to list USS files"),
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: this,
+                contextOverride: globals.INFORMATION_CONTEXT,
+            });
+            return (this.children = [placeholder]);
         }
 
         if (!this.dirty) {
@@ -149,27 +162,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         // Get the directories from the fullPath and display any thrown errors
-        let response: IZosFilesResponse;
-        const sessNode = this.getSessionNode();
-        try {
-            const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-            if (!ZoweExplorerApiRegister.getUssApi(cachedProfile).getSession(cachedProfile)) {
-                throw new imperative.ImperativeError({
-                    msg: localize("getChildren.error.sessionMissing", "Profile auth error"),
-                    additionalDetails: localize("getChildren.error.additionalDetails", "Profile is not authenticated, please log in to continue"),
-                    errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
-                });
-            }
-            response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).fileList(this.fullPath);
-
-            // Throws reject if the Zowe command does not throw an error but does not succeed
-            if (!response.success) {
-                throw Error(localize("getChildren.responses.error.response", "The response from Zowe CLI was not successful"));
-            }
-        } catch (err) {
-            await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
-            syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(sessNode);
-            return this.children;
+        const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+        const response = await this.getUssFiles(cachedProfile);
+        if (!response.success) {
+            return [];
         }
 
         // If search path has changed, invalidate all children
@@ -737,6 +733,23 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
         } catch (error) {
             await errorHandling(error, this.label.toString(), localize("copyUssFile.error", "Error uploading files"));
+        }
+    }
+
+    private async getUssFiles(profile: imperative.IProfileLoaded): Promise<IZosFilesResponse> {
+        try {
+            if (!ZoweExplorerApiRegister.getUssApi(profile).getSession(profile)) {
+                throw new imperative.ImperativeError({
+                    msg: localize("getChildren.error.sessionMissing", "Profile auth error"),
+                    additionalDetails: localize("getChildren.error.additionalDetails", "Profile is not authenticated, please log in to continue"),
+                    errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
+                });
+            }
+            return await ZoweExplorerApiRegister.getUssApi(profile).fileList(this.fullPath);
+        } catch (error) {
+            const updated = await errorHandling(error, this.getProfileName(), localize("getUssFiles.error", "Retrieving response from USS list API"));
+            syncSessionNode((prof) => ZoweExplorerApiRegister.getUssApi(prof), this.getSessionNode(), updated && this);
+            return { success: false, commandResponse: null };
         }
     }
 }
