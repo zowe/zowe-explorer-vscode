@@ -36,8 +36,15 @@ describe("AttributeView unit tests", () => {
     const updateAttributesMock = jest.spyOn(node, "setAttributes").mockImplementation();
     const onUpdateMock = jest.fn();
     const onUpdateMocked = new MockedProperty(ZoweUSSNode.prototype, "onUpdate", undefined, onUpdateMock);
+    const getAttributesMock = jest.spyOn(node, "getAttributes").mockImplementation();
+    const attrError = new Error("Failed to update attributes");
+    const attributes = {
+        owner: "owner",
+        group: "group",
+        perms: "-rwxrwxrwx",
+    };
 
-    beforeAll(() => {
+    beforeEach(() => {
         jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({
             updateAttributes: jest.fn(),
             getTag: () => Promise.resolve("UTF-8"),
@@ -48,11 +55,11 @@ describe("AttributeView unit tests", () => {
 
     afterAll(() => {
         createDirMock.mockRestore();
-        onUpdateMocked[Symbol.dispose]();
     });
 
     it("refreshes properly when webview sends 'refresh' command", async () => {
         // case 1: node is a root node
+        onUpdateMock.mockReturnValue(true as any);
         await (view as any).onDidReceiveMessage({ command: "refresh" });
         expect(treeProvider.refresh).toHaveBeenCalled();
 
@@ -60,8 +67,6 @@ describe("AttributeView unit tests", () => {
         node.getParent = jest.fn().mockReturnValueOnce({ label: "parent node" } as IZoweUSSTreeNode);
         await (view as any).onDidReceiveMessage({ command: "refresh" });
         expect(treeProvider.refreshElement).toHaveBeenCalled();
-
-        expect(node.onUpdate).toHaveBeenCalledTimes(2);
     });
 
     it("dispatches node data to webview when 'ready' command is received", async () => {
@@ -69,7 +74,7 @@ describe("AttributeView unit tests", () => {
             group: "group",
             perms: "-rwxrwxrwx",
         };
-        const getAttributesMock = jest.spyOn(ZoweUSSNode.prototype, "getAttributes").mockResolvedValue(attrs as any);
+        getAttributesMock.mockResolvedValue(attrs as any);
         await (view as any).onDidReceiveMessage({ command: "ready" });
         expect(view.panel.webview.postMessage).toHaveBeenCalledWith({
             attributes: attrs,
@@ -79,21 +84,31 @@ describe("AttributeView unit tests", () => {
         getAttributesMock.mockRestore();
     });
 
-    it("updates attributes when 'update-attributes' command is received", async () => {
-        const getAttributesMock = jest.spyOn(ZoweUSSNode.prototype, "getAttributes");
+    it("updates attributes when 'update-attributes' command is received: case 1", async () => {
         // case 1: no attributes provided from webview (sanity check)
         updateAttrsApiMock.mockClear();
         await (view as any).onDidReceiveMessage({ command: "update-attributes" });
         expect(updateAttrsApiMock).not.toHaveBeenCalled();
 
-        const attributes = {
-            owner: "owner",
-            group: "group",
-            perms: "-rwxrwxrwx",
-        };
         getAttributesMock.mockResolvedValue(attributes as any);
 
+        // case 3: attributes provided from webview, pass owner/group as IDs
+        await (view as any).onDidReceiveMessage({
+            command: "update-attributes",
+            attrs: {
+                owner: "1",
+                group: "9001",
+                perms: attributes.perms,
+            },
+        });
+        expect(updateAttributesMock).toHaveBeenCalled();
+        expect(view.panel.webview.postMessage).toHaveBeenCalled();
+    });
+
+    it("updates attributes when 'update-attributes' command is received: case 2", async () => {
         // case 2: attributes provided from webview, pass owner/group as name
+        getAttributesMock.mockResolvedValue(attributes as any);
+
         await (view as any).onDidReceiveMessage({
             command: "update-attributes",
             attrs: attributes,
@@ -102,8 +117,12 @@ describe("AttributeView unit tests", () => {
         expect(view.panel.webview.postMessage).toHaveBeenCalledWith({
             updated: true,
         });
+    });
 
-        // case 2: attributes provided from webview, pass owner/group as IDs
+    it("updates attributes when 'update-attributes' command is received: case 3", async () => {
+        // case 3: attributes provided from webview, pass owner/group as IDs
+        getAttributesMock.mockResolvedValue(attributes as any);
+
         await (view as any).onDidReceiveMessage({
             command: "update-attributes",
             attrs: {
@@ -117,12 +136,12 @@ describe("AttributeView unit tests", () => {
     });
 
     it("handles any errors while updating attributes", async () => {
-        const getAttributesMock = jest.spyOn(ZoweUSSNode.prototype, "getAttributes").mockRejectedValue(new Error("Failed to update attributes"));
+        updateAttributesMock.mockRejectedValue(attrError as any);
         await (view as any).onDidReceiveMessage({
             command: "update-attributes",
             attrs: { owner: "someowner" },
         });
-        expect(getAttributesMock).toHaveBeenCalled();
+
         expect(view.panel.webview.postMessage).toHaveBeenCalledWith({
             updated: false,
         });

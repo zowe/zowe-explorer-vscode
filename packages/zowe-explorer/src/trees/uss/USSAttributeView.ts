@@ -10,7 +10,7 @@
  */
 
 import { Types, Gui, MainframeInteraction, IZoweUSSTreeNode, WebView } from "@zowe/zowe-explorer-api";
-import { Disposable, ExtensionContext } from "vscode";
+import { ExtensionContext } from "vscode";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { SharedContext } from "../shared/SharedContext";
 import * as vscode from "vscode";
@@ -21,8 +21,6 @@ export class USSAttributeView extends WebView {
     private readonly ussNode: IZoweUSSTreeNode;
     private readonly ussApi: MainframeInteraction.IUss;
     private readonly canUpdate: boolean;
-
-    private onUpdateDisposable: Disposable;
 
     public constructor(context: ExtensionContext, treeProvider: Types.IZoweUSSTreeType, node: IZoweUSSTreeNode) {
         const label = node.label ? `Edit Attributes: ${node.label as string}` : "Edit Attributes";
@@ -45,14 +43,11 @@ export class USSAttributeView extends WebView {
         switch (message.command) {
             case "refresh":
                 if (this.canUpdate) {
-                    this.onUpdateDisposable = this.ussNode.onUpdate(async (node) => {
-                        await this.attachTag(node);
-                        await this.panel.webview.postMessage({
-                            attributes: await this.ussNode.getAttributes(),
-                            name: node.fullPath,
-                            readonly: this.ussApi.updateAttributes == null,
-                        });
-                        this.onUpdateDisposable.dispose();
+                    await this.attachTag(this.ussNode);
+                    await this.panel.webview.postMessage({
+                        attributes: await this.ussNode.getAttributes(),
+                        name: this.ussNode.fullPath,
+                        readonly: this.ussApi.updateAttributes == null,
                     });
 
                     if (this.ussNode.getParent()) {
@@ -103,38 +98,36 @@ export class USSAttributeView extends WebView {
 
         try {
             if (Object.keys(message?.attrs).length > 0) {
-                const oldAttrs = await this.ussNode.getAttributes();
+                const oldAttrs: Partial<Types.FileAttributes> = (await this.ussNode.getAttributes()) ?? {};
                 const attrs = message.attrs;
                 const newAttrs: Partial<Types.FileAttributes> = {};
-                if (!isNaN(parseInt(attrs.owner))) {
+                if (attrs.owner && !isNaN(parseInt(attrs.owner))) {
                     const uid = parseInt(attrs.owner);
                     newAttrs.uid = uid;
 
                     // set owner to the UID to prevent mismatched UIDs/owners
                     newAttrs.owner = attrs.owner;
-                } else if (oldAttrs.owner !== attrs.owner) {
+                } else if (attrs.owner && (!oldAttrs.owner || oldAttrs.owner !== attrs.owner)) {
                     newAttrs.owner = attrs.owner;
                 }
 
-                if (!isNaN(parseInt(attrs.group))) {
+                // must provide owner when changing group
+                if (attrs.group && attrs.owner && !isNaN(parseInt(attrs.group))) {
                     const gid = parseInt(attrs.group);
-                    // must provide owner when changing group
                     newAttrs.owner = attrs.owner;
                     newAttrs.gid = gid;
-
                     // set group to the GID to prevent mismatched GIDs/groups
                     newAttrs.group = attrs.group;
-                } else if (oldAttrs.group !== attrs.group) {
-                    // must provide owner when changing group
+                } else if (attrs.owner && attrs.group && (!oldAttrs.group || oldAttrs.group !== attrs.group)) {
                     newAttrs.owner = attrs.owner;
                     newAttrs.group = attrs.group;
                 }
 
-                if (oldAttrs.perms !== attrs.perms) {
+                if (attrs.perms && (!oldAttrs.perms || oldAttrs.perms !== attrs.perms)) {
                     newAttrs.perms = attrs.perms;
                 }
 
-                if (oldAttrs.tag !== attrs.tag && this.ussApi.getTag) {
+                if (attrs.tag && (!oldAttrs.tag || oldAttrs.tag !== attrs.tag) && this.ussApi.getTag) {
                     newAttrs.tag = attrs.tag;
                 }
 
