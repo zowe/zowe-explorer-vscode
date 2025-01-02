@@ -13,7 +13,7 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
-import { Gui, IZoweTreeNode, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, Types, ZosEncoding } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTreeNode, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, Types, ZosEncoding, Sorting } from "@zowe/zowe-explorer-api";
 import { UssFSProvider } from "../uss/UssFSProvider";
 import { USSUtils } from "../uss/USSUtils";
 import { Constants } from "../../configuration/Constants";
@@ -21,6 +21,7 @@ import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedContext } from "./SharedContext";
 import { Definitions } from "../../configuration/Definitions";
+import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 export class SharedUtils {
     public static async copyExternalLink(this: void, context: vscode.ExtensionContext, node: IZoweTreeNode): Promise<void> {
@@ -355,6 +356,37 @@ export class SharedUtils {
                 clearTimeout(timeoutId);
             }
             timeoutId = setTimeout(() => callback(...args), delay);
+        };
+    }
+
+    private static updateSortOptionsWithDefault<T>(sortMethod: T, sortOptions: string[]): void {
+        for (let i = 0; i < sortOptions.length; i++) {
+            sortOptions[i] = sortOptions[i].replace(` ${vscode.l10n.t("(default)")}`, "");
+            if (i === Number(sortMethod)) {
+                sortOptions[i] = `${sortOptions[i]} ${vscode.l10n.t("(default)")}`;
+            }
+        }
+    }
+
+    /**
+     * Gets the sort options from the settings with the default sort option marked
+     * @param sortOptions The list of sort options
+     * @param settingsKey The default sort method key
+     * @param sortMethod The sort method
+     * @returns The list of sort options with the default sort option marked
+     */
+    public static getDefaultSortOptions<T>(sortOptions: string[], settingsKey: string, sortMethod: T): Sorting.NodeSort {
+        const sortSetting = SettingsConfig.getDirectValue<Sorting.NodeSort>(settingsKey);
+        if (typeof sortSetting.method === "string") {
+            sortSetting.method = sortMethod[sortSetting.method as keyof typeof sortMethod] as Sorting.JobSortOpts | Sorting.DatasetSortOpts;
+            SharedUtils.updateSortOptionsWithDefault(sortSetting.method, sortOptions);
+        }
+        if (typeof sortSetting.direction === "string") {
+            sortSetting.direction = Sorting.SortDirection[sortSetting.direction as keyof typeof Sorting.SortDirection];
+        }
+        return {
+            method: sortSetting?.method ?? sortMethod[Object.keys(sortMethod)[0]],
+            direction: sortSetting?.direction ?? Sorting.SortDirection.Ascending,
         };
     }
 }
