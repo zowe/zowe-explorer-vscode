@@ -630,7 +630,7 @@ export class Profiles extends ProfilesCache {
         return returnValue;
     }
 
-    public async getDeleteProfile(): Promise<imperative.IProfileLoaded> {
+    private async getDeleteProfile(): Promise<imperative.IProfileLoaded> {
         ZoweLogger.trace("Profiles.getDeleteProfile called.");
         const allProfiles: imperative.IProfileLoaded[] = this.allProfiles;
         const profileNamesList = allProfiles.map((temprofile) => {
@@ -669,6 +669,8 @@ export class Profiles extends ProfilesCache {
             return;
         }
 
+        // As of ZE 3.0 we don't support the action of deleting profiles
+        // Command to open config file is kept for backwards compatibility
         const deleteLabel = deletedProfile.name;
 
         let currentProfile: imperative.IProfAttrs;
