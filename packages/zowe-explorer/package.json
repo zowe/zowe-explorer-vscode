@@ -1597,6 +1597,10 @@
         {
           "command": "zowe.ds.filteredDataSetsSearchFor",
           "when": "never"
+        },
+        {
+          "command": "zowe.deleteProfile",
+          "when": "never"
         }
       ]
     },
