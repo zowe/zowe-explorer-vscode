@@ -522,13 +522,11 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
             const progress = {
-                report: (message) => {
-                    return;
-                },
+                report: jest.fn(),
             };
             const token = {
                 isCancellationRequested: false,
-                onCancellationRequested: undefined,
+                onCancellationRequested: jest.fn(),
             };
             return callback(progress, token);
         });

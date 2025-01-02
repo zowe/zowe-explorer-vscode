@@ -17,6 +17,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where a migrated data set is unusable after it is recalled through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
 - Fixed an issue where a recalled PDS is expandable after it is migrated through Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
 - Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. [#3294](https://github.com/zowe/zowe-explorer-vscode/issues/3294)
+- Fixed issue where Search operation did not prompt for credentials if profile contains expired token. [#2259](https://github.com/zowe/zowe-explorer-vscode/issues/2259)
+- Fixed issue where inactive status was not displayed for profiles loaded from Global Config. [#3134](https://github.com/zowe/zowe-explorer-vscode/issues/3134)
 - Fixed an issue where clicking on a file in the Unix System Services tree caused the tree to abruptly change focus to the selected item. [#2486](https://github.com/zowe/zowe-explorer-vscode/issues/2486)
 - Fixed an issue where binary USS files were not fetched using the "Pull from Mainframe" context menu option. [#3355](https://github.com/zowe/zowe-explorer-vscode/issues/3355)
 - Fixed an issue with Auto Save where a failed UNIX file or data set save operation caused an infinite loop of save requests. [#2406](https://github.com/zowe/zowe-explorer-vscode/issues/2406), [#2627](https://github.com/zowe/zowe-explorer-vscode/issues/2627)

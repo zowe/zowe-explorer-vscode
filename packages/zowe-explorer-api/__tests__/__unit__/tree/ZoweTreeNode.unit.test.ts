@@ -13,7 +13,17 @@ import * as vscode from "vscode";
 import { ZoweTreeNode } from "../../../src/tree/ZoweTreeNode";
 import { IZoweTreeNode } from "../../../src/tree/IZoweTreeNode";
 import { imperative } from "@zowe/cli";
+
 describe("ZoweTreeNode", () => {
+    const innerProfile = { user: "apple", password: "banana" };
+    const fakeProfile: imperative.IProfileLoaded = {
+        name: "amazingProfile",
+        profile: innerProfile,
+        message: "",
+        type: "zosmf",
+        failNotFound: true,
+    };
+
     const makeNode = (
         name: string,
         collapseState: vscode.TreeItemCollapsibleState,
@@ -46,8 +56,8 @@ describe("ZoweTreeNode", () => {
 
     it("getProfile should return profile of current node", () => {
         const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined);
-        node.setProfileToChoice("myProfile" as unknown as imperative.IProfileLoaded);
-        expect(node.getProfile()).toBe("myProfile");
+        node.setProfileToChoice(fakeProfile);
+        expect(node.getProfile().name).toBe("amazingProfile");
     });
 
     it("getProfile should return profile of parent node", () => {
@@ -77,5 +87,29 @@ describe("ZoweTreeNode", () => {
         expect(node.getSession()).toBeUndefined();
         expect(node.getProfile()).toBeUndefined();
         expect(node.getProfileName()).toBeUndefined();
+    });
+
+    it("setProfileToChoice should update properties on existing profile object", () => {
+        const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined, undefined, {
+            ...fakeProfile,
+        });
+        node.setProfileToChoice({ ...fakeProfile, profile: { host: "example.com", port: 443 } });
+        expect(node.getProfile().profile?.port).toBeDefined();
+    });
+
+    it("setProfileToChoice should update child nodes with the new profile", () => {
+        const node = makeNode("test", vscode.TreeItemCollapsibleState.Expanded, undefined);
+        node.setProfileToChoice({ ...fakeProfile, profile: { ...fakeProfile.profile, user: "banana" } });
+        const nodeChild = makeNode("child", vscode.TreeItemCollapsibleState.None, undefined);
+        nodeChild.setProfileToChoice(node.getProfile());
+        node.children = [nodeChild as any];
+        const fsEntry = {
+            metadata: {
+                profile: node.getProfile(),
+            },
+        };
+        expect(node.getProfile().profile?.user).toBe("banana");
+        expect(nodeChild.getProfile().profile?.user).toBe("banana");
+        expect(fsEntry.metadata.profile.profile?.user).toBe("banana");
     });
 });

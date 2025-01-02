@@ -1,8 +1,6 @@
 {
   "profiles.operation.cancelled": "Operation Cancelled",
   "profiles.manualEditMsg": "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.",
-  "checkCurrentProfile.tokenAuthError.msg": "Token auth error",
-  "checkCurrentProfile.tokenAuthError.additionalDetails": "Profile was found using token auth, please log in to continue.",
   "profiles.createNewConnection": "$(plus) Create a new connection to z/OS",
   "profiles.createTeamConfig": "$(plus) Create a new Team Configuration file",
   "profiles.editConfig": "$(pencil) Edit Team Configuration file",
