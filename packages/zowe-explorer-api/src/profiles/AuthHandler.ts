@@ -98,16 +98,14 @@ export class AuthHandler {
                     items: [message],
                     vsCodeOpts: { modal: true },
                 });
-                if (userResp === message) {
-                    if (await opts.ssoLogin(null, profileName)) {
-                        // SSO login was successful, propagate new profile properties to other tree providers
-                        if (typeof profile !== "string") {
-                            ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(profile);
-                        }
-                        // Unlock profile so it can be used again
-                        AuthHandler.unlockProfile(profileName, true);
-                        return true;
+                if (userResp === message && (await opts.ssoLogin(null, profileName))) {
+                    // SSO login was successful, propagate new profile properties to other tree providers
+                    if (typeof profile !== "string") {
+                        ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(profile);
                     }
+                    // Unlock profile so it can be used again
+                    AuthHandler.unlockProfile(profileName, true);
+                    return true;
                 }
                 return false;
             }
