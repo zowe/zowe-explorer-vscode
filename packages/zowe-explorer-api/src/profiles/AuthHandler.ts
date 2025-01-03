@@ -43,7 +43,7 @@ export class AuthHandler {
     public static isUsingTokenAuth(secureProfileProps: string[], baseSecureProfileProps?: string[]): boolean {
         const profileUsesBasicAuth = secureProfileProps.includes("user") && secureProfileProps.includes("password");
         if (secureProfileProps.includes("tokenValue")) {
-            return secureProfileProps.includes("tokenValue") && !profileUsesBasicAuth;
+            return !profileUsesBasicAuth;
         }
         return baseSecureProfileProps?.includes("tokenValue") && !profileUsesBasicAuth;
     }
