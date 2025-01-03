@@ -159,8 +159,6 @@ export class AuthHandler {
         if (imperativeError && opts) {
             await AuthHandler.promptForAuthentication(imperativeError, profile, opts);
             mutex.release();
-            // Return `true` as the mutex was still locked successfully.
-            return true;
         }
 
         return true;
