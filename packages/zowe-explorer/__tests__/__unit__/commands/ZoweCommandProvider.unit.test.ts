@@ -10,14 +10,13 @@
  */
 
 import * as vscode from "vscode";
-import { ProfilesCache, ZoweExplorerApiType, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { ProfilesCache, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { createIProfile, createISession } from "../../__mocks__/mockCreators/shared";
 import { ZoweCommandProvider } from "../../../src/commands/ZoweCommandProvider";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { SharedContext } from "../../../src/trees/shared/SharedContext";
 import { createIJobFile } from "../../__mocks__/mockCreators/jobs";
-import { AuthUtils } from "../../../src/utils/AuthUtils";
 
 const globalMocks = {
     testSession: createISession(),
