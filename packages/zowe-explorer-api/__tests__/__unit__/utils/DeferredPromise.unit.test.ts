@@ -26,10 +26,10 @@ describe("DeferredPromise.status", () => {
         expect(deferred.status).toBe(DeferredPromiseStatus.Pending);
     });
 
-    it("returns fulfilled when resolved", () => {
+    it("returns resolved when resolved", () => {
         const deferred = new DeferredPromise();
         deferred.resolve(null);
-        expect(deferred.status).toBe(DeferredPromiseStatus.Fulfilled);
+        expect(deferred.status).toBe(DeferredPromiseStatus.Resolved);
     });
 
     it("returns rejected when rejected", async () => {

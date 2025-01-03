@@ -12,7 +12,7 @@
 /* Status of the deferred promise */
 export enum DeferredPromiseStatus {
     Pending = "pending",
-    Fulfilled = "fulfilled",
+    Resolved = "resolved",
     Rejected = "rejected",
 }
 
@@ -34,7 +34,7 @@ export class DeferredPromise<T> {
     public constructor() {
         this.promise = new Promise<T>((resolve, reject) => {
             this.resolve = (value): void => {
-                this.mStatus = DeferredPromiseStatus.Fulfilled;
+                this.mStatus = DeferredPromiseStatus.Resolved;
                 resolve(value);
             };
             this.reject = (err): void => {
