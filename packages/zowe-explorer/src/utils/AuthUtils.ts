@@ -44,25 +44,22 @@ export class AuthUtils {
                     profileName: profile.name,
                 },
             });
+
+            const authOpts = {
+                authMethods: Constants.PROFILES_CACHE,
+                imperativeError: err,
+                isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
+                errorCorrelation,
+            };
             // If the profile is already locked, prompt the user to re-authenticate.
             if (AuthHandler.isProfileLocked(profile)) {
-                await AuthHandler.promptForAuthentication(err, profile, {
-                    ssoLogin: Constants.PROFILES_CACHE.ssoLogin.bind(Constants.PROFILES_CACHE),
-                    promptCredentials: Constants.PROFILES_CACHE.promptCredentials.bind(Constants.PROFILES_CACHE),
-                    isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
-                    errorCorrelation,
-                });
+                await AuthHandler.promptForAuthentication(profile, authOpts);
             } else {
-                // Lock the profile and prompt the user to authenticate by providing login/credential prompt callbacks.
-                await AuthHandler.lockProfile(profile, err, {
-                    ssoLogin: Constants.PROFILES_CACHE.ssoLogin.bind(Constants.PROFILES_CACHE),
-                    promptCredentials: Constants.PROFILES_CACHE.promptCredentials.bind(Constants.PROFILES_CACHE),
-                    isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
-                    errorCorrelation,
-                });
+                // Lock the profile and prompt the user for authentication by providing login/credential prompt options.
+                await AuthHandler.lockProfile(profile, authOpts);
             }
         } else if (AuthHandler.isProfileLocked(profile)) {
-            // Error doesn't mean criteria to continue holding the lock. Unlock the profile to allow further use
+            // Error doesn't satisfy criteria to continue holding the lock. Unlock the profile to allow further use
             AuthHandler.unlockProfile(profile);
         }
     }
@@ -108,9 +105,9 @@ export class AuthUtils {
                 (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
                     imperativeError.message.includes("All configured authentication methods failed"))
             ) {
-                return await AuthHandler.lockProfile(profile, imperativeError, {
-                    ssoLogin: Constants.PROFILES_CACHE.ssoLogin.bind(Constants.PROFILES_CACHE),
-                    promptCredentials: Constants.PROFILES_CACHE.promptCredentials.bind(Constants.PROFILES_CACHE),
+                return await AuthHandler.lockProfile(profile, {
+                    authMethods: Constants.PROFILES_CACHE,
+                    imperativeError,
                     isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
                     errorCorrelation,
                 });

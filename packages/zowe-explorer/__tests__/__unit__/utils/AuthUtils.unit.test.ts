@@ -17,7 +17,7 @@ import { MockedProperty } from "../../__mocks__/mockUtils";
 describe("AuthUtils", () => {
     describe("handleProfileAuthOnError", () => {
         it("should prompt for authentication", async () => {
-            const errorDetails = new imperative.ImperativeError({
+            const imperativeError = new imperative.ImperativeError({
                 errorCode: 401 as unknown as string,
                 msg: "All configured authentication methods failed",
             });
@@ -30,23 +30,23 @@ describe("AuthUtils", () => {
                 configurable: true,
             });
             const correlateErrorMock = jest.spyOn(ErrorCorrelator.getInstance(), "correlateError");
-            const errorCorrelation = ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.All, errorDetails, {
+            const errorCorrelation = ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.All, imperativeError, {
                 templateArgs: {
                     profileName: profile.name,
                 },
             });
             const isUsingTokenAuthMock = jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
             const promptForAuthenticationMock = jest.spyOn(AuthHandler, "promptForAuthentication").mockResolvedValueOnce(true);
-            await AuthUtils.handleProfileAuthOnError(errorDetails, profile);
-            expect(correlateErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.All, errorDetails, {
+            await AuthUtils.handleProfileAuthOnError(imperativeError, profile);
+            expect(correlateErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.All, imperativeError, {
                 templateArgs: {
                     profileName: profile.name,
                 },
             });
             expect(promptForAuthenticationMock).toHaveBeenCalledWith(
-                errorDetails,
                 profile,
                 expect.objectContaining({
+                    imperativeError,
                     errorCorrelation,
                     isUsingTokenAuth: false,
                 })

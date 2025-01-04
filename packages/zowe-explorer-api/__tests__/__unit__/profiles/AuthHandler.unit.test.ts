@@ -13,6 +13,7 @@ import { Mutex } from "async-mutex";
 import { AuthHandler, Gui } from "../../../src";
 import { FileManagement } from "../../../src/utils/FileManagement";
 import { ImperativeError } from "@zowe/imperative";
+import { AuthPromptParams } from "@zowe/zowe-explorer-api";
 
 const TEST_PROFILE_NAME = "lpar.zosmf";
 
@@ -42,16 +43,19 @@ describe("AuthHandler.lockProfile", () => {
 
     it("handle promptForAuthentication call if error and options are given", async () => {
         const promptForAuthenticationMock = jest.spyOn(AuthHandler, "promptForAuthentication").mockResolvedValueOnce(true);
-        const impError = new ImperativeError({ msg: "Example auth error" });
-        const promptOpts = {
-            promptCredentials: jest.fn(),
-            ssoLogin: jest.fn(),
+        const imperativeError = new ImperativeError({ msg: "Example auth error" });
+        const authOpts: AuthPromptParams = {
+            authMethods: {
+                promptCredentials: jest.fn(),
+                ssoLogin: jest.fn(),
+            },
+            imperativeError,
         };
         const releaseSpy = jest.spyOn(Mutex.prototype, "release");
-        const result = await AuthHandler.lockProfile(TEST_PROFILE_NAME, impError, promptOpts);
+        const result = await AuthHandler.lockProfile(TEST_PROFILE_NAME, authOpts);
         expect(result).toBe(true);
         expect(promptForAuthenticationMock).toHaveBeenCalledTimes(1);
-        expect(promptForAuthenticationMock).toHaveBeenCalledWith(impError, TEST_PROFILE_NAME, promptOpts);
+        expect(promptForAuthenticationMock).toHaveBeenCalledWith(TEST_PROFILE_NAME, authOpts);
         expect(releaseSpy).toHaveBeenCalledTimes(1);
         AuthHandler.unlockProfile(TEST_PROFILE_NAME);
     });
@@ -74,12 +78,14 @@ describe("AuthHandler.lockProfile", () => {
 describe("AuthHandler.promptForAuthentication", () => {
     it("handles a token-based authentication error - login successful, profile is string", async () => {
         const tokenNotValidMsg = "Token is not valid or expired.";
-        const impError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
+        const imperativeError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
         const ssoLogin = jest.fn().mockResolvedValue(true);
         const promptCredentials = jest.fn();
         const showMessageMock = jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Log in to Authentication Service");
         const unlockProfileSpy = jest.spyOn(AuthHandler, "unlockProfile");
-        await expect(AuthHandler.promptForAuthentication(impError, "lpar.zosmf", { promptCredentials, ssoLogin })).resolves.toBe(true);
+        await expect(
+            AuthHandler.promptForAuthentication("lpar.zosmf", { authMethods: { promptCredentials, ssoLogin }, imperativeError })
+        ).resolves.toBe(true);
         expect(promptCredentials).not.toHaveBeenCalled();
         expect(ssoLogin).toHaveBeenCalledTimes(1);
         expect(ssoLogin).toHaveBeenCalledWith(null, "lpar.zosmf");
@@ -90,12 +96,14 @@ describe("AuthHandler.promptForAuthentication", () => {
 
     it("handles a standard authentication error - credentials provided, profile is string", async () => {
         const tokenNotValidMsg = "Invalid credentials";
-        const impError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
+        const imperativeError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
         const ssoLogin = jest.fn().mockResolvedValue(true);
         const promptCredentials = jest.fn().mockResolvedValue(["us3r", "p4ssw0rd"]);
         const errorMessageMock = jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("Update Credentials");
         const unlockProfileSpy = jest.spyOn(AuthHandler, "unlockProfile").mockClear();
-        await expect(AuthHandler.promptForAuthentication(impError, "lpar.zosmf", { promptCredentials, ssoLogin })).resolves.toBe(true);
+        await expect(
+            AuthHandler.promptForAuthentication("lpar.zosmf", { authMethods: { promptCredentials, ssoLogin }, imperativeError })
+        ).resolves.toBe(true);
         expect(unlockProfileSpy).toHaveBeenCalledTimes(1);
         expect(unlockProfileSpy).toHaveBeenCalledWith("lpar.zosmf", true);
         expect(ssoLogin).not.toHaveBeenCalled();

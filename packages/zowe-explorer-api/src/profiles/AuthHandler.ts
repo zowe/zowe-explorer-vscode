@@ -16,21 +16,28 @@ import { IZoweTreeNode } from "../tree";
 import { Mutex } from "async-mutex";
 import { ZoweVsCodeExtension } from "../vscode/ZoweVsCodeExtension";
 
+/**
+ * @brief individual authentication methods (also supports a `ProfilesCache` class)
+ */
 export interface IAuthMethods {
-    /* Method for establishing SSO login with a given profile name */
+    // Method for establishing SSO login with a given profile name
     ssoLogin: (node?: IZoweTreeNode, profileName?: string) => PromiseLike<boolean>;
-    /* Method that prompts the user for credentials, sets them on the profile and returns them to the caller if set */
+    // Method that prompts the user for credentials, sets them on the profile and returns them to the caller if set
     promptCredentials: (profile: string | imperative.IProfileLoaded, rePrompt?: boolean) => PromiseLike<string[]>;
 }
 
-export interface AuthPromptParams extends IAuthMethods {
+export type AuthPromptParams = {
     // Whether the profile is using token-based authentication
     isUsingTokenAuth?: boolean;
     // API-friendly error correlation for the "Invalid Credentials" scenario
     errorCorrelation?: CorrelatedError;
-}
+    // Authentication methods to call after user responds to prompts
+    authMethods: IAuthMethods;
+    // Error encountered from API call
+    imperativeError: imperative.ImperativeError;
+};
 
-type ProfileLike = string | imperative.IProfileLoaded;
+export type ProfileLike = string | imperative.IProfileLoaded;
 export class AuthHandler {
     private static profileLocks: Map<string, Mutex> = new Map();
 
@@ -78,27 +85,22 @@ export class AuthHandler {
 
     /**
      * Prompts the user to authenticate over SSO or a credential prompt in the event of an error.
-     * @param imperativeError The authentication error that was encountered
      * @param profile The profile to authenticate
-     * @param opts {AuthPromptParams} Prompt parameters (login methods, using token auth, error correlation)
+     * @param params {AuthPromptParams} Prompt parameters (login methods, using token auth, error correlation)
      * @returns {boolean} Whether authentication was successful
      */
-    public static async promptForAuthentication(
-        imperativeError: imperative.ImperativeError,
-        profile: ProfileLike,
-        opts: AuthPromptParams
-    ): Promise<boolean> {
+    public static async promptForAuthentication(profile: ProfileLike, params: AuthPromptParams): Promise<boolean> {
         const profileName = typeof profile === "string" ? profile : profile.name;
-        if (imperativeError.mDetails.additionalDetails) {
-            const tokenError: string = imperativeError.mDetails.additionalDetails;
-            if (tokenError.includes("Token is not valid or expired.") || opts.isUsingTokenAuth) {
+        if (params.imperativeError.mDetails.additionalDetails) {
+            const tokenError: string = params.imperativeError.mDetails.additionalDetails;
+            if (tokenError.includes("Token is not valid or expired.") || params.isUsingTokenAuth) {
                 // Handle token-based authentication error through the given `ssoLogin` method.
                 const message = "Log in to Authentication Service";
-                const userResp = await Gui.showMessage(opts.errorCorrelation?.message ?? imperativeError.message, {
+                const userResp = await Gui.showMessage(params.errorCorrelation?.message ?? params.imperativeError.message, {
                     items: [message],
                     vsCodeOpts: { modal: true },
                 });
-                if (userResp === message && (await opts.ssoLogin(null, profileName))) {
+                if (userResp === message && (await params.authMethods.ssoLogin(null, profileName))) {
                     // SSO login was successful, propagate new profile properties to other tree providers
                     if (typeof profile !== "string") {
                         ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(profile);
@@ -113,14 +115,14 @@ export class AuthHandler {
 
         // Prompt the user to update their credentials using the given `promptCredentials` method.
         const checkCredsButton = "Update Credentials";
-        const creds = await Gui.errorMessage(opts.errorCorrelation?.message ?? imperativeError.message, {
+        const creds = await Gui.errorMessage(params.errorCorrelation?.message ?? params.imperativeError.message, {
             items: [checkCredsButton],
             vsCodeOpts: { modal: true },
         }).then(async (selection) => {
             if (selection !== checkCredsButton) {
                 return;
             }
-            return opts.promptCredentials(profile, true);
+            return params.authMethods.promptCredentials(profile, true);
         });
 
         if (creds != null) {
@@ -139,11 +141,10 @@ export class AuthHandler {
      * Locks the given profile to prevent further use in asynchronous operations (at least where the lock is respected).
      * Supports prompting for authentication if an Imperative error and prompt options are given.
      * @param profile The profile to lock
-     * @param imperativeError The Imperative error that was encountered when using the profile
-     * @param opts Prompt parameters to use during authentication
+     * @param authOpts Authentication methods and related options. If provided, {@link promptForAuthentication} will be called with the given options.
      * @returns Whether the profile was successfully locked
      */
-    public static async lockProfile(profile: ProfileLike, imperativeError?: imperative.ImperativeError, opts?: AuthPromptParams): Promise<boolean> {
+    public static async lockProfile(profile: ProfileLike, authOpts?: AuthPromptParams): Promise<boolean> {
         const profileName = typeof profile === "string" ? profile : profile.name;
 
         // If the mutex does not exist, make one for the profile and acquire the lock
@@ -156,8 +157,8 @@ export class AuthHandler {
         await mutex.acquire();
 
         // Prompt the user to re-authenticate if an error and options were provided
-        if (imperativeError && opts) {
-            await AuthHandler.promptForAuthentication(imperativeError, profile, opts);
+        if (authOpts) {
+            await AuthHandler.promptForAuthentication(profile, authOpts);
             mutex.release();
         }
 
