@@ -9,4 +9,5 @@ node_modules
 pnpm-lock.yaml
 **/bundle.l10n.json
 **/.wdio-vscode-service
+packages/zowe-explorer/__tests__/**/zowe.config.json
 zedc/target

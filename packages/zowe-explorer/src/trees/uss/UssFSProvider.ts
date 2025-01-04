@@ -24,6 +24,7 @@ import {
     ZoweScheme,
     UriFsInfo,
     ZoweExplorerApiType,
+    AuthHandler,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { USSFileStructure } from "./USSFileStructure";
@@ -279,6 +280,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         try {
             await this.autoDetectEncoding(file as UssFile);
             const profileEncoding = file.encoding ? null : file.metadata.profile.profile?.encoding;
+            await AuthHandler.lockProfile(metadata.profile);
             resp = await ZoweExplorerApiRegister.getUssApi(metadata.profile).getContents(filePath, {
                 binary: file.encoding?.kind === "binary",
                 encoding: file.encoding?.kind === "other" ? file.encoding.codepage : profileEncoding,
@@ -286,11 +288,12 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 returnEtag: true,
                 stream: bufBuilder,
             });
+            AuthHandler.unlockProfile(metadata.profile);
         } catch (err) {
             if (err instanceof Error) {
                 ZoweLogger.error(err.message);
             }
-            AuthUtils.promptForAuthError(err, metadata.profile);
+            await AuthUtils.handleProfileAuthOnError(err, metadata.profile);
             return;
         }
 
@@ -321,7 +324,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         if (entry.encoding !== undefined) {
             return;
         }
-
+        await AuthHandler.lockProfile(entry.metadata.profile);
         const ussApi = ZoweExplorerApiRegister.getUssApi(entry.metadata.profile);
         if (ussApi.getTag != null) {
             const taggedEncoding = await ussApi.getTag(entry.metadata.path);
@@ -334,6 +337,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             const isBinary = await ussApi.isFileTagBinOrAscii(entry.metadata.path);
             entry.encoding = isBinary ? { kind: "binary" } : undefined;
         }
+        AuthHandler.unlockProfile(entry.metadata.profile);
     }
 
     public async fetchEncodingForUri(uri: vscode.Uri): Promise<ZosEncoding> {

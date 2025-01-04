@@ -12,6 +12,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added support for VS Code proxy settings with zosmf profile types. [#3010](https://github.com/zowe/zowe-explorer-vscode/issues/3010)
 - Added optional `getLocalStorage` function to the `IApiExplorerExtender` interface to expose local storage access to Zowe Explorer extenders. [#3180](https://github.com/zowe/zowe-explorer-vscode/issues/3180)
 - Added optional `setEncoding`, `getEncoding`, and `getEncodingInMap` functions to the `IZoweJobTreeNode` interface. [#3361](https://github.com/zowe/zowe-explorer-vscode/pull/3361)
+- Added an `AuthHandler` class with functions for locking/unlocking profiles, prompting for credentials and SSO login support. Extenders can now lock profiles after an authentication error, ensuring that an invalid profile is not used asynchronously until the error is resolved. [#3329](https://github.com/zowe/zowe-explorer-vscode/issues/3329)
 
 ### Bug fixes
 

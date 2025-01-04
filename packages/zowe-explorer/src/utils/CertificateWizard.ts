@@ -9,7 +9,7 @@
  *
  */
 
-import { Gui, WebView } from "@zowe/zowe-explorer-api";
+import { DeferredPromise, Gui, WebView } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import * as fs from "fs";
@@ -19,19 +19,6 @@ export type CertWizardOpts = {
     certKey?: string;
     dialogOpts?: vscode.OpenDialogOptions;
 };
-
-class DeferredPromise<T> {
-    public promise: Promise<T>;
-    public resolve: (value: T | PromiseLike<T>) => void;
-    public reject: (reason?: any) => void;
-
-    public constructor() {
-        this.promise = new Promise<T>((resolve, reject) => {
-            this.resolve = resolve;
-            this.reject = reject;
-        });
-    }
-}
 
 const allFiles = vscode.l10n.t("All Files");
 const userDismissed = vscode.l10n.t("User dismissed the Certificate Wizard.");

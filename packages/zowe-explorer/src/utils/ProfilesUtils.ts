@@ -12,7 +12,16 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
-import { IZoweTreeNode, ZoweTreeNode, FileManagement, Gui, ProfilesCache, imperative, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import {
+    IZoweTreeNode,
+    ZoweTreeNode,
+    FileManagement,
+    Gui,
+    ProfilesCache,
+    imperative,
+    ZoweVsCodeExtension,
+    AuthHandler,
+} from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { ZoweLogger } from "../tools/ZoweLogger";
@@ -452,6 +461,10 @@ export class ProfilesUtils {
                 args: [typeof profile === "string" ? profile : profile.name],
                 comment: ["Profile name"],
             });
+            AuthHandler.unlockProfile(profile, true);
+            if (typeof profile !== "string") {
+                await Constants.PROFILES_CACHE.updateCachedProfile(profile, node);
+            }
             ZoweLogger.info(successMsg);
             Gui.showMessage(successMsg);
         }

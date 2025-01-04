@@ -97,7 +97,7 @@ rules:
     - warn
     - "ignore": [-2, -1, 0, 1, 2, 4]
   no-multiple-empty-lines: warn
-  no-return-await: warn
+  no-return-await: off
   no-sequences: warn
   no-shadow: off
   no-sparse-arrays: warn

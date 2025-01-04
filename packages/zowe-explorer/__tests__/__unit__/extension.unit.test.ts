@@ -17,7 +17,7 @@ import * as fsextra from "fs-extra";
 import * as extension from "../../src/extension";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
-import { imperative, Gui, Validation, ProfilesCache, FileManagement } from "@zowe/zowe-explorer-api";
+import { imperative, Gui, Validation, ProfilesCache, FileManagement, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { createGetConfigMock, createInstanceOfProfileInfo, createIProfile, createTreeView } from "../__mocks__/mockCreators/shared";
 import { Constants } from "../../src/configuration/Constants";
 import { Profiles } from "../../src/configuration/Profiles";
@@ -249,6 +249,7 @@ async function createGlobalMocks() {
         ],
     };
 
+    jest.replaceProperty(ZoweVsCodeExtension, "onProfileUpdated", jest.fn());
     Object.defineProperty(fs, "mkdirSync", { value: globalMocks.mockMkdirSync, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", {
         value: globalMocks.mockCreateTreeView,

@@ -37,6 +37,7 @@
     "@zowe/zos-tso-for-zowe-sdk": "^8.8.3",
     "@zowe/zos-uss-for-zowe-sdk": "^8.8.3",
     "@zowe/zosmf-for-zowe-sdk": "^8.8.3",
+    "async-mutex": "^0.5.0",
     "deep-object-diff": "^1.1.9",
     "mustache": "^4.2.0",
     "semver": "^7.6.0"
