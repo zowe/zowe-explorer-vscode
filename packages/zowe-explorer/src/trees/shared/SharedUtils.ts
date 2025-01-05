@@ -359,7 +359,7 @@ export class SharedUtils {
         };
     }
 
-    private static updateSortOptionsWithDefault<T>(sortMethod: T, sortOptions: string[]): void {
+    public static updateSortOptionsWithDefault<T>(sortMethod: T, sortOptions: string[]): void {
         for (let i = 0; i < sortOptions.length; i++) {
             sortOptions[i] = sortOptions[i].replace(` ${vscode.l10n.t("(default)")}`, "");
             if (i === Number(sortMethod)) {
