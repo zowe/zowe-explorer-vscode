@@ -24,6 +24,7 @@ import { Definitions } from "../../configuration/Definitions";
 
 export class LoadMoreCodeLens implements vscode.CodeLensProvider {
     public constructor(private commandId: string) {}
+    public isLoading = false;
 
     public provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CodeLens[]> {
         const lineCount = document.lineCount;
@@ -31,8 +32,8 @@ export class LoadMoreCodeLens implements vscode.CodeLensProvider {
         const lastLineRange = new vscode.Range(lastLine, 0, lastLine, 0);
 
         const codelens = new vscode.CodeLens(lastLineRange, {
-            title: vscode.l10n.t("$(chevron-down) Load more..."),
-            command: this.commandId,
+            title: vscode.l10n.t(this.isLoading ? "$(sync~spin) Loading more..." : "$(chevron-down) Load more..."),
+            command: this.isLoading ? undefined : this.commandId,
             arguments: [document],
         });
 
@@ -42,6 +43,9 @@ export class LoadMoreCodeLens implements vscode.CodeLensProvider {
     public resolveCodeLens(codeLens: vscode.CodeLens, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CodeLens> {
         return codeLens;
     }
+
+    public onDidChangeCodeLensesEmitter: vscode.EventEmitter<void> = new vscode.EventEmitter();
+    public onDidChangeCodeLenses: vscode.Event<void> = this.onDidChangeCodeLensesEmitter.event;
 }
 
 export class SharedUtils {
