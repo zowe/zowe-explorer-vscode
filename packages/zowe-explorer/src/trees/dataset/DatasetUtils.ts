@@ -33,37 +33,42 @@ export class DatasetUtils {
         return { profileName: node.getParent().getLabel() as string, dataSetName: node.label as string };
     }
 
-    public static async getNodeLabels(node: Types.IZoweNodeType): Promise<{
-        memberName: string;
-        contextValue: string;
-        profileName: string;
-        dataSetName: string;
-    }> {
+    public static async getNodeLabels(node: Types.IZoweNodeType): Promise<
+        Array<{
+            memberName: string;
+            contextValue: string;
+            profileName: string;
+            dataSetName: string;
+        }>
+    > {
         ZoweLogger.trace("dataset.utils.getNodeLabels called.");
         if (node.contextValue.includes(Constants.DS_MEMBER_CONTEXT)) {
-            return {
-                ...DatasetUtils.getProfileAndDataSetName(node.getParent()),
-                memberName: node.getLabel() as string,
-                contextValue: node.contextValue,
-            };
+            return [
+                {
+                    ...DatasetUtils.getProfileAndDataSetName(node.getParent()),
+                    memberName: node.getLabel() as string,
+                    contextValue: node.contextValue,
+                },
+            ];
         } else if (node.contextValue.includes(Constants.DS_PDS_CONTEXT)) {
+            const arr: Array<{
+                memberName: string;
+                contextValue: string;
+                profileName: string;
+                dataSetName: string;
+            }> = [];
             const children = await node.getChildren();
             for (const item of children) {
-                return {
+                arr.push({
                     profileName: node.getParent().label as string,
                     dataSetName: node.label as string,
                     memberName: item.getLabel() as string,
                     contextValue: node.contextValue,
-                };
+                });
             }
-            // return children.map((item) => ({
-            //     profileName: node.getParent().label as string,
-            //     dataSetName: node.label as string,
-            //     memberName: item.getLabel() as string,
-            //     contextValue: node.contextValue,
-            // }));
+            return arr;
         } else {
-            return { ...DatasetUtils.getProfileAndDataSetName(node), memberName: undefined, contextValue: node.contextValue };
+            return [{ ...DatasetUtils.getProfileAndDataSetName(node), memberName: undefined, contextValue: node.contextValue }];
         }
     }
 

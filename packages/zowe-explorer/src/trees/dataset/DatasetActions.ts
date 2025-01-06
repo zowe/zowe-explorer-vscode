@@ -1361,158 +1361,24 @@ export class DatasetActions {
             return;
         }
         const filePaths = [];
+        // if (selectedNodes[0].contextValue === "pds") {
+        //     for (const el of selectedNodes) {
+        //         const element = await DatasetUtils.getNodeLabelsforPds(el);
+        //         filePaths.push(...element);
+        //     }
+        // } else {
+        //     for (const el of selectedNodes) {
+        //         const element = await DatasetUtils.getNodeLabels(el);
+        //         filePaths.push(element);
+        //     }
+        // } // This should be only 1 function for labels to be called
         for (const el of selectedNodes) {
             const element = await DatasetUtils.getNodeLabels(el);
             filePaths.push(element);
         }
+        filePaths.flat();
         return vscode.env.clipboard.writeText(JSON.stringify(filePaths.length > 1 ? filePaths : filePaths[0]));
     }
-
-    /**
-     * Copy data sets cross lpars
-     *
-     * @export
-     * @param {ZoweDatasetNode} node Node to copy,
-     * @param {ZoweDatasetNode[]} nodeList - Multiple selected Nodes to copy
-     * @param datasetProvider
-     */
-    public static async copyDataSetsCrossLpar(node, nodeList: ZoweDatasetNode[], datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
-        ZoweLogger.trace("dataset.actions.copyDataSetsCrossLpar called.");
-        let selectedNodes: ZoweDatasetNode[] = [];
-        if (!(node || nodeList)) {
-            selectedNodes = datasetProvider.getTreeView().selection as ZoweDatasetNode[];
-        } else {
-            selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as ZoweDatasetNode[];
-        }
-        const unique = [...new Set(selectedNodes.map((item) => item.contextValue))];
-        if (unique.length > 1) {
-            Gui.showMessage(vscode.l10n.t("Cannot perform the copy operation as the data sets selected have different types"));
-            return;
-        }
-
-        if (SharedContext.isDs(selectedNodes[0])) {
-            //multiple  sq datasets
-            const filePaths = [];
-            for (const el of selectedNodes) {
-                const element = await DatasetUtils.getNodeLabels(el);
-                filePaths.push(element);
-            }
-            return vscode.env.clipboard.writeText(JSON.stringify(filePaths.length > 1 ? filePaths : filePaths[0]));
-        }
-
-        // const inputBoxOptions: vscode.InputBoxOptions = {
-        //     placeHolder: "Enter the name of cross lpar profile",
-        // };
-        // const crossProfileName = await Gui.showInputBox(inputBoxOptions);
-        // if (crossProfileName != null) {
-        //     const allProfiles = Profiles.getInstance().allProfiles;
-        //     const crossProfile = allProfiles.find((profile) => profile.name === crossProfileName);
-        //     if (crossProfile === undefined) {
-        //         Gui.errorMessage("There is no such profile that you wanna copy to please create one such to copy");
-        //         return;
-        //     }
-        //     const mvsApi = ZoweExplorerApiRegister.getMvsApi(selectedNodes[0].getProfile());
-        //     if (mvsApi?.copyDataSetCrossLpar == null) {
-        //         await Gui.errorMessage(vscode.l10n.t("Copying data sets cross lpars is not yet supported for this profile."));
-        //     } else {
-        //         const currSession = datasetProvider.mSessionNodes.find(
-        //             (thisSession) => thisSession.label.toString().trim() === crossProfile.name
-        //         ) as IZoweDatasetTreeNode;
-        //         if (SharedContext.isPds(selectedNodes[0])) {
-        //             await DatasetActions.copyPartitionedDatasetsCrossLpar(selectedNodes, crossProfile);
-        //             datasetProvider.refreshElement(currSession);
-        //             return;
-        //         }
-        //         await Gui.withProgress(
-        //             {
-        //                 location: vscode.ProgressLocation.Notification,
-        //                 title: DatasetActions.localizedStrings.copyingFiles,
-        //                 cancellable: true,
-        //             },
-        //             async (progress, token) => {
-        //                 for (const [index, currNode] of selectedNodes.entries()) {
-        //                     let datasetName = currNode.getLabel();
-        //                     let member = undefined;
-        //                     if (SharedContext.isDsMember(selectedNodes[0])) {
-        //                         datasetName = currNode.getParent().getLabel();
-        //                         member = currNode.getLabel();
-        //                     }
-        //                     let replace;
-        //                     if (member !== undefined) {
-        //                         replace = await DatasetActions.determineReplacement(
-        //                             crossProfile,
-        //                             `${datasetName as string}(${member as string})`,
-        //                             "mem"
-        //                         );
-        //                     } else {
-        //                         replace = await DatasetActions.determineReplacement(crossProfile, `${datasetName as string}`, "ps");
-        //                     }
-        //                     if (replace !== "cancel") {
-        //                         const options: zosfiles.ICrossLparCopyDatasetOptions = {
-        //                             "from-dataset": { dsn: datasetName as string, member: member },
-        //                             responseTimeout: currNode.getProfile()?.profile?.responseTimeout,
-        //                             replace: replace === "replace" ? true : false,
-        //                         };
-        //                         if (token.isCancellationRequested) {
-        //                             Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
-        //                             return;
-        //                         }
-        //                         Gui.reportProgress(progress, selectedNodes.length, index, "Copying Files");
-        //                         try {
-        //                             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        //                             await mvsApi.copyDataSetCrossLpar(datasetName as string, member, options, crossProfile);
-        //                             datasetProvider.refreshElement(currSession);
-        //                         } catch (err) {
-        //                             ZoweLogger.error(err);
-        //                         }
-        //                     }
-        //                 }
-        //             }
-        //         );
-        //     }
-        // } else {
-        //     await Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-        //     return;
-        // }
-    }
-
-    // public static async copyPartitionedDatasetsCrossLpar(nodes: ZoweDatasetNode[], targetProfile: imperative.IProfileLoaded): Promise<void> {
-    //     ZoweLogger.trace("dataset.actions.copyPartitionedDatasetsCrossLpar called.");
-    //     await Gui.withProgress(
-    //         {
-    //             location: vscode.ProgressLocation.Notification,
-    //             title: DatasetActions.localizedStrings.copyingFiles,
-    //             cancellable: true,
-    //         },
-    //         async (progress, token) => {
-    //             for (const [index, node] of nodes.entries()) {
-    //                 const lbl = node.getLabel().toString();
-    //                 const children = await node.getChildren();
-    //                 const replace = await DatasetActions.determineReplacement(targetProfile, lbl, "po");
-    //                 if (replace !== "cancel") {
-    //                     if (token.isCancellationRequested) {
-    //                         Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
-    //                         return;
-    //                     }
-    //                     Gui.reportProgress(progress, nodes.length, index, "Copying Files");
-    //                     for (const child of children) {
-    //                         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    //                         await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetCrossLpar(
-    //                             lbl,
-    //                             child.getLabel().toString(),
-    //                             {
-    //                                 "from-dataset": { dsn: lbl, member: child.getLabel().toString() },
-    //                                 responseTimeout: node.getProfile()?.profile?.responseTimeout,
-    //                                 replace: true,
-    //                             },
-    //                             targetProfile
-    //                         );
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     );
-    // }
 
     /**
      * Migrate data sets
@@ -1524,7 +1390,8 @@ export class DatasetActions {
         ZoweLogger.trace("dataset.actions.hMigrateDataSet called.");
         await Profiles.getInstance().checkCurrentProfile(node.getProfile());
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
-            const { dataSetName } = await DatasetUtils.getNodeLabels(node);
+            const nodelabels = await DatasetUtils.getNodeLabels(node);
+            const dataSetName = nodelabels[0].dataSetName;
             try {
                 Gui.showMessage(
                     vscode.l10n.t({
@@ -1556,7 +1423,8 @@ export class DatasetActions {
         ZoweLogger.trace("dataset.actions.hRecallDataSet called.");
         await Profiles.getInstance().checkCurrentProfile(node.getProfile());
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
-            const { dataSetName } = await DatasetUtils.getNodeLabels(node);
+            const nodelabels = await DatasetUtils.getNodeLabels(node);
+            const dataSetName = nodelabels[0].dataSetName;
             try {
                 Gui.showMessage(
                     vscode.l10n.t({
@@ -1590,7 +1458,8 @@ export class DatasetActions {
         if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
             Gui.errorMessage(DatasetActions.localizedStrings.profileInvalid);
         } else {
-            const { dataSetName } = await DatasetUtils.getNodeLabels(node);
+            const nodelabels = await DatasetUtils.getNodeLabels(node);
+            const dataSetName = nodelabels[0].dataSetName;
             if (node.errorDetails) {
                 ZoweLogger.error(JSON.stringify(node.errorDetails, null, 2));
                 Gui.errorMessage(node.errorDetails.message);
@@ -1613,74 +1482,74 @@ export class DatasetActions {
      * @param {ZoweNode} node - The node to paste to
      * @param datasetProvider - the tree which contains the nodes
      */
-    public static async pasteMember(node: ZoweDatasetNode, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
-        ZoweLogger.trace("dataset.actions.pasteMember called.");
-        const { profileName, dataSetName } = await DatasetUtils.getNodeLabels(node);
-        let memberName: string;
-        let beforeDataSetName: string;
-        let beforeProfileName: string;
-        let beforeMemberName: string;
+    // public static async pasteMember(node: ZoweDatasetNode, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
+    //     ZoweLogger.trace("dataset.actions.pasteMember called.");
+    //     const { profileName, dataSetName } = await DatasetUtils.getNodeLabels(node);
+    //     let memberName: string;
+    //     let beforeDataSetName: string;
+    //     let beforeProfileName: string;
+    //     let beforeMemberName: string;
 
-        await Profiles.getInstance().checkCurrentProfile(node.getProfile());
-        if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
-            try {
-                ({
-                    dataSetName: beforeDataSetName,
-                    memberName: beforeMemberName,
-                    profileName: beforeProfileName,
-                } = JSON.parse(await vscode.env.clipboard.readText()));
-            } catch (err) {
-                throw Error(vscode.l10n.t("Invalid paste. Copy data set(s) first."));
-            }
-            if (node.contextValue.includes(Constants.DS_PDS_CONTEXT)) {
-                const inputBoxOptions: vscode.InputBoxOptions = {
-                    value: beforeMemberName,
-                    placeHolder: vscode.l10n.t("Name of data set member"),
-                    validateInput: (text) => {
-                        return DatasetUtils.validateMemberName(text) === true ? null : vscode.l10n.t("Enter valid member name");
-                    },
-                };
-                memberName = await Gui.showInputBox(inputBoxOptions);
-                if (!memberName) {
-                    return;
-                }
-            }
+    //     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+    //     if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
+    //         try {
+    //             ({
+    //                 dataSetName: beforeDataSetName,
+    //                 memberName: beforeMemberName,
+    //                 profileName: beforeProfileName,
+    //             } = JSON.parse(await vscode.env.clipboard.readText()));
+    //         } catch (err) {
+    //             throw Error(vscode.l10n.t("Invalid paste. Copy data set(s) first."));
+    //         }
+    //         if (node.contextValue.includes(Constants.DS_PDS_CONTEXT)) {
+    //             const inputBoxOptions: vscode.InputBoxOptions = {
+    //                 value: beforeMemberName,
+    //                 placeHolder: vscode.l10n.t("Name of data set member"),
+    //                 validateInput: (text) => {
+    //                     return DatasetUtils.validateMemberName(text) === true ? null : vscode.l10n.t("Enter valid member name");
+    //                 },
+    //             };
+    //             memberName = await Gui.showInputBox(inputBoxOptions);
+    //             if (!memberName) {
+    //                 return;
+    //             }
+    //         }
 
-            if (beforeProfileName === profileName) {
-                let replace: Definitions.ShouldReplace;
-                if (memberName) {
-                    replace = await DatasetActions.determineReplacement(node.getProfile(), `${dataSetName}(${memberName})`, "mem", node);
-                }
-                if (replace !== "cancel") {
-                    try {
-                        await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
-                            { dsn: beforeDataSetName, member: beforeMemberName },
-                            { dsn: dataSetName, member: memberName },
-                            { replace: replace === "replace" }
-                        );
-                    } catch (err) {
-                        ZoweLogger.error(err);
-                        Gui.errorMessage(err.message);
-                        return;
-                    }
-                    if (memberName) {
-                        datasetProvider.refreshElement(node);
-                        let node2;
-                        if (node.contextValue.includes(Constants.FAV_SUFFIX)) {
-                            node2 = datasetProvider.findNonFavoritedNode(node);
-                        } else {
-                            node2 = datasetProvider.findFavoritedNode(node);
-                        }
-                        if (node2) {
-                            datasetProvider.refreshElement(node2);
-                        }
-                    } else {
-                        await DatasetActions.refreshPS(node);
-                    }
-                }
-            }
-        }
-    }
+    //         if (beforeProfileName === profileName) {
+    //             let replace: Definitions.ShouldReplace;
+    //             if (memberName) {
+    //                 replace = await DatasetActions.determineReplacement(node.getProfile(), `${dataSetName}(${memberName})`, "mem", node);
+    //             }
+    //             if (replace !== "cancel") {
+    //                 try {
+    //                     await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
+    //                         { dsn: beforeDataSetName, member: beforeMemberName },
+    //                         { dsn: dataSetName, member: memberName },
+    //                         { replace: replace === "replace" }
+    //                     );
+    //                 } catch (err) {
+    //                     ZoweLogger.error(err);
+    //                     Gui.errorMessage(err.message);
+    //                     return;
+    //                 }
+    //                 if (memberName) {
+    //                     datasetProvider.refreshElement(node);
+    //                     let node2;
+    //                     if (node.contextValue.includes(Constants.FAV_SUFFIX)) {
+    //                         node2 = datasetProvider.findNonFavoritedNode(node);
+    //                     } else {
+    //                         node2 = datasetProvider.findFavoritedNode(node);
+    //                     }
+    //                     if (node2) {
+    //                         datasetProvider.refreshElement(node2);
+    //                     }
+    //                 } else {
+    //                     await DatasetActions.refreshPS(node);
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     /**
      * Paste members
@@ -1697,222 +1566,14 @@ export class DatasetActions {
             Gui.errorMessage(vscode.l10n.t("Invalid paste. Copy data set(s) first."));
             return;
         }
-        if (Array.isArray(clipboardContent)) {
-            if (node.getProfile().name === clipboardContent[0].profileName) {
-                if (clipboardContent[0].contextValue === "ds") {
-                    await DatasetActions.copySequentialDatasets(node, datasetProvider);
-                    datasetProvider.refreshElement(node);
-                    vscode.env.clipboard.writeText("");
-                    return;
-                }
-                if (clipboardContent[0].contextValue === "member") {
-                    await DatasetActions.copyDsMember(node);
-                    datasetProvider.refreshElement(node);
-                    vscode.env.clipboard.writeText("");
-                    return;
-                }
-                // if (clipboardContent[0].contextValue === "pds" && node.getProfile().name === clipboardContent[0].profileName) {
-                //     await DatasetActions.copyPartitionedDatasets(node, datasetProvider);
-                //     datasetProvider.refreshElement(node);
-                //     vscode.env.clipboard.writeText("");
-                //     return;
-                // }
-            } else {
-                if (clipboardContent[0].contextValue === "ds") {
-                    return DatasetActions.copySeqDataSetsCrossLpar(node, datasetProvider);
-                }
-                if (clipboardContent[0].contextValue === "member") {
-                    return DatasetActions.copyDsMemberCrossLpar(node, datasetProvider);
-                }
-            }
+        clipboardContent = clipboardContent.flat();
+        if (clipboardContent[0].contextValue === Constants.DS_DS_CONTEXT) {
+            await DatasetActions.copySequentialDatasets(clipboardContent, node);
+        } else if (clipboardContent[0].contextValue === Constants.DS_MEMBER_CONTEXT) {
+            await DatasetActions.copyDatasetMembers(clipboardContent, node);
         } else {
-            if (node.getProfile().name === clipboardContent.profileName) {
-                if (clipboardContent.contextValue === "member") {
-                    return DatasetActions.pasteMember(node, datasetProvider);
-                }
-                if (clipboardContent.contextValue === "ds") {
-                    return DatasetActions.pasteSeqDataSet(node, datasetProvider);
-                }
-            } else {
-                if (clipboardContent.contextValue === "ds") {
-                    return DatasetActions.pasteSeqDataSetCrossLpar(node, datasetProvider);
-                }
-                if (clipboardContent.contextValue === "member") {
-                    return DatasetActions.pasteMemberCrossLpar(node, datasetProvider);
-                }
-            }
+            await DatasetActions.copyPartitionedDatasets(clipboardContent, node);
         }
-    }
-
-    public static async pasteSeqDataSet(node: ZoweDatasetNode, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
-        ZoweLogger.trace("dataset.actions.copySequentialDatasets called.");
-        let clipboardContent;
-        try {
-            clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
-        } catch (err) {
-            Gui.errorMessage(vscode.l10n.t("Invalid paste. Copy data set(s) first."));
-            return;
-        }
-        const lbl = clipboardContent.dataSetName;
-        const inputBoxOptions: vscode.InputBoxOptions = {
-            prompt: vscode.l10n.t("Enter a name for the new data set"),
-            value: lbl,
-            placeHolder: vscode.l10n.t("Name of Data Set"),
-            validateInput: (text) => {
-                return DatasetUtils.validateDataSetName(text) && (lbl !== text) === true ? null : vscode.l10n.t("Enter a valid data set name.");
-            },
-        };
-        const datasetname = await Gui.showInputBox(inputBoxOptions);
-        if (!datasetname) {
-            return;
-        }
-        const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
-        if (mvsApi?.copyDataSet === null) {
-            await Gui.errorMessage(vscode.l10n.t("Copying data sets is not supported."));
-            return;
-        }
-        const replace = await DatasetActions.determineReplacement(node.getProfile(), datasetname, "ps", node);
-        if (replace === "notFound") {
-            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allocateLikeDataSet(datasetname, lbl);
-        }
-        if (replace !== "cancel") {
-            await Gui.withProgress(
-                {
-                    location: vscode.ProgressLocation.Window,
-                    title: DatasetActions.localizedStrings.copyingFiles,
-                },
-                () => {
-                    return mvsApi.copyDataSet(lbl, datasetname, null, replace === "replace");
-                }
-            );
-        }
-        datasetProvider.refreshElement(node);
-        vscode.env.clipboard.writeText("");
-    }
-
-    public static async copySeqDataSetsCrossLpar(node: ZoweDatasetNode, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
-        ZoweLogger.trace("dataset.actions.copySeqDataSetsCrossLpar called.");
-        let clipboardContent;
-        try {
-            clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
-        } catch (err) {
-            Gui.errorMessage(vscode.l10n.t("Invalid paste. Copy data set(s) first."));
-            return;
-        }
-        const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
-        if (mvsApi?.copyDataSetCrossLpar == null) {
-            await Gui.errorMessage(vscode.l10n.t("Copying data sets cross lpars is not yet supported for this profile."));
-            return;
-        }
-        const allProfiles = Profiles.getInstance().allProfiles;
-        const profile = allProfiles.find((prof) => prof.name === clipboardContent[0].profileName);
-        await Gui.withProgress(
-            {
-                location: vscode.ProgressLocation.Notification,
-                title: DatasetActions.localizedStrings.copyingFiles,
-                cancellable: true,
-            },
-            async (progress, token) => {
-                for (const content of clipboardContent) {
-                    const lbl = content.dataSetName;
-                    const inputBoxOptions: vscode.InputBoxOptions = {
-                        prompt: vscode.l10n.t("Enter a name for the new data set"),
-                        value: lbl,
-                        placeHolder: vscode.l10n.t("Name of Data Set"),
-                        validateInput: (text) => {
-                            return DatasetUtils.validateDataSetName(text) && (lbl !== text) === true
-                                ? null
-                                : vscode.l10n.t("Enter a valid data set name.");
-                        },
-                    };
-                    const dsname = await Gui.showInputBox(inputBoxOptions);
-                    if (!dsname) {
-                        return;
-                    }
-                    const replace = await DatasetActions.determineReplacement(node.getProfile(), dsname, "ps", node);
-                    if (replace !== "cancel") {
-                        const options: zosfiles.ICrossLparCopyDatasetOptions = {
-                            "from-dataset": { dsn: content.dataSetName, member: undefined },
-                            responseTimeout: node.getProfile()?.profile?.responseTimeout,
-                            replace: replace == "replace" ? true : false,
-                        };
-                        if (token.isCancellationRequested) {
-                            Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
-                            return;
-                        }
-                        try {
-                            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                            await mvsApi.copyDataSetCrossLpar(dsname, undefined, options, profile);
-                        } catch (err) {
-                            ZoweLogger.error(err);
-                        }
-                    }
-                }
-            }
-        );
-        datasetProvider.refreshElement(node);
-        vscode.env.clipboard.writeText("");
-        return;
-    }
-
-    public static async pasteSeqDataSetCrossLpar(node: ZoweDatasetNode, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
-        ZoweLogger.trace("dataset.actions.copySeqDataSetsCrossLpar called.");
-        let clipboardContent;
-        try {
-            clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
-        } catch (err) {
-            Gui.errorMessage(vscode.l10n.t("Invalid paste. Copy data set(s) first."));
-            return;
-        }
-        const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
-        if (mvsApi?.copyDataSetCrossLpar == null) {
-            await Gui.errorMessage(vscode.l10n.t("Copying data sets cross lpars is not yet supported for this profile."));
-            return;
-        }
-        const allProfiles = Profiles.getInstance().allProfiles;
-        const profile = allProfiles.find((prof) => prof.name === clipboardContent.profileName);
-        await Gui.withProgress(
-            {
-                location: vscode.ProgressLocation.Notification,
-                title: DatasetActions.localizedStrings.copyingFiles,
-                cancellable: true,
-            },
-            async (progress, token) => {
-                const lbl = clipboardContent.dataSetName;
-                const inputBoxOptions: vscode.InputBoxOptions = {
-                    prompt: vscode.l10n.t("Enter a name for the new data set"),
-                    value: lbl,
-                    placeHolder: vscode.l10n.t("Name of Data Set"),
-                    validateInput: (text) => {
-                        return DatasetUtils.validateDataSetName(text) && (lbl !== text) === true
-                            ? null
-                            : vscode.l10n.t("Enter a valid data set name.");
-                    },
-                };
-                const dsname = await Gui.showInputBox(inputBoxOptions);
-                if (!dsname) {
-                    return;
-                }
-                const replace = await DatasetActions.determineReplacement(node.getProfile(), dsname, "ps", node);
-                if (replace !== "cancel") {
-                    const options: zosfiles.ICrossLparCopyDatasetOptions = {
-                        "from-dataset": { dsn: clipboardContent.dataSetName, member: undefined },
-                        responseTimeout: node.getProfile()?.profile?.responseTimeout,
-                        replace: replace == "replace" ? true : false,
-                    };
-                    if (token.isCancellationRequested) {
-                        Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
-                        return;
-                    }
-                    try {
-                        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                        await mvsApi.copyDataSetCrossLpar(dsname, undefined, options, profile);
-                    } catch (err) {
-                        ZoweLogger.error(err);
-                    }
-                }
-            }
-        );
         datasetProvider.refreshElement(node);
         vscode.env.clipboard.writeText("");
         return;
@@ -1924,51 +1585,136 @@ export class DatasetActions {
      * @export
      * @param {ZoweDatasetNode[]} nodes - nodes to be copied
      */
-    public static async copySequentialDatasets(node: ZoweDatasetNode, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
+    public static async copySequentialDatasets(clipboardContent, node: ZoweDatasetNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.copySequentialDatasets called.");
-        let clipboardContent;
-        try {
-            clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
-        } catch (err) {
-            Gui.errorMessage(vscode.l10n.t("Invalid paste. Copy data set(s) first."));
-            return;
-        }
-        await DatasetActions.copyProcessor(clipboardContent, "ps", node, async (content: any, dsname: string, replace: Definitions.ShouldReplace) => {
-            const lbl = content.dataSetName;
-            const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
-            if (mvsApi?.copyDataSet == null) {
-                await Gui.errorMessage(vscode.l10n.t("Copying data sets is not supported."));
-            } else {
-                await Gui.withProgress(
-                    {
-                        location: vscode.ProgressLocation.Window,
-                        title: DatasetActions.localizedStrings.copyingFiles,
-                    },
-                    () => {
-                        return mvsApi.copyDataSet(lbl, dsname, null, replace === "replace");
-                    }
-                );
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
+        const copiedcontent = clipboardContent.flat();
+        if (node.getProfile().name === copiedcontent[0].profileName) {
+            await DatasetActions.copyProcessor(copiedcontent, "ps", node, async (content, dsname: string, replace: Definitions.ShouldReplace) => {
+                const lbl = content.dataSetName;
+                if (mvsApi?.copyDataSet == null) {
+                    await Gui.errorMessage(vscode.l10n.t("Copying data sets is not supported."));
+                } else {
+                    await Gui.withProgress(
+                        {
+                            location: vscode.ProgressLocation.Window,
+                            title: DatasetActions.localizedStrings.copyingFiles,
+                        },
+                        () => {
+                            return mvsApi.copyDataSet(lbl, dsname, null, replace === "replace");
+                        }
+                    );
+                }
+            });
+        } else {
+            if (mvsApi?.copyDataSetCrossLpar == null) {
+                await Gui.errorMessage(vscode.l10n.t("Copying data sets cross lpars is not yet supported for this profile."));
+                return;
             }
-        });
+            const allProfiles = Profiles.getInstance().allProfiles;
+            const profile = allProfiles.find((prof) => prof.name === copiedcontent[0].profileName);
+            await Gui.withProgress(
+                {
+                    location: vscode.ProgressLocation.Notification,
+                    title: DatasetActions.localizedStrings.copyingFiles,
+                    cancellable: true,
+                },
+                async (progress, token) => {
+                    for (const content of copiedcontent) {
+                        const lbl = content.dataSetName;
+                        const inputBoxOptions: vscode.InputBoxOptions = {
+                            prompt: vscode.l10n.t("Enter a name for the new data set"),
+                            value: lbl,
+                            placeHolder: vscode.l10n.t("Name of Data Set"),
+                        };
+                        const dsname = await Gui.showInputBox(inputBoxOptions);
+                        if (!dsname) {
+                            return;
+                        }
+                        const replace = await DatasetActions.determineReplacement(node.getProfile(), dsname, "ps", node);
+                        if (replace !== "cancel") {
+                            const options: zosfiles.ICrossLparCopyDatasetOptions = {
+                                "from-dataset": { dsn: content.dataSetName, member: undefined },
+                                responseTimeout: node.getProfile()?.profile?.responseTimeout,
+                                replace: replace === "replace" ? true : false,
+                            };
+                            if (token.isCancellationRequested) {
+                                Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+                                return;
+                            }
+                            try {
+                                await mvsApi.copyDataSetCrossLpar(dsname, undefined, options, profile);
+                            } catch (err) {
+                                ZoweLogger.error(err);
+                            }
+                        }
+                    }
+                }
+            );
+        }
+        return;
     }
 
-    public static async copyDsMember(node: ZoweDatasetNode): Promise<void> {
-        ZoweLogger.trace("dataset.actions.copySequentialDatasets called.");
-        let clipboardContent;
-        try {
-            clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
-        } catch (err) {
-            Gui.errorMessage(vscode.l10n.t("Invalid paste. Copy data set(s) first."));
-            return;
-        }
-        await Gui.withProgress(
-            {
-                location: vscode.ProgressLocation.Window,
-                title: DatasetActions.localizedStrings.copyingFiles,
-            },
-            async () => {
-                for (const content of clipboardContent) {
-                    if (content.memberName) {
+    public static async copyDatasetMembers(clipboardContent, node: ZoweDatasetNode): Promise<void> {
+        ZoweLogger.trace("dataset.actions.copyDatasetMembers called.");
+        if (node.getProfile().name === clipboardContent[0].profileName) {
+            await Gui.withProgress(
+                {
+                    location: vscode.ProgressLocation.Window,
+                    title: DatasetActions.localizedStrings.copyingFiles,
+                },
+                async () => {
+                    for (const content of clipboardContent) {
+                        if (content.memberName) {
+                            const inputBoxOptions: vscode.InputBoxOptions = {
+                                value: content.memberName,
+                                placeHolder: vscode.l10n.t("Name of data set member"),
+                                validateInput: (text) => {
+                                    return DatasetUtils.validateMemberName(text) === true ? null : vscode.l10n.t("Enter valid member name");
+                                },
+                            };
+                            const memberName = await Gui.showInputBox(inputBoxOptions);
+                            if (!memberName) {
+                                return;
+                            }
+                            const replace = await DatasetActions.determineReplacement(
+                                node.getProfile(),
+                                `${content.dataSetName as string}(${content.memberName as string})`,
+                                "mem",
+                                node
+                            );
+                            if (replace !== "cancel") {
+                                try {
+                                    await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
+                                        { dsn: content.dataSetName, member: content.memberName },
+                                        { dsn: node.getLabel().toString(), member: memberName },
+                                        { replace: replace == "replace" ? true : false }
+                                    );
+                                } catch (err) {
+                                    Gui.errorMessage(err.message);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            );
+        } else {
+            const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
+            if (mvsApi?.copyDataSetCrossLpar == null) {
+                await Gui.errorMessage(vscode.l10n.t("Copying data sets cross lpars is not yet supported for this profile."));
+                return;
+            }
+            const allProfiles = Profiles.getInstance().allProfiles;
+            const profile = allProfiles.find((prof) => prof.name === clipboardContent[0].profileName);
+            await Gui.withProgress(
+                {
+                    location: vscode.ProgressLocation.Notification,
+                    title: DatasetActions.localizedStrings.copyingFiles,
+                    cancellable: true,
+                },
+                async (progress, token) => {
+                    for (const content of clipboardContent) {
                         const inputBoxOptions: vscode.InputBoxOptions = {
                             value: content.memberName,
                             placeHolder: vscode.l10n.t("Name of data set member"),
@@ -1982,156 +1728,31 @@ export class DatasetActions {
                         }
                         const replace = await DatasetActions.determineReplacement(
                             node.getProfile(),
-                            `${content.dataSetName as string}(${content.memberName as string})`,
+                            `${content.dataSetName as string}(${memberName})`,
                             "mem",
                             node
                         );
                         if (replace !== "cancel") {
-                            try {
-                                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
-                                    { dsn: content.dataSetName, member: content.memberName },
-                                    { dsn: node.getLabel().toString(), member: memberName },
-                                    { replace: replace == "replace" ? true : false }
-                                );
-                            } catch (err) {
-                                Gui.errorMessage(err.message);
+                            const options: zosfiles.ICrossLparCopyDatasetOptions = {
+                                "from-dataset": { dsn: content.dataSetName, member: content.memberName },
+                                responseTimeout: node.getProfile()?.profile?.responseTimeout,
+                                replace: replace == "replace" ? true : false,
+                            };
+                            if (token.isCancellationRequested) {
+                                Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
                                 return;
+                            }
+                            try {
+                                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                                await mvsApi.copyDataSetCrossLpar(node.getLabel() as string, memberName, options, profile);
+                            } catch (err) {
+                                ZoweLogger.error(err);
                             }
                         }
                     }
                 }
-            }
-        );
-        return;
-    }
-
-    public static async copyDsMemberCrossLpar(node: ZoweDatasetNode, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
-        ZoweLogger.trace("dataset.actions.copyDsMemberCrossLpar");
-        let clipboardContent;
-        try {
-            clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
-        } catch (err) {
-            Gui.errorMessage(vscode.l10n.t("Invalid paste. Copy data set(s) first."));
-            return;
+            );
         }
-        const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
-        if (mvsApi?.copyDataSetCrossLpar == null) {
-            await Gui.errorMessage(vscode.l10n.t("Copying data sets cross lpars is not yet supported for this profile."));
-            return;
-        }
-        const allProfiles = Profiles.getInstance().allProfiles;
-        const profile = allProfiles.find((prof) => prof.name === clipboardContent[0].profileName);
-        await Gui.withProgress(
-            {
-                location: vscode.ProgressLocation.Notification,
-                title: DatasetActions.localizedStrings.copyingFiles,
-                cancellable: true,
-            },
-            async (progress, token) => {
-                for (const content of clipboardContent) {
-                    const inputBoxOptions: vscode.InputBoxOptions = {
-                        value: content.memberName,
-                        placeHolder: vscode.l10n.t("Name of data set member"),
-                        validateInput: (text) => {
-                            return DatasetUtils.validateMemberName(text) === true ? null : vscode.l10n.t("Enter valid member name");
-                        },
-                    };
-                    const memberName = await Gui.showInputBox(inputBoxOptions);
-                    if (!memberName) {
-                        return;
-                    }
-                    const replace = await DatasetActions.determineReplacement(
-                        node.getProfile(),
-                        `${content.dataSetName as string}(${memberName})`,
-                        "mem",
-                        node
-                    );
-                    if (replace !== "cancel") {
-                        const options: zosfiles.ICrossLparCopyDatasetOptions = {
-                            "from-dataset": { dsn: content.dataSetName, member: content.memberName },
-                            responseTimeout: node.getProfile()?.profile?.responseTimeout,
-                            replace: replace == "replace" ? true : false,
-                        };
-                        if (token.isCancellationRequested) {
-                            Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
-                            return;
-                        }
-                        try {
-                            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                            await mvsApi.copyDataSetCrossLpar(node.getLabel() as string, memberName, options, profile);
-                        } catch (err) {
-                            ZoweLogger.error(err);
-                        }
-                    }
-                }
-            }
-        );
-        datasetProvider.refreshElement(node);
-        vscode.env.clipboard.writeText("");
-        return;
-    }
-
-    public static async pasteMemberCrossLpar(node: ZoweDatasetNode, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
-        ZoweLogger.trace("dataset.actions.copyDsMemberCrossLpar");
-        let clipboardContent;
-        try {
-            clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
-        } catch (err) {
-            Gui.errorMessage(vscode.l10n.t("Invalid paste. Copy data set(s) first."));
-            return;
-        }
-        const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
-        if (mvsApi?.copyDataSetCrossLpar == null) {
-            await Gui.errorMessage(vscode.l10n.t("Copying data sets cross lpars is not yet supported for this profile."));
-            return;
-        }
-        const allProfiles = Profiles.getInstance().allProfiles;
-        const profile = allProfiles.find((prof) => prof.name === clipboardContent.profileName);
-        await Gui.withProgress(
-            {
-                location: vscode.ProgressLocation.Notification,
-                title: DatasetActions.localizedStrings.copyingFiles,
-                cancellable: true,
-            },
-            async (progress, token) => {
-                const inputBoxOptions: vscode.InputBoxOptions = {
-                    value: clipboardContent.memberName,
-                    placeHolder: vscode.l10n.t("Name of data set member"),
-                    validateInput: (text) => {
-                        return DatasetUtils.validateMemberName(text) === true ? null : vscode.l10n.t("Enter valid member name");
-                    },
-                };
-                const memberName = await Gui.showInputBox(inputBoxOptions);
-                if (!memberName) {
-                    return;
-                }
-                const replace = await DatasetActions.determineReplacement(
-                    node.getProfile(),
-                    `${clipboardContent.dataSetName as string}(${memberName})`,
-                    "mem",
-                    node
-                );
-                if (replace !== "cancel") {
-                    const options: zosfiles.ICrossLparCopyDatasetOptions = {
-                        "from-dataset": { dsn: clipboardContent.dataSetName, member: clipboardContent.memberName },
-                        responseTimeout: node.getProfile()?.profile?.responseTimeout,
-                        replace: replace == "replace" ? true : false,
-                    };
-                    if (token.isCancellationRequested) {
-                        Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
-                        return;
-                    }
-                    try {
-                        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                        await mvsApi.copyDataSetCrossLpar(node.getLabel() as string, memberName, options, profile);
-                    } catch (err) {
-                        ZoweLogger.error(err);
-                    }
-                }
-            }
-        );
-        datasetProvider.refreshElement(node);
-        vscode.env.clipboard.writeText("");
         return;
     }
 
@@ -2141,50 +1762,108 @@ export class DatasetActions {
      * @export
      * @param {ZoweDatasetNode[]} nodes - nodes to be copied
      */
-    // public static async copyPartitionedDatasets(node: ZoweDatasetNode, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
-    //     ZoweLogger.trace("dataset.actions.copyPartitionedDatasets called.");
-    //     let clipboardContent;
-    //     try {
-    //         clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
-    //     } catch (err) {
-    //         Gui.errorMessage(vscode.l10n.t("Invalid paste. Copy data set(s) first."));
-    //         return;
-    //     }
-    //     console.log("Reading the clipboard content", clipboardContent);
-    //     await DatasetActions.copyProcessor(clipboardContent, "po", node, async (content: any, dsname: string, replace: Definitions.ShouldReplace) => {
-    //         const lbl = content.dataSetName;
-    //         // const response = await zosfiles.List.dataSet(node.getSession(), lbl);
-    //         // console.log("This is response", response.apiResponse);
-    //         // const uploadOptions: zosfiles.IUploadOptions = {
-    //         //     etag: node.getEtag(),
-    //         //     returnEtag: true,
-    //         // };
+    public static async copyPartitionedDatasets(clipboardContent, node: ZoweDatasetNode): Promise<void> {
+        ZoweLogger.trace("dataset.actions.copyPartitionedDatasets called.");
+        const groupedContent = clipboardContent.reduce((result, current) => {
+            const { dataSetName, memberName, ...rest } = current;
+            let group = result.find((item: any) => item.dataSetName === dataSetName);
+            if (!group) {
+                group = { ...rest, dataSetName, members: [] };
+                result.push(group);
+            }
+            group.members.push(memberName);
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            return result;
+        }, []);
+        if (node.getProfile().name === clipboardContent[0].profileName) {
+            await DatasetActions.copyProcessor(
+                groupedContent,
+                "po",
+                node,
+                async (content: any, dsname: string, replace: Definitions.ShouldReplace) => {
+                    const lbl = content.dataSetName;
 
-    //         const children = await node.getChildren();
-    //         // const prof = node.getProfile();
-    //         // if (prof.profile.encoding) {
-    //         //     uploadOptions.encoding = prof.profile.encoding;
-    //         // }
+                    const uploadOptions: zosfiles.IUploadOptions = {
+                        etag: node.getEtag(),
+                        returnEtag: true,
+                    };
 
-    //         await Gui.withProgress(
-    //             {
-    //                 location: vscode.ProgressLocation.Window,
-    //                 title: DatasetActions.localizedStrings.copyingFiles,
-    //             },
-    //             () => {
-    //                 return Promise.all(
-    //                     children.map((child) =>
-    //                         ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
-    //                             { dsn: lbl, member: child.getLabel().toString() },
-    //                             { dsn: dsname, member: child.getLabel().toString() },
-    //                             { replace: replace === "replace" }
-    //                         )
-    //                     )
-    //                 );
-    //             }
-    //         );
-    //     });
-    // }
+                    const prof = node.getProfile();
+                    if (prof.profile.encoding) {
+                        uploadOptions.encoding = prof.profile.encoding;
+                    }
+                    await Gui.withProgress(
+                        {
+                            location: vscode.ProgressLocation.Window,
+                            title: DatasetActions.localizedStrings.copyingFiles,
+                        },
+                        () => {
+                            return Promise.all(
+                                content.members.map((child) =>
+                                    ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
+                                        { dsn: lbl, member: child },
+                                        { dsn: dsname, member: child },
+                                        { replace: replace === "replace" }
+                                    )
+                                )
+                            );
+                        }
+                    );
+                }
+            );
+        } else {
+            const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
+            if (mvsApi?.copyDataSetCrossLpar == null) {
+                await Gui.errorMessage(vscode.l10n.t("Copying data sets cross lpars is not yet supported for this profile."));
+                return;
+            }
+            const allProfiles = Profiles.getInstance().allProfiles;
+            const profile = allProfiles.find((prof) => prof.name === clipboardContent[0].profileName);
+
+            await Gui.withProgress(
+                {
+                    location: vscode.ProgressLocation.Notification,
+                    title: DatasetActions.localizedStrings.copyingFiles,
+                    cancellable: true,
+                },
+                async (progress, token) => {
+                    for (const content of groupedContent) {
+                        const lbl = content.dataSetName;
+                        const inputBoxOptions: vscode.InputBoxOptions = {
+                            prompt: vscode.l10n.t("Enter a name for the new data set"),
+                            value: lbl,
+                            placeHolder: vscode.l10n.t("Name of Data Set"),
+                        };
+                        const dsname = await Gui.showInputBox(inputBoxOptions);
+                        if (!dsname) {
+                            return;
+                        }
+                        const replace = await DatasetActions.determineReplacement(node.getProfile(), dsname, "po", node);
+                        if (replace !== "cancel") {
+                            for (const child of content.members) {
+                                const options: zosfiles.ICrossLparCopyDatasetOptions = {
+                                    "from-dataset": { dsn: lbl, member: child },
+                                    responseTimeout: node.getProfile()?.profile?.responseTimeout,
+                                    replace: replace == "replace" ? true : false,
+                                };
+                                if (token.isCancellationRequested) {
+                                    Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+                                    return;
+                                }
+                                try {
+                                    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                                    await mvsApi.copyDataSetCrossLpar(dsname, child, options, profile);
+                                } catch (err) {
+                                    ZoweLogger.error(err);
+                                }
+                            }
+                        }
+                    }
+                }
+            );
+        }
+        return;
+    }
 
     /**
      * Helper function to determine whether or not we should replace some z/os content
@@ -2285,9 +1964,10 @@ export class DatasetActions {
                 }
             } catch (error) {
                 if (error instanceof Error) {
+                    const nodelabels = await DatasetUtils.getNodeLabels(node);
                     await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Mvs,
-                        dsName: (await DatasetUtils.getNodeLabels(node)).dataSetName, //here this statement will throw error
+                        dsName: nodelabels[0].dataSetName,
                         scenario: vscode.l10n.t("Unable to copy data set."),
                     });
                 }
