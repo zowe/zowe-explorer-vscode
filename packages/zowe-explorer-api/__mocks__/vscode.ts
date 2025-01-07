@@ -456,6 +456,8 @@ export namespace window {
         close: jest.fn(),
     };
 
+    export let activeTextEditor: TextDocument | undefined = { fileName: "placeholderFile.txt" } as any;
+
     /**
      * Show an information message to users. Optionally provide an array of items which will be presented as
      * clickable buttons.
@@ -1096,6 +1098,7 @@ export class FileSystemError extends Error {
  */
 export namespace workspace {
     export const textDocuments: TextDocument[] = [];
+    export const workspaceFolders: readonly WorkspaceFolder[] | undefined = [];
     export function getConfiguration(_configuration: string) {
         return {
             update: () => {
