@@ -25,14 +25,14 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Updated the `@zowe/cli` dependency to v7.29.8 for technical currency. [#3378](https://github.com/zowe/zowe-explorer-vscode/pull/3378)
 - Fixed issue where Search operation did not prompt for credentials if profile contains expired token. [#2259](https://github.com/zowe/zowe-explorer-vscode/issues/2259)
 - Fixed issue where inactive status was not displayed for profiles loaded from Global Config. [#3134](https://github.com/zowe/zowe-explorer-vscode/issues/3134)
-- Fixed an issue where invalid credentials could trigger "Update Credentials" prompt twice in new VS Code session. [#3376](https://github.com/zowe/zowe-explorer-vscode/pull/3376)
-- Fixed an issue where expanding job node to show spool doesn't trigger "Update Credentials" prompt when credentials are invalid. [#3376](https://github.com/zowe/zowe-explorer-vscode/pull/3376)
+- Fixed an issue where invalid credentials could trigger the **Update Credentials** prompt twice in new VS Code session. [#3376](https://github.com/zowe/zowe-explorer-vscode/pull/3376)
+- Fixed an issue where expanding a job node to show spool doesn't trigger the **Update Credentials** prompt when credentials are invalid. [#3376](https://github.com/zowe/zowe-explorer-vscode/pull/3376)
 
 ## `2.18.0`
 
 ### New features and enhancements
 
-- Added new Zowe Explorer z/OS Console webview with access via VS Code command pallete to issue MVS Console commands. [#2925](https://github.com/zowe/zowe-explorer-vscode/pull/2925)
+- Added new Zowe Explorer z/OS Console webview with access via VS Code command palette to issue MVS Console commands. [#2925](https://github.com/zowe/zowe-explorer-vscode/pull/2925)
 
 ### Bug fixes
 
