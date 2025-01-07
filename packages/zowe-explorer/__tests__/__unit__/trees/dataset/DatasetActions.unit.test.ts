@@ -22,6 +22,7 @@ import {
     TableViewProvider,
     TableBuilder,
     Table,
+    Sorting,
 } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
@@ -34,6 +35,7 @@ import {
     createTreeView,
     createQuickPickContent,
     createWorkspaceConfiguration,
+    createGetConfigMock,
 } from "../../../__mocks__/mockCreators/shared";
 import {
     createDatasetAttributes,
@@ -53,6 +55,7 @@ import { mocked } from "../../../__mocks__/mockUtils";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
+import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -96,6 +99,11 @@ function createGlobalMocks() {
     bindMvsApi(newMocks.mvsApi);
 
     Object.defineProperty(vscode.window, "withProgress", { value: jest.fn(), configurable: true });
+    Object.defineProperty(SettingsConfig, "getDirectValue", {
+        value: createGetConfigMock({
+            "zowe.ds.default.sort": Sorting.DatasetSortOpts.Name,
+        }),
+    });
     Object.defineProperty(zosfiles, "Upload", { value: jest.fn(), configurable: true });
     Object.defineProperty(zosfiles.Upload, "bufferToDataSet", { value: jest.fn(), configurable: true });
     Object.defineProperty(zosfiles.Upload, "pathToDataSet", { value: jest.fn(), configurable: true });

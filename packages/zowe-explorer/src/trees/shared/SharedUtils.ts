@@ -375,18 +375,41 @@ export class SharedUtils {
      * @param sortMethod The sort method
      * @returns The list of sort options with the default sort option marked
      */
-    public static getDefaultSortOptions<T>(sortOptions: string[], settingsKey: string, sortMethod: T): Sorting.NodeSort {
+    public static getDefaultSortOptions<T extends object>(sortOptions: string[], settingsKey: string, sortMethod: T): Sorting.NodeSort {
+        const defaultMethod = sortMethod[Object.keys(sortMethod)[0]];
+        const defaultDirection = Sorting.SortDirection.Ascending;
+
         const sortSetting = SettingsConfig.getDirectValue<Sorting.NodeSort>(settingsKey);
+        if (sortSetting == null || !sortSetting.method || !sortSetting.direction) {
+            SharedUtils.updateSortOptionsWithDefault(defaultMethod, sortOptions);
+            return {
+                method: defaultMethod,
+                direction: defaultDirection,
+            };
+        }
+
         if (typeof sortSetting.method === "string") {
-            sortSetting.method = sortMethod[sortSetting.method as keyof typeof sortMethod] as Sorting.JobSortOpts | Sorting.DatasetSortOpts;
+            const methodKey = sortSetting.method as keyof typeof sortMethod;
+            if (methodKey in sortMethod) {
+                sortSetting.method = sortMethod[methodKey] as Sorting.JobSortOpts | Sorting.DatasetSortOpts;
+            } else {
+                sortSetting.method = defaultMethod;
+            }
             SharedUtils.updateSortOptionsWithDefault(sortSetting.method, sortOptions);
         }
+
         if (typeof sortSetting.direction === "string") {
-            sortSetting.direction = Sorting.SortDirection[sortSetting.direction as keyof typeof Sorting.SortDirection];
+            const directionKey = sortSetting.direction as keyof typeof Sorting.SortDirection;
+            if (directionKey in Sorting.SortDirection) {
+                sortSetting.direction = Sorting.SortDirection[directionKey];
+            } else {
+                sortSetting.direction = defaultDirection;
+            }
         }
+
         return {
-            method: sortSetting?.method ?? sortMethod[Object.keys(sortMethod)[0]],
-            direction: sortSetting?.direction ?? Sorting.SortDirection.Ascending,
+            method: sortSetting?.method ?? defaultMethod,
+            direction: sortSetting?.direction ?? defaultDirection,
         };
     }
 }

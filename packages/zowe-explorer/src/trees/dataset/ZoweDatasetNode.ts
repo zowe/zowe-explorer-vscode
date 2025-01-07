@@ -38,7 +38,7 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedContext } from "../shared/SharedContext";
 import { AuthUtils } from "../../utils/AuthUtils";
 import type { Definitions } from "../../configuration/Definitions";
-import { DatasetTree } from "./DatasetTree";
+import type { DatasetTree } from "./DatasetTree";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetUtils } from "./DatasetUtils";
 

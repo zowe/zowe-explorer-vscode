@@ -133,6 +133,7 @@ function createGlobalMocks() {
     Object.defineProperty(SettingsConfig, "getDirectValue", {
         value: createGetConfigMock({
             "zowe.automaticProfileValidation": true,
+            "zowe.ds.default.sort": Sorting.DatasetSortOpts.Name,
         }),
     });
     Object.defineProperty(globalMocks.mockProfilesCache, "getConfigInstance", {
@@ -2927,6 +2928,7 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
         it("does nothing if no children exist", async () => {
             const mocks = getBlockMocks();
             const nodes = nodesForSuite();
+
             // case 1: called on PDS node
             mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name" });
             nodes.pds.children = [];

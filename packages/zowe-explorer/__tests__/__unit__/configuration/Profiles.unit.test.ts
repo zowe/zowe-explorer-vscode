@@ -25,6 +25,7 @@ import {
     createTeamConfigMock,
     createUnsecureTeamConfigMock,
     createMockNode,
+    createGetConfigMock,
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import {
@@ -37,6 +38,7 @@ import {
     Validation,
     FileManagement,
     ProfilesCache,
+    Sorting,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
@@ -955,6 +957,8 @@ describe("Profiles Unit Tests - function deleteProfile", () => {
             sessions: ["test", "test1", "test2"],
             fileHistory: ["[TEST]: TEST.LIST"],
             searchHistory: ["TEST.*"],
+            "zowe.ds.default.sort": Sorting.DatasetSortOpts.Name,
+            "zowe.jobs.default.sort": Sorting.JobSortOpts.Id,
         });
 
         // mock USS call to vs code settings
@@ -965,6 +969,8 @@ describe("Profiles Unit Tests - function deleteProfile", () => {
             sessions: ["test", "test1", "test2"],
             fileHistory: ["[TEST]: /u/test/test.txt"],
             searchHistory: ["/u/test"],
+            "zowe.ds.default.sort": Sorting.DatasetSortOpts.Name,
+            "zowe.jobs.default.sort": Sorting.JobSortOpts.Id,
         });
 
         // mock Jobs call to vs code settings
@@ -975,6 +981,8 @@ describe("Profiles Unit Tests - function deleteProfile", () => {
             sessions: ["test", "test1", "test2"],
             fileHistory: ["TEST"],
             searchHistory: ["Owner:TEST Prefix:*"],
+            "zowe.ds.default.sort": Sorting.DatasetSortOpts.Name,
+            "zowe.jobs.default.sort": Sorting.JobSortOpts.Id,
         });
 
         await expect(Profiles.getInstance().deleteProfile(datasetTree)).resolves.not.toThrow();
