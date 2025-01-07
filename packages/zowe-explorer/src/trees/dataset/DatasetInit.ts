@@ -143,7 +143,6 @@ export class DatasetInit {
                     node = datasetProvider.getTreeView().selection[0] as ZoweDatasetNode;
                 }
                 await DatasetActions.pasteDataSet(datasetProvider, node);
-                // await DatasetActions.refreshDataset(node.getParent() as IZoweDatasetTreeNode, datasetProvider);
             })
         );
         context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.renameDataSetMember", (node) => datasetProvider.rename(node)));

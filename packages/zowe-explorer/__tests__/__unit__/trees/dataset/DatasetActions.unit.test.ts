@@ -1209,7 +1209,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         const nodeList: ZoweDatasetNode[] = [node];
         await DatasetActions.copyDataSets(null, nodeList, null);
 
-        expect(clipboard.readText()).toBe('{"profileName":"sestest","dataSetName":"sestest","memberName":"HLQ.TEST.NODE","contextValue":"member"}');
+        expect(clipboard.readText()).toBe('[{"profileName":"sestest","dataSetName":"sestest","memberName":"HLQ.TEST.NODE","contextValue":"member"}]');
     });
     it("Testing warning of multiple datasets with different types to be copied", async () => {
         createGlobalMocks();
@@ -1250,7 +1250,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         const contextValue = Constants.DS_MEMBER_CONTEXT + Constants.FAV_SUFFIX;
         child.contextValue = contextValue;
         await DatasetActions.copyDataSets(child, null, blockMocks.testDatasetTree);
-        expect(clipboard.readText()).toBe(`{"profileName":"sestest","dataSetName":"parent","memberName":"child","contextValue":"${contextValue}"}`);
+        expect(clipboard.readText()).toBe(`[{"profileName":"sestest","dataSetName":"parent","memberName":"child","contextValue":"${contextValue}"}]`);
     });
     it("Checking copy the label of a node (with a very complex context value) to the clipboard", async () => {
         createGlobalMocks();
@@ -1264,7 +1264,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         const contextValue = Constants.DS_MEMBER_CONTEXT + "_this_is_a_very_complex_context_value";
         child.contextValue = contextValue;
         await DatasetActions.copyDataSets(child, null, blockMocks.testDatasetTree);
-        expect(clipboard.readText()).toBe(`{"profileName":"sestest","dataSetName":"parent","memberName":"child","contextValue":"${contextValue}"}`);
+        expect(clipboard.readText()).toBe(`[{"profileName":"sestest","dataSetName":"parent","memberName":"child","contextValue":"${contextValue}"}]`);
     });
     it("Checking copy the label of a member to the clipboard via quickkeys", async () => {
         createGlobalMocks();
@@ -1280,7 +1280,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         const treeView = createTreeView(selectedNodes);
         blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
         await DatasetActions.copyDataSets(null, null, blockMocks.testDatasetTree);
-        expect(clipboard.readText()).toBe('{"profileName":"sestest","dataSetName":"parent","memberName":"child","contextValue":"member"}');
+        expect(clipboard.readText()).toBe('[{"profileName":"sestest","dataSetName":"parent","memberName":"child","contextValue":"member"}]');
     });
     it("Checking copy the info of multiple members to the clipboard", async () => {
         createGlobalMocks();
@@ -1288,10 +1288,12 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         const nodeList: ZoweDatasetNode[] = [blockMocks.memberChild, blockMocks.memberChild];
         await DatasetActions.copyDataSets(null, nodeList, blockMocks.testDatasetTree);
         expect(clipboard.readText()).toBe(
-            JSON.stringify([
-                { profileName: "sestest", dataSetName: "parent", memberName: "child", contextValue: "member" },
-                { profileName: "sestest", dataSetName: "parent", memberName: "child", contextValue: "member" },
-            ])
+            JSON.stringify(
+                [
+                   [{ profileName: "sestest", dataSetName: "parent", memberName: "child", contextValue: "member" }],
+                    [{ profileName: "sestest", dataSetName: "parent", memberName: "child", contextValue: "member" }],
+                ],
+            )
         );
     });
     it("Checking copy of sequential datasets with empty new datasetname", async () => {
