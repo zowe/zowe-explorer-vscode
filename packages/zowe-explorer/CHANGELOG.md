@@ -22,6 +22,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where clicking on a file in the Unix System Services tree caused the tree to abruptly change focus to the selected item. [#2486](https://github.com/zowe/zowe-explorer-vscode/issues/2486)
 - Fixed an issue where binary USS files were not fetched using the "Pull from Mainframe" context menu option. [#3355](https://github.com/zowe/zowe-explorer-vscode/issues/3355)
 - Fixed an issue with Auto Save where a failed UNIX file or data set save operation caused an infinite loop of save requests. [#2406](https://github.com/zowe/zowe-explorer-vscode/issues/2406), [#2627](https://github.com/zowe/zowe-explorer-vscode/issues/2627)
+- Fixed an issue where "Open with Encoding" menu failed when tagged encoding was selected for a binary USS file. [#3377](https://github.com/zowe/zowe-explorer-vscode/pull/3377)
+- Fixed an issue where editing a team config file or updating secrets in the OS credential vault could trigger multiple events for a single action. [#3378](https://github.com/zowe/zowe-explorer-vscode/pull/3378)
+- Updated the `@zowe/cli` dependency to v7.29.8 for technical currency. [#3378](https://github.com/zowe/zowe-explorer-vscode/pull/3378)
 
 ## `2.18.0`
 
