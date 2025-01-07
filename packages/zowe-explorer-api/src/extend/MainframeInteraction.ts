@@ -505,19 +505,8 @@ export namespace MainframeInteraction {
          * @param {zostso.IStartTsoParms} parms
          * @returns {Promise<zostso.IIssueResponse>}
          * @memberof ICommand
-         * @deprecated Please use `issueTsoCmdWithParms`
          */
-        issueTsoCommandWithParms?(command: string, parms?: zostso.IStartTsoParms): Promise<zostso.IIssueResponse>;
-
-        /**
-         * Issues a TSO Command without the need for account information
-         *
-         * @param {string} command
-         * @param {zostso.IStartTsoParms} parms
-         * @returns {Promise<zostso.IIssueResponse>}
-         * @memberof ICommand
-         */
-        issueTsoCmdWithParms?(command: string, parms?: zostso.IStartTsoParms): Promise<zostso.IIssueResponse>;
+        issueTsoCommandWithParms?(command: string, parms?: zostso.IStartTsoParms, useNewTsoApis?: boolean): Promise<zostso.IIssueResponse>;
 
         /**
          * Issues a MVS Command and returns a Console Command API response.

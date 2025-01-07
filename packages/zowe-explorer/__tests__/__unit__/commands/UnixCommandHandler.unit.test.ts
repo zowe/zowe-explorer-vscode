@@ -190,7 +190,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                 checkCurrentProfile: jest.fn(() => {
                     return profilesForValidation;
                 }),
-                profileValidationHelper: jest.fn().mockReturnValue("active"), //.mockImplementation((prof, fun) => fun(prof)),
+                profileValidationHelper: jest.fn().mockReturnValue("active"),
                 validateProfiles: jest.fn(),
                 getBaseProfile: jest.fn(),
                 validProfile: Validation.ValidationType.VALID,

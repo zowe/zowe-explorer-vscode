@@ -324,7 +324,7 @@
     "Toggle if Unix Commands persist locally": ""
   },
   "zowe.commands.alwaysEdit": {
-    "Allow editing of commands before submitting": ""
+    "Allow commands to eb edited before submitting": ""
   },
   "zowe.commands.useIntegratedTerminals": {
     "Allow commands to be executed using integrated terminals": ""
@@ -825,7 +825,6 @@
   "Contents": "",
   "Open": "",
   "Are you sure you want to search {0} data sets and members?": "",
-  "Percent Complete": "",
   "Failed to upload changes for {0}: {1}": "",
   "Error encountered while activating and initializing logger": "",
   "Insufficient read permissions for {0} in local storage.": "",

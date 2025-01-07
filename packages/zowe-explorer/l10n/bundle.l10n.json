@@ -898,7 +898,6 @@
       "The number of data sets that are about to be searched"
     ]
   },
-  "Percent Complete": "Percent Complete",
   "Failed to upload changes for {0}: {1}/Build file hyperlinkError message": {
     "message": "Failed to upload changes for {0}: {1}",
     "comment": [

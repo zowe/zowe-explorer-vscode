@@ -107,7 +107,7 @@
   "zowe.commands.mvs.history": "Toggle if MVS Commands persist locally",
   "zowe.commands.tso.history": "Toggle if TSO Commands persist locally",
   "zowe.commands.uss.history": "Toggle if Unix Commands persist locally",
-  "zowe.commands.alwaysEdit": "Allow editing of commands before submitting",
+  "zowe.commands.alwaysEdit": "Allow commands to eb edited before submitting",
   "zowe.commands.useIntegratedTerminals": "Allow commands to be executed using integrated terminals",
   "zowe.automaticProfileValidation": "Allow automatic validation of profiles.",
   "zowe.pollInterval.info": "Default interval (in milliseconds) when polling spool files.",
