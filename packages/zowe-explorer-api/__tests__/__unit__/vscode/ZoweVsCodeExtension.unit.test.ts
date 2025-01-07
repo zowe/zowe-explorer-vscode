@@ -219,6 +219,7 @@ describe("ZoweVsCodeExtension", () => {
                 mergeArgsForProfile: jest.fn().mockReturnValue({ knownArgs: [] }),
             }),
             refresh: jest.fn(),
+            updateProfilesArrays: jest.fn(),
         };
 
         beforeEach(() => {
@@ -375,7 +376,7 @@ describe("ZoweVsCodeExtension", () => {
                 expect(loginSpy).not.toHaveBeenCalled();
                 expect(testSpy).not.toHaveBeenCalled();
                 expect(testCache.updateBaseProfileFileLogin).toHaveBeenCalledWith(baseProfile, updProfile, false);
-                expect(testNode.setProfileToChoice).toHaveBeenCalled();
+                expect(testCache.updateProfilesArrays).toHaveBeenCalledWith(serviceProfile, testNode);
                 quickPickMock.mockRestore();
             });
         });

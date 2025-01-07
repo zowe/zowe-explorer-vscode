@@ -28,6 +28,7 @@ import { ZoweSaveQueue } from "../../../src/abstract/ZoweSaveQueue";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import * as HistoryView from "../../../src/shared/HistoryView";
 import * as certWizard from "../../../src/utils/CertificateWizard";
+import * as sharedUtils from "../../../src/shared/utils";
 
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
@@ -330,6 +331,7 @@ describe("Test src/shared/extension", () => {
             });
             jest.spyOn(vscode.workspace, "createFileSystemWatcher").mockReturnValue(watcher);
             jest.spyOn(ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter, "fire").mockImplementation(mockEmitter);
+            jest.spyOn(sharedUtils, "debounce").mockImplementation((cb: any) => cb);
         });
 
         afterAll(() => {

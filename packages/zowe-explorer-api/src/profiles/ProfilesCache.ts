@@ -16,6 +16,7 @@ import { URL } from "url";
 
 import * as zowe from "@zowe/cli";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
+import { IZoweNodeType } from "../tree";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
@@ -129,10 +130,11 @@ export class ProfilesCache {
      * Updates profile in allProfiles array and if default updates defaultProfileByType
      *
      * @param {string} profileLoaded
+     * @param {IZoweNodeType} profileNode
      *
      * @returns {void}
      */
-    public updateProfilesArrays(profileLoaded: zowe.imperative.IProfileLoaded): void {
+    public updateProfilesArrays(profileLoaded: zowe.imperative.IProfileLoaded, profileNode?: IZoweNodeType): void {
         // update allProfiles array
         const promptedTypeIndex = this.allProfiles.findIndex(
             (profile) => profile?.type === profileLoaded?.type && profile?.name === profileLoaded?.name
@@ -143,6 +145,7 @@ export class ProfilesCache {
         if (defaultProf?.name === profileLoaded?.name) {
             this.defaultProfileByType.set(profileLoaded?.type, profileLoaded);
         }
+        profileNode?.setProfileToChoice(profileLoaded);
     }
 
     /**

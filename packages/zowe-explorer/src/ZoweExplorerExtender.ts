@@ -175,7 +175,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         let usingTeamConfig: boolean;
         let profileInfo: zowe.imperative.ProfileInfo;
         try {
-            profileInfo = await ProfilesUtils.getProfileInfo(globals.ISTHEIA);
+            profileInfo = await ProfilesUtils.setupProfileInfo(globals.ISTHEIA);
             await profileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir });
             usingTeamConfig = profileInfo.usingTeamConfig;
         } catch (error) {
