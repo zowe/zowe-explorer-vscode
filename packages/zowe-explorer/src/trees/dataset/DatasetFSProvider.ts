@@ -193,8 +193,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     private async fetchEntriesForDataset(entry: PdsEntry, uri: vscode.Uri, uriInfo: UriFsInfo): Promise<void> {
         let members: IZosFilesResponse;
         try {
+            await AuthHandler.lockProfile(uriInfo.profile);
             members = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(path.posix.basename(uri.path));
+            AuthHandler.unlockProfile(uriInfo.profile);
         } catch (err) {
+            await AuthUtils.handleProfileAuthOnError(err, uriInfo.profile);
             this._handleError(err, {
                 additionalContext: vscode.l10n.t("Failed to list dataset members"),
                 retry: {
