@@ -27,6 +27,7 @@ import {
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
+import { AuthUtils } from "../../../../src/utils/AuthUtils";
 const dayjs = require("dayjs");
 
 const testProfile = createIProfile();
@@ -293,7 +294,7 @@ describe("readFile", () => {
     it("throws an error if the entry does not have a profile", async () => {
         const _lookupAsFileMock = jest
             .spyOn(DatasetFSProvider.instance as any, "_lookupAsFile")
-            .mockReturnValueOnce({ ...testEntries.ps, metadata: { profile: null } });
+            .mockReturnValueOnce({ ...testEntries.ps, metadata: { profile: undefined } });
 
         let err;
         try {
@@ -754,12 +755,12 @@ describe("fetchEntriesForDataset", () => {
         expect(allMembersMock).toHaveBeenCalled();
         mvsApiMock.mockRestore();
     });
-    it("calls _handleError in the case of an API error", async () => {
+    it("calls handleProfileAuthOnError in the case of an API error", async () => {
         const allMembersMock = jest.fn().mockRejectedValue(new Error("API error"));
         const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
             allMembers: allMembersMock,
         } as any);
-        const _handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation();
+        const handleProfileAuthOnErrorMock = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation();
         const fakePds = Object.assign(Object.create(Object.getPrototypeOf(testEntries.pds)), testEntries.pds);
         await expect(
             (DatasetFSProvider.instance as any).fetchEntriesForDataset(fakePds, testUris.pds, {
@@ -770,8 +771,8 @@ describe("fetchEntriesForDataset", () => {
             })
         ).rejects.toThrow();
         expect(allMembersMock).toHaveBeenCalled();
-        expect(_handleErrorMock).toHaveBeenCalled();
-        _handleErrorMock.mockRestore();
+        expect(handleProfileAuthOnErrorMock).toHaveBeenCalled();
+        handleProfileAuthOnErrorMock.mockRestore();
         mvsApiMock.mockRestore();
     });
 });

@@ -17,7 +17,6 @@ import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { SharedContext } from "../../../src/trees/shared/SharedContext";
 import { createIJobFile } from "../../__mocks__/mockCreators/jobs";
-import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 import { Constants } from "../../../src/configuration/Constants";

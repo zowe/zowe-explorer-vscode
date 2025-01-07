@@ -27,6 +27,7 @@ import {
     FsAbstractUtils,
     ZoweExplorerApiType,
     ZosEncoding,
+    AuthHandler,
 } from "@zowe/zowe-explorer-api";
 import { IDownloadSpoolContentParms, IJob, IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -207,6 +208,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const bufBuilder = new BufferBuilder();
 
         const jesApi = ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile);
+        await AuthHandler.lockProfile(spoolEntry.metadata.profile);
         try {
             if (jesApi.downloadSingleSpool) {
                 const spoolDownloadObject: IDownloadSpoolContentParms = {
@@ -227,9 +229,10 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                 bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id));
             }
         } catch (err) {
-            AuthUtils.promptForAuthError(err, spoolEntry.metadata.profile);
+            await AuthUtils.handleProfileAuthOnError(err, spoolEntry.metadata.profile);
             throw err;
         }
+        AuthHandler.unlockProfile(spoolEntry.metadata.profile);
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
         spoolEntry.data = bufBuilder.read() ?? new Uint8Array();
