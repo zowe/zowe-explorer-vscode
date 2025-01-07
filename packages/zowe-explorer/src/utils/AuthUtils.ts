@@ -11,7 +11,7 @@
 
 import * as util from "util";
 import * as vscode from "vscode";
-import { imperative, Gui, MainframeInteraction, IZoweTreeNode, ErrorCorrelator, ZoweExplorerApiType, CorrelatedError } from "@zowe/zowe-explorer-api";
+import { imperative, Gui, MainframeInteraction, IZoweTreeNode, ErrorCorrelator, ZoweExplorerApiType, AuthHandler } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
@@ -24,52 +24,43 @@ interface ErrorContext {
 }
 
 export class AuthUtils {
-    public static async promptForAuthentication(
-        imperativeError: imperative.ImperativeError,
-        profile: imperative.IProfileLoaded,
-        correlation?: CorrelatedError
-    ): Promise<boolean> {
-        if (imperativeError.mDetails.additionalDetails) {
-            const tokenError: string = imperativeError.mDetails.additionalDetails;
-            const isTokenAuth = await AuthUtils.isUsingTokenAuth(profile.name);
-
-            if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
-                const message = vscode.l10n.t("Log in to Authentication Service");
-                const userResp = await Gui.showMessage(correlation?.message ?? imperativeError.message, {
-                    items: [message],
-                    vsCodeOpts: { modal: true },
-                });
-                return userResp === message ? Constants.PROFILES_CACHE.ssoLogin(null, profile.name) : false;
-            }
-        }
-        const checkCredsButton = vscode.l10n.t("Update Credentials");
-        const creds = await Gui.errorMessage(correlation?.message ?? imperativeError.message, {
-            items: [checkCredsButton],
-            vsCodeOpts: { modal: true },
-        }).then(async (selection) => {
-            if (selection !== checkCredsButton) {
-                return;
-            }
-            return Constants.PROFILES_CACHE.promptCredentials(profile, true);
-        });
-        return creds != null ? true : false;
-    }
-
-    public static promptForAuthError(err: Error, profile: imperative.IProfileLoaded): void {
+    /**
+     * Locks the profile if an authentication error has occurred (prevents further requests in filesystem until unlocked).
+     * If the error is not an authentication error, the profile is unlocked for further use.
+     *
+     * @param err {Error} The error that occurred
+     * @param profile {imperative.IProfileLoaded} The profile used when the error occurred
+     */
+    public static async handleProfileAuthOnError(err: Error, profile: imperative.IProfileLoaded): Promise<void> {
         if (
             err instanceof imperative.ImperativeError &&
             profile != null &&
             (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
                 err.message.includes("All configured authentication methods failed"))
         ) {
-            const correlation = ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.All, err, {
+            // In the case of an authentication error, find a more user-friendly error message if available.
+            const errorCorrelation = ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.All, err, {
                 templateArgs: {
-                    profileName: profile.name
-                }
+                    profileName: profile.name,
+                },
             });
-            void AuthUtils.promptForAuthentication(err, profile, correlation).catch(
-                (error) => error instanceof Error && ZoweLogger.error(error.message)
-            );
+
+            const authOpts = {
+                authMethods: Constants.PROFILES_CACHE,
+                imperativeError: err,
+                isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
+                errorCorrelation,
+            };
+            // If the profile is already locked, prompt the user to re-authenticate.
+            if (AuthHandler.isProfileLocked(profile)) {
+                await AuthHandler.promptForAuthentication(profile, authOpts);
+            } else {
+                // Lock the profile and prompt the user for authentication by providing login/credential prompt options.
+                await AuthHandler.lockProfile(profile, authOpts);
+            }
+        } else if (AuthHandler.isProfileLocked(profile)) {
+            // Error doesn't satisfy criteria to continue holding the lock. Unlock the profile to allow further use
+            AuthHandler.unlockProfile(profile);
         }
     }
 
@@ -97,7 +88,7 @@ export class AuthUtils {
         ZoweLogger.error(`${errorDetails.toString()}\n` + util.inspect({ errorDetails, ...{ ...moreInfo, profile: undefined } }, { depth: null }));
 
         const profile = typeof moreInfo.profile === "string" ? Constants.PROFILES_CACHE.loadNamedProfile(moreInfo.profile) : moreInfo?.profile;
-        const correlation = ErrorCorrelator.getInstance().correlateError(moreInfo?.apiType ?? ZoweExplorerApiType.All, errorDetails, {
+        const errorCorrelation = ErrorCorrelator.getInstance().correlateError(moreInfo?.apiType ?? ZoweExplorerApiType.All, errorDetails, {
             profileType: profile?.type,
             ...Object.keys(moreInfo).reduce((all, k) => (typeof moreInfo[k] === "string" ? { ...all, [k]: moreInfo[k] } : all), {}),
             templateArgs: { profileName: profile?.name ?? "", ...moreInfo?.templateArgs },
@@ -114,14 +105,22 @@ export class AuthUtils {
                 (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
                     imperativeError.message.includes("All configured authentication methods failed"))
             ) {
-                return AuthUtils.promptForAuthentication(imperativeError, profile, correlation);
+                if (!AuthHandler.isProfileLocked(profile)) {
+                    await AuthHandler.lockProfile(profile);
+                }
+                return await AuthHandler.promptForAuthentication(profile, {
+                    authMethods: Constants.PROFILES_CACHE,
+                    imperativeError,
+                    isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
+                    errorCorrelation,
+                });
             }
         }
         if (errorDetails.toString().includes("Could not find profile")) {
             return false;
         }
 
-        void ErrorCorrelator.getInstance().displayCorrelatedError(correlation, { templateArgs: { profileName: profile?.name ?? "" } });
+        void ErrorCorrelator.getInstance().displayCorrelatedError(errorCorrelation, { templateArgs: { profileName: profile?.name ?? "" } });
         return false;
     }
 
@@ -195,13 +194,9 @@ export class AuthUtils {
      * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not
      */
     public static async isUsingTokenAuth(profileName: string): Promise<boolean> {
-        const secureProfileProps = await Constants.PROFILES_CACHE.getSecurePropsForProfile(profileName);
-        const profileUsesBasicAuth = secureProfileProps.includes("user") && secureProfileProps.includes("password");
-        if (secureProfileProps.includes("tokenValue")) {
-            return secureProfileProps.includes("tokenValue") && !profileUsesBasicAuth;
-        }
+        const secureProps = await Constants.PROFILES_CACHE.getSecurePropsForProfile(profileName);
         const baseProfile = Constants.PROFILES_CACHE.getDefaultProfile("base");
-        const secureBaseProfileProps = await Constants.PROFILES_CACHE.getSecurePropsForProfile(baseProfile?.name);
-        return secureBaseProfileProps.includes("tokenValue") && !profileUsesBasicAuth;
+        const baseSecureProps = await Constants.PROFILES_CACHE.getSecurePropsForProfile(baseProfile?.name);
+        return AuthHandler.isUsingTokenAuth(secureProps, baseSecureProps);
     }
 }

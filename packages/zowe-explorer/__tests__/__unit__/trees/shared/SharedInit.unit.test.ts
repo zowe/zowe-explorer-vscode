@@ -26,7 +26,7 @@ import { UnixCommandHandler } from "../../../../src/commands/UnixCommandHandler"
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import * as certWizard from "../../../../src/utils/CertificateWizard";
-import { Gui, imperative, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, ZoweScheme, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
@@ -64,6 +64,8 @@ describe("Test src/shared/extension", () => {
             ssoLogin: jest.fn(),
             ssoLogout: jest.fn(),
         };
+        jest.replaceProperty(ZoweVsCodeExtension, "onProfileUpdated", jest.fn());
+
         const commands: IJestIt[] = [
             {
                 name: "zowe.updateSecureCredentials",
