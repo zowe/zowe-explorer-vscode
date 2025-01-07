@@ -198,16 +198,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             AuthHandler.unlockProfile(uriInfo.profile);
         } catch (err) {
             await AuthUtils.handleProfileAuthOnError(err, uriInfo.profile);
-            this._handleError(err, {
-                additionalContext: vscode.l10n.t("Failed to list dataset members"),
-                retry: {
-                    fn: this.fetchEntriesForDataset.bind(this),
-                    args: [entry, uri, uriInfo],
-                },
-                apiType: ZoweExplorerApiType.Mvs,
-                profileType: uriInfo.profile?.type,
-                templateArgs: { profileName: uriInfo.profileName },
-            });
             throw err;
         }
         const pdsExtension = DatasetUtils.getExtension(entry.name);
