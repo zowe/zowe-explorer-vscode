@@ -954,6 +954,7 @@ export class Profiles extends ProfilesCache {
                         ...node.getProfile(),
                         profile: { ...node.getProfile().profile, ...updBaseProfile },
                     });
+                    ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
                 } else {
                     Gui.errorMessage(vscode.l10n.t("Unable to switch to token-based authentication for profile {0}.", serviceProfile.name));
                     return;
@@ -1067,7 +1068,6 @@ export class Profiles extends ProfilesCache {
             ) {
                 await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(node.getSession());
                 await Profiles.getInstance().updateCachedProfile(serviceProfile, node);
-                ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
             } else {
                 const zeRegister = ZoweExplorerApiRegister.getInstance();
                 logoutOk = await ZoweVsCodeExtension.ssoLogout({
@@ -1087,6 +1087,7 @@ export class Profiles extends ProfilesCache {
                         comment: ["Service profile name"],
                     })
                 );
+                ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
             }
         } catch (error) {
             const message = vscode.l10n.t({
@@ -1142,7 +1143,6 @@ export class Profiles extends ProfilesCache {
         session.ISession.password = creds[1];
         await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(session);
         await Profiles.getInstance().updateCachedProfile(serviceProfile, node);
-        ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
         return true;
     }
 

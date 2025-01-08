@@ -284,7 +284,6 @@ export class ZoweVsCodeExtension {
         await cache.updateBaseProfileFileLogout(connOk ? baseProfile : serviceProfile);
         serviceProfile.profile = { ...serviceProfile.profile, tokenType: undefined, tokenValue: undefined };
         await cache.updateCachedProfile(serviceProfile, opts.profileNode);
-        ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
         return true;
     }
 

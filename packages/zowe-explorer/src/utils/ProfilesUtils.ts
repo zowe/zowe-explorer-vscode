@@ -464,7 +464,6 @@ export class ProfilesUtils {
             AuthHandler.unlockProfile(profile, true);
             if (typeof profile !== "string") {
                 await Constants.PROFILES_CACHE.updateCachedProfile(profile, node);
-                ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(profile);
             }
             ZoweLogger.info(successMsg);
             Gui.showMessage(successMsg);
