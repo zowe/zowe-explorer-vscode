@@ -31,9 +31,10 @@ export class AuthUtils {
      * @param err {Error} The error that occurred
      * @param profile {imperative.IProfileLoaded} The profile used when the error occurred
      */
-    public static async handleProfileAuthOnError(err: Error, profile: imperative.IProfileLoaded): Promise<void> {
+    public static async handleProfileAuthOnError(err: Error, profile?: imperative.IProfileLoaded): Promise<void> {
         if (
             err instanceof imperative.ImperativeError &&
+            profile != null &&
             (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
                 err.message.includes("All configured authentication methods failed"))
         ) {
@@ -57,7 +58,7 @@ export class AuthUtils {
                 // Lock the profile and prompt the user for authentication by providing login/credential prompt options.
                 await AuthHandler.lockProfile(profile, authOpts);
             }
-        } else if (AuthHandler.isProfileLocked(profile)) {
+        } else if (profile != null && AuthHandler.isProfileLocked(profile)) {
             // Error doesn't satisfy criteria to continue holding the lock. Unlock the profile to allow further use
             AuthHandler.unlockProfile(profile);
         }
