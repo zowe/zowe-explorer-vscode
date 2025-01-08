@@ -676,6 +676,12 @@ describe("ZosmfCommandApi", () => {
             transform: (args) => [args[1].account, ...args],
         },
         {
+            name: "issueTsoCommandWithParms",
+            spy: jest.spyOn(zostso.IssueTso, "issueTsoCmd"),
+            args: ["command", { account: "ACCT#" }, true],
+            transform: () => ["command", { addressSpaceOptions: { account: "ACCT#" } }],
+        },
+        {
             name: "issueMvsCommand",
             spy: jest.spyOn(zosconsole.IssueCommand, "issue"),
             args: ["command", "defcn"],

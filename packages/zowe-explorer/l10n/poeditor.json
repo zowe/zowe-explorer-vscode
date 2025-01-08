@@ -324,7 +324,7 @@
     "Toggle if Unix Commands persist locally": ""
   },
   "zowe.commands.alwaysEdit": {
-    "Allow commands to eb edited before submitting": ""
+    "Allow commands to be edited before submitting": ""
   },
   "zowe.commands.useIntegratedTerminals": {
     "Allow commands to be executed using integrated terminals": ""
