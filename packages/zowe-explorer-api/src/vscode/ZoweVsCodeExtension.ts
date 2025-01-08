@@ -220,7 +220,6 @@ export class ZoweVsCodeExtension {
         await cache.updateBaseProfileFileLogin(profileToUpdate, updBaseProfile, !connOk);
         serviceProfile.profile = { ...serviceProfile.profile, ...updBaseProfile };
         await cache.updateCachedProfile(serviceProfile, opts.profileNode);
-        ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
         return true;
     }
 
