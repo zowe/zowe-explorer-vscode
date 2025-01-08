@@ -105,6 +105,7 @@ export class ZoweVsCodeExtension {
                 await profInfo.updateProperty({ ...upd, property: "password", value: creds[1], setSecure });
             }
             await cache.updateCachedProfile(loadProfile, undefined, apiRegister);
+            ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(loadProfile);
 
             return loadProfile;
         }
@@ -219,6 +220,7 @@ export class ZoweVsCodeExtension {
         await cache.updateBaseProfileFileLogin(profileToUpdate, updBaseProfile, !connOk);
         serviceProfile.profile = { ...serviceProfile.profile, ...updBaseProfile };
         await cache.updateCachedProfile(serviceProfile, opts.profileNode);
+        ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
         return true;
     }
 
@@ -282,6 +284,7 @@ export class ZoweVsCodeExtension {
         await cache.updateBaseProfileFileLogout(connOk ? baseProfile : serviceProfile);
         serviceProfile.profile = { ...serviceProfile.profile, tokenType: undefined, tokenValue: undefined };
         await cache.updateCachedProfile(serviceProfile, opts.profileNode);
+        ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
         return true;
     }
 

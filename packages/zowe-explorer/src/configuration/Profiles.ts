@@ -1067,6 +1067,7 @@ export class Profiles extends ProfilesCache {
             ) {
                 await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(node.getSession());
                 await Profiles.getInstance().updateCachedProfile(serviceProfile, node);
+                ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
             } else {
                 const zeRegister = ZoweExplorerApiRegister.getInstance();
                 logoutOk = await ZoweVsCodeExtension.ssoLogout({
@@ -1141,6 +1142,7 @@ export class Profiles extends ProfilesCache {
         session.ISession.password = creds[1];
         await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(session);
         await Profiles.getInstance().updateCachedProfile(serviceProfile, node);
+        ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
         return true;
     }
 

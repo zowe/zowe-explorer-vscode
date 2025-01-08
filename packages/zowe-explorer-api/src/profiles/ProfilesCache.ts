@@ -18,7 +18,6 @@ import { ZosTsoProfile } from "@zowe/zos-tso-for-zowe-sdk";
 import { ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
 import { Types } from "../Types";
 import { VscSettings } from "../vscode/doc/VscSettings";
-import { ZoweVsCodeExtension } from "../vscode";
 
 export class ProfilesCache {
     public profilesForValidation: Validation.IValidationProfile[] = [];
@@ -116,7 +115,6 @@ export class ProfilesCache {
             }
         }
         profileNode?.setProfileToChoice(profileLoaded);
-        ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(profileLoaded);
     }
 
     /**
