@@ -11,7 +11,7 @@
 
 import * as globals from "../globals";
 import { TreeItem } from "vscode";
-import { IZoweTreeNode, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
+import { IZoweDatasetTreeNode, IZoweTreeNode, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import { imperative } from "@zowe/cli";
 
 /**
@@ -472,6 +472,15 @@ export function isValidationEnabled(node: TreeItem): boolean {
  */
 export function isJobsSession(node: TreeItem): boolean {
     return new RegExp("^(" + globals.JOBS_SESSION_CONTEXT + ")").test(node.contextValue);
+}
+
+/**
+ * Helper function which identifies if the node is part of the Dataset tree view
+ * @param node
+ * @return true if part of the Dataset tree, false otherwise
+ */
+export function isTypeDsTreeNode(node): node is IZoweDatasetTreeNode {
+    return (node as IZoweDatasetTreeNode).getDsDocumentFilePath !== undefined;
 }
 
 /**

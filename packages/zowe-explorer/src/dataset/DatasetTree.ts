@@ -179,19 +179,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 return this.mFavorites;
             }
             if (element.contextValue && element.contextValue === globals.FAV_PROFILE_CONTEXT) {
-                const favsForProfile = this.loadProfilesForFavorites(this.log, element);
-                return favsForProfile;
+                return this.loadProfilesForFavorites(this.log, element);
             }
+            const response = await element.getChildren();
+
             const finalResponse: IZoweDatasetTreeNode[] = [];
-            let response;
-            try {
-                response = await element.getChildren();
-            } catch (error) {
-                await errorHandling(error, String(element.label));
-            }
-            if (!response) {
-                return;
-            }
             for (const item of response) {
                 if (item.pattern && item.memberPattern) {
                     finalResponse.push(item);
@@ -204,16 +196,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
                 item.contextValue = contextually.withProfile(item);
             }
-            if (finalResponse.length === 0) {
-                return (element.children = [
-                    new ZoweDatasetNode({
-                        label: localize("getChildren.noDataset", "No data sets found"),
-                        collapsibleState: vscode.TreeItemCollapsibleState.None,
-                        parentNode: element,
-                        contextOverride: globals.INFORMATION_CONTEXT,
-                    }),
-                ]);
-            }
+
             return finalResponse;
         }
         return this.mSessionNodes;
@@ -483,8 +466,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 session,
                 profile,
+                contextOverride: globals.DS_SESSION_CONTEXT,
             });
-            node.contextValue = globals.DS_SESSION_CONTEXT + (profile.type !== "zosmf" ? `.profile=${profile.type}.` : "");
+            if (profile.type !== "zosmf") {
+                // TODO: Why do we inject profiles in context value only for DS tree?
+                node.contextValue += `.profile=${profile.type}.`;
+            }
             await this.refreshHomeProfileContext(node);
             const icon = getIconByNode(node);
             if (icon) {
@@ -933,13 +920,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     public async datasetFilterPrompt(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("DatasetTree.datasetFilterPrompt called.");
-        ZoweLogger.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
         await this.checkCurrentProfile(node);
         let nonFaveNode;
 
         if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
             if (contextually.isSessionNotFav(node)) {
+                ZoweLogger.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
                 nonFaveNode = node;
                 if (this.mHistory.getSearchHistory().length > 0) {
                     const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
@@ -999,9 +986,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             }
             // looking for members in pattern
-            node.children = [];
             node.dirty = true;
-            syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getMvsApi(profileValue).getSession())(nonFaveNode);
+            syncSessionNode((profileValue) => ZoweExplorerApiRegister.getMvsApi(profileValue), nonFaveNode);
             let dataSet: IDataSet;
             const dsSets: (IDataSet & { memberPattern?: string })[] = [];
             const dsNames = pattern.split(",");
@@ -1055,8 +1041,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 let resetIcon: IIconItem;
                 if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
                     resetIcon = getIconById(IconId.folder);
-                }
-                if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
+                } else if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
                     resetIcon = getIconById(IconId.folderOpen);
                 }
                 if (resetIcon) {
@@ -1113,8 +1098,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                                     let setIcon: IIconItem;
                                     if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
                                         setIcon = getIconById(IconId.filterFolder);
-                                    }
-                                    if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
+                                    } else if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
                                         setIcon = getIconById(IconId.filterFolderOpen);
                                     }
                                     if (setIcon) {
@@ -1136,6 +1120,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             this.addSearchHistory(pattern);
         }
         await TreeViewUtils.expandNode(nonFaveNode, this);
+        this.refresh();
     }
 
     public checkFilterPattern(dsName: string, itemName: string): boolean {

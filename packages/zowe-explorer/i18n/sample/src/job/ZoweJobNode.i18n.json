@@ -1,9 +1,10 @@
 {
   "getChildren.search": "Use the search button to display jobs",
-  "getChildren.noSpoolFiles": "There are no JES spool messages to display",
+  "getChildren.noSpoolFiles": "No spool files found",
   "getChildren.noJobs": "No jobs found",
   "getJobs.status.not.supported": "Filtering by job status is not yet supported with this profile type. Will show jobs with all statuses.",
   "getJobs.error.sessionMissing": "Profile auth error",
   "getJobs.error.additionalDetails": "Profile is not authenticated, please log in to continue",
-  "getChildren.error.response": "Retrieving response from "
+  "getJobs.error": "Retrieving response from JES list API",
+  "getSpoolFiles.error": "Retrieving response from JES list API"
 }

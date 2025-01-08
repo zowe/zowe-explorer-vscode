@@ -33,10 +33,11 @@ import { Gui, IZoweDatasetTreeNode, IZoweTreeNode, IZoweUSSTreeNode, ProfilesCac
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { LocalStorageKey, ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
+import { TreeProviders } from "../../../src/shared/TreeProviders";
 
 jest.mock("fs");
 
-async function createGlobalMocks() {
+function createGlobalMocks() {
     const newMocks = {
         session: createISession(),
         profileOne: createIProfile(),
@@ -85,7 +86,7 @@ async function createGlobalMocks() {
 
 describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
     it("Checks that concatChildNodes returns the proper array of children", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const rootNode = new ZoweUSSNode({
             label: "root",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -124,17 +125,45 @@ describe("syncSessionNode shared util function", () => {
     const sessionNode = createDatasetSessionNode(undefined, serviceProfile);
 
     it("should update a session and a profile in the provided node", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         // given
         Object.defineProperty(globalMocks.mockProfilesCache, "loadNamedProfile", {
             value: jest.fn().mockReturnValue(createIProfile()),
         });
         const expectedSession = new imperative.Session({});
-        const sessionForProfile = () => new imperative.Session({});
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        const sessionForProfile = (_profile) =>
+            ({
+                getSession: () => new imperative.Session({}),
+            } as any);
         // when
-        await utils.syncSessionNode(Profiles.getInstance())(sessionForProfile)(sessionNode);
-        expect(await sessionNode.getSession()).toEqual(expectedSession);
-        expect(await sessionNode.getProfile()).toEqual(createIProfile());
+        utils.syncSessionNode(sessionForProfile, sessionNode);
+        expect(sessionNode.getSession()).toEqual(expectedSession);
+        expect(sessionNode.getProfile()).toEqual(createIProfile());
+    });
+    it("should update session node and refresh tree node if provided", async () => {
+        const globalMocks = createGlobalMocks();
+        // given
+        Object.defineProperty(globalMocks.mockProfilesCache, "loadNamedProfile", {
+            value: jest.fn().mockReturnValue(createIProfile()),
+        });
+        const getChildrenSpy = jest.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
+        const refreshElementMock = jest.fn();
+        jest.spyOn(TreeProviders, "getProviderForNode").mockReturnValueOnce({
+            refreshElement: refreshElementMock,
+        } as any);
+        const getSessionMock = jest.fn().mockReturnValue(new imperative.Session({}));
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        const sessionForProfile = (_profile) =>
+            ({
+                getSession: getSessionMock,
+            } as any);
+        // when
+        utils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
+        expect(getSessionMock).toHaveBeenCalled();
+        expect(sessionNode.dirty).toBe(true);
+        expect(await getChildrenSpy).toHaveBeenCalled();
+        expect(refreshElementMock).toHaveBeenCalledWith(sessionNode);
     });
     it("should do nothing, if there is no profile from provided node in the file system", async () => {
         const profiles = createInstanceOfProfile(serviceProfile);
@@ -145,8 +174,12 @@ describe("syncSessionNode shared util function", () => {
         );
         profiles.getBaseProfile = jest.fn(() => undefined);
         // when
-        const dummyFn = () => new imperative.Session({});
-        await utils.syncSessionNode(profiles)(dummyFn)(sessionNode);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        const dummyFn = (_profile) =>
+            ({
+                getSession: () => new imperative.Session({}),
+            } as any);
+        utils.syncSessionNode(dummyFn, sessionNode);
         // then
         const initialSession = sessionNode.getSession();
         const initialProfile = sessionNode.getProfile();
@@ -307,7 +340,7 @@ describe("Test uploadContent", () => {
 });
 
 describe("Test force upload", () => {
-    async function createBlockMocks() {
+    function createBlockMocks() {
         const newVariables = {
             dsNode: new ZoweDatasetNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None }),
             ussNode: new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None }),
@@ -372,7 +405,7 @@ describe("Test force upload", () => {
     });
 
     it("should successfully call upload for a USS file if user clicks 'Yes'", async () => {
-        const blockMocks = await createBlockMocks();
+        const blockMocks = createBlockMocks();
         blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
         blockMocks.withProgress.mockResolvedValueOnce(blockMocks.fileResponse);
         await sharedUtils.willForceUpload(blockMocks.ussNode, blockMocks.mockDoc, null);
@@ -387,7 +420,7 @@ describe("Test force upload", () => {
     });
 
     it("should successfully call upload for a data set if user clicks 'Yes'", async () => {
-        const blockMocks = await createBlockMocks();
+        const blockMocks = createBlockMocks();
         blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
         blockMocks.withProgress.mockResolvedValueOnce(blockMocks.fileResponse);
         await sharedUtils.willForceUpload(blockMocks.dsNode, blockMocks.mockDoc, null);
@@ -402,14 +435,14 @@ describe("Test force upload", () => {
     });
 
     it("should cancel upload if user clicks 'No'", async () => {
-        const blockMocks = await createBlockMocks();
+        const blockMocks = createBlockMocks();
         blockMocks.showInformationMessage.mockResolvedValueOnce("No");
         await sharedUtils.willForceUpload(blockMocks.dsNode, blockMocks.mockDoc, null);
         expect(blockMocks.showInformationMessage.mock.calls[1][0]).toBe("Upload cancelled.");
     });
 
     it("should display specific message if Theia is detected", async () => {
-        const blockMocks = await createBlockMocks();
+        const blockMocks = createBlockMocks();
         Object.defineProperty(globals, "ISTHEIA", { value: true });
         blockMocks.showInformationMessage.mockResolvedValueOnce("No");
         await sharedUtils.willForceUpload(blockMocks.dsNode, blockMocks.mockDoc, null);
@@ -419,7 +452,7 @@ describe("Test force upload", () => {
     });
 
     it("should show error message if file fails to upload", async () => {
-        const blockMocks = await createBlockMocks();
+        const blockMocks = createBlockMocks();
         blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
         blockMocks.withProgress.mockResolvedValueOnce({ ...blockMocks.fileResponse, success: false });
         await sharedUtils.willForceUpload(blockMocks.ussNode, blockMocks.mockDoc, null);
@@ -434,7 +467,7 @@ describe("Test force upload", () => {
     });
 
     it("should show error message if upload throws an error", async () => {
-        const blockMocks = await createBlockMocks();
+        const blockMocks = createBlockMocks();
         blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
         const testError = new Error("Task failed successfully");
         blockMocks.withProgress.mockRejectedValueOnce(testError);
@@ -1177,7 +1210,7 @@ describe("Shared utils unit tests - function confirmForUnsavedDoc", () => {
 });
 describe("Shared utils unit tests - function initializeFileOpening", () => {
     it("successfully handles binary data sets that should be re-downloaded", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
 
         jest.spyOn(vscode.workspace, "openTextDocument").mockRejectedValue("Test error!");
         jest.spyOn(Gui, "errorMessage").mockResolvedValue("Re-download");
@@ -1202,7 +1235,7 @@ describe("Shared utils unit tests - function initializeFileOpening", () => {
     });
 
     it("successfully handles binary data sets that should be previewed", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
 
         // Creating a test node
         const rootNode = new ZoweDatasetNode({
@@ -1225,7 +1258,7 @@ describe("Shared utils unit tests - function initializeFileOpening", () => {
     });
 
     it("successfully handles text data sets that should be previewed", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
 
         jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(globalMocks.mockTextDocument as vscode.TextDocument);
 
@@ -1249,7 +1282,7 @@ describe("Shared utils unit tests - function initializeFileOpening", () => {
     });
 
     it("successfully handles text data sets that shouldn't be previewed", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
 
         jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(globalMocks.mockTextDocument as vscode.TextDocument);
 
@@ -1273,7 +1306,7 @@ describe("Shared utils unit tests - function initializeFileOpening", () => {
     });
 
     it("successfully handles binary USS files that should be re-downloaded", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
 
         jest.spyOn(vscode.workspace, "openTextDocument").mockRejectedValue("Test error!");
         jest.spyOn(Gui, "errorMessage").mockResolvedValue("Re-download");
@@ -1299,7 +1332,7 @@ describe("Shared utils unit tests - function initializeFileOpening", () => {
     });
 
     it("successfully handles binary USS files that should be previewed", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
 
         // Creating a test node
         const rootNode = new ZoweUSSNode({
@@ -1323,7 +1356,7 @@ describe("Shared utils unit tests - function initializeFileOpening", () => {
     });
 
     it("successfully handles text USS files that should be previewed", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
 
         jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(globalMocks.mockTextDocument as vscode.TextDocument);
 
@@ -1348,7 +1381,7 @@ describe("Shared utils unit tests - function initializeFileOpening", () => {
     });
 
     it("successfully handles text USS files that shouldn't be previewed", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
 
         jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(globalMocks.mockTextDocument as vscode.TextDocument);
 

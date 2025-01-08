@@ -80,6 +80,10 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             }
         }
 
+        if (opts.contextOverride) {
+            this.contextValue = opts.contextOverride;
+        }
+
         const icon = getIconByNode(this);
         if (icon) {
             this.iconPath = icon.path;
@@ -93,6 +97,8 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             if (!globals.ISTHEIA) {
                 this.id = this.label as string;
             }
+        } else if (this.contextValue === globals.INFORMATION_CONTEXT) {
+            this.command = { command: "zowe.placeholderCommand", title: "Placeholder" };
         }
     }
 
@@ -102,45 +108,37 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
      * @returns {Promise<IZoweJobTreeNode[]>}
      */
     public async getChildren(): Promise<IZoweJobTreeNode[]> {
-        const thisSessionNode = this.getSessionNode();
-        ZoweLogger.trace(`ZoweJobNode.getChildren called for ${String(thisSessionNode.label)}.`);
-        if (this?.filter !== undefined) {
-            return this.children;
-        }
+        ZoweLogger.trace(`ZoweJobNode.getChildren called for ${this.label as string}.`);
         if (contextually.isSession(this) && !this.filtered && !contextually.isFavorite(this)) {
             return [
                 new ZoweJobNode({
                     label: localize("getChildren.search", "Use the search button to display jobs"),
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
                     parentNode: this,
+                    contextOverride: globals.INFORMATION_CONTEXT,
                 }),
             ];
         }
 
-        if (!this.dirty) {
+        if (!this.dirty || this.filter !== undefined) {
             return this.children;
         }
 
         const elementChildren: Record<string, IZoweJobTreeNode> = {};
         if (contextually.isJob(this)) {
             // Fetch spool files under job node
-            const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-            const spools: zowe.IJobFile[] = (
-                (await ZoweExplorerApiRegister.getJesApi(cachedProfile).getSpoolFiles(this.job.jobname, this.job.jobid)) ?? []
-            )
-                // filter out all the objects which do not seem to be correct Job File Document types
-                // see an issue #845 for the details
-                .filter((item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined));
-            if (!spools.length) {
+            const spools = await this.getSpoolFiles(this.job);
+            if (spools == null) {
+                return [];
+            } else if (!spools.length) {
                 const noSpoolNode = new ZoweSpoolNode({
-                    label: localize("getChildren.noSpoolFiles", "There are no JES spool messages to display"),
+                    label: localize("getChildren.noSpoolFiles", "No spool files found"),
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
                     parentNode: this,
+                    contextOverride: globals.INFORMATION_CONTEXT,
                 });
-                noSpoolNode.iconPath = null;
-                return [noSpoolNode];
+                return (this.children = [noSpoolNode]);
             }
-            const refreshTimestamp = Date.now();
             spools.forEach((spool) => {
                 const sessionName = this.getProfileName();
                 const procstep = spool.procstep ? spool.procstep : undefined;
@@ -185,15 +183,16 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         } else {
             // Fetch jobs under session node
             const jobs = await this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus);
-            if (jobs.length === 0) {
+            if (jobs == null) {
+                return [];
+            } else if (jobs.length === 0) {
                 const noJobsNode = new ZoweJobNode({
                     label: localize("getChildren.noJobs", "No jobs found"),
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
                     parentNode: this,
+                    contextOverride: globals.INFORMATION_CONTEXT,
                 });
-                noJobsNode.contextValue = globals.INFORMATION_CONTEXT;
-                noJobsNode.iconPath = null;
-                return [noJobsNode];
+                return (this.children = [noJobsNode]);
             }
             jobs.forEach((job) => {
                 let nodeTitle: string;
@@ -354,10 +353,10 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         }
     }
 
-    private async getJobs(owner: string, prefix: string, searchId: string, status: string): Promise<zowe.IJob[]> {
+    private async getJobs(owner: string, prefix: string, searchId: string, status: string): Promise<zowe.IJob[] | undefined> {
         ZoweLogger.trace("ZoweJobNode.getJobs called.");
-        let jobsInternal: zowe.IJob[] = [];
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+        let jobsInternal: zowe.IJob[] = [];
         try {
             if (this.searchId.length > 0) {
                 jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJob(searchId));
@@ -398,13 +397,32 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 }, []);
             }
         } catch (error) {
-            ZoweLogger.trace("Error getting jobs from Rest API.");
-            await errorHandling(error, cachedProfile.name, localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`);
-            syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getJesApi(profileValue).getSession())(
-                this.getSessionNode()
-            );
+            const updated = await errorHandling(error, this.getProfileName(), localize("getJobs.error", "Retrieving response from JES list API"));
+            syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode(), updated && this);
+            return;
         }
         return jobsInternal;
+    }
+
+    private async getSpoolFiles(job: zowe.IJob = this.job): Promise<zowe.IJobFile[] | undefined> {
+        ZoweLogger.trace("ZoweJobNode.getSpoolFiles called.");
+        const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+        let spools: zowe.IJobFile[] = [];
+        try {
+            spools = (await ZoweExplorerApiRegister.getJesApi(cachedProfile).getSpoolFiles(this.job.jobname, this.job.jobid)) ?? [];
+            // filter out all the objects which do not seem to be correct Job File Document types
+            // see an issue #845 for the details
+            spools = spools.filter((item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined));
+        } catch (error) {
+            const updated = await errorHandling(
+                error,
+                this.getProfileName(),
+                localize("getSpoolFiles.error", "Retrieving response from JES list API")
+            );
+            syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode(), updated && this);
+            return;
+        }
+        return spools;
     }
 }
 

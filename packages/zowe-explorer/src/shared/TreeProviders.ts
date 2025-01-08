@@ -14,8 +14,8 @@ import { IZoweProviders } from "./init";
 import { DatasetTree } from "../dataset/DatasetTree";
 import { USSTree } from "../uss/USSTree";
 import { ZosJobsProvider } from "../job/ZosJobsProvider";
-import { IZoweNodeType } from "@zowe/zowe-explorer-api";
-import { getSessionType } from "./context";
+import { IZoweNodeType, IZoweTree } from "@zowe/zowe-explorer-api";
+import * as contextually from "./context";
 
 type ProviderFunctions = {
     ds: (context: vscode.ExtensionContext) => Promise<DatasetTree>;
@@ -75,8 +75,18 @@ export class TreeProviders {
     public static contextValueExistsAcrossTrees(node: IZoweNodeType, contextValue: string): boolean {
         const sessions = this.getSessionForAllTrees(node.getLabel().toString());
         const sessionContextInOtherTree = sessions.find(
-            (session) => session.contextValue.includes(contextValue) && getSessionType(session) !== getSessionType(node)
+            (session) => session.contextValue.includes(contextValue) && contextually.getSessionType(session) !== contextually.getSessionType(node)
         );
         return sessionContextInOtherTree !== undefined;
+    }
+
+    public static getProviderForNode(node: IZoweNodeType): IZoweTree<any> {
+        if (contextually.isTypeDsTreeNode(node) || contextually.isDsSession(node)) {
+            return TreeProviders.ds;
+        } else if (contextually.isTypeUssTreeNode(node) || contextually.isUssSession(node)) {
+            return TreeProviders.uss;
+        } else {
+            return TreeProviders.job;
+        }
     }
 }

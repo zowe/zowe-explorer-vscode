@@ -6,6 +6,7 @@
   "getChildren.noDataset": "No data sets found",
   "getDataSets.error.sessionMissing": "Profile auth error",
   "getDataSets.error.additionalDetails": "Profile is not authenticated, please log in to continue",
+  "getDatasets.error": "Retrieving response from MVS list API",
   "dataSet.opening": "$(sync~spin) Opening data set...",
   "openDs.error": "Invalid data set or member.",
   "openDs.openDataSet": "Opening {0}"

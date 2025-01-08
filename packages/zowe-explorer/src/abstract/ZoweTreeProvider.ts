@@ -131,9 +131,11 @@ export class ZoweTreeProvider {
         if (icon) {
             element.iconPath = icon.path;
         }
-        element.dirty = true;
         if (isOpen) {
             this.mOnDidChangeTreeData.fire(element);
+        } else {
+            // Don't mark as dirty when expanded to avoid duplicate refresh
+            element.dirty = true;
         }
     }
 

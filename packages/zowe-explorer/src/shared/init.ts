@@ -261,11 +261,11 @@ export function watchConfigProfile(context: vscode.ExtensionContext): void {
         watcher.onDidChange(
             sharedUtils.debounce(async (uri: vscode.Uri) => {
                 ZoweLogger.info(localize("watchConfigProfile.update", "Team config file updated."));
-                const newProfileContents = await vscode.workspace.fs.readFile(uri);
-                if (newProfileContents.toString() === globals.SAVED_PROFILE_CONTENTS.toString()) {
+                const newProfileContents = Buffer.from(await vscode.workspace.fs.readFile(uri));
+                if (globals.SAVED_PROFILE_CONTENTS.get(uri.fsPath)?.equals(newProfileContents)) {
                     return;
                 }
-                globals.setSavedProfileContents(newProfileContents);
+                globals.SAVED_PROFILE_CONTENTS.set(uri.fsPath, newProfileContents);
                 void refreshActions.refreshAll();
                 ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.UPDATE);
             }, 100) // eslint-disable-line no-magic-numbers
@@ -283,11 +283,11 @@ export function initSubscribers(context: vscode.ExtensionContext, theProvider: I
     const theTreeView = theProvider.getTreeView();
     context.subscriptions.push(theTreeView);
     if (!globals.ISTHEIA) {
-        theTreeView.onDidCollapseElement(async (e) => {
-            await theProvider.flipState(e.element, false);
+        theTreeView.onDidCollapseElement((e) => {
+            theProvider.flipState(e.element, false);
         });
-        theTreeView.onDidExpandElement(async (e) => {
-            await theProvider.flipState(e.element, true);
+        theTreeView.onDidExpandElement((e) => {
+            theProvider.flipState(e.element, true);
         });
     }
 }
