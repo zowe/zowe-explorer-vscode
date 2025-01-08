@@ -6,7 +6,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
-- Update Zowe SDKs to `8.8.4` to get the latest enhancements from Imperative and the z/OS Files SDK. [#3306](https://github.com/zowe/zowe-explorer-vscode/pull/3306)
+- Update Zowe SDKs to `8.10.4` to get the latest enhancements from Imperative and the z/OS Files SDK. [#3306](https://github.com/zowe/zowe-explorer-vscode/pull/3306)
 - Added new `searchDataSets` API to provide the ability to search all data sets and PDS members that match a pattern for a string. [#3306](https://github.com/zowe/zowe-explorer-vscode/pull/3306)
 - Added support for extenders to obtain an updated Session that will includes VS Code proxy settings values if set, `getProfileSessionWithVscProxy`. [#3010](https://github.com/zowe/zowe-explorer-vscode/issues/3010)
 - Added support for VS Code proxy settings with zosmf profile types. [#3010](https://github.com/zowe/zowe-explorer-vscode/issues/3010)
