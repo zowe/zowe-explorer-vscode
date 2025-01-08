@@ -40,7 +40,6 @@ export class MvsCommandHandler extends ZoweCommandProvider {
         return this.instance;
     }
 
-    public readonly controller: AbortController = new AbortController();
     public readonly dialogs: ICommandProviderDialogs = {
         commandSubmitted: vscode.l10n.t("MVS command submitted."),
         defaultText: `$(plus) ${vscode.l10n.t("Create a new MVS command")}`,

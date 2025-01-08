@@ -55,7 +55,6 @@ export abstract class ZoweCommandProvider {
 
     public abstract formatCommandLine(command: string, profile: imperative.IProfileLoaded): string;
     public abstract runCommand(profile: imperative.IProfileLoaded, command: string): Promise<string>;
-    public abstract controller: AbortController;
 
     public async issueCommand(profile: imperative.IProfileLoaded, command: string): Promise<void> {
         ZoweLogger.trace("ZoweCommandProvider.issueCommand called.");
@@ -111,7 +110,7 @@ export abstract class ZoweCommandProvider {
                             return error.message;
                         }
                     },
-                    this.controller,
+                    new AbortController(),
                     {
                         message: vscode.l10n.t({
                             message: "Welcome to the integrated terminal for: {0}",

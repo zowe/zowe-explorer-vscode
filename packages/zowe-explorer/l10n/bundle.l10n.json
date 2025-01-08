@@ -161,7 +161,6 @@
   "Certificate Key for Authentication.": "Certificate Key for Authentication.",
   "Certificate Keys": "Certificate Keys",
   "Select Certificate Key": "Select Certificate Key",
-  "Update Credentials": "Update Credentials",
   "Required parameter 'host' must not be blank.": "Required parameter 'host' must not be blank.",
   "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection./Profile name": {
     "message": "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
@@ -684,7 +683,6 @@
   "Save as User setting": "Save as User setting",
   "Save as Workspace setting": "Save as Workspace setting",
   "Failed to list datasets": "Failed to list datasets",
-  "Failed to list dataset members": "Failed to list dataset members",
   "Failed to read {0}/File path": {
     "message": "Failed to read {0}",
     "comment": [
@@ -920,6 +918,7 @@
   },
   "Add Credentials": "Add Credentials",
   "Add username and password for basic authentication": "Add username and password for basic authentication",
+  "Update Credentials": "Update Credentials",
   "Update stored username and password": "Update stored username and password",
   "Disable Profile Validation": "Disable Profile Validation",
   "Disable validation of server check for profile": "Disable validation of server check for profile",
