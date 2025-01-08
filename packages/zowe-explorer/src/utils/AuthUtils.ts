@@ -34,7 +34,6 @@ export class AuthUtils {
     public static async handleProfileAuthOnError(err: Error, profile: imperative.IProfileLoaded): Promise<void> {
         if (
             err instanceof imperative.ImperativeError &&
-            profile != null &&
             (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
                 err.message.includes("All configured authentication methods failed"))
         ) {
