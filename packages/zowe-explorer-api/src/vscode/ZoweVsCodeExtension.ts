@@ -105,6 +105,7 @@ export class ZoweVsCodeExtension {
                 await profInfo.updateProperty({ ...upd, property: "password", value: creds[1], setSecure });
             }
             await cache.updateCachedProfile(loadProfile, undefined, apiRegister);
+            ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(loadProfile);
 
             return loadProfile;
         }

@@ -834,6 +834,7 @@ export class Profiles extends ProfilesCache {
                     })
                 );
                 AuthHandler.unlockProfile(serviceProfile, true);
+                ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
             }
             return loginOk;
         } catch (err) {
@@ -957,6 +958,7 @@ export class Profiles extends ProfilesCache {
                         ...node.getProfile(),
                         profile: { ...node.getProfile().profile, ...updBaseProfile },
                     });
+                    ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
                 } else {
                     Gui.errorMessage(vscode.l10n.t("Unable to switch to token-based authentication for profile {0}.", serviceProfile.name));
                     return;
@@ -1089,6 +1091,7 @@ export class Profiles extends ProfilesCache {
                         comment: ["Service profile name"],
                     })
                 );
+                ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
             }
         } catch (error) {
             const message = vscode.l10n.t({
