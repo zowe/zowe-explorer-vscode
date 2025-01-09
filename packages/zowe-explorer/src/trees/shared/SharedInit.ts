@@ -77,10 +77,16 @@ export class SharedInit {
         // Contribute the "Zowe Resources" view as a WebviewView panel in Zowe Explorer.
         context.subscriptions.push(vscode.window.registerWebviewViewProvider("zowe-resources", TableViewProvider.getInstance()));
 
+        const commandProviders: Definitions.IZoweCommandProviders = {
+            mvs: MvsCommandHandler.getInstance(),
+            tso: TsoCommandHandler.getInstance(),
+            uss: UnixCommandHandler.getInstance(),
+        };
+
         // Webview for editing persistent items on Zowe Explorer
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.editHistory", () => {
-                return new SharedHistoryView(context, providers);
+                return new SharedHistoryView(context, providers, commandProviders);
             })
         );
 
@@ -251,27 +257,27 @@ export class SharedInit {
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.issueTsoCmd", async (node?, command?) => {
                     if (node) {
-                        await TsoCommandHandler.getInstance().issueTsoCommand(node.session, command, node);
+                        await commandProviders.tso.issueTsoCommand(node.session, command, node);
                     } else {
-                        await TsoCommandHandler.getInstance().issueTsoCommand();
+                        await commandProviders.tso.issueTsoCommand();
                     }
                 })
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.issueUnixCmd", async (node?, command?) => {
                     if (node) {
-                        await UnixCommandHandler.getInstance().issueUnixCommand(node, command);
+                        await commandProviders.uss.issueUnixCommand(node, command);
                     } else {
-                        await UnixCommandHandler.getInstance().issueUnixCommand();
+                        await commandProviders.uss.issueUnixCommand();
                     }
                 })
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.issueMvsCmd", async (node?, command?) => {
                     if (node) {
-                        await MvsCommandHandler.getInstance().issueMvsCommand(node.session, command, node);
+                        await commandProviders.mvs.issueMvsCommand(node.session, command, node);
                     } else {
-                        await MvsCommandHandler.getInstance().issueMvsCommand();
+                        await commandProviders.mvs.issueMvsCommand();
                     }
                 })
             );

@@ -11,17 +11,15 @@
 
 import * as vscode from "vscode";
 import * as zostso from "@zowe/zos-tso-for-zowe-sdk";
-import { Gui, Validation, imperative, IZoweTreeNode, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
-import { ZoweCommandProvider } from "./ZoweCommandProvider";
+import { Gui, Validation, imperative, IZoweTreeNode, PersistenceSchemaEnum, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import { ICommandProviderDialogs, ZoweCommandProvider } from "./ZoweCommandProvider";
 import { ZoweLogger } from "../tools/ZoweLogger";
-import { Profiles } from "../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
-import { ProfileManagement } from "../management/ProfileManagement";
-import { Constants } from "../configuration/Constants";
-import { SettingsConfig } from "../configuration/SettingsConfig";
-import { FilterDescriptor, FilterItem } from "../management/FilterManagement";
 import { AuthUtils } from "../utils/AuthUtils";
 import { Definitions } from "../configuration/Definitions";
+import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
+import { SettingsConfig } from "../configuration/SettingsConfig";
+import { Constants } from "../configuration/Constants";
 
 /**
  * Provides a class that manages submitting a TSO command on the server
@@ -43,13 +41,33 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         return this.instance;
     }
 
-    private static readonly defaultDialogText: string = `$(plus) ${vscode.l10n.t("Create a new TSO command")}`;
+    public history: ZowePersistentFilters;
     private static instance: TsoCommandHandler;
-    public outputChannel: vscode.OutputChannel;
+
+    public readonly dialogs: ICommandProviderDialogs = {
+        commandSubmitted: vscode.l10n.t("TSO command submitted."),
+        defaultText: `$(plus) ${vscode.l10n.t("Create a new TSO command")}`,
+        selectProfile: vscode.l10n.t("Select the profile to use to submit the TSO command"),
+        searchCommand: vscode.l10n.t("Enter or update the TSO command"),
+        writeCommand: (options) =>
+            vscode.l10n.t({
+                message: "Select a TSO command to run against {0} (An option to edit will follow)",
+                args: options,
+                comment: ["Host name"],
+            }),
+        selectCommand: (options) =>
+            vscode.l10n.t({
+                message: "Select a TSO command to run immediately against {0}",
+                args: options,
+                comment: ["Host name"],
+            }),
+    };
+
+    public tsoParams: zostso.IStartTsoParms;
 
     public constructor() {
-        super();
-        this.outputChannel = Gui.createOutputChannel(vscode.l10n.t("Zowe TSO Command"));
+        super(vscode.l10n.t("Zowe TSO Command"));
+        this.history = new ZowePersistentFilters(PersistenceSchemaEnum.TsoCommands, ZoweCommandProvider.totalFilters);
     }
 
     /**
@@ -60,7 +78,6 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      */
     public async issueTsoCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode): Promise<void> {
         ZoweLogger.trace("TsoCommandHandler.issueTsoCommand called.");
-        const profiles = Profiles.getInstance();
         let profile: imperative.IProfileLoaded;
         if (node) {
             await this.checkCurrentProfile(node);
@@ -72,56 +89,32 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             }
         }
         if (!session) {
-            const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS);
-            if (profileNamesList.length > 0) {
-                const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: vscode.l10n.t("Select the profile to use to submit the TSO command"),
-                    ignoreFocusOut: true,
-                    canPickMany: false,
-                };
-                const sesName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
-                if (sesName === undefined) {
-                    Gui.showMessage(vscode.l10n.t("Operation cancelled"));
-                    return;
-                }
-                const allProfiles = profiles.allProfiles;
-                profile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
-                if (!node) {
-                    await profiles.checkCurrentProfile(profile);
-                }
-                if (profiles.validProfile !== Validation.ValidationType.INVALID) {
-                    session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
-                } else {
-                    Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
-                    return;
-                }
-            } else {
-                Gui.showMessage(vscode.l10n.t("No profiles available"));
+            profile = await this.selectNodeProfile(Definitions.Trees.MVS);
+            if (!profile) {
                 return;
             }
         } else {
             profile = node.getProfile();
         }
         try {
-            if (profiles.validProfile !== Validation.ValidationType.INVALID) {
+            if (this.profileInstance.validProfile !== Validation.ValidationType.INVALID) {
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
                 if (commandApi) {
-                    let tsoParams: zostso.IStartTsoParms;
                     if (profile.type === "zosmf") {
-                        tsoParams = await this.getTsoParams();
-                        if (!tsoParams) {
+                        this.tsoParams = await this.getTsoParams();
+                        if (!this.tsoParams) {
                             return;
                         }
                     }
-                    let command1: string = command;
-                    if (!command) {
-                        command1 = await this.getQuickPick(session && session.ISession ? session.ISession.hostname : "unknown");
+                    const iTerms = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS);
+                    if (!command && !iTerms) {
+                        command = await this.getQuickPick([session && session.ISession ? session.ISession.hostname : "unknown"]);
                     }
-                    await this.issueCommand(command1, profile, tsoParams);
-                } else {
-                    Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
-                    return;
+                    await this.issueCommand(profile, command ?? "");
                 }
+            } else {
+                Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
+                return;
             }
         } catch (error) {
             if (error.toString().includes("non-existing")) {
@@ -139,125 +132,19 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         }
     }
 
-    private async getQuickPick(hostname: string): Promise<string> {
-        ZoweLogger.trace("TsoCommandHandler.getQuickPick called.");
-        let response = "";
-        const alwaysEdit: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_ALWAYS_EDIT);
-        if (this.history.getSearchHistory().length > 0) {
-            const createPick = new FilterDescriptor(TsoCommandHandler.defaultDialogText);
-            const items: vscode.QuickPickItem[] = this.history.getSearchHistory().map((element) => new FilterItem({ text: element }));
-            const quickpick = Gui.createQuickPick();
-            quickpick.placeholder = alwaysEdit
-                ? vscode.l10n.t({
-                      message: "Select a TSO command to run against {0} (An option to edit will follow)",
-                      args: [hostname],
-                      comment: ["Host name"],
-                  })
-                : vscode.l10n.t({
-                      message: "Select a TSO command to run immediately against {0}",
-                      args: [hostname],
-                      comment: ["Host name"],
-                  });
-
-            quickpick.items = [createPick, ...items];
-            quickpick.ignoreFocusOut = true;
-            quickpick.show();
-            const choice = await Gui.resolveQuickPick(quickpick);
-            quickpick.hide();
-            if (!choice) {
-                Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-                return;
-            }
-            if (choice instanceof FilterDescriptor) {
-                if (quickpick.value) {
-                    response = quickpick.value;
-                }
-            } else {
-                response = choice.label;
-            }
+    public formatCommandLine(command: string): string {
+        if (command.startsWith("/")) {
+            command = command.substring(1);
         }
-        if (!response || alwaysEdit) {
-            // manually entering a search
-            const options2: vscode.InputBoxOptions = {
-                prompt: vscode.l10n.t("Enter or update the TSO command"),
-                value: response,
-                valueSelection: response ? [response.length, response.length] : undefined,
-            };
-            // get user input
-            response = await Gui.showInputBox(options2);
-            if (!response) {
-                Gui.showMessage(vscode.l10n.t("No command entered."));
-                return;
-            }
-        }
-        return response;
-    }
-    /**
-     * Allow the user to submit an TSO command to the selected server. Response is written
-     * to the output channel.
-     * @param command the command string
-     * @param profile profile to be used
-     * @param tsoParams parameters (from TSO profile, when used)
-     */
-    private async issueCommand(command: string, profile: imperative.IProfileLoaded, tsoParams?: zostso.IStartTsoParms): Promise<void> {
-        ZoweLogger.trace("TsoCommandHandler.issueCommand called.");
-        try {
-            if (command) {
-                // If the user has started their command with a / then remove it
-                if (command.startsWith("/")) {
-                    command = command.substring(1);
-                }
-                this.outputChannel.appendLine(`> ${command}`);
-                const submitResponse = await Gui.withProgress(
-                    {
-                        location: vscode.ProgressLocation.Notification,
-                        title: vscode.l10n.t("TSO command submitted."),
-                    },
-                    () => {
-                        return ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommandWithParms(command, tsoParams);
-                    }
-                );
-                if (submitResponse.success) {
-                    this.outputChannel.appendLine(submitResponse.commandResponse);
-                    this.outputChannel.show(true);
-                }
-            }
-            this.history.addSearchHistory(command);
-        } catch (error) {
-            if (error.toString().includes("account number")) {
-                const message = vscode.l10n.t("No account number was supplied.");
-                ZoweLogger.error(message);
-                Gui.errorMessage(message);
-            } else {
-                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Command, profile });
-            }
-        }
+        return `> ${command}`;
     }
 
-    private async selectTsoProfile(tsoProfiles: imperative.IProfileLoaded[] = []): Promise<imperative.IProfileLoaded> {
-        ZoweLogger.trace("TsoCommandHandler.selectTsoProfile called.");
-        let tsoProfile: imperative.IProfileLoaded;
-        if (tsoProfiles.length > 1) {
-            const tsoProfileNamesList = tsoProfiles.map((temprofile) => {
-                return temprofile.name;
-            });
-            if (tsoProfileNamesList.length) {
-                const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: vscode.l10n.t("Select the TSO profile to use for account number."),
-                    ignoreFocusOut: true,
-                    canPickMany: false,
-                };
-                const sesName = await Gui.showQuickPick(tsoProfileNamesList, quickPickOptions);
-                if (sesName === undefined) {
-                    Gui.showMessage(vscode.l10n.t("Operation cancelled"));
-                    return;
-                }
-                tsoProfile = tsoProfiles.filter((temprofile) => temprofile.name === sesName)[0];
-            }
-        } else if (tsoProfiles.length > 0) {
-            tsoProfile = tsoProfiles[0];
+    public async runCommand(profile: imperative.IProfileLoaded, command: string): Promise<string> {
+        if (command.startsWith("/")) {
+            command = command.substring(1);
         }
-        return tsoProfile;
+        const response = await ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommandWithParms(command, this.tsoParams);
+        return response.commandResponse;
     }
 
     /**
@@ -267,7 +154,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      */
     private async getTsoParams(): Promise<zostso.IStartTsoParms> {
         ZoweLogger.trace("TsoCommandHandler.getTsoParams called.");
-        const profileInfo = await Profiles.getInstance().getProfileInfo();
+        const profileInfo = await this.profileInstance.getProfileInfo();
         let tsoParms: zostso.IStartTsoParms = {};
 
         // Keys in the IStartTsoParms interface
@@ -276,7 +163,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         const profiles = profileInfo.getAllProfiles("tso");
         let tsoProfile: imperative.IProfileLoaded;
         if (profiles.length > 0) {
-            tsoProfile = await this.selectTsoProfile(profiles.map((p) => imperative.ProfileInfo.profAttrsToProfLoaded(p)));
+            tsoProfile = await this.selectServiceProfile(profiles.map((p) => imperative.ProfileInfo.profAttrsToProfLoaded(p)));
             if (tsoProfile != null) {
                 const prof = profileInfo.mergeArgsForProfile(tsoProfile.profile as imperative.IProfAttrs);
                 iStartTso.forEach((p) => (tsoProfile.profile[p] = prof.knownArgs.find((a) => a.argName === p)?.argValue));
@@ -301,7 +188,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             };
             tsoParms.account = await Gui.showInputBox(InputBoxOptions);
             if (!tsoParms.account) {
-                Gui.showMessage(vscode.l10n.t("Operation cancelled."));
+                ZoweLogger.info(this.operationCancelled);
                 return;
             }
         }

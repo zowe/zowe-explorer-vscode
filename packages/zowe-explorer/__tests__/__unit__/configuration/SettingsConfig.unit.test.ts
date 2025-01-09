@@ -48,7 +48,7 @@ describe("SettingsConfig Unit Tests", () => {
             const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
             const promptReloadSpy = jest.spyOn(SettingsConfig as any, "promptReload");
             await (SettingsConfig as any).migrateToLocalStorage();
-            expect(setValueSpy).toHaveBeenCalledTimes(6);
+            expect(setValueSpy).toHaveBeenCalledTimes(8);
             expect(promptReloadSpy).toHaveBeenCalledTimes(1);
         });
         it("should successfully migrate to local storage and update data set templates to new setting", async () => {
@@ -83,7 +83,7 @@ describe("SettingsConfig Unit Tests", () => {
             const promptReloadSpy = jest.spyOn(SettingsConfig as any, "promptReload");
             await (SettingsConfig as any).migrateToLocalStorage();
             expect(templateSpy).toHaveBeenCalledTimes(1);
-            expect(setValueSpy).toHaveBeenCalledTimes(6);
+            expect(setValueSpy).toHaveBeenCalledTimes(8);
             expect(promptReloadSpy).toHaveBeenCalledTimes(1);
         });
     });

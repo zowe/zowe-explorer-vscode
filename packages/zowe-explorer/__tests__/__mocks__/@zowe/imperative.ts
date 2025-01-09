@@ -150,6 +150,7 @@ export interface ICommandArguments {
 export interface IImperativeError {
     msg: string;
     errorCode?: number;
+    causeErrors?: any;
     additionalDetails?: string;
 }
 
@@ -236,12 +237,19 @@ export class ConfigUtils {
 }
 export class ImperativeError extends Error {
     private msg: string;
-    constructor(public mDetails: IImperativeError) {
+    public causeErrors: any;
+    public additionalDetails: any;
+    constructor(private mDetails: IImperativeError) {
         super();
         this.msg = mDetails.msg;
+        this.causeErrors = this.mDetails.causeErrors;
+        this.additionalDetails = this.mDetails.additionalDetails;
     }
     public get message() {
         return this.msg;
+    }
+    public get details() {
+        return this.mDetails;
     }
 }
 
@@ -359,6 +367,7 @@ export class TextUtils {
     public static prettyJson(object: any, options?: any, color?: boolean, append?: string): string {
         return JSON.stringify(object);
     }
+    public static chalk = jest.requireActual("chalk");
 }
 
 export namespace SessConstants {

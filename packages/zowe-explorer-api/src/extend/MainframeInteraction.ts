@@ -506,7 +506,7 @@ export namespace MainframeInteraction {
          * @returns {Promise<zostso.IIssueResponse>}
          * @memberof ICommand
          */
-        issueTsoCommandWithParms?(command: string, parms?: zostso.IStartTsoParms): Promise<zostso.IIssueResponse>;
+        issueTsoCommandWithParms?(command: string, parms?: zostso.IStartTsoParms, useNewTsoApis?: boolean): Promise<zostso.IIssueResponse>;
 
         /**
          * Issues a MVS Command and returns a Console Command API response.
