@@ -10,17 +10,15 @@
  */
 
 import * as vscode from "vscode";
-import { Validation, imperative, IZoweTreeNode, Gui, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
-import { ZoweCommandProvider } from "./ZoweCommandProvider";
+import { Validation, imperative, IZoweTreeNode, Gui, PersistenceSchemaEnum, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import { ICommandProviderDialogs, ZoweCommandProvider } from "./ZoweCommandProvider";
 import { ZoweLogger } from "../tools/ZoweLogger";
-import { Profiles } from "../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
-import { ProfileManagement } from "../management/ProfileManagement";
-import { Constants } from "../configuration/Constants";
-import { SettingsConfig } from "../configuration/SettingsConfig";
-import { FilterDescriptor, FilterItem } from "../management/FilterManagement";
 import { AuthUtils } from "../utils/AuthUtils";
 import { Definitions } from "../configuration/Definitions";
+import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
+import { SettingsConfig } from "../configuration/SettingsConfig";
+import { Constants } from "../configuration/Constants";
 
 /**
  * Provides a class that manages submitting a command on the server
@@ -42,13 +40,31 @@ export class MvsCommandHandler extends ZoweCommandProvider {
         return this.instance;
     }
 
-    private static readonly defaultDialogText: string = `$(plus) ${vscode.l10n.t("Create a new MVS command")}`;
+    public readonly dialogs: ICommandProviderDialogs = {
+        commandSubmitted: vscode.l10n.t("MVS command submitted."),
+        defaultText: `$(plus) ${vscode.l10n.t("Create a new MVS command")}`,
+        selectProfile: vscode.l10n.t("Select the profile to use to submit the MVS command"),
+        searchCommand: vscode.l10n.t("Enter or update the MVS command"),
+        writeCommand: (options) =>
+            vscode.l10n.t({
+                message: "Select an MVS command to run against {0} (An option to edit will follow)",
+                args: options,
+                comment: ["Host name"],
+            }),
+        selectCommand: (options) =>
+            vscode.l10n.t({
+                message: "Select an MVS command to run immediately against {0}",
+                args: options,
+                comment: ["Host name"],
+            }),
+    };
+
+    public history: ZowePersistentFilters;
     private static instance: MvsCommandHandler;
-    public outputChannel: vscode.OutputChannel;
 
     public constructor() {
-        super();
-        this.outputChannel = Gui.createOutputChannel(vscode.l10n.t("Zowe MVS Command"));
+        super(vscode.l10n.t("Zowe MVS Command"));
+        this.history = new ZowePersistentFilters(PersistenceSchemaEnum.MvsCommands, ZoweCommandProvider.totalFilters);
     }
 
     /**
@@ -59,7 +75,6 @@ export class MvsCommandHandler extends ZoweCommandProvider {
      */
     public async issueMvsCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode): Promise<void> {
         ZoweLogger.trace("MvsCommandHandler.issueMvsCommand called.");
-        const profiles = Profiles.getInstance();
         let profile: imperative.IProfileLoaded;
         if (node) {
             await this.checkCurrentProfile(node);
@@ -71,49 +86,26 @@ export class MvsCommandHandler extends ZoweCommandProvider {
             }
         }
         if (!session) {
-            const allProfiles = profiles.allProfiles;
-            const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS);
-            if (profileNamesList.length) {
-                const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: vscode.l10n.t("Select the profile to use to submit the command"),
-                    ignoreFocusOut: true,
-                    canPickMany: false,
-                };
-                const sesName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
-                if (sesName === undefined) {
-                    Gui.showMessage(vscode.l10n.t("Operation cancelled"));
-                    return;
-                }
-                profile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
-                if (!node) {
-                    await profiles.checkCurrentProfile(profile);
-                }
-                if (profiles.validProfile !== Validation.ValidationType.INVALID) {
-                    session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
-                } else {
-                    Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
-                    return;
-                }
-            } else {
-                Gui.showMessage(vscode.l10n.t("No profiles available"));
+            profile = await this.selectNodeProfile(Definitions.Trees.MVS);
+            if (!profile) {
                 return;
             }
         } else {
             profile = node.getProfile();
         }
         try {
-            if (profiles.validProfile !== Validation.ValidationType.INVALID) {
+            if (this.profileInstance.validProfile !== Validation.ValidationType.INVALID) {
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
                 if (commandApi) {
-                    let command1: string = command;
-                    if (!command) {
-                        command1 = await this.getQuickPick(session && session.ISession ? session.ISession.hostname : "unknown");
+                    const iTerms = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS);
+                    if (!command && !iTerms) {
+                        command = await this.getQuickPick([session && session.ISession ? session.ISession.hostname : "unknown"]);
                     }
-                    await this.issueCommand(profile, command1);
-                } else {
-                    Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
-                    return;
+                    await this.issueCommand(profile, command ?? "");
                 }
+            } else {
+                Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
+                return;
             }
         } catch (error) {
             if (error.toString().includes("non-existing")) {
@@ -131,92 +123,18 @@ export class MvsCommandHandler extends ZoweCommandProvider {
         }
     }
 
-    private async getQuickPick(hostname: string): Promise<string> {
-        ZoweLogger.trace("MvsCommandHandler.getQuickPick called.");
-        let response = "";
-        const alwaysEdit: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_ALWAYS_EDIT);
-        if (this.history.getSearchHistory().length > 0) {
-            const createPick = new FilterDescriptor(MvsCommandHandler.defaultDialogText);
-            const items: vscode.QuickPickItem[] = this.history.getSearchHistory().map((element) => new FilterItem({ text: element }));
-            const quickpick = Gui.createQuickPick();
-            quickpick.placeholder = alwaysEdit
-                ? vscode.l10n.t({
-                      message: "Select an MVS command to run against {0} (An option to edit will follow)",
-                      args: [hostname],
-                      comment: ["Host name"],
-                  })
-                : vscode.l10n.t({
-                      message: "Select an MVS command to run immediately against {0}",
-                      args: [hostname],
-                      comment: ["Host name"],
-                  });
-
-            quickpick.items = [createPick, ...items];
-            quickpick.ignoreFocusOut = true;
-            quickpick.show();
-            const choice = await Gui.resolveQuickPick(quickpick);
-            quickpick.hide();
-            if (!choice) {
-                Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-                return;
-            }
-            if (choice instanceof FilterDescriptor) {
-                if (quickpick.value) {
-                    response = quickpick.value;
-                }
-            } else {
-                response = choice.label;
-            }
+    public formatCommandLine(command: string): string {
+        if (command.startsWith("/")) {
+            command = command.substring(1);
         }
-        if (!response || alwaysEdit) {
-            // manually entering a search
-            const options2: vscode.InputBoxOptions = {
-                prompt: vscode.l10n.t("Enter or update the MVS command"),
-                value: response,
-                valueSelection: response ? [response.length, response.length] : undefined,
-            };
-            // get user input
-            response = await Gui.showInputBox(options2);
-            if (!response) {
-                Gui.showMessage(vscode.l10n.t("No command entered."));
-                return;
-            }
-        }
-        return response;
+        return `> ${command}`;
     }
 
-    /**
-     * Allow the user to submit an MVS Console command to the selected server. Response is written
-     * to the output channel.
-     * @param session The Session object
-     * @param command the command string
-     */
-    private async issueCommand(profile: imperative.IProfileLoaded, command: string): Promise<void> {
-        ZoweLogger.trace("MvsCommandHandler.issueCommand called.");
-        try {
-            if (command) {
-                // If the user has started their command with a / then remove it
-                if (command.startsWith("/")) {
-                    command = command.substring(1);
-                }
-                this.outputChannel.appendLine(`> ${command}`);
-                const submitResponse = await Gui.withProgress(
-                    {
-                        location: vscode.ProgressLocation.Notification,
-                        title: vscode.l10n.t("MVS command submitted."),
-                    },
-                    () => {
-                        return ZoweExplorerApiRegister.getCommandApi(profile).issueMvsCommand(command, profile.profile?.consoleName);
-                    }
-                );
-                if (submitResponse.success) {
-                    this.outputChannel.appendLine(submitResponse.commandResponse);
-                    this.outputChannel.show(true);
-                }
-            }
-        } catch (error) {
-            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Command, profile });
+    public async runCommand(profile: imperative.IProfileLoaded, command: string): Promise<string> {
+        if (command.startsWith("/")) {
+            command = command.substring(1);
         }
-        this.history.addSearchHistory(command);
+        const response = await ZoweExplorerApiRegister.getCommandApi(profile).issueMvsCommand(command, profile.profile?.consoleName);
+        return response.commandResponse;
     }
 }
