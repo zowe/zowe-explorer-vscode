@@ -39,6 +39,7 @@ import {
     FileManagement,
     ProfilesCache,
     Sorting,
+    AuthHandler,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
@@ -1288,6 +1289,22 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
         expect(ZoweLogger.error).toHaveBeenCalled();
         loginBaseProfMock.mockRestore();
     });
+    it("should call onProfileUpdatedEmitter.fire and unlockProfile", async () => {
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
+            getTokenTypeName: () => imperative.SessConstants.TOKEN_TYPE_APIML,
+            login: jest.fn(),
+        } as never);
+        const profileUpdatedEmitterSpy = jest.spyOn(ZoweVsCodeExtension.onProfileUpdatedEmitter, "fire");
+        const unlockProfileSpy = jest.spyOn(AuthHandler, "unlockProfile");
+        const loginBaseProfMock = jest.spyOn(ZoweVsCodeExtension, "ssoLogin").mockResolvedValueOnce(true);
+        jest.spyOn(Profiles.getInstance() as any, "loginCredentialPrompt").mockReturnValue(["fake", "12345"]);
+        await expect(Profiles.getInstance().ssoLogin(testNode, "fake")).resolves.not.toThrow();
+        expect(profileUpdatedEmitterSpy).toHaveBeenCalledTimes(1);
+        expect(profileUpdatedEmitterSpy).toHaveBeenCalledWith(globalMocks.testProfile);
+        expect(unlockProfileSpy).toHaveBeenCalledTimes(1);
+        expect(unlockProfileSpy).toHaveBeenCalledWith(globalMocks.testProfile, true);
+        loginBaseProfMock.mockRestore();
+    });
 });
 
 describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
@@ -1896,17 +1913,23 @@ describe("Profiles Unit Tests - function ssoLogout", () => {
         jest.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
         const getTokenTypeNameMock = jest.fn();
         const logoutMock = jest.fn();
+        const onProfileUpdatedEmitterSpy = jest.spyOn(ZoweVsCodeExtension.onProfileUpdatedEmitter, "fire");
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockImplementation(() => ({
             logout: logoutMock,
             getSession: jest.fn(),
             getProfileTypeName: jest.fn(),
             getTokenTypeName: getTokenTypeNameMock,
         }));
+        const updateCachedProfileMock = jest.spyOn(Profiles.getInstance(), "updateCachedProfile").mockResolvedValueOnce(undefined);
         const updateBaseProfileFileLogoutSpy = jest.spyOn(Profiles.getInstance() as any, "updateBaseProfileFileLogout").mockImplementation();
         await expect(Profiles.getInstance().ssoLogout(testNode)).resolves.not.toThrow();
         expect(getTokenTypeNameMock).toHaveBeenCalledTimes(1);
         expect(logoutMock).toHaveBeenCalledTimes(1);
+        expect(updateCachedProfileMock).toHaveBeenCalledTimes(1);
+        expect(updateCachedProfileMock).toHaveBeenCalledWith(globalMocks.testProfile, testNode);
         expect(updateBaseProfileFileLogoutSpy).toHaveBeenCalledTimes(1);
+        expect(onProfileUpdatedEmitterSpy).toHaveBeenCalledTimes(1);
+        expect(onProfileUpdatedEmitterSpy).toHaveBeenCalledWith(globalMocks.testProfile);
     });
 });
 

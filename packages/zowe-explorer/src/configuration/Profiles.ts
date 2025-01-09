@@ -686,6 +686,33 @@ export class Profiles extends ProfilesCache {
         await this.openConfigFile(filePath);
     }
 
+    public async profileValidationHelper(theProfile: imperative.IProfileLoaded, getStatus: (...args: unknown[]) => Promise<string>) {
+        return Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: vscode.l10n.t({
+                    message: `Validating {0} Profile.`,
+                    args: [theProfile.name],
+                    comment: [`The profile name`],
+                }),
+                cancellable: true,
+            },
+            async (progress, token) => {
+                token.onCancellationRequested(() => {
+                    // will be returned as undefined
+                    Gui.showMessage(
+                        vscode.l10n.t({
+                            message: `Validating {0} was cancelled.`,
+                            args: [theProfile.name],
+                            comment: [`The profile name`],
+                        })
+                    );
+                });
+                return getStatus(theProfile, theProfile.type);
+            }
+        );
+    }
+
     public async validateProfiles(theProfile: imperative.IProfileLoaded): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("Profiles.validateProfiles called.");
         let filteredProfile: Validation.IValidationProfile;
@@ -706,30 +733,7 @@ export class Profiles extends ProfilesCache {
         if (filteredProfile === undefined) {
             try {
                 if (getSessStatus.getStatus) {
-                    profileStatus = await Gui.withProgress(
-                        {
-                            location: vscode.ProgressLocation.Notification,
-                            title: vscode.l10n.t({
-                                message: `Validating {0} Profile.`,
-                                args: [theProfile.name],
-                                comment: [`The profile name`],
-                            }),
-                            cancellable: true,
-                        },
-                        async (progress, token) => {
-                            token.onCancellationRequested(() => {
-                                // will be returned as undefined
-                                Gui.showMessage(
-                                    vscode.l10n.t({
-                                        message: `Validating {0} was cancelled.`,
-                                        args: [theProfile.name],
-                                        comment: [`The profile name`],
-                                    })
-                                );
-                            });
-                            return getSessStatus.getStatus(theProfile, theProfile.type);
-                        }
-                    );
+                    profileStatus = await this.profileValidationHelper(theProfile, getSessStatus.getStatus.bind(getSessStatus));
                 } else {
                     profileStatus = "unverified";
                 }
@@ -830,6 +834,7 @@ export class Profiles extends ProfilesCache {
                     })
                 );
                 AuthHandler.unlockProfile(serviceProfile, true);
+                ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
             }
             return loginOk;
         } catch (err) {
@@ -953,6 +958,7 @@ export class Profiles extends ProfilesCache {
                         ...node.getProfile(),
                         profile: { ...node.getProfile().profile, ...updBaseProfile },
                     });
+                    ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
                 } else {
                     Gui.errorMessage(vscode.l10n.t("Unable to switch to token-based authentication for profile {0}.", serviceProfile.name));
                     return;
@@ -1085,6 +1091,7 @@ export class Profiles extends ProfilesCache {
                         comment: ["Service profile name"],
                     })
                 );
+                ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
             }
         } catch (error) {
             const message = vscode.l10n.t({

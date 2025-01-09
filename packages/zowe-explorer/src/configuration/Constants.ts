@@ -72,6 +72,7 @@ export class Constants {
     public static readonly SETTINGS_DS_TEMPLATES = "zowe.ds.templates";
     public static readonly SETTINGS_DS_DEFAULT_SORT = "zowe.ds.default.sort";
     public static readonly SETTINGS_JOBS_DEFAULT_SORT = "zowe.jobs.default.sort";
+    public static readonly SETTINGS_COMMANDS_INTEGRATED_TERMINALS = "zowe.commands.useIntegratedTerminals";
     public static readonly SETTINGS_COMMANDS_ALWAYS_EDIT = "zowe.commands.alwaysEdit";
     public static readonly SETTINGS_AUTOMATIC_PROFILE_VALIDATION = "zowe.automaticProfileValidation";
     public static readonly SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";
@@ -97,7 +98,9 @@ export class Constants {
         "Zowe-Default-Datasets-PDS": Constants.SETTINGS_DS_DEFAULT_PDS,
         "Zowe-Default-Datasets-Extended": Constants.SETTINGS_DS_DEFAULT_EXTENDED,
         "Zowe-Default-Datasets-PS": Constants.SETTINGS_DS_DEFAULT_PS,
-        "Zowe Commands: History": PersistenceSchemaEnum.Commands,
+        "Zowe MVS Commands: History": PersistenceSchemaEnum.MvsCommands,
+        "Zowe TSO Commands: History": PersistenceSchemaEnum.TsoCommands,
+        "Zowe Unix Commands: History": PersistenceSchemaEnum.UssCommands,
         "Zowe Commands: Always edit": Constants.SETTINGS_COMMANDS_ALWAYS_EDIT,
         "Zowe-Automatic-Validation": Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION,
         "Zowe-DS-Persistent": PersistenceSchemaEnum.Dataset,
@@ -265,5 +268,6 @@ export class Constants {
         DS: "ds-panel-tab",
         USS: "uss-panel-tab",
         JOBS: "jobs-panel-tab",
+        CMDS: "cmds-panel-tab",
     };
 }
