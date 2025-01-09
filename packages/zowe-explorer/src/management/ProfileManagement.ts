@@ -63,7 +63,6 @@ export class ProfileManagement {
     }
     public static AuthQpLabels = {
         add: "add-credentials",
-        delete: "delete-profile",
         disable: "disable-validation",
         edit: "edit-profile",
         enable: "enable-validation",
@@ -83,11 +82,6 @@ export class ProfileManagement {
         [ProfileManagement.AuthQpLabels.update]: {
             label: `$(refresh) ${vscode.l10n.t("Update Credentials")}`,
             description: vscode.l10n.t("Update stored username and password"),
-        },
-    };
-    public static readonly deleteProfileQpItem: Record<string, vscode.QuickPickItem> = {
-        [ProfileManagement.AuthQpLabels.delete]: {
-            label: `$(trash) ${vscode.l10n.t("Delete Profile")}`,
         },
     };
     public static readonly disableProfileValildationQpItem: Record<string, vscode.QuickPickItem> = {
@@ -192,10 +186,6 @@ export class ProfileManagement {
                 await Profiles.getInstance().handleSwitchAuthentication(node);
                 break;
             }
-            case this.deleteProfileQpItem[this.AuthQpLabels.delete]: {
-                await this.handleDeleteProfiles(node);
-                break;
-            }
             case this.enableProfileValildationQpItem[this.AuthQpLabels.enable]: {
                 await this.handleEnableProfileValidation(node);
                 break;
@@ -264,17 +254,7 @@ export class ProfileManagement {
         } else {
             quickPickOptions.push(this.disableProfileValildationQpItem[this.AuthQpLabels.disable]);
         }
-        quickPickOptions.push(this.deleteProfileQpItem[this.AuthQpLabels.delete]);
         return quickPickOptions;
-    }
-    private static async handleDeleteProfiles(node: IZoweTreeNode): Promise<void> {
-        const profInfo = await Profiles.getInstance().getProfileInfo();
-        if (profInfo.getTeamConfig().exists) {
-            const profile = node.getProfile();
-            await Profiles.getInstance().editSession(profile);
-            return;
-        }
-        await vscode.commands.executeCommand("zowe.deleteProfile", node);
     }
 
     private static async handleHideProfiles(node: IZoweTreeNode): Promise<void> {

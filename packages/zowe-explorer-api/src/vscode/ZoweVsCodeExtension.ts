@@ -15,9 +15,9 @@ import { ProfilesCache } from "../profiles/ProfilesCache";
 import { Login, Logout } from "@zowe/core-for-zowe-sdk";
 import * as imperative from "@zowe/imperative";
 import { Gui } from "../globals/Gui";
-import { PromptCredentialsOptions } from "./doc/PromptCredentials";
+import type { PromptCredentialsOptions } from "./doc/PromptCredentials";
 import { Types } from "../Types";
-import { BaseProfileAuthOptions } from "./doc/BaseProfileAuth";
+import type { BaseProfileAuthOptions } from "./doc/BaseProfileAuth";
 
 /**
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
@@ -26,6 +26,9 @@ export class ZoweVsCodeExtension {
     public static get workspaceRoot(): vscode.WorkspaceFolder | undefined {
         return vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file");
     }
+
+    public static onProfileUpdatedEmitter: vscode.EventEmitter<imperative.IProfileLoaded> = new vscode.EventEmitter();
+    public static readonly onProfileUpdated = ZoweVsCodeExtension.onProfileUpdatedEmitter.event;
 
     /**
      * @internal

@@ -43,9 +43,7 @@ const testEntries = {
             profile: testProfile,
             path: "/TESTJOB(JOB1234) - ACTIVE/JES2.JESMSGLG.2",
         },
-        spool: {
-            id: "SOMEID",
-        } as any,
+        spool: createIJobFile(),
     } as SpoolEntry,
     session: {
         ...new FilterEntry("sestest"),
@@ -226,6 +224,44 @@ describe("fetchSpoolAtUri", () => {
         lookupAsFileMock.mockRestore();
     });
 
+    it("fetches the spool contents for a given URI - downloadSingleSpool w/ binary encoding", async () => {
+        const lookupAsFileMock = jest
+            .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
+            .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array(), encoding: { kind: "binary" } });
+        const newData = "spool contents";
+        const mockJesApi = {
+            downloadSingleSpool: jest.fn((opts) => {
+                opts.stream.write(newData);
+            }),
+        };
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const entry = await JobFSProvider.instance.fetchSpoolAtUri(testUris.spool);
+        expect(mockJesApi.downloadSingleSpool).toHaveBeenCalledWith(expect.objectContaining({ jobFile: testEntries.spool.spool, binary: true }));
+        expect(entry.data.toString()).toStrictEqual(newData.toString());
+        jesApiMock.mockRestore();
+        lookupAsFileMock.mockRestore();
+    });
+
+    it("fetches the spool contents for a given URI - downloadSingleSpool w/ other encoding", async () => {
+        const lookupAsFileMock = jest
+            .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
+            .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array(), encoding: { kind: "other", codepage: "IBM-1147" } });
+        const newData = "spool contents";
+        const mockJesApi = {
+            downloadSingleSpool: jest.fn((opts) => {
+                opts.stream.write(newData);
+            }),
+        };
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const entry = await JobFSProvider.instance.fetchSpoolAtUri(testUris.spool);
+        expect(mockJesApi.downloadSingleSpool).toHaveBeenCalledWith(
+            expect.objectContaining({ jobFile: testEntries.spool.spool, encoding: "IBM-1147", binary: false })
+        );
+        expect(entry.data.toString()).toStrictEqual(newData.toString());
+        jesApiMock.mockRestore();
+        lookupAsFileMock.mockRestore();
+    });
+
     it("fetches the spool contents for a given URI - getSpoolContentById", async () => {
         const lookupAsFileMock = jest
             .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
@@ -255,7 +291,7 @@ describe("fetchSpoolAtUri", () => {
                 throw new Error("Failed to download spool");
             }),
         };
-        const promptForAuthErrorMock = jest.spyOn(AuthUtils, "promptForAuthError").mockImplementation();
+        const promptForAuthErrorMock = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation();
         const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
         await expect(JobFSProvider.instance.fetchSpoolAtUri(testUris.spool)).rejects.toThrow();
         expect(promptForAuthErrorMock).toHaveBeenCalled();

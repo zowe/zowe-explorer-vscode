@@ -54,7 +54,6 @@ describe("ProfileManagement unit tests", () => {
             mockSwitchChosen: ProfileManagement.switchAuthenticationQpItems[ProfileManagement.AuthQpLabels.switch],
             mockLogoutChosen: ProfileManagement.tokenAuthLogoutQpItem[ProfileManagement.AuthQpLabels.logout],
             mockEditProfChosen: ProfileManagement.editProfileQpItems[ProfileManagement.AuthQpLabels.edit],
-            mockDeleteProfChosen: ProfileManagement.deleteProfileQpItem[ProfileManagement.AuthQpLabels.delete],
             mockHideProfChosen: ProfileManagement.hideProfileQpItems[ProfileManagement.AuthQpLabels.hide],
             mockEnableValidationChosen: ProfileManagement.enableProfileValildationQpItem[ProfileManagement.AuthQpLabels.enable],
             mockDisableValidationChosen: ProfileManagement.disableProfileValildationQpItem[ProfileManagement.AuthQpLabels.disable],
@@ -155,17 +154,6 @@ describe("ProfileManagement unit tests", () => {
         it("profile using basic authentication should see editSession called when Edit Profile chosen", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockEditProfChosen);
-            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
-            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
-            expect(mocks.editSpy).toHaveBeenCalled();
-        });
-        it("profile using basic authentication should see editSession called when Delete Profile chosen with v2 profile", async () => {
-            const mocks = createBlockMocks(createGlobalMocks());
-            Object.defineProperty(mocks.mockProfileInstance, "getProfileInfo", {
-                value: jest.fn().mockResolvedValue(mocks.mockProfileInfo as imperative.ProfileInfo),
-                configurable: true,
-            });
-            mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockDeleteProfChosen);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
             expect(mocks.editSpy).toHaveBeenCalled();

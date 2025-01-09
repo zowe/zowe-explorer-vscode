@@ -11,7 +11,7 @@
 
 import * as imperative from "@zowe/imperative";
 import type { IRegisterClient } from "../extend/IRegisterClient";
-import { FileManagement } from "../utils";
+import { FileManagement } from "../utils/FileManagement";
 import { Validation } from "./Validation";
 import { ZosmfProfile } from "@zowe/zosmf-for-zowe-sdk";
 import { ZosTsoProfile } from "@zowe/zos-tso-for-zowe-sdk";
@@ -391,7 +391,9 @@ export class ProfilesCache {
 
     public static getProfileSessionWithVscProxy(session: imperative.Session): imperative.Session {
         const VsCodeProxySettings = VscSettings.getVsCodeProxySettings();
-        session.ISession.proxy = VsCodeProxySettings;
+        if (session.ISession) {
+            session.ISession.proxy = VsCodeProxySettings;
+        }
         return session;
     }
 

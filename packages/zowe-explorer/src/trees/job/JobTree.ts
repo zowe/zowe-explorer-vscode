@@ -12,7 +12,17 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { IJob } from "@zowe/zos-jobs-for-zowe-sdk";
-import { Gui, Validation, imperative, IZoweJobTreeNode, PersistenceSchemaEnum, Poller, Types, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import {
+    Gui,
+    Validation,
+    imperative,
+    IZoweJobTreeNode,
+    PersistenceSchemaEnum,
+    Poller,
+    Types,
+    ZoweExplorerApiType,
+    ZosEncoding,
+} from "@zowe/zowe-explorer-api";
 import { ZoweJobNode } from "./ZoweJobNode";
 import { JobFSProvider } from "./JobFSProvider";
 import { JobUtils } from "./JobUtils";
@@ -1161,6 +1171,22 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         });
         inputBox.show();
         return inputBox;
+    }
+
+    /**
+     * Opens the spool file with a particular encoding
+     * @param {IZoweJobTreeNode} node The Job Tree Node to open with encoding
+     * @param {ZosEncoding} encoding The encoding to use to open the Job Tree Node
+     */
+
+    public async openWithEncoding(node: IZoweJobTreeNode, encoding?: ZosEncoding): Promise<void> {
+        encoding ??= await SharedUtils.promptForEncoding(node);
+        if (encoding !== undefined) {
+            // Set the encoding, fetch the new contents with the encoding, and open the spool file.
+            await node.setEncoding(encoding);
+            await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
+            await vscode.commands.executeCommand("vscode.open", node.resourceUri);
+        }
     }
 }
 

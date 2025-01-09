@@ -1205,6 +1205,11 @@
           "group": "000_zowe_jobsMainframeInteraction@3"
         },
         {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(spool.*)/",
+          "command": "zowe.openWithEncoding",
+          "group": "000_zowe_jobsMainframeInteraction@4"
+        },
+        {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)job.*/",
           "command": "zowe.jobs.refreshJob",
           "group": "000_zowe_jobsMainframeInteraction@0"
@@ -1592,6 +1597,10 @@
         {
           "command": "zowe.ds.filteredDataSetsSearchFor",
           "when": "never"
+        },
+        {
+          "command": "zowe.deleteProfile",
+          "when": "never"
         }
       ]
     },
@@ -1897,11 +1906,11 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "@zowe/core-for-zowe-sdk": "^8.8.3",
-    "@zowe/secrets-for-zowe-sdk": "^8.1.2",
-    "@zowe/zos-files-for-zowe-sdk": "^8.8.4",
-    "@zowe/zos-jobs-for-zowe-sdk": "^8.8.4",
-    "@zowe/zosmf-for-zowe-sdk": "^8.8.3",
+    "@zowe/core-for-zowe-sdk": "^8.10.4",
+    "@zowe/secrets-for-zowe-sdk": "^8.10.4",
+    "@zowe/zos-files-for-zowe-sdk": "^8.10.4",
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.10.4",
+    "@zowe/zosmf-for-zowe-sdk": "^8.10.4",
     "@zowe/zowe-explorer-api": "3.1.0-SNAPSHOT",
     "dayjs": "^1.11.10",
     "fs-extra": "8.0.1",
