@@ -121,6 +121,14 @@ function createGlobalMocks(): { [key: string]: any } {
         configurable: true,
     });
 
+    Object.defineProperty(SettingsConfig, "getDirectValue", {
+        value: createGetConfigMock({
+            "zowe.ds.default.sort": Sorting.DatasetSortOpts.Name,
+            "zowe.jobs.default.sort": Sorting.JobSortOpts.Id,
+        }),
+        configurable: true,
+    });
+
     Object.defineProperty(vscode.window, "showInformationMessage", {
         value: newMocks.mockShowInformationMessage,
         configurable: true,
@@ -583,7 +591,15 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         });
 
         Object.defineProperty(SettingsConfig, "getDirectValue", {
-            value: jest.fn().mockReturnValue(true),
+            value: jest.fn((key: string) => {
+                if (key === "zowe.ds.default.sort") {
+                    return Sorting.DatasetSortOpts.Name;
+                }
+                if (key === "zowe.jobs.default.sort") {
+                    return Sorting.JobSortOpts.Id;
+                }
+                return false;
+            }),
             configurable: true,
         });
         const spyConfig = jest.spyOn(Profiles.getInstance(), "openConfigFile").mockImplementation();
@@ -1934,7 +1950,15 @@ describe("Profiles Unit Tests - function createNonSecureProfile", () => {
         const changingConfig = globalMocks.testTeamConfigProfile;
         const privateProfile = Profiles.getInstance() as any;
         Object.defineProperty(SettingsConfig, "getDirectValue", {
-            value: jest.fn().mockReturnValue(false),
+            value: jest.fn((key: string) => {
+                if (key === "zowe.ds.default.sort") {
+                    return Sorting.DatasetSortOpts.Name;
+                }
+                if (key === "zowe.jobs.default.sort") {
+                    return Sorting.JobSortOpts.Id;
+                }
+                return false;
+            }),
             configurable: true,
         });
         expect(privateProfile.createNonSecureProfile(changingConfig)).toBeUndefined();
