@@ -18,6 +18,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - You can now add multiple partitioned data sets or USS directories to your workspace at once using the "Add to Workspace" feature. [#3324](https://github.com/zowe/zowe-explorer-vscode/issues/3324)
 - Exposed read and write access to local storage keys for Zowe Explorer extenders. [#3180](https://github.com/zowe/zowe-explorer-vscode/issues/3180)
 - Added `Open with Encoding` to the context menu of Job Spool files. [#1941](https://github.com/zowe/zowe-explorer-vscode/issues/1941)
+- Added two new settings, `zowe.ds.default.sort` and `zowe.jobs.default.sort`, that allow you to change the default sorting order of datasets and jobs when you open them. [#3369](https://github.com/zowe/zowe-explorer-vscode/pull/3369)
 
 ### Bug fixes
 
