@@ -68,6 +68,34 @@ export class JobTableView {
             type: "primary",
         },
     };
+    // These fields are typically included in job metadata.
+    private static expectedFields = [
+        {
+            field: "jobname",
+            headerName: l10n.t("Name"),
+            filter: true,
+            sort: "asc",
+        } as Table.ColumnOpts,
+        {
+            field: "class",
+            headerName: l10n.t("Class"),
+            filter: true,
+        },
+        { field: "owner", headerName: l10n.t("Owner"), filter: true },
+        { field: "jobid", headerName: l10n.t("ID"), filter: true },
+        { field: "retcode", headerName: l10n.t("Return Code"), filter: true },
+        { field: "status", headerName: l10n.t("Status"), filter: true },
+        { field: "subsystem", headerName: l10n.t("Subsystem"), filter: true },
+        { field: "type", headerName: l10n.t("Type"), filter: true },
+        { field: "job-correlator", headerName: l10n.t("Job Correlator"), filter: true },
+        { field: "phase", headerName: l10n.t("Phase"), filter: true },
+        { field: "phase-name", headerName: l10n.t("Phase Name"), filter: true },
+        { field: "exec-started", headerName: l10n.t("Time Started") },
+        { field: "exec-submitted", headerName: l10n.t("Time Submitted") },
+        { field: "exec-ended", headerName: l10n.t("Time Ended") },
+        { field: "reason-not-running", headerName: l10n.t("Error Details"), filter: true },
+    ];
+
     private static table: Table.Instance;
 
     private static buildTitle(profileNode: IZoweJobTreeNode): string {
@@ -173,9 +201,11 @@ export class JobTableView {
      */
     private static async generateTable(context: ExtensionContext, profileNode: IZoweJobTreeNode): Promise<Table.Instance> {
         if (this.table) {
+            const jobProperties = JobTableView.cachedChildren.map((item) => this.jobPropertiesFor(item));
             await this.table.setTitle(this.buildTitle(profileNode));
-            await this.table.setContent(JobTableView.cachedChildren.map((item) => this.jobPropertiesFor(item)));
+            await this.table.setContent(jobProperties);
         } else {
+            const jobProperties = JobTableView.cachedChildren.map((item) => this.jobPropertiesFor(item));
             this.table = new TableBuilder(context)
                 .options({
                     autoSizeStrategy: { type: "fitCellContents" },
@@ -187,32 +217,7 @@ export class JobTableView {
                 .isView()
                 .title(this.buildTitle(profileNode))
                 .rows(...JobTableView.cachedChildren.map((item) => this.jobPropertiesFor(item)))
-                .columns(
-                    ...[
-                        {
-                            field: "jobname",
-                            headerName: l10n.t("Name"),
-                            filter: true,
-                            sort: "asc",
-                        } as Table.ColumnOpts,
-                        {
-                            field: "class",
-                            headerName: l10n.t("Class"),
-                            filter: true,
-                        },
-                        { field: "owner", headerName: l10n.t("Owner"), filter: true },
-                        { field: "jobid", headerName: l10n.t("ID"), filter: true },
-                        { field: "retcode", headerName: l10n.t("Return Code"), filter: true },
-                        { field: "status", headerName: l10n.t("Status"), filter: true },
-                        { field: "subsystem", headerName: l10n.t("Subsystem"), filter: true },
-                        { field: "type", headerName: l10n.t("Type"), filter: true },
-                        { field: "job-correlator", headerName: l10n.t("Job Correlator"), filter: true },
-                        { field: "phase", headerName: l10n.t("Phase"), filter: true },
-                        { field: "phase-name", headerName: l10n.t("Phase Name"), filter: true },
-                        { field: "reason-not-running", headerName: l10n.t("Error Details"), filter: true },
-                        { field: "actions", hide: true },
-                    ]
-                )
+                .columns(...[...this.expectedFields, { field: "actions", hide: true }])
                 .addContextOption("all", this.contextOptions.getJcl)
                 .addContextOption("all", this.contextOptions.displayInTree)
                 .addRowAction("all", this.rowActions.cancelJob)
