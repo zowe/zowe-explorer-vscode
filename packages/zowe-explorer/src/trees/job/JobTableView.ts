@@ -201,9 +201,8 @@ export class JobTableView {
      */
     private static async generateTable(context: ExtensionContext, profileNode: IZoweJobTreeNode): Promise<Table.Instance> {
         if (this.table) {
-            const jobProperties = JobTableView.cachedChildren.map((item) => this.jobPropertiesFor(item));
             await this.table.setTitle(this.buildTitle(profileNode));
-            await this.table.setContent(jobProperties);
+            await this.table.setContent(JobTableView.cachedChildren.map((item) => this.jobPropertiesFor(item)));
         } else {
             this.table = new TableBuilder(context)
                 .options({
