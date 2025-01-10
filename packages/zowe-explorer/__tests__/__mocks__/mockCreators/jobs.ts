@@ -45,7 +45,9 @@ export function createIJobObject() {
         type: "JOB",
         url: "fake/url",
         "exec-member": "sampleMember",
-        "exec-ended": "2024-03-07T00:04:67:980z",
+        "exec-ended": "2024-03-07T00:04:27:980z",
+        "exec-started": "2024-03-06T00:04:27:100z",
+        "exec-submitted": "2024-03-07T00:04:07:000z",
     };
 }
 
