@@ -693,19 +693,35 @@ export class DatasetActions {
         if (name) {
             const label = parent.label as string;
             const profile = parent.getProfile();
-            let foundNode: IZoweDatasetTreeNode;
+            // let foundNode: IZoweDatasetTreeNode;
+            let memberFound = false;
+            const memberUri = vscode.Uri.from({
+                scheme: ZoweScheme.DS,
+                path: path.posix.join(parent.resourceUri.path, name),
+            });
             try {
-                // Make sure we have the latest children nodes, i.e. members
-                await parent.getChildren();
-                foundNode = parent.children.find((mem) => mem.getLabel().toString().toUpperCase() === name.toUpperCase());
-                if (foundNode != null) {
+                const memberFileEntry = await DatasetFSProvider.instance.fetchDatasetAtUri(memberUri);
+                memberFound = memberFileEntry != null;
+                if (memberFound) {
                     const replace = await DatasetActions.determineReplacement(profile, `${label}(${name})`, "mem");
                     if (replace === "cancel") {
-                        await vscode.commands.executeCommand("vscode.open", foundNode.resourceUri);
+                        await vscode.commands.executeCommand("vscode.open", memberUri);
                         datasetProvider.refresh();
                         return;
                     }
                 }
+
+                // // Make sure we have the latest children nodes, i.e. members
+                // await parent.getChildren();
+                // foundNode = parent.children.find((mem) => mem.getLabel().toString().toUpperCase() === name);
+                // if (foundNode != null) {
+                //     const replace = await DatasetActions.determineReplacement(profile, `${label}(${name})`, "mem");
+                //     if (replace === "cancel") {
+                //         await vscode.commands.executeCommand("vscode.open", foundNode.resourceUri);
+                //         datasetProvider.refresh();
+                //         return;
+                //     }
+                // }
                 await ZoweExplorerApiRegister.getMvsApi(profile).createDataSetMember(label + "(" + name + ")", {
                     responseTimeout: profile.profile?.responseTimeout,
                 });
@@ -719,16 +735,17 @@ export class DatasetActions {
                 }
                 throw err;
             }
-            const newNode = new ZoweDatasetNode({
-                label: name,
-                collapsibleState: vscode.TreeItemCollapsibleState.None,
-                parentNode: parent,
-                profile: parent.getProfile(),
-            });
-            const theNode = foundNode ?? newNode;
-            await vscode.workspace.fs.writeFile(theNode.resourceUri, new Uint8Array());
+            if (!memberFound) {
+                const newNode = new ZoweDatasetNode({
+                    label: name,
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    parentNode: parent,
+                    profile: parent.getProfile(),
+                });
+                parent.children.push(newNode);
+            }
+            await vscode.workspace.fs.writeFile(memberUri, new Uint8Array());
 
-            if (foundNode == null) parent.children.push(theNode);
             parent.dirty = true;
             datasetProvider.refreshElement(parent);
 
@@ -738,7 +755,7 @@ export class DatasetActions {
                 datasetProvider.refreshElement(otherTreeParent);
             }
 
-            await vscode.commands.executeCommand("vscode.open", theNode.resourceUri);
+            await vscode.commands.executeCommand("vscode.open", memberUri);
             datasetProvider.refresh();
         }
     }
