@@ -205,7 +205,6 @@ export class JobTableView {
             await this.table.setTitle(this.buildTitle(profileNode));
             await this.table.setContent(jobProperties);
         } else {
-            const jobProperties = JobTableView.cachedChildren.map((item) => this.jobPropertiesFor(item));
             this.table = new TableBuilder(context)
                 .options({
                     autoSizeStrategy: { type: "fitCellContents" },

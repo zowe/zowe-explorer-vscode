@@ -208,5 +208,13 @@ describe("JobTableView unit tests", () => {
             const expectedProperties = { ...blockMocks.jobNode.job };
             expect((JobTableView as any).jobPropertiesFor(blockMocks.jobNode)).toStrictEqual(expectedProperties);
         });
+
+        it("returns exec-started, exec-submitted and exec-ended properties from the job node", () => {
+            const blockMocks = getBlockMocks();
+            const jobProperties = (JobTableView as any).jobPropertiesFor(blockMocks.jobNode);
+            expect(jobProperties).toHaveProperty("exec-started");
+            expect(jobProperties).toHaveProperty("exec-submitted");
+            expect(jobProperties).toHaveProperty("exec-ended");
+        });
     });
 });
