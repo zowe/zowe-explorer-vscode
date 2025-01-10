@@ -1123,7 +1123,16 @@
   "All jobs": "All jobs",
   "Ascending": "Ascending",
   "Descending": "Descending",
-  "Create a new Unix command": "Create a new Unix command",
+  "Unable to perform this operation due to the following problem.": "Unable to perform this operation due to the following problem.",
+  "Response From Service": "Response From Service",
+  "Diagnostic Information": "Diagnostic Information",
+  "Welcome to the integrated terminal for: {0}/Terminal Name": {
+    "message": "Welcome to the integrated terminal for: {0}",
+    "comment": [
+      "Terminal Name"
+    ]
+  },
+  "Profile is invalid": "Profile is invalid",
   "Issuing commands is not supported for this profile type, {0}./Profile type": {
     "message": "Issuing commands is not supported for this profile type, {0}.",
     "comment": [
@@ -1137,22 +1146,13 @@
     ]
   },
   "Error preparing SSH connection for issuing UNIX commands, please check SSH profile for correctness.": "Error preparing SSH connection for issuing UNIX commands, please check SSH profile for correctness.",
-  "No SSH profile found. Please create an SSH profile.": "No SSH profile found. Please create an SSH profile.",
-  "SSH profile missing connection details. Please update.": "SSH profile missing connection details. Please update.",
-  "No profiles available.": "No profiles available.",
   "Redirecting to Home Directory": "Redirecting to Home Directory",
-  "Zowe Unix Command": "Zowe Unix Command",
-  "An SSH profile will be used for issuing UNIX commands with the profile {0}.": "An SSH profile will be used for issuing UNIX commands with the profile {0}.",
-  "Error checking if SSH profile type required for issuing UNIX commands, setting requirement to false for profile {0}.": "Error checking if SSH profile type required for issuing UNIX commands, setting requirement to false for profile {0}.",
-  "Enter the path of the directory in order to execute the command": "Enter the path of the directory in order to execute the command",
-  "Not implemented yet for profile of type: {0}/Profile type": {
-    "message": "Not implemented yet for profile of type: {0}",
-    "comment": [
-      "Profile type"
-    ]
-  },
-  "Select the SSH Profile.": "Select the SSH Profile.",
+  "SSH profile missing connection details. Please update.": "SSH profile missing connection details. Please update.",
+  "No SSH profile found. Please create an SSH profile.": "No SSH profile found. Please create an SSH profile.",
+  "Unix command submitted.": "Unix command submitted.",
+  "$(plus) Create a new Unix command": "$(plus) Create a new Unix command",
   "Select the profile to use to submit the Unix command": "Select the profile to use to submit the Unix command",
+  "Enter or update the Unix command": "Enter or update the Unix command",
   "Select a Unix command to run against {0} (An option to edit will follow)/Current work directory": {
     "message": "Select a Unix command to run against {0} (An option to edit will follow)",
     "comment": [
@@ -1165,12 +1165,20 @@
       "Current work directory"
     ]
   },
-  "Enter or update the Unix command": "Enter or update the Unix command",
-  "Unix command submitted.": "Unix command submitted.",
+  "Zowe Unix Command": "Zowe Unix Command",
+  "An SSH profile will be used for issuing UNIX commands with the profile {0}.": "An SSH profile will be used for issuing UNIX commands with the profile {0}.",
+  "Error checking if SSH profile type required for issuing UNIX commands, setting requirement to false for profile {0}.": "Error checking if SSH profile type required for issuing UNIX commands, setting requirement to false for profile {0}.",
+  "Enter the path of the directory in order to execute the command": "Enter the path of the directory in order to execute the command",
+  "Not implemented yet for profile of type: {0}/Profile type": {
+    "message": "Not implemented yet for profile of type: {0}",
+    "comment": [
+      "Profile type"
+    ]
+  },
+  "TSO command submitted.": "TSO command submitted.",
   "Create a new TSO command": "Create a new TSO command",
-  "Zowe TSO Command": "Zowe TSO Command",
   "Select the profile to use to submit the TSO command": "Select the profile to use to submit the TSO command",
-  "Profile is invalid": "Profile is invalid",
+  "Enter or update the TSO command": "Enter or update the TSO command",
   "Select a TSO command to run against {0} (An option to edit will follow)/Host name": {
     "message": "Select a TSO command to run against {0} (An option to edit will follow)",
     "comment": [
@@ -1183,17 +1191,13 @@
       "Host name"
     ]
   },
-  "Enter or update the TSO command": "Enter or update the TSO command",
-  "No command entered.": "No command entered.",
-  "TSO command submitted.": "TSO command submitted.",
-  "No account number was supplied.": "No account number was supplied.",
-  "Select the TSO profile to use for account number.": "Select the TSO profile to use for account number.",
+  "Zowe TSO Command": "Zowe TSO Command",
   "Account Number": "Account Number",
   "Enter the account number for the TSO connection.": "Enter the account number for the TSO connection.",
-  "Operation cancelled.": "Operation cancelled.",
+  "MVS command submitted.": "MVS command submitted.",
   "Create a new MVS command": "Create a new MVS command",
-  "Zowe MVS Command": "Zowe MVS Command",
-  "Select the profile to use to submit the command": "Select the profile to use to submit the command",
+  "Select the profile to use to submit the MVS command": "Select the profile to use to submit the MVS command",
+  "Enter or update the MVS command": "Enter or update the MVS command",
   "Select an MVS command to run against {0} (An option to edit will follow)/Host name": {
     "message": "Select an MVS command to run against {0} (An option to edit will follow)",
     "comment": [
@@ -1206,6 +1210,5 @@
       "Host name"
     ]
   },
-  "Enter or update the MVS command": "Enter or update the MVS command",
-  "MVS command submitted.": "MVS command submitted."
+  "Zowe MVS Command": "Zowe MVS Command"
 }

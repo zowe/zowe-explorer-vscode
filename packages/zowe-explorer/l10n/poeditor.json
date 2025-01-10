@@ -314,8 +314,20 @@
   "zowe.cliLoggerSetting.presented": {
     "User has been asked to sync Zowe Explorer log setting with Zowe CL's environment variable.": ""
   },
-  "zowe.commands.history": {
-    "Toggle if Commands persist locally": ""
+  "zowe.commands.mvs.history": {
+    "Toggle if MVS Commands persist locally": ""
+  },
+  "zowe.commands.tso.history": {
+    "Toggle if TSO Commands persist locally": ""
+  },
+  "zowe.commands.uss.history": {
+    "Toggle if Unix Commands persist locally": ""
+  },
+  "zowe.commands.alwaysEdit": {
+    "Allow commands to be edited before submitting": ""
+  },
+  "zowe.commands.useIntegratedTerminals": {
+    "Allow commands to be executed using integrated terminals": ""
   },
   "zowe.automaticProfileValidation": {
     "Allow automatic validation of profiles.": ""
@@ -914,43 +926,41 @@
   "All jobs": "",
   "Ascending": "",
   "Descending": "",
-  "Create a new Unix command": "",
+  "Unable to perform this operation due to the following problem.": "",
+  "Response From Service": "",
+  "Diagnostic Information": "",
+  "Welcome to the integrated terminal for: {0}": "",
+  "Profile is invalid": "",
   "Issuing commands is not supported for this profile type, {0}.": "",
   "Issuing UNIX commands is not supported for this profile type, {0}.": "",
   "Error preparing SSH connection for issuing UNIX commands, please check SSH profile for correctness.": "",
-  "No SSH profile found. Please create an SSH profile.": "",
-  "SSH profile missing connection details. Please update.": "",
-  "No profiles available.": "",
   "Redirecting to Home Directory": "",
+  "SSH profile missing connection details. Please update.": "",
+  "No SSH profile found. Please create an SSH profile.": "",
+  "Unix command submitted.": "",
+  "$(plus) Create a new Unix command": "",
+  "Select the profile to use to submit the Unix command": "",
+  "Enter or update the Unix command": "",
+  "Select a Unix command to run against {0} (An option to edit will follow)": "",
+  "Select a Unix command to run immediately against {0}": "",
   "Zowe Unix Command": "",
   "An SSH profile will be used for issuing UNIX commands with the profile {0}.": "",
   "Error checking if SSH profile type required for issuing UNIX commands, setting requirement to false for profile {0}.": "",
   "Enter the path of the directory in order to execute the command": "",
-  "Select the SSH Profile.": "",
-  "Select the profile to use to submit the Unix command": "",
-  "Select a Unix command to run against {0} (An option to edit will follow)": "",
-  "Select a Unix command to run immediately against {0}": "",
-  "Enter or update the Unix command": "",
-  "Unix command submitted.": "",
+  "TSO command submitted.": "",
   "Create a new TSO command": "",
-  "Zowe TSO Command": "",
   "Select the profile to use to submit the TSO command": "",
-  "Profile is invalid": "",
+  "Enter or update the TSO command": "",
   "Select a TSO command to run against {0} (An option to edit will follow)": "",
   "Select a TSO command to run immediately against {0}": "",
-  "Enter or update the TSO command": "",
-  "No command entered.": "",
-  "TSO command submitted.": "",
-  "No account number was supplied.": "",
-  "Select the TSO profile to use for account number.": "",
+  "Zowe TSO Command": "",
   "Account Number": "",
   "Enter the account number for the TSO connection.": "",
-  "Operation cancelled.": "",
+  "MVS command submitted.": "",
   "Create a new MVS command": "",
-  "Zowe MVS Command": "",
-  "Select the profile to use to submit the command": "",
+  "Select the profile to use to submit the MVS command": "",
+  "Enter or update the MVS command": "",
   "Select an MVS command to run against {0} (An option to edit will follow)": "",
   "Select an MVS command to run immediately against {0}": "",
-  "Enter or update the MVS command": "",
-  "MVS command submitted.": ""
+  "Zowe MVS Command": ""
 }

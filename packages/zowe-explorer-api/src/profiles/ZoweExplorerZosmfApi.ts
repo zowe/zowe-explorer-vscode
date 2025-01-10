@@ -466,7 +466,11 @@ export namespace ZoweExplorerZosmf {
      * An implementation of the Zowe Explorer Command API interface for zOSMF.
      */
     export class CommandApi extends CommonApi implements MainframeInteraction.ICommand {
-        public issueTsoCommandWithParms(command: string, parms: zostso.IStartTsoParms): Promise<zostso.IIssueResponse> {
+        public issueTsoCommandWithParms(command: string, parms: zostso.IStartTsoParms, useNewTsoApis?: boolean): Promise<zostso.IIssueResponse> {
+            if (useNewTsoApis) {
+                return zostso.IssueTso.issueTsoCmd(this.getSession(), command, { addressSpaceOptions: parms });
+            }
+
             // eslint-disable-next-line deprecation/deprecation
             return zostso.IssueTso.issueTsoCommand(this.getSession(), parms.account, command, parms);
         }
@@ -478,13 +482,24 @@ export namespace ZoweExplorerZosmf {
         public async issueUnixCommand(command: string, cwd: string, sshSession: zosuss.SshSession): Promise<string> {
             let stdout = "";
             if (cwd) {
-                await zosuss.Shell.executeSshCwd(sshSession, command, '"' + cwd + '"', (data: string) => {
-                    stdout += data;
-                });
+                await zosuss.Shell.executeSshCwd(
+                    sshSession,
+                    command,
+                    '"' + cwd + '"',
+                    (data: string) => {
+                        stdout += data;
+                    },
+                    true
+                );
             } else {
-                await zosuss.Shell.executeSsh(sshSession, command, (data: string) => {
-                    stdout += data;
-                });
+                await zosuss.Shell.executeSsh(
+                    sshSession,
+                    command,
+                    (data: string) => {
+                        stdout += data;
+                    },
+                    true
+                );
             }
             return stdout;
         }

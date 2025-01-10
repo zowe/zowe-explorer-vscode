@@ -75,6 +75,15 @@ export default function PersistentDataPanel({ type }: Readonly<{ type: Readonly<
     setPersistentProp(() => data[type][selection[type]]);
   }, [selection]);
 
+  if (type == "cmds") {
+    return (
+      <DataPanelContext.Provider value={{ type, selection, selectedItems: selectedItemsMemo }}>
+        <VSCodePanelView id={panelId[type]} style={{ flexDirection: "column", minHeight: "100vh" }}>
+          <h1>Coming soon!</h1>
+        </VSCodePanelView>
+      </DataPanelContext.Provider>
+    );
+  }
   return (
     <DataPanelContext.Provider value={{ type, selection, selectedItems: selectedItemsMemo }}>
       <VSCodePanelView id={panelId[type]} style={{ flexDirection: "column", minHeight: "100vh" }}>
