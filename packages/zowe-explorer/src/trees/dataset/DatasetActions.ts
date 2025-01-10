@@ -1465,10 +1465,11 @@ export class DatasetActions {
     }
 
     /**
-     * Paste members
+     * Paste Datasets
      *
      * @export
      * @param datasetProvider - the tree which contains the nodes
+     * @param node - the node to which content is pasted
      */
     public static async pasteDataSet(datasetProvider: Types.IZoweDatasetTreeType, node: ZoweDatasetNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.pasteDataSetMembers called.");
@@ -1496,7 +1497,8 @@ export class DatasetActions {
      * copies given sequential dataset nodes
      *
      * @export
-     * @param {ZoweDatasetNode[]} nodes - nodes to be copied
+     * @param {ZoweDatasetNode} node - The node to which content is pasted
+     * @param clipboardContent - Copied clipboard content
      */
     public static async copySequentialDatasets(clipboardContent, node: ZoweDatasetNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.copySequentialDatasets called.");
@@ -1569,6 +1571,14 @@ export class DatasetActions {
         return;
     }
 
+    /**
+     * copies given dataset members
+     *
+     * @export
+     * @param {ZoweDatasetNode} node - The node to which content is pasted
+     * @param clipboardContent - Copied clipboard content
+     */
+
     public static async copyDatasetMembers(clipboardContent, node: ZoweDatasetNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.copyDatasetMembers called.");
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
@@ -1637,7 +1647,8 @@ export class DatasetActions {
      * copies given partitioned dataset nodes
      *
      * @export
-     * @param {ZoweDatasetNode[]} nodes - nodes to be copied
+     * @param {ZoweDatasetNode} node - The node to which content is pasted
+     * @param clipboardContent - Copied clipboard content
      */
     public static async copyPartitionedDatasets(clipboardContent, node: ZoweDatasetNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.copyPartitionedDatasets called.");
