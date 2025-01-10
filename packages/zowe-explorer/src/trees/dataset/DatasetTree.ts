@@ -720,6 +720,19 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 await SettingsConfig.setDirectValue(DatasetTree.persistenceSchema, setting);
             }
         }
+        if (e.affectsConfiguration(Constants.SETTINGS_DS_DEFAULT_SORT)) {
+            const sortOpts = SharedUtils.getDefaultSortOptions(
+                DatasetUtils.DATASET_SORT_OPTS,
+                Constants.SETTINGS_DS_DEFAULT_SORT,
+                Sorting.DatasetSortOpts
+            );
+            for (const sessionNode of this.mSessionNodes) {
+                const isSession = SharedContext.isDsSession(sessionNode);
+                this.updateSortForNode(sessionNode, sortOpts, isSession);
+            }
+            this.refresh();
+            this.refreshElement(this.mFavoriteSession);
+        }
     }
 
     public addSearchHistory(criteria: string): void {
@@ -1347,7 +1360,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     ...sortOpts,
                     direction: Constants.SORT_DIRS.indexOf(dir),
                 };
-                // TODO: Update sort order as persistence setting maybe
             }
             await this.sortPdsMembersDialog(node);
             return;

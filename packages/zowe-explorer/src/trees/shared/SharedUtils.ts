@@ -360,6 +360,7 @@ export class SharedUtils {
     }
 
     public static updateSortOptionsWithDefault<T>(sortMethod: T, sortOptions: string[]): void {
+        ZoweLogger.trace("shared.utils.updateSortOptionsWithDefault called.");
         for (let i = 0; i < sortOptions.length; i++) {
             sortOptions[i] = sortOptions[i].replace(` ${vscode.l10n.t("(default)")}`, "");
             if (i === Number(sortMethod)) {
@@ -376,6 +377,7 @@ export class SharedUtils {
      * @returns The list of sort options with the default sort option marked
      */
     public static getDefaultSortOptions<T extends object>(sortOptions: string[], settingsKey: string, sortMethod: T): Sorting.NodeSort {
+        ZoweLogger.trace("shared.utils.getDefaultSortOptions called.");
         const defaultMethod = sortMethod[Object.keys(sortMethod)[0]];
         const defaultDirection = Sorting.SortDirection.Ascending;
 
