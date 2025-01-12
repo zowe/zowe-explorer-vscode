@@ -1411,6 +1411,39 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
     });
 
+    it("If isCancellationRequested is true", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        node.contextValue = Constants.DS_DS_CONTEXT;
+        clipboard.writeText(
+            JSON.stringify([
+                {
+                    dataSetName: "HLQ.TEST.BEFORE.NODE",
+                    profileName: "sestest1",
+                    contextValue: Constants.DS_DS_CONTEXT,
+                },
+            ])
+        );
+        mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
+            const progress = {
+                report: jest.fn(),
+            };
+            const token = {
+                isCancellationRequested: true,
+                onCancellationRequested: jest.fn(),
+            };
+            return callback(progress, token);
+        });
+        globalMocks.showInputBox.mockResolvedValueOnce("CopyNode");
+        jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("notFound");
+        await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
+    });
+
     it("Testing copyPartitionedDatasets() successfully runs within same profile", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -1504,7 +1537,47 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, dsNode)).resolves.not.toThrow();
     });
 
-    it("Testing copyDatasetMembers() succesfully runs on same profile", async () => {
+    it("Testing isCancellationRequested true on copyPartitionedDatasets()", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const parentNode = new ZoweDatasetNode({
+            label: "parent",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        const dsNode = new ZoweDatasetNode({
+            label: "dsNode",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            parentNode,
+            session: blockMocks.zosmfSession,
+            profile: blockMocks.imperativeProfile,
+        });
+        dsNode.contextValue = Constants.DS_PDS_CONTEXT;
+        clipboard.writeText(
+            JSON.stringify([
+                {
+                    dataSetName: "HLQ.TEST.BEFORE.NODE",
+                    profileName: "sestest1",
+                    contextValue: Constants.DS_PDS_CONTEXT,
+                },
+            ])
+        );
+        mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
+            const progress = {
+                report: jest.fn(),
+            };
+            const token = {
+                isCancellationRequested: true,
+                onCancellationRequested: jest.fn(),
+            };
+            return callback(progress, token);
+        });
+        globalMocks.showInputBox.mockResolvedValueOnce("pdsTest");
+        jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("notFound");
+        await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, dsNode)).resolves.not.toThrow();
+    });
+
+    it("Testing copyDatasetMembers() succesfully runs", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const memberNode = new ZoweDatasetNode({
@@ -1544,24 +1617,6 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
             apiResponse: {},
         });
         jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("notFound");
-        await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, memberNode)).resolves.not.toThrow();
-
-        //for cross lpar copy paste of members
-        clipboard.writeText(
-            JSON.stringify([
-                {
-                    memberName: "TEST",
-                    profileName: "sesTest1",
-                    contextValue: Constants.DS_MEMBER_CONTEXT,
-                },
-            ])
-        );
-        const copySpyCrossLpar = jest.spyOn(blockMocks.mvsApi, "copyDataSetCrossLpar");
-        copySpyCrossLpar.mockResolvedValue({
-            success: true,
-            commandResponse: "",
-            apiResponse: {},
-        });
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, memberNode)).resolves.not.toThrow();
     });
 
@@ -1604,6 +1659,48 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
             success: true,
             commandResponse: "",
             apiResponse: {},
+        });
+        await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, memberNode)).resolves.not.toThrow();
+    });
+
+    it("if isCancellationRequested is true for copyDatasetMembers()", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const memberNode = new ZoweDatasetNode({
+            label: "memberNode",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.pdsSessionNode,
+            profile: blockMocks.imperativeProfile,
+        });
+        memberNode.contextValue = Constants.DS_MEMBER_CONTEXT;
+        clipboard.writeText(
+            JSON.stringify([
+                {
+                    memberName: "TEST",
+                    profileName: "sesTest1",
+                    contextValue: Constants.DS_MEMBER_CONTEXT,
+                },
+            ])
+        );
+        mocked(vscode.window.showInputBox).mockImplementationOnce((options) => {
+            options.validateInput("pdsTest");
+            return Promise.resolve("pdsTest");
+        });
+        mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
+            const progress = {
+                report: jest.fn(),
+            };
+            const token = {
+                isCancellationRequested: true,
+                onCancellationRequested: jest.fn(),
+            };
+            return callback(progress, token);
+        });
+        const allmembersspy = jest.spyOn(blockMocks.mvsApi, "allMembers");
+        allmembersspy.mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: { items: [{ member: "PDSTEST" }] },
         });
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, memberNode)).resolves.not.toThrow();
     });
@@ -1728,6 +1825,18 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue("Not supported");
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
         expect(errorSpy).toHaveBeenCalled();
+
+        //for partitioned
+        clipboard.writeText(
+            JSON.stringify([
+                {
+                    dataSetName: "HLQ.TEST.BEFORE.NODE",
+                    profileName: "sestest1",
+                    contextValue: Constants.DS_PDS_CONTEXT,
+                },
+            ])
+        );
+        await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
     });
 });
 
