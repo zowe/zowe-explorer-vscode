@@ -126,6 +126,7 @@ function createGlobalMocks(): { [key: string]: any } {
         value: createGetConfigMock({
             "zowe.ds.default.sort": Sorting.DatasetSortOpts.Name,
             "zowe.jobs.default.sort": Sorting.JobSortOpts.Id,
+            [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED]: false,
         }),
         configurable: true,
     });
