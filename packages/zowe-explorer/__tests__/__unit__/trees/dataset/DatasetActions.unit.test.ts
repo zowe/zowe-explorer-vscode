@@ -1205,10 +1205,13 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: blockMocks.pdsSessionNode,
         });
-        node.contextValue = Constants.DS_MEMBER_CONTEXT;
+        node.contextValue = Constants.DS_PDS_CONTEXT;
         const nodeList: ZoweDatasetNode[] = [node];
+        jest.spyOn(node, "getChildren").mockResolvedValue([node]);
         await DatasetActions.copyDataSets(null, nodeList, null);
-        expect(clipboard.readText()).toBe('[{"profileName":"sestest","dataSetName":"sestest","memberName":"HLQ.TEST.NODE","contextValue":"member"}]');
+        expect(clipboard.readText()).toBe(
+            '[{"profileName":"sestest","dataSetName":"HLQ.TEST.NODE","memberName":"HLQ.TEST.NODE","contextValue":"pds"}]'
+        );
     });
     it("Checking copy the label of a member to the clipboard via quickkeys", async () => {
         createGlobalMocks();
