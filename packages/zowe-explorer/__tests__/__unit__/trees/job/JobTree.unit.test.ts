@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
-import { Gui, imperative, IZoweJobTreeNode, ProfilesCache, Validation, Poller, ZosEncoding } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweJobTreeNode, ProfilesCache, Validation, Poller, ZosEncoding, Sorting } from "@zowe/zowe-explorer-api";
 import { createIJobFile, createIJobObject, createJobFavoritesNode, createJobSessionNode, MockJobDetail } from "../../../__mocks__/mockCreators/jobs";
 import {
     createIProfile,
@@ -20,6 +20,7 @@ import {
     createISessionWithoutCredentials,
     createTreeView,
     createInstanceOfProfileInfo,
+    createGetConfigMock,
 } from "../../../__mocks__/mockCreators/shared";
 import { createJesApi } from "../../../__mocks__/mockCreators/api";
 import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
@@ -175,6 +176,14 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode.window, "createInputBox", {
         value: jest.fn(() => mockInputBox),
+        configurable: true,
+    });
+
+    Object.defineProperty(SettingsConfig, "getDirectValue", {
+        value: createGetConfigMock({
+            "zowe.ds.default.sort": Sorting.DatasetSortOpts.Name,
+            "zowe.jobs.default.sort": Sorting.JobSortOpts.Id,
+        }),
         configurable: true,
     });
 

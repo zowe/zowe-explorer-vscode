@@ -11,6 +11,7 @@
 
 import * as vscode from "vscode";
 import {
+    createGetConfigMock,
     createInstanceOfProfile,
     createIProfile,
     createISessionWithoutCredentials,
@@ -20,7 +21,7 @@ import {
     createTreeView,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import { Gui, Types } from "@zowe/zowe-explorer-api";
+import { Gui, Sorting, Types } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { createUSSSessionNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
@@ -37,6 +38,7 @@ import { IconUtils } from "../../../../src/icons/IconUtils";
 import { IconGenerator } from "../../../../src/icons/IconGenerator";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
+import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -92,6 +94,13 @@ function createGlobalMocks() {
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn().mockReturnValue(createInstanceOfProfile(globalMocks.imperativeProfile)),
+        configurable: true,
+    });
+    Object.defineProperty(SettingsConfig, "getDirectValue", {
+        value: createGetConfigMock({
+            "zowe.ds.default.sort": Sorting.DatasetSortOpts.Name,
+            "zowe.jobs.default.sort": Sorting.JobSortOpts.Id,
+        }),
         configurable: true,
     });
     Object.defineProperty(zosfiles, "Download", {
