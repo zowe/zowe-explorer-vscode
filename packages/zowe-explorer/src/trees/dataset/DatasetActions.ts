@@ -693,25 +693,18 @@ export class DatasetActions {
         if (name) {
             const label = parent.label as string;
             const profile = parent.getProfile();
-            let memberFound = false;
+            let replace: Definitions.ShouldReplace;
             const memberUri = vscode.Uri.from({
                 scheme: ZoweScheme.DS,
                 path: path.posix.join(parent.resourceUri.path, name),
             });
             try {
-                const memberFileEntry = await DatasetFSProvider.instance.fetchDatasetAtUri(memberUri);
-                memberFound = memberFileEntry != null;
-                if (memberFound) {
-                    const replace = await DatasetActions.determineReplacement(profile, `${label}(${name})`, "mem");
-                    if (replace === "cancel") {
-                        await vscode.commands.executeCommand("vscode.open", memberUri);
-                        datasetProvider.refresh();
-                        return;
-                    }
+                replace = await DatasetActions.determineReplacement(profile, `${label}(${name})`, "mem");
+                if (replace !== "cancel") {
+                    await ZoweExplorerApiRegister.getMvsApi(profile).createDataSetMember(label + "(" + name + ")", {
+                        responseTimeout: profile.profile?.responseTimeout,
+                    });
                 }
-                await ZoweExplorerApiRegister.getMvsApi(profile).createDataSetMember(label + "(" + name + ")", {
-                    responseTimeout: profile.profile?.responseTimeout,
-                });
             } catch (err) {
                 if (err instanceof Error) {
                     await AuthUtils.errorHandling(err, {
@@ -722,7 +715,7 @@ export class DatasetActions {
                 }
                 throw err;
             }
-            if (!memberFound) {
+            if (replace === "notFound") {
                 const newNode = new ZoweDatasetNode({
                     label: name,
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -730,8 +723,8 @@ export class DatasetActions {
                     profile: parent.getProfile(),
                 });
                 parent.children.push(newNode);
+                await vscode.workspace.fs.writeFile(memberUri, new Uint8Array());
             }
-            await vscode.workspace.fs.writeFile(memberUri, new Uint8Array());
 
             parent.dirty = true;
             datasetProvider.refreshElement(parent);

@@ -187,6 +187,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
                 etag: "123",
             },
         });
+        jest.spyOn(blockMocks.mvsApi, "allMembers").mockImplementation(jest.fn());
 
         await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
 
