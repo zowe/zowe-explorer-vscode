@@ -73,27 +73,25 @@ export class JobTableView {
         {
             field: "jobname",
             headerName: l10n.t("Name"),
-            filter: true,
             sort: "asc",
         } as Table.ColumnOpts,
         {
             field: "class",
             headerName: l10n.t("Class"),
-            filter: true,
         },
-        { field: "owner", headerName: l10n.t("Owner"), filter: true },
-        { field: "jobid", headerName: l10n.t("ID"), filter: true },
-        { field: "retcode", headerName: l10n.t("Return Code"), filter: true },
-        { field: "status", headerName: l10n.t("Status"), filter: true },
-        { field: "subsystem", headerName: l10n.t("Subsystem"), filter: true },
-        { field: "type", headerName: l10n.t("Type"), filter: true },
-        { field: "job-correlator", headerName: l10n.t("Job Correlator"), filter: true },
-        { field: "phase", headerName: l10n.t("Phase"), filter: true },
-        { field: "phase-name", headerName: l10n.t("Phase Name"), filter: true },
+        { field: "owner", headerName: l10n.t("Owner") },
+        { field: "jobid", headerName: l10n.t("ID") },
+        { field: "retcode", headerName: l10n.t("Return Code") },
+        { field: "status", headerName: l10n.t("Status") },
+        { field: "subsystem", headerName: l10n.t("Subsystem") },
+        { field: "type", headerName: l10n.t("Type") },
+        { field: "job-correlator", headerName: l10n.t("Job Correlator") },
+        { field: "phase", headerName: l10n.t("Phase") },
+        { field: "phase-name", headerName: l10n.t("Phase Name") },
         { field: "exec-started", headerName: l10n.t("Time Started") },
         { field: "exec-submitted", headerName: l10n.t("Time Submitted") },
         { field: "exec-ended", headerName: l10n.t("Time Ended") },
-        { field: "reason-not-running", headerName: l10n.t("Error Details"), filter: true },
+        { field: "reason-not-running", headerName: l10n.t("Error Details") },
     ];
 
     private static table: Table.Instance;
@@ -215,7 +213,7 @@ export class JobTableView {
                 .isView()
                 .title(this.buildTitle(profileNode))
                 .rows(...JobTableView.cachedChildren.map((item) => this.jobPropertiesFor(item)))
-                .columns(...[...this.expectedFields, { field: "actions", hide: true }])
+                .columns(...[...this.expectedFields.map((field) => ({ filter: true, ...field })), { field: "actions", hide: true }])
                 .addContextOption("all", this.contextOptions.getJcl)
                 .addContextOption("all", this.contextOptions.displayInTree)
                 .addRowAction("all", this.rowActions.cancelJob)
