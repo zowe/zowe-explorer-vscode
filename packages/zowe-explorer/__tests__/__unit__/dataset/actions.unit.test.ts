@@ -184,6 +184,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
                 etag: "123",
             },
         });
+        jest.spyOn(blockMocks.mvsApi, "allMembers").mockImplementation(jest.fn());
 
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
@@ -269,7 +270,6 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             }
         );
     });
-
     it("should not replace existing member when user cancels the replacement prompt", async () => {
         const blockMocks = createBlockMocksShared();
         const parent = new ZoweDatasetNode({
@@ -291,7 +291,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         });
 
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("TESTMEMBER");
-        mocked(Gui.showMessage).mockResolvedValue("replace");
+        mocked(Gui.showMessage).mockResolvedValueOnce("cancel");
 
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 

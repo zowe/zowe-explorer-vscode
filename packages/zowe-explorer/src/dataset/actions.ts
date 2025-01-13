@@ -412,21 +412,15 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
     if (name) {
         const label = parent.label as string;
         const profile = parent.getProfile();
-        let foundNode;
+        let replace: shouldReplace;
+        const dsMemberName = `${label}(${name})`;
         try {
-            await ZoweExplorerApiRegister.getMvsApi(profile).getContents(label);
-            foundNode = parent.children.find((mem) => mem.label.toString().toUpperCase() === name);
-            if (foundNode) {
-                const replace = await determineReplacement(profile, `${label}(${name})`, "mem");
-                if (replace === "cancel") {
-                    datasetProvider.refresh();
-                    return;
-                }
+            replace = await determineReplacement(profile, dsMemberName, "mem");
+            if (replace !== "cancel") {
+                await ZoweExplorerApiRegister.getMvsApi(profile).createDataSetMember(dsMemberName, {
+                    responseTimeout: profile.profile?.responseTimeout,
+                });
             }
-
-            await ZoweExplorerApiRegister.getMvsApi(profile).createDataSetMember(label + "(" + name + ")", {
-                responseTimeout: profile.profile?.responseTimeout,
-            });
         } catch (err) {
             if (err instanceof Error) {
                 await errorHandling(err, label, localize("createMember.error", "Unable to create member."));
@@ -434,18 +428,18 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
             throw err;
         }
 
-        let theNode =
-            foundNode ??
-            new ZoweDatasetNode({
-                label: name,
-                collapsibleState: vscode.TreeItemCollapsibleState.None,
-                parentNode: parent,
-                profile: parent.getProfile(),
-            });
+        const newNode = new ZoweDatasetNode({
+            label: name,
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: parent,
+            profile: parent.getProfile(),
+        });
 
-        theNode.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [theNode] };
-        await theNode.openDs(false, true, datasetProvider);
-        if (!foundNode) parent.children.push(theNode);
+        newNode.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [newNode] };
+        await newNode.openDs(false, true, datasetProvider);
+        if (replace === "notFound") {
+            parent.children.push(newNode);
+        }
 
         parent.dirty = true;
         datasetProvider.refreshElement(parent);
