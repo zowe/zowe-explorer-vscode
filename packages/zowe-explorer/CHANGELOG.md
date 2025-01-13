@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## Bug Fixes
+
+- Prevented data-loss when creating a new member called something that already exists. [[#3327](https://github.com/zowe/zowe-explorer-vscode/issues/3327)]
+
 ## TBD Release
 
 ### New features and enhancements
