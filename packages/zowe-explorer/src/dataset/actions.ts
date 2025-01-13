@@ -412,7 +412,18 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
     if (name) {
         const label = parent.label as string;
         const profile = parent.getProfile();
+        let foundNode;
         try {
+            await ZoweExplorerApiRegister.getMvsApi(profile).getContents(label);
+            foundNode = parent.children.find((mem) => mem.label.toString().toUpperCase() === name);
+            if (foundNode) {
+                const replace = await determineReplacement(profile, `${label}(${name})`, "mem");
+                if (replace === "cancel") {
+                    datasetProvider.refresh();
+                    return;
+                }
+            }
+
             await ZoweExplorerApiRegister.getMvsApi(profile).createDataSetMember(label + "(" + name + ")", {
                 responseTimeout: profile.profile?.responseTimeout,
             });
@@ -423,16 +434,19 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
             throw err;
         }
 
-        const newNode = new ZoweDatasetNode({
-            label: name,
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: parent,
-            profile: parent.getProfile(),
-        });
-        newNode.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [newNode] };
-        await newNode.openDs(false, true, datasetProvider);
+        let theNode =
+            foundNode ??
+            new ZoweDatasetNode({
+                label: name,
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: parent,
+                profile: parent.getProfile(),
+            });
 
-        parent.children.push(newNode);
+        theNode.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [theNode] };
+        await theNode.openDs(false, true, datasetProvider);
+        if (!foundNode) parent.children.push(theNode);
+
         parent.dirty = true;
         datasetProvider.refreshElement(parent);
 
