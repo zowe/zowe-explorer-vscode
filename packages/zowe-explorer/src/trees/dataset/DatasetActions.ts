@@ -693,7 +693,6 @@ export class DatasetActions {
         if (name) {
             const label = parent.label as string;
             const profile = parent.getProfile();
-            // let foundNode: IZoweDatasetTreeNode;
             let memberFound = false;
             const memberUri = vscode.Uri.from({
                 scheme: ZoweScheme.DS,
@@ -710,18 +709,6 @@ export class DatasetActions {
                         return;
                     }
                 }
-
-                // // Make sure we have the latest children nodes, i.e. members
-                // await parent.getChildren();
-                // foundNode = parent.children.find((mem) => mem.getLabel().toString().toUpperCase() === name);
-                // if (foundNode != null) {
-                //     const replace = await DatasetActions.determineReplacement(profile, `${label}(${name})`, "mem");
-                //     if (replace === "cancel") {
-                //         await vscode.commands.executeCommand("vscode.open", foundNode.resourceUri);
-                //         datasetProvider.refresh();
-                //         return;
-                //     }
-                // }
                 await ZoweExplorerApiRegister.getMvsApi(profile).createDataSetMember(label + "(" + name + ")", {
                     responseTimeout: profile.profile?.responseTimeout,
                 });
