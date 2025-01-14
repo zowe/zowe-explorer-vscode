@@ -23,6 +23,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - You can now add multiple partitioned data sets or USS directories to your workspace at once using the "Add to Workspace" feature. [#3324](https://github.com/zowe/zowe-explorer-vscode/issues/3324)
 - Exposed read and write access to local storage keys for Zowe Explorer extenders. [#3180](https://github.com/zowe/zowe-explorer-vscode/issues/3180)
 - Added `Open with Encoding` to the context menu of Job Spool files. [#1941](https://github.com/zowe/zowe-explorer-vscode/issues/1941)
+- Added Time Started, Time Ended, and Time Submitted job properties to the Jobs table view. [#3055](https://github.com/zowe/zowe-explorer-vscode/issues/3055)
 
 ### Bug fixes
 
@@ -39,6 +40,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where cached encoding was applied for all profiles with the same data set or USS path in the "Open with Encoding" menu. [#3363](https://github.com/zowe/zowe-explorer-vscode/pull/3363)
 - Removed "Delete Profile" action from the "Manage Profile" menu since this action is currently not supported in Zowe Explorer. [#3037](https://github.com/zowe/zowe-explorer-vscode/issues/3037)
 - Fixed an issue where the filesystem continued to use a profile with invalid credentials to fetch resources. Now, after an authentication error occurs for a profile, it cannot be used again in the filesystem until the authentication error is resolved. [#3329](https://github.com/zowe/zowe-explorer-vscode/issues/3329)
+- Resolved user interface bug with tables that caused an inconsistent table height within the VS Code Panel. [#3389](https://github.com/zowe/zowe-explorer-vscode/pull/3389)
 
 ## `3.0.3`
 

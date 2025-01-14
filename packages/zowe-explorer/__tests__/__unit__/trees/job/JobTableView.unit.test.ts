@@ -202,11 +202,27 @@ describe("JobTableView unit tests", () => {
         });
     });
 
+    describe("expectedFields", () => {
+        it("includes exec-started, exec-submitted and exec-ended properties", () => {
+            for (const prop of ["exec-started", "exec-submitted", "exec-ended"]) {
+                expect((JobTableView as any).expectedFields.some((f) => f.field === prop)).toBe(true);
+            }
+        });
+    });
+
     describe("jobPropertiesFor", () => {
         it("returns job properties from the job node", () => {
             const blockMocks = getBlockMocks();
             const expectedProperties = { ...blockMocks.jobNode.job };
             expect((JobTableView as any).jobPropertiesFor(blockMocks.jobNode)).toStrictEqual(expectedProperties);
+        });
+
+        it("returns exec-started, exec-submitted and exec-ended properties from the job node", () => {
+            const blockMocks = getBlockMocks();
+            const jobProperties = (JobTableView as any).jobPropertiesFor(blockMocks.jobNode);
+            expect(jobProperties).toHaveProperty("exec-started");
+            expect(jobProperties).toHaveProperty("exec-submitted");
+            expect(jobProperties).toHaveProperty("exec-ended");
         });
     });
 });
