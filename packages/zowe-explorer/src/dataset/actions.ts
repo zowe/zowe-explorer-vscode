@@ -420,6 +420,9 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
                 await ZoweExplorerApiRegister.getMvsApi(profile).createDataSetMember(dsMemberName, {
                     responseTimeout: profile.profile?.responseTimeout,
                 });
+                if (replace === "replace") {
+                    deleteTempFile(dsMemberName, parent);
+                }
             }
         } catch (err) {
             if (err instanceof Error) {
@@ -1170,16 +1173,6 @@ export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: ap
     }
 
     datasetProvider.refreshElement(node.getSessionNode());
-
-    // remove local copy of file
-    const fileName = getDocumentFilePath(label, node);
-    try {
-        if (fs.existsSync(fileName)) {
-            fs.unlinkSync(fileName);
-        }
-    } catch (err) {
-        ZoweLogger.warn(err);
-    }
 }
 
 /**
@@ -1882,5 +1875,16 @@ export async function copyName(node: api.IZoweDatasetTreeNode): Promise<void> {
         await vscode.env.clipboard.writeText(`${node.getParent().label as string}(${node.label as string})`);
     } else if (contextually.isDs(node) || contextually.isPds(node) || contextually.isMigrated(node)) {
         await vscode.env.clipboard.writeText(node.label as string);
+    }
+}
+export async function deleteTempFile(label: string, node: api.IZoweDatasetTreeNode): Promise<void> {
+    // remove local copy of file
+    const fileName = getDocumentFilePath(label, node);
+    try {
+        if (fs.existsSync(fileName)) {
+            fs.unlinkSync(fileName);
+        }
+    } catch (err) {
+        ZoweLogger.warn(err);
     }
 }
