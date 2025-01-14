@@ -4,7 +4,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## Bug Fixes
 
-- Prevented data-loss when creating a new member called something that already exists. [[#3327](https://github.com/zowe/zowe-explorer-vscode/issues/3327)]
+- Fixed data loss when creating a data set member with the same name as an existing member. When creating a new member, the user is now prompted to replace it if the member already exists. [[#3327](https://github.com/zowe/zowe-explorer-vscode/issues/3327)]
 
 ## TBD Release
 
