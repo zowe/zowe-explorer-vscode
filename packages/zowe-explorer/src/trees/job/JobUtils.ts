@@ -12,9 +12,10 @@
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { Sorting } from "@zowe/zowe-explorer-api";
+
 export class JobUtils {
-    public static readonly JOB_SORT_OPTS = [
-        `$(list-ordered) ${vscode.l10n.t("Job ID (default)")}`,
+    public static JOB_SORT_OPTS = [
+        `$(list-ordered) ${vscode.l10n.t("Job ID")}`,
         `$(calendar) ${vscode.l10n.t("Date Submitted")}`,
         `$(calendar) ${vscode.l10n.t("Date Completed")}`,
         `$(case-sensitive) ${vscode.l10n.t("Job Name")}`,

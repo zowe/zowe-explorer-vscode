@@ -22,6 +22,7 @@ import {
     Types,
     ZoweExplorerApiType,
     ZosEncoding,
+    Sorting,
 } from "@zowe/zowe-explorer-api";
 import { ZoweJobNode } from "./ZoweJobNode";
 import { JobFSProvider } from "./JobFSProvider";
@@ -852,6 +853,14 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 setting.history = [];
                 await SettingsConfig.setDirectValue(JobTree.persistenceSchema, setting);
             }
+        }
+        if (e.affectsConfiguration(Constants.SETTINGS_JOBS_DEFAULT_SORT)) {
+            const sortOpts = SharedUtils.getDefaultSortOptions(JobUtils.JOB_SORT_OPTS, Constants.SETTINGS_JOBS_DEFAULT_SORT, Sorting.JobSortOpts);
+            for (const sessionNode of this.mSessionNodes) {
+                sessionNode.sort = sortOpts;
+                this.sortBy(sessionNode);
+            }
+            this.refresh();
         }
     }
 

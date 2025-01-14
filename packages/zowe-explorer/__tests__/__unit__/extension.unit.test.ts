@@ -17,7 +17,7 @@ import * as fsextra from "fs-extra";
 import * as extension from "../../src/extension";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
-import { imperative, Gui, Validation, ProfilesCache, FileManagement, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { imperative, Gui, Validation, ProfilesCache, FileManagement, ZoweVsCodeExtension, Sorting } from "@zowe/zowe-explorer-api";
 import { createGetConfigMock, createInstanceOfProfileInfo, createIProfile, createTreeView } from "../__mocks__/mockCreators/shared";
 import { Constants } from "../../src/configuration/Constants";
 import { Profiles } from "../../src/configuration/Profiles";
@@ -349,6 +349,7 @@ async function createGlobalMocks() {
     Object.defineProperty(SettingsConfig, "getDirectValue", {
         value: createGetConfigMock({
             "zowe.automaticProfileValidation": true,
+            "zowe.ds.default.sort": Sorting.DatasetSortOpts.Name,
         }),
     });
     jest.spyOn(ProfilesUtils, "setupProfileInfo").mockResolvedValue({
