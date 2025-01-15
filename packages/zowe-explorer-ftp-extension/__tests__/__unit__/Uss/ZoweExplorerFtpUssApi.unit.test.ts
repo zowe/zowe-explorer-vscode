@@ -216,7 +216,7 @@ describe("FtpUssApi", () => {
 
     it("should throw error when list files failed", async () => {
         jest.spyOn(UssUtils, "listFiles").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("List files failed.");
             })
         );
@@ -261,7 +261,7 @@ describe("FtpUssApi", () => {
 
     it("should throw error when upload directory failed", async () => {
         jest.spyOn(UssUtils, "uploadFile").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Upload file failed.");
             })
         );
@@ -277,7 +277,7 @@ describe("FtpUssApi", () => {
 
     it("should throw error when create file failed", async () => {
         jest.spyOn(UssUtils, "uploadFile").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Upload file failed.");
             })
         );
@@ -288,7 +288,7 @@ describe("FtpUssApi", () => {
 
     it("should throw error when delete file failed", async () => {
         jest.spyOn(UssUtils, "deleteFile").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Delete file failed.");
             })
         );
@@ -299,7 +299,7 @@ describe("FtpUssApi", () => {
 
     it("should throw error when rename file failed", async () => {
         jest.spyOn(UssUtils, "renameFile").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Rename file failed.");
             })
         );

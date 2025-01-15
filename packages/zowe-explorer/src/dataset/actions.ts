@@ -1173,6 +1173,7 @@ export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: ap
     }
 
     datasetProvider.refreshElement(node.getSessionNode());
+    deleteTempFile(label, node);
 }
 
 /**
@@ -1877,7 +1878,7 @@ export async function copyName(node: api.IZoweDatasetTreeNode): Promise<void> {
         await vscode.env.clipboard.writeText(node.label as string);
     }
 }
-export async function deleteTempFile(label: string, node: api.IZoweDatasetTreeNode): Promise<void> {
+export function deleteTempFile(label: string, node: api.IZoweDatasetTreeNode): void {
     // remove local copy of file
     const fileName = getDocumentFilePath(label, node);
     try {
