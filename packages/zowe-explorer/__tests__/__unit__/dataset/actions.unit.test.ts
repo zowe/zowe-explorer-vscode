@@ -184,8 +184,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
                 etag: "123",
             },
         });
-        jest.spyOn(blockMocks.mvsApi, "allMembers").mockImplementation(jest.fn());
-
+        const allMembersSpy = jest.spyOn(blockMocks.mvsApi, "allMembers").mockImplementation(jest.fn());
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
         const newNode = parent.children.find((node) => node.label === "TESTMEMBER");
@@ -291,11 +290,44 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         });
 
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("TESTMEMBER");
-        mocked(Gui.showMessage).mockResolvedValueOnce("cancel");
+        mocked(Gui.showMessage).mockResolvedValueOnce("Cancel");
 
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
         expect(blockMocks.testDatasetTree.refresh).toHaveBeenCalled();
+    });
+    it("should delete the existing temp file when replacing and logging warnings if failed to delete", async () => {
+        const blockMocks = createBlockMocksShared();
+        const parent = new ZoweDatasetNode({
+            label: "parent",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+            session: blockMocks.session,
+        });
+
+        parent.children = [{ ...parent, label: "TESTMEMBER" } as any] as any;
+
+        const allMembersSpy = jest.spyOn(blockMocks.mvsApi, "allMembers");
+        allMembersSpy.mockResolvedValueOnce({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [createDSMemberAttributes("TESTMEMBER")],
+            },
+        });
+
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("TESTMEMBER");
+        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
+        mocked(fs.existsSync).mockReturnValueOnce(true);
+        mocked(fs.unlinkSync).mockImplementation(() => {
+            throw new Error("test");
+        });
+        const zoweLoggerWarnSpy = jest.spyOn(ZoweLogger, "warn").mockImplementation(jest.fn());
+
+        await dsActions.createMember(parent, blockMocks.testDatasetTree);
+
+        expect(mocked(fs.unlinkSync)).toHaveBeenCalled();
+        expect(zoweLoggerWarnSpy).toHaveBeenCalled();
     });
 });
 
