@@ -71,8 +71,11 @@ const localizedStrings = {
 };
 
 /**
- * Allocates a copy of a data set or member
+ * Allocates a copy of a data set or member.
  *
+ * @param {api.IZoweTree<api.IZoweDatasetTreeNode>} datasetProvider - The dataset provider.
+ * @param {api.IZoweDatasetTreeNode} [node] - The dataset node.
+ * @return {Promise<void>} A promise that resolves to void.
  */
 export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>, node?: api.IZoweDatasetTreeNode): Promise<void> {
     let profile: zowe.imperative.IProfileLoaded;
@@ -170,6 +173,13 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
     ZoweLogger.info(localize("allocateLike.logger.info2", "{0} was created like {0}.", newDSName, likeDSName));
 }
 
+/**
+ * Uploads files to a z/OS dataset.
+ *
+ * @param {ZoweDatasetNode} node - The dataset node to upload the files to.
+ * @param {api.IZoweTree<api.IZoweDatasetTreeNode>} datasetProvider - The dataset provider.
+ * @return {Promise<void>} A promise that resolves when the upload is complete.
+ */
 export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
     ZoweLogger.trace("dataset.actions.uploadDialog called.");
     const fileOpenOptions = {
@@ -223,6 +233,13 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.I
     }
 }
 
+/**
+ * Uploads a file to a z/OS dataset.
+ *
+ * @param {ZoweDatasetNode} node - The dataset node to upload the file to.
+ * @param {string} docPath - The path of the file to upload.
+ * @return {Promise<zowe.IZosFilesResponse>} - A promise that resolves to the response of the upload operation.
+ */
 export async function uploadFile(node: ZoweDatasetNode, docPath: string): Promise<zowe.IZosFilesResponse> {
     ZoweLogger.trace("dataset.actions.uploadFile called.");
     try {
@@ -412,10 +429,18 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
     if (name) {
         const label = parent.label as string;
         const profile = parent.getProfile();
+        let replace: shouldReplace;
+        const dsMemberName = `${label}(${name})`;
         try {
-            await ZoweExplorerApiRegister.getMvsApi(profile).createDataSetMember(label + "(" + name + ")", {
-                responseTimeout: profile.profile?.responseTimeout,
-            });
+            replace = await determineReplacement(profile, dsMemberName, "mem");
+            if (replace !== "cancel") {
+                await ZoweExplorerApiRegister.getMvsApi(profile).createDataSetMember(dsMemberName, {
+                    responseTimeout: profile.profile?.responseTimeout,
+                });
+                if (replace === "replace") {
+                    deleteTempFile(dsMemberName, parent);
+                }
+            }
         } catch (err) {
             if (err instanceof Error) {
                 await errorHandling(err, label, localize("createMember.error", "Unable to create member."));
@@ -429,10 +454,13 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
             parentNode: parent,
             profile: parent.getProfile(),
         });
+
         newNode.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [newNode] };
         await newNode.openDs(false, true, datasetProvider);
+        if (replace === "notFound") {
+            parent.children.push(newNode);
+        }
 
-        parent.children.push(newNode);
         parent.dirty = true;
         datasetProvider.refreshElement(parent);
 
@@ -446,6 +474,12 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
     }
 }
 
+/**
+ * Retrieves the dataset type and options based on the provided type.
+ *
+ * @param {string} type - The type of dataset.
+ * @return {{ typeEnum: zowe.CreateDataSetTypeEnum, createOptions: vscode.WorkspaceConfiguration }} - Object containing the dataset type and options.
+ */
 export function getDataSetTypeAndOptions(type: string): {
     typeEnum: zowe.CreateDataSetTypeEnum;
     createOptions: vscode.WorkspaceConfiguration;
@@ -1162,16 +1196,7 @@ export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: ap
     }
 
     datasetProvider.refreshElement(node.getSessionNode());
-
-    // remove local copy of file
-    const fileName = getDocumentFilePath(label, node);
-    try {
-        if (fs.existsSync(fileName)) {
-            fs.unlinkSync(fileName);
-        }
-    } catch (err) {
-        ZoweLogger.warn(err);
-    }
+    deleteTempFile(label, node);
 }
 
 /**
@@ -1869,10 +1894,35 @@ export async function _copyProcessor(
     }
 }
 
+/**
+ * Copies the name of a dataset tree node to the clipboard.
+ *
+ * @param {api.IZoweDatasetTreeNode} node - The dataset tree node.
+ * @return {Promise<void>} A promise that resolves when the name is copied.
+ */
 export async function copyName(node: api.IZoweDatasetTreeNode): Promise<void> {
     if (contextually.isDsMember(node) && node.getParent()) {
         await vscode.env.clipboard.writeText(`${node.getParent().label as string}(${node.label as string})`);
     } else if (contextually.isDs(node) || contextually.isPds(node) || contextually.isMigrated(node)) {
         await vscode.env.clipboard.writeText(node.label as string);
+    }
+}
+
+/**
+ * Deletes a temporary file.
+ *
+ * @param {string} label - The label of the file.
+ * @param {api.IZoweDatasetTreeNode} node - The dataset tree node.
+ * @return {void}
+ */
+export function deleteTempFile(label: string, node: api.IZoweDatasetTreeNode): void {
+    // remove local copy of file
+    const fileName = getDocumentFilePath(label, node);
+    try {
+        if (fs.existsSync(fileName)) {
+            fs.unlinkSync(fileName);
+        }
+    } catch (err) {
+        ZoweLogger.warn(err);
     }
 }

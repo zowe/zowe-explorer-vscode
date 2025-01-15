@@ -220,7 +220,7 @@ describe("FtpMvsApi", () => {
             type: "file",
             options: { encoding: "" },
         };
-        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce((val) => {
+        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce((_val) => {
             throw new Error("getContents example error");
         });
         await expect(async () => {
@@ -287,7 +287,7 @@ describe("FtpMvsApi", () => {
 
     it("should throw error when list dataset failed", async () => {
         jest.spyOn(DataSetUtils, "listDataSets").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("List dataset failed.");
             })
         );
@@ -298,7 +298,7 @@ describe("FtpMvsApi", () => {
 
     it("should throw error when list dataset members failed", async () => {
         jest.spyOn(DataSetUtils, "listMembers").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("List members failed.");
             })
         );
@@ -309,7 +309,7 @@ describe("FtpMvsApi", () => {
 
     it("should throw error when get contents failed", async () => {
         jest.spyOn(DataSetUtils, "downloadDataSet").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Download dataset failed.");
             })
         );
@@ -327,7 +327,7 @@ describe("FtpMvsApi", () => {
 
     it("should throw error when put contents failed", async () => {
         jest.spyOn(DataSetUtils, "uploadDataSet").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Upload dataset failed.");
             })
         );
@@ -344,7 +344,7 @@ describe("FtpMvsApi", () => {
 
     it("should throw error when create dataset failed", async () => {
         jest.spyOn(DataSetUtils, "allocateDataSet").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Allocate dataset failed.");
             })
         );
@@ -360,7 +360,7 @@ describe("FtpMvsApi", () => {
 
     it("should throw error when create dataset member failed", async () => {
         jest.spyOn(DataSetUtils, "uploadDataSet").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Upload dataset failed.");
             })
         );
@@ -376,7 +376,7 @@ describe("FtpMvsApi", () => {
 
     it("should throw error when rename dataset failed", async () => {
         jest.spyOn(DataSetUtils, "renameDataSet").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Rename dataset failed.");
             })
         );
@@ -387,7 +387,7 @@ describe("FtpMvsApi", () => {
 
     it("should throw error when rename dataset member failed", async () => {
         jest.spyOn(DataSetUtils, "renameDataSet").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Rename dataset failed.");
             })
         );
@@ -398,7 +398,7 @@ describe("FtpMvsApi", () => {
 
     it("should throw error when delete dataset failed", async () => {
         jest.spyOn(DataSetUtils, "deleteDataSet").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Delete dataset failed.");
             })
         );
