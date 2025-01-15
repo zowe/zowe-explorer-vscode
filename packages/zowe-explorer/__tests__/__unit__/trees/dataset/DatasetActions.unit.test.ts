@@ -188,6 +188,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
                 etag: "123",
             },
         });
+        jest.spyOn(blockMocks.mvsApi, "allMembers").mockImplementation(jest.fn());
 
         await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
 
@@ -279,6 +280,28 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
                 responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
             }
         );
+    });
+
+    it("should not replace existing member when user cancels the replacement prompt", async () => {
+        const blockMocks = createBlockMocksShared();
+        const parent = new ZoweDatasetNode({
+            label: "parent",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+            session: blockMocks.session,
+        });
+
+        blockMocks.testDatasetTree.getChildren = jest.fn().mockResolvedValueOnce([{ ...parent, label: "TESTMEMBER" } as any] as any);
+
+        jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("cancel" as any);
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("TESTMEMBER");
+
+        jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValueOnce(true as any);
+
+        await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
+
+        expect(vscode.commands.executeCommand).toHaveBeenCalledWith("vscode.open", { path: "/parent/parent/TESTMEMBER", scheme: "zowe-ds" });
+        expect(blockMocks.testDatasetTree.refresh).toHaveBeenCalled();
     });
 });
 

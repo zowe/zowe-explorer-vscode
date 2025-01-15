@@ -693,10 +693,18 @@ export class DatasetActions {
         if (name) {
             const label = parent.label as string;
             const profile = parent.getProfile();
+            let replace: Definitions.ShouldReplace;
+            const memberUri = vscode.Uri.from({
+                scheme: ZoweScheme.DS,
+                path: path.posix.join(parent.resourceUri.path, name),
+            });
             try {
-                await ZoweExplorerApiRegister.getMvsApi(profile).createDataSetMember(label + "(" + name + ")", {
-                    responseTimeout: profile.profile?.responseTimeout,
-                });
+                replace = await DatasetActions.determineReplacement(profile, `${label}(${name})`, "mem");
+                if (replace !== "cancel") {
+                    await ZoweExplorerApiRegister.getMvsApi(profile).createDataSetMember(label + "(" + name + ")", {
+                        responseTimeout: profile.profile?.responseTimeout,
+                    });
+                }
             } catch (err) {
                 if (err instanceof Error) {
                     await AuthUtils.errorHandling(err, {
@@ -707,16 +715,17 @@ export class DatasetActions {
                 }
                 throw err;
             }
+            if (replace === "notFound") {
+                const newNode = new ZoweDatasetNode({
+                    label: name,
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    parentNode: parent,
+                    profile: parent.getProfile(),
+                });
+                parent.children.push(newNode);
+                await vscode.workspace.fs.writeFile(memberUri, new Uint8Array());
+            }
 
-            const newNode = new ZoweDatasetNode({
-                label: name,
-                collapsibleState: vscode.TreeItemCollapsibleState.None,
-                parentNode: parent,
-                profile: parent.getProfile(),
-            });
-            await vscode.workspace.fs.writeFile(newNode.resourceUri, new Uint8Array());
-
-            parent.children.push(newNode);
             parent.dirty = true;
             datasetProvider.refreshElement(parent);
 
@@ -726,7 +735,7 @@ export class DatasetActions {
                 datasetProvider.refreshElement(otherTreeParent);
             }
 
-            await vscode.commands.executeCommand("vscode.open", newNode.resourceUri);
+            await vscode.commands.executeCommand("vscode.open", memberUri);
             datasetProvider.refresh();
         }
     }
