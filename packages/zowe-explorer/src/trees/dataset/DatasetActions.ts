@@ -1374,7 +1374,6 @@ export class DatasetActions {
             const element = await DatasetUtils.getNodeLabels(el);
             filePaths.push(element);
         }
-        filePaths.flat();
         return vscode.env.clipboard.writeText(JSON.stringify(filePaths.length > 1 ? filePaths : filePaths[0]));
     }
 
@@ -1558,10 +1557,15 @@ export class DatasetActions {
                         }
                         const replace = await DatasetActions.determineReplacement(node.getProfile(), dsname, "ps");
                         if (replace !== "cancel") {
+                            // const attributes = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(content.dataSetName, {
+                            //     attributes: true,
+                            // });
+                            // console.log("Response", attributes.apiResponse.items[0].spacu);
                             const options: zosfiles.ICrossLparCopyDatasetOptions = {
                                 "from-dataset": { dsn: content.dataSetName, member: undefined },
                                 responseTimeout: node.getProfile()?.profile?.responseTimeout,
                                 replace: replace === "replace" ? true : false,
+                                // targetStorageClass: attributes.apiResponse.items[0].spacu,
                             };
                             if (token.isCancellationRequested) {
                                 Gui.showMessage(DatasetActions.localizedStrings.opCancelled);

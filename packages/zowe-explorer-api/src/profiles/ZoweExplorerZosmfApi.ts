@@ -400,7 +400,7 @@ export namespace ZoweExplorerZosmf {
                 this.getSession(sourceprofile),
                 { dsn: toDataSetName, member: toMemberName },
                 options,
-                { volume: undefined },
+                {},
                 this.getSession()
             );
         }

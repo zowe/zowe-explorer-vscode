@@ -381,7 +381,7 @@ export namespace MainframeInteraction {
          * Copies a dataSet to cross Lpar
          *
          */
-        copyDataSetCrossLpar(
+        copyDataSetCrossLpar?(
             toDataSetName: string,
             toMemberName: string,
             options: zosfiles.ICrossLparCopyDatasetOptions,
