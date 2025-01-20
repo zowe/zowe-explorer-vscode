@@ -113,36 +113,77 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         recursiveCall?: boolean
     ): Promise<void> {
         const destinationInfo = FsAbstractUtils.getInfoForUri(destUri, Profiles.getInstance());
-        // this is like when the dragged item is a file like sequential
-        try {
-            await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
-                zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
-                sourceNode.getLabel() as string,
-                {}
-            );
-        } catch (err) {
-            //file might already exist. Ignore the error and try to write it to lpar
-        }
-        // read the contents from the source LPAR
-        // const contents = await ZoweExplorerApiRegister.getMvsApi(sourceNode.getProfile()).getContents(sourceNode.getLabel() as string);
-        const contents = await DatasetFSProvider.instance.readFile(sourceNode.resourceUri);
-        //write the contents to the destination LPAR
-        try {
-            await DatasetFSProvider.instance.writeFile(
-                destUri.with({
-                    query: "forceUplaod=true",
-                }),
-                contents,
-                { create: true, overwrite: true }
-            );
-        } catch (err) {
-            // If the write fails, we cannot move to the next file
-            if (err instanceof Error) {
-                Gui.errorMessage(
-                    vscode.l10n.t("Failed to move file {0}: {1}", destUri.path.substring(destinationInfo.slashAfterProfilePos), err.message)
+        if (SharedContext.isPds(sourceNode)) {
+            if (!DatasetFSProvider.instance.exists(destUri)) {
+                // create a PDS on remote
+                try {
+                    await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
+                        zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
+                        sourceNode.getLabel() as string,
+                        {}
+                    );
+                } catch (err) {
+                    //error
+                }
+                // create directory entry in local
+                DatasetFSProvider.instance.createDirectory(destUri);
+            }
+            const children = await sourceNode.getChildren();
+            for (const childNode of children) {
+                // move members within the folder to the destination
+                await this.crossLparMove(
+                    childNode,
+                    sourceUri.with({
+                        path: path.posix.join(sourceUri.path, childNode.getLabel() as string),
+                    }),
+                    destUri.with({
+                        path: path.posix.join(destUri.path, childNode.getLabel() as string),
+                    }),
+                    true
                 );
             }
-            return;
+            await vscode.workspace.fs.delete(sourceUri, { recursive: true });
+        } else {
+            // this is like when the dragged item is a file like sequential
+            try {
+                if (sourceNode.contextValue === Constants.DS_MEMBER_CONTEXT) {
+                    const dsname: string = destUri.path.match(/^\/[^/]+\/(.*?)\/[^/]+$/)[1] + "(" + (sourceNode.getLabel() as string) + ")";
+                    await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, {});
+                } else {
+                    await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
+                        zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
+                        sourceNode.getLabel() as string,
+                        {}
+                    );
+                }
+            } catch (err) {
+                //file might already exist. Ignore the error and try to write it to lpar
+            }
+            // read the contents from the source LPAR
+            const contents = await DatasetFSProvider.instance.readFile(sourceNode.resourceUri);
+            //write the contents to the destination LPAR
+            try {
+                await DatasetFSProvider.instance.writeFile(
+                    destUri.with({
+                        query: "forceUplaod=true",
+                    }),
+                    contents,
+                    { create: true, overwrite: true }
+                );
+            } catch (err) {
+                // If the write fails, we cannot move to the next file
+                if (err instanceof Error) {
+                    Gui.errorMessage(
+                        vscode.l10n.t("Failed to move file {0}: {1}", destUri.path.substring(destinationInfo.slashAfterProfilePos), err.message)
+                    );
+                }
+                return;
+            }
+
+            if (!recursiveCall) {
+                // Delete any files from the selection on the source LPAR
+                await vscode.workspace.fs.delete(sourceNode.resourceUri, { recursive: false });
+            }
         }
     }
 
@@ -201,10 +242,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
             const newUriForNode = vscode.Uri.from({
                 scheme: ZoweScheme.DS,
-                path: path.posix.join("/", target.getProfile().name, target.fullPath, item.label as string),
+                path: path.posix.join("/", target.resourceUri.path, item.label as string),
             });
-            const prof = node.getProfile();
-            // const hasMoveApi = ZoweExplorerApiRegister.getMvsApi(prof).
 
             await this.crossLparMove(node, node.resourceUri, newUriForNode);
 
