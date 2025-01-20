@@ -25,6 +25,7 @@ import {
     FsAbstractUtils,
     DatasetMatch,
     ZoweExplorerApiType,
+    ZoweScheme,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetFSProvider } from "./DatasetFSProvider";
@@ -43,6 +44,7 @@ import { FilterDescriptor, FilterItem } from "../../management/FilterManagement"
 import { IconUtils } from "../../icons/IconUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { DataSetTemplates } from "./DatasetTemplates";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 
 /**
  * A tree that contains nodes of sessions and data sets
@@ -64,8 +66,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     // public memberPattern: IZoweDatasetTreeNode[] = [];
     private treeView: vscode.TreeView<IZoweDatasetTreeNode>;
 
-    public dragMimeTypes: string[] = ["application/vnd.code.tree.zowe.ds.explorer"];
+    public dragMimeTypes: string[] = [];
     public dropMimeTypes: string[] = ["application/vnd.code.tree.zowe.ds.explorer"];
+
+    private draggedNodes: Record<string, IZoweDatasetTreeNode> = {};
 
     public constructor() {
         super(
@@ -83,10 +87,140 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         this.mSessionNodes = [this.mFavoriteSession];
         this.treeView = Gui.createTreeView<IZoweDatasetTreeNode>("zowe.ds.explorer", {
             treeDataProvider: this,
+            dragAndDropController: this,
             canSelectMany: true,
         });
         // eslint-disable-next-line @typescript-eslint/unbound-method
         this.treeView.onDidCollapseElement(TreeViewUtils.refreshIconOnCollapse([SharedContext.isPds, SharedContext.isDsSession], this));
+    }
+
+    public handleDrag(source: IZoweDatasetTreeNode[], dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): void {
+        const items = [];
+        for (const srcItem of source) {
+            this.draggedNodes[srcItem.resourceUri.path] = srcItem;
+            items.push({
+                label: srcItem.label,
+                uri: srcItem.resourceUri,
+            });
+        }
+        dataTransfer.set("application/vnd.code.tree.zowe.ds.explorer", new vscode.DataTransferItem(items));
+    }
+
+    private async crossLparMove(
+        sourceNode: IZoweDatasetTreeNode,
+        sourceUri: vscode.Uri,
+        destUri: vscode.Uri,
+        recursiveCall?: boolean
+    ): Promise<void> {
+        const destinationInfo = FsAbstractUtils.getInfoForUri(destUri, Profiles.getInstance());
+        // this is like when the dragged item is a file like sequential
+        try {
+            await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
+                zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
+                sourceNode.getLabel() as string,
+                {}
+            );
+        } catch (err) {
+            //file might already exist. Ignore the error and try to write it to lpar
+        }
+        // read the contents from the source LPAR
+        // const contents = await ZoweExplorerApiRegister.getMvsApi(sourceNode.getProfile()).getContents(sourceNode.getLabel() as string);
+        const contents = await DatasetFSProvider.instance.readFile(sourceNode.resourceUri);
+        //write the contents to the destination LPAR
+        try {
+            await DatasetFSProvider.instance.writeFile(
+                destUri.with({
+                    query: "forceUplaod=true",
+                }),
+                contents,
+                { create: true, overwrite: true }
+            );
+        } catch (err) {
+            // If the write fails, we cannot move to the next file
+            if (err instanceof Error) {
+                Gui.errorMessage(
+                    vscode.l10n.t("Failed to move file {0}: {1}", destUri.path.substring(destinationInfo.slashAfterProfilePos), err.message)
+                );
+            }
+            return;
+        }
+    }
+
+    public async handleDrop(
+        targetNode: IZoweDatasetTreeNode | undefined,
+        dataTransfer: vscode.DataTransfer,
+        _token: vscode.CancellationToken
+    ): Promise<void> {
+        const droppedItems = dataTransfer.get("application/vnd.code.tree.zowe.ds.explorer");
+        if (!droppedItems) {
+            return;
+        }
+
+        //get the closest parent folder if the target is a
+        let target = targetNode;
+        if (!SharedContext.isPds(target)) {
+            target = target.getParent() as IZoweDatasetTreeNode;
+        }
+
+        //should see y this condition is present here
+        // If the target path fully contains the path of the dragged node,
+        // the user is trying to move a parent node into its child - invalid operation
+        const movedIntoChild = Object.values(this.draggedNodes).some((n) => target.resourceUri.path.startsWith(n.resourceUri.path));
+        if (movedIntoChild) {
+            this.draggedNodes = {};
+            return;
+        }
+
+        // determine if any overwrites may occur
+        const willOverwrite = Object.values(this.draggedNodes).some((n) => target.children?.find((tc) => tc.label === n.label) != null);
+        if (willOverwrite) {
+            const userOpts = [vscode.l10n.t("Confirm")];
+            const resp = await Gui.warningMessage(
+                vscode.l10n.t("One or more items may be overwritten from this drop operation. Confirm or cancel?"),
+                {
+                    items: userOpts,
+                    vsCodeOpts: {
+                        modal: true,
+                    },
+                }
+            );
+            if (resp == null || resp !== userOpts[0]) {
+                return;
+            }
+        }
+
+        const movingMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Moving MVS files...")}`);
+        const parentsToUpdate = new Set<IZoweDatasetTreeNode>();
+
+        for (const item of droppedItems.value) {
+            const node = this.draggedNodes[item.uri.path];
+            if (node.getParent() === target) {
+                //skip nodes that are direct children of the target node
+                continue;
+            }
+
+            const newUriForNode = vscode.Uri.from({
+                scheme: ZoweScheme.DS,
+                path: path.posix.join("/", target.getProfile().name, target.fullPath, item.label as string),
+            });
+            const prof = node.getProfile();
+            // const hasMoveApi = ZoweExplorerApiRegister.getMvsApi(prof).
+
+            await this.crossLparMove(node, node.resourceUri, newUriForNode);
+
+            //remove node from old parent and relocate to new parent
+            const oldParent = node.getParent() as IZoweDatasetTreeNode;
+            oldParent.children = oldParent.children.filter((c) => c !== node);
+            node.resourceUri = newUriForNode;
+
+            parentsToUpdate.add(node.getParent() as IZoweDatasetTreeNode);
+        }
+        for (const parent of parentsToUpdate) {
+            this.refreshElement(parent);
+        }
+        this.refreshElement(target);
+        movingMsg.dispose();
+        this.draggedNodes = {};
     }
 
     /**
