@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   circular-deps:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
 
