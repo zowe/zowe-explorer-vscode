@@ -1557,15 +1557,10 @@ export class DatasetActions {
                         }
                         const replace = await DatasetActions.determineReplacement(node.getProfile(), dsname, "ps");
                         if (replace !== "cancel") {
-                            // const attributes = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(content.dataSetName, {
-                            //     attributes: true,
-                            // });
-                            // console.log("Response", attributes.apiResponse.items[0].spacu);
                             const options: zosfiles.ICrossLparCopyDatasetOptions = {
                                 "from-dataset": { dsn: content.dataSetName, member: undefined },
                                 responseTimeout: node.getProfile()?.profile?.responseTimeout,
                                 replace: replace === "replace" ? true : false,
-                                // targetStorageClass: attributes.apiResponse.items[0].spacu,
                             };
                             if (token.isCancellationRequested) {
                                 Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
@@ -1635,6 +1630,11 @@ export class DatasetActions {
                                         { replace: replace == "replace" ? true : false }
                                     );
                                 } else {
+                                    if (mvsApi?.copyDataSetCrossLpar == null) {
+                                        await Gui.errorMessage(vscode.l10n.t("Copying data sets cross lpars is not yet supported for this profile."));
+                                        return;
+                                    }
+
                                     const options: zosfiles.ICrossLparCopyDatasetOptions = {
                                         "from-dataset": { dsn: content.dataSetName, member: content.memberName },
                                         responseTimeout: node.getProfile()?.profile?.responseTimeout,
