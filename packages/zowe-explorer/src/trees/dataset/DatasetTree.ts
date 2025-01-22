@@ -94,7 +94,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         this.treeView.onDidCollapseElement(TreeViewUtils.refreshIconOnCollapse([SharedContext.isPds, SharedContext.isDsSession], this));
     }
 
-    public handleDrag(source: IZoweDatasetTreeNode[], dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): void {
+    public handleDrag(source: IZoweDatasetTreeNode[], dataTransfer: vscode.DataTransfer, _token: vscode.CancellationToken): void {
         const items = [];
         for (const srcItem of source) {
             this.draggedNodes[srcItem.resourceUri.path] = srcItem;
@@ -144,17 +144,19 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
             await vscode.workspace.fs.delete(sourceUri, { recursive: true });
         } else {
-            // this is like when the dragged item is a file like sequential
             try {
-                if (sourceNode.contextValue === Constants.DS_MEMBER_CONTEXT) {
-                    const dsname: string = destUri.path.match(/^\/[^/]+\/(.*?)\/[^/]+$/)[1] + "(" + (sourceNode.getLabel() as string) + ")";
-                    await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, {});
-                } else {
-                    await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
-                        zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
-                        sourceNode.getLabel() as string,
-                        {}
-                    );
+                const entry = await DatasetFSProvider.instance.fetchDatasetAtUri(destUri);
+                if (entry == null) {
+                    if (sourceNode.contextValue === Constants.DS_MEMBER_CONTEXT) {
+                        const dsname: string = destUri.path.match(/^\/[^/]+\/(.*?)\/[^/]+$/)[1] + "(" + (sourceNode.getLabel() as string) + ")";
+                        await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, {});
+                    } else {
+                        await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
+                            zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
+                            sourceNode.getLabel() as string,
+                            {}
+                        );
+                    }
                 }
             } catch (err) {
                 //file might already exist. Ignore the error and try to write it to lpar
@@ -203,7 +205,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             target = target.getParent() as IZoweDatasetTreeNode;
         }
 
-        //should see y this condition is present here
         // If the target path fully contains the path of the dragged node,
         // the user is trying to move a parent node into its child - invalid operation
         const movedIntoChild = Object.values(this.draggedNodes).some((n) => target.resourceUri.path.startsWith(n.resourceUri.path));
@@ -246,11 +247,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             });
 
             await this.crossLparMove(node, node.resourceUri, newUriForNode);
-
-            //remove node from old parent and relocate to new parent
-            const oldParent = node.getParent() as IZoweDatasetTreeNode;
-            oldParent.children = oldParent.children.filter((c) => c !== node);
-            node.resourceUri = newUriForNode;
 
             parentsToUpdate.add(node.getParent() as IZoweDatasetTreeNode);
         }
