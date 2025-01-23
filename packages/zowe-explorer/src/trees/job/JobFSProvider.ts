@@ -208,7 +208,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const bufBuilder = new BufferBuilder();
 
         const jesApi = ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile);
-        await AuthHandler.lockProfile(spoolEntry.metadata.profile);
+        await AuthHandler.waitForUnlock(spoolEntry.metadata.profile);
         try {
             if (jesApi.downloadSingleSpool) {
                 const spoolDownloadObject: IDownloadSpoolContentParms = {
@@ -232,7 +232,6 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             await AuthUtils.handleProfileAuthOnError(err, spoolEntry.metadata.profile);
             throw err;
         }
-        AuthHandler.unlockProfile(spoolEntry.metadata.profile);
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
         spoolEntry.data = bufBuilder.read() ?? new Uint8Array();

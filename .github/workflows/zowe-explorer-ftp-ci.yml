@@ -28,7 +28,7 @@ jobs:
       matrix:
         node-version: [18.x, 20.x, 22.x]
         # order operating systems from best to worst
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-latest, ubuntu-22.04, macos-latest]
 
     if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
 
@@ -53,25 +53,25 @@ jobs:
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
-        if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20.x'
+        if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '20.x'
         with:
           name: zowe-explorer-ftp-extension-results
           path: packages/zowe-explorer-ftp-extension/results/
 
       # Run codecov upload for only one run
       # - name: Upload Results to Codecov
-      #   if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20.x'
+      #   if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '20.x'
       #   uses: codecov/codecov-action@v3
       #   with:
       #     env_vars: OS,NODE
 
       - name: Package VSIX
-        if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20.x'
+        if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '20.x'
         run: pnpm package
         working-directory: packages/zowe-explorer-ftp-extension
 
       - name: Archive VSIX artifact
-        if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20.x'
+        if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '20.x'
         uses: actions/upload-artifact@v4
         with:
           name: zowe-explorer-ftp-extension-vsix
