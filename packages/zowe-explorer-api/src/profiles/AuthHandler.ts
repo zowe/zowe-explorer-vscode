@@ -61,7 +61,7 @@ export class AuthHandler {
      * @param refreshResources {boolean} Whether to refresh high-priority resources (active editor & virtual workspace) after unlocking
      */
     public static unlockProfile(profile: ProfileLike, refreshResources?: boolean): void {
-        const profileName = typeof profile === "string" ? profile : profile.name;
+        const profileName = AuthHandler.getProfileName(profile);
         const mutex = this.profileLocks.get(profileName);
         // If a mutex doesn't exist for this profile or the mutex is no longer locked, return
         if (mutex == null || !mutex.isLocked()) {
@@ -90,7 +90,7 @@ export class AuthHandler {
      * @returns {boolean} Whether authentication was successful
      */
     public static async promptForAuthentication(profile: ProfileLike, params: AuthPromptParams): Promise<boolean> {
-        const profileName = typeof profile === "string" ? profile : profile.name;
+        const profileName = AuthHandler.getProfileName(profile);
         if (params.imperativeError.mDetails.additionalDetails) {
             const tokenError: string = params.imperativeError.mDetails.additionalDetails;
             if (tokenError.includes("Token is not valid or expired.") || params.isUsingTokenAuth) {
@@ -137,7 +137,7 @@ export class AuthHandler {
      * @returns Whether the profile was successfully locked
      */
     public static async lockProfile(profile: ProfileLike, authOpts?: AuthPromptParams): Promise<boolean> {
-        const profileName = typeof profile === "string" ? profile : profile.name;
+        const profileName = AuthHandler.getProfileName(profile);
 
         // If the mutex does not exist, make one for the profile and acquire the lock
         if (!this.profileLocks.has(profileName)) {
@@ -157,13 +157,29 @@ export class AuthHandler {
         return true;
     }
 
+    private static getProfileName(profile: ProfileLike): string {
+        return typeof profile === "string" ? profile : profile.name;
+    }
+
+    /**
+     * Waits for the profile to be unlocked (ONLY if the profile was locked after an authentication error)
+     * @param profile The profile to check
+     * @returns {boolean} `true` if the given profile is locked, `false` otherwise
+     */
+    public static async waitForUnlock(profile: ProfileLike): Promise<void> {
+        const profileName = AuthHandler.getProfileName(profile);
+        if (!this.profileLocks.has(profileName)) {
+            return this.profileLocks.get(profileName)?.waitForUnlock();
+        }
+    }
+
     /**
      * Checks whether the given profile has its lock acquired.
      * @param profile The profile to check
      * @returns {boolean} `true` if the given profile is locked, `false` otherwise
      */
     public static isProfileLocked(profile: ProfileLike): boolean {
-        const mutex = this.profileLocks.get(typeof profile === "string" ? profile : profile.name);
+        const mutex = this.profileLocks.get(AuthHandler.getProfileName(profile));
         if (mutex == null) {
             return false;
         }
