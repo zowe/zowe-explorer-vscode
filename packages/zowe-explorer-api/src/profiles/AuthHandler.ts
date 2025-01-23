@@ -169,8 +169,10 @@ export class AuthHandler {
     public static async waitForUnlock(profile: ProfileLike): Promise<void> {
         const profileName = AuthHandler.getProfileName(profile);
         if (!this.profileLocks.has(profileName)) {
-            return this.profileLocks.get(profileName)?.waitForUnlock();
+            return;
         }
+
+        return this.profileLocks.get(profileName)?.waitForUnlock();
     }
 
     /**
