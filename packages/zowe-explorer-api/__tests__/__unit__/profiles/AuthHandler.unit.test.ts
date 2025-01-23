@@ -17,6 +17,22 @@ import { AuthPromptParams } from "@zowe/zowe-explorer-api";
 
 const TEST_PROFILE_NAME = "lpar.zosmf";
 
+describe("AuthHandler.waitForUnlock", () => {
+    it("calls Mutex.waitForUnlock if the profile lock is present", async () => {
+        const mutex = new Mutex();
+        const waitForUnlockMock = jest.spyOn(mutex, "waitForUnlock");
+        (AuthHandler as any).profileLocks.set(TEST_PROFILE_NAME, mutex);
+        await AuthHandler.waitForUnlock(TEST_PROFILE_NAME);
+        expect(waitForUnlockMock).toHaveBeenCalled();
+        (AuthHandler as any).profileLocks.clear();
+    });
+    it("does nothing if the profile lock is not in the profileLocks map", async () => {
+        const waitForUnlockMock = jest.spyOn(Mutex.prototype, "waitForUnlock");
+        await AuthHandler.waitForUnlock(TEST_PROFILE_NAME);
+        expect(waitForUnlockMock).not.toHaveBeenCalled();
+    });
+});
+
 describe("AuthHandler.isProfileLocked", () => {
     it("returns true if the profile is locked", async () => {
         await AuthHandler.lockProfile(TEST_PROFILE_NAME);
