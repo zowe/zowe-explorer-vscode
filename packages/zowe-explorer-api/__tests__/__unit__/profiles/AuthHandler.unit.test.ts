@@ -17,6 +17,23 @@ import { AuthPromptParams } from "@zowe/zowe-explorer-api";
 
 const TEST_PROFILE_NAME = "lpar.zosmf";
 
+describe("AuthHandler.disableLocksForType", () => {
+    it("removes the profile type from the list of profile types w/ locks enabled", () => {
+        AuthHandler.disableLocksForType("zosmf");
+        expect((AuthHandler as any).enabledProfileTypes.has("zosmf")).toBe(false);
+    });
+});
+
+describe("AuthHandler.enableLocksForType", () => {
+    it("adds the profile type to the list of profile types w/ locks enabled", () => {
+        AuthHandler.enableLocksForType("sample-type");
+        expect((AuthHandler as any).enabledProfileTypes.has("sample-type")).toBe(true);
+
+        // cleanup for other tests
+        (AuthHandler as any).enabledProfileTypes.delete("sample-type");
+    });
+});
+
 describe("AuthHandler.waitForUnlock", () => {
     it("calls Mutex.waitForUnlock if the profile lock is present", async () => {
         const mutex = new Mutex();
@@ -50,6 +67,17 @@ describe("AuthHandler.isProfileLocked", () => {
 });
 
 describe("AuthHandler.lockProfile", () => {
+    it("does not acquire a Mutex if the profile type doesn't have locks enabled", async () => {
+        const acquireMutex = jest.spyOn(Mutex.prototype, "acquire");
+        await AuthHandler.lockProfile({
+            profile: {},
+            type: "sample-type",
+            message: "",
+            failNotFound: false,
+        });
+        expect(acquireMutex).not.toHaveBeenCalled();
+    });
+
     it("assigns and acquires a Mutex to the profile in the profile map", async () => {
         await AuthHandler.lockProfile(TEST_PROFILE_NAME);
         expect((AuthHandler as any).profileLocks.has(TEST_PROFILE_NAME)).toBe(true);
