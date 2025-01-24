@@ -46,6 +46,7 @@ import { Icon } from "../../../../src/icons/Icon";
 import { ZoweTreeProvider } from "../../../../src/trees/ZoweTreeProvider";
 import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
+import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -1200,6 +1201,22 @@ describe("USSTree Unit Tests - Function addSingleSession", () => {
         await globalMocks.testTree.addSingleSession(globalMocks.testProfile);
 
         expect(globalMocks.testTree.mSessionNodes.length).toEqual(2);
+    });
+
+    it("Tests that addSingleSession skips adding the session, if API is not registered", async () => {
+        const globalMocks = createGlobalMocks();
+
+        globalMocks.testTree.mSessionNodes.pop();
+        const zoweLoggerWarnSpy = jest.spyOn(ZoweLogger, "warn");
+
+        // Mock the API register so that registeredMvsApiTypes is empty
+        const mockApiRegister = ZoweExplorerApiRegister.getInstance();
+        jest.spyOn(mockApiRegister, "registeredUssApiTypes").mockReturnValueOnce([]);
+
+        await globalMocks.testTree.addSingleSession(globalMocks.testProfile);
+
+        expect(globalMocks.testTree.mSessionNodes.length).toEqual(1);
+        expect(zoweLoggerWarnSpy).toHaveBeenCalledWith(expect.stringContaining("USS API is not registered"));
     });
 
     it("Tests that addSingleSession adds type info to the session", async () => {

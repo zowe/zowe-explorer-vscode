@@ -468,6 +468,11 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
                 return;
             }
+            // If there is no API registered for the profile type, do nothing
+            if (!ZoweExplorerApiRegister.getInstance().registeredUssApiTypes().includes(profile.type)) {
+                ZoweLogger.warn(`USS API is not registered for profile type ${profile.type}, skipping ${profile.name}`);
+                return;
+            }
             // Uses loaded profile to create a session with the USS API
             let session: imperative.Session;
             try {

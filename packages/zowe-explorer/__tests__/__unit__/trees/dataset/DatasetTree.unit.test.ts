@@ -987,7 +987,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
     });
 });
 
-describe("USSTree Unit Tests - Function addSingleSession", () => {
+describe("Dataset Tree Unit Tests - Function addSingleSession", () => {
     function createBlockMocks() {
         const newMocks = {
             mockProfilesInstance: null,
@@ -1023,6 +1023,23 @@ describe("USSTree Unit Tests - Function addSingleSession", () => {
         await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
 
         expect(blockMocks.testTree.mSessionNodes.length).toEqual(2);
+    });
+
+    it("Tests that addSingleSession skips adding the session, if API is not registered", async () => {
+        await createGlobalMocks();
+        const blockMocks = await createBlockMocks();
+
+        blockMocks.testTree.mSessionNodes.pop();
+        const zoweLoggerWarnSpy = jest.spyOn(ZoweLogger, "warn");
+
+        // Mock the API register so that registeredMvsApiTypes is empty
+        const mockApiRegister = ZoweExplorerApiRegister.getInstance();
+        jest.spyOn(mockApiRegister, "registeredMvsApiTypes").mockReturnValueOnce([]);
+
+        await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
+
+        expect(blockMocks.testTree.mSessionNodes.length).toEqual(1);
+        expect(zoweLoggerWarnSpy).toHaveBeenCalledWith(expect.stringContaining("MVS API is not registered"));
     });
 
     it("Tests that addSingleSession adds type info to the session", async () => {
@@ -1068,6 +1085,7 @@ describe("USSTree Unit Tests - Function addSingleSession", () => {
         jest.spyOn(ZoweExplorerApiRegister.getMvsApi(blockMocks.testProfile), "getSession").mockImplementationOnce(() => {
             throw new Error("test error hostname:sample.com");
         });
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "registeredMvsApiTypes").mockReturnValueOnce([undefined]);
         const zoweLoggerErrorSpy = jest.spyOn(ZoweLogger, "error");
         expect(blockMocks.testTree.addSingleSession({ name: "test1234" }));
         expect(zoweLoggerErrorSpy).toHaveBeenCalledTimes(1);
@@ -1079,6 +1097,7 @@ describe("USSTree Unit Tests - Function addSingleSession", () => {
         jest.spyOn(ZoweExplorerApiRegister.getMvsApi(blockMocks.testProfile), "getSession").mockImplementationOnce(() => {
             throw new Error("test error");
         });
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "registeredMvsApiTypes").mockReturnValueOnce([undefined]);
         const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling");
         expect(blockMocks.testTree.addSingleSession({ name: "test1234" }));
         expect(errorHandlingSpy).toHaveBeenCalledTimes(1);

@@ -195,6 +195,11 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
                 return;
             }
+            // If there is no API registered for the profile type, do nothing
+            if (!ZoweExplorerApiRegister.getInstance().registeredJesApiTypes().includes(profile.type)) {
+                ZoweLogger.warn(`JES API is not registered for profile type ${profile.type}, skipping ${profile.name}`);
+                return;
+            }
             // Uses loaded profile to create a zosmf session with Zowe
             let session: imperative.Session;
             try {

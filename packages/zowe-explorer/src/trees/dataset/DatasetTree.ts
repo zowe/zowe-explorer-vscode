@@ -429,6 +429,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
                 return;
             }
+            // If there is no API registered for the profile type, do nothing
+            if (!ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes().includes(profile.type)) {
+                ZoweLogger.warn(`MVS API is not registered for profile type ${profile.type}, skipping ${profile.name}`);
+                return;
+            }
             // Uses loaded profile to create a session with the MVS API
             let session: imperative.Session;
             try {

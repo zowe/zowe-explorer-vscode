@@ -20,6 +20,7 @@ import {
     createISessionWithoutCredentials,
     createTreeView,
     createInstanceOfProfileInfo,
+    createValidIProfile,
 } from "../../../__mocks__/mockCreators/shared";
 import { createJesApi } from "../../../__mocks__/mockCreators/api";
 import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
@@ -353,6 +354,88 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         await testTree.getChildren(testTree.mSessionNodes[1]);
 
         expect(elementGetChildrenSpy).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("ZosJobsProvider unit tests - Function addSingleSession", () => {
+    function createBlockMocks() {
+        const newMocks = {
+            testProfile: createIProfile(),
+            testBaseProfile: createValidIProfile(),
+            testSession: createISession(),
+            testTree: null,
+        };
+
+        newMocks.testBaseProfile.profile.tokenType = "tokenType";
+        newMocks.testBaseProfile.profile.tokenValue = "testTokenValue";
+        newMocks.testTree = new JobTree();
+        const jobSessionTestNode = createJobSessionNode(newMocks.testSession, newMocks.testProfile);
+        newMocks.testTree.mSessionNodes.push(jobSessionTestNode);
+
+        return newMocks;
+    }
+
+    it("Tests if addSingleSession uses the baseProfile to get the combined profile information", async () => {
+        const blockMocks = createBlockMocks();
+
+        blockMocks.testTree.mSessionNodes.pop();
+        blockMocks.testSession.ISession.tokenType = blockMocks.testBaseProfile.profile.tokenType;
+        blockMocks.testSession.ISession.tokenValue = blockMocks.testBaseProfile.profile.tokenValue;
+
+        // Mock the USS API so that getSession returns the correct value
+        const mockUssApi = ZoweExplorerApiRegister.getJesApi(blockMocks.testProfile);
+        const getJesApiMock = jest.fn();
+        getJesApiMock.mockReturnValue(mockUssApi);
+        ZoweExplorerApiRegister.getJesApi = getJesApiMock.bind(ZoweExplorerApiRegister);
+        jest.spyOn(mockUssApi, "getSession").mockReturnValue(blockMocks.testSession);
+
+        await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
+
+        expect(blockMocks.testTree.mSessionNodes[1].session.ISession.tokenValue).toEqual("testTokenValue");
+    });
+
+    it("Tests that addSingleSession doesn't add the session again, if it was already added", async () => {
+        const blockMocks = createBlockMocks();
+
+        await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
+
+        expect(blockMocks.testTree.mSessionNodes.length).toEqual(2);
+    });
+
+    it("Tests that addSingleSession skips adding the session, if API is not registered", async () => {
+        const blockMocks = createBlockMocks();
+
+        blockMocks.testTree.mSessionNodes.pop();
+        const zoweLoggerWarnSpy = jest.spyOn(ZoweLogger, "warn");
+
+        // Mock the API register so that registeredMvsApiTypes is empty
+        const mockApiRegister = ZoweExplorerApiRegister.getInstance();
+        jest.spyOn(mockApiRegister, "registeredJesApiTypes").mockReturnValueOnce([]);
+
+        await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
+
+        expect(blockMocks.testTree.mSessionNodes.length).toEqual(1);
+        expect(zoweLoggerWarnSpy).toHaveBeenCalledWith(expect.stringContaining("JES API is not registered"));
+    });
+
+    it("Tests that addSingleSession successfully adds a session", async () => {
+        const blockMocks = createBlockMocks();
+
+        blockMocks.testTree.mSessionNodes.pop();
+        blockMocks.testSession.ISession.tokenType = blockMocks.testBaseProfile.profile.tokenType;
+        blockMocks.testSession.ISession.tokenValue = blockMocks.testBaseProfile.profile.tokenValue;
+
+        // Mock the USS API so that getSession returns the correct value
+        const mockJesApi = ZoweExplorerApiRegister.getJesApi(blockMocks.testProfile);
+        const getJesApiMock = jest.fn();
+        getJesApiMock.mockReturnValue(mockJesApi);
+        ZoweExplorerApiRegister.getJesApi = getJesApiMock.bind(ZoweExplorerApiRegister);
+        jest.spyOn(mockJesApi, "getSession").mockReturnValue(blockMocks.testSession);
+
+        await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
+
+        expect(blockMocks.testTree.mSessionNodes.length).toEqual(2);
+        expect(blockMocks.testTree.mSessionNodes[1].profile.name).toEqual(blockMocks.testProfile.name);
     });
 });
 
