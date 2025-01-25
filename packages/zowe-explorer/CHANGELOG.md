@@ -2,11 +2,6 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
-## Bug Fixes
-
-- Fixed data loss when creating a data set member with the same name as an existing member. When creating a new member, the user is now prompted to replace it if the member already exists. [[#3327](https://github.com/zowe/zowe-explorer-vscode/issues/3327)]
-- Fixed an issue where registering new profile types from a Zowe Explorer extender could cause an internal API error on startup. [#3412](https://github.com/zowe/zowe-explorer-vscode/pull/3412)
-
 ## TBD Release
 
 ### New features and enhancements
@@ -41,7 +36,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where cached encoding was applied for all profiles with the same data set or USS path in the "Open with Encoding" menu. [#3363](https://github.com/zowe/zowe-explorer-vscode/pull/3363)
 - Removed "Delete Profile" action from the "Manage Profile" menu since this action is currently not supported in Zowe Explorer. [#3037](https://github.com/zowe/zowe-explorer-vscode/issues/3037)
 - Fixed an issue where the filesystem continued to use a profile with invalid credentials to fetch resources. Now, after an authentication error occurs for a profile, it cannot be used again in the filesystem until the authentication error is resolved. [#3329](https://github.com/zowe/zowe-explorer-vscode/issues/3329)
+- Fixed data loss when creating a data set member with the same name as an existing member. When creating a new member, the user is now prompted to replace it if the member already exists. [[#3327](https://github.com/zowe/zowe-explorer-vscode/issues/3327)]
 - Resolved user interface bug with tables that caused an inconsistent table height within the VS Code Panel. [#3389](https://github.com/zowe/zowe-explorer-vscode/pull/3389)
+- Fixed an issue where opening a data set with the same starting pattern as an archived data set caused a REST API error (code 500) to appear in the editor. [#3407](https://github.com/zowe/zowe-explorer-vscode/pull/3407)
+- Fixed an issue where registering new profile types from a Zowe Explorer extender could cause an internal API error on startup. [#3412](https://github.com/zowe/zowe-explorer-vscode/pull/3412)
 
 ## `3.0.3`
 
