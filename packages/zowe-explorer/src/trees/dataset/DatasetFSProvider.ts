@@ -100,7 +100,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(pds.name, { attributes: true });
             } else {
                 // Data Set
-                resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.parse(uri.path).name, { attributes: true });
+                const dsPath = (entry.metadata as DsEntryMetadata).extensionRemovedFromPath();
+                resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.posix.basename(dsPath), {
+                    attributes: true,
+                });
             }
         } catch (err) {
             if (err instanceof Error) {

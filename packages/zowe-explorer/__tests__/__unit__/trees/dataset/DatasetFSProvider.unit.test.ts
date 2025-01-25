@@ -28,6 +28,7 @@ import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
+import * as path from "path";
 const dayjs = require("dayjs");
 
 const testProfile = createIProfile();
@@ -686,6 +687,31 @@ describe("stat", () => {
         remoteLookupForResourceMock.mockRestore();
         getInfoForUriMock.mockRestore();
     });
+
+    it("calls dataSet for PS and invalidates its data if mtime is newer", async () => {
+        const fakePs = Object.assign(Object.create(Object.getPrototypeOf(testEntries.ps)), testEntries.ps);
+        const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(fakePs);
+        const lookupParentDirMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory").mockReturnValue(testEntries.session);
+        const dataSetMock = jest.fn().mockResolvedValue({
+            success: true,
+            apiResponse: {
+                items: [{ name: "USER.DATA.PS", dsorg: "PS" }],
+            },
+            commandResponse: "",
+        });
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+            dataSet: dataSetMock,
+        } as any);
+        const res = await DatasetFSProvider.instance.stat(testUris.ps);
+        expect(lookupMock).toHaveBeenCalledWith(testUris.ps, false);
+        expect(dataSetMock).toHaveBeenCalledWith(path.posix.basename(testEntries.ps.metadata.extensionRemovedFromPath()), { attributes: true });
+        expect(res).toStrictEqual({ ...fakePs });
+        expect(fakePs.wasAccessed).toBe(false);
+        lookupMock.mockRestore();
+        lookupParentDirMock.mockRestore();
+        mvsApiMock.mockRestore();
+    });
+
     it("calls allMembers for a PDS member and invalidates its data if mtime is newer", async () => {
         const fakePdsMember = Object.assign(Object.create(Object.getPrototypeOf(testEntries.pdsMember)), testEntries.pdsMember);
         const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(fakePdsMember);
