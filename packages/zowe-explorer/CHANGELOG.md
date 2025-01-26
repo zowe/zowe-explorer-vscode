@@ -42,6 +42,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Removed "Delete Profile" action from the "Manage Profile" menu since this action is currently not supported in Zowe Explorer. [#3037](https://github.com/zowe/zowe-explorer-vscode/issues/3037)
 - Fixed an issue where the filesystem continued to use a profile with invalid credentials to fetch resources. Now, after an authentication error occurs for a profile, it cannot be used again in the filesystem until the authentication error is resolved. [#3329](https://github.com/zowe/zowe-explorer-vscode/issues/3329)
 - Resolved user interface bug with tables that caused an inconsistent table height within the VS Code Panel. [#3389](https://github.com/zowe/zowe-explorer-vscode/pull/3389)
+- Fixed an issue where opening a data set with the same starting pattern as an archived data set caused a REST API error (code 500) to appear in the editor. [#3407](https://github.com/zowe/zowe-explorer-vscode/pull/3407)
 
 ## `3.0.3`
 
