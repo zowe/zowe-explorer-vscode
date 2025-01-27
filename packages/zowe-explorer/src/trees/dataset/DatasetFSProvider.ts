@@ -609,6 +609,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 });
                 throw err;
             }
+
             entry.data = content;
             // Prompt the user with the conflict dialog
             await this._handleConflict(uri, entry);
