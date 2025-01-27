@@ -104,7 +104,12 @@ export class USSInit {
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.deleteNode", async (node, nodeList) => {
-                let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
+                let selectedNodes;
+                if (node || nodeList) {
+                    selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
+                } else {
+                    selectedNodes = ussFileProvider.getTreeView().selection;
+                }
                 selectedNodes = selectedNodes.filter(
                     (x) => SharedContext.isDocument(x) || SharedContext.isUssDirectory(x) || SharedContext.isBinary(x)
                 );
