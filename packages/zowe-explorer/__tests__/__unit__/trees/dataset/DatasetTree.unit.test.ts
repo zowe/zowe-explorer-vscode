@@ -55,7 +55,6 @@ import { IconUtils } from "../../../../src/icons/IconUtils";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { ZoweTreeProvider } from "../../../../src/trees/ZoweTreeProvider";
 import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
-import { error } from "console";
 
 jest.mock("fs");
 jest.mock("util");
