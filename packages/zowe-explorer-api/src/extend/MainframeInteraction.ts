@@ -376,6 +376,17 @@ export namespace MainframeInteraction {
          * @returns {Promise<zosfiles.ISearchResponse>}
          */
         searchDataSets?(searchOptions: zosfiles.ISearchOptions): Promise<zosfiles.ISearchResponse>;
+
+        /**
+         * Copies a dataSet to cross Lpar
+         *
+         */
+        copyDataSetCrossLpar?(
+            toDataSetName: string,
+            toMemberName: string,
+            options: zosfiles.ICrossLparCopyDatasetOptions,
+            sourceprofile: imperative.IProfileLoaded
+        ): Promise<zosfiles.IZosFilesResponse>;
     }
 
     /**
