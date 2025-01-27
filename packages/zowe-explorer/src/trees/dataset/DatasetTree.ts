@@ -199,8 +199,22 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             return;
         }
 
-        //get the closest parent folder if the target is a
         let target = targetNode;
+        for (const item of droppedItems.value) {
+            const node = this.draggedNodes[item.uri.path];
+            if (SharedContext.isPds(target) || SharedContext.isDsMember(target)) {
+                if (SharedContext.isPds(node) || SharedContext.isDs(node)) {
+                    Gui.errorMessage(vscode.l10n.t("Cannot drop a seq or pds onto a pds"));
+                    return;
+                }
+            }
+            if (SharedContext.isDsMember(node) && SharedContext.isDs(target)) {
+                Gui.errorMessage(vscode.l10n.t("Cannot drop a member onto a seq dataset"));
+                return;
+            }
+        }
+
+        //get the closest parent folder if the target is not a pds
         if (!SharedContext.isPds(target)) {
             target = target.getParent() as IZoweDatasetTreeNode;
         }

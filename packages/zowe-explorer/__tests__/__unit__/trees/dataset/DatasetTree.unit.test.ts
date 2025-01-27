@@ -3462,3 +3462,134 @@ describe("Dataset Tree Unit Tests - Function applyPatternsToChildren", () => {
         withProfileMock.mockRestore();
     });
 });
+
+describe("DataSetTree Unit Tests - Function handleDrag", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        return {
+            session,
+            imperativeProfile,
+            datasetSessionNode,
+        };
+    }
+    it("adds a DataTransferItem containing info about the dragged Data node", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const datasetNode = new ZoweDatasetNode({
+            label: "draggedNode",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+            session: blockMocks.session,
+        });
+        const dataTransferSetMock = jest.fn();
+        const testTree = new DatasetTree();
+        testTree.handleDrag([datasetNode], { set: dataTransferSetMock } as any, undefined);
+        expect(dataTransferSetMock).toHaveBeenCalledWith(
+            "application/vnd.code.tree.zowe.ds.explorer",
+            new vscode.DataTransferItem([
+                {
+                    label: datasetNode.label,
+                    uri: datasetNode.resourceUri,
+                },
+            ])
+        );
+    });
+});
+
+describe("DataSetTree Unit Tests - Function handleDrop", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        datasetSessionNode.dirty = false;
+        const datasetNode = new ZoweDatasetNode({
+            label: "draggedNode",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: datasetSessionNode,
+            session: session,
+        });
+        datasetNode.dirty = false;
+        return {
+            session,
+            imperativeProfile,
+            datasetSessionNode,
+            datasetNode,
+        };
+    }
+    it("returns early if there are no items in the dataTransfer object", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const statusBarMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
+        const getDataTransferMock = jest.spyOn(vscode.DataTransfer.prototype, "get").mockReturnValueOnce(undefined);
+        const testTree = new DatasetTree();
+        await testTree.handleDrop(blockMocks.datasetNode, new vscode.DataTransfer(), undefined);
+        expect(statusBarMsgSpy).not.toHaveBeenCalled();
+        getDataTransferMock.mockRestore();
+    });
+
+    it("handle moving of seq and pds to different profiles dropping on seq", async () => {
+        createGlobalMocks();
+        const testTree = new DatasetTree();
+        const statusBarMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
+        const blockMocks = createBlockMocks();
+        const datasetSession = blockMocks.datasetSessionNode;
+        const datasetPdsNode = new ZoweDatasetNode({
+            label: "pdsnode",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            profile: datasetSession.getProfile(),
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        datasetPdsNode.dirty = false;
+        const memberNode = new ZoweDatasetNode({
+            label: "mem1",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            profile: datasetSession.getProfile(),
+        });
+        datasetPdsNode.children = [memberNode];
+        datasetPdsNode.contextValue = Constants.DS_PDS_CONTEXT;
+        memberNode.contextValue = Constants.DS_MEMBER_CONTEXT;
+        memberNode.dirty = false;
+        const datasetSeqNode = new ZoweDatasetNode({
+            label: "seqnode",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: datasetPdsNode.getProfile(),
+            parentNode: blockMocks.datasetNode,
+        });
+        datasetSeqNode.contextValue = Constants.DS_DS_CONTEXT;
+        datasetSession.children = [datasetPdsNode, datasetSeqNode];
+        const dataTransfer = new vscode.DataTransfer();
+        const getDataTransferMock = jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
+            value: [
+                {
+                    label: datasetPdsNode.label as string,
+                    uri: datasetPdsNode.resourceUri,
+                },
+            ],
+        } as any);
+        const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
+            [datasetPdsNode.resourceUri.path]: datasetPdsNode,
+        });
+        const createDataSetMock = jest.fn();
+        const createDataSetMemberMock = jest.fn();
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+            createDataSet: createDataSetMock,
+            createDataSetMember: createDataSetMemberMock,
+        } as any);
+
+        const createDirMock = jest.spyOn(DatasetFSProvider.instance as any, "createDirectory").mockResolvedValueOnce(undefined);
+        const deleteMock = jest.spyOn(vscode.workspace.fs, "delete").mockResolvedValue(undefined);
+        const readFileMock = jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+        const writeFileMock = jest.spyOn(DatasetFSProvider.instance, "writeFile").mockResolvedValue(undefined);
+        await testTree.handleDrop(datasetSeqNode, dataTransfer, undefined);
+        expect(deleteMock).toHaveBeenCalledWith(datasetPdsNode.resourceUri, { recursive: true });
+        expect(statusBarMsgSpy).toHaveBeenCalledWith("$(sync~spin) Moving MVS files...");
+        draggedNodeMock[Symbol.dispose]();
+        getDataTransferMock.mockRestore();
+        writeFileMock.mockRestore();
+        readFileMock.mockRestore();
+        createDirMock.mockRestore();
+        mvsApiMock.mockRestore();
+    });
+});
