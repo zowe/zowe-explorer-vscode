@@ -55,6 +55,7 @@ import { IconUtils } from "../../../../src/icons/IconUtils";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { ZoweTreeProvider } from "../../../../src/trees/ZoweTreeProvider";
 import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
+import { error } from "console";
 
 jest.mock("fs");
 jest.mock("util");
@@ -3554,7 +3555,12 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             parentNode: datasetNode,
         });
         datasetSeqNode.contextValue = Constants.DS_DS_CONTEXT;
-
+        const draggedNode = new ZoweDatasetNode({
+            label: "seqnode1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: datasetSessionNode,
+        });
+        draggedNode.contextValue = Constants.DS_DS_CONTEXT;
         return {
             session,
             imperativeProfile,
@@ -3563,6 +3569,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             datasetPdsNode,
             datasetSeqNode,
             memberNode,
+            draggedNode,
         };
     }
     it("returns early if there are no items in the dataTransfer object", async () => {
@@ -3612,10 +3619,10 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         expect(statusBarMsgSpy).toHaveBeenCalledWith("$(sync~spin) Moving MVS files...");
         draggedNodeMock[Symbol.dispose]();
         getDataTransferMock.mockRestore();
+        mvsApiMock.mockRestore();
         writeFileMock.mockRestore();
         readFileMock.mockRestore();
         createDirMock.mockRestore();
-        mvsApiMock.mockRestore();
     });
 
     it("Dragging a pds onto another pds on different LPAR should throw error", async () => {
@@ -3683,5 +3690,45 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         expect(Gui.warningMessage).toHaveBeenCalledTimes(1);
         getDataTransferMock.mockRestore();
         draggedNodeMock[Symbol.dispose]();
+    });
+
+    it("Write File throwing error", async () => {
+        createGlobalMocks();
+        const testTree = new DatasetTree();
+        const statusBarMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
+        const blockMocks = createBlockMocks();
+        const datasetSession = blockMocks.datasetSessionNode;
+        datasetSession.children = [blockMocks.datasetPdsNode, blockMocks.datasetSeqNode];
+        const dataTransfer = new vscode.DataTransfer();
+        const getDataTransferMock = jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
+            value: [
+                {
+                    label: blockMocks.draggedNode.label as string,
+                    uri: blockMocks.draggedNode.resourceUri,
+                },
+            ],
+        } as any);
+        const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
+            [blockMocks.draggedNode.resourceUri.path]: blockMocks.draggedNode,
+        });
+        const createDataSetMock = jest.fn();
+        const createDataSetMemberMock = jest.fn();
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+            createDataSet: createDataSetMock,
+            createDataSetMember: createDataSetMemberMock,
+        } as any);
+
+        const createDirMock = jest.spyOn(DatasetFSProvider.instance as any, "createDirectory").mockResolvedValueOnce(undefined);
+        const readFileMock = jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementationOnce(() => {
+            throw Error("Write file error");
+        });
+        await testTree.handleDrop(blockMocks.datasetSeqNode, dataTransfer, undefined);
+        expect(statusBarMsgSpy).toHaveBeenCalledWith("$(sync~spin) Moving MVS files...");
+        draggedNodeMock[Symbol.dispose]();
+        getDataTransferMock.mockRestore();
+        mvsApiMock.mockRestore();
+        readFileMock.mockRestore();
+        createDirMock.mockRestore();
     });
 });
