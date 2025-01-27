@@ -568,6 +568,13 @@ describe("ZosmfMvsApi", () => {
         await zosmfApi.uploadFromBuffer(buf, "SOME.DS(MEMB)");
         expect(uploadFileSpy).toHaveBeenCalledWith(zosmfApi.getSession(), buf, "SOME.DS(MEMB)", fakeProperties);
     });
+
+    it("Test copyDataSetCrossLpar()", async () => {
+        const copySpy = jest.spyOn(zosfiles.Copy, "dataSetCrossLPAR").mockImplementation();
+        const zosmfApi = new ZoweExplorerZosmf.MvsApi(loadedProfile);
+        await zosmfApi.copyDataSetCrossLpar("TO.NAME", "TO.MEMBER", undefined as any, loadedProfile);
+        expect(copySpy).toHaveBeenCalled();
+    });
 });
 
 describe("ZosmfJesApi", () => {
