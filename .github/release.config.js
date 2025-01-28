@@ -18,7 +18,7 @@ module.exports = {
         {
             name: "release/3.*",
             channel: "latest",
-            level: "patch"
+            level: "minor"
         }
         // {
         //     name: "next",
