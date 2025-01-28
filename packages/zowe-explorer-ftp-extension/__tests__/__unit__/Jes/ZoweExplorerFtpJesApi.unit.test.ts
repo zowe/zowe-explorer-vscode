@@ -140,7 +140,7 @@ describe("FtpJesApi", () => {
 
     it("should throw error when list jobs by owner and prefix failed.", async () => {
         jest.spyOn(JobUtils, "listJobs").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("List jobs failed.");
             })
         );
@@ -151,7 +151,7 @@ describe("FtpJesApi", () => {
 
     it("should throw error when get job failed.", async () => {
         jest.spyOn(JobUtils, "findJobByID").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Get jobs failed.");
             })
         );
@@ -162,7 +162,7 @@ describe("FtpJesApi", () => {
 
     it("should throw error when get spool files failed.", async () => {
         jest.spyOn(JobUtils, "findJobByID").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Get jobs failed.");
             })
         );
@@ -173,7 +173,7 @@ describe("FtpJesApi", () => {
 
     it("should throw error when download spool contents failed.", async () => {
         jest.spyOn(JobUtils, "findJobByID").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Get jobs failed.");
             })
         );
@@ -187,7 +187,7 @@ describe("FtpJesApi", () => {
 
     it("should throw error when get spool contents by id failed.", async () => {
         jest.spyOn(JobUtils, "getSpoolFileContent").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Get spool file content failed.");
             })
         );
@@ -198,7 +198,7 @@ describe("FtpJesApi", () => {
 
     it("should throw error when submit job failed", async () => {
         jest.spyOn(JobUtils, "submitJob").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Submit job failed.");
             })
         );
@@ -209,7 +209,7 @@ describe("FtpJesApi", () => {
 
     it("should throw error when delete job failed", async () => {
         jest.spyOn(JobUtils, "deleteJob").mockImplementationOnce(
-            jest.fn((val) => {
+            jest.fn((_val) => {
                 throw new Error("Delete job failed.");
             })
         );
