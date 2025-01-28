@@ -15,8 +15,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added an `AuthHandler` class with functions for locking/unlocking profiles, prompting for credentials and SSO login support. Extenders can now lock profiles after an authentication error, ensuring that an invalid profile is not used asynchronously until the error is resolved. [#3329](https://github.com/zowe/zowe-explorer-vscode/issues/3329)
 - Added individual user settings for MVS, TSO, and Unix commands. [#3079](https://github.com/zowe/zowe-explorer-vscode/pull/3079)
 
-### Bug fixes
-
 ## `3.0.3`
 
 ### Bug fixes

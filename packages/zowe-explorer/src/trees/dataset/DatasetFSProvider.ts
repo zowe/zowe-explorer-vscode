@@ -100,7 +100,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(pds.name, { attributes: true });
             } else {
                 // Data Set
-                resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.parse(uri.path).name, { attributes: true });
+                const dsPath = (entry.metadata as DsEntryMetadata).extensionRemovedFromPath();
+                resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.posix.basename(dsPath), {
+                    attributes: true,
+                });
             }
         } catch (err) {
             if (err instanceof Error) {
@@ -193,9 +196,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     private async fetchEntriesForDataset(entry: PdsEntry, uri: vscode.Uri, uriInfo: UriFsInfo): Promise<void> {
         let members: IZosFilesResponse;
         try {
-            await AuthHandler.lockProfile(uriInfo.profile);
+            await AuthHandler.waitForUnlock(entry.metadata.profile);
             members = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(path.posix.basename(uri.path));
-            AuthHandler.unlockProfile(uriInfo.profile);
         } catch (err) {
             await AuthUtils.handleProfileAuthOnError(err, uriInfo.profile);
             throw err;
@@ -382,7 +384,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const metadata = dsEntry?.metadata ?? this._getInfoFromUri(uri);
         const profileEncoding = dsEntry?.encoding ? null : dsEntry?.metadata.profile.profile?.encoding;
         try {
-            await AuthHandler.lockProfile(metadata.profile);
+            await AuthHandler.waitForUnlock(metadata.profile);
             const resp = await ZoweExplorerApiRegister.getMvsApi(metadata.profile).getContents(metadata.dsName, {
                 binary: dsEntry?.encoding?.kind === "binary",
                 encoding: dsEntry?.encoding?.kind === "other" ? dsEntry?.encoding.codepage : profileEncoding,
@@ -390,7 +392,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 returnEtag: true,
                 stream: bufBuilder,
             });
-            AuthHandler.unlockProfile(metadata.profile);
             const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
             //if an entry does not exist for the dataset, create it
             if (!dsEntry) {
