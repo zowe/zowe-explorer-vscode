@@ -364,7 +364,6 @@ export class SharedUtils {
     ): Promise<boolean> {
         const movedIntoChild = Object.values(draggedNodes).some((n) => target.resourceUri.path.startsWith(n.resourceUri.path));
         if (movedIntoChild) {
-            draggedNodes = {};
             return false;
         }
 
