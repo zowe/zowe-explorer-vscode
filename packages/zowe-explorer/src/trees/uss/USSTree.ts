@@ -182,30 +182,9 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             target = target.getParent() as IZoweUSSTreeNode;
         }
 
-        // If the target path fully contains the path of the dragged node,
-        // the user is trying to move a parent node into its child - invalid operation
-        const movedIntoChild = Object.values(this.draggedNodes).some((n) => target.resourceUri.path.startsWith(n.resourceUri.path));
-        if (movedIntoChild) {
-            this.draggedNodes = {};
+        const overwrite = await SharedUtils.handleDragAndDropOverwrite(target, this.draggedNodes);
+        if (overwrite === false) {
             return;
-        }
-
-        // determine if any overwrites may occur
-        const willOverwrite = Object.values(this.draggedNodes).some((n) => target.children?.find((tc) => tc.label === n.label) != null);
-        if (willOverwrite) {
-            const userOpts = [vscode.l10n.t("Confirm")];
-            const resp = await Gui.warningMessage(
-                vscode.l10n.t("One or more items may be overwritten from this drop operation. Confirm or cancel?"),
-                {
-                    items: userOpts,
-                    vsCodeOpts: {
-                        modal: true,
-                    },
-                }
-            );
-            if (resp == null || resp !== userOpts[0]) {
-                return;
-            }
         }
 
         const movingMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Moving USS files...")}`);

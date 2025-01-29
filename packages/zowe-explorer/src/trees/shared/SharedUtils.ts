@@ -357,4 +357,36 @@ export class SharedUtils {
             timeoutId = setTimeout(() => callback(...args), delay);
         };
     }
+
+    public static async handleDragAndDropOverwrite(
+        target: IZoweDatasetTreeNode | IZoweUSSTreeNode | undefined,
+        draggedNodes: Record<string, IZoweDatasetTreeNode | IZoweUSSTreeNode>
+    ): Promise<boolean> {
+        const movedIntoChild = Object.values(draggedNodes).some((n) => target.resourceUri.path.startsWith(n.resourceUri.path));
+        if (movedIntoChild) {
+            draggedNodes = {};
+            return false;
+        }
+
+        // determine if any overwrites may occur
+        const willOverwrite = Object.values(draggedNodes).some((n) => target.children?.find((tc) => tc.label === n.label) != null);
+        if (willOverwrite) {
+            const userOpts = [vscode.l10n.t("Confirm")];
+            const resp = await Gui.warningMessage(
+                vscode.l10n.t("One or more items may be overwritten from this drop operation. Confirm or cancel?"),
+                {
+                    items: userOpts,
+                    vsCodeOpts: {
+                        modal: true,
+                    },
+                }
+            );
+            if (resp == null || resp !== userOpts[0]) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+        return true;
+    }
 }
