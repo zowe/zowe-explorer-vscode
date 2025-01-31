@@ -6,6 +6,12 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+### Bug fixes
+
+## `3.1.0`
+
+### New features and enhancements
+
 - Update Zowe SDKs to `8.10.4` to get the latest enhancements from Imperative and the z/OS Files SDK. [#3306](https://github.com/zowe/zowe-explorer-vscode/pull/3306)
 - Added new `searchDataSets` API to provide the ability to search all data sets and PDS members that match a pattern for a string. [#3306](https://github.com/zowe/zowe-explorer-vscode/pull/3306)
 - Added support for extenders to obtain an updated Session that will includes VS Code proxy settings values if set, `getProfileSessionWithVscProxy`. [#3010](https://github.com/zowe/zowe-explorer-vscode/issues/3010)
@@ -15,8 +21,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added an `AuthHandler` class with functions for locking/unlocking profiles, prompting for credentials and SSO login support. Extenders can now lock profiles after an authentication error, ensuring that an invalid profile is not used asynchronously until the error is resolved. [#3329](https://github.com/zowe/zowe-explorer-vscode/issues/3329)
 - Added individual user settings for MVS, TSO, and Unix commands. [#3079](https://github.com/zowe/zowe-explorer-vscode/pull/3079)
 - Added new `copyDataSetCrossLpar` API to provide ability to copy/paste data sets across LPARs. [#3012](https://github.com/zowe/zowe-explorer-vscode/issues/3012)
-
-### Bug fixes
 
 ## `3.0.3`
 
