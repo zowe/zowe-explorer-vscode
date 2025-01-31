@@ -6,6 +6,17 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added Time Started, Time Ended, and Time Submitted job properties to the Jobs table view. [#3055](https://github.com/zowe/zowe-explorer-vscode/issues/3055)
+- Implemented copy/paste functionality of data sets within and across LPARs. [#3012](https://github.com/zowe/zowe-explorer-vscode/issues/3012)
+
+### Bug fixes
+
+- Fixed an issue where a TypeError occurred when applying VS Code proxy settings to an invalid session. [#3425](https://github.com/zowe/zowe-explorer-vscode/issues/3425)
+
+## `3.1.0`
+
+### New features and enhancements
+
 - Updated Zowe SDKs to `8.10.4` for technical currency. [#3306](https://github.com/zowe/zowe-explorer-vscode/pull/3306)
 - Added expired JSON web token detection for profiles in each tree view (Data Sets, USS, Jobs). When a user performs a search on a profile, they are prompted to log in if their token expired. [#3175](https://github.com/zowe/zowe-explorer-vscode/issues/3175)
 - Added integrated terminals for z/OS Unix, TSO, and MVS commands which can be enabled via the `Zowe › Commands: Use Integrated Terminals` setting. [#3079](https://github.com/zowe/zowe-explorer-vscode/pull/3079)
@@ -19,8 +30,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - You can now add multiple partitioned data sets or USS directories to your workspace at once using the "Add to Workspace" feature. [#3324](https://github.com/zowe/zowe-explorer-vscode/issues/3324)
 - Exposed read and write access to local storage keys for Zowe Explorer extenders. [#3180](https://github.com/zowe/zowe-explorer-vscode/issues/3180)
 - Added `Open with Encoding` to the context menu of Job Spool files. [#1941](https://github.com/zowe/zowe-explorer-vscode/issues/1941)
-- Added Time Started, Time Ended, and Time Submitted job properties to the Jobs table view. [#3055](https://github.com/zowe/zowe-explorer-vscode/issues/3055)
-- Implemented copy/paste functionality of data sets within and across LPARs. [#3012](https://github.com/zowe/zowe-explorer-vscode/issues/3012)
 
 ### Bug fixes
 
