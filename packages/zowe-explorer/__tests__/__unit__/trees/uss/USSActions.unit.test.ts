@@ -816,10 +816,35 @@ describe("USS Action Unit Tests - copy file / directory", () => {
 });
 
 describe("USS Action Unit Tests - function deleteUSSFilesPrompt", () => {
-    it("should return true", async () => {
+    const globalMocks = createGlobalMocks();
+    const testUSSTree = createUSSTree(
+        [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
+        [createUSSNode(globalMocks.testSession, createIProfile())],
+        createTreeView()
+    );
+    it("should call deleteUSSNode with false if confirmed", async () => {              
+        const testNode = createUSSNode(createISession(), createIProfile());    
         const nodes = [createUSSNode(createISession(), createIProfile())];
+        const deleteUSSNodeSpy = jest.spyOn(ZoweUSSNode.prototype, "deleteUSSNode");      
+        jest.spyOn(Gui, "warningMessage").mockReturnValue(Promise.resolve("Delete"));
+        await USSActions.deleteUSSFilesPrompt(testNode, nodes, testUSSTree);
+        expect(deleteUSSNodeSpy).toHaveBeenCalledWith(testUSSTree,"",false);
+    });
+    it("should call deleteUSSNode with true if cancelled", async () => {              
+        const testNode = createUSSNode(createISession(), createIProfile());    
+        const nodes = [createUSSNode(createISession(), createIProfile())];
+        const deleteUSSNodeSpy = jest.spyOn(ZoweUSSNode.prototype, "deleteUSSNode");
         jest.spyOn(Gui, "warningMessage").mockReturnValue(Promise.resolve("Cancel"));
-        await expect(USSActions.deleteUSSFilesPrompt(nodes)).resolves.toEqual(true);
+        await USSActions.deleteUSSFilesPrompt(testNode, nodes, testUSSTree);
+        expect(deleteUSSNodeSpy).toHaveBeenCalledWith(testUSSTree,"",true);
+    });
+    it("should call getTreeView if nodes are empty", async () => {                
+        const getTreeViewSpy = jest.spyOn(testUSSTree, "getTreeView");   
+        const deleteUSSNodeSpy = jest.spyOn(ZoweUSSNode.prototype, "deleteUSSNode");   
+        jest.spyOn(Gui, "warningMessage").mockReturnValue(Promise.resolve("Delete"));
+        await USSActions.deleteUSSFilesPrompt(null, null, testUSSTree);
+        expect(getTreeViewSpy).toHaveBeenCalled();
+        expect(deleteUSSNodeSpy).toHaveBeenCalledWith(testUSSTree,"",false);
     });
 });
 
