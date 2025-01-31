@@ -235,9 +235,18 @@ export class USSActions {
         vscode.env.clipboard.writeText(node.fullPath);
     }
 
-    public static async deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<boolean> {
+    public static async deleteUSSFilesPrompt(node: IZoweUSSTreeNode, nodeList: IZoweUSSTreeNode[], ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
         ZoweLogger.trace("uss.actions.deleteUSSFilesPrompt called.");
-        const fileNames = nodes.reduce((label, currentVal) => {
+        let selectedNodes;
+        if (node || nodeList) {
+            selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
+        } else {
+            selectedNodes = ussFileProvider.getTreeView().selection;
+        }
+        selectedNodes = selectedNodes.filter(
+            (x) => SharedContext.isDocument(x) || SharedContext.isUssDirectory(x) || SharedContext.isBinary(x)
+        );
+        const fileNames = selectedNodes.reduce((label, currentVal) => {
             return `${label}${currentVal.label.toString()}\n`;
         }, "");
 
@@ -258,7 +267,9 @@ export class USSActions {
                 cancelled = true;
             }
         });
-        return cancelled;
+        for (const item of selectedNodes) {
+            await item.deleteUSSNode(ussFileProvider, "", cancelled);
+        }
     }
 
     /**
