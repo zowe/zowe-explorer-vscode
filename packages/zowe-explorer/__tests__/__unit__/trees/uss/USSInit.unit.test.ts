@@ -83,12 +83,7 @@ describe("Test src/uss/extension", () => {
             },
             {
                 name: "zowe.uss.deleteNode",
-                mock: [
-                    { spy: jest.spyOn(SharedContext, "isDocument"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(SharedContext, "isUssDirectory"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(USSActions, "deleteUSSFilesPrompt"), arg: [[test.value]], ret: false },
-                    { spy: jest.spyOn(test.value, "deleteUSSNode"), arg: [ussFileProvider, ""], ret: true },
-                ],
+                mock: [{ spy: jest.spyOn(USSActions, "deleteUSSFilesPrompt"), arg: [test.value, undefined, ussFileProvider] }],
             },
             {
                 name: "zowe.uss.renameNode",
