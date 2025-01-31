@@ -118,7 +118,7 @@ describe("ZosmfUssApi", () => {
         const exampleSession = Object.assign(Object.create(Object.getPrototypeOf(fakeSession)), fakeSession);
         exampleSession.ISession.password = loadedProfile.profile?.password;
         exampleSession.ISession.user = loadedProfile.profile?.user;
-        jest.spyOn(ProfilesCache, "getProfileSessionWithVscProxy").mockReturnValueOnce(exampleSession as any);
+        jest.spyOn(ProfilesCache, "getProfileSessionWithVscProxy").mockReturnValueOnce(exampleSession);
 
         it("should include profile properties in the built session object", () => {
             const api = new ZoweExplorerZosmf.UssApi(loadedProfile);
