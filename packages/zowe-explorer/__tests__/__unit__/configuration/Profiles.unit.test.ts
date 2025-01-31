@@ -621,10 +621,8 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         });
 
         jest.spyOn(globalMocks.mockProfileInstance, "createNonSecureProfile").mockImplementation();
-        const expectedValue =
-            process.platform === "win32"
-                ? "file:\\globalPath\\.zowe\\zowe.config.json"
-                : "file:/globalPath/.zowe/zowe.config.json".split(path.sep).join(path.posix.sep);
+
+        const expectedValue = path.join("file:", "globalPath", ".zowe", "zowe.config.json");
 
         const spyConfig = jest.spyOn(Profiles.getInstance(), "openConfigFile").mockImplementation();
         await Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree);
