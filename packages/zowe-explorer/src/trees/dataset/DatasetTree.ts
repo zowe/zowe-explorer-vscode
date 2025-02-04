@@ -167,7 +167,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             try {
                 await DatasetFSProvider.instance.writeFile(
                     destUri.with({
-                        query: "forceUplaod=true",
+                        query: "forceUpload=true",
                     }),
                     contents,
                     { create: true, overwrite: true }
