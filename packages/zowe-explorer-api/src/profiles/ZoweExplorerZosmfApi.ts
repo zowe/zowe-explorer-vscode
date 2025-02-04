@@ -29,7 +29,7 @@ export namespace ZoweExplorerZosmf {
     /**
      * An implementation of the Zowe Explorer API Common interface for zOSMF.
      */
-    class CommonApi implements MainframeInteraction.ICommon {
+    export class CommonApi implements MainframeInteraction.ICommon {
         public static getProfileTypeName(): string {
             return zosmf.ZosmfProfile.type;
         }
@@ -55,7 +55,7 @@ export namespace ZoweExplorerZosmf {
                 // todo: initialize and use logging
                 imperative.Logger.getAppLogger().error(error as string);
             }
-            return ProfilesCache.getProfileSessionWithVscProxy(this.session);
+            return this.session ? ProfilesCache.getProfileSessionWithVscProxy(this.session) : undefined;
         }
 
         private _getSession(serviceProfile: imperative.IProfileLoaded): imperative.Session {
