@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Added Time Started, Time Ended, and Time Submitted job properties to the Jobs table view. [#3055](https://github.com/zowe/zowe-explorer-vscode/issues/3055)
 - Implemented copy/paste functionality of data sets within and across LPARs. [#3012](https://github.com/zowe/zowe-explorer-vscode/issues/3012)
+- Added Time Started, Time Ended, and Time Submitted job properties to the Jobs table view. [#3055](https://github.com/zowe/zowe-explorer-vscode/issues/3055)
+- Implemented drag and drop functionality of data sets within and across LPARs. [#3413](https://github.com/zowe/zowe-explorer-vscode/pull/3413)
 
 ### Bug fixes
 
