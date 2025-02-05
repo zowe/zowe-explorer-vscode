@@ -36,6 +36,7 @@ export class USSAttributeView extends WebView {
     }
 
     private async attachTag(node: IZoweUSSTreeNode): Promise<void> {
+        console.log(node.fullPath);
         if (this.ussApi.getTag && !SharedContext.isUssDirectory(node)) {
             await node.setAttributes({ tag: await this.ussApi.getTag(node.fullPath) });
         }
@@ -56,13 +57,17 @@ export class USSAttributeView extends WebView {
                     // });
 
                     const attrs = await this.ussNode.fetchAttributes();
-                    await this.ussNode.setAttributes(attrs);
+
                     await this.attachTag(this.ussNode);
+
+                    // if (attrs !== this.ussNode.getAttributes()) {
+                    //     await this.ussNode.setAttributes(attrs);
+                    // }
 
                     await this.panel.webview.postMessage({
                         attributes: attrs,
                         name: this.ussNode.fullPath,
-                        readonly: true,
+                        readonly: this.ussApi.updateAttributes == null,
                     });
 
                     if (this.ussNode.getParent()) {
