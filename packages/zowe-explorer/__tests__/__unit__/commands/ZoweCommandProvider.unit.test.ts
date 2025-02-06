@@ -122,7 +122,10 @@ describe("ZoweCommandProvider Unit Tests", () => {
                 expect(createTerminal).not.toHaveBeenCalled();
             });
 
-            it("should not create a terminal if user escapes the input box", async () => {
+            it("should not create a terminal if user escapes the input box and useIntegratedTerminals is false", async () => {
+                jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation(
+                    (setting) => setting !== Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS
+                );
                 const createTerminal = jest.fn().mockReturnValue({ show: jest.fn() });
                 Object.defineProperty(vscode.window, "createTerminal", { value: createTerminal, configurable: true });
                 await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, testProfile, "");

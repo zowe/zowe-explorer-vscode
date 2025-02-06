@@ -61,10 +61,6 @@ export abstract class ZoweCommandProvider {
         if (profile == null || command == null) {
             return;
         }
-        if (command.length === 0) {
-            Gui.showMessage(this.operationCancelled);
-            return;
-        }
         try {
             const iTerms = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS);
             if (iTerms) {
@@ -129,6 +125,10 @@ export abstract class ZoweCommandProvider {
                 this.terminal = vscode.window.createTerminal({ name: `(${profile.name}) ${this.terminalName}`, pty: this.pseudoTerminal });
                 this.terminal.show();
             } else {
+                if (command.length === 0) {
+                    Gui.showMessage(this.operationCancelled);
+                    return;
+                }
                 this.outputChannel ??= Gui.createOutputChannel(this.terminalName);
                 this.outputChannel.appendLine(this.formatCommandLine(command, profile));
                 const response = await Gui.withProgress(
