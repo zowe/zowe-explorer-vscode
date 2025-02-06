@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where a TypeError occurred when applying VS Code proxy settings to an invalid session. [#3425](https://github.com/zowe/zowe-explorer-vscode/issues/3425)
+
 ## `3.1.0`
 
 ### New features and enhancements
