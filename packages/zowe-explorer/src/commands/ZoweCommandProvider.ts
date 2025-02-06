@@ -61,6 +61,10 @@ export abstract class ZoweCommandProvider {
         if (profile == null || command == null) {
             return;
         }
+        if (command.length === 0) {
+            Gui.showMessage(this.operationCancelled);
+            return;
+        }
         try {
             const iTerms = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS);
             if (iTerms) {

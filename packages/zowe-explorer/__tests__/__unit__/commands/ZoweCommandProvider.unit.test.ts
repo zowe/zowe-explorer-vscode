@@ -109,6 +109,8 @@ describe("ZoweCommandProvider Unit Tests", () => {
                 runCommand: jest.fn().mockRejectedValue(testError),
             };
             const testProfile: any = { name: "test", profile: { user: "firstName", password: "12345" } };
+            const showInformationMessage = jest.fn();
+            Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
 
             it("should not create a terminal if the profile or the command is undefined", async () => {
                 const createTerminal = jest.fn().mockReturnValue({ show: jest.fn() });
@@ -118,6 +120,14 @@ describe("ZoweCommandProvider Unit Tests", () => {
                 await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, testProfile, null);
                 await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, testProfile, undefined);
                 expect(createTerminal).not.toHaveBeenCalled();
+            });
+
+            it("should not create a terminal if user escapes the input box", async () => {
+                const createTerminal = jest.fn().mockReturnValue({ show: jest.fn() });
+                Object.defineProperty(vscode.window, "createTerminal", { value: createTerminal, configurable: true });
+                await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, testProfile, "");
+                expect(createTerminal).not.toHaveBeenCalled();
+                expect(showInformationMessage.mock.calls.length).toBe(1);
             });
 
             it("should create an integrated terminal", async () => {
