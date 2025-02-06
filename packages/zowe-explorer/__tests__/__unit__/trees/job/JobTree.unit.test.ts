@@ -1393,4 +1393,17 @@ describe("openWithEncoding", () => {
         expect(fetchSpoolAtUriMock).toHaveBeenCalledTimes(0);
         expect(executeCommandMock).toHaveBeenCalledTimes(0);
     });
+
+    it("should catch if error is thrown", async () => {
+        const testTree = new JobTree();
+        const spoolNode = new ZoweSpoolNode({ label: "SPOOL", collapsibleState: vscode.TreeItemCollapsibleState.None, spool: createIJobFile() });
+        const encoding: ZosEncoding = { kind: "other", codepage: "IBM-1147" };
+        const promptMock = jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue(encoding);
+        jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementationOnce(() => {
+            throw new Error("testError");
+        });
+        await testTree.openWithEncoding(spoolNode);
+        expect(promptMock).toHaveBeenCalledWith(spoolNode);
+        expect(promptMock).toHaveBeenCalledTimes(1);
+    });
 });
