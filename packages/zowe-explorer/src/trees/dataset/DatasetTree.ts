@@ -1419,6 +1419,12 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         arguments: [child.resourceUri],
                     };
                 }
+            } else if (node.contextValue === Constants.DS_DS_CONTEXT) {
+                node.command = {
+                    title: "",
+                    command: "vscode.open",
+                    arguments: [node.resourceUri],
+                };
             }
 
             this.refreshElement(node.getParent() as IZoweDatasetTreeNode);
