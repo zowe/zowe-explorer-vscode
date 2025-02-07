@@ -50,7 +50,7 @@
         {
           "id": "zowezosconsole",
           "title": "%zowe.zosconsole%",
-          "icon": ""
+          "icon": "resources/dark/chevron-right.svg"
         }
       ]
     },
