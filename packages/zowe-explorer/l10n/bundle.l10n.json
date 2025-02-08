@@ -463,19 +463,6 @@
   "Get JCL": "Get JCL",
   "Display in Tree": "Display in Tree",
   "Download": "Download",
-  "Name": "Name",
-  "Class": "Class",
-  "ID": "ID",
-  "Status": "Status",
-  "Subsystem": "Subsystem",
-  "Type": "Type",
-  "Job Correlator": "Job Correlator",
-  "Phase": "Phase",
-  "Phase Name": "Phase Name",
-  "Time Started": "Time Started",
-  "Time Submitted": "Time Submitted",
-  "Time Ended": "Time Ended",
-  "Error Details": "Error Details",
   "Jobs with ID: {0}/Job Search ID": {
     "message": "Jobs with ID: {0}",
     "comment": [
@@ -490,6 +477,16 @@
       "Job Status"
     ]
   },
+  "Name": "Name",
+  "Class": "Class",
+  "ID": "ID",
+  "Status": "Status",
+  "Subsystem": "Subsystem",
+  "Type": "Type",
+  "Job Correlator": "Job Correlator",
+  "Phase": "Phase",
+  "Phase Name": "Phase Name",
+  "Error Details": "Error Details",
   "Fetching spool file...": "Fetching spool file...",
   "Failed to delete job {0}/Job name": {
     "message": "Failed to delete job {0}",
