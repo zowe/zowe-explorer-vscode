@@ -332,6 +332,26 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.ds.downloadDataset",
+        "title": "%downloadDataset%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.ds.downloadMember",
+        "title": "%downloadMember%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.ds.downloadAllDatasets",
+        "title": "%downloadAllDatasets%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.ds.downloadAllMembers",
+        "title": "%downloadAllMembers%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.ds.editDataSet",
         "title": "%editDataSet%",
         "category": "Zowe Explorer",
@@ -1125,6 +1145,31 @@
           "group": "099_zowe_dsModification@2"
         },
         {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^session.*/ && !listMultiSelection",
+          "command": "zowe.ds.downloadAllDatasets",
+          "group": "099_zowe_dsModification@3"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^ds.*/ && !listMultiSelection",
+          "command": "zowe.ds.downloadDataset",
+          "group": "099_zowe_dsModification@3"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/ && !listMultiSelection",
+          "command": "zowe.ds.downloadAllMembers",
+          "group": "099_zowe_dsModification@3"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^migr.*/ && !listMultiSelection",
+          "command": "zowe.ds.downloadAllMembers",
+          "group": "099_zowe_dsModification@3"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^member.*/ && !listMultiSelection",
+          "command": "zowe.ds.downloadMember",
+          "group": "099_zowe_dsModification@3"
+        },
+        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^ds.*/",
           "command": "zowe.ds.deleteDataset",
           "group": "099_zowe_dsModification@5"
@@ -1580,6 +1625,22 @@
         },
         {
           "command": "zowe.ds.sortBy",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.downloadAllDatasets",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.downloadDataset",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.downloadAllMembers",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.downloadMember",
           "when": "never"
         },
         {

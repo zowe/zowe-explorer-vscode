@@ -507,6 +507,79 @@ export class DatasetActions {
     }
 
     /**
+     * Downloads all the members of a PDS
+     * TODO (@JWaters02): Implement path history
+     * TODO (@JWaters02): Figure out extensionMap on the downloadAllMembers API
+     */
+    public static async downloadAllMembers(node: IZoweDatasetTreeNode): Promise<void> {
+        ZoweLogger.trace("dataset.actions.downloadDataset called.");
+
+        const profile = node.getProfile();
+        await Profiles.getInstance().checkCurrentProfile(profile);
+        if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
+            Gui.errorMessage(DatasetActions.localizedStrings.profileInvalid);
+            return;
+        }
+
+        // Placeholder for history-related bits
+        const historyItems: vscode.QuickPickItem[] = []; // Add history items here
+
+        historyItems.push({ label: vscode.l10n.t("Enter a new file path...") });
+
+        const quickPickOptions: vscode.QuickPickOptions = {
+            placeHolder: vscode.l10n.t("Select a download location or enter a new file path"),
+            ignoreFocusOut: true,
+        };
+
+        const selectedOption = await Gui.showQuickPick(historyItems, quickPickOptions);
+        if (!selectedOption) {
+            Gui.showMessage(vscode.l10n.t("Operation cancelled"));
+            return;
+        }
+
+        let selectedPath: string;
+        if (selectedOption.label === vscode.l10n.t("Enter a new file path...")) {
+            const options: vscode.OpenDialogOptions = {
+                canSelectFiles: false,
+                canSelectFolders: true,
+                canSelectMany: false,
+                openLabel: vscode.l10n.t("Select Download Location"),
+            };
+
+            const downloadPath = await Gui.showOpenDialog(options);
+            if (!downloadPath || downloadPath.length === 0) {
+                Gui.showMessage(vscode.l10n.t("Operation cancelled"));
+                return;
+            }
+
+            selectedPath = downloadPath[0].fsPath;
+            // Placeholder for adding the new path to history
+        } else {
+            selectedPath = selectedOption.label;
+        }
+
+        ZoweLogger.info(`Selected download path: ${selectedPath}`);
+
+        try {
+            const datasetName = node.label as string;
+            const maxConcurrentRequests = profile.profile?.maxConcurrentRequests || 1;
+            const extensionMap = await DatasetUtils.getExtensionMap(node);
+
+            const downloadOptions: zosfiles.IDownloadOptions = {
+                directory: selectedPath,
+                maxConcurrentRequests,
+                extensionMap,
+                overwrite: true,
+            };
+
+            await ZoweExplorerApiRegister.getMvsApi(profile).downloadAllMembers(datasetName, downloadOptions);
+            Gui.showMessage(vscode.l10n.t("Dataset downloaded successfully"));
+        } catch (e) {
+            await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
+        }
+    }
+
+    /**
      * Deletes nodes from the data set tree & delegates deletion of data sets, members, and profiles
      *
      * @export

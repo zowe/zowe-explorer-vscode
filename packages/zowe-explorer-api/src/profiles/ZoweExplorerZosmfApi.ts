@@ -263,6 +263,13 @@ export namespace ZoweExplorerZosmf {
             });
         }
 
+        public downloadAllMembers(dataSetName: string, options?: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse> {
+            return zosfiles.Download.allMembers(this.getSession(), dataSetName, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                ...options,
+            });
+        }
+
         public uploadFromBuffer(buffer: Buffer, dataSetName: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.Upload.bufferToDataSet(this.getSession(), buffer, dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,

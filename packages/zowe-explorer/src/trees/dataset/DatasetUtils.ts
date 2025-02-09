@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { DS_EXTENSION_MAP, Types } from "@zowe/zowe-explorer-api";
+import { DS_EXTENSION_MAP, IZoweDatasetTreeNode, Types } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../configuration/Constants";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 export class DatasetUtils {
@@ -103,5 +103,35 @@ export class DatasetUtils {
             }
         }
         return null;
+    }
+
+    /**
+     * Gets a map of file extensions for all members of a PDS to be used for IDownloadOptions.
+     */
+    public static async getExtensionMap(node: IZoweDatasetTreeNode): Promise<{ [key: string]: string }> {
+        ZoweLogger.trace("dataset.utils.getExtensionMap called.");
+        const extensionMap: { [key: string]: string } = {};
+        const children = await node.getChildren();
+
+        for (const child of children) {
+            let extension;
+            for (const [ext, matches] of DS_EXTENSION_MAP.entries()) {
+                if (matches.some((match) => (match instanceof RegExp ? match.test(child.label as string) : match === (child.label as string)))) {
+                    extension = ext;
+                    break;
+                }
+            }
+
+            if (extension) {
+                extensionMap[child.label as string] = extension;
+            } else {
+                const parentExtension = DatasetUtils.getExtension(node.label as string);
+                if (parentExtension) {
+                    extensionMap[child.label as string] = parentExtension;
+                }
+            }
+        }
+
+        return extensionMap;
     }
 }
