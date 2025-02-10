@@ -331,9 +331,9 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
     /**
      * @param {string} profileLabel
      * @param {string} beforeLabel
-     * @param {string} afterLabel
+     * @param {vscode.Uri} newUri
      */
-    renameNode(profile: string, beforeDataSetName: string, afterDataSetName: string): void | Promise<void>;
+    renameNode(profile: string, beforeDataSetName: string, afterDataSetName: string, newUri: vscode.Uri): void | Promise<void>;
 
     /**
      * Opens an item & reveals it in the tree
