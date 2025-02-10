@@ -721,9 +721,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
      * @param profileLabel
      * @param beforeLabel
      * @param afterLabel
+     * @param newUri
      */
 
-    public renameNode(profileLabel: string, beforeLabel: string, afterLabel: string): void {
+    public renameNode(profileLabel: string, beforeLabel: string, afterLabel: string, newUri: vscode.Uri): void {
         ZoweLogger.trace("DatasetTree.renameNode called.");
         const sessionNode = this.mSessionNodes.find((session) => session.label.toString() === profileLabel.trim());
         if (sessionNode) {
@@ -731,8 +732,23 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (matchingNode) {
                 matchingNode.label = afterLabel;
                 matchingNode.tooltip = afterLabel;
+                matchingNode.resourceUri = newUri;
                 this.refreshElement(matchingNode);
             }
+
+            if (SharedContext.isPds(matchingNode)) {
+                for (const child of matchingNode.children) {
+                    child.resourceUri = child.resourceUri.with({
+                        path: path.posix.join(newUri.path, child.resourceUri.path.substring(child.resourceUri.path.lastIndexOf("/") + 1)),
+                    });
+                    child.command = {
+                        title: "",
+                        command: "vscode.open",
+                        arguments: [child.resourceUri],
+                    };
+                }
+            }
+            this.refreshElement(matchingNode.getParent() as IZoweDatasetTreeNode);
         }
     }
 
@@ -1399,7 +1415,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             // Rename corresponding node in Sessions or Favorites section (whichever one Rename wasn't called from)
             if (SharedContext.isFavorite(node)) {
                 const profileName = node.getProfileName();
-                this.renameNode(profileName, beforeDataSetName, afterDataSetName);
+                this.renameNode(profileName, beforeDataSetName, afterDataSetName, newUri);
             } else {
                 this.renameFavorite(node, afterDataSetName);
             }
