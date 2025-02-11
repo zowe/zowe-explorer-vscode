@@ -2229,11 +2229,31 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
 
         expect(blockMocks.node.label).toEqual("newLabel");
     });
+
+    it("Checking opening of PDS when rename operation is performed from Favorited PDS", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        jest.spyOn(SharedContext, "isPds").mockReturnValue(true);
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: blockMocks.testTree.mSessionNodes[1].getProfile(),
+        });
+        node.resourceUri = vscode.Uri.from({
+            scheme: ZoweScheme.DS,
+            path: "/sestest/RENAME.PDS",
+        });
+        blockMocks.testTree.mSessionNodes[1].children[0].children = [node];
+        await blockMocks.testTree.renameNode(blockMocks.imperativeProfile.name, blockMocks.node.label.toString(), "newLabel", node.resourceUri);
+        expect(blockMocks.testTree.mSessionNodes[1].children[0].children[0].command.command).toBe('vscode.open')
+    });
 });
 
 describe("Dataset Tree Unit Tests - Function createFilterString", () => {
     function createBlockMocks() {
-        const session = createISession();
+        const session = createISession();.
         const imperativeProfile = createIProfile();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const node = new ZoweDatasetNode({
