@@ -17,6 +17,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where the 'Delete' key binding for the USS tree returns a 'contextValue' error. [#2796](https://github.com/zowe/zowe-explorer-vscode/issues/2796)
 - Fixed an issue where cancelling Unix, MVS or TSO command still submits the command. [#3422](https://github.com/zowe/zowe-explorer-vscode/issues/3422)
 - Fixed an issue where user is unable to open a renamed sequential data set from the Data Sets tree view.. [#3345](https://github.com/zowe/zowe-explorer-vscode/issues/3345)
+- Fixed an issue to use profile encoding rather than metadata encoding during upload and download of dataset and uss files
+  [#3457](https://github.com/zowe/zowe-explorer-vscode/issues/3457)
 
 ## `3.1.0`
 
