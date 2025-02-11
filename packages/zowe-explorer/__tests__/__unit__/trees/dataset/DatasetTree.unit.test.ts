@@ -2226,8 +2226,7 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
         jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
         blockMocks.testTree.mSessionNodes[1].children[0].contextValue = Constants.DS_DS_CONTEXT;
         await blockMocks.testTree.renameNode(blockMocks.imperativeProfile.name, blockMocks.node.label.toString(), "newLabel");
-
-        expect(blockMocks.node.label).toEqual("newLabel");
+        expect(blockMocks.testTree.mSessionNodes[1].children[0].command.command).toBe("vscode.open");
     });
 
     it("Checking opening of PDS when rename operation is performed from Favorited PDS", async () => {
@@ -2247,13 +2246,13 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
         });
         blockMocks.testTree.mSessionNodes[1].children[0].children = [node];
         await blockMocks.testTree.renameNode(blockMocks.imperativeProfile.name, blockMocks.node.label.toString(), "newLabel", node.resourceUri);
-        expect(blockMocks.testTree.mSessionNodes[1].children[0].children[0].command.command).toBe('vscode.open')
+        expect(blockMocks.testTree.mSessionNodes[1].children[0].children[0].command.command).toBe("vscode.open");
     });
 });
 
 describe("Dataset Tree Unit Tests - Function createFilterString", () => {
     function createBlockMocks() {
-        const session = createISession();.
+        const session = createISession();
         const imperativeProfile = createIProfile();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const node = new ZoweDatasetNode({
