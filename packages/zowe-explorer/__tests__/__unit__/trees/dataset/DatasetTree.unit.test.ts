@@ -2341,7 +2341,15 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             session: blockMocks.session,
             profile: testTree.mSessionNodes[1].getProfile(),
         });
-
+        const fav_node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+            contextValue: Constants.DS_FAV_CONTEXT,
+        });
+        jest.spyOn(testTree, "findFavoritedNode").mockReturnValue(fav_node);
         await testTree.rename(node);
         expect(blockMocks.rename).toHaveBeenLastCalledWith(
             { path: "/sestest/HLQ.TEST.RENAME.NODE", scheme: ZoweScheme.DS },
@@ -2552,6 +2560,15 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         mocked(Gui.showInputBox).mockImplementation((options) => {
             return Promise.resolve("HLQ.TEST.NEWNAME.NODE");
         });
+        const fav_node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+            contextValue: Constants.DS_FAV_CONTEXT,
+        });
+        jest.spyOn(testTree, "findFavoritedNode").mockReturnValue(fav_node);
         await testTree.rename(parent);
         expect(renameDataSetSpy).toHaveBeenLastCalledWith(parent);
         expect(parent.resourceUri?.path).toBe("/sestest/HLQ.TEST.NEWNAME.NODE");
