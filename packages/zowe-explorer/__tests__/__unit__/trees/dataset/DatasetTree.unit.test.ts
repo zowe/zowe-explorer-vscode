@@ -2195,7 +2195,6 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
             parentNode: datasetSessionNode,
         });
         const testTree = new DatasetTree();
-
         datasetSessionNode.children.push(node);
         testTree.mSessionNodes.push(datasetSessionNode);
         jest.spyOn(datasetSessionNode, "getChildren").mockReturnValue(Promise.resolve([datasetSessionNode]));
@@ -2208,10 +2207,24 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
         };
     }
 
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
     it("Checking opening of PS Dataset", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
+        await blockMocks.testTree.renameNode(blockMocks.imperativeProfile.name, blockMocks.node.label.toString(), "newLabel");
+
+        expect(blockMocks.node.label).toEqual("newLabel");
+    });
+
+    it("Checking opening of seq ds when rename operation is performed from Favorited seq ds", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
+        blockMocks.testTree.mSessionNodes[1].children[0].contextValue = Constants.DS_DS_CONTEXT;
         await blockMocks.testTree.renameNode(blockMocks.imperativeProfile.name, blockMocks.node.label.toString(), "newLabel");
 
         expect(blockMocks.node.label).toEqual("newLabel");
