@@ -2770,6 +2770,38 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         await testValidDsName("HLQ.TEST.RENAME.NODE.NEW.TEST");
         await testValidDsName("INVALID-DATASET-NAME");
     });
+
+    it("To check if rename of favorited seq ds is performed correctly when the rename operation is performed on the seq ds from the ds tree view ", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+        });
+        const fav_node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+        });
+        fav_node.contextValue = Constants.DS_FAV_CONTEXT;
+        jest.spyOn(testTree, "findFavoritedNode").mockReturnValue(fav_node);
+        await testTree.rename(node);
+        expect(blockMocks.rename).toHaveBeenLastCalledWith(
+            { path: "/sestest/HLQ.TEST.RENAME.NODE", scheme: ZoweScheme.DS },
+            { path: "/sestest/HLQ.TEST.RENAME.NODE.NEW", scheme: ZoweScheme.DS },
+            { overwrite: false }
+        );
+    });
 });
 
 describe("Dataset Tree Unit Tests - Function checkFilterPattern", () => {
