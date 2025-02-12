@@ -772,15 +772,15 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             matchingNode.tooltip = newLabel;
             matchingNode.resourceUri = newUri;
             this.refreshElement(matchingNode as IZoweDatasetTreeNode);
+            if (matchingNode.contextValue === Constants.DS_FAV_CONTEXT) {
+                matchingNode.command = {
+                    title: "",
+                    command: "vscode.open",
+                    arguments: [matchingNode.resourceUri],
+                };
+            }
+            this.refreshElement(matchingNode.getParent() as IZoweDatasetTreeNode);
         }
-        if (matchingNode.contextValue === Constants.DS_FAV_CONTEXT) {
-            matchingNode.command = {
-                title: "",
-                command: "vscode.open",
-                arguments: [matchingNode.resourceUri],
-            };
-        }
-        this.refreshElement(matchingNode.getParent() as IZoweDatasetTreeNode);
     }
 
     /**
