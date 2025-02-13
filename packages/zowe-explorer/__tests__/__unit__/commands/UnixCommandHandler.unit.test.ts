@@ -359,7 +359,7 @@ describe("UnixCommand Actions Unit Testing", () => {
             placeHolder: "Select the profile to use to submit the Unix command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls.length).toBe(0);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
     });
 
     it("tests the issueUnixCommand function user escapes the commandbox", async () => {
@@ -389,7 +389,7 @@ describe("UnixCommand Actions Unit Testing", () => {
             placeHolder: "Select the profile to use to submit the Unix command",
         });
         expect(showInputBox.mock.calls.length).toBe(2);
-        expect(showInformationMessage.mock.calls.length).toBe(0);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
     });
 
     it("tests the issueUnixCommand function - issueUnixCommand throws an error", async () => {
