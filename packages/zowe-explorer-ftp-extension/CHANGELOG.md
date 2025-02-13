@@ -1,5 +1,11 @@
 All notable changes to the "zowe-explorer-ftp-extension" extension will be documented in this file.
 
+## TBD Release
+
+### New features and enhancements
+
+### Bug fixes
+
 ## `3.1.1`
 
 ### New features and enhancements
