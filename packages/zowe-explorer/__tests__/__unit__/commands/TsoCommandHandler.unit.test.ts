@@ -371,7 +371,7 @@ describe("TsoCommandHandler unit testing", () => {
             placeHolder: "Select the profile to use to submit the TSO command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls.length).toBe(0);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
     });
 
     it("tests the issueTsoCommand function user starts typing a value in quick pick", async () => {
