@@ -729,6 +729,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         if (sessionNode) {
             const matchingNode = sessionNode.children.find((node) => node.label === beforeLabel);
             if (matchingNode) {
+                const newUri = matchingNode.resourceUri.with({
+                    path: path.posix.join(path.posix.dirname(matchingNode.resourceUri.path), afterLabel),
+                });
                 matchingNode.label = afterLabel;
                 matchingNode.tooltip = afterLabel;
                 matchingNode.resourceUri = newUri;
