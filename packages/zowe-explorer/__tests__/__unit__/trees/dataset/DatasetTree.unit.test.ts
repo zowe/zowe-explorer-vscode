@@ -2245,7 +2245,7 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
             path: "/sestest/RENAME.PDS",
         });
         blockMocks.testTree.mSessionNodes[1].children[0].children = [node];
-        await blockMocks.testTree.renameNode(blockMocks.imperativeProfile.name, blockMocks.node.label.toString(), "newLabel", node.resourceUri);
+        await blockMocks.testTree.renameNode(blockMocks.imperativeProfile.name, blockMocks.node.label.toString(), "newLabel");
         expect(blockMocks.testTree.mSessionNodes[1].children[0].children[0].command.command).toBe("vscode.open");
     });
 });
