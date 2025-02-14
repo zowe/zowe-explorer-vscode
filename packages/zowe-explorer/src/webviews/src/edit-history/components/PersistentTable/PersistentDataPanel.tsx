@@ -51,7 +51,7 @@ export default function PersistentDataPanel({ type }: Readonly<{ type: Readonly<
   };
 
   useEffect(() => {
-    window.addEventListener("message", (event) => {
+    const handleMessage = (event: MessageEvent) => {
       if (!isSecureOrigin(event.origin)) {
         return;
       }
@@ -64,16 +64,20 @@ export default function PersistentDataPanel({ type }: Readonly<{ type: Readonly<
           }));
         }
       }
-    });
-  }, []);
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, [type]);
 
   useEffect(() => {
-    setPersistentProp(() => data[type][selection[type]]);
-  }, [data]);
-
-  useEffect(() => {
-    setPersistentProp(() => data[type][selection[type]]);
-  }, [selection]);
+    if (data[type] && selection[type]) {
+      setPersistentProp(() => data[type][selection[type]] || []);
+    }
+  }, [data, selection, type]);
 
   if (type == "cmds") {
     return (
