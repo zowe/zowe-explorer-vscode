@@ -2333,6 +2333,10 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         };
     }
 
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
     it("returns early if errorForUnsavedResource was true", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -2660,6 +2664,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         testTree.mFavorites.push(favProfileNode);
         const renameDataSetMemberSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSetMember");
         const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockImplementation();
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
 
         await testTree.rename(child);
 
@@ -2835,7 +2840,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         );
     });
 
-    it("Checking function with favorited PDS ", async () => {
+    it("Checking rename functionality with favorited PDS ", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
