@@ -10,6 +10,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Implemented copy/paste functionality of data sets within and across LPARs. [#3012](https://github.com/zowe/zowe-explorer-vscode/issues/3012)
 - Added Time Started, Time Ended, and Time Submitted job properties to the Jobs table view. [#3055](https://github.com/zowe/zowe-explorer-vscode/issues/3055)
 - Implemented drag and drop functionality of data sets within and across LPARs. [#3413](https://github.com/zowe/zowe-explorer-vscode/pull/3413)
+- Renamed "Zowe Explorer z/OS Console" to "z/OS Console". [#3445](https://github.com/zowe/zowe-explorer-vscode/pull/3445)
 
 ### Bug fixes
 
@@ -18,6 +19,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where the 'Delete' key binding for the USS tree returns a 'contextValue' error. [#2796](https://github.com/zowe/zowe-explorer-vscode/issues/2796)
 - Fixed an issue where cancelling Unix, MVS or TSO command still submits the command. [#3422](https://github.com/zowe/zowe-explorer-vscode/issues/3422)
 - Fixed an issue where user is unable to open a renamed sequential data set from the Data Sets tree view.. [#3345](https://github.com/zowe/zowe-explorer-vscode/issues/3345)
+- Fixed missing z/OS Console icon when `Workbench > Panel: Show Labels` is set to false. [#3293](https://github.com/zowe/zowe-explorer-vscode/issues/3293)
+- Fixed z/OS Console panel background colour to be in sync with the rest of the VS Code styling. [#3445](https://github.com/zowe/zowe-explorer-vscode/pull/3445)
 
 ## `3.1.0`
 
