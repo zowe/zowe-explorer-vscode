@@ -325,7 +325,7 @@ describe("readDirectory", () => {
 });
 
 describe("fetchFileAtUri", () => {
-    it("calls getContents to get the data for a file entry", async () => {
+    beforeEach(() => {
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -335,6 +335,8 @@ describe("fetchFileAtUri", () => {
                 };
             }),
         });
+    });
+    it("calls getContents to get the data for a file entry", async () => {
         const fileEntry = { ...testEntries.file };
         const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
         const exampleData = "hello world!";
@@ -360,15 +362,6 @@ describe("fetchFileAtUri", () => {
         autoDetectEncodingMock.mockRestore();
     });
     it("returns early if it failed to fetch contents", async () => {
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn(() => {
-                        return testProfile;
-                    }),
-                };
-            }),
-        });
         const fileEntry = { ...testEntries.file };
         const _fireSoonSpy = jest.spyOn((UssFSProvider as any).prototype, "_fireSoon");
         const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
@@ -384,15 +377,6 @@ describe("fetchFileAtUri", () => {
         autoDetectEncodingMock.mockRestore();
     });
     it("calls getContents to get the data for a file entry with encoding", async () => {
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn(() => {
-                        return testProfile;
-                    }),
-                };
-            }),
-        });
         const fileEntry = { ...testEntries.file };
         const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
         const exampleData = "hello world!";
@@ -418,15 +402,6 @@ describe("fetchFileAtUri", () => {
         expect(getContentsMock).toHaveBeenCalledWith("/aFile.txt", expect.objectContaining({ binary: true }));
     });
     it("assigns conflictData if the 'isConflict' option is specified", async () => {
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn(() => {
-                        return testProfile;
-                    }),
-                };
-            }),
-        });
         const fileEntry = { ...testEntries.file };
         const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
         const exampleData = "<remote data>";
@@ -452,15 +427,6 @@ describe("fetchFileAtUri", () => {
         autoDetectEncodingMock.mockRestore();
     });
     it("calls '_updateResourceInEditor' if the 'editor' option is specified", async () => {
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn(() => {
-                        return testProfile;
-                    }),
-                };
-            }),
-        });
         const fileEntry = { ...testEntries.file };
         const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
         const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation();

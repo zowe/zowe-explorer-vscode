@@ -203,6 +203,17 @@ describe("readDirectory", () => {
     });
 });
 describe("fetchDatasetAtUri", () => {
+    beforeEach(() => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn(() => {
+                        return testProfile;
+                    }),
+                };
+            }),
+        });
+    });
     it("fetches a data set at the given URI", async () => {
         const contents = "dataset contents";
         const mockMvsApi = {
@@ -216,15 +227,6 @@ describe("fetchDatasetAtUri", () => {
                 };
             }),
         };
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn(() => {
-                        return testProfile;
-                    }),
-                };
-            }),
-        });
         const fakePo = { ...testEntries.ps };
         const lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(fakePo);
         const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
@@ -249,15 +251,6 @@ describe("fetchDatasetAtUri", () => {
                 };
             }),
         };
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn(() => {
-                        return testProfile;
-                    }),
-                };
-            }),
-        });
         const fakePo = { ...testEntries.ps };
         const lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(fakePo);
         const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
@@ -274,15 +267,6 @@ describe("fetchDatasetAtUri", () => {
         const mockMvsApi = {
             getContents: jest.fn().mockRejectedValue(new Error("unknown API error")),
         };
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn(() => {
-                        return testProfile;
-                    }),
-                };
-            }),
-        });
         const fakePo = { ...testEntries.ps };
         const lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(fakePo);
         const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
@@ -305,15 +289,6 @@ describe("fetchDatasetAtUri", () => {
                 };
             }),
         };
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn(() => {
-                        return testProfile;
-                    }),
-                };
-            }),
-        });
         const fakePo = { ...testEntries.ps };
         const _updateResourceInEditorMock = jest.spyOn(DatasetFSProvider.instance as any, "_updateResourceInEditor").mockImplementation();
         const lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(fakePo);
