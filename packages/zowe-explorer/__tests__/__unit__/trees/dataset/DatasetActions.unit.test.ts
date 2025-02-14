@@ -415,6 +415,152 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     });
 });
 
+describe("DatasetActions - downloading functions", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const zosmfSession = createSessCfgFromArgs(imperativeProfile);
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
+        const mvsApi = createMvsApi(imperativeProfile);
+        const fetchDsAtUri = jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockImplementation();
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const mockCheckCurrentProfile = jest.fn();
+        bindMvsApi(mvsApi);
+        Object.defineProperty(ProfilesCache, "getProfileSessionWithVscProxy", { value: jest.fn().mockReturnValue(zosmfSession), configurable: true });
+
+        return {
+            session,
+            zosmfSession,
+            treeView,
+            imperativeProfile,
+            datasetSessionNode,
+            mvsApi,
+            testDatasetTree,
+            fetchDsAtUri,
+            profileInstance,
+            mockCheckCurrentProfile,
+        };
+    }
+
+    // let getMvsApiSpy: jest.SpyInstance;
+    // const downloadAllDatasetsMock = jest.fn();
+    // const fakeMvsApi = {
+    //     downloadAllDatasets: downloadAllDatasetsMock,
+    // };
+
+    // beforeAll(() => {
+    //     getMvsApiSpy = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(fakeMvsApi as any);
+    // });
+
+    // afterAll(() => jest.restoreAllMocks());
+
+    describe("function downloadAllMembers", () => {
+        it("should download all members successfully with valid profile", async () => {
+            createGlobalMocks();
+            const blockMocks = createBlockMocksShared();
+            const node = new ZoweDatasetNode({
+                label: "HLQ.TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: blockMocks.datasetSessionNode,
+            });
+
+            mocked(vscode.window.showQuickPick).mockResolvedValueOnce({ label: "Enter a new file path..." });
+            mocked(vscode.window.showOpenDialog).mockResolvedValueOnce([vscode.Uri.file("C:/Downloads")]);
+            mocked(DatasetUtils.getExtensionMap).mockResolvedValueOnce({ member1: ".txt", member2: ".c" });
+
+            await DatasetActions.downloadAllMembers(node);
+
+            expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Dataset downloaded successfully");
+            // expect(getMvsApiSpy).toHaveBeenCalledTimes(1);
+        });
+
+        // it("should handle invalid profile", async () => {
+        //     createGlobalMocks();
+        //     const blockMocks = createBlockMocks();
+        //     const node = new ZoweDatasetNode({
+        //         label: "HLQ.TEST.PDS",
+        //         collapsibleState: vscode.TreeItemCollapsibleState.None,
+        //         parentNode: blockMocks.datasetSessionNode,
+        //         profile: blockMocks.imperativeProfile,
+        //     });
+
+        //     mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        //     Object.defineProperty(Profiles, "getInstance", {
+        //         value: jest.fn(() => {
+        //             return {
+        //                 checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({
+        //                     name: blockMocks.imperativeProfile.name,
+        //                     status: "unverified",
+        //                 }),
+        //                 validProfile: Validation.ValidationType.UNVERIFIED,
+        //             };
+        //         }),
+        //     });
+
+        //     await DatasetActions.downloadAllMembers(node);
+
+        //     expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith(DatasetActions.localizedStrings.profileInvalid);
+        // });
+
+        // it("should handle user cancelling quick pick", async () => {
+        //     createGlobalMocks();
+        //     const blockMocks = createBlockMocks();
+        //     const node = new ZoweDatasetNode({
+        //         label: "HLQ.TEST.PDS",
+        //         collapsibleState: vscode.TreeItemCollapsibleState.None,
+        //         parentNode: blockMocks.datasetSessionNode,
+        //         profile: blockMocks.imperativeProfile,
+        //     });
+
+        //     mocked(vscode.window.showQuickPick).mockResolvedValueOnce(undefined);
+
+        //     await DatasetActions.downloadAllMembers(node);
+
+        //     expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Operation cancelled");
+        // });
+
+        // it("should handle user cancelling file dialog", async () => {
+        //     createGlobalMocks();
+        //     const blockMocks = createBlockMocks();
+        //     const node = new ZoweDatasetNode({
+        //         label: "HLQ.TEST.PDS",
+        //         collapsibleState: vscode.TreeItemCollapsibleState.None,
+        //         parentNode: blockMocks.datasetSessionNode,
+        //         profile: blockMocks.imperativeProfile,
+        //     });
+
+        //     mocked(vscode.window.showQuickPick).mockResolvedValueOnce({ label: "Enter a new file path..." });
+        //     mocked(vscode.window.showOpenDialog).mockResolvedValueOnce(undefined);
+
+        //     await DatasetActions.downloadAllMembers(node);
+
+        //     expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Operation cancelled");
+        // });
+
+        // it("should handle download failure", async () => {
+        //     createGlobalMocks();
+        //     const blockMocks = createBlockMocks();
+        //     const node = new ZoweDatasetNode({
+        //         label: "HLQ.TEST.PDS",
+        //         collapsibleState: vscode.TreeItemCollapsibleState.None,
+        //         parentNode: blockMocks.datasetSessionNode,
+        //         profile: blockMocks.imperativeProfile,
+        //     });
+
+        //     mocked(vscode.window.showQuickPick).mockResolvedValueOnce({ label: "Enter a new file path..." });
+        //     mocked(vscode.window.showOpenDialog).mockResolvedValueOnce([vscode.Uri.file("C:/Downloads")]);
+        //     mocked(DatasetUtils.getExtensionMap).mockResolvedValueOnce({ member1: ".txt", member2: ".c" });
+
+        //     await DatasetActions.downloadAllMembers(node);
+
+        //     expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Failed to download dataset");
+        //     expect(getMvsApiSpy).toHaveBeenCalledTimes(1);
+        // });
+    });
+});
+
 describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
     function createBlockMocks(globalMocks) {
         const testDatasetTree = createDatasetTree(globalMocks.datasetSessionNode, globalMocks.treeView, globalMocks.testFavoritesNode);

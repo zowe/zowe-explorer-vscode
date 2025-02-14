@@ -508,8 +508,8 @@ export class DatasetActions {
 
     /**
      * Downloads all the members of a PDS
-     * TODO (@JWaters02): Implement path history
-     * TODO (@JWaters02): Figure out extensionMap on the downloadAllMembers API
+     * TODO: Implement path history
+     * TODO: Figure out extensionMap on the downloadAllMembers API
      */
     public static async downloadAllMembers(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.downloadDataset called.");

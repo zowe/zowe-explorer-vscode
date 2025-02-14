@@ -198,42 +198,6 @@
   "Profile auth error": "Profile auth error",
   "Profile is not authenticated, please log in to continue": "Profile is not authenticated, please log in to continue",
   "Retrieving response from USS list API": "Retrieving response from USS list API",
-  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
-  "Failed to move {0}/File path": {
-    "message": "Failed to move {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Profile does not exist for this file.": "Profile does not exist for this file.",
-  "Saving USS file...": "Saving USS file...",
-  "Failed to rename {0}/File path": {
-    "message": "Failed to rename {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Failed to delete {0}/File name": {
-    "message": "Failed to delete {0}",
-    "comment": [
-      "File name"
-    ]
-  },
-  "No error details given": "No error details given",
-  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
-    "message": "Error fetching destination {0} for paste action: {1}",
-    "comment": [
-      "USS path",
-      "Error message"
-    ]
-  },
-  "Failed to copy {0} to {1}/Source pathDestination path": {
-    "message": "Failed to copy {0} to {1}",
-    "comment": [
-      "Source path",
-      "Destination path"
-    ]
-  },
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
     "comment": [
@@ -249,8 +213,6 @@
   "Binary": "Binary",
   "Create a new filter": "Create a new filter",
   "Failed to move file {0}: {1}": "Failed to move file {0}: {1}",
-  "Confirm": "Confirm",
-  "One or more items may be overwritten from this drop operation. Confirm or cancel?": "One or more items may be overwritten from this drop operation. Confirm or cancel?",
   "Moving USS files...": "Moving USS files...",
   "Enter a new name for the {0}/Node type": {
     "message": "Enter a new name for the {0}",
@@ -297,6 +259,42 @@
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "Pulling from Mainframe...": "Pulling from Mainframe...",
+  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
+  "Failed to move {0}/File path": {
+    "message": "Failed to move {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Profile does not exist for this file.": "Profile does not exist for this file.",
+  "Saving USS file...": "Saving USS file...",
+  "Failed to rename {0}/File path": {
+    "message": "Failed to rename {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Failed to delete {0}/File name": {
+    "message": "Failed to delete {0}",
+    "comment": [
+      "File name"
+    ]
+  },
+  "No error details given": "No error details given",
+  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
+    "message": "Error fetching destination {0} for paste action: {1}",
+    "comment": [
+      "USS path",
+      "Error message"
+    ]
+  },
+  "Failed to copy {0} to {1}/Source pathDestination path": {
+    "message": "Failed to copy {0} to {1}",
+    "comment": [
+      "Source path",
+      "Destination path"
+    ]
+  },
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -369,6 +367,8 @@
       "Name of USS session"
     ]
   },
+  "Confirm": "Confirm",
+  "One or more items may be overwritten from this drop operation. Confirm or cancel?": "One or more items may be overwritten from this drop operation. Confirm or cancel?",
   "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",
   "Team config file deleted, refreshing Zowe Explorer.": "Team config file deleted, refreshing Zowe Explorer.",
   "Team config file updated, refreshing Zowe Explorer.": "Team config file updated, refreshing Zowe Explorer.",
@@ -509,15 +509,8 @@
       "Job name"
     ]
   },
-  "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}/Jobs lengthJob names": {
-    "message": "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}",
-    "comment": [
-      "Jobs length",
-      "Job names"
-    ]
-  },
-  "The following jobs were deleted: {0}/Deleted jobs": {
-    "message": "The following jobs were deleted: {0}",
+  "The following jobs were deleted: {0}{1}/Deleted jobs": {
+    "message": "The following jobs were deleted: {0}{1}",
     "comment": [
       "Deleted jobs"
     ]
@@ -584,6 +577,9 @@
   "Date Modified": "Date Modified",
   "User ID": "User ID",
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
+  "Cannot drop a sequential dataset or a partitioned dataset onto another PDS.": "Cannot drop a sequential dataset or a partitioned dataset onto another PDS.",
+  "Cannot drop a member onto a sequential dataset.": "Cannot drop a member onto a sequential dataset.",
+  "Moving MVS files...": "Moving MVS files...",
   "Initializing profiles with data set favorites.": "Initializing profiles with data set favorites.",
   "No data set favorites found.": "No data set favorites found.",
   "Error creating data set favorite node: {0} for profile {1}./LabelProfile name": {
