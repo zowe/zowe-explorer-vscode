@@ -941,7 +941,7 @@ export class Profiles extends ProfilesCache {
                         preferBaseToken: true,
                     });
                 } else {
-                    loginOk = loginOk = await ZoweVsCodeExtension.directConnectLogin(serviceProfile, zeInstance, node);
+                    loginOk = await ZoweVsCodeExtension.directConnectLogin(serviceProfile, zeInstance, node);
                 }
 
                 if (loginOk) {
