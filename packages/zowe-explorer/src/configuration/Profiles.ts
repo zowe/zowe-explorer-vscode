@@ -66,7 +66,6 @@ export class Profiles extends ProfilesCache {
     private manualEditMsg = vscode.l10n.t(
         `The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.`
     );
-    private InputBoxOptions: vscode.InputBoxOptions;
     public constructor(log: imperative.Logger, cwd?: string) {
         super(log, cwd);
     }
@@ -814,7 +813,7 @@ export class Profiles extends ProfilesCache {
         try {
             let loginOk = false;
             if (loginTokenType && !loginTokenType.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)) {
-                loginOk = await this.loginWithRegularProfile(serviceProfile, node);
+                loginOk = await ZoweVsCodeExtension.directConnectLogin(serviceProfile, zeInstance, node);
             } else {
                 loginOk = await ZoweVsCodeExtension.ssoLogin({
                     serviceProfile,
@@ -942,7 +941,7 @@ export class Profiles extends ProfilesCache {
                         preferBaseToken: true,
                     });
                 } else {
-                    loginOk = await this.loginWithRegularProfile(serviceProfile, node);
+                    loginOk = loginOk = await ZoweVsCodeExtension.directConnectLogin(serviceProfile, zeInstance, node);
                 }
 
                 if (loginOk) {
@@ -1063,6 +1062,7 @@ export class Profiles extends ProfilesCache {
         try {
             this.clearFilterFromAllTrees(node);
             let logoutOk = true;
+            const zeRegister = ZoweExplorerApiRegister.getInstance();
 
             // this will handle extenders
             if (
@@ -1070,10 +1070,8 @@ export class Profiles extends ProfilesCache {
                 serviceProfile.profile != null &&
                 !serviceProfile.profile.tokenType?.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)
             ) {
-                await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(node.getSession());
-                await Profiles.getInstance().updateCachedProfile(serviceProfile, node);
+                logoutOk = await ZoweVsCodeExtension.directConnectLogout(serviceProfile, zeRegister, node);
             } else {
-                const zeRegister = ZoweExplorerApiRegister.getInstance();
                 logoutOk = await ZoweVsCodeExtension.ssoLogout({
                     serviceProfile,
                     defaultTokenType: zeRegister?.getCommonApi(serviceProfile).getTokenTypeName(),
@@ -1129,25 +1127,6 @@ export class Profiles extends ProfilesCache {
         return mergedArgs.knownArgs
             .filter((arg) => arg.secure || arg.argName === "tokenType" || arg.argName === "tokenValue")
             .map((arg) => arg.argName);
-    }
-
-    private async loginWithRegularProfile(serviceProfile: imperative.IProfileLoaded, node?: Types.IZoweNodeType): Promise<boolean> {
-        let session: imperative.Session;
-        if (node) {
-            session = node.getSession();
-        }
-        if (session == null) {
-            session = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getSession();
-        }
-        const creds = await this.loginCredentialPrompt();
-        if (!creds) {
-            return false;
-        }
-        session.ISession.user = creds[0];
-        session.ISession.password = creds[1];
-        await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(session);
-        await Profiles.getInstance().updateCachedProfile(serviceProfile, node);
-        return true;
     }
 
     private async getConfigLocationPrompt(action: string): Promise<string> {
@@ -1226,71 +1205,6 @@ export class Profiles extends ProfilesCache {
             }
         }
         return ret;
-    }
-
-    private async loginCredentialPrompt(): Promise<string[]> {
-        ZoweLogger.trace("Profiles.loginCredentialPrompt called.");
-        let newPass: string;
-        const newUser = await this.userInfo();
-        if (!newUser) {
-            Gui.showMessage(this.profilesOpCancelled);
-            return;
-        } else {
-            newPass = await this.passwordInfo();
-            if (!newPass) {
-                Gui.showMessage(this.profilesOpCancelled);
-                return;
-            }
-        }
-        return [newUser, newPass];
-    }
-
-    private async userInfo(input?: string): Promise<string> {
-        ZoweLogger.trace("Profiles.userInfo called.");
-        let userName: string;
-
-        if (input) {
-            userName = input;
-        }
-        this.InputBoxOptions = {
-            placeHolder: vscode.l10n.t("User Name"),
-            prompt: vscode.l10n.t("Enter the user name for the connection. Leave blank to not store."),
-            ignoreFocusOut: true,
-            value: userName,
-        };
-        userName = await Gui.showInputBox(this.InputBoxOptions);
-
-        if (userName === undefined) {
-            Gui.showMessage(this.profilesOpCancelled);
-            return undefined;
-        }
-
-        return userName.trim();
-    }
-
-    private async passwordInfo(input?: string): Promise<string> {
-        ZoweLogger.trace("Profiles.passwordInfo called.");
-        let passWord: string;
-
-        if (input) {
-            passWord = input;
-        }
-
-        this.InputBoxOptions = {
-            placeHolder: vscode.l10n.t("Password"),
-            prompt: vscode.l10n.t("Enter the password for the connection. Leave blank to not store."),
-            password: true,
-            ignoreFocusOut: true,
-            value: passWord,
-        };
-        passWord = await Gui.showInputBox(this.InputBoxOptions);
-
-        if (passWord === undefined) {
-            Gui.showMessage(this.profilesOpCancelled);
-            return undefined;
-        }
-
-        return passWord.trim();
     }
 
     // Temporary solution for handling unsecure profiles until CLI team's work is made
