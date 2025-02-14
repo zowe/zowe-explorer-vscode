@@ -176,7 +176,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         ZoweLogger.trace("ZoweTreeProvider.findFavoritedNode called.");
         return undefined;
     }
-    public renameFavorite(_node: IZoweTreeNode, _newLabel: string, _newUri: vscode.Uri): any {
+    public renameFavorite(_node: IZoweTreeNode, _newLabel: string): any {
         ZoweLogger.trace("ZoweTreeProvider.renameFavorite called.");
         return undefined;
     }
