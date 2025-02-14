@@ -27,6 +27,7 @@ import {
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
+import { Profiles } from "../../../../src/configuration/Profiles";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import * as path from "path";
 const dayjs = require("dayjs");
@@ -202,6 +203,17 @@ describe("readDirectory", () => {
     });
 });
 describe("fetchDatasetAtUri", () => {
+    beforeEach(() => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn(() => {
+                        return testProfile;
+                    }),
+                };
+            }),
+        });
+    });
     it("fetches a data set at the given URI", async () => {
         const contents = "dataset contents";
         const mockMvsApi = {

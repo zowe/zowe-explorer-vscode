@@ -279,7 +279,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         let resp: IZosFilesResponse;
         try {
             await this.autoDetectEncoding(file as UssFile);
-            const profileEncoding = file.encoding ? null : file.metadata.profile.profile?.encoding;
+            const profile = Profiles.getInstance().loadNamedProfile(file?.metadata.profile.name);
+            const profileEncoding = file.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
             await AuthHandler.waitForUnlock(file.metadata.profile);
             resp = await ZoweExplorerApiRegister.getUssApi(metadata.profile).getContents(filePath, {
                 binary: file.encoding?.kind === "binary",
@@ -408,7 +409,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         try {
             const ussApi = ZoweExplorerApiRegister.getUssApi(entry.metadata.profile);
             await this.autoDetectEncoding(entry);
-            const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
+            const profile = Profiles.getInstance().loadNamedProfile(entry?.metadata.profile.name);
+            const profileEncoding = entry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
             resp = await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
                 binary: entry.encoding?.kind === "binary",

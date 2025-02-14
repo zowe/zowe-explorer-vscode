@@ -382,7 +382,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let dsEntry = this._lookupAsFile(uri, { silent: true }) as DsEntry | undefined;
         const bufBuilder = new BufferBuilder();
         const metadata = dsEntry?.metadata ?? this._getInfoFromUri(uri);
-        const profileEncoding = dsEntry?.encoding ? null : dsEntry?.metadata.profile.profile?.encoding;
+        const profile = Profiles.getInstance().loadNamedProfile(dsEntry?.metadata.profile.name);
+        const profileEncoding = dsEntry?.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
         try {
             await AuthHandler.waitForUnlock(metadata.profile);
             const resp = await ZoweExplorerApiRegister.getMvsApi(metadata.profile).getContents(metadata.dsName, {
@@ -510,7 +511,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let resp: IZosFilesResponse;
         try {
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile);
-            const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
+            const profile = Profiles.getInstance().loadNamedProfile(entry?.metadata.profile.name);
+            const profileEncoding = entry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
             resp = await mvsApi.uploadFromBuffer(Buffer.from(content), entry.metadata.dsName, {
                 binary: entry.encoding?.kind === "binary",
                 encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
