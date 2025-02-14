@@ -762,7 +762,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
      *
      * @param node
      * @param newLabel
-     * @param newUri
      */
     public renameFavorite(node: IZoweDatasetTreeNode, newLabel: string): void {
         ZoweLogger.trace("DatasetTree.renameFavorite called.");
