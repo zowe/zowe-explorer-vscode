@@ -14,7 +14,6 @@ import { CorrelatedError, FileManagement } from "../utils";
 import * as imperative from "@zowe/imperative";
 import { IZoweTreeNode } from "../tree";
 import { Mutex } from "async-mutex";
-import { ZoweVsCodeExtension } from "../vscode/ZoweVsCodeExtension";
 
 /**
  * @brief individual authentication methods (also supports a `ProfilesCache` class)

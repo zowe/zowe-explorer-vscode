@@ -7,6 +7,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ### New features and enhancements
 
 - Added new `copyDataSetCrossLpar` API to provide ability to copy/paste data sets across LPARs. [#3012](https://github.com/zowe/zowe-explorer-vscode/issues/3012)
+- Added new `directConnectLogin` and `directConnectLogout` to the ZoweVsCodeExtension class. [#3346](https://github.com/zowe/zowe-explorer-vscode/issues/3346)
 
 ### Bug fixes
 

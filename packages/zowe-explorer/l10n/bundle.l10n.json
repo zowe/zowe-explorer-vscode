@@ -249,8 +249,6 @@
   "Binary": "Binary",
   "Create a new filter": "Create a new filter",
   "Failed to move file {0}: {1}": "Failed to move file {0}: {1}",
-  "Confirm": "Confirm",
-  "One or more items may be overwritten from this drop operation. Confirm or cancel?": "One or more items may be overwritten from this drop operation. Confirm or cancel?",
   "Moving USS files...": "Moving USS files...",
   "Enter a new name for the {0}/Node type": {
     "message": "Enter a new name for the {0}",
@@ -369,6 +367,8 @@
       "Name of USS session"
     ]
   },
+  "Confirm": "Confirm",
+  "One or more items may be overwritten from this drop operation. Confirm or cancel?": "One or more items may be overwritten from this drop operation. Confirm or cancel?",
   "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",
   "Team config file deleted, refreshing Zowe Explorer.": "Team config file deleted, refreshing Zowe Explorer.",
   "Team config file updated, refreshing Zowe Explorer.": "Team config file updated, refreshing Zowe Explorer.",
@@ -584,6 +584,9 @@
   "Date Modified": "Date Modified",
   "User ID": "User ID",
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
+  "Cannot drop a sequential dataset or a partitioned dataset onto another PDS.": "Cannot drop a sequential dataset or a partitioned dataset onto another PDS.",
+  "Cannot drop a member onto a sequential dataset.": "Cannot drop a member onto a sequential dataset.",
+  "Moving MVS files...": "Moving MVS files...",
   "Initializing profiles with data set favorites.": "Initializing profiles with data set favorites.",
   "No data set favorites found.": "No data set favorites found.",
   "Error creating data set favorite node: {0} for profile {1}./LabelProfile name": {
@@ -1095,8 +1098,6 @@
   "Select the location of the config file to edit": "Select the location of the config file to edit",
   "Global: in the Zowe home directory": "Global: in the Zowe home directory",
   "Project: in the current working directory": "Project: in the current working directory",
-  "Enter the user name for the connection. Leave blank to not store.": "Enter the user name for the connection. Leave blank to not store.",
-  "Enter the password for the connection. Leave blank to not store.": "Enter the password for the connection. Leave blank to not store.",
   "Do you wish to apply this for all trees?": "Do you wish to apply this for all trees?",
   "Apply to all trees": "Apply to all trees",
   "Apply to current tree selected": "Apply to current tree selected",
