@@ -776,7 +776,18 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             matchingNode.tooltip = newLabel;
             matchingNode.resourceUri = newUri;
             this.refreshElement(matchingNode as IZoweDatasetTreeNode);
-            if (matchingNode.contextValue.includes(Constants.DS_DS_CONTEXT)) {
+            if (SharedContext.isPds(matchingNode)) {
+                for (const child of matchingNode.children) {
+                    child.resourceUri = child.resourceUri.with({
+                        path: path.posix.join(newUri.path, child.resourceUri.path.substring(child.resourceUri.path.lastIndexOf("/") + 1)),
+                    });
+                    child.command = {
+                        title: "",
+                        command: "vscode.open",
+                        arguments: [child.resourceUri],
+                    };
+                }
+            } else if (matchingNode.contextValue.includes(Constants.DS_DS_CONTEXT)) {
                 matchingNode.command = {
                     title: "",
                     command: "vscode.open",
