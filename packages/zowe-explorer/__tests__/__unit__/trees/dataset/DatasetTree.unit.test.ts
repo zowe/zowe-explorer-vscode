@@ -2881,6 +2881,48 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         expect(child.resourceUri?.path).toBe("/HLQ.TEST.NEWNAME.NODE/mem1");
         expect(refreshElementSpy).toHaveBeenCalled();
     });
+
+    it("Checking rename functionality of favorited pds after renaming the pds from the ds tree", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+        });
+        const fav_node = new ZoweDatasetNode({
+            label: "HLQ.TEST.NEW.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+            contextValue: Constants.PDS_FAV_CONTEXT,
+        });
+        const child = new ZoweDatasetNode({
+            label: "MEM.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.PDS_FAV_CONTEXT,
+            parentNode: fav_node,
+            profile: blockMocks.imperativeProfile,
+            session: blockMocks.session,
+        });
+        fav_node.children = [child];
+        jest.spyOn(testTree, "findFavoritedNode").mockReturnValue(fav_node);
+        jest.spyOn(SharedContext, "isPds").mockReturnValue(true);
+        await testTree.rename(node);
+        expect(blockMocks.rename).toHaveBeenLastCalledWith(
+            { path: "/sestest/HLQ.TEST.RENAME.NODE", scheme: ZoweScheme.DS },
+            { path: "/sestest/HLQ.TEST.RENAME.NODE.NEW", scheme: ZoweScheme.DS },
+            { overwrite: false }
+        );
+    });
 });
 
 describe("Dataset Tree Unit Tests - Function checkFilterPattern", () => {
