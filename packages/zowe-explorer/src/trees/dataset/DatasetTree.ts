@@ -767,6 +767,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public renameFavorite(node: IZoweDatasetTreeNode, newLabel: string): void {
         ZoweLogger.trace("DatasetTree.renameFavorite called.");
         const matchingNode = this.findFavoritedNode(node);
+        const newUri = node.resourceUri.with({
+            path: path.posix.join(path.posix.dirname(node.resourceUri.path), newLabel),
+        });
         if (matchingNode) {
             matchingNode.label = newLabel;
             matchingNode.tooltip = newLabel;
