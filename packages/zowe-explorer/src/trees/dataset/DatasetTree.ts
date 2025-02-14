@@ -764,7 +764,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
      * @param newLabel
      * @param newUri
      */
-    public renameFavorite(node: IZoweDatasetTreeNode, newLabel: string, newUri: vscode.Uri): void {
+    public renameFavorite(node: IZoweDatasetTreeNode, newLabel: string): void {
         ZoweLogger.trace("DatasetTree.renameFavorite called.");
         const matchingNode = this.findFavoritedNode(node);
         if (matchingNode) {
@@ -1433,7 +1433,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 const profileName = node.getProfileName();
                 this.renameNode(profileName, beforeDataSetName, afterDataSetName, newUri);
             } else {
-                this.renameFavorite(node, afterDataSetName, newUri);
+                this.renameFavorite(node, afterDataSetName);
             }
             // Rename the node that was clicked on
             node.resourceUri = newUri;
