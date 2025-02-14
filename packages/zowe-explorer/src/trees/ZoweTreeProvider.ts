@@ -180,7 +180,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         ZoweLogger.trace("ZoweTreeProvider.renameFavorite called.");
         return undefined;
     }
-    public renameNode(_profile: string, _beforeDataSetName: string, _afterDataSetName: string, _newUri: vscode.Uri): any {
+    public renameNode(_profile: string, _beforeDataSetName: string, _afterDataSetName: string): any {
         ZoweLogger.trace("ZoweTreeProvider.renameNode called.");
         return undefined;
     }
