@@ -721,10 +721,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
      * @param profileLabel
      * @param beforeLabel
      * @param afterLabel
-     * @param newUri
      */
 
-    public renameNode(profileLabel: string, beforeLabel: string, afterLabel: string, newUri: vscode.Uri): void {
+    public renameNode(profileLabel: string, beforeLabel: string, afterLabel: string): void {
         ZoweLogger.trace("DatasetTree.renameNode called.");
         const sessionNode = this.mSessionNodes.find((session) => session.label.toString() === profileLabel.trim());
         if (sessionNode) {
@@ -1433,7 +1432,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             // Rename corresponding node in Sessions or Favorites section (whichever one Rename wasn't called from)
             if (SharedContext.isFavorite(node)) {
                 const profileName = node.getProfileName();
-                this.renameNode(profileName, beforeDataSetName, afterDataSetName, newUri);
+                this.renameNode(profileName, beforeDataSetName, afterDataSetName);
             } else {
                 this.renameFavorite(node, afterDataSetName);
             }
