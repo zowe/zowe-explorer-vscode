@@ -822,29 +822,29 @@ describe("USS Action Unit Tests - function deleteUSSFilesPrompt", () => {
         [createUSSNode(globalMocks.testSession, createIProfile())],
         createTreeView()
     );
-    it("should call deleteUSSNode with false if confirmed", async () => {              
-        const testNode = createUSSNode(createISession(), createIProfile());    
+    it("should call deleteUSSNode with false if confirmed", async () => {
+        const testNode = createUSSNode(createISession(), createIProfile());
         const nodes = [createUSSNode(createISession(), createIProfile())];
-        const deleteUSSNodeSpy = jest.spyOn(ZoweUSSNode.prototype, "deleteUSSNode");      
+        const deleteUSSNodeSpy = jest.spyOn(ZoweUSSNode.prototype, "deleteUSSNode");
         jest.spyOn(Gui, "warningMessage").mockReturnValue(Promise.resolve("Delete"));
         await USSActions.deleteUSSFilesPrompt(testNode, nodes, testUSSTree);
-        expect(deleteUSSNodeSpy).toHaveBeenCalledWith(testUSSTree,"",false);
+        expect(deleteUSSNodeSpy).toHaveBeenCalledWith(testUSSTree, "", false);
     });
-    it("should call deleteUSSNode with true if cancelled", async () => {              
-        const testNode = createUSSNode(createISession(), createIProfile());    
+    it("should call deleteUSSNode with true if cancelled", async () => {
+        const testNode = createUSSNode(createISession(), createIProfile());
         const nodes = [createUSSNode(createISession(), createIProfile())];
         const deleteUSSNodeSpy = jest.spyOn(ZoweUSSNode.prototype, "deleteUSSNode");
         jest.spyOn(Gui, "warningMessage").mockReturnValue(Promise.resolve("Cancel"));
         await USSActions.deleteUSSFilesPrompt(testNode, nodes, testUSSTree);
-        expect(deleteUSSNodeSpy).toHaveBeenCalledWith(testUSSTree,"",true);
+        expect(deleteUSSNodeSpy).toHaveBeenCalledWith(testUSSTree, "", true);
     });
-    it("should call getTreeView if nodes are empty", async () => {                
-        const getTreeViewSpy = jest.spyOn(testUSSTree, "getTreeView");   
-        const deleteUSSNodeSpy = jest.spyOn(ZoweUSSNode.prototype, "deleteUSSNode");   
+    it("should call getTreeView if nodes are empty", async () => {
+        const getTreeViewSpy = jest.spyOn(testUSSTree, "getTreeView");
+        const deleteUSSNodeSpy = jest.spyOn(ZoweUSSNode.prototype, "deleteUSSNode");
         jest.spyOn(Gui, "warningMessage").mockReturnValue(Promise.resolve("Delete"));
         await USSActions.deleteUSSFilesPrompt(null, null, testUSSTree);
         expect(getTreeViewSpy).toHaveBeenCalled();
-        expect(deleteUSSNodeSpy).toHaveBeenCalledWith(testUSSTree,"",false);
+        expect(deleteUSSNodeSpy).toHaveBeenCalledWith(testUSSTree, "", false);
     });
 });
 
