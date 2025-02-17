@@ -36,7 +36,6 @@ export class USSAttributeView extends WebView {
     }
 
     private async attachTag(node: IZoweUSSTreeNode): Promise<void> {
-        console.log(node.fullPath);
         if (this.ussApi.getTag && !SharedContext.isUssDirectory(node)) {
             await node.setAttributes({ tag: await this.ussApi.getTag(node.fullPath) });
         }
@@ -46,28 +45,13 @@ export class USSAttributeView extends WebView {
         switch (message.command) {
             case "refresh":
                 if (this.canUpdate) {
-                    // this.onUpdateDisposable = this.ussNode.onUpdate(async (node) => {
-                    //     await this.attachTag(node);
-                    //     await this.panel.webview.postMessage({
-                    //         attributes: await this.ussNode.getAttributes(),
-                    //         name: node.fullPath,
-                    //         readonly: this.ussApi.updateAttributes == null,
-                    //     });
-                    //     this.onUpdateDisposable.dispose();
-                    // });
-
                     const attrs = await this.ussNode.fetchAttributes();
-
+                    await this.ussNode.setAttributes(attrs);
                     await this.attachTag(this.ussNode);
-
-                    // if (attrs !== this.ussNode.getAttributes()) {
-                    //     await this.ussNode.setAttributes(attrs);
-                    // }
-
                     await this.panel.webview.postMessage({
-                        attributes: attrs,
+                        attributes: await this.ussNode.getAttributes(),
                         name: this.ussNode.fullPath,
-                        readonly: this.ussApi.updateAttributes == null,
+                        allowUpdate: false,
                     });
 
                     if (this.ussNode.getParent()) {

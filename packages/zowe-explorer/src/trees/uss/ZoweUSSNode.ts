@@ -163,6 +163,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             return undefined;
         }
         const item = response.apiResponse.items[0];
+
         const attrs: Types.FileAttributes = {
             gid: item.gid,
             uid: item.uid,
@@ -170,7 +171,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             perms: item.mode,
             owner: item.user,
         };
-        console.log(attrs);
+        this.setAttributes(attrs);
         return attrs;
     }
 
