@@ -103,19 +103,8 @@ export class USSInit {
             )
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.deleteNode", async (node, nodeList) => {
-                let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
-                selectedNodes = selectedNodes.filter(
-                    (x) => SharedContext.isDocument(x) || SharedContext.isUssDirectory(x) || SharedContext.isBinary(x)
-                );
-                const cancelled = await USSActions.deleteUSSFilesPrompt(selectedNodes);
-                if (cancelled) {
-                    return;
-                }
-
-                for (const item of selectedNodes) {
-                    await item.deleteUSSNode(ussFileProvider, "");
-                }
+            vscode.commands.registerCommand("zowe.uss.deleteNode", async (node: IZoweUSSTreeNode, nodeList: IZoweUSSTreeNode[]) => {
+                await USSActions.deleteUSSFilesPrompt(node, nodeList, ussFileProvider);
             })
         );
         context.subscriptions.push(
