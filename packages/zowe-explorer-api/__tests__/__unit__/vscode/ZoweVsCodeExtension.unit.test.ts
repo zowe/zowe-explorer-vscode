@@ -910,4 +910,60 @@ describe("ZoweVsCodeExtension", () => {
             expect(options.session.certKey).toEqual("/test/key/path");
         });
     });
+    describe("Direct connect token authentication methods", () => {
+        let blockMocks: ReturnType<typeof createBlockMocks>;
+        const expectedSession = new imperative.Session({
+            hostname: "dummy",
+            password: "Password",
+            port: 1234,
+            tokenType: "jwtToken",
+            type: "token",
+            user: "Username",
+        });
+
+        function createBlockMocks() {
+            const vals = {
+                serviceProfile: {
+                    failNotFound: false,
+                    message: "",
+                    name: "service",
+                    type: "service",
+                    profile: {
+                        host: "dummy",
+                        port: 1234,
+                    },
+                },
+                promptSpy: jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass"),
+                testNode: undefined,
+                testRegister: {
+                    getCommonApi: () => ({
+                        login: jest.fn().mockReturnValue("tokenValue"),
+                        logout: jest.fn(),
+                        getSession: jest.fn().mockReturnValue(new imperative.Session(JSON.parse(JSON.stringify(expectedSession.ISession)))),
+                    }),
+                },
+            };
+            jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
+                updateCachedProfile: jest.fn(),
+            });
+            vals.testNode = {
+                setProfileToChoice: jest.fn(),
+                getProfile: jest.fn().mockReturnValue(vals.serviceProfile),
+            } as any;
+            return vals;
+        }
+        beforeEach(() => {
+            blockMocks = createBlockMocks();
+        });
+        it("directConnectLogin should obtain a JWT and return true", async () => {
+            blockMocks.promptSpy.mockResolvedValue(["user", "pass"]);
+            const response = await (ZoweVsCodeExtension as any).directConnectLogin(blockMocks.serviceProfile, blockMocks.testRegister);
+            expect(response).toEqual(true);
+        });
+        it("directConnectLogin should not obtain a JWT and return false due to no credentials entered", async () => {
+            blockMocks.promptSpy.mockResolvedValue(undefined);
+            const response = await (ZoweVsCodeExtension as any).directConnectLogin(blockMocks.serviceProfile, blockMocks.testRegister);
+            expect(response).toEqual(false);
+        });
+    });
 });
