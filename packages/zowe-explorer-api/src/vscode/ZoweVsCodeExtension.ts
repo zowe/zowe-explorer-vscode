@@ -240,14 +240,14 @@ export class ZoweVsCodeExtension {
         } else {
             session = zeCommon?.getSession();
         }
-        const creds = await ZoweVsCodeExtension.promptUserPass({ session: session.ISession, rePrompt: true });
+        const creds = await this.promptUserPass({ session: session.ISession, rePrompt: true });
         if (!creds) {
             return false;
         }
         session.ISession.user = creds[0];
         session.ISession.password = creds[1];
         await zeCommon?.login(session);
-        await ZoweVsCodeExtension.profilesCache.updateCachedProfile(serviceProfile, node);
+        await this.profilesCache.updateCachedProfile(serviceProfile, node);
         return true;
     }
 
@@ -330,8 +330,8 @@ export class ZoweVsCodeExtension {
         } else {
             session = zeCommon?.getSession();
         }
-        await zeCommon.logout(session);
-        await ZoweVsCodeExtension.profilesCache.updateCachedProfile(serviceProfile, node);
+        await zeCommon?.logout(session);
+        await this.profilesCache.updateCachedProfile(serviceProfile, node);
         return true;
     }
 
