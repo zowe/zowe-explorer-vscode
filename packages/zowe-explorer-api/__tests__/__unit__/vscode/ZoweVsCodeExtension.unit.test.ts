@@ -947,23 +947,34 @@ describe("ZoweVsCodeExtension", () => {
                 updateCachedProfile: jest.fn(),
             });
             vals.testNode = {
-                setProfileToChoice: jest.fn(),
-                getProfile: jest.fn().mockReturnValue(vals.serviceProfile),
+                getSession: jest.fn().mockReturnValue(new imperative.Session(JSON.parse(JSON.stringify(expectedSession.ISession)))),
             } as any;
             return vals;
         }
         beforeEach(() => {
             blockMocks = createBlockMocks();
         });
-        it("directConnectLogin should obtain a JWT and return true", async () => {
+        it("directConnectLogin should obtain a JWT and return true using profile to get session", async () => {
             blockMocks.promptSpy.mockResolvedValue(["user", "pass"]);
-            const response = await (ZoweVsCodeExtension as any).directConnectLogin(blockMocks.serviceProfile, blockMocks.testRegister);
-            expect(response).toEqual(true);
+            expect(await (ZoweVsCodeExtension as any).directConnectLogin(blockMocks.serviceProfile, blockMocks.testRegister)).toEqual(true);
         });
-        it("directConnectLogin should not obtain a JWT and return false due to no credentials entered", async () => {
+        it("directConnectLogin should obtain a JWT and return true using node to get session", async () => {
+            blockMocks.promptSpy.mockResolvedValue(["user", "pass"]);
+            expect(
+                await (ZoweVsCodeExtension as any).directConnectLogin(blockMocks.serviceProfile, blockMocks.testRegister, blockMocks.testNode)
+            ).toEqual(true);
+        });
+        it("directConnectLogin should not obtain a JWT and return false due to no credentials entered using profile to get session", async () => {
             blockMocks.promptSpy.mockResolvedValue(undefined);
-            const response = await (ZoweVsCodeExtension as any).directConnectLogin(blockMocks.serviceProfile, blockMocks.testRegister);
-            expect(response).toEqual(false);
+            expect(await (ZoweVsCodeExtension as any).directConnectLogin(blockMocks.serviceProfile, blockMocks.testRegister)).toEqual(false);
+        });
+        it("directConnectLogout should retire JWT and return true using profile to get session", async () => {
+            expect(await (ZoweVsCodeExtension as any).directConnectLogout(blockMocks.serviceProfile, blockMocks.testRegister)).toEqual(true);
+        });
+        it("directConnectLogout should retire JWT and return true using node to get session", async () => {
+            expect(
+                await (ZoweVsCodeExtension as any).directConnectLogout(blockMocks.serviceProfile, blockMocks.testRegister, blockMocks.testNode)
+            ).toEqual(true);
         });
     });
 });

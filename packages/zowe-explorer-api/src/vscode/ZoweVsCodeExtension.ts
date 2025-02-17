@@ -323,7 +323,14 @@ export class ZoweVsCodeExtension {
         zeRegister: Types.IApiRegisterClient,
         node?: Types.IZoweNodeType
     ): Promise<boolean> {
-        await zeRegister.getCommonApi(serviceProfile).logout(node.getSession());
+        const zeCommon = zeRegister.getCommonApi(serviceProfile);
+        let session: imperative.Session;
+        if (node) {
+            session = node.getSession();
+        } else {
+            session = zeCommon?.getSession();
+        }
+        await zeCommon.logout(session);
         await ZoweVsCodeExtension.profilesCache.updateCachedProfile(serviceProfile, node);
         return true;
     }
