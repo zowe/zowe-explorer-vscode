@@ -22,8 +22,6 @@ export class USSAttributeView extends WebView {
     private readonly ussApi: MainframeInteraction.IUss;
     private readonly canUpdate: boolean;
 
-    // private onUpdateDisposable: Disposable;
-
     public constructor(context: ExtensionContext, treeProvider: Types.IZoweUSSTreeType, node: IZoweUSSTreeNode) {
         const label = node.label ? `Edit Attributes: ${node.label as string}` : "Edit Attributes";
         super(label, "edit-attributes", context, {

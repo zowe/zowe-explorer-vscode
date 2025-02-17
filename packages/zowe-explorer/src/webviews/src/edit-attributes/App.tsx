@@ -51,10 +51,6 @@ export function App() {
     }
   };
 
-  const refreshAttributes = () => {
-    vscodeApi.postMessage({ command: "refresh" });
-  };
-
   const applyAttributes = () => {
     setIsUpdating(true);
     if (attributes.current) {
@@ -177,7 +173,7 @@ export function App() {
               {l10n.t("Last refreshed:")} {timestamp.toLocaleString(navigator.language)}
             </p>
           )}
-          <VSCodeButton appearance="secondary" onClick={() => refreshAttributes()}>
+          <VSCodeButton appearance="secondary" onClick={() => vscodeApi.postMessage({ command: "refresh" })}>
             <span style={{ marginRight: "0.5em" }}>⟳</span>
             {l10n.t("Refresh")}
           </VSCodeButton>

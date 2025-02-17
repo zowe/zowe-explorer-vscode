@@ -60,8 +60,6 @@ describe("AttributeView unit tests", () => {
         node.getParent = jest.fn().mockReturnValueOnce({ label: "parent node" } as IZoweUSSTreeNode);
         await (view as any).onDidReceiveMessage({ command: "refresh" });
         expect(treeProvider.refreshElement).toHaveBeenCalled();
-
-        // expect(node.onUpdate).toHaveBeenCalledTimes(2);
     });
 
     it("dispatches node data to webview when 'ready' command is received", async () => {
