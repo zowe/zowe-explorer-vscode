@@ -7,6 +7,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ### New features and enhancements
 
 - Added new `copyDataSetCrossLpar` API to provide ability to copy/paste data sets across LPARs. [#3012](https://github.com/zowe/zowe-explorer-vscode/issues/3012)
+- Added new `fetchAttributes` API to `IZoweUSSTreeNode`. [#3238](https://github.com/zowe/zowe-explorer-vscode/issues/3238)
 
 ### Bug fixes
 
