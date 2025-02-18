@@ -587,6 +587,10 @@ export class DatasetActions {
             return SharedContext.isDsMember(deletedNode) ? deletedNode.getParent() : ` ${deletedNode.getLabel().toString()}`;
         });
 
+        const MAX_DISPLAYED_DATASET_NAMES = 10;
+        const displayedDatasetNames = nodesToDelete.slice(0, MAX_DISPLAYED_DATASET_NAMES).join("\n");
+        const additionalDatasetsCount = nodesToDelete.length - MAX_DISPLAYED_DATASET_NAMES;
+
         // Confirm that the user really wants to delete
         ZoweLogger.debug(
             vscode.l10n.t({
@@ -597,9 +601,11 @@ export class DatasetActions {
         );
         const deleteButton = vscode.l10n.t("Delete");
         const message = vscode.l10n.t({
-            message: `Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}`,
-            args: [nodesToDelete.length, nodesToDelete.toString().replace(/(,)/g, "\n")],
-            comment: ["Data Sets to delete length", "Data Sets to delete"],
+            message:
+                `Are you sure you want to delete the following {0} item(s)?\n` +
+                `This will permanently remove these data sets and/or members from your system.\n\n{1}{2}`,
+            args: [nodesToDelete.length, displayedDatasetNames, additionalDatasetsCount > 0 ? `\n...and ${additionalDatasetsCount} more` : ""],
+            comment: ["Data Sets to delete length", "Data Sets to delete", "Additional datasets count"],
         });
         await Gui.warningMessage(message, {
             items: [deleteButton],
@@ -651,11 +657,13 @@ export class DatasetActions {
         }
         if (nodesDeleted.length > 0) {
             nodesDeleted.sort((a, b) => a.localeCompare(b));
+            const displayedDeletedNames = nodesDeleted.slice(0, MAX_DISPLAYED_DATASET_NAMES).join("\n");
+            const additionalDeletedCount = nodesDeleted.length - MAX_DISPLAYED_DATASET_NAMES;
             Gui.showMessage(
                 vscode.l10n.t({
-                    message: "The following {0} item(s) were deleted: {1}",
-                    args: [nodesDeleted.length, nodesDeleted.toString().trim()],
-                    comment: ["Data Sets deleted length", "Data Sets deleted"],
+                    message: "The following {0} item(s) were deleted:\n{1}{2}",
+                    args: [nodesDeleted.length, displayedDeletedNames, additionalDeletedCount > 0 ? `\n...and ${additionalDeletedCount} more` : ""],
+                    comment: ["Data Sets deleted length", "Data Sets deleted", "Additional datasets count"],
                 })
             );
         }
