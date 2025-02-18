@@ -1186,11 +1186,15 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
 
     public async openWithEncoding(node: IZoweJobTreeNode, encoding?: ZosEncoding): Promise<void> {
         encoding ??= await SharedUtils.promptForEncoding(node);
-        if (encoding !== undefined) {
-            // Set the encoding, fetch the new contents with the encoding, and open the spool file.
-            await node.setEncoding(encoding);
-            await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
-            await vscode.commands.executeCommand("vscode.open", node.resourceUri);
+        try {
+            if (encoding !== undefined) {
+                // Set the encoding, fetch the new contents with the encoding, and open the spool file.
+                await node.setEncoding(encoding);
+                await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
+                await vscode.commands.executeCommand("vscode.open", node.resourceUri);
+            }
+        } catch (err) {
+            await AuthUtils.errorHandling(err, { profile: node.getProfile() });
         }
     }
 }
