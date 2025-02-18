@@ -1410,6 +1410,42 @@ describe("ZoweUSSNode Unit Tests - Function node.getAttributes", () => {
     });
 });
 
+describe("ZoweUSSNode Unit Tests - Function node.fetchAttributes", () => {
+    const attrs1 = { owner: "aUser", uid: 0, gid: 1000, group: "USERS", perms: "rwxrwxrwx" };
+    const attrs2 = { owner: "bUser", uid: 0, gid: 1000, group: "USERS", perms: "rwxrw-rw-" };
+    it("fetches the attributes for a file from host", async () => {
+        const fileEntry = new UssFile("testFile");
+        fileEntry.attributes = attrs1;
+        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(fileEntry);
+        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [
+                    {
+                        gid: attrs2.gid,
+                        uid: attrs2.uid,
+                        group: attrs2.group,
+                        mode: attrs2.perms,
+                        user: attrs2.owner,
+                    },
+                ],
+            },
+            commandResponse: "",
+        });
+        jest.spyOn(node, "setAttributes").mockImplementation();
+        expect(await node.fetchAttributes()).toStrictEqual(attrs2);
+        lookupMock.mockRestore();
+    });
+
+    it("returns undefined if no entry is found", async () => {
+        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(undefined);
+        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        expect(await node.fetchAttributes()).toBeUndefined();
+        lookupMock.mockRestore();
+    });
+});
+
 describe("ZoweUSSNode Unit Tests - Function node.setAttributes", () => {
     const attrs = { owner: "aUser", uid: 0, gid: 1000, group: "USERS", perms: "rwxrwxrwx" };
     it("sets the attributes for a file", () => {
