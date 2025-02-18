@@ -248,7 +248,7 @@ export class USSActions {
             selectedNodes = ussFileProvider.getTreeView().selection;
         }
         selectedNodes = selectedNodes.filter((x) => SharedContext.isDocument(x) || SharedContext.isUssDirectory(x) || SharedContext.isBinary(x));
-        const fileNames = selectedNodes.map((node) => node.label.toString());
+        const fileNames = selectedNodes.map(({ label }) => label.toString());
         const MAX_DISPLAYED_FILE_NAMES = 10;
         const displayedFileNames = fileNames.slice(0, MAX_DISPLAYED_FILE_NAMES).join("\n");
         const additionalFilesCount = fileNames.length - MAX_DISPLAYED_FILE_NAMES;
