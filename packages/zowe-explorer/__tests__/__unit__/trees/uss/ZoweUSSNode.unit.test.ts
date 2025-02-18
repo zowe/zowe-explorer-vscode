@@ -1437,14 +1437,14 @@ describe("ZoweUSSNode Unit Tests - Function node.fetchAttributes", () => {
         lookupMock.mockRestore();
     });
     it("returns undefined if no entry is found", async () => {
-        const fileEntry = new UssFile("testFile");
-        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(fileEntry);
+        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(undefined);
         const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
         expect(await node.fetchAttributes()).toBeUndefined();
         lookupMock.mockRestore();
     });
     it("returns undefined if API response success is false", async () => {
-        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(undefined);
+        const fileEntry = new UssFile("testFile");
+        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(fileEntry);
         const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
         jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
             success: false,
