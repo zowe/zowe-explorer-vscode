@@ -159,7 +159,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             return undefined;
         }
         const response = await this.getUssFiles(this.profile);
-        if (response.apiResponse?.length === 0) {
+        if (response.success === false || response.apiResponse?.items.length === 0 || response.apiResponse?.items.length > 1) {
             return undefined;
         }
         const item = response.apiResponse.items[0];

@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
-import { Gui, imperative, ProfilesCache, UssDirectory, UssFile, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { FileEntry, Gui, imperative, ProfilesCache, UssDirectory, UssFile, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
@@ -1413,6 +1413,15 @@ describe("ZoweUSSNode Unit Tests - Function node.getAttributes", () => {
 describe("ZoweUSSNode Unit Tests - Function node.fetchAttributes", () => {
     const attrs1 = { owner: "aUser", uid: 0, gid: 1000, group: "USERS", perms: "rwxrwxrwx" };
     const attrs2 = { owner: "bUser", uid: 0, gid: 1000, group: "USERS", perms: "rwxrw-rw-" };
+    const fileAttrs = [
+        {
+            gid: attrs2.gid,
+            uid: attrs2.uid,
+            group: attrs2.group,
+            mode: attrs2.perms,
+            user: attrs2.owner,
+        },
+    ];
     it("fetches the attributes for a file from host", async () => {
         const fileEntry = new UssFile("testFile");
         fileEntry.attributes = attrs1;
@@ -1420,27 +1429,50 @@ describe("ZoweUSSNode Unit Tests - Function node.fetchAttributes", () => {
         const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
         jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
             success: true,
-            apiResponse: {
-                items: [
-                    {
-                        gid: attrs2.gid,
-                        uid: attrs2.uid,
-                        group: attrs2.group,
-                        mode: attrs2.perms,
-                        user: attrs2.owner,
-                    },
-                ],
-            },
+            apiResponse: { items: fileAttrs },
             commandResponse: "",
         });
         jest.spyOn(node, "setAttributes").mockImplementation();
         expect(await node.fetchAttributes()).toStrictEqual(attrs2);
         lookupMock.mockRestore();
     });
-
     it("returns undefined if no entry is found", async () => {
+        const fileEntry = new UssFile("testFile");
+        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(fileEntry);
+        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        expect(await node.fetchAttributes()).toBeUndefined();
+        lookupMock.mockRestore();
+    });
+    it("returns undefined if API response success is false", async () => {
         const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(undefined);
         const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
+            success: false,
+            apiResponse: { items: [] },
+            commandResponse: "",
+        });
+        expect(await node.fetchAttributes()).toBeUndefined();
+        lookupMock.mockRestore();
+    });
+    it("returns undefined if API response apiResponse is empty array", async () => {
+        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(undefined);
+        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
+            success: true,
+            apiResponse: { items: [] },
+            commandResponse: "",
+        });
+        expect(await node.fetchAttributes()).toBeUndefined();
+        lookupMock.mockRestore();
+    });
+    it("returns undefined if API response apiResponse is more than 1 array/file attrs", async () => {
+        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(undefined);
+        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
+            success: true,
+            apiResponse: { items: fileAttrs, fileAttrs },
+            commandResponse: "",
+        });
         expect(await node.fetchAttributes()).toBeUndefined();
         lookupMock.mockRestore();
     });
