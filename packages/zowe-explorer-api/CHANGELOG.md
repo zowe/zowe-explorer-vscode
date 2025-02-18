@@ -13,6 +13,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Fixes an issue where properties of the `TableViewProvider` class were not accessible when the class was extended by developers. [#3456](https://github.com/zowe/zowe-explorer-vscode/pull/3456)
 
+## `3.1.1`
+
 ## `3.1.0`
 
 ### New features and enhancements
