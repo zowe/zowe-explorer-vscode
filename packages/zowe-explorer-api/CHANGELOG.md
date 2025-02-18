@@ -8,10 +8,13 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Added new `copyDataSetCrossLpar` API to provide ability to copy/paste data sets across LPARs. [#3012](https://github.com/zowe/zowe-explorer-vscode/issues/3012)
 - Added new `fetchAttributes` API to `IZoweUSSTreeNode` to fetch latest attributes for UNIX files. [#3238](https://github.com/zowe/zowe-explorer-vscode/issues/3238)
+- Added new `directConnectLogin` and `directConnectLogout` to the ZoweVsCodeExtension class. [#3346](https://github.com/zowe/zowe-explorer-vscode/issues/3346)
 
 ### Bug fixes
 
 - Fixes an issue where properties of the `TableViewProvider` class were not accessible when the class was extended by developers. [#3456](https://github.com/zowe/zowe-explorer-vscode/pull/3456)
+
+## `3.1.1`
 
 ## `3.1.0`
 
