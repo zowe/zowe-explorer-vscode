@@ -37,12 +37,10 @@ import { Table } from "./TableView";
  * the "Zowe Resources" panel and is therefore not supported.
  */
 export class TableViewProvider implements WebviewViewProvider {
-    private view?: WebviewView;
-    private tableView: Table.Instance = null;
+    protected view?: WebviewView;
+    protected tableView: Table.Instance = null;
 
-    private static instance: TableViewProvider;
-
-    private constructor() {}
+    protected static instance: TableViewProvider;
 
     /**
      * Retrieve the singleton instance of the TableViewProvider.
