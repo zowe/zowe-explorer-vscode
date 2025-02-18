@@ -67,7 +67,6 @@ export namespace Definitions {
         session?: imperative.Session;
         profile?: imperative.IProfileLoaded;
         contextOverride?: string;
-        contextValue?: string;
     }
     export interface IZoweDatasetTreeOpts extends IZoweTreeOpts {
         encoding?: ZosEncoding;
