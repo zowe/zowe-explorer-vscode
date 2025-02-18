@@ -509,7 +509,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
-            `The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel().toString()}`
+            `The following 1 item(s) were deleted:\n ${blockMocks.testDatasetNode.getLabel().toString()}`
         );
     });
 
@@ -526,7 +526,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
-            `The following 1 item(s) were deleted: ` +
+            `The following 1 item(s) were deleted:\n ` +
                 `${blockMocks.testMemberNode.getParent().getLabel().toString()}(${blockMocks.testMemberNode.getLabel().toString()})`
         );
     });
@@ -543,7 +543,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
-            `The following 1 item(s) were deleted: ${blockMocks.testVsamNode.getLabel().toString()}`
+            `The following 1 item(s) were deleted:\n ${blockMocks.testVsamNode.getLabel().toString()}`
         );
     });
 
@@ -559,7 +559,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
-            `The following 1 item(s) were deleted: ${blockMocks.testMigrNode.getLabel().toString()}`
+            `The following 1 item(s) were deleted:\n ${blockMocks.testMigrNode.getLabel().toString()}`
         );
     });
 
@@ -575,8 +575,8 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
-            `The following 2 item(s) were deleted: ` +
-                `${blockMocks.testDatasetNode.getLabel().toString()}, ${blockMocks.testVsamNode.getLabel().toString()}`
+            `The following 2 item(s) were deleted:\n ` +
+                `${blockMocks.testDatasetNode.getLabel().toString()}\n ${blockMocks.testVsamNode.getLabel().toString()}`
         );
     });
 
@@ -592,7 +592,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
-            `The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel().toString()}`
+            `The following 1 item(s) were deleted:\n ${blockMocks.testDatasetNode.getLabel().toString()}`
         );
     });
 
@@ -658,8 +658,8 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
-            `The following 2 item(s) were deleted: ` +
-                `${blockMocks.testDatasetNode.getLabel().toString()}, ${blockMocks.testFavoritedNode.getLabel().toString()}`
+            `The following 2 item(s) were deleted:\n ` +
+                `${blockMocks.testDatasetNode.getLabel().toString()}\n ${blockMocks.testFavoritedNode.getLabel().toString()}`
         );
     });
 
@@ -685,7 +685,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree, blockMocks.testMemberNode);
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
-            `The following 1 item(s) were deleted: ` +
+            `The following 1 item(s) were deleted:\n ` +
                 `${blockMocks.testMemberNode.getParent().getLabel().toString()}(${blockMocks.testMemberNode.getLabel().toString()})`
         );
     });
