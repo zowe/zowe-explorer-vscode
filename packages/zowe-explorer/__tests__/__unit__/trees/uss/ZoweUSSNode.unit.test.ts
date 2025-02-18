@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
-import { FileEntry, Gui, imperative, ProfilesCache, UssDirectory, UssFile, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, ProfilesCache, UssDirectory, UssFile, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
