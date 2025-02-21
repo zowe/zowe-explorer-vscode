@@ -451,6 +451,75 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         await SharedActions.openRecentMemberPrompt(testDatasetTree, testUSSTree);
         expect(testUSSTree.openItemFromPath).toHaveBeenCalledWith(`/node1/node2/node3.txt`, blockMocks.ussSessionNode);
     });
+
+    it("Tests that openRecentMemberPrompt shows 'Profile not found' message when session is not valid", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const quickPickContent = createQuickPickContent("[invalid]: node", [], globalMocks.qpPlaceholder);
+        const testDatasetTree = createDatasetTree(blockMocks.datasetSessionNode, globalMocks.treeView);
+        mocked(testDatasetTree.getFileHistory).mockReturnValueOnce([`[invalid]: node`]);
+        const testUSSTree = createUSSTree([], [blockMocks.ussSessionNode], globalMocks.treeView);
+        mocked(testUSSTree.getFileHistory).mockReturnValueOnce([]);
+        mocked(Gui.createQuickPick).mockReturnValue(quickPickContent);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new FilterDescriptor("node"));
+
+        const showMessageSpy = jest.spyOn(Gui, "showMessage");
+
+        await SharedActions.openRecentMemberPrompt(testDatasetTree, testUSSTree);
+        expect(showMessageSpy).toHaveBeenCalledWith("Profile not found.");
+    });
+
+    it("Tests that openRecentMemberPrompt handles profile names with different casings for Data Set", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const dsNode = new ZoweDatasetNode({
+            label: "node",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+            session: globalMocks.session,
+        });
+        dsNode.contextValue = Constants.DS_DS_CONTEXT;
+        const qpItem = new FilterDescriptor(dsNode.label as string);
+        const quickPickContent = createQuickPickContent("[SESTEST]: node", [qpItem], globalMocks.qpPlaceholder);
+
+        const testDatasetTree = createDatasetTree(blockMocks.datasetSessionNode, globalMocks.treeView);
+        mocked(testDatasetTree.getFileHistory).mockReturnValueOnce([`[SESTEST]: node`]);
+        const testUSSTree = createUSSTree([], [blockMocks.ussSessionNode], globalMocks.treeView);
+        mocked(testUSSTree.getFileHistory).mockReturnValueOnce([]);
+        mocked(Gui.createQuickPick).mockReturnValue(quickPickContent);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
+
+        await SharedActions.openRecentMemberPrompt(testDatasetTree, testUSSTree);
+        expect(testDatasetTree.openItemFromPath).toHaveBeenCalledWith(`[SESTEST]: node`, blockMocks.datasetSessionNode);
+    });
+
+    it("Tests that openRecentMemberPrompt handles profile names with different casings for USS", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const node = new ZoweUSSNode({
+            label: "node3.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.ussSessionNode,
+            profile: globalMocks.imperativeProfile,
+            parentPath: "/node1/node2",
+        });
+        node.contextValue = Constants.DS_DS_CONTEXT;
+        const qpItem = new FilterDescriptor(node.label as string);
+        const quickPickContent = createQuickPickContent("[SESTEST]: /node1/node2/node3.txt", [qpItem], globalMocks.qpPlaceholder);
+
+        const testDatasetTree = createDatasetTree(blockMocks.datasetSessionNode, globalMocks.treeView);
+        mocked(testDatasetTree.getFileHistory).mockReturnValueOnce([]);
+        const testUSSTree = createUSSTree([], [blockMocks.ussSessionNode], globalMocks.treeView);
+        mocked(testUSSTree.getFileHistory).mockReturnValueOnce([`[SESTEST]: /node1/node2/node3.txt`]);
+        mocked(Gui.createQuickPick).mockReturnValue(quickPickContent);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
+
+        await SharedActions.openRecentMemberPrompt(testDatasetTree, testUSSTree);
+        expect(testUSSTree.openItemFromPath).toHaveBeenCalledWith(`/node1/node2/node3.txt`, blockMocks.ussSessionNode);
+    });
 });
 
 describe("Shared Actions Unit Tests - Function returnIconState", () => {
