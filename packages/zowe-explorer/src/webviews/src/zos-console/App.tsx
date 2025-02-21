@@ -1,5 +1,3 @@
-import { Dropdown, Option, TextArea, TextField } from "@vscode/webview-ui-toolkit";
-import { VSCodeDropdown, VSCodeTextArea, VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
 import { useEffect, useState } from "preact/hooks";
 import * as l10n from "@vscode/l10n";
 import { isSecureOrigin } from "../utils";
@@ -21,7 +19,7 @@ export function App() {
       }
 
       const message = event.data;
-      const profileList = document.getElementById("systems") as Option;
+      const profileList = document.getElementById("systems") as HTMLSelectElement;
 
       switch (message.type) {
         case "commandResult":
@@ -29,7 +27,7 @@ export function App() {
           break;
         case "optionsList":
           for (const profile in message.profiles) {
-            const option = document.createElement("vscode-option");
+            const option = document.createElement("option");
             option.textContent = message.profiles[profile];
             if (message.profiles[profile] === message.defaultProfile) {
               option.setAttribute("selected", "true");
@@ -47,14 +45,14 @@ export function App() {
         }
       }
     });
-    const consoleResponse = document.getElementById("output") as TextArea;
-    consoleResponse.control.scrollTop = consoleResponse.control.scrollHeight;
+    const consoleResponse = document.getElementById("output") as HTMLTextAreaElement;
+    consoleResponse.scrollTop = consoleResponse.scrollHeight;
     vscode.postMessage({ command: "GET_LOCALIZATION" });
   });
 
   const sendCommand = (e: KeyboardEvent) => {
-    const consoleField = document.getElementById("command-input") as TextField;
-    const profileList = document.getElementById("systems") as Dropdown;
+    const consoleField = document.getElementById("command-input") as HTMLInputElement;
+    const profileList = document.getElementById("systems") as HTMLSelectElement;
     if (e.key === "Enter") {
       if (consoleField!.value === "clear") {
         setConsoleContent("");
@@ -70,36 +68,58 @@ export function App() {
   };
 
   return (
-    <div className="box">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <VSCodeTextField
-          id="command-input"
-          name="command-input"
-          type="text"
-          placeholder={placeholder}
-          onKeyDown={sendCommand}
+    <div className="box vscode-panel">
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ position: "relative", width: "calc(100% - 170px)" }}>
+          <span
+            className="codicon codicon-chevron-right"
+            style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}
+          ></span>
+          <input
+            id="command-input"
+            name="command-input"
+            type="text"
+            placeholder={placeholder}
+            onKeyDown={sendCommand}
+            style={{
+              width: "100%",
+              paddingLeft: "30px",
+              fontFamily: "Consolas,monospace",
+              backgroundColor: "var(--vscode-editor-background)",
+              color: "var(--vscode-editor-foreground)",
+              border: "none",
+              outline: "none",
+            }}
+          />
+        </div>
+        <select
+          id="systems"
           style={{
-            width: "100%",
-            "font-family": "Consolas,monospace",
+            width: "150px",
+            marginLeft: "20px",
+            backgroundColor: "var(--vscode-editor-background)",
+            color: "var(--vscode-editor-foreground)",
+            border: "none",
+            outline: "none",
           }}
-        >
-          <span slot="start" className="codicon codicon-chevron-right"></span>
-        </VSCodeTextField>
-        <VSCodeDropdown id="systems"></VSCodeDropdown>
+        ></select>
       </div>
-      <VSCodeTextArea
+      <textarea
         id="output"
-        readonly
-        resize="none"
-        value={consoleContent}
+        readOnly
         style={{
           width: "100%",
           height: "100%",
           overflow: "auto",
           display: "flex",
-          "font-family": "Consolas,monospace",
+          fontFamily: "Consolas,monospace",
+          backgroundColor: "var(--vscode-editor-background)",
+          color: "var(--vscode-editor-foreground)",
+          border: "none",
+          outline: "none",
         }}
-      ></VSCodeTextArea>
+        value={consoleContent}
+      ></textarea>
     </div>
   );
 }
