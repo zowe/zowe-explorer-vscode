@@ -249,9 +249,8 @@ export class USSActions {
         }
         selectedNodes = selectedNodes.filter((x) => SharedContext.isDocument(x) || SharedContext.isUssDirectory(x) || SharedContext.isBinary(x));
         const fileNames = selectedNodes.map(({ label }) => label.toString());
-        const MAX_DISPLAYED_FILE_NAMES = 10;
-        const displayedFileNames = fileNames.slice(0, MAX_DISPLAYED_FILE_NAMES).join("\n");
-        const additionalFilesCount = fileNames.length - MAX_DISPLAYED_FILE_NAMES;
+        const displayedFileNames = fileNames.slice(0, Constants.MAX_DISPLAYED_DELETE_NAMES).join("\n");
+        const additionalFilesCount = fileNames.length - Constants.MAX_DISPLAYED_DELETE_NAMES;
         const message = vscode.l10n.t({
             message:
                 "Are you sure you want to delete the following item?\n" +

@@ -63,9 +63,8 @@ export class JobActions {
         const deleteButton = vscode.l10n.t("Delete");
         const toJobname = (jobNode: IZoweJobTreeNode): string => `${jobNode.job.jobname}(${jobNode.job.jobid})`;
         const jobNames = jobs.map(toJobname);
-        const MAX_DISPLAYED_JOB_NAMES = 10;
-        let displayedJobNames = jobNames.slice(0, MAX_DISPLAYED_JOB_NAMES).join("\n");
-        let additionalJobsCount = jobNames.length - MAX_DISPLAYED_JOB_NAMES;
+        let displayedJobNames = jobNames.slice(0, Constants.MAX_DISPLAYED_DELETE_NAMES).join("\n");
+        let additionalJobsCount = jobNames.length - Constants.MAX_DISPLAYED_DELETE_NAMES;
         const message = vscode.l10n.t({
             message:
                 "Are you sure you want to delete the following {0} items?\n" +
@@ -106,8 +105,8 @@ export class JobActions {
             })
             .filter((result) => result !== undefined);
         if (deletedJobs.length) {
-            displayedJobNames = deletedJobs.slice(0, MAX_DISPLAYED_JOB_NAMES).map(toJobname).join(", ");
-            additionalJobsCount = deletedJobs.length - MAX_DISPLAYED_JOB_NAMES;
+            displayedJobNames = deletedJobs.slice(0, Constants.MAX_DISPLAYED_DELETE_NAMES).map(toJobname).join(", ");
+            additionalJobsCount = deletedJobs.length - Constants.MAX_DISPLAYED_DELETE_NAMES;
             Gui.showMessage(
                 vscode.l10n.t({
                     message: "The following jobs were deleted: {0}{1}",

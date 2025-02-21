@@ -587,9 +587,8 @@ export class DatasetActions {
             return SharedContext.isDsMember(deletedNode) ? deletedNode.getParent() : ` ${deletedNode.getLabel().toString()}`;
         });
 
-        const MAX_DISPLAYED_DATASET_NAMES = 10;
-        const displayedDatasetNames = nodesToDelete.slice(0, MAX_DISPLAYED_DATASET_NAMES).join("\n");
-        const additionalDatasetsCount = nodesToDelete.length - MAX_DISPLAYED_DATASET_NAMES;
+        const displayedDatasetNames = nodesToDelete.slice(0, Constants.MAX_DISPLAYED_DELETE_NAMES).join("\n");
+        const additionalDatasetsCount = nodesToDelete.length - Constants.MAX_DISPLAYED_DELETE_NAMES;
 
         // Confirm that the user really wants to delete
         ZoweLogger.debug(
@@ -657,8 +656,8 @@ export class DatasetActions {
         }
         if (nodesDeleted.length > 0) {
             nodesDeleted.sort((a, b) => a.localeCompare(b));
-            const displayedDeletedNames = nodesDeleted.slice(0, MAX_DISPLAYED_DATASET_NAMES).join("\n");
-            const additionalDeletedCount = nodesDeleted.length - MAX_DISPLAYED_DATASET_NAMES;
+            const displayedDeletedNames = nodesDeleted.slice(0, Constants.MAX_DISPLAYED_DELETE_NAMES).join("\n");
+            const additionalDeletedCount = nodesDeleted.length - Constants.MAX_DISPLAYED_DELETE_NAMES;
             Gui.showMessage(
                 vscode.l10n.t({
                     message: "The following {0} item(s) were deleted:\n{1}{2}",
