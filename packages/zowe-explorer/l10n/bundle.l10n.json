@@ -198,42 +198,6 @@
   "Profile auth error": "Profile auth error",
   "Profile is not authenticated, please log in to continue": "Profile is not authenticated, please log in to continue",
   "Retrieving response from USS list API": "Retrieving response from USS list API",
-  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
-  "Failed to move {0}/File path": {
-    "message": "Failed to move {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Profile does not exist for this file.": "Profile does not exist for this file.",
-  "Saving USS file...": "Saving USS file...",
-  "Failed to rename {0}/File path": {
-    "message": "Failed to rename {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Failed to delete {0}/File name": {
-    "message": "Failed to delete {0}",
-    "comment": [
-      "File name"
-    ]
-  },
-  "No error details given": "No error details given",
-  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
-    "message": "Error fetching destination {0} for paste action: {1}",
-    "comment": [
-      "USS path",
-      "Error message"
-    ]
-  },
-  "Failed to copy {0} to {1}/Source pathDestination path": {
-    "message": "Failed to copy {0} to {1}",
-    "comment": [
-      "Source path",
-      "Destination path"
-    ]
-  },
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
     "comment": [
@@ -295,6 +259,42 @@
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "Pulling from Mainframe...": "Pulling from Mainframe...",
+  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
+  "Failed to move {0}/File path": {
+    "message": "Failed to move {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Profile does not exist for this file.": "Profile does not exist for this file.",
+  "Saving USS file...": "Saving USS file...",
+  "Failed to rename {0}/File path": {
+    "message": "Failed to rename {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Failed to delete {0}/File name": {
+    "message": "Failed to delete {0}",
+    "comment": [
+      "File name"
+    ]
+  },
+  "No error details given": "No error details given",
+  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
+    "message": "Error fetching destination {0} for paste action: {1}",
+    "comment": [
+      "USS path",
+      "Error message"
+    ]
+  },
+  "Failed to copy {0} to {1}/Source pathDestination path": {
+    "message": "Failed to copy {0} to {1}",
+    "comment": [
+      "Source path",
+      "Destination path"
+    ]
+  },
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -312,12 +312,6 @@
   "Uploading file to USS tree": "Uploading file to USS tree",
   "Upload action was cancelled.": "Upload action was cancelled.",
   "Uploading USS file": "Uploading USS file",
-  "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}/File names": {
-    "message": "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
-    "comment": [
-      "File names"
-    ]
-  },
   "Delete action was canceled.": "Delete action was canceled.",
   "Copying file structure...": "Copying file structure...",
   "The paste operation is not supported for this node.": "The paste operation is not supported for this node.",
@@ -383,6 +377,7 @@
   "You must enter a pattern.": "You must enter a pattern.",
   "Prompting the user to choose a recent member for editing": "Prompting the user to choose a recent member for editing",
   "Select a recent member to open": "Select a recent member to open",
+  "Profile not found.": "Profile not found.",
   "No recent members found.": "No recent members found.",
   "Use the search button to display jobs": "Use the search button to display jobs",
   "No spool files found": "No spool files found",
@@ -509,15 +504,8 @@
       "Job name"
     ]
   },
-  "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}/Jobs lengthJob names": {
-    "message": "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}",
-    "comment": [
-      "Jobs length",
-      "Job names"
-    ]
-  },
-  "The following jobs were deleted: {0}/Deleted jobs": {
-    "message": "The following jobs were deleted: {0}",
+  "The following jobs were deleted: {0}{1}/Deleted jobs": {
+    "message": "The following jobs were deleted: {0}{1}",
     "comment": [
       "Deleted jobs"
     ]
@@ -757,19 +745,13 @@
       "Data Sets to delete"
     ]
   },
-  "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}/Data Sets to delete lengthData Sets to delete": {
-    "message": "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}",
-    "comment": [
-      "Data Sets to delete length",
-      "Data Sets to delete"
-    ]
-  },
   "Deleting items": "Deleting items",
-  "The following {0} item(s) were deleted: {1}/Data Sets deleted lengthData Sets deleted": {
-    "message": "The following {0} item(s) were deleted: {1}",
+  "The following {0} item(s) were deleted:\n{1}{2}/Data Sets deleted lengthData Sets deletedAdditional datasets count": {
+    "message": "The following {0} item(s) were deleted:\n{1}{2}",
     "comment": [
       "Data Sets deleted length",
-      "Data Sets deleted"
+      "Data Sets deleted",
+      "Additional datasets count"
     ]
   },
   "Name of member": "Name of member",
