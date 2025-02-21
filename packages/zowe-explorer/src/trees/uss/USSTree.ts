@@ -704,6 +704,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     quickpick.hide();
                     if (!choice) {
                         Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
+                        quickpick.dispose();
                         return;
                     }
                     if (choice instanceof FilterDescriptor) {
@@ -713,6 +714,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     } else {
                         remotepath = choice.label;
                     }
+                    quickpick.dispose();
                 }
                 // manually entering a search - switch to an input box
                 const options: vscode.InputBoxOptions = {

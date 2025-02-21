@@ -1227,6 +1227,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     quickpick.hide();
                     if (!choice) {
                         Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
+                        quickpick.dispose();
                         return;
                     }
                     if (choice instanceof FilterDescriptor) {
@@ -1236,6 +1237,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     } else {
                         pattern = choice.label;
                     }
+                    quickpick.dispose();
                 }
                 const options: vscode.InputBoxOptions = {
                     prompt: vscode.l10n.t("Search data sets: use a comma to separate multiple patterns"),

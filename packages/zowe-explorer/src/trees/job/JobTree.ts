@@ -671,8 +671,10 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         quickpick.hide();
         if (!choice) {
             Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
+            quickpick.dispose();
             return undefined;
         }
+        quickpick.dispose();
         return choice as FilterItem;
     }
 
