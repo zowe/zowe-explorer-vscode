@@ -305,10 +305,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 let dsNode = existingItems[item.dsname ?? item.member];
                 if (dsNode != null) {
                     elementChildren[dsNode.label.toString()] = dsNode;
-                    if (SharedContext.isMigrated(dsNode) && item.migr?.toUpperCase() !== "YES") {
-                        await dsNode.datasetRecalled(item.dsorg === "PO" || item.dsorg === "PO-E");
-                    } else if (!SharedContext.isMigrated(dsNode) && item.migr?.toUpperCase() === "YES") {
-                        dsNode.datasetMigrated();
+                    if (item.migr) {
+                        const migrationStatus = item.migr.toUpperCase();
+                        if (SharedContext.isMigrated(dsNode) && migrationStatus !== "YES") {
+                            await dsNode.datasetRecalled(item.dsorg === "PO" || item.dsorg === "PO-E");
+                        } else if (!SharedContext.isMigrated(dsNode) && migrationStatus === "YES") {
+                            dsNode.datasetMigrated();
+                        }
                     }
                 } else if (item.migr && item.migr.toUpperCase() === "YES") {
                     // Creates a ZoweDatasetNode for a migrated dataset
