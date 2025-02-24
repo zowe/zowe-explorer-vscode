@@ -984,7 +984,7 @@ describe("ZoweDatasetNode Unit Tests - getChildren() migration scenarios", () =>
         expect(pdsNode.command).toBeUndefined();
     });
 
-    it("should handle a dataset that was recalled", async () => {
+    it("should handle a PS that was recalled", async () => {
         const sessionNode = new ZoweDatasetNode({
             label: "sestest",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -1030,6 +1030,56 @@ describe("ZoweDatasetNode Unit Tests - getChildren() migration scenarios", () =>
         expect(dsNode.contextValue).toBe(Constants.DS_DS_CONTEXT);
         expect(dsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
         expect(dsNode.resourceUri).toBeDefined();
+        expect(dsNode.resourceUri.path).toBe("/sestest/TEST.DS");
         expect(dsNode.command).toBeDefined();
+    });
+
+    it("should handle a PDS that was recalled", async () => {
+        const sessionNode = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+        });
+
+        const pdsNode = new ZoweDatasetNode({
+            label: "TEST.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: sessionNode,
+            profile: profileOne,
+            contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
+        });
+
+        sessionNode.pattern = "TEST.*";
+        sessionNode.children = [pdsNode];
+
+        jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
+            applyPatternsToChildren: jest.fn(),
+        } as any);
+        jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
+            loadNamedProfile: jest.fn().mockReturnValueOnce(profileOne),
+        } as any);
+        jest.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
+            {
+                success: true,
+                apiResponse: {
+                    items: [
+                        {
+                            dsname: "TEST.PDS",
+                            migr: "NO",
+                            dsorg: "PO",
+                        },
+                    ],
+                },
+            },
+        ]);
+
+        await sessionNode.getChildren();
+
+        expect(pdsNode.contextValue).toBe(Constants.DS_PDS_CONTEXT);
+        expect(pdsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
+        expect(pdsNode.resourceUri).toBeDefined();
+        expect(pdsNode.resourceUri.path).toBe("/sestest/TEST.PDS");
     });
 });
