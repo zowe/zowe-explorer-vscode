@@ -69,5 +69,10 @@ export const tableProps = (
     onSelectionChanged: (event) => {
         setSelectionCount(event.api.getSelectedRows().length);
     },
+    onSortChanged: (event) => {
+        const rows: Table.RowData[] = [];
+        event.api.forEachNodeAfterFilterAndSort((row, _i) => rows.push(row.data));
+        vscodeApi.postMessage({ command: "ondisplaychanged", data: rows });
+    },
     ...(tableData.options ?? {}),
 });
