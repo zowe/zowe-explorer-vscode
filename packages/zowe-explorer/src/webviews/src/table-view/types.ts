@@ -39,6 +39,8 @@ export const tableProps = (
     ensureDomOrder: true,
     rowData: tableData.rows,
     columnDefs: tableData.columns?.map((col) => ({
+        sortable: true,
+        sortingOrder: ["asc", "desc", null],
         ...col,
         comparator: col.comparator ? new Function(wrapFn(col.comparator))() : undefined,
         colSpan: col.colSpan ? new Function(wrapFn(col.colSpan))() : undefined,
@@ -66,11 +68,6 @@ export const tableProps = (
     },
     onSelectionChanged: (event) => {
         setSelectionCount(event.api.getSelectedRows().length);
-    },
-    onSortChanged: (event) => {
-        const rows: Table.RowData[] = [];
-        event.api.forEachNodeAfterFilterAndSort((row, _i) => rows.push(row.data));
-        vscodeApi.postMessage({ command: "ondisplaychanged", data: rows });
     },
     ...(tableData.options ?? {}),
 });
