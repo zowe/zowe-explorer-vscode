@@ -36,10 +36,14 @@ describe("AuthHandler.enableLocksForType", () => {
 
 describe("AuthHandler.waitForUnlock", () => {
     it("calls Mutex.waitForUnlock if the profile lock is present", async () => {
+        // Used so that `setTimeout` can be invoked from 30sec timeout promise
+        jest.useFakeTimers();
         const mutex = new Mutex();
-        const waitForUnlockMock = jest.spyOn(mutex, "waitForUnlock");
+        const isLockedMock = jest.spyOn(mutex, "isLocked").mockReturnValueOnce(true);
+        const waitForUnlockMock = jest.spyOn(mutex, "waitForUnlock").mockResolvedValueOnce(undefined);
         (AuthHandler as any).profileLocks.set(TEST_PROFILE_NAME, mutex);
         await AuthHandler.waitForUnlock(TEST_PROFILE_NAME);
+        expect(isLockedMock).toHaveBeenCalled();
         expect(waitForUnlockMock).toHaveBeenCalled();
         (AuthHandler as any).profileLocks.clear();
     });

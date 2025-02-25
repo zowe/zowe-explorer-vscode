@@ -234,10 +234,6 @@ export class AuthHandler {
 
         try {
             await Promise.race([mutex.waitForUnlock(), timeoutPromise]);
-
-            // Add a small delay after unlock to ensure credentials are fully updated
-            // before allowing multiple requests to proceed
-            await new Promise((resolve) => setTimeout(resolve, 500));
         } catch (error) {
             // If we hit the timeout, log it but don't throw to allow operation to continue
             if (error instanceof Error && error.message.includes("Timeout waiting for profile")) {
