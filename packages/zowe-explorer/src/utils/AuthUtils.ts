@@ -55,10 +55,11 @@ export class AuthUtils {
                 imperativeError: err,
                 isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
                 errorCorrelation,
+                useModal: true,
             };
             // If the profile is already locked, prompt the user to re-authenticate.
             if (AuthHandler.isProfileLocked(profile)) {
-                await AuthHandler.promptForAuthentication(profile, authOpts);
+                await AuthHandler.waitForUnlock(profile);
             } else {
                 // Lock the profile and prompt the user for authentication by providing login/credential prompt options.
                 await AuthHandler.lockProfile(profile, authOpts);
@@ -118,6 +119,7 @@ export class AuthUtils {
                     imperativeError,
                     isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
                     errorCorrelation,
+                    useModal: true,
                 });
             }
         }

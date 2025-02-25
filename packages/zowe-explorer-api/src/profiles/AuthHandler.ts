@@ -40,7 +40,8 @@ export type AuthPromptParams = {
 
 export type ProfileLike = string | imperative.IProfileLoaded;
 export class AuthHandler {
-    private static profileLocks: Map<string, Mutex> = new Map();
+    private static authPromptLocks = new Map<string, Mutex>();
+    private static profileLocks = new Map<string, Mutex>();
     private static enabledProfileTypes: Set<string> = new Set(["zosmf"]);
 
     /**
@@ -80,6 +81,7 @@ export class AuthHandler {
      */
     public static unlockProfile(profile: ProfileLike, refreshResources?: boolean): void {
         const profileName = AuthHandler.getProfileName(profile);
+        this.authPromptLocks.get(profileName)?.release();
         const mutex = this.profileLocks.get(profileName);
         // If a mutex doesn't exist for this profile or the mutex is no longer locked, return
         if (mutex == null || !mutex.isLocked()) {
@@ -101,26 +103,23 @@ export class AuthHandler {
         }
     }
 
-    private static authErrorTimestamps = new Map<string, number>();
-    private static readonly DEBOUNCE_WINDOW_MS = 2000; // 2 seconds
-
     /**
      * Determines whether to handle an authentication error for a given profile.
-     * This debounces authentication errors so we don't spam the user with authentication prompts during parallel requests.
+     * This uses a mutex to prevent additional authentication prompts until the first prompt is resolved.
      * @param profileName The name of the profile to check
      * @returns {boolean} Whether to handle the authentication error
      */
-    public static shouldHandleAuthError(profileName: string): boolean {
-        const now = Date.now();
-        const lastErrorTime = this.authErrorTimestamps.get(profileName) || 0;
+    public static async shouldHandleAuthError(profileName: string): Promise<boolean> {
+        if (!this.authPromptLocks.has(profileName)) {
+            this.authPromptLocks.set(profileName, new Mutex());
+        }
 
-        // If we've seen an auth error for this profile within the debounce window, don't handle it again
-        if (now - lastErrorTime < this.DEBOUNCE_WINDOW_MS) {
+        const mutex = this.authPromptLocks.get(profileName);
+        if (mutex.isLocked()) {
             return false;
         }
 
-        // Update the timestamp and allow handling this error
-        this.authErrorTimestamps.set(profileName, now);
+        await mutex.acquire();
         return true;
     }
 
