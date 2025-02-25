@@ -125,7 +125,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public async move(oldUri: vscode.Uri, newUri: vscode.Uri): Promise<boolean> {
         const info = this._getInfoFromUri(newUri);
-        const ussApi = ZoweExplorerApiRegister.getUssApi(info.profile);
+        const profile = Profiles.getInstance().loadNamedProfile(info.profile.name);
+        const ussApi = ZoweExplorerApiRegister.getUssApi(profile);
 
         if (!ussApi.move) {
             await Gui.errorMessage(vscode.l10n.t("The 'move' function is not implemented for this USS API."));
@@ -172,9 +173,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             };
         }
 
+        const loadedProfile = Profiles.getInstance().loadNamedProfile(profile.name);
         let response: IZosFilesResponse;
         try {
-            response = await ZoweExplorerApiRegister.getUssApi(profile).fileList(ussPath);
+            response = await ZoweExplorerApiRegister.getUssApi(loadedProfile).fileList(ussPath);
             // If request was successful, create directories for the path if it doesn't exist
             if (response.success && !keepRelative && response.apiResponse.items?.[0]?.mode?.startsWith("d") && !this.exists(uri)) {
                 await vscode.workspace.fs.createDirectory(uri.with({ query: "" }));
@@ -321,12 +323,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const bufBuilder = new BufferBuilder();
         const filePath = uri.path.substring(uriInfo.slashAfterProfilePos);
-        const metadata = file.metadata;
+        const profile = Profiles.getInstance().loadNamedProfile(file.metadata.profile.name);
 
         let resp: IZosFilesResponse;
         try {
             await this.autoDetectEncoding(file as UssFile);
-            const profile = Profiles.getInstance().loadNamedProfile(file?.metadata.profile.name);
             const profileEncoding = file.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
             // Wait for any ongoing authentication process to complete
@@ -339,10 +340,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 return;
             }
 
-            resp = await ZoweExplorerApiRegister.getUssApi(metadata.profile).getContents(filePath, {
+            resp = await ZoweExplorerApiRegister.getUssApi(profile).getContents(filePath, {
                 binary: file.encoding?.kind === "binary",
                 encoding: file.encoding?.kind === "other" ? file.encoding.codepage : profileEncoding,
-                responseTimeout: metadata.profile.profile?.responseTimeout,
+                responseTimeout: profile.profile?.responseTimeout,
                 returnEtag: true,
                 stream: bufBuilder,
             });
@@ -350,7 +351,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             if (err instanceof Error) {
                 ZoweLogger.error(err.message);
             }
-            await AuthUtils.handleProfileAuthOnError(err, metadata.profile);
+            await AuthUtils.handleProfileAuthOnError(err, profile);
             return;
         }
 
@@ -371,7 +372,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             file.size = file.data.byteLength;
         }
 
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri: uri });
+        ZoweLogger.trace(`[UssFSProvider] fetchFileAtUri fired a change event for ${uri.toString()}`);
+        this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
+
         if (options?.editor) {
             await this._updateResourceInEditor(uri);
         }
@@ -381,8 +384,19 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         if (entry.encoding !== undefined) {
             return;
         }
+
+        // Wait for any ongoing authentication process to complete
         await AuthHandler.waitForUnlock(entry.metadata.profile);
-        const ussApi = ZoweExplorerApiRegister.getUssApi(entry.metadata.profile);
+
+        // Check if the profile is locked (indicating an auth error is being handled)
+        // If it's locked, we should wait and not make additional requests
+        if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
+            ZoweLogger.debug(`[UssFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
+            return;
+        }
+
+        const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
+        const ussApi = ZoweExplorerApiRegister.getUssApi(profile);
         try {
             if (ussApi.getTag != null) {
                 const taggedEncoding = await ussApi.getTag(entry.metadata.path);
@@ -466,11 +480,22 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 ? new vscode.Disposable(() => {})
                 : Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Saving USS file...")}`);
 
+        // Wait for any ongoing authentication process to complete
+        await AuthHandler.waitForUnlock(entry.metadata.profile);
+
+        // Check if the profile is locked (indicating an auth error is being handled)
+        // If it's locked, we should wait and not make additional requests
+        if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
+            statusMsg.dispose();
+            ZoweLogger.debug(`[UssFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
+            throw new Error(`Profile ${entry.metadata.profile.name} is locked due to authentication error`);
+        }
+        const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
+
         let resp: IZosFilesResponse;
         try {
-            const ussApi = ZoweExplorerApiRegister.getUssApi(entry.metadata.profile);
+            const ussApi = ZoweExplorerApiRegister.getUssApi(profile);
             await this.autoDetectEncoding(entry);
-            const profile = Profiles.getInstance().loadNamedProfile(entry?.metadata.profile.name);
             const profileEncoding = entry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
             resp = await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
@@ -481,6 +506,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             });
         } catch (err) {
             statusMsg.dispose();
+            await AuthUtils.handleProfileAuthOnError(err, profile);
             throw err;
         }
 
@@ -614,10 +640,21 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // Build the new path using the previous path and new file/folder name.
         const newPath = path.posix.join(entry.metadata.path, "..", newName);
 
+        // Wait for any ongoing authentication process to complete
+        await AuthHandler.waitForUnlock(entry.metadata.profile);
+
+        // Check if the profile is locked (indicating an auth error is being handled)
+        // If it's locked, we should wait and not make additional requests
+        if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
+            ZoweLogger.debug(`[UssFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
+            return;
+        }
+
+        const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
         try {
-            await ZoweExplorerApiRegister.getUssApi(entry.metadata.profile).rename(entry.metadata.path, newPath);
+            await ZoweExplorerApiRegister.getUssApi(profile).rename(entry.metadata.path, newPath);
         } catch (err) {
-            await AuthUtils.handleProfileAuthOnError(err, entry.metadata.profile);
+            await AuthUtils.handleProfileAuthOnError(err, profile);
             this._handleError(err, {
                 additionalContext: vscode.l10n.t({
                     message: "Failed to rename {0}",
@@ -629,8 +666,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     args: [oldUri, newUri, options],
                 },
                 apiType: ZoweExplorerApiType.Uss,
-                profileType: entry.metadata.profile?.type,
-                templateArgs: { profileName: entry.metadata.profile?.name ?? "" },
+                profileType: profile.type,
+                templateArgs: { profileName: profile.name ?? "" },
             });
             throw err;
         }
@@ -655,13 +692,21 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     public async delete(uri: vscode.Uri, _options: { recursive: boolean }): Promise<void> {
         const { entryToDelete, parent, parentUri } = this._getDeleteInfo(uri);
 
+        // Wait for any ongoing authentication process to complete
+        await AuthHandler.waitForUnlock(parent.metadata.profile);
+
+        // Check if the profile is locked (indicating an auth error is being handled)
+        // If it's locked, we should wait and not make additional requests
+        if (AuthHandler.isProfileLocked(parent.metadata.profile)) {
+            ZoweLogger.debug(`[UssFSProvider] Profile ${parent.metadata.profile.name} is locked, waiting for authentication`);
+            return;
+        }
+
+        const profile = Profiles.getInstance().loadNamedProfile(parent.metadata.profile.name);
         try {
-            await ZoweExplorerApiRegister.getUssApi(parent.metadata.profile).delete(
-                entryToDelete.metadata.path,
-                entryToDelete instanceof UssDirectory
-            );
+            await ZoweExplorerApiRegister.getUssApi(profile).delete(entryToDelete.metadata.path, entryToDelete instanceof UssDirectory);
         } catch (err) {
-            await AuthUtils.handleProfileAuthOnError(err, parent.metadata.profile);
+            await AuthUtils.handleProfileAuthOnError(err, profile);
             this._handleError(err, {
                 additionalContext: vscode.l10n.t({
                     message: "Failed to delete {0}",
@@ -673,8 +718,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     args: [uri, _options],
                 },
                 apiType: ZoweExplorerApiType.Uss,
-                profileType: parent.metadata.profile?.type,
-                templateArgs: { profileName: parent.metadata.profile?.name ?? "" },
+                profileType: profile.type,
+                templateArgs: { profileName: profile.name ?? "" },
             });
             throw err;
         }
@@ -730,7 +775,19 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     ): Promise<void> {
         const destInfo = this._getInfoFromUri(destination);
         const sourceInfo = this._getInfoFromUri(source);
-        const api = ZoweExplorerApiRegister.getUssApi(destInfo.profile);
+
+        // Wait for any ongoing authentication process to complete
+        await AuthHandler.waitForUnlock(destInfo.profile);
+
+        // Check if the profile is locked (indicating an auth error is being handled)
+        // If it's locked, we should wait and not make additional requests
+        if (AuthHandler.isProfileLocked(destInfo.profile)) {
+            ZoweLogger.debug(`[UssFSProvider] Profile ${destInfo.profile.name} is locked, waiting for authentication`);
+            return;
+        }
+
+        const profile = Profiles.getInstance().loadNamedProfile(destInfo.profile.name);
+        const api = ZoweExplorerApiRegister.getUssApi(profile);
 
         const hasCopyApi = api.copy != null;
 
@@ -783,7 +840,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 await api.uploadFromBuffer(Buffer.from(fileEntry.data), outputPath);
             }
         } catch (err) {
-            await AuthUtils.handleProfileAuthOnError(err, destInfo.profile);
+            await AuthUtils.handleProfileAuthOnError(err, profile);
             this._handleError(err, {
                 additionalContext: vscode.l10n.t({
                     message: "Failed to copy {0} to {1}",
