@@ -2195,7 +2195,6 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
             parentNode: datasetSessionNode,
         });
         const testTree = new DatasetTree();
-
         datasetSessionNode.children.push(node);
         testTree.mSessionNodes.push(datasetSessionNode);
         jest.spyOn(datasetSessionNode, "getChildren").mockReturnValue(Promise.resolve([datasetSessionNode]));
@@ -2208,6 +2207,10 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
         };
     }
 
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
     it("Checking opening of PS Dataset", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -2215,6 +2218,35 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
         await blockMocks.testTree.renameNode(blockMocks.imperativeProfile.name, blockMocks.node.label.toString(), "newLabel");
 
         expect(blockMocks.node.label).toEqual("newLabel");
+    });
+
+    it("Checking opening of seq ds when rename operation is performed from Favorited seq ds", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
+        blockMocks.testTree.mSessionNodes[1].children[0].contextValue = Constants.DS_DS_CONTEXT;
+        await blockMocks.testTree.renameNode(blockMocks.imperativeProfile.name, blockMocks.node.label.toString(), "newLabel");
+        expect(blockMocks.testTree.mSessionNodes[1].children[0].command.command).toBe("vscode.open");
+    });
+
+    it("Checking opening of PDS when rename operation is performed from Favorited PDS", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        jest.spyOn(SharedContext, "isPds").mockReturnValue(true);
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: blockMocks.testTree.mSessionNodes[1].getProfile(),
+        });
+        node.resourceUri = vscode.Uri.from({
+            scheme: ZoweScheme.DS,
+            path: "/sestest/RENAME.PDS",
+        });
+        blockMocks.testTree.mSessionNodes[1].children[0].children = [node];
+        await blockMocks.testTree.renameNode(blockMocks.imperativeProfile.name, blockMocks.node.label.toString(), "newLabel");
+        expect(blockMocks.testTree.mSessionNodes[1].children[0].children[0].command.command).toBe("vscode.open");
     });
 });
 
@@ -2301,6 +2333,10 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         };
     }
 
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
     it("returns early if errorForUnsavedResource was true", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -2341,7 +2377,15 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             session: blockMocks.session,
             profile: testTree.mSessionNodes[1].getProfile(),
         });
-
+        const fav_node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+            contextValue: Constants.DS_FAV_CONTEXT,
+        });
+        jest.spyOn(testTree, "findFavoritedNode").mockReturnValue(fav_node);
         await testTree.rename(node);
         expect(blockMocks.rename).toHaveBeenLastCalledWith(
             { path: "/sestest/HLQ.TEST.RENAME.NODE", scheme: ZoweScheme.DS },
@@ -2552,6 +2596,15 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         mocked(Gui.showInputBox).mockImplementation((options) => {
             return Promise.resolve("HLQ.TEST.NEWNAME.NODE");
         });
+        const fav_node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+            contextValue: Constants.DS_FAV_CONTEXT,
+        });
+        jest.spyOn(testTree, "findFavoritedNode").mockReturnValue(fav_node);
         await testTree.rename(parent);
         expect(renameDataSetSpy).toHaveBeenLastCalledWith(parent);
         expect(parent.resourceUri?.path).toBe("/sestest/HLQ.TEST.NEWNAME.NODE");
@@ -2611,6 +2664,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         testTree.mFavorites.push(favProfileNode);
         const renameDataSetMemberSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSetMember");
         const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockImplementation();
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
 
         await testTree.rename(child);
 
@@ -2752,6 +2806,122 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
 
         await testValidDsName("HLQ.TEST.RENAME.NODE.NEW.TEST");
         await testValidDsName("INVALID-DATASET-NAME");
+    });
+
+    it("To check if rename of favorited seq ds is performed correctly when the rename operation is performed on the seq ds from the ds tree view ", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+        });
+        const fav_node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+        });
+        fav_node.contextValue = Constants.DS_FAV_CONTEXT;
+        jest.spyOn(testTree, "findFavoritedNode").mockReturnValue(fav_node);
+        await testTree.rename(node);
+        expect(blockMocks.rename).toHaveBeenLastCalledWith(
+            { path: "/sestest/HLQ.TEST.RENAME.NODE", scheme: ZoweScheme.DS },
+            { path: "/sestest/HLQ.TEST.RENAME.NODE.NEW", scheme: ZoweScheme.DS },
+            { overwrite: false }
+        );
+    });
+
+    it("Checking rename functionality with favorited PDS ", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        // Create nodes in Session section
+        const parent = new ZoweDatasetNode({
+            label: "HLQ.TEST.OLDNAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.PDS_FAV_CONTEXT,
+            parentNode: testTree.mSessionNodes[1],
+            profile: blockMocks.imperativeProfile,
+            session: blockMocks.session,
+        });
+        const child = new ZoweDatasetNode({
+            label: "mem1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.DS_MEMBER_CONTEXT,
+            parentNode: parent,
+        });
+        // Simulate corresponding nodes in favorites
+        // Push test nodes to respective arrays
+        parent.children.push(child);
+        testTree.mSessionNodes[1].children.push(parent);
+
+        const refreshElementSpy = jest.spyOn(testTree, "refreshElement");
+
+        const renameDataSetSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSet");
+
+        mocked(Gui.showInputBox).mockImplementation((options) => {
+            return Promise.resolve("HLQ.TEST.NEWNAME.NODE");
+        });
+        jest.spyOn(SharedContext, "isFavorite").mockReturnValue(true);
+        await testTree.rename(parent);
+        expect(renameDataSetSpy).toHaveBeenLastCalledWith(parent);
+        expect(parent.resourceUri?.path).toBe("/HLQ.TEST.NEWNAME.NODE");
+        expect(child.resourceUri?.path).toBe("/HLQ.TEST.NEWNAME.NODE/mem1");
+        expect(refreshElementSpy).toHaveBeenCalled();
+    });
+
+    it("Checking rename functionality of favorited pds after renaming the pds from the ds tree", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+        });
+        const fav_node = new ZoweDatasetNode({
+            label: "HLQ.TEST.NEW.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+            contextValue: Constants.PDS_FAV_CONTEXT,
+        });
+        const child = new ZoweDatasetNode({
+            label: "MEM.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.PDS_FAV_CONTEXT,
+            parentNode: fav_node,
+            profile: blockMocks.imperativeProfile,
+            session: blockMocks.session,
+        });
+        fav_node.children = [child];
+        jest.spyOn(testTree, "findFavoritedNode").mockReturnValue(fav_node);
+        jest.spyOn(SharedContext, "isPds").mockReturnValue(true);
+        await testTree.rename(node);
+        expect(blockMocks.rename).toHaveBeenLastCalledWith(
+            { path: "/sestest/HLQ.TEST.RENAME.NODE", scheme: ZoweScheme.DS },
+            { path: "/sestest/HLQ.TEST.RENAME.NODE.NEW", scheme: ZoweScheme.DS },
+            { overwrite: false }
+        );
     });
 });
 
