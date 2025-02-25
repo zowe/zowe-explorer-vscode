@@ -266,6 +266,8 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
         await this.datasetProvider?.addSession({ profileType });
         await this.datasetProvider?.refreshFavorites();
         await this.ussFileProvider?.addSession({ profileType });
+        await this.ussFileProvider?.refreshFavorites();
         await this.jobsProvider?.addSession({ profileType });
+        await this.jobsProvider?.refreshFavorites();
     }
 }
