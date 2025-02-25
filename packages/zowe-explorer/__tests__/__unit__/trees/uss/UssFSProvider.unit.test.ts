@@ -16,6 +16,7 @@ import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
+import { MockedProperty } from "../../../__mocks__/mockUtils";
 
 const testProfile = createIProfile();
 
@@ -125,6 +126,19 @@ describe("stat", () => {
 describe("move", () => {
     const getInfoFromUriMock = jest.spyOn((UssFSProvider as any).prototype, "_getInfoFromUri");
     const newUri = testUris.file.with({ path: "/sestest/aFile2.txt" });
+
+    let mockedProperty: MockedProperty;
+    beforeEach(() => {
+        mockedProperty = new MockedProperty(Profiles, "getInstance", {
+            value: jest.fn().mockReturnValue({
+                loadNamedProfile: jest.fn().mockReturnValue(testProfile),
+            } as any),
+        });
+    });
+
+    afterAll(() => {
+        mockedProperty[Symbol.dispose]();
+    });
 
     it("returns true if it successfully moved a valid, old URI to the new URI", async () => {
         getInfoFromUriMock

@@ -411,6 +411,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             }
         } catch (err) {
             await AuthUtils.handleProfileAuthOnError(err, entry.metadata.profile);
+            throw err;
         }
     }
 

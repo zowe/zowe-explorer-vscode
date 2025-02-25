@@ -20,9 +20,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where user is unable to open a renamed sequential data set from the Data Sets tree view.. [#3345](https://github.com/zowe/zowe-explorer-vscode/issues/3345)
 - Fixed missing z/OS Console icon when `Workbench > Panel: Show Labels` is set to false. [#3293](https://github.com/zowe/zowe-explorer-vscode/issues/3293)
 - Fixed z/OS Console panel background colour to be in sync with the rest of the VS Code styling. [#3445](https://github.com/zowe/zowe-explorer-vscode/pull/3445)
-- Fixed an issue seen with outdated profile information in the z/OS tree view data during upload and download of data set and USS files
-  [#3457](https://github.com/zowe/zowe-explorer-vscode/issues/3457)
+- Fixed an issue seen with outdated profile information in the z/OS tree view data during upload and download of data set and USS files [#3457](https://github.com/zowe/zowe-explorer-vscode/issues/3457)
 - Fixed issue where deleting too many nodes at once would cause the confirmation prompt to be oversized. [#3254](https://github.com/zowe/zowe-explorer-vscode/issues/3254)
+- Fixed issue where users were prompted several times when using a profile with invalid credentials in a VS Code workspace. Now, the user is only prompted once per profile, and can enter in new credentials before any further prompts appear. [#3480](https://github.com/zowe/zowe-explorer-vscode/pull/3480)
 
 ## `3.1.1`
 

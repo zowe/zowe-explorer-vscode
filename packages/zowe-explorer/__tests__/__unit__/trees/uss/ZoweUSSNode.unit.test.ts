@@ -728,7 +728,8 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         const blockMocks = createBlockMocks(globalMocks);
 
         blockMocks.rootNode.contextValue = Constants.USS_DIR_CONTEXT;
-        blockMocks.rootNode.dirty = true;
+        blockMocks.rootNode.dirty = false;
+        blockMocks.rootNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
 
         const setAttrsMock = jest.spyOn(ZoweUSSNode.prototype, "setAttributes").mockImplementation();
 
@@ -756,7 +757,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
             title: "Open",
             arguments: [sampleChildren[1].resourceUri],
         };
-        blockMocks.rootNode.children.push(sampleChildren[0]);
+        blockMocks.rootNode.children.push(...sampleChildren);
 
         const rootChildren = await blockMocks.rootNode.getChildren();
         expect(rootChildren.length).toBe(2);
@@ -802,8 +803,6 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
             parentPath: "/u",
         });
 
-        // Creating structure of files and directorie
-        // Label of each child must match names of items returned by mock fileList() in packages/zowe-explorer/__mocks__/@zowe/cli.ts
         const oldUserChildren: ZoweUSSNode[] = [
             new ZoweUSSNode({
                 label: "aDir",
@@ -822,10 +821,27 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
                 parentPath: oldPath,
             }),
         ];
+        const getUssFilesMock = jest.spyOn(parentNode as any, "getUssFiles").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [
+                    {
+                        name: "bDir",
+                        mode: "dr-xr-xr-x",
+                    },
+                    {
+                        name: "theFile.txt",
+                        mode: "-r-xr-xr-x",
+                    },
+                ],
+            },
+        });
+
         parentNode.children = oldUserChildren;
         parentNode.dirty = true;
 
         const newChildren = await parentNode.getChildren();
+        expect(getUssFilesMock).toHaveBeenCalledTimes(1);
         expect(newChildren[0].fullPath).not.toContain(oldPath);
         expect(newChildren[1].fullPath).not.toContain(oldPath);
         expect(newChildren[0].fullPath).toContain(newPath);

@@ -94,6 +94,19 @@ describe("createDirectory", () => {
 });
 
 describe("readDirectory", () => {
+    let mockedProperty: MockedProperty;
+    beforeEach(() => {
+        mockedProperty = new MockedProperty(Profiles, "getInstance", {
+            value: jest.fn().mockReturnValue({
+                loadNamedProfile: jest.fn().mockReturnValue(testProfile),
+            } as any),
+        });
+    });
+
+    afterAll(() => {
+        mockedProperty[Symbol.dispose]();
+    });
+
     describe("filter entry (session)", () => {
         it("calls dataSetsMatchingPattern when reading directories if it exists", async () => {
             const mockSessionEntry = { ...testEntries.session, filter: {}, metadata: { profile: testProfile, path: "/" } };
