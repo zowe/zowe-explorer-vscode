@@ -194,7 +194,35 @@ export class AuthHandler {
             return;
         }
 
-        return this.profileLocks.get(profileName)?.waitForUnlock();
+        const mutex = this.profileLocks.get(profileName);
+        // If the mutex isn't locked, no need to wait
+        if (!mutex.isLocked()) {
+            return;
+        }
+
+        // Wait for the mutex to be unlocked with a timeout to prevent indefinite waiting
+        const timeoutMs = 30000; // 30 seconds timeout
+        const timeoutPromise = new Promise<void>((_, reject) => {
+            setTimeout(() => {
+                reject(new Error(`Timeout waiting for profile ${profileName} to be unlocked`));
+            }, timeoutMs);
+        });
+
+        try {
+            await Promise.race([mutex.waitForUnlock(), timeoutPromise]);
+
+            // Add a small delay after unlock to ensure credentials are fully updated
+            // before allowing multiple requests to proceed
+            await new Promise((resolve) => setTimeout(resolve, 500));
+        } catch (error) {
+            // If we hit the timeout, log it but don't throw to allow operation to continue
+            if (error instanceof Error && error.message.includes("Timeout waiting for profile")) {
+                // Log the timeout but continue - we'll use a no-op since we don't have access to the logger in the API
+                // This is acceptable since this is just a fallback for an edge case where the user did not respond to a credential prompt in time
+            } else {
+                throw error;
+            }
+        }
     }
 
     /**
