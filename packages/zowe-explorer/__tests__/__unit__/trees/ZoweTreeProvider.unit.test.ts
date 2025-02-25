@@ -585,24 +585,17 @@ describe("Tree Provider Unit Tests - function loadProfileByPersistedProfile", ()
         globalMocks.testDSTree = DatasetInit.createDatasetTree(imperative.Logger.getAppLogger());
         globalMocks.testDSTree.mSessionNodes = [{ label: "sestest", getProfileName: (): string => "profile1" }];
         globalMocks.testDSTree.getSessions = (): string[] => ["profile1"];
-        Object.defineProperty(globalMocks.testDSTree, "addSingleSession", {
-            value: jest.fn().mockImplementationOnce(() => {
-                return;
-            }),
-            configurable: true,
-        });
+        globalMocks.testDSTree.addSingleSession = jest.fn();
 
         const resetValidationSettingsSpy = jest.spyOn(SharedActions, "resetValidationSettings");
         resetValidationSettingsSpy.mockImplementation();
-        globalMocks.mockLoadNamedProfile.mockReturnValue(new Error());
-        // jest.spyOn(Profiles.getInstance(), "loadNamedProfile").mockImplementation(() => {
-        //     throw new Error();
-        // });
-
+        jest.spyOn(Profiles.getInstance(), "loadNamedProfile").mockImplementation(() => {
+            throw new Error();
+        });
         const zoweLoggerWarnSpy = jest.spyOn(ZoweLogger, "warn");
 
         await expect(ZoweTreeProvider.prototype["loadProfileByPersistedProfile"](globalMocks.testDSTree, "zosmf", true)).resolves.not.toThrow();
-        // expect(globalMocks.testDSTree.addSingleSession).toHaveBeenCalledTimes(2);
+        expect(globalMocks.testDSTree.addSingleSession).toHaveBeenCalledTimes(2);
         expect(resetValidationSettingsSpy).toHaveBeenCalled();
         expect(zoweLoggerWarnSpy).toHaveBeenCalledTimes(1);
         resetValidationSettingsSpy.mockClear();
