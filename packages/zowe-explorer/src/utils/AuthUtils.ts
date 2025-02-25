@@ -55,7 +55,6 @@ export class AuthUtils {
                 imperativeError: err,
                 isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
                 errorCorrelation,
-                useModal: false,
             };
             // If the profile is already locked, prompt the user to re-authenticate.
             if (AuthHandler.isProfileLocked(profile)) {
