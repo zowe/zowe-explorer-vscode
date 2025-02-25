@@ -99,6 +99,29 @@ export class AuthHandler {
         }
     }
 
+    private static authErrorTimestamps = new Map<string, number>();
+    private static readonly DEBOUNCE_WINDOW_MS = 2000; // 2 seconds
+
+    /**
+     * Determines whether to handle an authentication error for a given profile.
+     * This debounces authentication errors so we don't spam the user with authentication prompts during parallel requests.
+     * @param profileName The name of the profile to check
+     * @returns {boolean} Whether to handle the authentication error
+     */
+    public static shouldHandleAuthError(profileName: string): boolean {
+        const now = Date.now();
+        const lastErrorTime = this.authErrorTimestamps.get(profileName) || 0;
+
+        // If we've seen an auth error for this profile within the debounce window, don't handle it again
+        if (now - lastErrorTime < this.DEBOUNCE_WINDOW_MS) {
+            return false;
+        }
+
+        // Update the timestamp and allow handling this error
+        this.authErrorTimestamps.set(profileName, now);
+        return true;
+    }
+
     /**
      * Prompts the user to authenticate over SSO or a credential prompt in the event of an error.
      * @param profile The profile to authenticate
