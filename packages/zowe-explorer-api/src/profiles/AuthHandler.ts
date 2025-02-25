@@ -34,6 +34,8 @@ export type AuthPromptParams = {
     authMethods: IAuthMethods;
     // Error encountered from API call
     imperativeError: imperative.ImperativeError;
+    // Whether to show the dialog as a modal
+    useModal?: boolean;
 };
 
 export type ProfileLike = string | imperative.IProfileLoaded;
@@ -137,7 +139,7 @@ export class AuthHandler {
                 const message = "Log in to Authentication Service";
                 const userResp = await Gui.showMessage(params.errorCorrelation?.message ?? params.imperativeError.message, {
                     items: [message],
-                    vsCodeOpts: { modal: true },
+                    vsCodeOpts: { modal: params.useModal },
                 });
                 if (userResp === message && (await params.authMethods.ssoLogin(null, profileName))) {
                     // Unlock profile so it can be used again
@@ -152,7 +154,7 @@ export class AuthHandler {
         const checkCredsButton = "Update Credentials";
         const creds = await Gui.errorMessage(params.errorCorrelation?.message ?? params.imperativeError.message, {
             items: [checkCredsButton],
-            vsCodeOpts: { modal: true },
+            vsCodeOpts: { modal: params.useModal },
         }).then(async (selection) => {
             if (selection !== checkCredsButton) {
                 return;
