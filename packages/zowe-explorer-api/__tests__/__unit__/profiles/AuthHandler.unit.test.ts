@@ -54,6 +54,23 @@ describe("AuthHandler.waitForUnlock", () => {
     });
 });
 
+describe("AuthHandler.unlockAllProfiles", () => {
+    it("unlocks all profiles in the AuthHandler.profileLocks map", async () => {
+        const mutexAuthPrompt = new Mutex();
+        const mutexProfile = new Mutex();
+        const releaseAuthPromptMutex = jest.spyOn(mutexAuthPrompt, "release");
+        const releaseProfileMutex = jest.spyOn(mutexProfile, "release");
+        (AuthHandler as any).authPromptLocks.set(TEST_PROFILE_NAME, mutexAuthPrompt);
+        (AuthHandler as any).profileLocks.set(TEST_PROFILE_NAME, mutexProfile);
+
+        AuthHandler.unlockAllProfiles();
+        expect(releaseAuthPromptMutex).toHaveBeenCalledTimes(1);
+        expect(releaseProfileMutex).toHaveBeenCalledTimes(1);
+        (AuthHandler as any).authPromptLocks.clear();
+        (AuthHandler as any).profileLocks.clear();
+    });
+});
+
 describe("AuthHandler.isProfileLocked", () => {
     it("returns true if the profile is locked", async () => {
         await AuthHandler.lockProfile(TEST_PROFILE_NAME);

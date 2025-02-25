@@ -246,6 +246,21 @@ export class AuthHandler {
     }
 
     /**
+     * Releases locks for all profiles.
+     * Used for scenarios such as the `onVaultChanged` event, where we don't know what secure values have changed,
+     * but we can't assume that the profile still has invalid credentials.
+     */
+    public static unlockAllProfiles(): void {
+        for (const mutex of this.authPromptLocks.values()) {
+            mutex.release();
+        }
+
+        for (const mutex of this.profileLocks.values()) {
+            mutex.release();
+        }
+    }
+
+    /**
      * Checks whether the given profile has its lock acquired.
      * @param profile The profile to check
      * @returns {boolean} `true` if the given profile is locked, `false` otherwise
