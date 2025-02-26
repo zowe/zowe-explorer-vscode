@@ -235,13 +235,10 @@ export class AuthHandler {
         try {
             await Promise.race([mutex.waitForUnlock(), timeoutPromise]);
         } catch (error) {
-            // If we hit the timeout, log it but don't throw to allow operation to continue
-            if (error instanceof Error && error.message.includes("Timeout waiting for profile")) {
-                // Log the timeout but continue - we'll use a no-op since we don't have access to the logger in the API
-                // This is acceptable since this is just a fallback for an edge case where the user did not respond to a credential prompt in time
-            } else {
-                throw error;
-            }
+            // Log the timeout to console since we don't have access to the logger in the API
+            // This is acceptable as this is just a fallback for an edge case where the user did not respond to a credential prompt in time
+            // eslint-disable-next-line no-console
+            console.log(`Timeout waiting for profile ${profileName} to be unlocked`);
         }
     }
 
