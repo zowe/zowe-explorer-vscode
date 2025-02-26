@@ -308,7 +308,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     if (item.migr) {
                         const migrationStatus = item.migr.toUpperCase();
                         if (SharedContext.isMigrated(dsNode) && migrationStatus !== "YES") {
-                            await dsNode.datasetRecalled(item.dsorg === "PO" || item.dsorg === "PO-E");
+                            await dsNode.datasetRecalled(item.dsorg?.startsWith("PO"));
                         } else if (!SharedContext.isMigrated(dsNode) && migrationStatus === "YES") {
                             dsNode.datasetMigrated();
                         }
@@ -323,7 +323,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         profile: cachedProfile,
                     });
                     elementChildren[dsNode.label.toString()] = dsNode;
-                } else if (item.dsorg === "PO" || item.dsorg === "PO-E") {
+                } else if (item.dsorg?.startsWith("PO")) {
                     // Creates a ZoweDatasetNode for a PDS
                     dsNode = new ZoweDatasetNode({
                         label: item.dsname,
