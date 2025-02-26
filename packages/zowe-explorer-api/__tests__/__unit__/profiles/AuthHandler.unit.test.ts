@@ -222,3 +222,12 @@ describe("AuthHandler.unlockProfile", () => {
         expect(reloadWorkspaceMock).toHaveBeenCalledWith(TEST_PROFILE_NAME);
     });
 });
+
+describe("AuthHandler.shouldHandleAuthError", () => {
+    it("returns true if a credential prompt was not yet shown to the user", async () => {
+        await expect(AuthHandler.shouldHandleAuthError(TEST_PROFILE_NAME)).resolves.toBe(true);
+    });
+    it("returns false if the user is currently responding to a credential prompt", async () => {
+        await expect(AuthHandler.shouldHandleAuthError(TEST_PROFILE_NAME)).resolves.toBe(false);
+    });
+});
