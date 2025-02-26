@@ -23,6 +23,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue seen with outdated profile information in the z/OS tree view data during upload and download of data set and USS files
   [#3457](https://github.com/zowe/zowe-explorer-vscode/issues/3457)
 - Fixed issue where deleting too many nodes at once would cause the confirmation prompt to be oversized. [#3254](https://github.com/zowe/zowe-explorer-vscode/issues/3254)
+- Fixed an issue where selecting items in table views would reset the column sort order. [#3473](https://github.com/zowe/zowe-explorer-vscode/issues/3473)
 - Fixed an issue where data set migration status was incorrectly handled when the `migr` attribute was not present in the API response. [#3471](https://github.com/zowe/zowe-explorer-vscode/issues/3471)
 
 ## `3.1.1`
