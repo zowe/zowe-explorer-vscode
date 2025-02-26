@@ -729,9 +729,32 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         if (sessionNode) {
             const matchingNode = sessionNode.children.find((node) => node.label === beforeLabel);
             if (matchingNode) {
+                const newUri = matchingNode.resourceUri.with({
+                    path: path.posix.join(path.posix.dirname(matchingNode.resourceUri.path), afterLabel),
+                });
                 matchingNode.label = afterLabel;
                 matchingNode.tooltip = afterLabel;
+                matchingNode.resourceUri = newUri;
                 this.refreshElement(matchingNode);
+                if (SharedContext.isPds(matchingNode)) {
+                    for (const child of matchingNode.children) {
+                        child.resourceUri = child.resourceUri.with({
+                            path: path.posix.join(newUri.path, child.resourceUri.path.substring(child.resourceUri.path.lastIndexOf("/") + 1)),
+                        });
+                        child.command = {
+                            title: "",
+                            command: "vscode.open",
+                            arguments: [child.resourceUri],
+                        };
+                    }
+                } else if (matchingNode.contextValue.includes(Constants.DS_DS_CONTEXT)) {
+                    matchingNode.command = {
+                        title: "",
+                        command: "vscode.open",
+                        arguments: [matchingNode.resourceUri],
+                    };
+                }
+                this.refreshElement(matchingNode.getParent() as IZoweDatasetTreeNode);
             }
         }
     }
@@ -740,14 +763,38 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
      * Renames a node from the favorites list
      *
      * @param node
+     * @param newLabel
      */
     public renameFavorite(node: IZoweDatasetTreeNode, newLabel: string): void {
         ZoweLogger.trace("DatasetTree.renameFavorite called.");
         const matchingNode = this.findFavoritedNode(node);
+        const newUri = node.resourceUri.with({
+            path: path.posix.join(path.posix.dirname(node.resourceUri.path), newLabel),
+        });
         if (matchingNode) {
             matchingNode.label = newLabel;
             matchingNode.tooltip = newLabel;
+            matchingNode.resourceUri = newUri;
             this.refreshElement(matchingNode as IZoweDatasetTreeNode);
+            if (SharedContext.isPds(matchingNode)) {
+                for (const child of matchingNode.children) {
+                    child.resourceUri = child.resourceUri.with({
+                        path: path.posix.join(newUri.path, child.resourceUri.path.substring(child.resourceUri.path.lastIndexOf("/") + 1)),
+                    });
+                    child.command = {
+                        title: "",
+                        command: "vscode.open",
+                        arguments: [child.resourceUri],
+                    };
+                }
+            } else if (matchingNode.contextValue.includes(Constants.DS_DS_CONTEXT)) {
+                matchingNode.command = {
+                    title: "",
+                    command: "vscode.open",
+                    arguments: [matchingNode.resourceUri],
+                };
+            }
+            this.refreshElement(matchingNode.getParent() as IZoweDatasetTreeNode);
         }
     }
 
@@ -1419,7 +1466,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         arguments: [child.resourceUri],
                     };
                 }
-            } else if (node.contextValue === Constants.DS_DS_CONTEXT || node.contextValue === Constants.DS_FAV_CONTEXT) {
+            } else if (node.contextValue.includes(Constants.DS_DS_CONTEXT)) {
                 node.command = {
                     title: "",
                     command: "vscode.open",
