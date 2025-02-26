@@ -3868,7 +3868,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
                         field: "name",
                         headerName: vscode.l10n.t("Data Set Name"),
                         filter: true,
-                        sort: "asc",
+                        initialSort: "asc",
                     } as Table.ColumnOpts,
                     {
                         field: "position",
@@ -4006,7 +4006,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
                         field: "name",
                         headerName: vscode.l10n.t("Data Set Name"),
                         filter: true,
-                        sort: "asc",
+                        initialSort: "asc",
                     } as Table.ColumnOpts,
                     {
                         field: "position",
@@ -4120,7 +4120,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
                         field: "name",
                         headerName: vscode.l10n.t("Data Set Name"),
                         filter: true,
-                        sort: "asc",
+                        initialSort: "asc",
                     } as Table.ColumnOpts,
                     {
                         field: "position",
@@ -4260,7 +4260,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
                         field: "name",
                         headerName: vscode.l10n.t("Data Set Name"),
                         filter: true,
-                        sort: "asc",
+                        initialSort: "asc",
                     } as Table.ColumnOpts,
                     {
                         field: "position",
