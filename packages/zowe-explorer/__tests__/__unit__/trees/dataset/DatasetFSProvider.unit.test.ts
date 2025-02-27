@@ -12,6 +12,7 @@
 import { Disposable, FilePermission, FileSystemError, FileType, TextEditor, Uri } from "vscode";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import {
+    AuthHandler,
     DirEntry,
     DsEntry,
     DsEntryMetadata,
@@ -30,6 +31,7 @@ import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerA
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import * as path from "path";
+import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 const dayjs = require("dayjs");
 
 const testProfile = createIProfile();
@@ -1251,5 +1253,107 @@ describe("rename", () => {
         _lookupMock.mockRestore();
         mvsApiMock.mockRestore();
         _lookupParentDirectoryMock.mockRestore();
+    });
+});
+
+describe("Expected behavior for functions w/ profile locks", () => {
+    let isProfileLockedMock;
+    let warnLoggerMock;
+
+    beforeEach(() => {
+        isProfileLockedMock = jest.spyOn(AuthHandler, "isProfileLocked");
+        warnLoggerMock = jest.spyOn(ZoweLogger, "warn").mockImplementation();
+    });
+
+    afterEach(() => {
+        isProfileLockedMock.mockRestore();
+        warnLoggerMock.mockRestore();
+    });
+
+    describe("stat", () => {
+        it("returns entry without API calls when profile is locked", async () => {
+            const fakeEntry = { ...testEntries.ps };
+            const lookupMock = jest.spyOn(DatasetFSProvider.instance, "lookup").mockReturnValueOnce(fakeEntry);
+            const getInfoForUriMock = jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValueOnce({
+                profile: testProfile,
+                isRoot: false,
+                slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                profileName: "sestest",
+            });
+
+            isProfileLockedMock.mockReturnValueOnce(true);
+            const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValueOnce(undefined);
+
+            const datasetMock = jest.fn().mockResolvedValueOnce({});
+            const getMvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce({ dataSet: datasetMock } as any);
+
+            const result = await DatasetFSProvider.instance.stat(testUris.ps);
+
+            expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+            expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
+            expect(warnLoggerMock).toHaveBeenCalledWith("[DatasetFSProvider] Profile sestest is locked, waiting for authentication");
+            expect(datasetMock).not.toHaveBeenCalled();
+            expect(result).toBe(fakeEntry);
+
+            lookupMock.mockRestore();
+            getInfoForUriMock.mockRestore();
+            waitForUnlockMock.mockRestore();
+            getMvsApiMock.mockRestore();
+        });
+    });
+
+    describe("fetchEntriesForProfile", () => {
+        it("returns early without making API calls when profile is locked", async () => {
+            const fakeEntry = { ...testEntries.session, entries: new Map() };
+            const lookupAsDirectoryMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockReturnValueOnce(fakeEntry);
+            const uriInfo = { profile: testProfile };
+
+            isProfileLockedMock.mockReturnValueOnce(true);
+            const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValueOnce(undefined);
+
+            const datasetMock = jest.fn().mockResolvedValueOnce({});
+            const getMvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce({ dataSet: datasetMock } as any);
+
+            const result = await (DatasetFSProvider.instance as any).fetchEntriesForProfile(testUris.session, uriInfo, "USER.*");
+
+            expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+            expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
+            expect(warnLoggerMock).toHaveBeenCalledWith("[DatasetFSProvider] Profile sestest is locked, waiting for authentication");
+            expect(datasetMock).not.toHaveBeenCalled();
+            expect(result).toBe(fakeEntry);
+
+            lookupAsDirectoryMock.mockRestore();
+            waitForUnlockMock.mockRestore();
+            getMvsApiMock.mockRestore();
+        });
+    });
+
+    describe("fetchDatasetAtUri", () => {
+        it("returns null without making API calls when profile is locked", async () => {
+            const file = new DsEntry("TEST.DS", false);
+            file.metadata = new DsEntryMetadata({ profile: testProfile, path: "/TEST.DS" });
+
+            const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(file);
+            const getInfoFromUriMock = jest.spyOn(DatasetFSProvider.instance as any, "_getInfoFromUri").mockReturnValueOnce(file.metadata);
+
+            isProfileLockedMock.mockReturnValueOnce(true);
+            const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValueOnce(undefined);
+
+            const getContentsMock = jest.fn().mockResolvedValueOnce({});
+            const getMvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce({ getContents: getContentsMock } as any);
+
+            const result = await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps);
+
+            expect(waitForUnlockMock).toHaveBeenCalled();
+            expect(isProfileLockedMock).toHaveBeenCalled();
+            expect(warnLoggerMock).toHaveBeenCalledWith("[DatasetFSProvider] Profile sestest is locked, waiting for authentication");
+            expect(getContentsMock).not.toHaveBeenCalled();
+            expect(result).toBeNull();
+
+            lookupMock.mockRestore();
+            getInfoFromUriMock.mockRestore();
+            waitForUnlockMock.mockRestore();
+            getMvsApiMock.mockRestore();
+        });
     });
 });
