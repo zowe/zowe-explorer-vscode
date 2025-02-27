@@ -336,7 +336,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             // Check if the profile is locked (indicating an auth error is being handled)
             // If it's locked, we should wait and not make additional requests
             if (AuthHandler.isProfileLocked(file.metadata.profile)) {
-                ZoweLogger.debug(`[UssFSProvider] Profile ${file.metadata.profile.name} is locked, waiting for authentication`);
+                ZoweLogger.warn(`[UssFSProvider] Profile ${file.metadata.profile.name} is locked, waiting for authentication`);
                 return;
             }
 
@@ -391,7 +391,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
         if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
-            ZoweLogger.debug(`[UssFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
+            ZoweLogger.warn(`[UssFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
             return;
         }
 
@@ -488,7 +488,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // If it's locked, we should wait and not make additional requests
         if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
             statusMsg.dispose();
-            ZoweLogger.debug(`[UssFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
+            ZoweLogger.warn(`[UssFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
             throw new Error(`Profile ${entry.metadata.profile.name} is locked due to authentication error`);
         }
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
@@ -647,7 +647,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
         if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
-            ZoweLogger.debug(`[UssFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
+            ZoweLogger.warn(`[UssFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
             return;
         }
 
@@ -699,7 +699,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
         if (AuthHandler.isProfileLocked(parent.metadata.profile)) {
-            ZoweLogger.debug(`[UssFSProvider] Profile ${parent.metadata.profile.name} is locked, waiting for authentication`);
+            ZoweLogger.warn(`[UssFSProvider] Profile ${parent.metadata.profile.name} is locked, waiting for authentication`);
             return;
         }
 
@@ -783,7 +783,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
         if (AuthHandler.isProfileLocked(destInfo.profile)) {
-            ZoweLogger.debug(`[UssFSProvider] Profile ${destInfo.profile.name} is locked, waiting for authentication`);
+            ZoweLogger.warn(`[UssFSProvider] Profile ${destInfo.profile.name} is locked, waiting for authentication`);
             return;
         }
 

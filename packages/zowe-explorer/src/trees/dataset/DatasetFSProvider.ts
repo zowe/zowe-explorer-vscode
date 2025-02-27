@@ -101,7 +101,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             // Check if the profile is locked (indicating an auth error is being handled)
             // If it's locked, we should wait and not make additional requests
             if (AuthHandler.isProfileLocked(uriInfo.profile)) {
-                ZoweLogger.debug(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
+                ZoweLogger.warn(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
                 return entry;
             }
 
@@ -151,7 +151,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
         if (AuthHandler.isProfileLocked(uriInfo.profile)) {
-            ZoweLogger.debug(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
+            ZoweLogger.warn(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
             return profileEntry;
         }
 
@@ -226,7 +226,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             // Check if the profile is locked (indicating an auth error is being handled)
             // If it's locked, we should wait and not make additional requests
             if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
-                ZoweLogger.debug(`[DatasetFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
+                ZoweLogger.warn(`[DatasetFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
                 return;
             }
 
@@ -271,7 +271,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
         if (AuthHandler.isProfileLocked(uriInfo.profile)) {
-            ZoweLogger.debug(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
+            ZoweLogger.warn(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
             if (entryExists) {
                 return entry;
             }
@@ -441,7 +441,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             // Check if the profile is locked (indicating an auth error is being handled)
             // If it's locked, we should wait and not make additional requests
             if (AuthHandler.isProfileLocked(metadata.profile)) {
-                ZoweLogger.debug(`[DatasetFSProvider] Profile ${metadata.profile.name} is locked, waiting for authentication`);
+                ZoweLogger.warn(`[DatasetFSProvider] Profile ${metadata.profile.name} is locked, waiting for authentication`);
                 return null;
             }
 
