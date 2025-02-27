@@ -15,6 +15,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue where deleting too many nodes at once would cause the confirmation prompt to be oversized. [#3254](https://github.com/zowe/zowe-explorer-vscode/issues/3254)
 - Fixed an issue with UNIX file edit attributes refresh button not updating/reverting values correctly. [#3238](https://github.com/zowe/zowe-explorer-vscode/issues/3238)
 - Fixed an issue seen where extender favorites not showing in the tree views. [#3470](https://github.com/zowe/zowe-explorer-vscode/issues/3470)
+- Fixed an issue where data set migration status was incorrectly handled when the `migr` attribute was not present in the API response. [#3471](https://github.com/zowe/zowe-explorer-vscode/issues/3471)
 
 ## `3.1.1`
 
