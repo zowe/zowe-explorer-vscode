@@ -316,6 +316,7 @@ describe("fetchEntries", () => {
             expect(listFilesMock).toHaveBeenCalledTimes(1);
             existsMock.mockRestore();
             lookupMock.mockRestore();
+            listFilesMock.mockRestore();
         });
     });
 });
@@ -1527,14 +1528,14 @@ describe("Expected behavior for functions w/ profile locks", () => {
     });
 
     describe("listFiles", () => {
-        xit("returns early without making API calls when profile is locked", async () => {
+        it("returns early without making API calls when profile is locked", async () => {
             isProfileLockedMock.mockReturnValueOnce(true);
             const ussApiMock = {
                 fileList: jest.fn().mockResolvedValueOnce({ success: true, items: [] }),
             } as any;
 
             const getUssApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(ussApiMock);
-            const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValueOnce(undefined);
+            const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
 
             const result = await UssFSProvider.instance.listFiles(testProfile, testUris.file);
 
@@ -1550,7 +1551,7 @@ describe("Expected behavior for functions w/ profile locks", () => {
             getUssApiMock.mockRestore();
         });
 
-        xit("makes API calls when profile is not locked", async () => {
+        it("makes API calls when profile is not locked", async () => {
             isProfileLockedMock.mockReturnValueOnce(false);
             const ussApiMock = {
                 fileList: jest.fn().mockResolvedValueOnce({
