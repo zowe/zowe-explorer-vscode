@@ -1604,6 +1604,108 @@ describe("Expected behavior for functions w/ profile locks", () => {
         });
     });
 
+    describe("fetchEntries", () => {
+        it("returns entry (if present) without making API calls when profile is locked", async () => {
+            const existsMock = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(true);
+            const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
+            const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(testEntries.file);
+
+            isProfileLockedMock.mockReturnValueOnce(true);
+
+            await (UssFSProvider.instance as any).fetchEntries(testUris.file, {
+                isRoot: false,
+                slashAfterProfilePos: testUris.file.path.indexOf("/", 1),
+                profile: testProfile,
+                profileName: testProfile.name,
+            });
+
+            expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");
+            expect(existsMock).toHaveBeenCalledTimes(1);
+            expect(existsMock).toHaveBeenCalledWith(testUris.file);
+            expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
+            expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+            expect(lookupMock).toHaveBeenCalledTimes(1);
+            expect(lookupMock).toHaveBeenCalledWith(testUris.file, false);
+
+            existsMock.mockRestore();
+            lookupMock.mockRestore();
+            waitForUnlockMock.mockRestore();
+        });
+
+        it("throws error if entry does not exist and profile is locked", async () => {
+            const existsMock = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);
+            const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
+            const lookupSpy = jest.spyOn(UssFSProvider.instance, "lookup");
+
+            isProfileLockedMock.mockReturnValueOnce(true);
+
+            await expect(
+                (UssFSProvider.instance as any).fetchEntries(testUris.file, {
+                    isRoot: false,
+                    slashAfterProfilePos: testUris.file.path.indexOf("/", 1),
+                    profile: testProfile,
+                    profileName: testProfile.name,
+                })
+            ).rejects.toThrow(FileSystemError.FileNotFound(testUris.file));
+
+            expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");
+            expect(existsMock).toHaveBeenCalledTimes(1);
+            expect(existsMock).toHaveBeenCalledWith(testUris.file);
+            expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
+            expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+            expect(lookupSpy).not.toHaveBeenCalled();
+
+            existsMock.mockRestore();
+            waitForUnlockMock.mockRestore();
+        });
+    });
+
+    describe("delete", () => {
+        it("returns early without making API calls when profile is locked", async () => {
+            const getDeleteInfoMock = jest
+                .spyOn(UssFSProvider.instance as any, "_getDeleteInfo")
+                .mockClear()
+                .mockReturnValueOnce({
+                    entryToDelete: testEntries.file,
+                    parent: testEntries.session,
+                    parentUri: testUris.session,
+                });
+            const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
+            const loadNamedProfileSpy = jest.spyOn(Profiles.prototype, "loadNamedProfile");
+            isProfileLockedMock.mockReturnValueOnce(true);
+
+            await UssFSProvider.instance.delete(testUris.file, { recursive: false });
+            expect(getDeleteInfoMock).toHaveBeenCalledTimes(1);
+            expect(getDeleteInfoMock).toHaveBeenCalledWith(testUris.file);
+            expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
+            expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+            expect(loadNamedProfileSpy).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("stat", () => {
+        it("returns early without making API calls when profile is locked", async () => {
+            const file = new UssFile("testFile");
+            file.metadata = { profile: testProfile, path: "/testFile" };
+
+            const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(file);
+            const listFilesSpy = jest.spyOn(UssFSProvider.instance, "listFiles");
+
+            isProfileLockedMock.mockReturnValueOnce(true);
+            const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
+
+            await UssFSProvider.instance.stat(testUris.file);
+
+            expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile);
+            expect(isProfileLockedMock).toHaveBeenCalledWith(file.metadata.profile);
+            expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");
+            expect(listFilesSpy).not.toHaveBeenCalled();
+
+            lookupMock.mockRestore();
+            waitForUnlockMock.mockRestore();
+        });
+    });
+
     describe("autoDetectEncoding", () => {
         it("returns early without making API calls when profile is locked", async () => {
             const file = new UssFile("testFile");
