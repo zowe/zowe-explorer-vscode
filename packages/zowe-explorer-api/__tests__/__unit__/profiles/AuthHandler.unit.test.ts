@@ -36,10 +36,14 @@ describe("AuthHandler.enableLocksForType", () => {
 
 describe("AuthHandler.waitForUnlock", () => {
     it("calls Mutex.waitForUnlock if the profile lock is present", async () => {
+        // Used so that `setTimeout` can be invoked from 30sec timeout promise
+        jest.useFakeTimers();
         const mutex = new Mutex();
-        const waitForUnlockMock = jest.spyOn(mutex, "waitForUnlock");
+        const isLockedMock = jest.spyOn(mutex, "isLocked").mockReturnValueOnce(true);
+        const waitForUnlockMock = jest.spyOn(mutex, "waitForUnlock").mockResolvedValueOnce(undefined);
         (AuthHandler as any).profileLocks.set(TEST_PROFILE_NAME, mutex);
         await AuthHandler.waitForUnlock(TEST_PROFILE_NAME);
+        expect(isLockedMock).toHaveBeenCalled();
         expect(waitForUnlockMock).toHaveBeenCalled();
         (AuthHandler as any).profileLocks.clear();
     });
@@ -47,6 +51,23 @@ describe("AuthHandler.waitForUnlock", () => {
         const waitForUnlockMock = jest.spyOn(Mutex.prototype, "waitForUnlock");
         await AuthHandler.waitForUnlock(TEST_PROFILE_NAME);
         expect(waitForUnlockMock).not.toHaveBeenCalled();
+    });
+});
+
+describe("AuthHandler.unlockAllProfiles", () => {
+    it("unlocks all profiles in the AuthHandler.profileLocks map", async () => {
+        const mutexAuthPrompt = new Mutex();
+        const mutexProfile = new Mutex();
+        const releaseAuthPromptMutex = jest.spyOn(mutexAuthPrompt, "release");
+        const releaseProfileMutex = jest.spyOn(mutexProfile, "release");
+        (AuthHandler as any).authPromptLocks.set(TEST_PROFILE_NAME, mutexAuthPrompt);
+        (AuthHandler as any).profileLocks.set(TEST_PROFILE_NAME, mutexProfile);
+
+        AuthHandler.unlockAllProfiles();
+        expect(releaseAuthPromptMutex).toHaveBeenCalledTimes(1);
+        expect(releaseProfileMutex).toHaveBeenCalledTimes(1);
+        (AuthHandler as any).authPromptLocks.clear();
+        (AuthHandler as any).profileLocks.clear();
     });
 });
 
@@ -199,5 +220,14 @@ describe("AuthHandler.unlockProfile", () => {
         AuthHandler.unlockProfile(TEST_PROFILE_NAME, true);
         expect(reloadActiveEditorMock).toHaveBeenCalledWith(TEST_PROFILE_NAME);
         expect(reloadWorkspaceMock).toHaveBeenCalledWith(TEST_PROFILE_NAME);
+    });
+});
+
+describe("AuthHandler.shouldHandleAuthError", () => {
+    it("returns true if a credential prompt was not yet shown to the user", async () => {
+        await expect(AuthHandler.shouldHandleAuthError(TEST_PROFILE_NAME)).resolves.toBe(true);
+    });
+    it("returns false if the user is currently responding to a credential prompt", async () => {
+        await expect(AuthHandler.shouldHandleAuthError(TEST_PROFILE_NAME)).resolves.toBe(false);
     });
 });
