@@ -12,7 +12,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ### Bug fixes
 
 - Fixes an issue where properties of the `TableViewProvider` class were not accessible when the class was extended by developers. [#3456](https://github.com/zowe/zowe-explorer-vscode/pull/3456)
-- Fixed issue where the `AuthHandler.waitForUnlock` function could hang indefinitely if the profile is never unlocked. Now, the function will return after a 30 second timeout as a safety measure. This function should be used alongside the `AuthHandler.isProfileLocked` function to verify that the profile is unlocked before making API requests. [#3480](https://github.com/zowe/zowe-explorer-vscode/pull/3480)
+- Fixed issue where the `AuthHandler.waitForUnlock` function could hang indefinitely if the profile is never unlocked. Now, as a safety measure, the function returns after a 30-second timeout. This function should be used alongside the `AuthHandler.isProfileLocked` function to verify that the profile is unlocked before making API requests. [#3480](https://github.com/zowe/zowe-explorer-vscode/pull/3480)
 
 ## `3.1.1`
 
