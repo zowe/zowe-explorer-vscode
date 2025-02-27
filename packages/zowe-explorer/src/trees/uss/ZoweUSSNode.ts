@@ -153,6 +153,27 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         return ussEntry.attributes;
     }
 
+    public async fetchAttributes(): Promise<Types.FileAttributes> {
+        const ussEntry = UssFSProvider.instance.lookup(this.resourceUri, true) as UssFile | UssDirectory;
+        if (ussEntry == null || FsAbstractUtils.isDirectoryEntry(ussEntry)) {
+            return undefined;
+        }
+        const response = await this.getUssFiles(this.profile);
+        if (response.success === false || response.apiResponse?.items.length === 0 || response.apiResponse?.items.length > 1) {
+            return undefined;
+        }
+        const item = response.apiResponse.items[0];
+        const attrs: Types.FileAttributes = {
+            gid: item.gid,
+            uid: item.uid,
+            group: item.group,
+            perms: item.mode,
+            owner: item.user,
+        };
+        this.setAttributes(attrs);
+        return attrs;
+    }
+
     public setAttributes(attributes: Partial<Types.FileAttributes>): void {
         const ussEntry = UssFSProvider.instance.lookup(this.resourceUri, true) as UssFile | UssDirectory;
         if (ussEntry == null) {
