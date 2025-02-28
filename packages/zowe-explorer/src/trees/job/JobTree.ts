@@ -337,6 +337,10 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         ZoweLogger.trace("JobTree.initializeJobsTree called.");
         this.log = log;
         ZoweLogger.debug(vscode.l10n.t("Initializing profiles with jobs favorites."));
+        await this.refreshFavorites();
+    }
+
+    public async refreshFavorites(): Promise<void> {
         const lines: string[] = this.mHistory.readFavorites();
         if (lines.length === 0) {
             ZoweLogger.debug(vscode.l10n.t("No jobs favorites found."));

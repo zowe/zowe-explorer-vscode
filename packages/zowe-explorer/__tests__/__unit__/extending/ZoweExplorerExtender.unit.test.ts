@@ -96,6 +96,7 @@ describe("ZoweExplorerExtender unit tests", () => {
         const datasetTree = createDatasetTree(datasetSessionNode, blockMocks.altTypeProfile);
         ZoweExplorerExtender.createInstance(datasetTree, undefined, undefined);
         jest.spyOn(blockMocks.instTest.datasetProvider, "addSession");
+        jest.spyOn(blockMocks.instTest.datasetProvider, "refreshFavorites").mockImplementation();
         await blockMocks.instTest.reloadProfiles();
         expect(blockMocks.instTest.datasetProvider.addSession).toHaveBeenCalled();
     });
@@ -129,6 +130,7 @@ describe("ZoweExplorerExtender unit tests", () => {
         ZoweExplorerExtender.createInstance(datasetTree, ussTree, jobsTree);
         jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({ ds: datasetTree, uss: ussTree, job: jobsTree });
         jest.spyOn(blockMocks.instTest.datasetProvider, "addSession").mockImplementation(DatasetTree.prototype.addSession);
+        jest.spyOn(blockMocks.instTest.datasetProvider, "refreshFavorites").mockImplementation();
         jest.spyOn(blockMocks.instTest.ussFileProvider, "addSession").mockImplementation(USSTree.prototype.addSession);
         jest.spyOn(blockMocks.instTest.jobsProvider, "addSession").mockImplementation(JobTree.prototype.addSession);
         const loadProfileSpy = jest.spyOn(ZoweTreeProvider.prototype as any, "loadProfileByPersistedProfile");

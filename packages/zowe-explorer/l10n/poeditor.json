@@ -12,7 +12,7 @@
     "Zowe Resources": ""
   },
   "zowe.zosconsole": {
-    "Zowe Explorer z/OS Console": ""
+    "z/OS Console": ""
   },
   "zowe.resources.name": {
     "Zowe Resources": ""
@@ -593,7 +593,6 @@
   "Uploading file to USS tree": "",
   "Upload action was cancelled.": "",
   "Uploading USS file": "",
-  "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}": "",
   "Delete action was canceled.": "",
   "Copying file structure...": "",
   "The paste operation is not supported for this node.": "",
@@ -687,8 +686,7 @@
   "Failed to delete job {0}": "",
   "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}": "",
   "Job {0} was deleted.": "",
-  "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}": "",
-  "The following jobs were deleted: {0}": "",
+  "The following jobs were deleted: {0}{1}": "",
   "Download single spool operation not implemented by extender. Please contact the extension developer(s).": "",
   "No spool files found for {0}": "",
   "Modify Command": "",
@@ -779,9 +777,8 @@
   "Uploading to data set": "",
   "No data sets selected for deletion, cancelling...": "",
   "Deleting data set(s): {0}": "",
-  "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}": "",
   "Deleting items": "",
-  "The following {0} item(s) were deleted: {1}": "",
+  "The following {0} item(s) were deleted:\n{1}{2}": "",
   "Name of member": "",
   "Creating new data set member {0}": "",
   "Unable to create member.": "",
