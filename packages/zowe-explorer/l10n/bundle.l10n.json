@@ -314,12 +314,6 @@
   "Uploading file to USS tree": "Uploading file to USS tree",
   "Upload action was cancelled.": "Upload action was cancelled.",
   "Uploading USS file": "Uploading USS file",
-  "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}/File names": {
-    "message": "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
-    "comment": [
-      "File names"
-    ]
-  },
   "Delete action was canceled.": "Delete action was canceled.",
   "Copying file structure...": "Copying file structure...",
   "The paste operation is not supported for this node.": "The paste operation is not supported for this node.",
@@ -506,15 +500,8 @@
       "Job name"
     ]
   },
-  "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}/Jobs lengthJob names": {
-    "message": "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}",
-    "comment": [
-      "Jobs length",
-      "Job names"
-    ]
-  },
-  "The following jobs were deleted: {0}/Deleted jobs": {
-    "message": "The following jobs were deleted: {0}",
+  "The following jobs were deleted: {0}{1}/Deleted jobs": {
+    "message": "The following jobs were deleted: {0}{1}",
     "comment": [
       "Deleted jobs"
     ]
@@ -751,19 +738,13 @@
       "Data Sets to delete"
     ]
   },
-  "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}/Data Sets to delete lengthData Sets to delete": {
-    "message": "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}",
-    "comment": [
-      "Data Sets to delete length",
-      "Data Sets to delete"
-    ]
-  },
   "Deleting items": "Deleting items",
-  "The following {0} item(s) were deleted: {1}/Data Sets deleted lengthData Sets deleted": {
-    "message": "The following {0} item(s) were deleted: {1}",
+  "The following {0} item(s) were deleted:\n{1}{2}/Data Sets deleted lengthData Sets deletedAdditional datasets count": {
+    "message": "The following {0} item(s) were deleted:\n{1}{2}",
     "comment": [
       "Data Sets deleted length",
-      "Data Sets deleted"
+      "Data Sets deleted",
+      "Additional datasets count"
     ]
   },
   "Name of member": "Name of member",

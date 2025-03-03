@@ -6,6 +6,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added new optional `refreshFavorites` to IZoweTree interface. [#3470](https://github.com/zowe/zowe-explorer-vscode/issues/3470)
+
 ### Bug fixes
 
 ## `3.1.1`
