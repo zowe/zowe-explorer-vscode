@@ -731,9 +731,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 this.updateSortForNode(sessionNode, sortOpts, isSession);
             }
             this.refresh();
-            for (const favorite of this.mFavorites) {
+            for (const favProfile of this.mFavorites) {
                 // each entry is a profile, we need to update sort order for its children
-                for (const child of favorite.children) {
+                for (const child of favProfile.children) {
                     this.updateSortForNode(child, sortOpts, false);
                 }
             }

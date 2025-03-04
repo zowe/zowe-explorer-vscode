@@ -861,6 +861,10 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 this.sortBy(sessionNode);
             }
             this.refresh();
+            for (const favProfile of this.mFavorites) {
+                favProfile.sort = sortOpts;
+                this.sortBy(favProfile);
+            }
         }
     }
 
