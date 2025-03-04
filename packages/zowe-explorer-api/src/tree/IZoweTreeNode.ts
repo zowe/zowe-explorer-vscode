@@ -353,6 +353,11 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
     getAttributes(): Types.FileAttributes | PromiseLike<Types.FileAttributes>;
 
     /**
+     * Fetches the attributes for the USS file/folder from host.
+     */
+    fetchAttributes?(): Types.FileAttributes | PromiseLike<Types.FileAttributes>;
+
+    /**
      * Sets the attributes for the USS file/folder.
      */
     setAttributes(attributes: Partial<Types.FileAttributes>): void | PromiseLike<void>;
