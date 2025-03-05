@@ -9,7 +9,7 @@
 
 ## Introduction
 
-[Zowe Explorer for Visual Studio Code](https://github.com/zowe/community#zowe-explorer) provides access to mainframe resources in VS Code. Zowe Explorer provides an intuitive, modern development experience that enables mainframe developers and system programmers to:
+[Zowe Explorer for VS Code](https://github.com/zowe/community#zowe-explorer) provides access to mainframe resources in Visual Studio Code. Zowe Explorer provides a modern, familiar, user-friendly interface that enables mainframe developers and system programmers to:
 
 - Manage data sets and USS files on a z/OS mainframe with browse, create, modify, rename, copy, and upload functionality
 - Submit JCL and view job output
@@ -29,7 +29,7 @@ Zowe Explorer for VS Code is a Zowe&trade; component that focuses on modernizing
 
 ## Prerequisite tasks
 
-Zowe clients like Zowe Explorer for VS Code use z/OSMF Representational State Transfer (REST) APIs to work with system resources and extract system data. Ensure that the following  z/OSMF REST services are configured and available.
+Zowe clients like Zowe Explorer for VS Code use z/OSMF Representational State Transfer (REST) APIs to work with system resources and extract system data. Ensure that the following z/OSMF REST services are configured and available.
 
 - TSO/E address space services
 - z/OS data set and file REST interface
@@ -109,9 +109,11 @@ To update securely stored user names and passwords in Zowe Explorer:
 
 Zowe Explorer for VS Code supports multiple authentication methods including basic authentication, multi-factor authentication, tokens, and certificates.
 
-### Using Single Sign-On
+### Using Single Sign-On (SSO)
 
-As a Zowe user, you can use a base profile stored in a team configuration file to access multiple services through Single Sign-On.
+As a Zowe user, you can use a base profile stored in a team configuration file to access multiple services through SSO.
+
+**Note**: For services not registered to your API ML instance, please consult the product or extender documentation for SSO support.
 
 In Zowe Explorer, a base profile enables you to authenticate your credentials with one method, the Zowe API Mediation Layer (API ML), to access multiple services. For more information, see [profile types](https://docs.zowe.org/stable/user-guide/cli-using-using-team-profiles#zowe-cli-profile-types).
 
@@ -138,7 +140,9 @@ If you are done working with Zowe Explorer and want to prevent further use of a 
 
 ### Multi-factor authentication (MFA) support
 
-Zowe Explorer supports the use of MFA through the Zowe API Mediation Layer (API ML).
+Zowe Explorer supports the use of MFA through token authentication using either Zowe API Mediation Layer (API ML) or z/OSMF.
+
+**Note**: For services not registered to your API ML instance, please consult the product or extender documentation for MFA support.
 
 To use MFA authentication with Zowe Explorer, log into API ML:
 
