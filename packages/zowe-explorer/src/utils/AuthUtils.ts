@@ -38,6 +38,11 @@ export class AuthUtils {
             (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
                 err.message.includes("All configured authentication methods failed"))
         ) {
+            if (!(await AuthHandler.shouldHandleAuthError(profile.name))) {
+                ZoweLogger.debug(`[AuthUtils] Skipping authentication prompt for profile ${profile.name} due to debouncing`);
+                return;
+            }
+
             // In the case of an authentication error, find a more user-friendly error message if available.
             const errorCorrelation = ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.All, err, {
                 templateArgs: {
@@ -53,7 +58,7 @@ export class AuthUtils {
             };
             // If the profile is already locked, prompt the user to re-authenticate.
             if (AuthHandler.isProfileLocked(profile)) {
-                await AuthHandler.promptForAuthentication(profile, authOpts);
+                await AuthHandler.waitForUnlock(profile);
             } else {
                 // Lock the profile and prompt the user for authentication by providing login/credential prompt options.
                 await AuthHandler.lockProfile(profile, authOpts);
