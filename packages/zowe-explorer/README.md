@@ -49,7 +49,7 @@ Configure Zowe Explorer for VS Code by changing the extension settings. For more
 
 A team configuration file stores connection information to mainframe services in *profiles* that are easy to maintain and share with others in your organization.
 
-**Note**: Team configuration files can be used across two core components of the Zowe project, Zowe Explorer for VS Code and Zowe CLI.
+**Note**: Team configuration files can be used across three core components of the Zowe project, Zowe Explorer for VS Code, Zowe Explorer for IntelliJ IDEA, and Zowe CLI.
 
 1. Navigate to the **Side Bar**.
 2. Hover over the **DATA SETS**, **USS**, or **JOBS** tree view header.
@@ -119,7 +119,7 @@ In Zowe Explorer, a base profile enables you to authenticate your credentials wi
 
 To log into the API ML authentication service with an existing base profile:
 
-1. Right-click on the profiles you want to connect through with the API ML.
+1. Right-click on the profile you want to connect to using SSO.
 2. Select the **Manage Profile** option from the context menu.
 3. In the **Quick Pick**, select **Log in to Authentication Service**.
 4. In the following **Quick Pick** menu, select the appropriate option for authenticating to the API ML.
