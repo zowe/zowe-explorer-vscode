@@ -14,7 +14,6 @@ import { CorrelatedError, FileManagement } from "../utils";
 import * as imperative from "@zowe/imperative";
 import { IZoweTreeNode } from "../tree";
 import { Mutex } from "async-mutex";
-import { ZoweVsCodeExtension } from "../vscode/ZoweVsCodeExtension";
 
 /**
  * @brief individual authentication methods (also supports a `ProfilesCache` class)
@@ -39,7 +38,25 @@ export type AuthPromptParams = {
 
 export type ProfileLike = string | imperative.IProfileLoaded;
 export class AuthHandler {
-    private static profileLocks: Map<string, Mutex> = new Map();
+    private static authPromptLocks = new Map<string, Mutex>();
+    private static profileLocks = new Map<string, Mutex>();
+    private static enabledProfileTypes: Set<string> = new Set(["zosmf"]);
+
+    /**
+     * Enables profile locks for the given type.
+     * @param type The profile type to enable locks for.
+     */
+    public static enableLocksForType(type: string): void {
+        this.enabledProfileTypes.add(type);
+    }
+
+    /**
+     * Disables profile locks for the given type.
+     * @param type The profile type to disable locks for.
+     */
+    public static disableLocksForType(type: string): void {
+        this.enabledProfileTypes.delete(type);
+    }
 
     /**
      * Function that checks whether a profile is using token based authentication
@@ -61,7 +78,8 @@ export class AuthHandler {
      * @param refreshResources {boolean} Whether to refresh high-priority resources (active editor & virtual workspace) after unlocking
      */
     public static unlockProfile(profile: ProfileLike, refreshResources?: boolean): void {
-        const profileName = typeof profile === "string" ? profile : profile.name;
+        const profileName = AuthHandler.getProfileName(profile);
+        this.authPromptLocks.get(profileName)?.release();
         const mutex = this.profileLocks.get(profileName);
         // If a mutex doesn't exist for this profile or the mutex is no longer locked, return
         if (mutex == null || !mutex.isLocked()) {
@@ -84,13 +102,33 @@ export class AuthHandler {
     }
 
     /**
+     * Determines whether to handle an authentication error for a given profile.
+     * This uses a mutex to prevent additional authentication prompts until the first prompt is resolved.
+     * @param profileName The name of the profile to check
+     * @returns {boolean} Whether to handle the authentication error
+     */
+    public static async shouldHandleAuthError(profileName: string): Promise<boolean> {
+        if (!this.authPromptLocks.has(profileName)) {
+            this.authPromptLocks.set(profileName, new Mutex());
+        }
+
+        const mutex = this.authPromptLocks.get(profileName);
+        if (mutex.isLocked()) {
+            return false;
+        }
+
+        await mutex.acquire();
+        return true;
+    }
+
+    /**
      * Prompts the user to authenticate over SSO or a credential prompt in the event of an error.
      * @param profile The profile to authenticate
      * @param params {AuthPromptParams} Prompt parameters (login methods, using token auth, error correlation)
      * @returns {boolean} Whether authentication was successful
      */
     public static async promptForAuthentication(profile: ProfileLike, params: AuthPromptParams): Promise<boolean> {
-        const profileName = typeof profile === "string" ? profile : profile.name;
+        const profileName = AuthHandler.getProfileName(profile);
         if (params.imperativeError.mDetails.additionalDetails) {
             const tokenError: string = params.imperativeError.mDetails.additionalDetails;
             if (tokenError.includes("Token is not valid or expired.") || params.isUsingTokenAuth) {
@@ -137,24 +175,84 @@ export class AuthHandler {
      * @returns Whether the profile was successfully locked
      */
     public static async lockProfile(profile: ProfileLike, authOpts?: AuthPromptParams): Promise<boolean> {
-        const profileName = typeof profile === "string" ? profile : profile.name;
+        const profileName = AuthHandler.getProfileName(profile);
 
-        // If the mutex does not exist, make one for the profile and acquire the lock
-        if (!this.profileLocks.has(profileName)) {
-            this.profileLocks.set(profileName, new Mutex());
+        // Only create a lock for the profile when we can determine the profile type and the profile type has locks enabled
+        if (!AuthHandler.isProfileLoaded(profile) || this.enabledProfileTypes.has(profile.type)) {
+            // If the mutex does not exist, make one for the profile and acquire the lock
+            if (!this.profileLocks.has(profileName)) {
+                this.profileLocks.set(profileName, new Mutex());
+            }
+
+            // Attempt to acquire the lock - only lock the mutex if the profile type has locks enabled
+            const mutex = this.profileLocks.get(profileName);
+            await mutex.acquire();
         }
-
-        // Attempt to acquire the lock
-        const mutex = this.profileLocks.get(profileName);
-        await mutex.acquire();
 
         // Prompt the user to re-authenticate if an error and options were provided
         if (authOpts) {
             await AuthHandler.promptForAuthentication(profile, authOpts);
-            mutex.release();
+            this.profileLocks.get(profileName)?.release();
         }
 
         return true;
+    }
+
+    private static isProfileLoaded(profile: ProfileLike): profile is imperative.IProfileLoaded {
+        return typeof profile !== "string";
+    }
+
+    private static getProfileName(profile: ProfileLike): string {
+        return typeof profile === "string" ? profile : profile.name;
+    }
+
+    /**
+     * Waits for the profile to be unlocked (ONLY if the profile was locked after an authentication error)
+     * @param profile The profile name or object that may be locked
+     */
+    public static async waitForUnlock(profile: ProfileLike): Promise<void> {
+        const profileName = AuthHandler.getProfileName(profile);
+        if (!this.profileLocks.has(profileName)) {
+            return;
+        }
+
+        const mutex = this.profileLocks.get(profileName);
+        // If the mutex isn't locked, no need to wait
+        if (!mutex.isLocked()) {
+            return;
+        }
+
+        // Wait for the mutex to be unlocked with a timeout to prevent indefinite waiting
+        const timeoutMs = 30000; // 30 seconds timeout
+        const timeoutPromise = new Promise<void>((_, reject) => {
+            setTimeout(() => {
+                reject(new Error(`Timeout waiting for profile ${profileName} to be unlocked`));
+            }, timeoutMs);
+        });
+
+        try {
+            await Promise.race([mutex.waitForUnlock(), timeoutPromise]);
+        } catch (error) {
+            // Log the timeout to console since we don't have access to the logger in the API
+            // This is acceptable as this is just a fallback for an edge case where the user did not respond to a credential prompt in time
+            // eslint-disable-next-line no-console
+            console.log(`Timeout waiting for profile ${profileName} to be unlocked`);
+        }
+    }
+
+    /**
+     * Releases locks for all profiles.
+     * Used for scenarios such as the `onVaultChanged` event, where we don't know what secure values have changed,
+     * but we can't assume that the profile still has invalid credentials.
+     */
+    public static unlockAllProfiles(): void {
+        for (const mutex of this.authPromptLocks.values()) {
+            mutex.release();
+        }
+
+        for (const mutex of this.profileLocks.values()) {
+            mutex.release();
+        }
     }
 
     /**
@@ -163,7 +261,7 @@ export class AuthHandler {
      * @returns {boolean} `true` if the given profile is locked, `false` otherwise
      */
     public static isProfileLocked(profile: ProfileLike): boolean {
-        const mutex = this.profileLocks.get(typeof profile === "string" ? profile : profile.name);
+        const mutex = this.profileLocks.get(AuthHandler.getProfileName(profile));
         if (mutex == null) {
             return false;
         }

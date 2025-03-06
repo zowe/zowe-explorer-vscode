@@ -196,6 +196,11 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
                 return;
             }
+            // If there is no API registered for the profile type, do nothing
+            if (!ZoweExplorerApiRegister.getInstance().registeredJesApiTypes().includes(profile.type)) {
+                ZoweLogger.warn(`JES API is not registered for profile type ${profile.type}, skipping ${profile.name}`);
+                return;
+            }
             // Uses loaded profile to create a zosmf session with Zowe
             let session: imperative.Session;
             try {
@@ -333,6 +338,10 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         ZoweLogger.trace("JobTree.initializeJobsTree called.");
         this.log = log;
         ZoweLogger.debug(vscode.l10n.t("Initializing profiles with jobs favorites."));
+        await this.refreshFavorites();
+    }
+
+    public async refreshFavorites(): Promise<void> {
         const lines: string[] = this.mHistory.readFavorites();
         if (lines.length === 0) {
             ZoweLogger.debug(vscode.l10n.t("No jobs favorites found."));
@@ -1194,11 +1203,15 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
 
     public async openWithEncoding(node: IZoweJobTreeNode, encoding?: ZosEncoding): Promise<void> {
         encoding ??= await SharedUtils.promptForEncoding(node);
-        if (encoding !== undefined) {
-            // Set the encoding, fetch the new contents with the encoding, and open the spool file.
-            await node.setEncoding(encoding);
-            await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
-            await vscode.commands.executeCommand("vscode.open", node.resourceUri);
+        try {
+            if (encoding !== undefined) {
+                // Set the encoding, fetch the new contents with the encoding, and open the spool file.
+                await node.setEncoding(encoding);
+                await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
+                await vscode.commands.executeCommand("vscode.open", node.resourceUri);
+            }
+        } catch (err) {
+            await AuthUtils.errorHandling(err, { profile: node.getProfile() });
         }
     }
 }

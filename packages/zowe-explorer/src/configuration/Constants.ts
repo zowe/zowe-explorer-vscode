@@ -19,6 +19,7 @@ export class Constants {
     public static readonly COMMAND_COUNT = 105;
     public static readonly MAX_SEARCH_HISTORY = 5;
     public static readonly MAX_FILE_HISTORY = 10;
+    public static readonly MAX_DISPLAYED_DELETE_NAMES = 10;
     public static readonly MS_PER_SEC = 1000;
     public static readonly STATUS_BAR_TIMEOUT_MS = 5000;
     public static readonly CONTEXT_PREFIX = "_";

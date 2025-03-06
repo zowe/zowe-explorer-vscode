@@ -90,37 +90,43 @@ async function expectApiWithSession<T>({ name, spy, args, transform }: ITestApi<
     expect(spy).toHaveBeenCalledWith(fakeSession, ...params);
 }
 
+describe("CommonApi", () => {
+    describe("getSession", () => {
+        it("returns undefined and does not throw error if the session was not created", () => {
+            const api = new ZoweExplorerZosmf.CommonApi();
+            let session: imperative.Session;
+            expect(() => (session = api.getSession())).not.toThrow();
+            expect(session).toBe(undefined);
+        });
+        it("returns a built session from _getSession and does not throw error", () => {
+            const api = new ZoweExplorerZosmf.CommonApi(loadedProfile);
+            let session: imperative.Session;
+            const _getSessionSpy = jest.spyOn(api as any, "_getSession");
+            expect(() => (session = api.getSession())).not.toThrow();
+            expect(_getSessionSpy).toHaveBeenCalledTimes(1);
+            expect(session).not.toBeUndefined();
+        });
+    });
+});
+
 describe("ZosmfUssApi", () => {
     afterEach(() => {
         jest.clearAllMocks();
     });
 
     describe("_getSession", () => {
-        const exampleProfile = {
-            message: "",
-            type: "zosmf",
-            failNotFound: false,
-            name: "test.zosmf",
-            profile: {
-                host: "localhost",
-                password: "password",
-                protocol: "http",
-                user: "aZosmfUser",
-                ...fakeProperties,
-            },
-        } as imperative.IProfileLoaded;
-        const exampleSession = imperative.Session.createFromUrl(new URL("http://localhost"));
-        exampleSession.ISession.password = exampleProfile.profile?.password;
-        exampleSession.ISession.user = exampleProfile.profile?.user;
-        jest.spyOn(ProfilesCache, "getProfileSessionWithVscProxy").mockReturnValueOnce(exampleSession as any);
+        const exampleSession = Object.assign(Object.create(Object.getPrototypeOf(fakeSession)), fakeSession);
+        exampleSession.ISession.password = loadedProfile.profile?.password;
+        exampleSession.ISession.user = loadedProfile.profile?.user;
+        jest.spyOn(ProfilesCache, "getProfileSessionWithVscProxy").mockReturnValueOnce(exampleSession);
 
         it("should include profile properties in the built session object", () => {
             const api = new ZoweExplorerZosmf.UssApi(loadedProfile);
 
-            const transformedProps: Record<string, any> = { ...exampleProfile.profile, hostname: exampleProfile.profile?.host, ...fakeProperties };
+            const transformedProps: Record<string, any> = { ...loadedProfile.profile, hostname: loadedProfile.profile?.host, ...fakeProperties };
             delete transformedProps["host"];
             delete transformedProps["responseTimeout"];
-            expect((api as any)._getSession(exampleProfile).mISession).toMatchObject(transformedProps);
+            expect((api as any)._getSession(loadedProfile).mISession).toMatchObject(transformedProps);
         });
     });
 
@@ -567,6 +573,13 @@ describe("ZosmfMvsApi", () => {
         const buf = Buffer.from("123abc");
         await zosmfApi.uploadFromBuffer(buf, "SOME.DS(MEMB)");
         expect(uploadFileSpy).toHaveBeenCalledWith(zosmfApi.getSession(), buf, "SOME.DS(MEMB)", fakeProperties);
+    });
+
+    it("Test copyDataSetCrossLpar()", async () => {
+        const copySpy = jest.spyOn(zosfiles.Copy, "dataSetCrossLPAR").mockImplementation();
+        const zosmfApi = new ZoweExplorerZosmf.MvsApi(loadedProfile);
+        await zosmfApi.copyDataSetCrossLpar("TO.NAME", "TO.MEMBER", undefined as any, loadedProfile);
+        expect(copySpy).toHaveBeenCalled();
     });
 });
 

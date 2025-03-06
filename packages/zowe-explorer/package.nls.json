@@ -3,7 +3,7 @@
   "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe Data Sets, USS files, and Jobs",
   "viewsContainers.activitybar": "Zowe Explorer",
   "viewsContainers.panel.tableView": "Zowe Resources",
-  "zowe.zosconsole": "Zowe Explorer z/OS Console",
+  "zowe.zosconsole": "z/OS Console",
   "zowe.resources.name": "Zowe Resources",
   "zosconsole": "z/OS Console",
   "zowe.placeholderCommand": "Placeholder",

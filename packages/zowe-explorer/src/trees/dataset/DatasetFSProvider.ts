@@ -89,23 +89,38 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
 
         ZoweLogger.trace(`[DatasetFSProvider] stat is locating resource ${uri.toString()}`);
+        const profile = Profiles.getInstance().loadNamedProfile(uriInfo.profile.name);
 
         // Locate the resource using the profile in the given URI.
         let resp;
         const isPdsMember = !FsDatasetsUtils.isPdsEntry(entry) && (entry as DsEntry).isMember;
         try {
+            // Wait for any ongoing authentication process to complete
+            await AuthHandler.waitForUnlock(uriInfo.profile);
+
+            // Check if the profile is locked (indicating an auth error is being handled)
+            // If it's locked, we should wait and not make additional requests
+            if (AuthHandler.isProfileLocked(uriInfo.profile)) {
+                ZoweLogger.warn(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
+                return entry;
+            }
+
             if (isPdsMember) {
                 // PDS member
                 const pds = this._lookupParentDirectory(uri);
-                resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(pds.name, { attributes: true });
+                resp = await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(pds.name, { attributes: true });
             } else {
                 // Data Set
-                resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.parse(uri.path).name, { attributes: true });
+                const dsPath = (entry.metadata as DsEntryMetadata).extensionRemovedFromPath();
+                resp = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(path.posix.basename(dsPath), {
+                    attributes: true,
+                });
             }
         } catch (err) {
             if (err instanceof Error) {
                 ZoweLogger.error(err.message);
             }
+            await AuthUtils.handleProfileAuthOnError(err, profile);
             throw err;
         }
 
@@ -130,7 +145,18 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     private async fetchEntriesForProfile(uri: vscode.Uri, uriInfo: UriFsInfo, pattern: string): Promise<FilterEntry> {
         const profileEntry = this._lookupAsDirectory(uri, false) as FilterEntry;
 
-        const mvsApi = ZoweExplorerApiRegister.getMvsApi(uriInfo.profile);
+        // Wait for any ongoing authentication process to complete
+        await AuthHandler.waitForUnlock(uriInfo.profile);
+
+        // Check if the profile is locked (indicating an auth error is being handled)
+        // If it's locked, we should wait and not make additional requests
+        if (AuthHandler.isProfileLocked(uriInfo.profile)) {
+            ZoweLogger.warn(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
+            return profileEntry;
+        }
+
+        const profile = Profiles.getInstance().loadNamedProfile(uriInfo.profile.name);
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
         const datasetResponses: IZosFilesResponse[] = [];
         const dsPatterns = [
             ...new Set(
@@ -150,6 +176,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 }
             }
         } catch (err) {
+            await AuthUtils.handleProfileAuthOnError(err, uriInfo.profile);
             this._handleError(err, {
                 additionalContext: vscode.l10n.t("Failed to list datasets"),
                 retry: {
@@ -166,7 +193,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 let tempEntry = profileEntry.entries.get(ds.dsname);
                 if (tempEntry == null) {
                     let name = ds.dsname;
-                    if (ds.dsorg === "PO" || ds.dsorg === "PO-E") {
+                    if (ds.dsorg?.startsWith("PO")) {
                         // Entry is a PDS
                         tempEntry = new PdsEntry(ds.dsname);
                     } else if (ds.dsorg === "VS") {
@@ -193,9 +220,18 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     private async fetchEntriesForDataset(entry: PdsEntry, uri: vscode.Uri, uriInfo: UriFsInfo): Promise<void> {
         let members: IZosFilesResponse;
         try {
-            await AuthHandler.lockProfile(uriInfo.profile);
-            members = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(path.posix.basename(uri.path));
-            AuthHandler.unlockProfile(uriInfo.profile);
+            // Wait for any ongoing authentication process to complete
+            await AuthHandler.waitForUnlock(entry.metadata.profile);
+
+            // Check if the profile is locked (indicating an auth error is being handled)
+            // If it's locked, we should wait and not make additional requests
+            if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
+                ZoweLogger.warn(`[DatasetFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
+                return;
+            }
+
+            const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
+            members = await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(path.posix.basename(uri.path));
         } catch (err) {
             await AuthUtils.handleProfileAuthOnError(err, uriInfo.profile);
             throw err;
@@ -228,10 +264,25 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         // /DATA.SET/MEMBER
         const uriPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1).split("/");
         const pdsMember = uriPath.length === 2;
+
+        // Wait for any ongoing authentication process to complete
+        await AuthHandler.waitForUnlock(uriInfo.profile);
+
+        // Check if the profile is locked (indicating an auth error is being handled)
+        // If it's locked, we should wait and not make additional requests
+        if (AuthHandler.isProfileLocked(uriInfo.profile)) {
+            ZoweLogger.warn(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
+            if (entryExists) {
+                return entry;
+            }
+            throw vscode.FileSystemError.FileNotFound(uri);
+        }
+
         if (!entryExists) {
             try {
+                const profile = Profiles.getInstance().loadNamedProfile(uriInfo.profile.name);
                 if (pdsMember) {
-                    const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(uriPath[0]);
+                    const resp = await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(uriPath[0]);
                     entryIsDir = false;
                     const memberName = path.parse(uriPath[1]).name;
                     if (
@@ -242,7 +293,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         throw vscode.FileSystemError.FileNotFound(uri);
                     }
                 } else {
-                    const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(uriPath[0], {
+                    const resp = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(uriPath[0], {
                         attributes: true,
                     });
                     if (resp.success && resp.apiResponse?.items?.length > 0) {
@@ -255,6 +306,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 if (err instanceof Error) {
                     ZoweLogger.error(err.message);
                 }
+                await AuthUtils.handleProfileAuthOnError(err, uriInfo.profile);
                 throw err;
             }
         }
@@ -380,17 +432,26 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let dsEntry = this._lookupAsFile(uri, { silent: true }) as DsEntry | undefined;
         const bufBuilder = new BufferBuilder();
         const metadata = dsEntry?.metadata ?? this._getInfoFromUri(uri);
-        const profileEncoding = dsEntry?.encoding ? null : dsEntry?.metadata.profile.profile?.encoding;
+        const profile = Profiles.getInstance().loadNamedProfile(metadata.profile.name);
+        const profileEncoding = dsEntry?.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
         try {
-            await AuthHandler.lockProfile(metadata.profile);
-            const resp = await ZoweExplorerApiRegister.getMvsApi(metadata.profile).getContents(metadata.dsName, {
+            // Wait for any ongoing authentication process to complete
+            await AuthHandler.waitForUnlock(metadata.profile);
+
+            // Check if the profile is locked (indicating an auth error is being handled)
+            // If it's locked, we should wait and not make additional requests
+            if (AuthHandler.isProfileLocked(metadata.profile)) {
+                ZoweLogger.warn(`[DatasetFSProvider] Profile ${metadata.profile.name} is locked, waiting for authentication`);
+                return null;
+            }
+
+            const resp = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(metadata.dsName, {
                 binary: dsEntry?.encoding?.kind === "binary",
                 encoding: dsEntry?.encoding?.kind === "other" ? dsEntry?.encoding.codepage : profileEncoding,
-                responseTimeout: metadata.profile.profile?.responseTimeout,
+                responseTimeout: profile.profile?.responseTimeout,
                 returnEtag: true,
                 stream: bufBuilder,
             });
-            AuthHandler.unlockProfile(metadata.profile);
             const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
             //if an entry does not exist for the dataset, create it
             if (!dsEntry) {
@@ -509,7 +570,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let resp: IZosFilesResponse;
         try {
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile);
-            const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
+            const profile = Profiles.getInstance().loadNamedProfile(entry?.metadata.profile.name);
+            const profileEncoding = entry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
             resp = await mvsApi.uploadFromBuffer(Buffer.from(content), entry.metadata.dsName, {
                 binary: entry.encoding?.kind === "binary",
                 encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,

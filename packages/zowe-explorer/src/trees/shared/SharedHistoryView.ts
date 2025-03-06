@@ -37,6 +37,7 @@ export class SharedHistoryView extends WebView {
     }
 
     protected async onDidReceiveMessage(message: any): Promise<void> {
+        ZoweLogger.trace("HistoryView.onDidReceiveMessage called.");
         switch (message.command) {
             case "refresh":
                 await this.refreshView(message);
@@ -59,7 +60,7 @@ export class SharedHistoryView extends WebView {
                 this.showError(message);
                 break;
             case "update-selection":
-                this.updateSelection(message);
+                await this.updateSelection(message);
                 break;
             case "add-item":
                 await this.addItem(message);
@@ -93,11 +94,23 @@ export class SharedHistoryView extends WebView {
     }
 
     private getTreeProvider(type: string): Definitions.TreeProvider {
+        ZoweLogger.trace("HistoryView.getTreeProvider called.");
         return this.treeProviders[type === "jobs" ? "job" : type] as Definitions.TreeProvider;
     }
 
     private getHistoryData(type: string): Definitions.History {
+        ZoweLogger.trace("HistoryView.getHistoryData called.");
         const treeProvider = this.treeProviders[type] as Definitions.TreeProvider;
+        if (!treeProvider) {
+            ZoweLogger.error(`No tree provider found for type: ${type}`);
+            return {
+                search: [],
+                sessions: [],
+                fileHistory: [],
+                favorites: [],
+                encodingHistory: [],
+            };
+        }
         return {
             search: treeProvider.getSearchHistory(),
             sessions: treeProvider.getSessions(),
@@ -108,6 +121,7 @@ export class SharedHistoryView extends WebView {
     }
 
     private fetchEncodingHistory(): string[] {
+        ZoweLogger.trace("HistoryView.fetchEncodingHistory called.");
         return ZoweLocalStorage.getValue<string[]>(Definitions.LocalStorageKey.ENCODING_HISTORY) ?? [];
     }
 
@@ -116,9 +130,10 @@ export class SharedHistoryView extends WebView {
         Gui.errorMessage(message.attrs.errorMsg);
     }
 
-    private updateSelection(message): void {
+    private async updateSelection(message): Promise<void> {
         ZoweLogger.trace("HistoryView.updateSelection called.");
         this.currentSelection[message.attrs.type] = message.attrs.selection;
+        await this.refreshView(message);
     }
 
     private async addItem(message): Promise<void> {

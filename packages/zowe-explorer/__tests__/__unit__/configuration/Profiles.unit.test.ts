@@ -640,10 +640,8 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         });
 
         jest.spyOn(globalMocks.mockProfileInstance, "createNonSecureProfile").mockImplementation();
-        const expectedValue =
-            process.platform === "win32"
-                ? "file:\\globalPath\\.zowe\\zowe.config.json"
-                : "file:/globalPath/.zowe/zowe.config.json".split(path.sep).join(path.posix.sep);
+
+        const expectedValue = path.join("file:", "globalPath", ".zowe", "zowe.config.json");
 
         const spyConfig = jest.spyOn(Profiles.getInstance(), "openConfigFile").mockImplementation();
         await Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree);
@@ -1256,7 +1254,6 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
             getTokenTypeName: () => imperative.SessConstants.TOKEN_TYPE_APIML,
             login: () => "ajshdlfkjshdalfjhas",
         } as never);
-        jest.spyOn(Profiles.getInstance() as any, "loginCredentialPrompt").mockReturnValue(["fake", "12345"]);
         jest.spyOn(Profiles.getInstance() as any, "updateBaseProfileFileLogin").mockImplementation();
         await expect(Profiles.getInstance().ssoLogin(testNode, "fake")).resolves.not.toThrow();
     });
@@ -1266,7 +1263,6 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
             login: () => "ajshdlfkjshdalfjhas",
             getSession: () => globalMocks.testSession,
         } as never);
-        jest.spyOn(Profiles.getInstance() as any, "loginCredentialPrompt").mockReturnValue(["fake", "12345"]);
         await expect(Profiles.getInstance().ssoLogin(testNode, "fake")).resolves.not.toThrow();
     });
     it("should catch error getting token type and log warning", async () => {
@@ -1285,7 +1281,6 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
             login: jest.fn(),
         } as never);
         const loginBaseProfMock = jest.spyOn(ZoweVsCodeExtension, "ssoLogin").mockRejectedValueOnce(new Error("test error."));
-        jest.spyOn(Profiles.getInstance() as any, "loginCredentialPrompt").mockReturnValue(["fake", "12345"]);
         await expect(Profiles.getInstance().ssoLogin(testNode, "fake")).resolves.not.toThrow();
         expect(ZoweLogger.error).toHaveBeenCalled();
         loginBaseProfMock.mockRestore();
@@ -1298,7 +1293,6 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
         const profileUpdatedEmitterSpy = jest.spyOn(ZoweVsCodeExtension.onProfileUpdatedEmitter, "fire");
         const unlockProfileSpy = jest.spyOn(AuthHandler, "unlockProfile");
         const loginBaseProfMock = jest.spyOn(ZoweVsCodeExtension, "ssoLogin").mockResolvedValueOnce(true);
-        jest.spyOn(Profiles.getInstance() as any, "loginCredentialPrompt").mockReturnValue(["fake", "12345"]);
         await expect(Profiles.getInstance().ssoLogin(testNode, "fake")).resolves.not.toThrow();
         expect(profileUpdatedEmitterSpy).toHaveBeenCalledTimes(1);
         expect(profileUpdatedEmitterSpy).toHaveBeenCalledWith(globalMocks.testProfile);
@@ -1531,7 +1525,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
             getTokenTypeName: () => "jwtToken",
         } as never);
-        jest.spyOn(Profiles.getInstance() as any, "loginWithRegularProfile").mockResolvedValue(true);
+        jest.spyOn(ZoweVsCodeExtension as any, "directConnectLogin").mockResolvedValue(true);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
         expect(Gui.showMessage).toHaveBeenCalled();
         expect(testNode.profile.profile.tokenType).toBe(modifiedTestNode.profile.profile.tokenType);
@@ -1589,7 +1583,6 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
             getTokenTypeName: () => "jwtToken",
         } as never);
-        jest.spyOn(Profiles.getInstance() as any, "loginWithRegularProfile").mockResolvedValue(false);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
         expect(Gui.errorMessage).toHaveBeenCalled();
         expect(testNode.profile.profile.tokenType).toBe(modifiedTestNode.profile.profile.tokenType);
@@ -2009,36 +2002,6 @@ describe("Profiles Unit Tests - function validationArraySetup", () => {
             name: globalMocks.testProfile.name,
             setting: true,
         });
-    });
-});
-
-describe("Profiles Unit Tests - function loginCredentialPrompt", () => {
-    afterEach(() => {
-        jest.resetAllMocks();
-        jest.clearAllMocks();
-    });
-
-    it("should show a gui message if there is not a newUser", async () => {
-        const privateProfile = Profiles.getInstance() as any;
-        Object.defineProperty(privateProfile, "userInfo", {
-            value: () => null,
-        });
-        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
-        await expect(privateProfile.loginCredentialPrompt()).resolves.toEqual(undefined);
-        expect(showMessageSpy).toHaveBeenCalledTimes(1);
-    });
-
-    it("should show a gui message if there is not a newUser", async () => {
-        const privateProfile = Profiles.getInstance() as any;
-        Object.defineProperty(Profiles, "getInstance", {
-            value: () => ({
-                userInfo: () => "test",
-                passwordInfo: () => null,
-            }),
-        });
-        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
-        await expect(privateProfile.loginCredentialPrompt()).resolves.toEqual(undefined);
-        expect(showMessageSpy).toHaveBeenCalledTimes(1);
     });
 });
 

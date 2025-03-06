@@ -249,8 +249,6 @@
   "Binary": "Binary",
   "Create a new filter": "Create a new filter",
   "Failed to move file {0}: {1}": "Failed to move file {0}: {1}",
-  "Confirm": "Confirm",
-  "One or more items may be overwritten from this drop operation. Confirm or cancel?": "One or more items may be overwritten from this drop operation. Confirm or cancel?",
   "Moving USS files...": "Moving USS files...",
   "Enter a new name for the {0}/Node type": {
     "message": "Enter a new name for the {0}",
@@ -314,12 +312,6 @@
   "Uploading file to USS tree": "Uploading file to USS tree",
   "Upload action was cancelled.": "Upload action was cancelled.",
   "Uploading USS file": "Uploading USS file",
-  "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}/File names": {
-    "message": "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
-    "comment": [
-      "File names"
-    ]
-  },
   "Delete action was canceled.": "Delete action was canceled.",
   "Copying file structure...": "Copying file structure...",
   "The paste operation is not supported for this node.": "The paste operation is not supported for this node.",
@@ -369,6 +361,8 @@
       "Name of USS session"
     ]
   },
+  "Confirm": "Confirm",
+  "One or more items may be overwritten from this drop operation. Confirm or cancel?": "One or more items may be overwritten from this drop operation. Confirm or cancel?",
   "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",
   "Team config file deleted, refreshing Zowe Explorer.": "Team config file deleted, refreshing Zowe Explorer.",
   "Team config file updated, refreshing Zowe Explorer.": "Team config file updated, refreshing Zowe Explorer.",
@@ -464,6 +458,19 @@
   "Get JCL": "Get JCL",
   "Display in Tree": "Display in Tree",
   "Download": "Download",
+  "Name": "Name",
+  "Class": "Class",
+  "ID": "ID",
+  "Status": "Status",
+  "Subsystem": "Subsystem",
+  "Type": "Type",
+  "Job Correlator": "Job Correlator",
+  "Phase": "Phase",
+  "Phase Name": "Phase Name",
+  "Time Started": "Time Started",
+  "Time Submitted": "Time Submitted",
+  "Time Ended": "Time Ended",
+  "Error Details": "Error Details",
   "Jobs with ID: {0}/Job Search ID": {
     "message": "Jobs with ID: {0}",
     "comment": [
@@ -478,16 +485,6 @@
       "Job Status"
     ]
   },
-  "Name": "Name",
-  "Class": "Class",
-  "ID": "ID",
-  "Status": "Status",
-  "Subsystem": "Subsystem",
-  "Type": "Type",
-  "Job Correlator": "Job Correlator",
-  "Phase": "Phase",
-  "Phase Name": "Phase Name",
-  "Error Details": "Error Details",
   "Fetching spool file...": "Fetching spool file...",
   "Failed to delete job {0}/Job name": {
     "message": "Failed to delete job {0}",
@@ -507,15 +504,8 @@
       "Job name"
     ]
   },
-  "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}/Jobs lengthJob names": {
-    "message": "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}",
-    "comment": [
-      "Jobs length",
-      "Job names"
-    ]
-  },
-  "The following jobs were deleted: {0}/Deleted jobs": {
-    "message": "The following jobs were deleted: {0}",
+  "The following jobs were deleted: {0}{1}/Deleted jobs": {
+    "message": "The following jobs were deleted: {0}{1}",
     "comment": [
       "Deleted jobs"
     ]
@@ -581,6 +571,9 @@
   "Date Modified": "Date Modified",
   "User ID": "User ID",
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
+  "Cannot drop a sequential dataset or a partitioned dataset onto another PDS.": "Cannot drop a sequential dataset or a partitioned dataset onto another PDS.",
+  "Cannot drop a member onto a sequential dataset.": "Cannot drop a member onto a sequential dataset.",
+  "Moving MVS files...": "Moving MVS files...",
   "Initializing profiles with data set favorites.": "Initializing profiles with data set favorites.",
   "No data set favorites found.": "No data set favorites found.",
   "Error creating data set favorite node: {0} for profile {1}./LabelProfile name": {
@@ -751,19 +744,13 @@
       "Data Sets to delete"
     ]
   },
-  "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}/Data Sets to delete lengthData Sets to delete": {
-    "message": "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}",
-    "comment": [
-      "Data Sets to delete length",
-      "Data Sets to delete"
-    ]
-  },
   "Deleting items": "Deleting items",
-  "The following {0} item(s) were deleted: {1}/Data Sets deleted lengthData Sets deleted": {
-    "message": "The following {0} item(s) were deleted: {1}",
+  "The following {0} item(s) were deleted:\n{1}{2}/Data Sets deleted lengthData Sets deletedAdditional datasets count": {
+    "message": "The following {0} item(s) were deleted:\n{1}{2}",
     "comment": [
       "Data Sets deleted length",
-      "Data Sets deleted"
+      "Data Sets deleted",
+      "Additional datasets count"
     ]
   },
   "Name of member": "Name of member",
@@ -864,8 +851,9 @@
   },
   "Unable to gather more information": "Unable to gather more information",
   "Invalid paste. Copy data set(s) first.": "Invalid paste. Copy data set(s) first.",
-  "Name of data set member": "Name of data set member",
   "Copying data sets is not supported.": "Copying data sets is not supported.",
+  "Copying data sets cross lpars is not yet supported for this profile.": "Copying data sets cross lpars is not yet supported for this profile.",
+  "Name of data set member": "Name of data set member",
   "Replace": "Replace",
   "The data set member already exists.\nDo you want to replace it?": "The data set member already exists.\nDo you want to replace it?",
   "The physical sequential (PS) data set already exists.\nDo you want to replace it?": "The physical sequential (PS) data set already exists.\nDo you want to replace it?",
@@ -1091,8 +1079,6 @@
   "Select the location of the config file to edit": "Select the location of the config file to edit",
   "Global: in the Zowe home directory": "Global: in the Zowe home directory",
   "Project: in the current working directory": "Project: in the current working directory",
-  "Enter the user name for the connection. Leave blank to not store.": "Enter the user name for the connection. Leave blank to not store.",
-  "Enter the password for the connection. Leave blank to not store.": "Enter the password for the connection. Leave blank to not store.",
   "Do you wish to apply this for all trees?": "Do you wish to apply this for all trees?",
   "Apply to all trees": "Apply to all trees",
   "Apply to current tree selected": "Apply to current tree selected",

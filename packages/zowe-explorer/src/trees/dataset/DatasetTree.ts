@@ -25,6 +25,7 @@ import {
     FsAbstractUtils,
     DatasetMatch,
     ZoweExplorerApiType,
+    ZoweScheme,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetFSProvider } from "./DatasetFSProvider";
@@ -43,6 +44,7 @@ import { FilterDescriptor, FilterItem } from "../../management/FilterManagement"
 import { IconUtils } from "../../icons/IconUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { DataSetTemplates } from "./DatasetTemplates";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 
 /**
  * A tree that contains nodes of sessions and data sets
@@ -64,8 +66,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     // public memberPattern: IZoweDatasetTreeNode[] = [];
     private treeView: vscode.TreeView<IZoweDatasetTreeNode>;
 
-    public dragMimeTypes: string[] = ["application/vnd.code.tree.zowe.ds.explorer"];
+    public dragMimeTypes: string[] = [];
     public dropMimeTypes: string[] = ["application/vnd.code.tree.zowe.ds.explorer"];
+
+    private draggedNodes: Record<string, IZoweDatasetTreeNode> = {};
 
     public constructor() {
         super(
@@ -83,10 +87,168 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         this.mSessionNodes = [this.mFavoriteSession];
         this.treeView = Gui.createTreeView<IZoweDatasetTreeNode>("zowe.ds.explorer", {
             treeDataProvider: this,
+            dragAndDropController: this,
             canSelectMany: true,
         });
         // eslint-disable-next-line @typescript-eslint/unbound-method
         this.treeView.onDidCollapseElement(TreeViewUtils.refreshIconOnCollapse([SharedContext.isPds, SharedContext.isDsSession], this));
+    }
+
+    public handleDrag(source: IZoweDatasetTreeNode[], dataTransfer: vscode.DataTransfer, _token: vscode.CancellationToken): void {
+        const items = [];
+        for (const srcItem of source) {
+            this.draggedNodes[srcItem.resourceUri.path] = srcItem;
+            items.push({
+                label: srcItem.label,
+                uri: srcItem.resourceUri,
+            });
+        }
+        dataTransfer.set("application/vnd.code.tree.zowe.ds.explorer", new vscode.DataTransferItem(items));
+    }
+
+    private async crossLparMove(
+        sourceNode: IZoweDatasetTreeNode,
+        sourceUri: vscode.Uri,
+        destUri: vscode.Uri,
+        recursiveCall?: boolean
+    ): Promise<void> {
+        const destinationInfo = FsAbstractUtils.getInfoForUri(destUri, Profiles.getInstance());
+        if (SharedContext.isPds(sourceNode)) {
+            if (!DatasetFSProvider.instance.exists(destUri)) {
+                // create a PDS on remote
+                try {
+                    await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
+                        zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
+                        sourceNode.getLabel() as string,
+                        {}
+                    );
+                } catch (err) {
+                    //error
+                }
+                // create directory entry in local
+                DatasetFSProvider.instance.createDirectory(destUri);
+            }
+            const children = await sourceNode.getChildren();
+            for (const childNode of children) {
+                // move members within the folder to the destination
+                await this.crossLparMove(
+                    childNode,
+                    sourceUri.with({
+                        path: path.posix.join(sourceUri.path, childNode.getLabel() as string),
+                    }),
+                    destUri.with({
+                        path: path.posix.join(destUri.path, childNode.getLabel() as string),
+                    }),
+                    true
+                );
+            }
+            await vscode.workspace.fs.delete(sourceUri, { recursive: true });
+        } else {
+            try {
+                const entry = await DatasetFSProvider.instance.fetchDatasetAtUri(destUri);
+                if (entry == null) {
+                    if (sourceNode.contextValue === Constants.DS_MEMBER_CONTEXT) {
+                        const dsname: string = destUri.path.match(/^\/[^/]+\/(.*?)\/[^/]+$/)[1] + "(" + (sourceNode.getLabel() as string) + ")";
+                        await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, {});
+                    } else {
+                        await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
+                            zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
+                            sourceNode.getLabel() as string,
+                            {}
+                        );
+                    }
+                }
+            } catch (err) {
+                //file might already exist. Ignore the error and try to write it to lpar
+            }
+            // read the contents from the source LPAR
+            const contents = await DatasetFSProvider.instance.readFile(sourceNode.resourceUri);
+            //write the contents to the destination LPAR
+            try {
+                await DatasetFSProvider.instance.writeFile(
+                    destUri.with({
+                        query: "forceUpload=true",
+                    }),
+                    contents,
+                    { create: true, overwrite: true }
+                );
+            } catch (err) {
+                // If the write fails, we cannot move to the next file
+                if (err instanceof Error) {
+                    Gui.errorMessage(
+                        vscode.l10n.t("Failed to move file {0}: {1}", destUri.path.substring(destinationInfo.slashAfterProfilePos), err.message)
+                    );
+                }
+                return;
+            }
+
+            if (!recursiveCall) {
+                // Delete any files from the selection on the source LPAR
+                await vscode.workspace.fs.delete(sourceNode.resourceUri, { recursive: false });
+            }
+        }
+    }
+
+    public async handleDrop(
+        targetNode: IZoweDatasetTreeNode | undefined,
+        dataTransfer: vscode.DataTransfer,
+        _token: vscode.CancellationToken
+    ): Promise<void> {
+        const droppedItems = dataTransfer.get("application/vnd.code.tree.zowe.ds.explorer");
+        if (!droppedItems) {
+            return;
+        }
+
+        let target = targetNode;
+        for (const item of droppedItems.value) {
+            const node = this.draggedNodes[item.uri.path];
+            if (SharedContext.isPds(target) || SharedContext.isDsMember(target)) {
+                if (SharedContext.isPds(node) || SharedContext.isDs(node)) {
+                    Gui.errorMessage(vscode.l10n.t("Cannot drop a sequential dataset or a partitioned dataset onto another PDS."));
+                    return;
+                }
+            }
+            if (SharedContext.isDsMember(node) && SharedContext.isDs(target)) {
+                Gui.errorMessage(vscode.l10n.t("Cannot drop a member onto a sequential dataset."));
+                return;
+            }
+        }
+
+        //get the closest parent folder if the target is not a pds
+        if (!SharedContext.isPds(target)) {
+            target = target.getParent() as IZoweDatasetTreeNode;
+        }
+
+        const overwrite = await SharedUtils.handleDragAndDropOverwrite(target, this.draggedNodes);
+        if (overwrite === false) {
+            return;
+        }
+
+        const movingMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Moving MVS files...")}`);
+        const parentsToUpdate = new Set<IZoweDatasetTreeNode>();
+
+        for (const item of droppedItems.value) {
+            const node = this.draggedNodes[item.uri.path];
+            if (node.getParent() === target) {
+                //skip nodes that are direct children of the target node
+                continue;
+            }
+
+            const newUriForNode = vscode.Uri.from({
+                scheme: ZoweScheme.DS,
+                path: path.posix.join("/", target.resourceUri.path, item.label as string),
+            });
+
+            await this.crossLparMove(node, node.resourceUri, newUriForNode);
+
+            parentsToUpdate.add(node.getParent() as IZoweDatasetTreeNode);
+        }
+        for (const parent of parentsToUpdate) {
+            this.refreshElement(parent);
+        }
+        this.refreshElement(target);
+        movingMsg.dispose();
+        this.draggedNodes = {};
     }
 
     /**
@@ -240,6 +402,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         ZoweLogger.trace("DatasetTree.initializeFavorites called.");
         this.log = log;
         ZoweLogger.debug(vscode.l10n.t("Initializing profiles with data set favorites."));
+        await this.refreshFavorites();
+    }
+
+    public async refreshFavorites(): Promise<void> {
         const lines: string[] = this.mHistory.readFavorites();
         if (lines.length === 0) {
             ZoweLogger.debug(vscode.l10n.t("No data set favorites found."));
@@ -275,8 +441,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         ZoweLogger.trace("DatasetTree.initializeFavChildNodeForProfile called.");
         const profile = parentNode.getProfile();
         let node: ZoweDatasetNode;
-        if (contextValue === Constants.DS_PDS_CONTEXT || contextValue === Constants.DS_DS_CONTEXT) {
-            if (contextValue === Constants.DS_PDS_CONTEXT) {
+        if (contextValue.includes(Constants.DS_PDS_CONTEXT) || contextValue.includes(Constants.DS_DS_CONTEXT)) {
+            if (contextValue.includes(Constants.DS_PDS_CONTEXT)) {
                 node = new ZoweDatasetNode({
                     label,
                     collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -303,7 +469,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (icon) {
                 node.iconPath = icon.path;
             }
-        } else if (contextValue === Constants.DS_SESSION_CONTEXT) {
+        } else if (contextValue.includes(Constants.DS_SESSION_CONTEXT)) {
             node = new ZoweDatasetNode({
                 label,
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -427,6 +593,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         if (profile) {
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
+                return;
+            }
+            // If there is no API registered for the profile type, do nothing
+            if (!ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes().includes(profile.type)) {
+                ZoweLogger.warn(`MVS API is not registered for profile type ${profile.type}, skipping ${profile.name}`);
                 return;
             }
             // Uses loaded profile to create a session with the MVS API
@@ -562,9 +733,32 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         if (sessionNode) {
             const matchingNode = sessionNode.children.find((node) => node.label === beforeLabel);
             if (matchingNode) {
+                const newUri = matchingNode.resourceUri.with({
+                    path: path.posix.join(path.posix.dirname(matchingNode.resourceUri.path), afterLabel),
+                });
                 matchingNode.label = afterLabel;
                 matchingNode.tooltip = afterLabel;
+                matchingNode.resourceUri = newUri;
                 this.refreshElement(matchingNode);
+                if (SharedContext.isPds(matchingNode)) {
+                    for (const child of matchingNode.children) {
+                        child.resourceUri = child.resourceUri.with({
+                            path: path.posix.join(newUri.path, child.resourceUri.path.substring(child.resourceUri.path.lastIndexOf("/") + 1)),
+                        });
+                        child.command = {
+                            title: "",
+                            command: "vscode.open",
+                            arguments: [child.resourceUri],
+                        };
+                    }
+                } else if (matchingNode.contextValue.includes(Constants.DS_DS_CONTEXT)) {
+                    matchingNode.command = {
+                        title: "",
+                        command: "vscode.open",
+                        arguments: [matchingNode.resourceUri],
+                    };
+                }
+                this.refreshElement(matchingNode.getParent() as IZoweDatasetTreeNode);
             }
         }
     }
@@ -573,14 +767,38 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
      * Renames a node from the favorites list
      *
      * @param node
+     * @param newLabel
      */
     public renameFavorite(node: IZoweDatasetTreeNode, newLabel: string): void {
         ZoweLogger.trace("DatasetTree.renameFavorite called.");
         const matchingNode = this.findFavoritedNode(node);
+        const newUri = node.resourceUri.with({
+            path: path.posix.join(path.posix.dirname(node.resourceUri.path), newLabel),
+        });
         if (matchingNode) {
             matchingNode.label = newLabel;
             matchingNode.tooltip = newLabel;
+            matchingNode.resourceUri = newUri;
             this.refreshElement(matchingNode as IZoweDatasetTreeNode);
+            if (SharedContext.isPds(matchingNode)) {
+                for (const child of matchingNode.children) {
+                    child.resourceUri = child.resourceUri.with({
+                        path: path.posix.join(newUri.path, child.resourceUri.path.substring(child.resourceUri.path.lastIndexOf("/") + 1)),
+                    });
+                    child.command = {
+                        title: "",
+                        command: "vscode.open",
+                        arguments: [child.resourceUri],
+                    };
+                }
+            } else if (matchingNode.contextValue.includes(Constants.DS_DS_CONTEXT)) {
+                matchingNode.command = {
+                    title: "",
+                    command: "vscode.open",
+                    arguments: [matchingNode.resourceUri],
+                };
+            }
+            this.refreshElement(matchingNode.getParent() as IZoweDatasetTreeNode);
         }
     }
 
@@ -1270,6 +1488,12 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         arguments: [child.resourceUri],
                     };
                 }
+            } else if (node.contextValue.includes(Constants.DS_DS_CONTEXT)) {
+                node.command = {
+                    title: "",
+                    command: "vscode.open",
+                    arguments: [node.resourceUri],
+                };
             }
 
             this.refreshElement(node.getParent() as IZoweDatasetTreeNode);

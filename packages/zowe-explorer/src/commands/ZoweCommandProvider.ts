@@ -125,6 +125,10 @@ export abstract class ZoweCommandProvider {
                 this.terminal = vscode.window.createTerminal({ name: `(${profile.name}) ${this.terminalName}`, pty: this.pseudoTerminal });
                 this.terminal.show();
             } else {
+                if (command.length === 0) {
+                    Gui.showMessage(this.operationCancelled);
+                    return;
+                }
                 this.outputChannel ??= Gui.createOutputChannel(this.terminalName);
                 this.outputChannel.appendLine(this.formatCommandLine(command, profile));
                 const response = await Gui.withProgress(

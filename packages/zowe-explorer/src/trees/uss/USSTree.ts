@@ -182,30 +182,9 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             target = target.getParent() as IZoweUSSTreeNode;
         }
 
-        // If the target path fully contains the path of the dragged node,
-        // the user is trying to move a parent node into its child - invalid operation
-        const movedIntoChild = Object.values(this.draggedNodes).some((n) => target.resourceUri.path.startsWith(n.resourceUri.path));
-        if (movedIntoChild) {
-            this.draggedNodes = {};
+        const overwrite = await SharedUtils.handleDragAndDropOverwrite(target, this.draggedNodes);
+        if (overwrite === false) {
             return;
-        }
-
-        // determine if any overwrites may occur
-        const willOverwrite = Object.values(this.draggedNodes).some((n) => target.children?.find((tc) => tc.label === n.label) != null);
-        if (willOverwrite) {
-            const userOpts = [vscode.l10n.t("Confirm")];
-            const resp = await Gui.warningMessage(
-                vscode.l10n.t("One or more items may be overwritten from this drop operation. Confirm or cancel?"),
-                {
-                    items: userOpts,
-                    vsCodeOpts: {
-                        modal: true,
-                    },
-                }
-            );
-            if (resp == null || resp !== userOpts[0]) {
-                return;
-            }
         }
 
         const movingMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Moving USS files...")}`);
@@ -466,6 +445,11 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         if (profile) {
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
+                return;
+            }
+            // If there is no API registered for the profile type, do nothing
+            if (!ZoweExplorerApiRegister.getInstance().registeredUssApiTypes().includes(profile.type)) {
+                ZoweLogger.warn(`USS API is not registered for profile type ${profile.type}, skipping ${profile.name}`);
                 return;
             }
             // Uses loaded profile to create a session with the USS API
@@ -841,6 +825,10 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         ZoweLogger.trace("USSTree.initializeFavorites called.");
         this.log = log;
         ZoweLogger.debug(vscode.l10n.t("Initializing profiles with USS favorites."));
+        await this.refreshFavorites();
+    }
+
+    public async refreshFavorites(): Promise<void> {
         const lines: string[] = this.mHistory.readFavorites();
         if (lines.length === 0) {
             ZoweLogger.debug(vscode.l10n.t("No USS favorites found."));

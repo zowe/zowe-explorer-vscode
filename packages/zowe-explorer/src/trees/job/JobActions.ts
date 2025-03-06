@@ -62,11 +62,15 @@ export class JobActions {
         ZoweLogger.trace("job.actions.deleteMultipleJobs called.");
         const deleteButton = vscode.l10n.t("Delete");
         const toJobname = (jobNode: IZoweJobTreeNode): string => `${jobNode.job.jobname}(${jobNode.job.jobid})`;
+        const jobNames = jobs.map(toJobname);
+        let displayedJobNames = jobNames.slice(0, Constants.MAX_DISPLAYED_DELETE_NAMES).join("\n");
+        let additionalJobsCount = jobNames.length - Constants.MAX_DISPLAYED_DELETE_NAMES;
         const message = vscode.l10n.t({
             message:
-                "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}",
-            args: [jobs.length, jobs.map(toJobname).toString().replace(/(,)/g, "\n")],
-            comment: ["Jobs length", "Job names"],
+                "Are you sure you want to delete the following {0} items?\n" +
+                "This will permanently remove the following jobs from your system.\n\n{1}{2}",
+            args: [jobs.length, displayedJobNames, additionalJobsCount > 0 ? `\n...and ${additionalJobsCount} more` : ""],
+            comment: ["Jobs length", "Job names", "Additional jobs count"],
         });
         const deleteChoice = await Gui.warningMessage(message, {
             items: [deleteButton],
@@ -101,10 +105,12 @@ export class JobActions {
             })
             .filter((result) => result !== undefined);
         if (deletedJobs.length) {
+            displayedJobNames = deletedJobs.slice(0, Constants.MAX_DISPLAYED_DELETE_NAMES).map(toJobname).join(", ");
+            additionalJobsCount = deletedJobs.length - Constants.MAX_DISPLAYED_DELETE_NAMES;
             Gui.showMessage(
                 vscode.l10n.t({
-                    message: "The following jobs were deleted: {0}",
-                    args: [deletedJobs.map(toJobname).toString().replace(/(,)/g, ", ")],
+                    message: "The following jobs were deleted: {0}{1}",
+                    args: [displayedJobNames, additionalJobsCount > 0 ? `, ...and ${additionalJobsCount} more` : ""],
                     comment: ["Deleted jobs"],
                 })
             );
