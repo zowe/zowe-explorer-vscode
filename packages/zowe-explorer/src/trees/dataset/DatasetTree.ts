@@ -240,6 +240,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         ZoweLogger.trace("DatasetTree.initializeFavorites called.");
         this.log = log;
         ZoweLogger.debug(vscode.l10n.t("Initializing profiles with data set favorites."));
+        await this.refreshFavorites();
+    }
+
+    public async refreshFavorites(): Promise<void> {
         const lines: string[] = this.mHistory.readFavorites();
         if (lines.length === 0) {
             ZoweLogger.debug(vscode.l10n.t("No data set favorites found."));
@@ -275,8 +279,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         ZoweLogger.trace("DatasetTree.initializeFavChildNodeForProfile called.");
         const profile = parentNode.getProfile();
         let node: ZoweDatasetNode;
-        if (contextValue === Constants.DS_PDS_CONTEXT || contextValue === Constants.DS_DS_CONTEXT) {
-            if (contextValue === Constants.DS_PDS_CONTEXT) {
+        if (contextValue.includes(Constants.DS_PDS_CONTEXT) || contextValue.includes(Constants.DS_DS_CONTEXT)) {
+            if (contextValue.includes(Constants.DS_PDS_CONTEXT)) {
                 node = new ZoweDatasetNode({
                     label,
                     collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -303,7 +307,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (icon) {
                 node.iconPath = icon.path;
             }
-        } else if (contextValue === Constants.DS_SESSION_CONTEXT) {
+        } else if (contextValue.includes(Constants.DS_SESSION_CONTEXT)) {
             node = new ZoweDatasetNode({
                 label,
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
