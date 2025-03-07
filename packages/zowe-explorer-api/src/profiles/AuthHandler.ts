@@ -40,7 +40,7 @@ export type ProfileLike = string | imperative.IProfileLoaded;
 export class AuthHandler {
     private static authPromptLocks = new Map<string, Mutex>();
     private static profileLocks = new Map<string, Mutex>();
-    private static enabledProfileTypes: Set<string> = new Set(["zosmf", "zftp"]);
+    private static enabledProfileTypes: Set<string> = new Set(["zosmf"]);
 
     /**
      * Enables profile locks for the given type.
