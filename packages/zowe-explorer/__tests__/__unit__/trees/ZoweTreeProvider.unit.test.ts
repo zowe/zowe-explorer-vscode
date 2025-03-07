@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { imperative, ProfilesCache, Validation, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { imperative, ProfilesCache, Validation, PersistenceSchemaEnum, Sorting } from "@zowe/zowe-explorer-api";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { ZoweTreeProvider } from "../../../src/trees/ZoweTreeProvider";
 import {
@@ -149,6 +149,7 @@ async function createGlobalMocks() {
     Object.defineProperty(SettingsConfig, "getDirectValue", {
         value: createGetConfigMock({
             "zowe.automaticProfileValidation": true,
+            "zowe.ds.default.sort": Sorting.DatasetSortOpts.Name,
         }),
     });
 
