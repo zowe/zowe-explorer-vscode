@@ -207,6 +207,10 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
         const bufBuilder = new BufferBuilder();
 
+        const metadata = spoolEntry.metadata ?? this._getInfoFromUri(uri);
+        const profile = Profiles.getInstance().loadNamedProfile(metadata.profile.name);
+        const profileEncoding = spoolEntry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
+
         const jesApi = ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile);
         await AuthHandler.waitForUnlock(spoolEntry.metadata.profile);
         try {
@@ -214,15 +218,10 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                 const spoolDownloadObject: IDownloadSpoolContentParms = {
                     jobFile: spoolEntry.spool,
                     stream: bufBuilder,
+                    binary: spoolEntry.encoding?.kind === "binary",
+                    encoding: spoolEntry.encoding?.kind === "other" ? spoolEntry.encoding.codepage : profileEncoding,
                 };
 
-                // Handle encoding and binary options
-                if (spoolEntry.encoding) {
-                    spoolDownloadObject.binary = spoolEntry.encoding.kind === "binary";
-                    if (spoolEntry.encoding.kind === "other") {
-                        spoolDownloadObject.encoding = spoolEntry.encoding.codepage;
-                    }
-                }
                 await jesApi.downloadSingleSpool(spoolDownloadObject);
             } else {
                 const jobEntry = this._lookupParentDirectory(uri) as JobEntry;
