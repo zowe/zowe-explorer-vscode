@@ -25,6 +25,7 @@ import {
     createTeamConfigMock,
     createUnsecureTeamConfigMock,
     createMockNode,
+    createGetConfigMock,
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import {
@@ -37,6 +38,7 @@ import {
     Validation,
     FileManagement,
     ProfilesCache,
+    Sorting,
     AuthHandler,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/configuration/Profiles";
@@ -116,6 +118,15 @@ function createGlobalMocks(): { [key: string]: any } {
                 onCancellationRequested: jest.fn(),
             };
             return callback(progress, token);
+        }),
+        configurable: true,
+    });
+
+    Object.defineProperty(SettingsConfig, "getDirectValue", {
+        value: createGetConfigMock({
+            "zowe.ds.default.sort": Sorting.DatasetSortOpts.Name,
+            "zowe.jobs.default.sort": Sorting.JobSortOpts.Id,
+            [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED]: false,
         }),
         configurable: true,
     });
@@ -582,7 +593,15 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         });
 
         Object.defineProperty(SettingsConfig, "getDirectValue", {
-            value: jest.fn().mockReturnValue(true),
+            value: jest.fn((key: string) => {
+                if (key === "zowe.ds.default.sort") {
+                    return Sorting.DatasetSortOpts.Name;
+                }
+                if (key === "zowe.jobs.default.sort") {
+                    return Sorting.JobSortOpts.Id;
+                }
+                return false;
+            }),
             configurable: true,
         });
         const spyConfig = jest.spyOn(Profiles.getInstance(), "openConfigFile").mockImplementation();
@@ -954,6 +973,8 @@ describe("Profiles Unit Tests - function deleteProfile", () => {
             sessions: ["test", "test1", "test2"],
             fileHistory: ["[TEST]: TEST.LIST"],
             searchHistory: ["TEST.*"],
+            "zowe.ds.default.sort": Sorting.DatasetSortOpts.Name,
+            "zowe.jobs.default.sort": Sorting.JobSortOpts.Id,
         });
 
         // mock USS call to vs code settings
@@ -964,6 +985,8 @@ describe("Profiles Unit Tests - function deleteProfile", () => {
             sessions: ["test", "test1", "test2"],
             fileHistory: ["[TEST]: /u/test/test.txt"],
             searchHistory: ["/u/test"],
+            "zowe.ds.default.sort": Sorting.DatasetSortOpts.Name,
+            "zowe.jobs.default.sort": Sorting.JobSortOpts.Id,
         });
 
         // mock Jobs call to vs code settings
@@ -974,6 +997,8 @@ describe("Profiles Unit Tests - function deleteProfile", () => {
             sessions: ["test", "test1", "test2"],
             fileHistory: ["TEST"],
             searchHistory: ["Owner:TEST Prefix:*"],
+            "zowe.ds.default.sort": Sorting.DatasetSortOpts.Name,
+            "zowe.jobs.default.sort": Sorting.JobSortOpts.Id,
         });
 
         await expect(Profiles.getInstance().deleteProfile(datasetTree)).resolves.not.toThrow();
@@ -1942,7 +1967,15 @@ describe("Profiles Unit Tests - function createNonSecureProfile", () => {
         const changingConfig = globalMocks.testTeamConfigProfile;
         const privateProfile = Profiles.getInstance() as any;
         Object.defineProperty(SettingsConfig, "getDirectValue", {
-            value: jest.fn().mockReturnValue(false),
+            value: jest.fn((key: string) => {
+                if (key === "zowe.ds.default.sort") {
+                    return Sorting.DatasetSortOpts.Name;
+                }
+                if (key === "zowe.jobs.default.sort") {
+                    return Sorting.JobSortOpts.Id;
+                }
+                return false;
+            }),
             configurable: true,
         });
         expect(privateProfile.createNonSecureProfile(changingConfig)).toBeUndefined();

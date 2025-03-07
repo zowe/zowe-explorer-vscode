@@ -88,10 +88,15 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         if (this.getParent() == null || this.getParent().label === vscode.l10n.t("Favorites")) {
-            // set default sort options for session nodes
+            // read sort options from settings file
+            const sortSetting = SharedUtils.getDefaultSortOptions(
+                DatasetUtils.DATASET_SORT_OPTS,
+                Constants.SETTINGS_DS_DEFAULT_SORT,
+                Sorting.DatasetSortOpts
+            );
             this.sort = {
-                method: Sorting.DatasetSortOpts.Name,
-                direction: Sorting.SortDirection.Ascending,
+                method: sortSetting.method,
+                direction: sortSetting.direction,
             };
         }
 
