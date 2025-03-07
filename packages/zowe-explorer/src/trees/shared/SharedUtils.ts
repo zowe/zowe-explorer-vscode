@@ -231,10 +231,12 @@ export class SharedUtils {
             zosEncoding = await UssFSProvider.instance.fetchEncodingForUri(node.resourceUri);
         }
         let currentEncoding = zosEncoding ? USSUtils.zosEncodingToString(zosEncoding) : await SharedUtils.getCachedEncoding(node);
-        if (zosEncoding?.kind === "binary") {
+        if (zosEncoding?.kind === "binary" || currentEncoding === "binary") {
             currentEncoding = binaryItem.label;
-        } else if (zosEncoding === null || zosEncoding?.kind === "text" || currentEncoding === null || currentEncoding === "text") {
+        } else if (zosEncoding?.kind === "text" || currentEncoding === "text") {
             currentEncoding = ebcdicItem.label;
+        } else if (zosEncoding == null && currentEncoding == null) {
+            currentEncoding = profile.profile?.encoding ?? ebcdicItem.label;
         }
         const encodingHistory = ZoweLocalStorage.getValue<string[]>(Definitions.LocalStorageKey.ENCODING_HISTORY) ?? [];
         if (encodingHistory.length > 0) {
@@ -414,7 +416,7 @@ export class SharedUtils {
             direction: sortSetting?.direction ?? defaultDirection,
         };
     }
-  
+
     public static async handleDragAndDropOverwrite(
         target: IZoweDatasetTreeNode | IZoweUSSTreeNode | undefined,
         draggedNodes: Record<string, IZoweDatasetTreeNode | IZoweUSSTreeNode>
