@@ -169,7 +169,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 let tempEntry = profileEntry.entries.get(ds.dsname);
                 if (tempEntry == null) {
                     let name = ds.dsname;
-                    if (ds.dsorg === "PO" || ds.dsorg === "PO-E") {
+                    if (ds.dsorg?.startsWith("PO")) {
                         // Entry is a PDS
                         tempEntry = new PdsEntry(ds.dsname);
                     } else if (ds.dsorg === "VS") {
