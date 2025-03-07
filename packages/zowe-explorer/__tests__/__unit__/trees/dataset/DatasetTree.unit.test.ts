@@ -133,6 +133,7 @@ function createGlobalMocks() {
     Object.defineProperty(SettingsConfig, "getDirectValue", {
         value: createGetConfigMock({
             "zowe.automaticProfileValidation": true,
+            "zowe.ds.default.sort": Sorting.DatasetSortOpts.Name,
         }),
     });
     Object.defineProperty(globalMocks.mockProfilesCache, "getConfigInstance", {
@@ -3116,14 +3117,15 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
         it("does nothing if no children exist", async () => {
             const mocks = getBlockMocks();
             const nodes = nodesForSuite();
+
             // case 1: called on PDS node
-            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name (default)" });
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name" });
             nodes.pds.children = [];
             await tree.sortPdsMembersDialog(nodes.pds);
             expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
 
             // case 2: called on session node
-            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name (default)" });
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name" });
             nodes.session.children = [];
             await tree.sortPdsMembersDialog(nodes.session);
             expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
@@ -3132,7 +3134,7 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
         it("sorts by name", async () => {
             const mocks = getBlockMocks();
             const nodes = nodesForSuite();
-            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name (default)" });
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name" });
             await tree.sortPdsMembersDialog(nodes.pds);
             expect(mocks.nodeDataChanged).toHaveBeenCalled();
             expect(mocks.refreshElement).not.toHaveBeenCalled();
@@ -3296,7 +3298,7 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
         it("sorting by session: descriptions are reset when sorted by name", async () => {
             const mocks = getBlockMocks();
             const nodes = nodesForSuite();
-            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name (default)" });
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name" });
             await tree.sortPdsMembersDialog(nodes.session);
             expect(mocks.nodeDataChanged).toHaveBeenCalled();
             expect(mocks.refreshElement).not.toHaveBeenCalled();
