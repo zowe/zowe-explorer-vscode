@@ -102,6 +102,10 @@ describe("SpoolProvider Unit Tests", () => {
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    afterAll(() => {
         jest.resetAllMocks();
     });
 
@@ -178,7 +182,6 @@ describe("SpoolProvider Unit Tests", () => {
     });
 
     it("Tests that the spool content is returned", async () => {
-        const GetJobs = jest.fn();
         const getSpoolContentById = jest.fn();
         const profileOne: zowe.imperative.IProfileLoaded = {
             name: "sessionName",
@@ -205,11 +208,14 @@ describe("SpoolProvider Unit Tests", () => {
                 };
             }),
         });
-        Object.defineProperty(zowe, "GetJobs", { value: GetJobs });
-        Object.defineProperty(GetJobs, "getSpoolContentById", { value: getSpoolContentById });
-        getSpoolContentById.mockReturnValue("spool content");
+        Object.defineProperty(zowe, "GetJobs", {
+            value: { getSpoolContentById },
+            configurable: true,
+        });
+        getSpoolContentById.mockResolvedValueOnce("spool content");
 
         const provider = new SpoolProvider();
+        SpoolProvider.files = {};
 
         // the first time the file is provided by SpoolProvider, it will fetch the latest spool content
         const fetchContentSpy = jest.spyOn(SpoolFile.prototype, "fetchContent");
@@ -218,9 +224,55 @@ describe("SpoolProvider Unit Tests", () => {
 
         expect(content).toBe("spool content");
         expect(getSpoolContentById.mock.calls.length).toEqual(1);
-        expect(getSpoolContentById.mock.calls[0][1]).toEqual(iJobFile.jobname);
-        expect(getSpoolContentById.mock.calls[0][2]).toEqual(iJobFile.jobid);
-        expect(getSpoolContentById.mock.calls[0][3]).toEqual(iJobFile.id);
+        expect(getSpoolContentById.mock.calls[0].slice(1)).toEqual([iJobFile.jobname, iJobFile.jobid, iJobFile.id, undefined]);
+        await provider.provideTextDocumentContent(uriObj);
+    });
+
+    it("Tests that the spool content is returned with encoding", async () => {
+        const getSpoolContentById = jest.fn();
+        const profileOne: zowe.imperative.IProfileLoaded = {
+            name: "sessionName",
+            profile: {
+                user: undefined,
+                password: undefined,
+                encoding: "IBM-1047",
+            },
+            type: "zosmf",
+            message: "",
+            failNotFound: false,
+        };
+        const mockLoadNamedProfile = jest.fn();
+        mockLoadNamedProfile.mockReturnValue(profileOne);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [profileOne, { name: "secondName" }],
+                    defaultProfile: profileOne,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
+                    loadNamedProfile: mockLoadNamedProfile,
+                };
+            }),
+        });
+        Object.defineProperty(zowe, "GetJobs", {
+            value: { getSpoolContentById },
+            configurable: true,
+        });
+        getSpoolContentById.mockResolvedValueOnce("spool content");
+
+        const provider = new SpoolProvider();
+        SpoolProvider.files = {};
+
+        // the first time the file is provided by SpoolProvider, it will fetch the latest spool content
+        const fetchContentSpy = jest.spyOn(SpoolFile.prototype, "fetchContent");
+        const content = await provider.provideTextDocumentContent(uriObj);
+        expect(fetchContentSpy).toHaveBeenCalled();
+
+        expect(content).toBe("spool content");
+        expect(getSpoolContentById.mock.calls.length).toEqual(1);
+        expect(getSpoolContentById.mock.calls[0].slice(1)).toEqual([iJobFile.jobname, iJobFile.jobid, iJobFile.id, profileOne.profile?.encoding]);
         await provider.provideTextDocumentContent(uriObj);
     });
 

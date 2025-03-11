@@ -18,7 +18,7 @@ permissions:
 jobs:
   update-project:
     name: Move project item
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: zowe-actions/shared-actions/project-move-item@main
       if: ${{ github.event.issue && fromJSON(env.ISSUE_STATUSES)[github.event.label.name] }}

@@ -20,7 +20,7 @@ on:
 
 jobs:
   check_version:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     outputs:
       should_publish: ${{ steps.should_publish_any.outputs.should_publish != null }}
     steps:
@@ -61,7 +61,7 @@ jobs:
         id: should_publish_any
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: check_version
     if: needs.check_version.outputs.should_publish
     steps:

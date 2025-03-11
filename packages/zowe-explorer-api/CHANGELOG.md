@@ -9,6 +9,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ### Bug fixes
 
 - Fixed an issue where the `responseTimeout` profile property was ignored for z/OSMF MVS and USS API calls. [#3225](https://github.com/zowe/zowe-explorer-vscode/issues/3225)
+- Added optional `encoding` argument which was missing from the `ZoweExplorerApi.IJes.getSpoolContentById` method. [#3504](https://github.com/zowe/zowe-explorer-vscode/issues/3504)
 - Updated the `@zowe/cli` dependency to v7.29.8 for technical currency. [#3378](https://github.com/zowe/zowe-explorer-vscode/pull/3378)
 
 ## `2.18.0`
