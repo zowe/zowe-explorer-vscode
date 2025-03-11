@@ -66,7 +66,12 @@ export class SpoolFile {
      */
     public async fetchContent(): Promise<void> {
         const profile = Profiles.getInstance().loadNamedProfile(this.sessionName);
-        const result = await ZoweExplorerApiRegister.getJesApi(profile).getSpoolContentById(this.spool.jobname, this.spool.jobid, this.spool.id);
+        const result = await ZoweExplorerApiRegister.getJesApi(profile).getSpoolContentById(
+            this.spool.jobname,
+            this.spool.jobid,
+            this.spool.id,
+            profile.profile?.encoding
+        );
         this.content = result;
 
         // Signal to the SpoolProvider that the new contents should be rendered for this file
