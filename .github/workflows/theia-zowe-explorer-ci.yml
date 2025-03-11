@@ -14,12 +14,12 @@ on:
 
 jobs:
   ze-theia-build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     timeout-minutes: 60
 
     concurrency:
-      group: ubuntu-latest-theia-ci-${{ github.ref }}
+      group: ubuntu-22.04-theia-ci-${{ github.ref }}
       cancel-in-progress: true
 
     if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
