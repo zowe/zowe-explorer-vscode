@@ -430,8 +430,8 @@ export namespace ZoweExplorerZosmf {
             return zosjobs.DownloadJobs.downloadSpoolContentCommon(this.getSession(), parms);
         }
 
-        public getSpoolContentById(jobname: string, jobid: string, spoolId: number): Promise<string> {
-            return zosjobs.GetJobs.getSpoolContentById(this.getSession(), jobname, jobid, spoolId);
+        public getSpoolContentById(jobname: string, jobid: string, spoolId: number, encoding?: string): Promise<string> {
+            return zosjobs.GetJobs.getSpoolContentById(this.getSession(), jobname, jobid, spoolId, encoding);
         }
 
         public getJclForJob(job: zosjobs.IJob): Promise<string> {
