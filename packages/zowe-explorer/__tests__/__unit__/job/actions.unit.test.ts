@@ -360,6 +360,44 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         expect(mocked(Gui.infoMessage)).toBeCalled();
     });
 
+    it("Checking download of Job Spool with encoding", async () => {
+        const blockMocks = createGlobalMocks();
+        const iJobFile = createIJobFile();
+        const jobs: IZoweJobTreeNode[] = [];
+        const spool: zowe.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1 };
+        const node = new ZoweSpoolNode({
+            label: "test:dd - 1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: { ...blockMocks.imperativeProfile, profile: { ...blockMocks.imperativeProfile.profile, encoding: "IBM-1047" } },
+            job: blockMocks.iJob,
+            spool,
+        });
+        const fileUri = {
+            fsPath: "/tmp/foo",
+            scheme: "",
+            authority: "",
+            fragment: "",
+            path: "",
+            query: "",
+        };
+        jobs.push(node, node);
+        mocked(Gui.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
+        const downloadFileSpy = jest.spyOn(blockMocks.jesApi, "downloadSingleSpool").mockResolvedValue(undefined);
+        const getSpoolFilesSpy = jest.spyOn(SpoolProvider, "getSpoolFiles").mockResolvedValueOnce([spool]).mockResolvedValueOnce([]);
+
+        await jobActions.downloadSingleSpool(jobs);
+        expect(mocked(Gui.showOpenDialog)).toBeCalled();
+        expect(getSpoolFilesSpy).toHaveBeenCalledWith(node);
+        expect(downloadFileSpy).toHaveBeenCalledTimes(1);
+        expect(downloadFileSpy.mock.calls[0][0]).toEqual({
+            jobFile: spool,
+            outDir: fileUri.fsPath,
+            encoding: "IBM-1047",
+        });
+        expect(mocked(Gui.infoMessage)).toBeCalled();
+    });
+
     it("should fail to download single spool files if the extender has not implemented the operation", async () => {
         const blockMocks = createGlobalMocks();
         const iJobFile = createIJobFile();

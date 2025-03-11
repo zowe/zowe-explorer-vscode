@@ -93,11 +93,13 @@ export async function downloadSingleSpool(nodes: IZoweJobTreeNode[], binary?: bo
                 if (!spools.length) {
                     await Gui.infoMessage(localize("downloadSingleSpool.notFound", "No spool files found for {0}", node.label as string));
                 }
+                const profile = node.getProfile();
                 for (const spool of spools) {
-                    await ZoweExplorerApiRegister.getJesApi(nodes[0].getProfile()).downloadSingleSpool({
+                    await ZoweExplorerApiRegister.getJesApi(profile).downloadSingleSpool({
                         jobFile: spool,
-                        binary,
                         outDir: dirUri[0].fsPath,
+                        binary,
+                        encoding: binary ? undefined : profile.profile?.encoding,
                     });
                 }
             }
