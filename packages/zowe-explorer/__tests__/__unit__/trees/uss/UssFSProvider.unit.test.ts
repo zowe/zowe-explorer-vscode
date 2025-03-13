@@ -341,6 +341,17 @@ describe("readDirectory", () => {
 });
 
 describe("fetchFileAtUri", () => {
+    beforeEach(() => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn(() => {
+                        return testProfile;
+                    }),
+                };
+            }),
+        });
+    });
     it("calls getContents to get the data for a file entry", async () => {
         const fileEntry = { ...testEntries.file };
         const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
