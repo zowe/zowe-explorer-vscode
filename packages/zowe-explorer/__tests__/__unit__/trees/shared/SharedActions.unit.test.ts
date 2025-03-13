@@ -530,17 +530,17 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         expect(testUSSTree.openItemFromPath).toHaveBeenCalledWith(`/node1/node2/node3.txt`, blockMocks.ussSessionNode);
     });
 
-    it("Tests that openRecentMemberPrompt shows a UI message when the profile is not found and returns early", async () => {
+    it("Tests that openRecentMemberPrompt shows a UI message when the profile is not found on a USS path and returns early", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        const quickPickContent = createQuickPickContent("[invalid]: node", [], globalMocks.qpPlaceholder);
+        const quickPickContent = createQuickPickContent("[invalid]: /profile/dir/file.txt", [], globalMocks.qpPlaceholder);
         const testDatasetTree = createDatasetTree(blockMocks.datasetSessionNode, globalMocks.treeView);
-        mocked(testDatasetTree.getFileHistory).mockReturnValueOnce([`[invalid]: node`]);
+        mocked(testDatasetTree.getFileHistory).mockReturnValueOnce([]);
         const testUSSTree = createUSSTree([], [blockMocks.ussSessionNode], globalMocks.treeView);
-        mocked(testUSSTree.getFileHistory).mockReturnValueOnce([]);
+        mocked(testUSSTree.getFileHistory).mockReturnValueOnce([`[invalid]: /profile/dir/file.txt`]);
         mocked(Gui.createQuickPick).mockReturnValueOnce(quickPickContent);
-        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new FilterDescriptor("node"));
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new FilterDescriptor("[invalid]: /profile/dir/file.txt"));
         const showMessageSpy = jest.spyOn(Gui, "showMessage");
 
         await SharedActions.openRecentMemberPrompt(testDatasetTree, testUSSTree);
