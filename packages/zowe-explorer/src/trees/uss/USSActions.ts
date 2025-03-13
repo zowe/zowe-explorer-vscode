@@ -235,7 +235,11 @@ export class USSActions {
         vscode.env.clipboard.writeText(node.fullPath);
     }
 
-    public static async deleteUSSFilesPrompt(node: IZoweUSSTreeNode, nodeList: IZoweUSSTreeNode[], ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
+    public static async deleteUSSFilesPrompt(
+        node: IZoweUSSTreeNode,
+        nodeList: IZoweUSSTreeNode[],
+        ussFileProvider: Types.IZoweUSSTreeType
+    ): Promise<void> {
         ZoweLogger.trace("uss.actions.deleteUSSFilesPrompt called.");
         let selectedNodes;
         if (node || nodeList) {

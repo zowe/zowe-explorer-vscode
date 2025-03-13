@@ -49,13 +49,11 @@ export namespace ZoweExplorerZosmf {
         }
 
         public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
-            if (!this.session) {
-                try {
-                    this.session = this._getSession(profile || this.profile);
-                } catch (error) {
-                    // todo: initialize and use logging
-                    imperative.Logger.getAppLogger().error(error as string);
-                }
+            try {
+                this.session = this._getSession(profile || this.profile);
+            } catch (error) {
+                // todo: initialize and use logging
+                imperative.Logger.getAppLogger().error(error as string);
             }
             return this.session ? ProfilesCache.getProfileSessionWithVscProxy(this.session) : undefined;
         }
@@ -370,6 +368,7 @@ export namespace ZoweExplorerZosmf {
                 ...options,
             });
         }
+
         public copyDataSet(fromDataSetName: string, toDataSetName: string, enq?: string, replace?: boolean): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.Copy.dataSet(
                 this.getSession(),
@@ -389,6 +388,21 @@ export namespace ZoweExplorerZosmf {
                     ...searchOptions.listOptions,
                 },
             });
+        }
+
+        public async copyDataSetCrossLpar(
+            toDataSetName: string,
+            toMemberName: string,
+            options: zosfiles.ICrossLparCopyDatasetOptions,
+            sourceprofile: imperative.IProfileLoaded
+        ): Promise<zosfiles.IZosFilesResponse> {
+            return zosfiles.Copy.dataSetCrossLPAR(
+                this.getSession(sourceprofile),
+                { dsn: toDataSetName, member: toMemberName },
+                options,
+                {},
+                this.getSession()
+            );
         }
     }
 

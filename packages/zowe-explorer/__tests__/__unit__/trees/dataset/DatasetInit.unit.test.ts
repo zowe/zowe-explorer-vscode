@@ -152,7 +152,7 @@ describe("Test src/dataset/extension", () => {
                 mock: [{ spy: jest.spyOn(DatasetActions, "copyDataSets"), arg: [test.value, undefined, dsProvider] }],
             },
             {
-                name: "zowe.ds.pasteDataSets:1",
+                name: "zowe.ds.pasteDataSets",
                 parm: [false],
                 mock: [
                     {
@@ -160,20 +160,7 @@ describe("Test src/dataset/extension", () => {
                         arg: [],
                         ret: { reveal: jest.fn(), onDidChangeVisibility: jest.fn(), selection: [test.value] },
                     },
-                    { spy: jest.spyOn(DatasetActions, "pasteDataSetMembers"), arg: [dsProvider, test.value] },
-                    { spy: jest.spyOn(DatasetActions, "refreshDataset"), arg: ["test", dsProvider] },
-                ],
-            },
-            {
-                name: "zowe.ds.pasteDataSets:2",
-                mock: [
-                    {
-                        spy: jest.spyOn(dsProvider, "getTreeView"),
-                        arg: [],
-                        ret: { reveal: jest.fn(), onDidChangeVisibility: jest.fn(), selection: [test.value] },
-                    },
-                    { spy: jest.spyOn(DatasetActions, "pasteDataSetMembers"), arg: [dsProvider, test.value] },
-                    { spy: jest.spyOn(DatasetActions, "refreshDataset"), arg: ["test", dsProvider] },
+                    { spy: jest.spyOn(DatasetActions, "pasteDataSet"), arg: [dsProvider, test.value] },
                 ],
             },
             {

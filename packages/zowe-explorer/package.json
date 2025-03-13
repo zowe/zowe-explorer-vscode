@@ -1928,7 +1928,7 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "@zowe/core-for-zowe-sdk": "^8.10.4",
+    "@zowe/core-for-zowe-sdk": "^8.13.0",
     "@zowe/secrets-for-zowe-sdk": "^8.10.4",
     "@zowe/zos-files-for-zowe-sdk": "^8.10.4",
     "@zowe/zos-jobs-for-zowe-sdk": "^8.10.4",

@@ -2195,7 +2195,6 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
             parentNode: datasetSessionNode,
         });
         const testTree = new DatasetTree();
-
         datasetSessionNode.children.push(node);
         testTree.mSessionNodes.push(datasetSessionNode);
         jest.spyOn(datasetSessionNode, "getChildren").mockReturnValue(Promise.resolve([datasetSessionNode]));
@@ -2208,6 +2207,10 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
         };
     }
 
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
     it("Checking opening of PS Dataset", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -2215,6 +2218,35 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
         await blockMocks.testTree.renameNode(blockMocks.imperativeProfile.name, blockMocks.node.label.toString(), "newLabel");
 
         expect(blockMocks.node.label).toEqual("newLabel");
+    });
+
+    it("Checking opening of seq ds when rename operation is performed from Favorited seq ds", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
+        blockMocks.testTree.mSessionNodes[1].children[0].contextValue = Constants.DS_DS_CONTEXT;
+        await blockMocks.testTree.renameNode(blockMocks.imperativeProfile.name, blockMocks.node.label.toString(), "newLabel");
+        expect(blockMocks.testTree.mSessionNodes[1].children[0].command.command).toBe("vscode.open");
+    });
+
+    it("Checking opening of PDS when rename operation is performed from Favorited PDS", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        jest.spyOn(SharedContext, "isPds").mockReturnValue(true);
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: blockMocks.testTree.mSessionNodes[1].getProfile(),
+        });
+        node.resourceUri = vscode.Uri.from({
+            scheme: ZoweScheme.DS,
+            path: "/sestest/RENAME.PDS",
+        });
+        blockMocks.testTree.mSessionNodes[1].children[0].children = [node];
+        await blockMocks.testTree.renameNode(blockMocks.imperativeProfile.name, blockMocks.node.label.toString(), "newLabel");
+        expect(blockMocks.testTree.mSessionNodes[1].children[0].children[0].command.command).toBe("vscode.open");
     });
 });
 
@@ -2301,6 +2333,10 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         };
     }
 
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
     it("returns early if errorForUnsavedResource was true", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -2341,7 +2377,15 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             session: blockMocks.session,
             profile: testTree.mSessionNodes[1].getProfile(),
         });
-
+        const fav_node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+            contextValue: Constants.DS_FAV_CONTEXT,
+        });
+        jest.spyOn(testTree, "findFavoritedNode").mockReturnValue(fav_node);
         await testTree.rename(node);
         expect(blockMocks.rename).toHaveBeenLastCalledWith(
             { path: "/sestest/HLQ.TEST.RENAME.NODE", scheme: ZoweScheme.DS },
@@ -2552,6 +2596,15 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         mocked(Gui.showInputBox).mockImplementation((options) => {
             return Promise.resolve("HLQ.TEST.NEWNAME.NODE");
         });
+        const fav_node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+            contextValue: Constants.DS_FAV_CONTEXT,
+        });
+        jest.spyOn(testTree, "findFavoritedNode").mockReturnValue(fav_node);
         await testTree.rename(parent);
         expect(renameDataSetSpy).toHaveBeenLastCalledWith(parent);
         expect(parent.resourceUri?.path).toBe("/sestest/HLQ.TEST.NEWNAME.NODE");
@@ -2611,6 +2664,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         testTree.mFavorites.push(favProfileNode);
         const renameDataSetMemberSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSetMember");
         const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockImplementation();
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
 
         await testTree.rename(child);
 
@@ -2752,6 +2806,122 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
 
         await testValidDsName("HLQ.TEST.RENAME.NODE.NEW.TEST");
         await testValidDsName("INVALID-DATASET-NAME");
+    });
+
+    it("To check if rename of favorited seq ds is performed correctly when the rename operation is performed on the seq ds from the ds tree view ", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+        });
+        const fav_node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+        });
+        fav_node.contextValue = Constants.DS_FAV_CONTEXT;
+        jest.spyOn(testTree, "findFavoritedNode").mockReturnValue(fav_node);
+        await testTree.rename(node);
+        expect(blockMocks.rename).toHaveBeenLastCalledWith(
+            { path: "/sestest/HLQ.TEST.RENAME.NODE", scheme: ZoweScheme.DS },
+            { path: "/sestest/HLQ.TEST.RENAME.NODE.NEW", scheme: ZoweScheme.DS },
+            { overwrite: false }
+        );
+    });
+
+    it("Checking rename functionality with favorited PDS ", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        // Create nodes in Session section
+        const parent = new ZoweDatasetNode({
+            label: "HLQ.TEST.OLDNAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.PDS_FAV_CONTEXT,
+            parentNode: testTree.mSessionNodes[1],
+            profile: blockMocks.imperativeProfile,
+            session: blockMocks.session,
+        });
+        const child = new ZoweDatasetNode({
+            label: "mem1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.DS_MEMBER_CONTEXT,
+            parentNode: parent,
+        });
+        // Simulate corresponding nodes in favorites
+        // Push test nodes to respective arrays
+        parent.children.push(child);
+        testTree.mSessionNodes[1].children.push(parent);
+
+        const refreshElementSpy = jest.spyOn(testTree, "refreshElement");
+
+        const renameDataSetSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSet");
+
+        mocked(Gui.showInputBox).mockImplementation((options) => {
+            return Promise.resolve("HLQ.TEST.NEWNAME.NODE");
+        });
+        jest.spyOn(SharedContext, "isFavorite").mockReturnValue(true);
+        await testTree.rename(parent);
+        expect(renameDataSetSpy).toHaveBeenLastCalledWith(parent);
+        expect(parent.resourceUri?.path).toBe("/HLQ.TEST.NEWNAME.NODE");
+        expect(child.resourceUri?.path).toBe("/HLQ.TEST.NEWNAME.NODE/mem1");
+        expect(refreshElementSpy).toHaveBeenCalled();
+    });
+
+    it("Checking rename functionality of favorited pds after renaming the pds from the ds tree", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+        });
+        const fav_node = new ZoweDatasetNode({
+            label: "HLQ.TEST.NEW.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+            contextValue: Constants.PDS_FAV_CONTEXT,
+        });
+        const child = new ZoweDatasetNode({
+            label: "MEM.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.PDS_FAV_CONTEXT,
+            parentNode: fav_node,
+            profile: blockMocks.imperativeProfile,
+            session: blockMocks.session,
+        });
+        fav_node.children = [child];
+        jest.spyOn(testTree, "findFavoritedNode").mockReturnValue(fav_node);
+        jest.spyOn(SharedContext, "isPds").mockReturnValue(true);
+        await testTree.rename(node);
+        expect(blockMocks.rename).toHaveBeenLastCalledWith(
+            { path: "/sestest/HLQ.TEST.RENAME.NODE", scheme: ZoweScheme.DS },
+            { path: "/sestest/HLQ.TEST.RENAME.NODE.NEW", scheme: ZoweScheme.DS },
+            { overwrite: false }
+        );
     });
 });
 
@@ -3479,5 +3649,255 @@ describe("Dataset Tree Unit Tests - Function applyPatternsToChildren", () => {
         testTree.applyPatternsToChildren(fakeChildren as any[], [{ dsn: "HLQ.PROD.PDS", member: "A*" }], fakeSessionNode as any);
         expect(fakeChildren[0].iconPath).toBe(IconGenerator.getIconById(IconUtils.IconId.filterFolderOpen).path);
         withProfileMock.mockRestore();
+    });
+});
+
+describe("DataSetTree Unit Tests - Function handleDrag", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        return {
+            session,
+            imperativeProfile,
+            datasetSessionNode,
+        };
+    }
+    it("adds a DataTransferItem containing info about the dragged Data node", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const datasetNode = new ZoweDatasetNode({
+            label: "draggedNode",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+            session: blockMocks.session,
+        });
+        const dataTransferSetMock = jest.fn();
+        const testTree = new DatasetTree();
+        testTree.handleDrag([datasetNode], { set: dataTransferSetMock } as any, undefined);
+        expect(dataTransferSetMock).toHaveBeenCalledWith(
+            "application/vnd.code.tree.zowe.ds.explorer",
+            new vscode.DataTransferItem([
+                {
+                    label: datasetNode.label,
+                    uri: datasetNode.resourceUri,
+                },
+            ])
+        );
+    });
+});
+
+describe("DataSetTree Unit Tests - Function handleDrop", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        datasetSessionNode.dirty = false;
+        const datasetNode = new ZoweDatasetNode({
+            label: "draggedNode",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: datasetSessionNode,
+            session: session,
+        });
+        datasetNode.dirty = false;
+
+        const datasetPdsNode = new ZoweDatasetNode({
+            label: "pdsnode",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            profile: datasetSessionNode.getProfile(),
+            parentNode: datasetSessionNode,
+        });
+        datasetPdsNode.dirty = false;
+        const memberNode = new ZoweDatasetNode({
+            label: "mem1",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            profile: datasetSessionNode.getProfile(),
+        });
+        datasetPdsNode.children = [memberNode];
+        datasetPdsNode.contextValue = Constants.DS_PDS_CONTEXT;
+        memberNode.contextValue = Constants.DS_MEMBER_CONTEXT;
+        memberNode.dirty = false;
+        const datasetSeqNode = new ZoweDatasetNode({
+            label: "seqnode",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: datasetPdsNode.getProfile(),
+            parentNode: datasetNode,
+        });
+        datasetSeqNode.contextValue = Constants.DS_DS_CONTEXT;
+        const draggedNode = new ZoweDatasetNode({
+            label: "seqnode1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: datasetSessionNode,
+        });
+        draggedNode.contextValue = Constants.DS_DS_CONTEXT;
+        return {
+            session,
+            imperativeProfile,
+            datasetSessionNode,
+            datasetNode,
+            datasetPdsNode,
+            datasetSeqNode,
+            memberNode,
+            draggedNode,
+        };
+    }
+    it("returns early if there are no items in the dataTransfer object", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const statusBarMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
+        const getDataTransferMock = jest.spyOn(vscode.DataTransfer.prototype, "get").mockReturnValueOnce(undefined);
+        const testTree = new DatasetTree();
+        await testTree.handleDrop(blockMocks.datasetNode, new vscode.DataTransfer(), undefined);
+        expect(statusBarMsgSpy).not.toHaveBeenCalled();
+        getDataTransferMock.mockRestore();
+    });
+
+    it("handle moving of seq and pds to different profiles dropping on seq", async () => {
+        createGlobalMocks();
+        const testTree = new DatasetTree();
+        const statusBarMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
+        const blockMocks = createBlockMocks();
+        const datasetSession = blockMocks.datasetSessionNode;
+
+        datasetSession.children = [blockMocks.datasetPdsNode, blockMocks.datasetSeqNode];
+        const dataTransfer = new vscode.DataTransfer();
+        const getDataTransferMock = jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
+            value: [
+                {
+                    label: blockMocks.datasetPdsNode.label as string,
+                    uri: blockMocks.datasetPdsNode.resourceUri,
+                },
+            ],
+        } as any);
+        const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
+            [blockMocks.datasetPdsNode.resourceUri.path]: blockMocks.datasetPdsNode,
+        });
+        const createDataSetMock = jest.fn();
+        const createDataSetMemberMock = jest.fn();
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+            createDataSet: createDataSetMock,
+            createDataSetMember: createDataSetMemberMock,
+        } as any);
+
+        const createDirMock = jest.spyOn(DatasetFSProvider.instance as any, "createDirectory").mockResolvedValueOnce(undefined);
+        const deleteMock = jest.spyOn(vscode.workspace.fs, "delete").mockResolvedValue(undefined);
+        const readFileMock = jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+        const writeFileMock = jest.spyOn(DatasetFSProvider.instance, "writeFile").mockResolvedValue(undefined);
+        await testTree.handleDrop(blockMocks.datasetSeqNode, dataTransfer, undefined);
+        expect(deleteMock).toHaveBeenCalledWith(blockMocks.datasetPdsNode.resourceUri, { recursive: true });
+        expect(statusBarMsgSpy).toHaveBeenCalledWith("$(sync~spin) Moving MVS files...");
+        draggedNodeMock[Symbol.dispose]();
+        getDataTransferMock.mockRestore();
+        mvsApiMock.mockRestore();
+        writeFileMock.mockRestore();
+        readFileMock.mockRestore();
+        createDirMock.mockRestore();
+    });
+
+    it("Dragging a pds onto another pds on different LPAR should throw error", async () => {
+        createGlobalMocks();
+        const testTree = new DatasetTree();
+        const blockMocks = createBlockMocks();
+        const dataTransfer = new vscode.DataTransfer();
+        const getDataTransferMock = jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
+            value: [
+                {
+                    label: blockMocks.datasetPdsNode.label as string,
+                    uri: blockMocks.datasetPdsNode.resourceUri,
+                },
+            ],
+        } as any);
+        const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
+            [blockMocks.datasetPdsNode.resourceUri.path]: blockMocks.datasetPdsNode,
+        });
+        await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer, undefined);
+        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a sequential dataset or a partitioned dataset onto another PDS.");
+        getDataTransferMock.mockRestore();
+        draggedNodeMock[Symbol.dispose]();
+    });
+
+    it("If a member is dropped on a sequential ds, should throw error", async () => {
+        createGlobalMocks();
+        const testTree = new DatasetTree();
+        const blockMocks = createBlockMocks();
+        const dataTransfer = new vscode.DataTransfer();
+        const getDataTransferMock = jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
+            value: [
+                {
+                    label: blockMocks.memberNode.label as string,
+                    uri: blockMocks.memberNode.resourceUri,
+                },
+            ],
+        } as any);
+        const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
+            [blockMocks.memberNode.resourceUri.path]: blockMocks.memberNode,
+        });
+        await testTree.handleDrop(blockMocks.datasetSeqNode, dataTransfer, undefined);
+        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a member onto a sequential dataset.");
+        getDataTransferMock.mockRestore();
+        draggedNodeMock[Symbol.dispose]();
+    });
+
+    it("Member being dropped on pds", async () => {
+        createGlobalMocks();
+        const testTree = new DatasetTree();
+        const blockMocks = createBlockMocks();
+        const dataTransfer = new vscode.DataTransfer();
+        const getDataTransferMock = jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
+            value: [
+                {
+                    label: blockMocks.memberNode.label as string,
+                    uri: blockMocks.memberNode.resourceUri,
+                },
+            ],
+        } as any);
+        const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
+            [blockMocks.memberNode.resourceUri.path]: blockMocks.memberNode,
+        });
+        jest.spyOn(Gui, "warningMessage").mockResolvedValueOnce(null as any);
+        await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer, undefined);
+        expect(Gui.warningMessage).toHaveBeenCalledTimes(1);
+        getDataTransferMock.mockRestore();
+        draggedNodeMock[Symbol.dispose]();
+    });
+
+    it("Write File throwing error", async () => {
+        createGlobalMocks();
+        const testTree = new DatasetTree();
+        const statusBarMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
+        const blockMocks = createBlockMocks();
+        const datasetSession = blockMocks.datasetSessionNode;
+        datasetSession.children = [blockMocks.datasetPdsNode, blockMocks.datasetSeqNode];
+        const dataTransfer = new vscode.DataTransfer();
+        const getDataTransferMock = jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
+            value: [
+                {
+                    label: blockMocks.draggedNode.label as string,
+                    uri: blockMocks.draggedNode.resourceUri,
+                },
+            ],
+        } as any);
+        const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
+            [blockMocks.draggedNode.resourceUri.path]: blockMocks.draggedNode,
+        });
+        const createDataSetMock = jest.fn();
+        const createDataSetMemberMock = jest.fn();
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+            createDataSet: createDataSetMock,
+            createDataSetMember: createDataSetMemberMock,
+        } as any);
+
+        const createDirMock = jest.spyOn(DatasetFSProvider.instance as any, "createDirectory").mockResolvedValueOnce(undefined);
+        const readFileMock = jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementationOnce(() => {
+            throw Error("Write file error");
+        });
+        await testTree.handleDrop(blockMocks.datasetSeqNode, dataTransfer, undefined);
+        expect(statusBarMsgSpy).toHaveBeenCalledWith("$(sync~spin) Moving MVS files...");
+        draggedNodeMock[Symbol.dispose]();
+        getDataTransferMock.mockRestore();
+        mvsApiMock.mockRestore();
+        readFileMock.mockRestore();
+        createDirMock.mockRestore();
     });
 });
