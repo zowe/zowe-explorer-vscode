@@ -520,6 +520,25 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         await SharedActions.openRecentMemberPrompt(testDatasetTree, testUSSTree);
         expect(testUSSTree.openItemFromPath).toHaveBeenCalledWith(`/node1/node2/node3.txt`, blockMocks.ussSessionNode);
     });
+
+    it("Tests that openRecentMemberPrompt shows a UI message when the profile is not found and returns early", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const quickPickContent = createQuickPickContent("[invalid]: node", [], globalMocks.qpPlaceholder);
+        const testDatasetTree = createDatasetTree(blockMocks.datasetSessionNode, globalMocks.treeView);
+        mocked(testDatasetTree.getFileHistory).mockReturnValueOnce([`[invalid]: node`]);
+        const testUSSTree = createUSSTree([], [blockMocks.ussSessionNode], globalMocks.treeView);
+        mocked(testUSSTree.getFileHistory).mockReturnValueOnce([]);
+        mocked(Gui.createQuickPick).mockReturnValueOnce(quickPickContent);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new FilterDescriptor("node"));
+        const showMessageSpy = jest.spyOn(Gui, "showMessage");
+
+        await SharedActions.openRecentMemberPrompt(testDatasetTree, testUSSTree);
+        expect(showMessageSpy).toHaveBeenCalledWith("Profile not found.");
+        expect(testDatasetTree.openItemFromPath).not.toHaveBeenCalled();
+        expect(testUSSTree.openItemFromPath).not.toHaveBeenCalled();
+    });
 });
 
 describe("Shared Actions Unit Tests - Function returnIconState", () => {
