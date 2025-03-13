@@ -14,8 +14,9 @@ import { createIProfile, createISession, createInstanceOfProfile } from "../../.
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { createUSSNode, createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
-import { imperative, ProfilesCache, Gui, ZosEncoding, BaseProvider } from "@zowe/zowe-explorer-api";
+import { imperative, ProfilesCache, Gui, ZosEncoding, BaseProvider, Sorting } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../../../src/configuration/Constants";
+import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 import { FilterItem } from "../../../../src/management/FilterManagement";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
@@ -1218,5 +1219,170 @@ describe("Shared utils unit tests - function debounce", () => {
         debouncedFn();
         jest.runAllTimers();
         expect(mockEventHandler).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("Shared utils unit tests - updateSortOptionsWithDefault", () => {
+    it("should add (default) to the correct sort option", () => {
+        const sortOptions = ["Name", "Date Created", "Date Modified", "User ID"];
+        const sortMethod = 2; // Date Modified
+
+        SharedUtils.updateSortOptionsWithDefault(sortMethod, sortOptions);
+
+        expect(sortOptions).toEqual(["Name", "Date Created", "Date Modified (default)", "User ID"]);
+    });
+
+    it("should remove existing (default) from other sort options", () => {
+        const sortOptions = ["Name (default)", "Date Created", "Date Modified", "User ID"];
+        const sortMethod = 2; // Date Modified
+
+        SharedUtils.updateSortOptionsWithDefault(sortMethod, sortOptions);
+
+        expect(sortOptions).toEqual(["Name", "Date Created", "Date Modified (default)", "User ID"]);
+    });
+
+    it("should handle empty sort options array", () => {
+        const sortOptions: string[] = [];
+        const sortMethod = 0; // Any index
+
+        SharedUtils.updateSortOptionsWithDefault(sortMethod, sortOptions);
+
+        expect(sortOptions).toEqual([]);
+    });
+
+    it("should handle sort method out of bounds", () => {
+        const sortOptions = ["Name", "Date Created", "Date Modified", "User ID"];
+        const sortMethod = 10; // Out of bounds
+
+        SharedUtils.updateSortOptionsWithDefault(sortMethod, sortOptions);
+
+        expect(sortOptions).toEqual(["Name", "Date Created", "Date Modified", "User ID"]);
+    });
+
+    it("should handle sort method as string", () => {
+        const sortOptions = ["Name", "Date Created", "Date Modified", "User ID"];
+        const sortMethod = "2"; // Date Modified
+
+        SharedUtils.updateSortOptionsWithDefault(sortMethod, sortOptions);
+
+        expect(sortOptions).toEqual(["Name", "Date Created", "Date Modified (default)", "User ID"]);
+    });
+});
+
+describe("Shared utils unit tests - getDefaultSortOptions", () => {
+    it("should return default sort options when settings are not defined", () => {
+        const sortOptions = ["Name", "Date Created", "Date Modified", "User ID"];
+        const settingsKey = "defaultSort";
+        const sortMethod = {
+            Name: 0,
+            DateCreated: 1,
+            DateModified: 2,
+            UserId: 3,
+        };
+
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(undefined);
+
+        const result = SharedUtils.getDefaultSortOptions(sortOptions, settingsKey, sortMethod);
+
+        expect(result).toEqual({
+            method: sortMethod.Name,
+            direction: Sorting.SortDirection.Ascending,
+        });
+    });
+
+    it("should return sort options from settings with default sort option marked", () => {
+        const sortOptions = ["Name", "Date Created", "Date Modified", "User ID"];
+        const settingsKey = "defaultSort";
+        const sortMethod = {
+            Name: 0,
+            DateCreated: 1,
+            DateModified: 2,
+            UserId: 3,
+        };
+
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
+            method: "DateModified",
+            direction: "Descending",
+        });
+
+        const result = SharedUtils.getDefaultSortOptions(sortOptions, settingsKey, sortMethod);
+
+        expect(result).toEqual({
+            method: sortMethod.DateModified,
+            direction: Sorting.SortDirection.Descending,
+        });
+        expect(sortOptions).toEqual(["Name", "Date Created", "Date Modified (default)", "User ID"]);
+    });
+
+    it("should handle string sort method and direction from settings", () => {
+        const sortOptions = ["Name", "Date Created", "Date Modified", "User ID"];
+        const settingsKey = "defaultSort";
+        const sortMethod = {
+            Name: 0,
+            DateCreated: 1,
+            DateModified: 2,
+            UserId: 3,
+        };
+
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
+            method: "UserId",
+            direction: "Ascending",
+        });
+
+        const result = SharedUtils.getDefaultSortOptions(sortOptions, settingsKey, sortMethod);
+
+        expect(result).toEqual({
+            method: sortMethod.UserId,
+            direction: Sorting.SortDirection.Ascending,
+        });
+        expect(sortOptions).toEqual(["Name", "Date Created", "Date Modified", "User ID (default)"]);
+    });
+
+    it("should handle invalid sort method and direction from settings", () => {
+        const sortOptions = ["Name", "Date Created", "Date Modified", "User ID"];
+        const settingsKey = "defaultSort";
+        const sortMethod = {
+            Name: 0,
+            DateCreated: 1,
+            DateModified: 2,
+            UserId: 3,
+        };
+
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
+            method: "InvalidMethod",
+            direction: "InvalidDirection",
+        });
+
+        const result = SharedUtils.getDefaultSortOptions(sortOptions, settingsKey, sortMethod);
+
+        expect(result).toEqual({
+            method: sortMethod.Name,
+            direction: Sorting.SortDirection.Ascending,
+        });
+        expect(sortOptions).toEqual(["Name (default)", "Date Created", "Date Modified", "User ID"]);
+    });
+
+    it("should handle missing sort method and direction from settings", () => {
+        const sortOptions = ["Name", "Date Created", "Date Modified", "User ID"];
+        const settingsKey = "defaultSort";
+        const sortMethod = {
+            Name: 0,
+            DateCreated: 1,
+            DateModified: 2,
+            UserId: 3,
+        };
+
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
+            method: undefined,
+            direction: undefined,
+        });
+
+        const result = SharedUtils.getDefaultSortOptions(sortOptions, settingsKey, sortMethod);
+
+        expect(result).toEqual({
+            method: sortMethod.Name,
+            direction: Sorting.SortDirection.Ascending,
+        });
+        expect(sortOptions).toEqual(["Name (default)", "Date Created", "Date Modified", "User ID"]);
     });
 });

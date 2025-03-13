@@ -1702,6 +1702,50 @@
           "description": "%zowe.ds.default.ps%",
           "scope": "resource"
         },
+        "zowe.ds.templates": {
+          "type": "array",
+          "default": [],
+          "description": "%zowe.ds.templates%",
+          "scope": "window"
+        },
+        "zowe.ds.default.sort": {
+          "type": "object",
+          "default": {
+            "method": "Name",
+            "direction": "Ascending"
+          },
+          "properties": {
+            "method": {
+              "type": "string",
+              "enum": [
+                "Name",
+                "DateCreated",
+                "LastModified",
+                "UserId"
+              ],
+              "enumDescriptions": [
+                "%zowe.ds.default.sort.method.name%",
+                "%zowe.ds.default.sort.method.dateCreated%",
+                "%zowe.ds.default.sort.method.lastModified%",
+                "%zowe.ds.default.sort.method.userId%"
+              ],
+              "description": "%zowe.ds.default.sort.method.description%"
+            },
+            "direction": {
+              "type": "string",
+              "enum": [
+                "Ascending",
+                "Descending"
+              ],
+              "enumDescriptions": [
+                "%zowe.ds.default.sort.direction.ascending%",
+                "%zowe.ds.default.sort.direction.descending%"
+              ],
+              "description": "%zowe.ds.default.sort.direction.description%"
+            }
+          },
+          "description": "%zowe.ds.default.sort.description%"
+        },
         "zowe.ds.history": {
           "default": {
             "persistence": true,
@@ -1712,12 +1756,6 @@
           "description": "%zowe.ds.history%",
           "scope": "application",
           "deprecationMessage": "%zowe.history.deprecationMsg%"
-        },
-        "zowe.ds.templates": {
-          "type": "array",
-          "default": [],
-          "description": "%zowe.ds.templates%",
-          "scope": "window"
         },
         "zowe.files.logsFolder.path": {
           "type": "string",
@@ -1735,6 +1773,46 @@
           "description": "%zowe.uss.history%",
           "scope": "application",
           "deprecationMessage": "%zowe.history.deprecationMsg%"
+        },
+        "zowe.jobs.default.sort": {
+          "type": "object",
+          "default": {
+            "method": "Name",
+            "direction": "Ascending"
+          },
+          "properties": {
+            "method": {
+              "type": "string",
+              "enum": [
+                "Id",
+                "DateSubmitted",
+                "DateCompleted",
+                "Name",
+                "ReturnCode"
+              ],
+              "enumDescriptions": [
+                "%zowe.jobs.default.sort.method.id%",
+                "%zowe.jobs.default.sort.method.dateSubmitted%",
+                "%zowe.jobs.default.sort.method.dateCompleted%",
+                "%zowe.jobs.default.sort.method.name%",
+                "%zowe.jobs.default.sort.method.returnCode%"
+              ],
+              "description": "%zowe.jobs.default.sort.method.description%"
+            },
+            "direction": {
+              "type": "string",
+              "enum": [
+                "Ascending",
+                "Descending"
+              ],
+              "enumDescriptions": [
+                "%zowe.jobs.default.sort.direction.ascending%",
+                "%zowe.jobs.default.sort.direction.descending%"
+              ],
+              "description": "%zowe.jobs.default.sort.direction.description%"
+            }
+          },
+          "description": "%zowe.jobs.default.sort.description%"
         },
         "zowe.jobs.history": {
           "default": {

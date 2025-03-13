@@ -71,3 +71,9 @@ export class ZoweVsCodeExtension {
         };
     }
 }
+
+export class AuthHandler {
+    public static enableLocksForType(typ: string): void {
+        return;
+    }
+}

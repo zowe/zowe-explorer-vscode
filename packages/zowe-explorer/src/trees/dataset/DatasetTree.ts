@@ -938,6 +938,24 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 await SettingsConfig.setDirectValue(DatasetTree.persistenceSchema, setting);
             }
         }
+        if (e.affectsConfiguration(Constants.SETTINGS_DS_DEFAULT_SORT)) {
+            const sortOpts = SharedUtils.getDefaultSortOptions(
+                DatasetUtils.DATASET_SORT_OPTS,
+                Constants.SETTINGS_DS_DEFAULT_SORT,
+                Sorting.DatasetSortOpts
+            );
+            for (const sessionNode of this.mSessionNodes) {
+                const isSession = SharedContext.isDsSession(sessionNode);
+                this.updateSortForNode(sessionNode, sortOpts, isSession);
+            }
+            this.refresh();
+            for (const favProfile of this.mFavorites) {
+                // each entry is a profile, we need to update sort order for its children
+                for (const child of favProfile.children) {
+                    this.updateSortForNode(child, sortOpts, false);
+                }
+            }
+        }
     }
 
     public addSearchHistory(criteria: string): void {
@@ -1527,11 +1545,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public async sortPdsMembersDialog(node: IZoweDatasetTreeNode): Promise<void> {
         const isSession = SharedContext.isSession(node);
 
-        // Assume defaults if a user hasn't selected any sort options yet
-        const sortOpts = node.sort ?? {
-            method: Sorting.DatasetSortOpts.Name,
-            direction: Sorting.SortDirection.Ascending,
-        };
+        // Read default options from settings if a user hasn't selected any sort options yet
+        const sortOpts =
+            node.sort ??
+            SharedUtils.getDefaultSortOptions(DatasetUtils.DATASET_SORT_OPTS, Constants.SETTINGS_DS_DEFAULT_SORT, Sorting.DatasetSortOpts);
 
         // Adapt menus to user based on the node that was interacted with
         const specifier = isSession
