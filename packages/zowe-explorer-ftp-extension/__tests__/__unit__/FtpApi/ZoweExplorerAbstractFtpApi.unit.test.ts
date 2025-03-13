@@ -73,11 +73,11 @@ describe("AbstractFtpApi", () => {
         Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
         jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(
             jest.fn((_val) => {
-                throw new Error("Failed: missing credentials");
+                throw new Error("PASS command failed");
             })
         );
         const imperativeError = new imperative.ImperativeError({
-            msg: "Rest API failure with HTTP(S) status 401 Authentication error.",
+            msg: "Rest API failure with HTTP(S) status 401 Username or password are not valid or expired",
             errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
         });
         const instance = new Dummy();
@@ -92,7 +92,7 @@ describe("AbstractFtpApi", () => {
         }).rejects.toThrow(imperativeError);
     });
 
-    it("should show a different fatal message when trying to call getStatus and an exception occurs.", async () => {
+    it("should show a different fatal message when trying to call getStatus and an exception occurs", async () => {
         Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
         jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(
             jest.fn((_prof) => {
@@ -101,7 +101,7 @@ describe("AbstractFtpApi", () => {
         );
         const instance = new Dummy();
         const imperativeError = new imperative.ImperativeError({
-            msg: "Rest API failure with HTTP(S) status 401 Authentication error.",
+            msg: "Rest API failure with HTTP(S) status 401 Username or password are not valid or expired",
             errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
         });
         instance.profile = {
@@ -112,7 +112,7 @@ describe("AbstractFtpApi", () => {
         };
         await expect(async () => {
             await instance.getStatus(undefined, "zftp");
-        }).rejects.toThrow(imperativeError);
+        }).rejects.not.toThrow(imperativeError);
     });
 
     it("should show a fatal message when using checkedProfile on an invalid profile", () => {

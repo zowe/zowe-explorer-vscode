@@ -13,6 +13,7 @@ import { AuthHandler, ErrorCorrelator, Gui, imperative, ZoweExplorerApiType } fr
 import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { Constants } from "../../../src/configuration/Constants";
 import { MockedProperty } from "../../__mocks__/mockUtils";
+import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 
 describe("AuthUtils", () => {
     describe("handleProfileAuthOnError", () => {
@@ -43,6 +44,51 @@ describe("AuthUtils", () => {
                     profileName: profile.name,
                 },
             });
+            expect(promptForAuthenticationMock).toHaveBeenCalledTimes(1);
+            expect(promptForAuthenticationMock).toHaveBeenCalledWith(
+                profile,
+                expect.objectContaining({
+                    imperativeError,
+                    errorCorrelation,
+                    isUsingTokenAuth: false,
+                })
+            );
+            profilesCacheMock[Symbol.dispose]();
+            isUsingTokenAuthMock.mockRestore();
+        });
+        it("should debounce duplicate/parallel auth prompts", async () => {
+            const imperativeError = new imperative.ImperativeError({
+                errorCode: 401 as unknown as string,
+                msg: "All configured authentication methods failed",
+            });
+            const profile = { name: "aProfile", type: "zosmf" } as any;
+            const profilesCacheMock = new MockedProperty(Constants, "PROFILES_CACHE", {
+                value: {
+                    ssoLogin: jest.fn().mockImplementation(),
+                    promptCredentials: jest.fn().mockImplementation(),
+                } as any,
+                configurable: true,
+            });
+            const correlateErrorMock = jest.spyOn(ErrorCorrelator.getInstance(), "correlateError");
+            const errorCorrelation = ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.All, imperativeError, {
+                templateArgs: {
+                    profileName: profile.name,
+                },
+            });
+            const isUsingTokenAuthMock = jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+            const promptForAuthenticationMock = jest.spyOn(AuthHandler, "promptForAuthentication").mockClear().mockResolvedValueOnce(true);
+            const debugMock = jest.spyOn(ZoweLogger, "debug").mockClear().mockReturnValue(undefined);
+            (AuthHandler as any).authPromptLocks.clear();
+            await AuthUtils.handleProfileAuthOnError(imperativeError, profile);
+            await AuthUtils.handleProfileAuthOnError(imperativeError, profile);
+            expect(debugMock).toHaveBeenCalledTimes(1);
+            expect(debugMock).toHaveBeenCalledWith("[AuthUtils] Skipping authentication prompt for profile aProfile due to debouncing");
+            expect(correlateErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.All, imperativeError, {
+                templateArgs: {
+                    profileName: profile.name,
+                },
+            });
+            expect(promptForAuthenticationMock).toHaveBeenCalledTimes(1);
             expect(promptForAuthenticationMock).toHaveBeenCalledWith(
                 profile,
                 expect.objectContaining({

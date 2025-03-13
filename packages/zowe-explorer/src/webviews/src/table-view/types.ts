@@ -39,6 +39,8 @@ export const tableProps = (
     ensureDomOrder: true,
     rowData: tableData.rows,
     columnDefs: tableData.columns?.map((col) => ({
+        sortable: true,
+        sortingOrder: ["asc", "desc", null],
         ...col,
         comparator: col.comparator ? new Function(wrapFn(col.comparator))() : undefined,
         colSpan: col.colSpan ? new Function(wrapFn(col.colSpan))() : undefined,

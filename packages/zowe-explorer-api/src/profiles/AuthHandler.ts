@@ -39,7 +39,8 @@ export type AuthPromptParams = {
 
 export type ProfileLike = string | imperative.IProfileLoaded;
 export class AuthHandler {
-    private static profileLocks: Map<string, Mutex> = new Map();
+    private static authPromptLocks = new Map<string, Mutex>();
+    private static profileLocks = new Map<string, Mutex>();
     private static enabledProfileTypes: Set<string> = new Set(["zosmf"]);
 
     /**
@@ -79,6 +80,7 @@ export class AuthHandler {
      */
     public static unlockProfile(profile: ProfileLike, refreshResources?: boolean): void {
         const profileName = AuthHandler.getProfileName(profile);
+        this.authPromptLocks.get(profileName)?.release();
         const mutex = this.profileLocks.get(profileName);
         // If a mutex doesn't exist for this profile or the mutex is no longer locked, return
         if (mutex == null || !mutex.isLocked()) {
@@ -98,6 +100,26 @@ export class AuthHandler {
                 // eslint-disable-next-line no-console
                 .catch((err) => err instanceof Error && console.error(err.message));
         }
+    }
+
+    /**
+     * Determines whether to handle an authentication error for a given profile.
+     * This uses a mutex to prevent additional authentication prompts until the first prompt is resolved.
+     * @param profileName The name of the profile to check
+     * @returns {boolean} Whether to handle the authentication error
+     */
+    public static async shouldHandleAuthError(profileName: string): Promise<boolean> {
+        if (!this.authPromptLocks.has(profileName)) {
+            this.authPromptLocks.set(profileName, new Mutex());
+        }
+
+        const mutex = this.authPromptLocks.get(profileName);
+        if (mutex.isLocked()) {
+            return false;
+        }
+
+        await mutex.acquire();
+        return true;
     }
 
     /**
@@ -195,7 +217,43 @@ export class AuthHandler {
             return;
         }
 
-        return this.profileLocks.get(profileName)?.waitForUnlock();
+        const mutex = this.profileLocks.get(profileName);
+        // If the mutex isn't locked, no need to wait
+        if (!mutex.isLocked()) {
+            return;
+        }
+
+        // Wait for the mutex to be unlocked with a timeout to prevent indefinite waiting
+        const timeoutMs = 30000; // 30 seconds timeout
+        const timeoutPromise = new Promise<void>((_, reject) => {
+            setTimeout(() => {
+                reject(new Error(`Timeout waiting for profile ${profileName} to be unlocked`));
+            }, timeoutMs);
+        });
+
+        try {
+            await Promise.race([mutex.waitForUnlock(), timeoutPromise]);
+        } catch (error) {
+            // Log the timeout to console since we don't have access to the logger in the API
+            // This is acceptable as this is just a fallback for an edge case where the user did not respond to a credential prompt in time
+            // eslint-disable-next-line no-console
+            console.log(`Timeout waiting for profile ${profileName} to be unlocked`);
+        }
+    }
+
+    /**
+     * Releases locks for all profiles.
+     * Used for scenarios such as the `onVaultChanged` event, where we don't know what secure values have changed,
+     * but we can't assume that the profile still has invalid credentials.
+     */
+    public static unlockAllProfiles(): void {
+        for (const mutex of this.authPromptLocks.values()) {
+            mutex.release();
+        }
+
+        for (const mutex of this.profileLocks.values()) {
+            mutex.release();
+        }
     }
 
     /**

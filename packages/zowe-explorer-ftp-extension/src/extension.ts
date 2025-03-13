@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { Gui, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { AuthHandler, Gui, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { FtpUssApi } from "./ZoweExplorerFtpUssApi";
 import { FtpMvsApi } from "./ZoweExplorerFtpMvsApi";
 import { FtpJesApi } from "./ZoweExplorerFtpJesApi";
@@ -35,6 +35,7 @@ export function deactivate(_context: vscode.ExtensionContext): void {
 async function registerFtpApis(): Promise<boolean> {
     const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.15.0");
     if (zoweExplorerApi) {
+        AuthHandler.enableLocksForType("zftp");
         zoweExplorerApi.registerUssApi(new FtpUssApi());
         zoweExplorerApi.registerMvsApi(new FtpMvsApi());
         zoweExplorerApi.registerJesApi(new FtpJesApi());
