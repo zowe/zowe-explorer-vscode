@@ -24,6 +24,7 @@ export class ProfilesCache {
     public profilesValidationSetting: Validation.IValidationSetting[] = [];
     public allProfiles: imperative.IProfileLoaded[] = [];
     public profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[] = [];
+    public static staticProfileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[] = [];
     protected allTypes: string[] = [];
     protected allExternalTypes = new Set<string>();
     protected profilesByType = new Map<string, imperative.IProfileLoaded[]>();
@@ -43,8 +44,10 @@ export class ProfilesCache {
             const index = this.profileTypeConfigurations.findIndex((ele) => ele.type == item.type);
             if (index !== -1) {
                 this.profileTypeConfigurations[index] = item;
+                ProfilesCache.staticProfileTypeConfigurations[index] = item;
             } else {
                 this.profileTypeConfigurations.push(item);
+                ProfilesCache.staticProfileTypeConfigurations.push(item);
             }
         });
     }
@@ -397,7 +400,7 @@ export class ProfilesCache {
         return session;
     }
 
-    protected getCoreProfileTypes(): imperative.IProfileTypeConfiguration[] {
+    public getCoreProfileTypes(): imperative.IProfileTypeConfiguration[] {
         return [ZosmfProfile, ZosTsoProfile, ZosUssProfile];
     }
 

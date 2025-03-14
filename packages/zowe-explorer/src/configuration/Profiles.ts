@@ -30,7 +30,6 @@ import {
 } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "./SettingsConfig";
 import { Constants } from "./Constants";
-import { ProfileConstants } from "@zowe/core-for-zowe-sdk";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
@@ -465,69 +464,7 @@ export class Profiles extends ProfilesCache {
     public async createZoweSchema(_zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<void> {
         ZoweLogger.trace("Profiles.createZoweSchema called.");
         try {
-            let user = false;
-            let global = true;
-            let rootPath = FileManagement.getZoweDir();
-            const workspaceDir = ZoweVsCodeExtension.workspaceRoot;
-            if (workspaceDir != null) {
-                const choice = await this.getConfigLocationPrompt("create");
-                if (choice === undefined) {
-                    Gui.showMessage(this.profilesOpCancelled);
-                    return;
-                }
-                if (choice === "project") {
-                    rootPath = workspaceDir.uri.fsPath;
-                    global = false;
-                }
-            }
-            // call check for existing and prompt here
-            const existingFile = await this.checkExistingConfig(rootPath);
-            if (existingFile === false) {
-                // handle prompt cancellation
-                return;
-            }
-            if (existingFile != null) {
-                user = existingFile.includes("user");
-            }
-            const config = await imperative.Config.load("zowe", {
-                homeDir: FileManagement.getZoweDir(),
-                projectDir: FileManagement.getFullPath(rootPath),
-            });
-            if (workspaceDir != null) {
-                config.api.layers.activate(user, global, rootPath);
-            }
-
-            const knownCliConfig: imperative.ICommandProfileTypeConfiguration[] = this.getCoreProfileTypes();
-            knownCliConfig.push(...this.getConfigArray());
-            knownCliConfig.push(ProfileConstants.BaseProfile);
-            config.setSchema(imperative.ConfigSchema.buildSchema(knownCliConfig));
-
-            // Note: IConfigBuilderOpts not exported
-            // const opts: IConfigBuilderOpts = {
-            const opts: any = {
-                // getSecureValue: this.promptForProp.bind(this),
-                populateProperties: true,
-            };
-
-            // Build new config and merge with existing layer
-            const impConfig: Partial<imperative.IImperativeConfig> = {
-                profiles: [...this.getCoreProfileTypes(), ...this.getConfigArray(), ProfileConstants.BaseProfile],
-                baseProfile: ProfileConstants.BaseProfile,
-            };
-            const newConfig: imperative.IConfig = await imperative.ConfigBuilder.build(impConfig, global, opts);
-
-            // Create non secure profile if VS Code setting is false
-            this.createNonSecureProfile(newConfig);
-
-            config.api.layers.merge(newConfig);
-            await config.save(false);
-            let configName;
-            if (user) {
-                configName = config.userConfigName;
-            } else {
-                configName = config.configName;
-            }
-            await this.openConfigFile(path.join(rootPath, configName));
+            await ZoweVsCodeExtension.createTeamConfiguration();
         } catch (err) {
             ZoweLogger.error(err);
             ZoweExplorerExtender.showZoweConfigError(err.message);
@@ -685,6 +622,7 @@ export class Profiles extends ProfilesCache {
         await this.openConfigFile(filePath);
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     public async profileValidationHelper(theProfile: imperative.IProfileLoaded, getStatus: (...args: unknown[]) => Promise<string>) {
         return Gui.withProgress(
             {
@@ -1154,30 +1092,6 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    private async checkExistingConfig(filePath: string): Promise<string | false> {
-        ZoweLogger.trace("Profiles.checkExistingConfig called.");
-        const existingLayers = await this.getConfigLayers();
-        const foundLayer = existingLayers.find((layer) => layer.path.includes(filePath));
-        if (foundLayer == null) {
-            return null;
-        }
-        const createButton = vscode.l10n.t("Create New");
-        const message = vscode.l10n.t({
-            message:
-                `A Team Configuration File already exists in this location\n{0}\n` +
-                `Continuing may alter the existing file, would you like to proceed?`,
-            args: [foundLayer.path],
-            comment: ["File path"],
-        });
-        const response = await Gui.infoMessage(message, { items: [createButton], vsCodeOpts: { modal: true } });
-        if (response) {
-            return path.basename(foundLayer.path);
-        } else {
-            await this.openConfigFile(foundLayer.path);
-        }
-        return false;
-    }
-
     private async getConfigLayers(): Promise<imperative.IConfigLayer[]> {
         ZoweLogger.trace("Profiles.getConfigLayers called.");
         const existingLayers: imperative.IConfigLayer[] = [];
@@ -1205,19 +1119,6 @@ export class Profiles extends ProfilesCache {
             }
         }
         return ret;
-    }
-
-    // Temporary solution for handling unsecure profiles until CLI team's work is made
-    // Remove secure properties and set autoStore to false when vscode setting is true
-    private createNonSecureProfile(newConfig: imperative.IConfig): void {
-        ZoweLogger.trace("Profiles.createNonSecureProfile called.");
-        const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
-        if (!isSecureCredsEnabled) {
-            for (const profile of Object.entries(newConfig.profiles)) {
-                delete newConfig.profiles[profile[0]].secure;
-            }
-            newConfig.autoStore = false;
-        }
     }
 
     public async refresh(apiRegister?: IRegisterClient): Promise<void> {
