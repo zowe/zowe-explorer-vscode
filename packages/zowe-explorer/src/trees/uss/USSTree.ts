@@ -691,7 +691,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         // If the path is empty, then the node's filter hasn't been selected yet
         // TODO: Is this the most robust and proper way of checking if a filter is active?
         if (node.fullPath !== "") {
-            if (node.fullPath === "/" || node.fullPath === ".") {
+            if (path.posix.dirname(node.fullPath) === "/") {
                 Gui.showMessage(vscode.l10n.t("You are already at the root directory."));
                 return;
             }
