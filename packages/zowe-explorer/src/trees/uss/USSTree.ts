@@ -687,13 +687,20 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      */
     public async cdUp(node: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("USSTree.cdUp called.");
-        if (node.fullPath === "/") {
-            Gui.showMessage(vscode.l10n.t("You are already at the root directory."));
-            return;
-        }
 
-        const parentPath = path.posix.dirname(node.fullPath);
-        await this.filterBy(node, parentPath);
+        // If the path is empty, then the node's filter hasn't been selected yet
+        // TODO: Is this the most robust and proper way of checking if a filter is active?
+        if (node.fullPath !== "") {
+            if (node.fullPath === "/" || node.fullPath === ".") {
+                Gui.showMessage(vscode.l10n.t("You are already at the root directory."));
+                return;
+            }
+
+            const parentPath = path.posix.dirname(node.fullPath);
+            await this.filterBy(node, parentPath);
+        } else {
+            Gui.showMessage(vscode.l10n.t("Select a filter first."));
+        }
     }
 
     /**
@@ -809,7 +816,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     sessionNode.contextValue += `_${Constants.FILTER_SEARCH}`;
                 }
                 sessionNode.dirty = true;
-                this.addSearchHistory(sanitizedPath);
+                // this.addSearchHistory(sanitizedPath); // TODO: Should we add to history? I think not as it's not a search
                 await TreeViewUtils.expandNode(sessionNode, this);
                 this.refresh();
             }
