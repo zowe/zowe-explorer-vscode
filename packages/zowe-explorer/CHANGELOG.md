@@ -5,6 +5,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## TBD Release
 
 ### New features and enhancements
+
 - Added "Copy Name" option to VSAM data sets [#3466](https://github.com/zowe/zowe-explorer-vscode/issues/3466)
 
 ### New features and enhancements
