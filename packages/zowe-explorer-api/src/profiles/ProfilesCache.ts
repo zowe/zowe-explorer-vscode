@@ -23,8 +23,12 @@ export class ProfilesCache {
     public profilesForValidation: Validation.IValidationProfile[] = [];
     public profilesValidationSetting: Validation.IValidationSetting[] = [];
     public allProfiles: imperative.IProfileLoaded[] = [];
+    /**
+     * @deprecated
+     * Use ProfilesCache.seesionProfileTypeConfigurations for Zowe Explorer VS Code session registered and Zowe core types list of meta-data.
+     * */
     public profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[] = [];
-    public static staticProfileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[] = [];
+    public static sessionProfileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[] = [];
     protected allTypes: string[] = [];
     protected allExternalTypes = new Set<string>();
     protected profilesByType = new Map<string, imperative.IProfileLoaded[]>();
@@ -39,21 +43,38 @@ export class ProfilesCache {
         return require("@zowe/secrets-for-zowe-sdk").keyring;
     }
 
+    /**
+     * Adds profile type meta-data to array for future use with team configuration actions,
+     * ie. Zowe Explorer uses upon extender registration in VS Code.
+     *
+     * @param {imperative.ICommandProfileTypeConfiguration[]} extendermetadata Profile type meta-data used with Zowe team configurations
+     *
+     * @returns {void}
+     */
     public addToConfigArray(extendermetadata: imperative.ICommandProfileTypeConfiguration[]): void {
+        // Disabling deprecation warning in method as to not break extenders.
+        // Will need to continue updating array in case of use of the deprecated method.
         extendermetadata?.forEach((item) => {
-            const index = this.profileTypeConfigurations.findIndex((ele) => ele.type == item.type);
+            const index = ProfilesCache.sessionProfileTypeConfigurations.findIndex((ele) => ele.type == item.type);
             if (index !== -1) {
-                this.profileTypeConfigurations[index] = item;
-                ProfilesCache.staticProfileTypeConfigurations[index] = item;
+                // eslint-disable-next-line deprecation/deprecation
+                ProfilesCache.sessionProfileTypeConfigurations[index] = this.profileTypeConfigurations[index] = item;
             } else {
+                // eslint-disable-next-line deprecation/deprecation
                 this.profileTypeConfigurations.push(item);
-                ProfilesCache.staticProfileTypeConfigurations.push(item);
+                ProfilesCache.sessionProfileTypeConfigurations.push(item);
             }
         });
     }
 
+    /**
+     * Returns an array of Zowe Explorer registered profile types and core Zowe supported profile types meta-data ,
+     * used with Zowe team configuration actions.
+     *
+     * @returns {imperative.ICommandProfileTypeConfiguration[]}
+     */
     public getConfigArray(): imperative.ICommandProfileTypeConfiguration[] {
-        return this.profileTypeConfigurations;
+        return ProfilesCache.sessionProfileTypeConfigurations;
     }
 
     public async getProfileInfo(_envTheia = false): Promise<imperative.ProfileInfo> {

@@ -378,7 +378,7 @@ export class ZoweVsCodeExtension {
         }
 
         const knownCliConfig: imperative.ICommandProfileTypeConfiguration[] = ZoweVsCodeExtension.profilesCache.getCoreProfileTypes();
-        knownCliConfig.push(...ProfilesCache.staticProfileTypeConfigurations);
+        knownCliConfig.push(...ZoweVsCodeExtension.profilesCache.getConfigArray());
         knownCliConfig.push(ProfileConstants.BaseProfile);
         config.setSchema(imperative.ConfigSchema.buildSchema(knownCliConfig));
 
