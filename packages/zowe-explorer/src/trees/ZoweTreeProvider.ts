@@ -29,12 +29,12 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
     public mOnDidChangeTreeData: vscode.EventEmitter<T | undefined | null | void> = new vscode.EventEmitter();
     public readonly onDidChangeTreeData = this.mOnDidChangeTreeData.event;
 
-    protected mHistory: ZowePersistentFilters;
+    protected mPersistence: ZowePersistentFilters;
     protected log: imperative.Logger = imperative.Logger.getAppLogger();
     protected validProfile: number = -1;
 
     public constructor(protected persistenceSchema: PersistenceSchemaEnum, public mFavoriteSession: IZoweTreeNode) {
-        this.mHistory = new ZowePersistentFilters(this.persistenceSchema);
+        this.mPersistence = new ZowePersistentFilters(this.persistenceSchema);
     }
 
     /**
@@ -152,7 +152,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
 
     public getSearchHistory(): string[] {
         ZoweLogger.trace("ZoweTreeProvider.getSearchHistory called.");
-        return this.mHistory.getSearchHistory();
+        return this.mPersistence.getSearchHistory();
     }
 
     public getTreeType(): PersistenceSchemaEnum {
@@ -163,7 +163,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
     public addSearchHistory(criteria: string): void {
         ZoweLogger.trace("ZoweTreeProvider.addSearchHistory called.");
         if (criteria) {
-            this.mHistory.addSearchHistory(criteria);
+            this.mPersistence.addSearchHistory(criteria);
         }
     }
 

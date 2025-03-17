@@ -227,7 +227,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             }
             node.dirty = true;
             this.mSessionNodes.push(node);
-            this.mHistory.addSession(profile.name);
+            this.mPersistence.addSession(profile.name);
         }
     }
 
@@ -342,7 +342,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     }
 
     public async refreshFavorites(): Promise<void> {
-        const lines: string[] = this.mHistory.readFavorites();
+        const lines: string[] = this.mPersistence.readFavorites();
         if (lines.length === 0) {
             ZoweLogger.debug(vscode.l10n.t("No jobs favorites found."));
             return;
@@ -585,7 +585,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 favoritesArray.push(favoriteEntry);
             });
         });
-        this.mHistory.updateFavorites(favoritesArray);
+        this.mPersistence.updateFavorites(favoritesArray);
     }
 
     /**
@@ -632,37 +632,37 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
 
     public removeSearchHistory(name: string): void {
         ZoweLogger.trace("JobTree.removeSearchHistory called.");
-        this.mHistory.removeSearchHistory(name);
+        this.mPersistence.removeSearchHistory(name);
     }
 
     public removeSession(name: string): void {
         ZoweLogger.trace("JobTree.removeSession called.");
-        this.mHistory.removeSession(name);
+        this.mPersistence.removeSession(name);
     }
 
     public resetSearchHistory(): void {
         ZoweLogger.trace("JobTree.resetSearchHistory called.");
-        this.mHistory.resetSearchHistory();
+        this.mPersistence.resetSearchHistory();
     }
 
     public getSessions(): string[] {
         ZoweLogger.trace("DatasetTree.getSessions called.");
-        return this.mHistory.getSessions();
+        return this.mPersistence.getSessions();
     }
 
     public getFileHistory(): string[] {
         ZoweLogger.trace("DatasetTree.getFileHistory called.");
-        return this.mHistory.getFileHistory();
+        return this.mPersistence.getFileHistory();
     }
 
     public getFavorites(): string[] {
         ZoweLogger.trace("DatasetTree.getFavorites called.");
-        return this.mHistory.readFavorites();
+        return this.mPersistence.readFavorites();
     }
 
     public async getUserJobsMenuChoice(): Promise<FilterItem | undefined> {
         ZoweLogger.trace("JobTree.getUserJobsMenuChoice called.");
-        const items: FilterItem[] = this.mHistory
+        const items: FilterItem[] = this.mPersistence
             .getSearchHistory()
             .map((element) => new FilterItem({ text: element, menuType: Definitions.JobPickerTypes.History }));
 

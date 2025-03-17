@@ -478,7 +478,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             }
             node.dirty = true;
             this.mSessionNodes.push(node);
-            this.mHistory.addSession(profile.name);
+            this.mPersistence.addSession(profile.name);
         }
     }
 
@@ -599,7 +599,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 favoritesArray.push(favoriteEntry);
             });
         });
-        this.mHistory.updateFavorites(favoritesArray);
+        this.mPersistence.updateFavorites(favoritesArray);
     }
 
     /**
@@ -692,9 +692,9 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             let remotepath: string;
             if (SharedContext.isSessionNotFav(node)) {
                 ZoweLogger.debug(vscode.l10n.t("Prompting the user for a USS path"));
-                if (this.mHistory.getSearchHistory().length > 0) {
+                if (this.mPersistence.getSearchHistory().length > 0) {
                     const createPick = new FilterDescriptor(USSTree.defaultDialogText);
-                    const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
+                    const items: vscode.QuickPickItem[] = this.mPersistence.getSearchHistory().map((element) => new FilterItem({ text: element }));
                     const quickpick = Gui.createQuickPick();
                     quickpick.placeholder = vscode.l10n.t("Select a filter");
                     quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
@@ -829,7 +829,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     }
 
     public async refreshFavorites(): Promise<void> {
-        const lines: string[] = this.mHistory.readFavorites();
+        const lines: string[] = this.mPersistence.readFavorites();
         if (lines.length === 0) {
             ZoweLogger.debug(vscode.l10n.t("No USS favorites found."));
             return;
@@ -1003,48 +1003,48 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
 
     public addFileHistory(criteria: string): void {
         ZoweLogger.trace("USSTree.addFileHistory called.");
-        this.mHistory.addFileHistory(criteria);
+        this.mPersistence.addFileHistory(criteria);
         this.refresh();
     }
 
     public getFileHistory(): string[] {
         ZoweLogger.trace("USSTree.getFileHistory called.");
-        return this.mHistory.getFileHistory();
+        return this.mPersistence.getFileHistory();
     }
 
     public removeFileHistory(name: string): void {
         ZoweLogger.trace("USSTree.removeFileHistory called.");
-        this.mHistory.removeFileHistory(name);
+        this.mPersistence.removeFileHistory(name);
     }
 
     public removeSearchHistory(name: string): void {
         ZoweLogger.trace("USSTree.removeSearchHistory called.");
-        this.mHistory.removeSearchHistory(name);
+        this.mPersistence.removeSearchHistory(name);
     }
 
     public removeSession(name: string): void {
         ZoweLogger.trace("USSTree.removeSession called.");
-        this.mHistory.removeSession(name);
+        this.mPersistence.removeSession(name);
     }
 
     public resetSearchHistory(): void {
         ZoweLogger.trace("USSTree.resetSearchHistory called.");
-        this.mHistory.resetSearchHistory();
+        this.mPersistence.resetSearchHistory();
     }
 
     public resetFileHistory(): void {
         ZoweLogger.trace("USSTree.resetFileHistory called.");
-        this.mHistory.resetFileHistory();
+        this.mPersistence.resetFileHistory();
     }
 
     public getSessions(): string[] {
         ZoweLogger.trace("USSTree.getSessions called.");
-        return this.mHistory.getSessions();
+        return this.mPersistence.getSessions();
     }
 
     public getFavorites(): string[] {
         ZoweLogger.trace("USSTree.getFavorites called.");
-        return this.mHistory.readFavorites();
+        return this.mPersistence.readFavorites();
     }
 
     /**
