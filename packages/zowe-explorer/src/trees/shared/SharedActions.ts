@@ -252,12 +252,8 @@ export class SharedActions {
 
         try {
             SharedActions.refreshInProgress = true;
-            if (treeProvider == null) {
-                for (const provider of Object.values(SharedTreeProviders.providers)) {
-                    await this.refreshAll(provider);
-                }
-                return;
-            }
+
+            // Refresh profiles before anything else to ensure we have the latest state
             try {
                 await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
             } catch (err) {
@@ -265,6 +261,14 @@ export class SharedActions {
                 ZoweExplorerExtender.showZoweConfigError(err.message);
                 return;
             }
+
+            if (treeProvider == null) {
+                for (const provider of Object.values(SharedTreeProviders.providers)) {
+                    await this.refreshAll(provider);
+                }
+                return;
+            }
+
             for (const sessNode of treeProvider.mSessionNodes) {
                 const profiles = await Profiles.getInstance().fetchAllProfiles();
                 const found = profiles.some((prof) => prof.name === sessNode.label.toString().trim());
