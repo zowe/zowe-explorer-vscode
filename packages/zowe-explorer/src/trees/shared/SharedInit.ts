@@ -150,8 +150,7 @@ export class SharedInit {
 
         context.subscriptions.push(
             ZoweVsCodeExtension.onProfileUpdated(async (profile) => {
-                const providers = Object.values(SharedTreeProviders.providers);
-                for (const provider of providers) {
+                for (const provider of Object.values(providers)) {
                     try {
                         const node = (await provider.getChildren()).find((n) => n.label === profile?.name);
                         node?.setProfileToChoice?.(profile);
