@@ -464,8 +464,9 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
             parent.children.push(newNode);
         }
 
-        if (replace !== "cancel") {
-            (parent.children.find((node) => node.label === name) as ZoweDatasetNode)?.setEtag(newEtag);
+        const child = parent.children.find((node) => node.label === name);
+        if (newEtag && child && child instanceof ZoweDatasetNode) {
+            child.setEtag(newEtag);
         }
 
         parent.dirty = true;
