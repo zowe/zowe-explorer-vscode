@@ -26,6 +26,15 @@ import { SharedTreeProviders } from "./SharedTreeProviders";
 import { ZoweExplorerExtender } from "../../extending/ZoweExplorerExtender";
 
 export class SharedActions {
+    private static refreshInProgress = false;
+
+    /**
+     * Returns true if a profile refresh is currently in progress
+     */
+    public static isRefreshInProgress(): boolean {
+        return SharedActions.refreshInProgress;
+    }
+
     /**
      * Search for matching items loaded in data set or USS tree
      *
@@ -235,35 +244,46 @@ export class SharedActions {
      */
     public static async refreshAll(treeProvider?: IZoweTree<IZoweTreeNode>): Promise<void> {
         ZoweLogger.trace("refresh.refreshAll called.");
-        if (treeProvider == null) {
-            for (const provider of Object.values(SharedTreeProviders.providers)) {
-                await this.refreshAll(provider);
-            }
+
+        if (SharedActions.refreshInProgress) {
+            ZoweLogger.debug("Profile refresh already in progress, skipping");
             return;
         }
+
         try {
-            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
-        } catch (err) {
-            ZoweLogger.error(err);
-            ZoweExplorerExtender.showZoweConfigError(err.message);
-            return;
-        }
-        for (const sessNode of treeProvider.mSessionNodes) {
-            const profiles = await Profiles.getInstance().fetchAllProfiles();
-            const found = profiles.some((prof) => prof.name === sessNode.label.toString().trim());
-            if (found || sessNode.label.toString() === vscode.l10n.t("Favorites")) {
-                if (SharedContext.isSessionNotFav(sessNode)) {
-                    sessNode.dirty = true;
-                    SharedActions.returnIconState(sessNode);
-                    AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getCommonApi(profile), sessNode);
+            SharedActions.refreshInProgress = true;
+            if (treeProvider == null) {
+                for (const provider of Object.values(SharedTreeProviders.providers)) {
+                    await this.refreshAll(provider);
                 }
-            } else {
-                await TreeViewUtils.removeSession(treeProvider, sessNode.label.toString().trim());
+                return;
             }
+            try {
+                await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+            } catch (err) {
+                ZoweLogger.error(err);
+                ZoweExplorerExtender.showZoweConfigError(err.message);
+                return;
+            }
+            for (const sessNode of treeProvider.mSessionNodes) {
+                const profiles = await Profiles.getInstance().fetchAllProfiles();
+                const found = profiles.some((prof) => prof.name === sessNode.label.toString().trim());
+                if (found || sessNode.label.toString() === vscode.l10n.t("Favorites")) {
+                    if (SharedContext.isSessionNotFav(sessNode)) {
+                        sessNode.dirty = true;
+                        SharedActions.returnIconState(sessNode);
+                        AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getCommonApi(profile), sessNode);
+                    }
+                } else {
+                    await TreeViewUtils.removeSession(treeProvider, sessNode.label.toString().trim());
+                }
+            }
+            for (const profType of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
+                await TreeViewUtils.addDefaultSession(treeProvider, profType);
+            }
+            treeProvider.refresh();
+        } finally {
+            SharedActions.refreshInProgress = false;
         }
-        for (const profType of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
-            await TreeViewUtils.addDefaultSession(treeProvider, profType);
-        }
-        treeProvider.refresh();
     }
 }

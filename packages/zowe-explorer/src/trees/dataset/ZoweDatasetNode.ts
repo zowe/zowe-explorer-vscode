@@ -41,6 +41,7 @@ import type { Definitions } from "../../configuration/Definitions";
 import type { DatasetTree } from "./DatasetTree";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetUtils } from "./DatasetUtils";
+import { SharedActions } from "../shared/SharedActions";
 
 /**
  * A type of TreeItem used to represent sessions and data sets
@@ -600,6 +601,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
     private async getDatasets(profile: imperative.IProfileLoaded): Promise<zosfiles.IZosFilesResponse[] | undefined> {
         ZoweLogger.trace("ZoweDatasetNode.getDatasets called.");
+
+        // Cancel operation if a refresh is in progress
+        if (SharedActions.isRefreshInProgress()) {
+            ZoweLogger.debug("Dataset operation cancelled - profile refresh in progress");
+            return undefined;
+        }
+
         const responses: zosfiles.IZosFilesResponse[] = [];
         const options: zosfiles.IListOptions = {
             attributes: true,
