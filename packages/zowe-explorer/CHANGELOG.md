@@ -10,7 +10,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Implemented copy/paste functionality of data sets within and across LPARs. [#3012](https://github.com/zowe/zowe-explorer-vscode/issues/3012)
 - Implemented drag and drop functionality of data sets within and across LPARs. [#3413](https://github.com/zowe/zowe-explorer-vscode/pull/3413)
 - Renamed "Zowe Explorer z/OS Console" to "z/OS Console". [#3445](https://github.com/zowe/zowe-explorer-vscode/pull/3445)
-- Adopted ZE APIs new `directConnectLogin` and `directConnectLogout` methods for login and logout actions NOT using the tokenType `apimlAuthenticationToken`. [#3346](https://github.com/zowe/zowe-explorer-vscode/issues/3346)
+- Adopted Zowe Explorer APIs new `directConnectLogin` and `directConnectLogout` methods for login and logout actions NOT using the tokenType `apimlAuthenticationToken`. [#3346](https://github.com/zowe/zowe-explorer-vscode/issues/3346)
+- Adopted new Zowe Explorer API, `ZoweVsCodeExtension.createTeamConfiguration` for Zowe team configuration creation. [#3088](https://github.com/zowe/zowe-explorer-vscode/issues/3088)
 
 ### Bug fixes
 

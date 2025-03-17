@@ -10,6 +10,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added new `fetchAttributes` API to `IZoweUSSTreeNode` to fetch latest attributes for UNIX files. [#3238](https://github.com/zowe/zowe-explorer-vscode/issues/3238)
 - Added new `directConnectLogin` and `directConnectLogout` to the ZoweVsCodeExtension class. [#3346](https://github.com/zowe/zowe-explorer-vscode/issues/3346)
 - Added new optional `refreshFavorites` to IZoweTree interface. [#3470](https://github.com/zowe/zowe-explorer-vscode/issues/3470)
+- Added new API, `ZoweVsCodeExtension.createTeamConfiguration`, allowing extenders to use the same prompting process adopted by Zowe Explorer for Zowe team configuration creation including all registered profile types. [#3088](https://github.com/zowe/zowe-explorer-vscode/issues/3088)
 
 ### Bug fixes
 
