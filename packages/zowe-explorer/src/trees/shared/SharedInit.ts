@@ -341,21 +341,27 @@ export class SharedInit {
         context.subscriptions.push(...watchers);
 
         watchers.forEach((watcher) => {
-            watcher.onDidCreate(async () => {
-                ZoweLogger.info(vscode.l10n.t("Team config file created, refreshing Zowe Explorer."));
-                await SharedActions.refreshAll();
-                ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.CREATE);
-            });
-            watcher.onDidDelete(async () => {
-                ZoweLogger.info(vscode.l10n.t("Team config file deleted, refreshing Zowe Explorer."));
-                await SharedActions.refreshAll();
-                ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.DELETE);
-            });
-            watcher.onDidChange(async () => {
-                ZoweLogger.info(vscode.l10n.t("Team config file updated, refreshing Zowe Explorer."));
-                await SharedActions.refreshAll();
-                ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
-            });
+            watcher.onDidCreate(
+                SharedUtils.debounceAsync(async () => {
+                    ZoweLogger.info(vscode.l10n.t("Team config file created, refreshing Zowe Explorer."));
+                    await SharedActions.refreshAll();
+                    ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.CREATE);
+                }, 100) // eslint-disable-line no-magic-numbers
+            );
+            watcher.onDidDelete(
+                SharedUtils.debounceAsync(async () => {
+                    ZoweLogger.info(vscode.l10n.t("Team config file deleted, refreshing Zowe Explorer."));
+                    await SharedActions.refreshAll();
+                    ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.DELETE);
+                }, 100) // eslint-disable-line no-magic-numbers
+            );
+            watcher.onDidChange(
+                SharedUtils.debounceAsync(async () => {
+                    ZoweLogger.info(vscode.l10n.t("Team config file updated, refreshing Zowe Explorer."));
+                    await SharedActions.refreshAll();
+                    ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
+                }, 100) // eslint-disable-line no-magic-numbers
+            );
         });
 
         try {

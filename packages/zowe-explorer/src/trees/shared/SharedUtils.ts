@@ -361,6 +361,49 @@ export class SharedUtils {
         };
     }
 
+    /**
+     * Debounces an async event callback to prevent duplicate triggers.
+     * Similar to `debounce`, but preserves the Promise return type.
+     * @param callback Async event callback
+     * @param delay Number of milliseconds to delay
+     */
+    public static debounceAsync<T extends (...args: any[]) => Promise<any>>(
+        callback: T,
+        delay: number
+    ): (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> {
+        let timeoutId: ReturnType<typeof setTimeout>;
+        let pendingPromise: Promise<any> | null = null;
+
+        return (...args: Parameters<T>): Promise<Awaited<ReturnType<T>>> => {
+            // Cancel previous execution
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+
+            // Create a new promise for this invocation
+            const promise = new Promise<Awaited<ReturnType<T>>>((resolve, reject) => {
+                timeoutId = setTimeout(() => {
+                    // Execute callback without async wrapper
+                    try {
+                        // Store the pending promise to allow multiple waiters
+                        pendingPromise = callback(...args);
+                        pendingPromise
+                            .then(resolve) // Forward the result
+                            .catch(reject) // Forward any errors
+                            .finally(() => {
+                                pendingPromise = null;
+                            });
+                    } catch (err) {
+                        reject(err);
+                        pendingPromise = null;
+                    }
+                }, delay);
+            });
+
+            return promise;
+        };
+    }
+
     public static updateSortOptionsWithDefault<T>(sortMethod: T, sortOptions: string[]): void {
         ZoweLogger.trace("shared.utils.updateSortOptionsWithDefault called.");
         for (let i = 0; i < sortOptions.length; i++) {
