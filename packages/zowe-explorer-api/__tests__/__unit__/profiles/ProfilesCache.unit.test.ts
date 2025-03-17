@@ -187,7 +187,6 @@ describe("ProfilesCache", () => {
 
     it("getConfigArray should return the data of profileTypeConfigurations Array", () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-        // profCache.profileTypeConfigurations = profileMetadata;
         ProfilesCache.sessionProfileTypeConfigurations = profileMetadata;
         const res = profCache.getConfigArray();
         expect(res).toEqual(profileMetadata);
