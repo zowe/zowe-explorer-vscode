@@ -28,6 +28,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where invalid credentials could trigger the **Update Credentials** prompt twice in new VS Code session. [#3376](https://github.com/zowe/zowe-explorer-vscode/pull/3376)
 - Fixed an issue where expanding a job node to show spool doesn't trigger the **Update Credentials** prompt when credentials are invalid. [#3376](https://github.com/zowe/zowe-explorer-vscode/pull/3376)
 - Fixed data loss when creating a data set member with the same name as an existing member. When creating a new member, the user is now prompted to replace it if the member already exists. [[#3327](https://github.com/zowe/zowe-explorer-vscode/issues/3327)]
+- Fixed an issue where profile encoding is not respected when opening job spool files. [#3504](https://github.com/zowe/zowe-explorer-vscode/issues/3504)
 
 ## `2.18.0`
 
