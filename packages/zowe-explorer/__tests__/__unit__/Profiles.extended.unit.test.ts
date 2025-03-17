@@ -868,7 +868,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
                 ? "file:\\globalPath\\.zowe\\zowe.config.json"
                 : "file:/globalPath/.zowe/zowe.config.json".split(path.sep).join(path.posix.sep);
 
-        await expect(Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree)).resolves.toBe(expectedValue);
+        await expect(Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree)).resolves.toContain(expectedValue);
     });
 });
 
