@@ -422,7 +422,9 @@ export class ProfilesCache {
     protected getMergedAttrs(mProfileInfo: imperative.ProfileInfo, profAttrs: imperative.IProfAttrs): imperative.IProfile {
         const profile: imperative.IProfile = {};
         if (profAttrs != null) {
-            const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true });
+            const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs, {
+                getSecureVals: mProfileInfo.getTeamConfig().properties.autoStore,
+            });
             for (const arg of mergedArgs.knownArgs) {
                 profile[arg.argName] = arg.argValue;
             }
