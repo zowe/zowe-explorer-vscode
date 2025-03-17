@@ -11,7 +11,6 @@
 
 import * as vscode from "vscode";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
-import * as path from "path";
 import {
     createISessionWithoutCredentials,
     createTreeView,
@@ -42,7 +41,6 @@ import {
     AuthHandler,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/configuration/Profiles";
-import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
 import { createUSSNode, createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
 import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
@@ -58,6 +56,7 @@ import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { FilterDescriptor } from "../../../src/management/FilterManagement";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { USSTree } from "../../../src/trees/uss/USSTree";
+import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
 
 jest.mock("child_process");
 jest.mock("fs");
@@ -136,6 +135,7 @@ function createGlobalMocks(): { [key: string]: any } {
         configurable: true,
     });
     Object.defineProperty(vscode.window, "showInputBox", { value: newMocks.mockShowInputBox, configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", {
         value: newMocks.mockShowErrorMessage,
         configurable: true,
@@ -515,17 +515,37 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
     afterAll(() => {
         jest.restoreAllMocks();
     });
-
     it("Tests that createZoweSchema presents correct message when escaping selection of config location prompt", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
         const spy = jest.spyOn(Gui, "showQuickPick");
         spy.mockResolvedValueOnce(undefined);
-        await Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree);
+        await globalMocks.mockProfileInstance.createZoweSchema(blockMocks.testDatasetTree);
         expect(spy).toHaveBeenCalled();
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation cancelled");
         spy.mockClear();
+    });
+    it("Tests that createZoweSchema completes successfully", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const zeapiCreateSpy = jest.spyOn(ZoweVsCodeExtension, "createTeamConfiguration");
+        await globalMocks.mockProfileInstance.createZoweSchema(blockMocks.testDatasetTree);
+        expect(zeapiCreateSpy).toHaveBeenCalled();
+        zeapiCreateSpy.mockClear();
+    });
+    it("Tests that createZoweSchema catches and handles thrown error", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const zeapiCreateSpy = jest.spyOn(ZoweVsCodeExtension, "createTeamConfiguration").mockRejectedValue(new Error("fake error"));
+        const spyZoweConfigError = jest.spyOn(ZoweExplorerExtender, "showZoweConfigError");
+        jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("Show config");
+        await globalMocks.mockProfileInstance.createZoweSchema(blockMocks.testDatasetTree);
+        expect(spyZoweConfigError).toHaveBeenCalled();
+        zeapiCreateSpy.mockClear();
+        spyZoweConfigError.mockClear();
     });
 });
 describe("Profiles Unit Tests - function getProfileIcon", () => {
