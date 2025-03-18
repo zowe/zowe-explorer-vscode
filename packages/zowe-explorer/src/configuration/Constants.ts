@@ -272,3 +272,12 @@ export class Constants {
         CMDS: "cmds-panel-tab",
     };
 }
+
+/**
+ * The result of the JWT token check in ZoweTreeProvider.checkJwtForProfile
+ */
+export enum JwtCheckResult {
+    TokenExpired = "TokenExpired",
+    TokenUnusedOrUnsupported = "TokenUnusedOrUnsupported",
+    TokenValid = "TokenValid",
+}
