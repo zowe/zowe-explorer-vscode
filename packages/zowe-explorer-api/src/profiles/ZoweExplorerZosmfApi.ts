@@ -21,7 +21,7 @@ import { MainframeInteraction } from "../extend/MainframeInteraction";
 import { FileManagement } from "../utils";
 import { Types } from "../Types";
 import { ProfilesCache } from "../profiles/ProfilesCache";
-import { ZoweVsCodeExtension } from "../vscode";
+import { ZoweVsCodeExtension } from "../vscode/ZoweVsCodeExtension";
 
 /**
  * Implementations of Zowe Explorer API for z/OSMF profiles
@@ -50,7 +50,7 @@ export namespace ZoweExplorerZosmf {
         }
 
         public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
-            const loadedProfile = ZoweVsCodeExtension.profilesCache.loadNamedProfile(profile?.name ?? this.profile?.profile.name);
+            const loadedProfile = profile ?? this.profile;
             try {
                 this.session = this._getSession(loadedProfile);
             } catch (error) {

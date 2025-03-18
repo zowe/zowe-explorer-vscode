@@ -640,11 +640,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 ];
                 const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
                 if (!mvsApi.getSession(profile)) {
-                    throw new imperative.ImperativeError({
-                        msg: vscode.l10n.t("Profile auth error"),
-                        additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
-                        errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
-                    });
+                    ZoweLogger.warn(`[ZoweDatasetNode.getDatasets] Session undefined for profile ${profile.name}`);
+                    return undefined;
                 }
                 if (mvsApi.dataSetsMatchingPattern) {
                     responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
