@@ -23,6 +23,7 @@ import { SharedActions } from "./shared/SharedActions";
 import { IconUtils } from "../icons/IconUtils";
 import { AuthUtils } from "../utils/AuthUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 
 export class ZoweTreeProvider<T extends IZoweTreeNode> {
     // Event Emitters used to notify subscribers that the refresh event has fired
@@ -351,6 +352,20 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         const profInfo = await Profiles.getInstance().getProfileInfo();
 
         if (profInfo.hasTokenExpiredForProfile(profileName)) {
+            const loadedProfile = Profiles.getInstance().loadNamedProfile(profileName);
+            let tokenType: string;
+            try {
+                tokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(loadedProfile).getTokenTypeName();
+            } catch (err) {
+                // The API does not support a token type, therefore we don't care about the status of the token from the base profile
+                return false;
+            }
+
+            // Return early if the API explicitly returned `null` for the token type, which suggests it is not supported.
+            if (tokenType == null) {
+                return false;
+            }
+
             const userResponse = await AuthUtils.promptForSsoLogin(profileName);
             if (userResponse === vscode.l10n.t("Log in to Authentication Service")) {
                 return true;
