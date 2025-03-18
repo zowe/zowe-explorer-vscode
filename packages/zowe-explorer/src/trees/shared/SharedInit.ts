@@ -22,6 +22,7 @@ import {
     ZoweScheme,
     ZoweVsCodeExtension,
     imperative,
+    AuthHandler,
 } from "@zowe/zowe-explorer-api";
 import { SharedActions } from "./SharedActions";
 import { SharedHistoryView } from "./SharedHistoryView";
@@ -367,6 +368,7 @@ export class SharedInit {
         try {
             const zoweWatcher = imperative.EventOperator.getWatcher().subscribeUser(imperative.ZoweUserEvents.ON_VAULT_CHANGED, async () => {
                 ZoweLogger.info(vscode.l10n.t("Changes in the credential vault detected, refreshing Zowe Explorer."));
+                AuthHandler.unlockAllProfiles();
                 await ProfilesUtils.readConfigFromDisk();
                 await SharedActions.refreshAll();
                 ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter.fire(Validation.EventType.UPDATE);
