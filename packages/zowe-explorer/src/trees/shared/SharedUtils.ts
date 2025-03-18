@@ -363,7 +363,6 @@ export class SharedUtils {
 
     /**
      * Debounces an async event callback to prevent duplicate triggers.
-     * Only fires after the specified delay has passed without any new calls.
      * @param callback Async event callback
      * @param delay Number of milliseconds to delay
      */
@@ -372,49 +371,18 @@ export class SharedUtils {
         delay: number
     ): (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> {
         let timeoutId: ReturnType<typeof setTimeout>;
-        let resolvePromise: (value: Awaited<ReturnType<T>>) => void;
-        let rejectPromise: (reason: any) => void;
-        let promise: Promise<Awaited<ReturnType<T>>> | null = null;
-        let latestArgs: Parameters<T>;
 
         return (...args: Parameters<T>): Promise<Awaited<ReturnType<T>>> => {
-            // Store the latest arguments
-            latestArgs = args;
-
-            // If there's an existing timeout, clear it
             if (timeoutId) {
                 clearTimeout(timeoutId);
             }
 
-            // Create a new promise if we don't have one
-            if (promise == null) {
-                promise = new Promise<Awaited<ReturnType<T>>>((resolve, reject) => {
-                    resolvePromise = resolve;
-                    rejectPromise = reject;
-                });
-            }
-
-            // Set a new timeout - use a regular function to avoid the async warning
-            timeoutId = setTimeout(() => {
-                // Forward result of callback to the returned promise
-                const executeCallback = async (): Promise<void> => {
-                    try {
-                        // Execute callback with the latest arguments after the quiet period
-                        const result = await callback(...latestArgs);
-                        resolvePromise(result);
-                    } catch (err) {
-                        rejectPromise(err);
-                    } finally {
-                        // Reset for the next debounce cycle
-                        promise = null;
-                    }
-                };
-
-                // Start the async execution - use void to explicitly ignore the invocation of this promise
-                void executeCallback();
-            }, delay);
-
-            return promise;
+            // Returns a promise that is fulfilled after the debounced callback finishes
+            return new Promise<Awaited<ReturnType<T>>>((resolve, reject) => {
+                timeoutId = setTimeout(() => {
+                    callback(...args).then(resolve, reject);
+                }, delay);
+            });
         };
     }
 
