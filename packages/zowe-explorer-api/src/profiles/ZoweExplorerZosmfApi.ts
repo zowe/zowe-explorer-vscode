@@ -50,7 +50,7 @@ export namespace ZoweExplorerZosmf {
         }
 
         public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
-            const loadedProfile = profile ?? ZoweVsCodeExtension.profilesCache.loadNamedProfile(this.profile?.profile.name);
+            const loadedProfile = ZoweVsCodeExtension.profilesCache.loadNamedProfile(profile?.name ?? this.profile?.profile.name);
             try {
                 this.session = this._getSession(loadedProfile);
             } catch (error) {
