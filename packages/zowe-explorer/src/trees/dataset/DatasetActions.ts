@@ -45,6 +45,7 @@ interface ISearchOptions {
     node: IZoweDatasetTreeNode;
     pattern: string;
     searchString: string;
+    caseSensitive: boolean;
 }
 
 export class DatasetActions {
@@ -1890,9 +1891,20 @@ export class DatasetActions {
         // Figure out what text we are looking for.
         const searchString = await Gui.showInputBox({ prompt: vscode.l10n.t("Enter the text to search for.") });
         if (!searchString) {
-            Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
             return;
         }
+
+        // Handle if the search should be case sensitive
+        const caseSensitiveQuickPick = await Gui.showQuickPick([vscode.l10n.t("Case Insensitive"), vscode.l10n.t("Case Sensitive")], {
+            title: vscode.l10n.t("Search Case Sensitivity"),
+            placeHolder: vscode.l10n.t("Select search case sensitivity"),
+            ignoreFocusOut: true,
+            canPickMany: false,
+        });
+        if (!caseSensitiveQuickPick) {
+            return;
+        }
+        const caseSensitive = caseSensitiveQuickPick === vscode.l10n.t("Case Sensitive");
 
         // Perform the actual search.
         const response: zosfiles.IZosFilesResponse = await Gui.withProgress(
@@ -1902,7 +1914,7 @@ export class DatasetActions {
                 cancellable: true,
             },
             async (progress, token) => {
-                return this.performSearch(progress, token, { node, pattern, searchString });
+                return this.performSearch(progress, token, { node, pattern, searchString, caseSensitive });
             }
         );
 
@@ -2049,6 +2061,7 @@ export class DatasetActions {
                 searchString: options.searchString,
                 progressTask: task,
                 mainframeSearch: false,
+                caseSensitive: options.caseSensitive,
                 continueSearch: function intercept(dataSets: zosfiles.IDataSet[]) {
                     realTotalEntries = dataSets.length;
                     return DatasetActions.continueSearchPrompt(dataSets);
