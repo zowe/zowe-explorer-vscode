@@ -415,6 +415,21 @@ export class ZoweVsCodeExtension {
         await Gui.showTextDocument(document, { preview: false });
     }
 
+    public static async getConfigLayers(): Promise<imperative.IConfigLayer[]> {
+        const existingLayers: imperative.IConfigLayer[] = [];
+        const config = await imperative.Config.load("zowe", {
+            homeDir: FileManagement.getZoweDir(),
+            projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath,
+        });
+        const layers = config.layers;
+        layers.forEach((layer) => {
+            if (layer.exists) {
+                existingLayers.push(layer);
+            }
+        });
+        return existingLayers;
+    }
+
     /**
      * This method is intended to be used for authentication (login, logout) purposes
      *
@@ -534,21 +549,6 @@ export class ZoweVsCodeExtension {
             await this.openConfigFile(foundLayer.path);
         }
         return false;
-    }
-
-    private static async getConfigLayers(): Promise<imperative.IConfigLayer[]> {
-        const existingLayers: imperative.IConfigLayer[] = [];
-        const config = await imperative.Config.load("zowe", {
-            homeDir: FileManagement.getZoweDir(),
-            projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath,
-        });
-        const layers = config.layers;
-        layers.forEach((layer) => {
-            if (layer.exists) {
-                existingLayers.push(layer);
-            }
-        });
-        return existingLayers;
     }
 
     private static async getConfigLocationPrompt(action: string): Promise<string> {

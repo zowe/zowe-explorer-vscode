@@ -53,7 +53,7 @@ export class ProfilesCache {
      */
     public addToConfigArray(extendermetadata: imperative.ICommandProfileTypeConfiguration[]): void {
         // Disabling deprecation warning in method as to not break extenders.
-        // Will need to continue updating array in case of use of the deprecated method.
+        // Will need to continue updating array in case of use of the deprecated constant.
         extendermetadata?.forEach((item) => {
             const index = ProfilesCache.sessionProfileTypeConfigurations.findIndex((ele) => ele.type == item.type);
             if (index !== -1) {
