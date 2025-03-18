@@ -37,6 +37,7 @@ import { createDatasetFavoritesNode, createDatasetSessionNode } from "../../__mo
 import { DatasetInit } from "../../../src/trees/dataset/DatasetInit";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { IconGenerator } from "../../../src/icons/IconGenerator";
+import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
 
 async function createGlobalMocks() {
     Object.defineProperty(ZoweLocalStorage, "globalState", {
@@ -639,7 +640,7 @@ describe("Tree Provider Unit Tests - function isGlobalProfileNode", () => {
 });
 
 describe("Tree Provider Unit Tests - function checkJwtTokenForProfile", () => {
-    function getBlockMocks() {
+    function getBlockMocks(supportTokens: boolean = true) {
         const getAllProfiles = jest.fn().mockReturnValue([
             {
                 profName: "zosmf",
@@ -654,6 +655,15 @@ describe("Tree Provider Unit Tests - function checkJwtTokenForProfile", () => {
         ]);
         const hasTokenExpiredForProfile = jest.fn();
         const mergeArgsForProfile = jest.fn();
+        const profile = createIProfile();
+        profile.profile.tokenValue = "abcdefgh12345678";
+
+        const getTokenTypeName = jest.fn().mockReturnValue(supportTokens ? "apimlAuthenticationToken" : undefined);
+        const getCommonApiMock = jest.spyOn(ZoweExplorerApiRegister.prototype, "getCommonApi").mockReturnValue({
+            getTokenTypeName,
+        } as any);
+
+        const loadNamedProfile = jest.fn().mockResolvedValue(profile);
         const showProfileInactiveMsg = jest.fn();
         const profilesGetInstance = jest.spyOn(Profiles, "getInstance").mockReturnValue({
             getProfileInfo: jest.fn().mockResolvedValue({
@@ -661,11 +671,14 @@ describe("Tree Provider Unit Tests - function checkJwtTokenForProfile", () => {
                 getAllProfiles,
                 mergeArgsForProfile,
             } as any),
+            loadNamedProfile,
             showProfileInactiveMsg,
         } as any);
 
         return {
             getAllProfiles,
+            getCommonApiMock,
+            getTokenTypeName,
             hasTokenExpiredForProfile,
             mergeArgsForProfile,
             profilesGetInstance,
@@ -678,6 +691,14 @@ describe("Tree Provider Unit Tests - function checkJwtTokenForProfile", () => {
         blockMocks.mergeArgsForProfile.mockReturnValue({ knownArgs: [{ argName: "tokenType", argValue: "LtpaToken2" }] });
         await (ZoweTreeProvider as any).checkJwtTokenForProfile("zosmf");
         expect(blockMocks.hasTokenExpiredForProfile).toHaveBeenCalledWith("zosmf");
+    });
+
+    it("returns early if the profile's API does not support tokens", async () => {
+        const blockMocks = getBlockMocks(false);
+        blockMocks.hasTokenExpiredForProfile.mockReturnValueOnce(false);
+        blockMocks.mergeArgsForProfile.mockReturnValue({ knownArgs: [{ argName: "tokenType", argValue: "LtpaToken2" }] });
+        await (ZoweTreeProvider as any).checkJwtTokenForProfile("zosmf");
+        expect(blockMocks.hasTokenExpiredForProfile).not.toHaveBeenCalledWith("zosmf");
     });
 
     it("prompts the user to log in if a JWT token is present and has expired", async () => {
