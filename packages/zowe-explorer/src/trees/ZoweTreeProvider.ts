@@ -335,8 +335,8 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
 
     /**
      * Checks if a JSON Web Token (JWT) is used for authenticating the given profile name.
-     * If so, it will grab and decode the token to determine its expiration date.
-     * If the token has expired, it will prompt the user to log in again.
+     * If so, it grabs and decodes the token to determine its expiration date.
+     * If the token has expired, it prompts the user to log in again and returns a result based on the login attempt.
      *
      * @param profileName The name of the profile to check the JWT token for
      * @returns The result of the JWT token check (expired, unsupported, or valid)
