@@ -693,6 +693,17 @@ describe("Tree Provider Unit Tests - function checkJwtTokenForProfile", () => {
         expect(blockMocks.hasTokenExpiredForProfile).toHaveBeenCalledWith("zosmf");
     });
 
+    it("returns early if the profile's getTokenTypeName API throws an error", async () => {
+        const blockMocks = getBlockMocks(false);
+        blockMocks.hasTokenExpiredForProfile.mockReturnValueOnce(false);
+        blockMocks.mergeArgsForProfile.mockReturnValue({ knownArgs: [{ argName: "tokenType", argValue: "LtpaToken2" }] });
+        blockMocks.getTokenTypeName.mockClear().mockImplementation(() => {
+            throw new Error("Tokens not supported for this profile");
+        });
+        await expect((ZoweTreeProvider as any).checkJwtTokenForProfile("zosmf")).resolves.toBe(true);
+        expect(blockMocks.hasTokenExpiredForProfile).not.toHaveBeenCalledWith("zosmf");
+    });
+
     it("returns early if the profile's API does not support tokens", async () => {
         const blockMocks = getBlockMocks(false);
         blockMocks.hasTokenExpiredForProfile.mockReturnValueOnce(false);
