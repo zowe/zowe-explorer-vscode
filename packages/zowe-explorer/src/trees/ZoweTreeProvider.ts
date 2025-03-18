@@ -340,9 +340,9 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
      *
      * @param profileName The name of the profile to check the JWT token for
      * @returns
-     * `true` if:
-     * - the user attempted to log in
-     * - the profile does not have a token
+     * `true` if one of these conditions are met:
+     * - the token expired and the user clicked log in
+     * - the profile does not have a token or does not support tokens
      * - the token has not expired on the profile
      *
      * `false` if:
@@ -355,12 +355,12 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
             tokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(loadedProfile).getTokenTypeName();
         } catch (err) {
             // The API does not support a token type, therefore we don't care about the status of the token from the base profile
-            return false;
+            return true;
         }
 
         // Return early if the API explicitly returned `null` or LTPA2 for the token type, which suggests that the expiration check is not needed.
         if (tokenType == null || tokenType == "LtpaToken2") {
-            return false;
+            return true;
         }
 
         const profInfo = await Profiles.getInstance().getProfileInfo();
