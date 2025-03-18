@@ -1894,17 +1894,28 @@ export class DatasetActions {
             return;
         }
 
-        // Handle if the search should be case sensitive
-        const caseSensitiveQuickPick = await Gui.showQuickPick([vscode.l10n.t("Case Insensitive"), vscode.l10n.t("Case Sensitive")], {
-            title: vscode.l10n.t("Search Case Sensitivity"),
-            placeHolder: vscode.l10n.t("Select search case sensitivity"),
-            ignoreFocusOut: true,
-            canPickMany: false,
-        });
-        if (!caseSensitiveQuickPick) {
+        // Handle various search options
+        const caseSensitiveQuickPick = await Gui.showQuickPick(
+            [
+                {
+                    label: vscode.l10n.t("Case Sensitive"),
+                    description: vscode.l10n.t("Perform the search with case sensitivity"),
+                    iconPath: new vscode.ThemeIcon("case-sensitive"),
+                } as vscode.QuickPickItem,
+            ],
+            {
+                title: vscode.l10n.t("Search Options"),
+                placeHolder: vscode.l10n.t("Select search options"),
+                ignoreFocusOut: true,
+                canPickMany: true,
+            }
+        );
+
+        // Case sensitivity
+        if (caseSensitiveQuickPick == undefined) {
             return;
         }
-        const caseSensitive = caseSensitiveQuickPick === vscode.l10n.t("Case Sensitive");
+        const caseSensitive = caseSensitiveQuickPick.some((option) => option.label === vscode.l10n.t("Case Sensitive"));
 
         // Perform the actual search.
         const response: zosfiles.IZosFilesResponse = await Gui.withProgress(

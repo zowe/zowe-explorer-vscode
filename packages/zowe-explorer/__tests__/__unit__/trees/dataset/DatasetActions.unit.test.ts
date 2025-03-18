@@ -3689,12 +3689,21 @@ describe("Dataset Actions Unit Tests - function search", () => {
         let tableBuilderBuildSpy: jest.SpyInstance;
 
         function quickPickPositiveExpect() {
-            expect(showQuickPickSpy).toHaveBeenCalledWith([vscode.l10n.t("Case Insensitive"), vscode.l10n.t("Case Sensitive")], {
-                title: vscode.l10n.t("Search Case Sensitivity"),
-                placeHolder: vscode.l10n.t("Select search case sensitivity"),
-                ignoreFocusOut: true,
-                canPickMany: false,
-            });
+            expect(showQuickPickSpy).toHaveBeenCalledWith(
+                [
+                    {
+                        label: vscode.l10n.t("Case Sensitive"),
+                        description: vscode.l10n.t("Perform the search with case sensitivity"),
+                        iconPath: new vscode.ThemeIcon("case-sensitive"),
+                    },
+                ],
+                {
+                    title: vscode.l10n.t("Search Options"),
+                    placeHolder: vscode.l10n.t("Select search options"),
+                    ignoreFocusOut: true,
+                    canPickMany: true,
+                }
+            );
         }
 
         beforeAll(() => {
@@ -3808,7 +3817,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
             const myProgress = { test: "test" };
 
             showInputBoxSpy.mockResolvedValue(searchString);
-            showQuickPickSpy.mockResolvedValue(vscode.l10n.t("Case Insensitive"));
+            showQuickPickSpy.mockResolvedValue([]);
             withProgressSpy.mockImplementation((opts: any, fn: any) => {
                 return fn(myProgress, tokenCancellation);
             });
@@ -3873,7 +3882,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
             const myProgress = { test: "test" };
 
             showInputBoxSpy.mockResolvedValue(searchString);
-            showQuickPickSpy.mockResolvedValue(vscode.l10n.t("Case Insensitive"));
+            showQuickPickSpy.mockResolvedValue([]);
             withProgressSpy.mockImplementation((opts: any, fn: any) => {
                 return fn(myProgress, tokenCancellation);
             });
@@ -4019,7 +4028,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
             const myProgress = { test: "test" };
 
             showInputBoxSpy.mockResolvedValue(searchString);
-            showQuickPickSpy.mockResolvedValue(vscode.l10n.t("Case Insensitive"));
+            showQuickPickSpy.mockResolvedValue([]);
             withProgressSpy.mockImplementation((opts: any, fn: any) => {
                 return fn(myProgress, tokenCancellation);
             });
@@ -4141,7 +4150,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
             const myProgress = { test: "test" };
 
             showInputBoxSpy.mockResolvedValue(searchString);
-            showQuickPickSpy.mockResolvedValue(vscode.l10n.t("Case Insensitive"));
+            showQuickPickSpy.mockResolvedValue([]);
             withProgressSpy.mockImplementation((opts: any, fn: any) => {
                 return fn(myProgress, tokenCancellation);
             });
@@ -4289,7 +4298,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
             const myProgress = { test: "test" };
 
             showInputBoxSpy.mockResolvedValue(searchString);
-            showQuickPickSpy.mockResolvedValue(vscode.l10n.t("Case Insensitive"));
+            showQuickPickSpy.mockResolvedValue([]);
             withProgressSpy.mockImplementation((opts: any, fn: any) => {
                 return fn(myProgress, tokenCancellation);
             });
@@ -4408,7 +4417,13 @@ describe("Dataset Actions Unit Tests - function search", () => {
             const myProgress = { test: "test" };
 
             showInputBoxSpy.mockResolvedValue(searchString);
-            showQuickPickSpy.mockResolvedValue(vscode.l10n.t("Case Sensitive"));
+            showQuickPickSpy.mockResolvedValue([
+                {
+                    label: vscode.l10n.t("Case Sensitive"),
+                    description: vscode.l10n.t("Perform the search with case sensitivity"),
+                    iconPath: new vscode.ThemeIcon("case-sensitive"),
+                } as vscode.QuickPickItem,
+            ]);
             withProgressSpy.mockImplementation((opts: any, fn: any) => {
                 return fn(myProgress, tokenCancellation);
             });
