@@ -39,6 +39,11 @@ describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
                 profile: {},
             } as imperative.IProfileLoaded,
             mockWorkspaceFolders: jest.fn().mockReturnValue([]),
+            mockWorkpaceFolderLoaded: [
+                {
+                    uri: { fsPath: "fakePath", scheme: "file" },
+                },
+            ],
             mockConfigInstance: createConfigInstance(),
             testTeamConfigProfile: createTeamConfigMock(),
             mockConfigLoad: null as any as typeof imperative.Config,
@@ -125,11 +130,7 @@ describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
 
         it("Test that createTeamConfiguration will show operation cancelled if location choice exited", async () => {
             const blockMocks = createGlobalMocks();
-            blockMocks.mockWorkspaceFolders.mockReturnValue([
-                {
-                    uri: { fsPath: "fakePath", scheme: "file" },
-                },
-            ]);
+            blockMocks.mockWorkspaceFolders.mockReturnValue(blockMocks.mockWorkpaceFolderLoaded);
             const spyQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce(undefined);
             const spyInfoMessage = jest.spyOn(Gui, "infoMessage");
             const spyOpenFile = jest.spyOn(ZoweVsCodeExtension, "openConfigFile");
@@ -159,11 +160,7 @@ describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
 
         it("Test that createTeamConfiguration will create global if VSC in project and config exist", async () => {
             const blockMocks = createGlobalMocks();
-            blockMocks.mockWorkspaceFolders.mockReturnValue([
-                {
-                    uri: { fsPath: "fakePath", scheme: "file" },
-                },
-            ]);
+            blockMocks.mockWorkspaceFolders.mockReturnValue(blockMocks.mockWorkpaceFolderLoaded);
             const spyQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce("Global: in the Zowe home directory" as any);
             const spyLayers = jest.spyOn(imperative.Config, "load");
             spyLayers.mockResolvedValueOnce(blockMocks.testConfig);
@@ -182,11 +179,7 @@ describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
 
         it("Test that createTeamConfiguration will create project if VSC in project", async () => {
             const blockMocks = createGlobalMocks();
-            blockMocks.mockWorkspaceFolders.mockReturnValue([
-                {
-                    uri: { fsPath: "fakePath", scheme: "file" },
-                },
-            ]);
+            blockMocks.mockWorkspaceFolders.mockReturnValue(blockMocks.mockWorkpaceFolderLoaded);
             const spyQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce("Project: in the current working directory" as any);
             const spyLayers = jest.spyOn(ZoweVsCodeExtension, "getConfigLayers");
             spyLayers.mockResolvedValueOnce(blockMocks.testConfig.layers);
@@ -202,16 +195,12 @@ describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
 
         it("Test that createTeamConfiguration will create unsecure global", async () => {
             const blockMocks = createGlobalMocks();
-            blockMocks.mockWorkspaceFolders.mockReturnValue([
-                {
-                    uri: { fsPath: "fakePath", scheme: "file" },
-                },
-            ]);
+            blockMocks.mockWorkspaceFolders.mockReturnValue(blockMocks.mockWorkpaceFolderLoaded);
             const spyQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce("Global: in the Zowe home directory" as any);
             const spyLayers = jest.spyOn(ZoweVsCodeExtension, "getConfigLayers");
             spyLayers.mockResolvedValueOnce(blockMocks.testConfig.layers);
             const spyInfoMessage = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Create New");
-            jest.spyOn(imperative.ConfigBuilder, "build").mockReturnValue(blockMocks.testTeamConfigProfile);
+            jest.spyOn(imperative.ConfigBuilder, "build").mockReturnValue(blockMocks.testTeamConfigProfile as any);
             blockMocks.mockDirectValue.mockReturnValueOnce(false);
             const spyOpenFile = jest.spyOn(ZoweVsCodeExtension, "openConfigFile");
 
