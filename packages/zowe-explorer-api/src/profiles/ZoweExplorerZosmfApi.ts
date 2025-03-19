@@ -68,17 +68,23 @@ export namespace ZoweExplorerZosmf {
                 basePath: serviceProfile.profile.basePath as string,
                 rejectUnauthorized: serviceProfile.profile.rejectUnauthorized as boolean,
             };
-            if (!serviceProfile.profile.tokenValue) {
+            if (serviceProfile.profile.tokenValue) {
+                cmdArgs = {
+                    ...cmdArgs,
+                    tokenType: serviceProfile.profile.tokenType as string,
+                    tokenValue: serviceProfile.profile.tokenValue as string,
+                };
+            } else if (serviceProfile.profile.user && serviceProfile.profile.password) {
                 cmdArgs = {
                     ...cmdArgs,
                     user: serviceProfile.profile.user as string,
                     password: serviceProfile.profile.password as string,
                 };
-            } else {
+            } else if (serviceProfile.profile.certFile && serviceProfile.profile.certKeyFile) {
                 cmdArgs = {
                     ...cmdArgs,
-                    tokenType: serviceProfile.profile.tokenType as string,
-                    tokenValue: serviceProfile.profile.tokenValue as string,
+                    certFile: serviceProfile.profile.certFile as string,
+                    certKeyFile: serviceProfile.profile.certKeyFile as string,
                 };
             }
             return this.getSessionFromCommandArgument(cmdArgs);
