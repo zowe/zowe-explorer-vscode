@@ -1871,7 +1871,7 @@ export class DatasetActions {
     public static async copyName(node: IZoweDatasetTreeNode): Promise<void> {
         if (SharedContext.isDsMember(node) && node.getParent()) {
             await vscode.env.clipboard.writeText(`${node.getParent().label as string}(${node.label as string})`);
-        } else if (SharedContext.isDs(node) || SharedContext.isPds(node) || SharedContext.isMigrated(node)) {
+        } else if (SharedContext.isDs(node) || SharedContext.isPds(node) || SharedContext.isMigrated(node) || SharedContext.isVsam(node)) {
             await vscode.env.clipboard.writeText(node.label as string);
         }
     }

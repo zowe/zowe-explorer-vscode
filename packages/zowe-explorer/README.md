@@ -47,7 +47,7 @@ Configure Zowe Explorer for VS Code by changing the extension settings. For more
 
 ### Create a team configuration file
 
-A team configuration file stores connection information to mainframe services in *profiles* that are easy to maintain and share with others in your organization.
+A team configuration file stores connection information to mainframe services in _profiles_ that are easy to maintain and share with others in your organization.
 
 **Note**: Team configuration files can be used across three core components of the Zowe project, Zowe Explorer for VS Code, Zowe Explorer for IntelliJ IDEA, and Zowe CLI.
 
@@ -58,15 +58,15 @@ A team configuration file stores connection information to mainframe services in
 5. If no workspace is open, a global configuration file is created. If a workspace is open, chose either a global configuration file or a project-level configuration file.
 6. Edit the configuration file to include the host and other connection information for a mainframe service, and save.
 
-      Your team configuration file appears either in your `.zowe` folder if you chose the global configuration file option, or in your workspace directory if you chose the project-level configuration file option. The notification message that displays in VS Code after configuration file creation includes the path of the created file.
+   Your team configuration file appears either in your `.zowe` folder if you chose the global configuration file option, or in your workspace directory if you chose the project-level configuration file option. The notification message that displays in VS Code after configuration file creation includes the path of the created file.
 
-      You can now use all the functionalities of the extension.
+   You can now use all the functionalities of the extension.
 
 ### Using profiles for the first time
 
 The first time team configuration profiles are used, you are prompted for a user name and password for the profile's connection.
 
-The term *password* is used loosely to represent all supported authentication secrets, such as passphrases, passtickets, Multifactor Authentication (MFA) tokens, etc.
+The term _password_ is used loosely to represent all supported authentication secrets, such as passphrases, passtickets, Multifactor Authentication (MFA) tokens, etc.
 
 ### Profile validation
 
@@ -103,7 +103,7 @@ To update securely stored user names and passwords in Zowe Explorer:
 1. Right click the profile and select **Manage Profile**.
 2. Select **Update Credentials** from the **Quick Pick**.
 
-    You are prompted for the new credentials and these are saved to the secure credentials vault.
+   You are prompted for the new credentials and these are saved to the secure credentials vault.
 
 ## Other authentication methods
 
@@ -125,7 +125,7 @@ To log into the API ML authentication service with an existing base profile:
 4. In the following **Quick Pick** menu, select the appropriate option for authenticating to the API ML.
 5. Answer the proceeding prompts for information.
 
-    If the request is successful, the token is used for authentication until the logout action is taken or the token expires.
+   If the request is successful, the token is used for authentication until the logout action is taken or the token expires.
 
 For more information, see [Integrating with API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-using-integrating-apiml).
 
@@ -136,7 +136,7 @@ If you are done working with Zowe Explorer and want to prevent further use of a 
 3. Select the **Manage Profile** option.
 4. In the **Quick Pick**, select the **Log out from Authentication Service** option.
 
-    Your token has been successfully invalidated.
+   Your token has been successfully invalidated.
 
 ### Multi-factor authentication (MFA) support
 
@@ -151,7 +151,7 @@ To use MFA authentication with Zowe Explorer, log into API ML:
 3. Select **Log in to Authentication Service** from the **Quick Pick**.
 4. When prompted, select the credential method you want to use.
 
-    Zowe Explorer logs you in to the authentication service for your selected profile.
+   Zowe Explorer logs you in to the authentication service for your selected profile.
 
 For more information regarding MFA support in Zowe's documentation on [integrating with API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-using-integrating-apiml/).
 
