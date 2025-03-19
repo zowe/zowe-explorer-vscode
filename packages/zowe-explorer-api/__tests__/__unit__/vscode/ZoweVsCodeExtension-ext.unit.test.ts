@@ -1,3 +1,15 @@
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
+ */
+
+import * as vscode from "vscode";
 import * as imperative from "@zowe/imperative";
 import { VscSettings } from "../../../src/vscode/doc/VscSettings";
 import { createConfigInstance, createConfigLoad } from "../../../__mocks__/mockCreators/shared";
@@ -26,7 +38,8 @@ describe("createTeamConfiguration", () => {
                 type: "service",
                 profile: {},
             } as imperative.IProfileLoaded,
-            testCache: new ProfilesCache({ debug: jest.fn() } as unknown as imperative.Logger),
+            mockWorkspaceFolders: jest.fn().mockReturnValue([]),
+            // testCache: new ProfilesCache({ debug: jest.fn() } as unknown as imperative.Logger),
             // testProfInfo: new imperative.ProfileInfo("zowe"),
             mockConfigInstance: createConfigInstance(),
             mockConfigLoad: null as any as typeof imperative.Config,
@@ -75,7 +88,7 @@ describe("createTeamConfiguration", () => {
         newMocks.configLayer.properties.profiles.service.properties = { ...newMocks.testProfile };
         // newMocks.mockConfigInstance.layerActive = jest.fn().mockReturnValue(newMocks.configLayer);
         // newMocks.mockConfigInstance.api.layers.merge = jest.fn();
-        newMocks.testCache.allProfiles = [newMocks.serviceProfile, newMocks.baseProfile];
+        // newMocks.testCache.allProfiles = [newMocks.serviceProfile, newMocks.baseProfile];
 
         Object.defineProperty(ZoweVsCodeExtension, "openConfigFile", { value: jest.fn(), configurable: true });
         Object.defineProperty(FileManagement, "getFullPath", { value: jest.fn(), configurable: true });
@@ -83,14 +96,17 @@ describe("createTeamConfiguration", () => {
         Object.defineProperty(VscSettings, "getDirectValue", { value: jest.fn().mockReturnValue(true), configurable: true });
         Object.defineProperty(imperative.ConfigSchema, "buildSchema", { value: jest.fn(), configurable: true });
         Object.defineProperty(imperative.ConfigBuilder, "build", { value: jest.fn(), configurable: true });
-
+        Object.defineProperty(vscode.workspace, "workspaceFolders", {
+            get: newMocks.mockWorkspaceFolders,
+            configurable: true,
+        });
         Object.defineProperty(imperative, "Config", {
             value: () => newMocks.mockConfigInstance,
             configurable: true,
         });
         newMocks.mockConfigLoad = Object.defineProperty(imperative.Config, "load", {
             value: jest.fn(() => {
-                return createConfigLoad();
+                return newMocks.testConfig;
             }),
             configurable: true,
         });
@@ -100,6 +116,20 @@ describe("createTeamConfiguration", () => {
 
     afterEach(() => {
         jest.clearAllMocks();
+    });
+
+    it("Test that createTeamConfiguration will throw error if error deals with parsing file", async () => {
+        const blockMocks = createBlockMocks();
+        const spyLayers = jest.spyOn(ZoweVsCodeExtension, "getConfigLayers");
+        spyLayers.mockResolvedValueOnce(blockMocks.testConfig.layers);
+        const spyInfoMessage = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(undefined);
+        const spyOpenFile = jest.spyOn(ZoweVsCodeExtension, "openConfigFile");
+        spyOpenFile.mockRejectedValueOnce("Error");
+
+        await expect(ZoweVsCodeExtension.createTeamConfiguration()).rejects.toEqual("Error");
+        spyLayers.mockClear();
+        spyInfoMessage.mockClear();
+        spyOpenFile.mockClear();
     });
 
     it("Tests that createTeamConfiguration will open config file when cancelling creation in location with existing config file", async () => {
@@ -119,15 +149,23 @@ describe("createTeamConfiguration", () => {
         spyOpenFile.mockClear();
     });
 
-    it("Test that createTeamConfiguration will throw error if error deals with parsing file", async () => {
+    it("Test that createTeamConfiguration will create global if VSC in project and config exist", async () => {
         const blockMocks = createBlockMocks();
+        blockMocks.mockWorkspaceFolders.mockClear().mockReturnValue([
+            {
+                uri: { fsPath: "fakePath", scheme: "file" },
+            },
+        ]);
+        const spyQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce("Global: in the Zowe home directory" as any);
         const spyLayers = jest.spyOn(ZoweVsCodeExtension, "getConfigLayers");
         spyLayers.mockResolvedValueOnce(blockMocks.testConfig.layers);
-        const spyInfoMessage = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(undefined);
+        const spyInfoMessage = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Create New");
         const spyOpenFile = jest.spyOn(ZoweVsCodeExtension, "openConfigFile");
-        spyOpenFile.mockRejectedValueOnce("Error");
-
-        await expect(ZoweVsCodeExtension.createTeamConfiguration()).rejects.toEqual("Error");
+        await ZoweVsCodeExtension.createTeamConfiguration();
+        expect(spyQuickPick).toHaveBeenCalled();
+        expect(spyInfoMessage).toHaveBeenCalled();
+        expect(spyOpenFile).toHaveBeenCalled();
+        spyQuickPick.mockClear();
         spyLayers.mockClear();
         spyInfoMessage.mockClear();
         spyOpenFile.mockClear();
