@@ -126,7 +126,10 @@ export class Profiles extends ProfilesCache {
                 await AuthUtils.errorHandling(error, { profile: theProfile });
                 return profileStatus;
             }
-        } else if (!usingTokenAuth && (!theProfile.profile.user || !theProfile.profile.password)) {
+        } else if (
+            !usingTokenAuth &&
+            !((theProfile.profile.user && theProfile.profile.password) || (theProfile.profile.certFile && theProfile.profile.certKeyFile))
+        ) {
             ZoweLogger.debug(`Profile ${theProfile.name} is using basic auth, prompting for missing credentials`);
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(
@@ -146,6 +149,14 @@ export class Profiles extends ProfilesCache {
                 this.validProfile = Validation.ValidationType.INVALID;
                 return { ...profileStatus, status: "inactive" };
             }
+        } else if (
+            !usingTokenAuth &&
+            !(theProfile.profile.user && theProfile.profile.password) &&
+            theProfile.profile.certFile &&
+            theProfile.profile.certKeyFile
+        ) {
+            profileStatus.status = "active";
+            this.profilesForValidation.push(profileStatus);
         }
 
         // Profile should have enough information to allow validation
