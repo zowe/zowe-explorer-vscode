@@ -11,7 +11,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Implemented drag and drop functionality of data sets within and across LPARs. [#3413](https://github.com/zowe/zowe-explorer-vscode/pull/3413)
 - Renamed "Zowe Explorer z/OS Console" to "z/OS Console". [#3445](https://github.com/zowe/zowe-explorer-vscode/pull/3445)
 - Adopted ZE APIs new `directConnectLogin` and `directConnectLogout` methods for login and logout actions NOT using the tokenType `apimlAuthenticationToken`. [#3346](https://github.com/zowe/zowe-explorer-vscode/issues/3346)
-- Implemented Certificate Authentication support for zosmf. [#2373](https://github.com/zowe/zowe-explorer-vscode/issues/2373)
+- Implemented Client Side Certificate Authentication support for zosmf. [#2373](https://github.com/zowe/zowe-explorer-vscode/issues/2373)
 
 ### Bug fixes
 

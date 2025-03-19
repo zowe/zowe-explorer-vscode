@@ -10,6 +10,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added new `fetchAttributes` API to `IZoweUSSTreeNode` to fetch latest attributes for UNIX files. [#3238](https://github.com/zowe/zowe-explorer-vscode/issues/3238)
 - Added new `directConnectLogin` and `directConnectLogout` to the ZoweVsCodeExtension class. [#3346](https://github.com/zowe/zowe-explorer-vscode/issues/3346)
 - Added new optional `refreshFavorites` to IZoweTree interface. [#3470](https://github.com/zowe/zowe-explorer-vscode/issues/3470)
+- Added `certFile` and `certKeyFile` properties to `ZoweExplorerZosmfApi._getSession` method to support certificate based authentication for direct connect. [#2373](https://github.com/zowe/zowe-explorer-vscode/issues/2373)
 
 ### Bug fixes
 
