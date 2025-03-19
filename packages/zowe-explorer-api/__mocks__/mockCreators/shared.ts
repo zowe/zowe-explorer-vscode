@@ -44,3 +44,49 @@ export function createConfigLoad() {
         save: jest.fn(),
     } as any;
 }
+
+export function createTeamConfigMock(): imperative.IConfig {
+    return {
+        $schema: "./zowe.schema.json",
+        profiles: {
+            zosmf: {
+                type: "zosmf",
+                properties: {
+                    port: 443,
+                },
+                secure: [],
+            },
+            tso: {
+                type: "tso",
+                properties: {
+                    account: "",
+                    codePage: "1047",
+                    logonProcedure: "IZUFPROC",
+                },
+                secure: [],
+            },
+            ssh: {
+                type: "ssh",
+                properties: {
+                    port: 22,
+                },
+                secure: [],
+            },
+            base: {
+                type: "base",
+                properties: {
+                    host: "sample.com",
+                    rejectUnauthorized: true,
+                },
+                secure: ["user", "password"],
+            },
+        },
+        defaults: {
+            zosmf: "zosmf",
+            tso: "tso",
+            ssh: "ssh",
+            base: "base",
+        },
+        autoStore: true,
+    };
+}

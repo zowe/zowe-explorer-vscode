@@ -352,7 +352,7 @@ export class ZoweVsCodeExtension {
         if (workspaceDir != null) {
             const choice = await this.getConfigLocationPrompt("create");
             if (choice === undefined) {
-                Gui.showMessage(`Operation cancelled`);
+                Gui.infoMessage(`Operation cancelled`);
                 return;
             }
             if (choice === "project") {
