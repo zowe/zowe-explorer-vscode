@@ -9,6 +9,8 @@
  *
  */
 
+import * as imperative from "@zowe/imperative";
+
 export function createConfigInstance() {
     return {
         load: jest.fn(),
