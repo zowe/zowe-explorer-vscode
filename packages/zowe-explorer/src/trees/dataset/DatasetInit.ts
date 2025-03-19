@@ -57,7 +57,7 @@ export class DatasetInit {
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.refreshAll", async () => {
-                await SharedActions.refreshAll(datasetProvider);
+                await SharedActions.refreshProvider(datasetProvider);
             })
         );
         context.subscriptions.push(

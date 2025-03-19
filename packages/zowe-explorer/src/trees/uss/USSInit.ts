@@ -48,7 +48,7 @@ export class USSInit {
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.refreshAll", async () => {
-                await SharedActions.refreshAll(ussFileProvider);
+                await SharedActions.refreshProvider(ussFileProvider);
             })
         );
         context.subscriptions.push(

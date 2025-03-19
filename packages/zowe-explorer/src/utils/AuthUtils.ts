@@ -174,8 +174,16 @@ export class AuthUtils {
             return;
         }
         sessionNode.setProfileToChoice(profile);
-        const session = getCommonApi(profile).getSession();
-        sessionNode.setSessionToChoice(session);
+        try {
+            const commonApi = getCommonApi(profile);
+            sessionNode.setSessionToChoice(commonApi.getSession());
+        } catch (err) {
+            if (err instanceof Error) {
+                // API is not yet registered, or building the session failed for this profile
+                ZoweLogger.error(`Error syncing session for ${profileName}: ${err.message}`);
+            }
+            return;
+        }
         if (nodeToRefresh) {
             nodeToRefresh.dirty = true;
             void nodeToRefresh.getChildren().then(() => SharedTreeProviders.getProviderForNode(nodeToRefresh).refreshElement(nodeToRefresh));

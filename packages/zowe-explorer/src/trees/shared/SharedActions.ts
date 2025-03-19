@@ -236,59 +236,59 @@ export class SharedActions {
         return node;
     }
 
+    public static async refreshProfiles(): Promise<void> {
+        // Refresh profiles before anything else to ensure we have the latest state
+        try {
+            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+        } catch (err) {
+            ZoweLogger.error(err);
+            ZoweExplorerExtender.showZoweConfigError(err.message);
+        }
+    }
+
+    public static async refreshProvider(treeProvider: IZoweTree<IZoweTreeNode>, refreshProfiles?: boolean): Promise<void> {
+        if (refreshProfiles) {
+            await SharedActions.refreshProfiles();
+        }
+
+        for (const sessNode of treeProvider.mSessionNodes) {
+            const profiles = await Profiles.getInstance().fetchAllProfiles();
+            const found = profiles.some((prof) => prof.name === sessNode.label.toString().trim());
+            if (found || sessNode.label.toString() === vscode.l10n.t("Favorites")) {
+                if (SharedContext.isSessionNotFav(sessNode)) {
+                    sessNode.dirty = true;
+                    SharedActions.returnIconState(sessNode);
+                    AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getCommonApi(profile), sessNode);
+                }
+            } else {
+                await TreeViewUtils.removeSession(treeProvider, sessNode.label.toString().trim());
+            }
+        }
+        for (const profType of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
+            await TreeViewUtils.addDefaultSession(treeProvider, profType);
+        }
+        treeProvider.refresh();
+    }
+
     /**
-     * View (DATA SETS, JOBS, USS) refresh button
-     * Refreshes treeView and profiles including their validation setting
-     *
-     * @param {IZoweTree} treeProvider
+     * Refreshes profiles and tree providers.
      */
-    public static async refreshAll(treeProvider?: IZoweTree<IZoweTreeNode>): Promise<void> {
+    public static async refreshAll(): Promise<void> {
         ZoweLogger.trace("refresh.refreshAll called.");
 
-        if (SharedActions.refreshInProgress && treeProvider == null) {
+        if (SharedActions.refreshInProgress) {
             // Discard duplicate calls to `refreshAll` when a tree provider isn't specified
             ZoweLogger.debug("Profile refresh already in progress, skipping");
             return;
         }
+        SharedActions.refreshInProgress = true;
 
-        try {
-            SharedActions.refreshInProgress = true;
+        await SharedActions.refreshProfiles();
 
-            // Refresh profiles before anything else to ensure we have the latest state
-            try {
-                await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
-            } catch (err) {
-                ZoweLogger.error(err);
-                ZoweExplorerExtender.showZoweConfigError(err.message);
-                return;
-            }
-
-            if (treeProvider == null) {
-                for (const provider of Object.values(SharedTreeProviders.providers)) {
-                    await this.refreshAll(provider);
-                }
-                return;
-            }
-
-            for (const sessNode of treeProvider.mSessionNodes) {
-                const profiles = await Profiles.getInstance().fetchAllProfiles();
-                const found = profiles.some((prof) => prof.name === sessNode.label.toString().trim());
-                if (found || sessNode.label.toString() === vscode.l10n.t("Favorites")) {
-                    if (SharedContext.isSessionNotFav(sessNode)) {
-                        sessNode.dirty = true;
-                        SharedActions.returnIconState(sessNode);
-                        AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getCommonApi(profile), sessNode);
-                    }
-                } else {
-                    await TreeViewUtils.removeSession(treeProvider, sessNode.label.toString().trim());
-                }
-            }
-            for (const profType of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
-                await TreeViewUtils.addDefaultSession(treeProvider, profType);
-            }
-            treeProvider.refresh();
-        } finally {
-            SharedActions.refreshInProgress = false;
+        for (const provider of Object.values(SharedTreeProviders.providers)) {
+            await SharedActions.refreshProvider(provider);
         }
+
+        SharedActions.refreshInProgress = false;
     }
 }

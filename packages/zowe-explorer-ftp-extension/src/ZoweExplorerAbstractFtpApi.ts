@@ -33,17 +33,18 @@ export abstract class AbstractFtpApi implements MainframeInteraction.ICommon {
     public getSession(profile?: imperative.IProfileLoaded): FtpSession {
         this.session = globals.SESSION_MAP.get(this.profile);
         if (!this.session) {
-            const ftpProfile = (profile || this.profile)?.profile;
+            const ftpProfile = profile || this.profile;
             if (!ftpProfile) {
                 throw new ZoweFtpExtensionError("Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.");
             }
 
+            const loadedProfile = ftpProfile.profile;
             this.session = new FtpSession({
-                hostname: ftpProfile.host,
-                port: ftpProfile.port,
-                user: ftpProfile.user,
-                password: ftpProfile.password,
-                rejectUnauthorized: ftpProfile.rejectUnauthorized,
+                hostname: loadedProfile.host,
+                port: loadedProfile.port,
+                user: loadedProfile.user,
+                password: loadedProfile.password,
+                rejectUnauthorized: loadedProfile.rejectUnauthorized,
             });
             globals.SESSION_MAP.set(this.profile, this.session);
         }
