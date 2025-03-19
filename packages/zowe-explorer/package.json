@@ -1065,7 +1065,7 @@
           "group": "002_zowe_dsWorkspace@4"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member).*/ && !listMultiSelection",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member|vsam).*/ && !listMultiSelection",
           "command": "zowe.ds.copyName",
           "group": "098_zowe_dsMisc@0"
         },
