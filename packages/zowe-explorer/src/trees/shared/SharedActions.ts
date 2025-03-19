@@ -245,7 +245,8 @@ export class SharedActions {
     public static async refreshAll(treeProvider?: IZoweTree<IZoweTreeNode>): Promise<void> {
         ZoweLogger.trace("refresh.refreshAll called.");
 
-        if (SharedActions.refreshInProgress) {
+        if (SharedActions.refreshInProgress && treeProvider == null) {
+            // Discard duplicate calls to `refreshAll` when a tree provider isn't specified
             ZoweLogger.debug("Profile refresh already in progress, skipping");
             return;
         }
