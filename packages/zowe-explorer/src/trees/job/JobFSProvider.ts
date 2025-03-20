@@ -214,18 +214,19 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const jesApi = ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile);
         await AuthHandler.waitForUnlock(spoolEntry.metadata.profile);
         try {
+            const spoolEncoding = spoolEntry.encoding?.kind === "other" ? spoolEntry.encoding.codepage : profileEncoding;
             if (jesApi.downloadSingleSpool) {
                 const spoolDownloadObject: IDownloadSpoolContentParms = {
                     jobFile: spoolEntry.spool,
                     stream: bufBuilder,
                     binary: spoolEntry.encoding?.kind === "binary",
-                    encoding: spoolEntry.encoding?.kind === "other" ? spoolEntry.encoding.codepage : profileEncoding,
+                    encoding: spoolEncoding,
                 };
 
                 await jesApi.downloadSingleSpool(spoolDownloadObject);
             } else {
                 const jobEntry = this._lookupParentDirectory(uri) as JobEntry;
-                bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id));
+                bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id, spoolEncoding));
             }
         } catch (err) {
             await AuthUtils.handleProfileAuthOnError(err, spoolEntry.metadata.profile);
