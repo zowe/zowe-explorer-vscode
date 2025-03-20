@@ -59,7 +59,7 @@ export namespace ZoweExplorerZosmf {
         }
 
         private _getSession(serviceProfile: imperative.IProfileLoaded): imperative.Session {
-            let cmdArgs: imperative.ICommandArguments = {
+            const cmdArgs: imperative.ICommandArguments = {
                 $0: "zowe",
                 _: [""],
                 host: serviceProfile.profile.host as string,
