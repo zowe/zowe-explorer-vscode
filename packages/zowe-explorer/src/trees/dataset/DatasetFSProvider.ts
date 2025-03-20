@@ -184,7 +184,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     args: [uri, uriInfo, pattern],
                 },
                 apiType: ZoweExplorerApiType.Mvs,
-                profileType: profile?.type,
+                profileType: profile.type,
                 templateArgs: { profileName: uriInfo.profileName },
             });
         }
@@ -569,7 +569,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Saving data set...")}`);
         let resp: IZosFilesResponse;
         try {
-            const profile = Profiles.getInstance().loadNamedProfile(entry?.metadata.profile.name);
+            const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
             const profileEncoding = entry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
             resp = await mvsApi.uploadFromBuffer(Buffer.from(content), entry.metadata.dsName, {
