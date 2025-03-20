@@ -1901,7 +1901,7 @@ export class DatasetActions {
                     label: vscode.l10n.t("Case Sensitive"),
                     description: vscode.l10n.t("Perform the search with case sensitivity"),
                     iconPath: new vscode.ThemeIcon("case-sensitive"),
-                } as vscode.QuickPickItem,
+                },
             ],
             {
                 title: vscode.l10n.t("Search Options"),
