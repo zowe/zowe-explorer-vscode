@@ -430,13 +430,16 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
         const label = parent.label as string;
         const profile = parent.getProfile();
         let replace: shouldReplace;
+        let newEtag: string;
         const dsMemberName = `${label}(${name})`;
         try {
             replace = await determineReplacement(profile, dsMemberName, "mem");
             if (replace !== "cancel") {
-                await ZoweExplorerApiRegister.getMvsApi(profile).createDataSetMember(dsMemberName, {
+                const response = await ZoweExplorerApiRegister.getMvsApi(profile).createDataSetMember(dsMemberName, {
                     responseTimeout: profile.profile?.responseTimeout,
+                    returnEtag: true,
                 });
+                newEtag = response.apiResponse.etag;
                 if (replace === "replace") {
                     deleteTempFile(dsMemberName, parent);
                 }
@@ -459,6 +462,11 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
         await newNode.openDs(false, true, datasetProvider);
         if (replace === "notFound") {
             parent.children.push(newNode);
+        }
+
+        const child = parent.children.find((node) => node.label === name);
+        if (newEtag && child && child instanceof ZoweDatasetNode) {
+            child.setEtag(newEtag);
         }
 
         parent.dirty = true;

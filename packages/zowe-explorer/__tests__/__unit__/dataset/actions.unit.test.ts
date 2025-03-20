@@ -163,6 +163,13 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
     const globalMocks = createGlobalMocks();
 
     it("Checking of common dataset member creation", async () => {
+        const testFilesResponse = {
+            success: true,
+            commandResponse: null,
+            apiResponse: {
+                etag: "123",
+            },
+        };
         const blockMocks = createBlockMocksShared();
         const parent = new ZoweDatasetNode({
             label: "parent",
@@ -177,14 +184,9 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         });
 
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => callback());
-        globalMocks.getContentsSpy.mockResolvedValueOnce({
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "123",
-            },
-        });
-        const allMembersSpy = jest.spyOn(blockMocks.mvsApi, "allMembers").mockImplementation(jest.fn());
+        globalMocks.getContentsSpy.mockResolvedValueOnce(testFilesResponse);
+        jest.spyOn(blockMocks.mvsApi, "allMembers").mockImplementation(jest.fn());
+        mocked(zowe.Upload.bufferToDataSet).mockResolvedValueOnce(testFilesResponse as any);
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
         const newNode = parent.children.find((node) => node.label === "TESTMEMBER");
@@ -197,6 +199,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         });
         expect(mocked(zowe.Upload.bufferToDataSet)).toHaveBeenCalledWith(blockMocks.zosmfSession, Buffer.from(""), parent.label + "(TESTMEMBER)", {
             responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
+            returnEtag: true,
         });
     });
     it("Checking failed attempt to create dataset member", async () => {
@@ -237,6 +240,13 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
     });
     it("Checking of member creation for favorite dataset", async () => {
         const blockMocks = createBlockMocksShared();
+        const testFilesResponse = {
+            success: true,
+            commandResponse: null,
+            apiResponse: {
+                etag: "123",
+            },
+        };
         const parent = new ZoweDatasetNode({
             label: "parent",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -249,14 +259,8 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("testMember");
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => callback());
-        globalMocks.getContentsSpy.mockResolvedValueOnce({
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "123",
-            },
-        });
-
+        globalMocks.getContentsSpy.mockResolvedValueOnce(testFilesResponse);
+        mocked(zowe.Upload.bufferToDataSet).mockResolvedValueOnce(testFilesResponse as any);
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
         expect(mySpy).toHaveBeenCalledWith({ placeHolder: "Name of Member", validateInput: expect.any(Function) });
@@ -266,6 +270,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             nonFavoriteLabel + "(TESTMEMBER)",
             {
                 responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
+                returnEtag: true,
             }
         );
     });
@@ -297,6 +302,14 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         expect(blockMocks.testDatasetTree.refresh).toHaveBeenCalled();
     });
     it("should delete the existing temp file when replacing and logging warnings if failed to delete", async () => {
+        const testFilesResponse = {
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [createDSMemberAttributes("TESTMEMBER")],
+                etag: "123",
+            },
+        };
         const blockMocks = createBlockMocksShared();
         const parent = new ZoweDatasetNode({
             label: "parent",
@@ -308,13 +321,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         parent.children = [{ ...parent, label: "TESTMEMBER" } as any] as any;
 
         const allMembersSpy = jest.spyOn(blockMocks.mvsApi, "allMembers");
-        allMembersSpy.mockResolvedValueOnce({
-            success: true,
-            commandResponse: "",
-            apiResponse: {
-                items: [createDSMemberAttributes("TESTMEMBER")],
-            },
-        });
+        allMembersSpy.mockResolvedValueOnce(testFilesResponse);
 
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("TESTMEMBER");
         mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
@@ -323,6 +330,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             throw new Error("test");
         });
         const zoweLoggerWarnSpy = jest.spyOn(ZoweLogger, "warn").mockImplementation(jest.fn());
+        jest.spyOn(blockMocks.mvsApi, "createDataSetMember").mockResolvedValueOnce(testFilesResponse);
 
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
