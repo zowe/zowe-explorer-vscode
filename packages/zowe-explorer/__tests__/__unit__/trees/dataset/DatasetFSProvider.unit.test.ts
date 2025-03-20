@@ -1078,7 +1078,7 @@ describe("delete", () => {
 
         await DatasetFSProvider.instance.delete(testUris.ps, { recursive: false });
         expect(mockMvsApi.deleteDataSet).toHaveBeenCalledWith(fakePs.name, { responseTimeout: undefined });
-        expect(_lookupMock).toHaveBeenCalledWith(testUris.ps, false);
+        expect(_lookupMock).toHaveBeenCalledWith(testUris.ps);
         expect(_fireSoonMock).toHaveBeenCalled();
 
         expect(fakeSession.entries.has(fakePs.name)).toBe(false);
@@ -1099,7 +1099,7 @@ describe("delete", () => {
 
         await DatasetFSProvider.instance.delete(testUris.pdsMember, { recursive: false });
         expect(mockMvsApi.deleteDataSet).toHaveBeenCalledWith(`${fakePds.name}(${fakePdsMember.name})`, { responseTimeout: undefined });
-        expect(_lookupMock).toHaveBeenCalledWith(testUris.pdsMember, false);
+        expect(_lookupMock).toHaveBeenCalledWith(testUris.pdsMember);
         expect(_fireSoonMock).toHaveBeenCalled();
 
         expect(fakePds.entries.has(fakePdsMember.name)).toBe(false);
@@ -1119,7 +1119,7 @@ describe("delete", () => {
 
         await DatasetFSProvider.instance.delete(testUris.pds, { recursive: false });
         expect(mockMvsApi.deleteDataSet).toHaveBeenCalledWith(fakePds.name, { responseTimeout: undefined });
-        expect(_lookupMock).toHaveBeenCalledWith(testUris.pds, false);
+        expect(_lookupMock).toHaveBeenCalledWith(testUris.pds);
         expect(_fireSoonMock).toHaveBeenCalled();
 
         mvsApiMock.mockRestore();
@@ -1143,7 +1143,7 @@ describe("delete", () => {
 
         await expect(DatasetFSProvider.instance.delete(testUris.ps, { recursive: false })).rejects.toThrow();
         expect(mockMvsApi.deleteDataSet).toHaveBeenCalledWith(fakePs.name, { responseTimeout: undefined });
-        expect(_lookupMock).toHaveBeenCalledWith(testUris.ps, false);
+        expect(_lookupMock).toHaveBeenCalledWith(testUris.ps);
         expect(_fireSoonMock).toHaveBeenCalled();
         expect(handleErrorMock).toHaveBeenCalledWith(
             sampleError,
