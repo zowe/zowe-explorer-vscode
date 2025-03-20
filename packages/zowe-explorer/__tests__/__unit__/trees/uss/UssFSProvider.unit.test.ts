@@ -10,7 +10,18 @@
  */
 
 import { Disposable, FilePermission, FileSystemError, FileType, TextEditor, Uri, workspace } from "vscode";
-import { AuthHandler, BaseProvider, DirEntry, FileEntry, Gui, UssDirectory, UssFile, ZoweExplorerApiType, ZoweScheme } from "@zowe/zowe-explorer-api";
+import {
+    AuthHandler,
+    BaseProvider,
+    DirEntry,
+    FileEntry,
+    FsAbstractUtils,
+    Gui,
+    UssDirectory,
+    UssFile,
+    ZoweExplorerApiType,
+    ZoweScheme,
+} from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
@@ -77,6 +88,12 @@ describe("stat", () => {
 
     it("returns a file entry", async () => {
         lookupMock.mockReturnValueOnce(testEntries.file);
+        const getInfoForUriMock = jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValueOnce({
+            isRoot: false,
+            slashAfterProfilePos: testUris.file.path.indexOf("/", 1),
+            profile: testProfile,
+            profileName: "sestest",
+        });
         const listFilesMock = jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
             success: true,
             apiResponse: {
@@ -88,12 +105,19 @@ describe("stat", () => {
         expect(lookupMock).toHaveBeenCalledWith(testUris.file, false);
         expect(listFilesMock).toHaveBeenCalled();
         listFilesMock.mockRestore();
+        getInfoForUriMock.mockRestore();
     });
 
     it("updates a file entry with new modification time and resets wasAccessed flag", async () => {
         const fakeFile = Object.assign(Object.create(Object.getPrototypeOf(testEntries.file)), testEntries.file);
         lookupMock.mockReturnValueOnce(fakeFile);
         const newMtime = Date.now();
+        const getInfoForUriMock = jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValueOnce({
+            isRoot: false,
+            slashAfterProfilePos: testUris.file.path.indexOf("/", 1),
+            profile: testProfile,
+            profileName: "sestest",
+        });
         const listFilesMock = jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
             success: true,
             apiResponse: {
@@ -107,6 +131,7 @@ describe("stat", () => {
         expect(fakeFile.wasAccessed).toBe(false);
         expect(listFilesMock).toHaveBeenCalled();
         listFilesMock.mockRestore();
+        getInfoForUriMock.mockRestore();
     });
 
     it("returns a file as 'read-only' when query has conflict parameter", async () => {
