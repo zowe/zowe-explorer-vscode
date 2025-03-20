@@ -50,9 +50,8 @@ export namespace ZoweExplorerZosmf {
         }
 
         public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
-            const loadedProfile = profile ?? this.profile;
             try {
-                this.session = this._getSession(loadedProfile);
+                this.session = this._getSession(profile ?? this.profile);
             } catch (error) {
                 // todo: initialize and use logging
                 imperative.Logger.getAppLogger().error(error as string);
