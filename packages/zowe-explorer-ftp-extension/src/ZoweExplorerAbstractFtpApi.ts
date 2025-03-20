@@ -31,14 +31,14 @@ export abstract class AbstractFtpApi implements MainframeInteraction.ICommon {
     }
 
     public getSession(profile?: imperative.IProfileLoaded): FtpSession {
-        this.session = globals.SESSION_MAP.get(this.profile);
-        if (!this.session) {
-            const ftpProfile = profile || this.profile;
-            if (!ftpProfile) {
-                throw new ZoweFtpExtensionError("Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.");
-            }
+        const ftpProfile = profile ?? this.profile;
+        if (ftpProfile == null) {
+            throw new ZoweFtpExtensionError("Internal error: AbstractFtpApi instance was not initialized with a valid Zowe profile.");
+        }
 
-            const loadedProfile = ftpProfile.profile;
+        this.session = globals.SESSION_MAP.get(ftpProfile);
+        const loadedProfile = ftpProfile.profile;
+        if (this.session == null && loadedProfile != null) {
             this.session = new FtpSession({
                 hostname: loadedProfile.host,
                 port: loadedProfile.port,
@@ -46,7 +46,7 @@ export abstract class AbstractFtpApi implements MainframeInteraction.ICommon {
                 password: loadedProfile.password,
                 rejectUnauthorized: loadedProfile.rejectUnauthorized,
             });
-            globals.SESSION_MAP.set(this.profile, this.session);
+            globals.SESSION_MAP.set(ftpProfile, this.session);
         }
         return this.session;
     }
@@ -63,7 +63,7 @@ export abstract class AbstractFtpApi implements MainframeInteraction.ICommon {
 
     public checkedProfile(): imperative.IProfileLoaded {
         if (!this.profile?.profile) {
-            throw new ZoweFtpExtensionError("Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.");
+            throw new ZoweFtpExtensionError("Internal error: AbstractFtpApi instance was not initialized with a valid Zowe profile.");
         }
         return this.profile;
     }
