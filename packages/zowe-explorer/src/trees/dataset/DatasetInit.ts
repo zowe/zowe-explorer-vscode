@@ -55,11 +55,7 @@ export class DatasetInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.addSession", async () => datasetProvider.createZoweSession(datasetProvider))
         );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.refreshAll", async () => {
-                await SharedActions.refreshProvider(datasetProvider);
-            })
-        );
+        context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.refreshAll", async () => SharedActions.refreshAll()));
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.refreshNode", async (node, nodeList) => {
                 const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Pulling from Mainframe...")}`);

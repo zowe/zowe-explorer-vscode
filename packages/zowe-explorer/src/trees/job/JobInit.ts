@@ -62,11 +62,7 @@ export class JobInit {
             })
         );
         context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.refreshJobsServer", (job) => JobActions.refreshJob(job, jobsProvider)));
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.jobs.refreshAllJobs", async () => {
-                await SharedActions.refreshProvider(jobsProvider);
-            })
-        );
+        context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.refreshAllJobs", async () => SharedActions.refreshAll()));
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.jobs.refreshJob", (job) => JobActions.refreshJob(job.mParent, jobsProvider))
         );
