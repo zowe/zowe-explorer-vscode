@@ -282,6 +282,27 @@ describe("fetchSpoolAtUri", () => {
         lookupAsFileMock.mockRestore();
     });
 
+    it("fetches the spool contents for a given URI - getSpoolContentById w/ encoding", async () => {
+        const lookupAsFileMock = jest
+            .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
+            .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array(), encoding: { kind: "other", codepage: "IBM-1147" } });
+        const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce({ ...testEntries.job });
+        const mockJesApi = {
+            getSpoolContentById: jest.fn((opts) => {
+                return "spool contents";
+            }),
+        };
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const entry = await JobFSProvider.instance.fetchSpoolAtUri(testUris.spool);
+        expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.spool);
+        expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.spool);
+        expect(mockJesApi.getSpoolContentById).toHaveBeenCalled();
+        expect(mockJesApi.getSpoolContentById.mock.calls[0][3]).toBe("IBM-1147");
+        expect(entry.data.toString()).toStrictEqual("spool contents");
+        jesApiMock.mockRestore();
+        lookupAsFileMock.mockRestore();
+    });
+
     it("calls AuthUtils.promptForAuthError when an error occurs", async () => {
         const lookupAsFileMock = jest
             .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
