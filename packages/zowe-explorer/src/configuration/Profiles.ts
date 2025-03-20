@@ -128,7 +128,7 @@ export class Profiles extends ProfilesCache {
                 await AuthUtils.errorHandling(error, { profile: theProfile });
                 return profileStatus;
             }
-        } else if (!usingTokenAuth && !(usingBasicAuth || usingCertAuth)) {
+        } else if (!usingTokenAuth && !usingBasicAuth && !usingCertAuth) {
             ZoweLogger.debug(`Profile ${theProfile.name} is using basic auth, prompting for missing credentials`);
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(
