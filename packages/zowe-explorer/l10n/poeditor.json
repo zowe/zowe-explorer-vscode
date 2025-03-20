@@ -404,6 +404,9 @@
   "zowe.security.secureCredentialsEnabled": {
     "Allow credentials to be stored securely. If disabled and autoStore is set to true, z/OS credentials are stored as clear text in zowe.config.json.": ""
   },
+  "zowe.openRecentMember": {
+    "Open Recent Member": ""
+  },
   "issueTsoCmd": {
     "Issue TSO Command": ""
   },
@@ -615,15 +618,6 @@
   "Profile auth error": "",
   "Profile is not authenticated, please log in to continue": "",
   "Retrieving response from USS list API": "",
-  "The 'move' function is not implemented for this USS API.": "",
-  "Failed to move {0}": "",
-  "Profile does not exist for this file.": "",
-  "Saving USS file...": "",
-  "Failed to rename {0}": "",
-  "Failed to delete {0}": "",
-  "No error details given": "",
-  "Error fetching destination {0} for paste action: {1}": "",
-  "Failed to copy {0} to {1}": "",
   "Downloaded: {0}": "",
   "Encoding: {0}": "",
   "Binary": "",
@@ -649,6 +643,15 @@
   "initializeUSSFavorites.error.buttonRemove": "",
   "File does not exist. It may have been deleted.": "",
   "Pulling from Mainframe...": "",
+  "The 'move' function is not implemented for this USS API.": "",
+  "Failed to move {0}": "",
+  "Profile does not exist for this file.": "",
+  "Saving USS file...": "",
+  "Failed to rename {0}": "",
+  "Failed to delete {0}": "",
+  "No error details given": "",
+  "Error fetching destination {0} for paste action: {1}": "",
+  "Failed to copy {0} to {1}": "",
   "{0} location": "",
   "Choose a location to create the {0}": "",
   "Name of file or directory": "",
@@ -692,6 +695,7 @@
   "You must enter a pattern.": "",
   "Prompting the user to choose a recent member for editing": "",
   "Select a recent member to open": "",
+  "Profile not found.": "",
   "No recent members found.": "",
   "Use the search button to display jobs": "",
   "No spool files found": "",

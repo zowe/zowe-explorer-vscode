@@ -2934,6 +2934,16 @@ describe("Dataset Actions Unit Tests - function copyName", () => {
         await DatasetActions.copyName(ds);
         expect(mocked(vscode.env.clipboard.writeText)).toHaveBeenCalledWith("A.DS.MIGRAT");
     });
+    it("copies the correct path for a VSAM data set", async () => {
+        const vsam = new ZoweDatasetNode({
+            label: "A.VSAM",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.VSAM_CONTEXT,
+            parentNode: datasetSessionNode,
+        });
+        await DatasetActions.copyName(vsam);
+        expect(mocked(vscode.env.clipboard.writeText)).toHaveBeenCalledWith("A.VSAM");
+    });
 });
 
 describe("Dataset Actions Unit Tests - function search", () => {
