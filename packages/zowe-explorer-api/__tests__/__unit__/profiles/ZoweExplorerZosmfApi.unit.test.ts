@@ -613,7 +613,7 @@ describe("ZosmfJesApi", () => {
         {
             name: "getSpoolContentById",
             spy: jest.spyOn(zosjobs.GetJobs, "getSpoolContentById"),
-            args: ["jobname", "jobid", 100],
+            args: ["jobname", "jobid", 100, undefined],
         },
         {
             name: "getJclForJob",
