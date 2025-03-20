@@ -570,7 +570,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let resp: IZosFilesResponse;
         try {
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile);
-            const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
+            const profile = Profiles.getInstance().loadNamedProfile(entry?.metadata.profile.name);
+            const profileEncoding = entry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
             resp = await mvsApi.uploadFromBuffer(Buffer.from(content), entry.metadata.dsName, {
                 binary: entry.encoding?.kind === "binary",
                 encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
