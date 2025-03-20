@@ -7,6 +7,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### New features and enhancements
 
 - Renamed "Zowe Explorer z/OS Console" to "z/OS Console". [#3445](https://github.com/zowe/zowe-explorer-vscode/pull/3445)
+- The "Open Recent Member" command can now be triggered from the command palette. [#3477](https://github.com/zowe/zowe-explorer-vscode/pull/3477)
 
 ### Bug fixes
 
@@ -19,6 +20,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where data set migration status was incorrectly handled when the `migr` attribute was not present in the API response. [#3471](https://github.com/zowe/zowe-explorer-vscode/issues/3471)
 - Fixed an issue where selecting items in table views would reset the column sort order. [#3473](https://github.com/zowe/zowe-explorer-vscode/issues/3473)
 - Fixed issue where users were prompted several times when using a profile with invalid credentials in a VS Code workspace. Now, the user is only prompted once per profile, allowing the user to enter in new credentials. [#3480](https://github.com/zowe/zowe-explorer-vscode/pull/3480)
+- Fixed issue where selecting a recent member to open from a profile name that no longer exists would cause an error. [#3447](https://github.com/zowe/zowe-explorer-vscode/issues/3447)
+- Fixed issue with a conflicting keybinding for `Open Recent Member`, changed keybinding to `Ctrl`+`Alt`+`T` for Windows and `⌘ Cmd`+`⌥ Opt`+`T` for macOS. [#3447](https://github.com/zowe/zowe-explorer-vscode/issues/3447)
+- Fixed issue where saving data set member to history would save only the member name instead of the full path. [#3447](https://github.com/zowe/zowe-explorer-vscode/pull/3477)
 
 ## `3.1.1`
 
