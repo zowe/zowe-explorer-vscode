@@ -88,8 +88,8 @@
     "keybindings": [
       {
         "command": "zowe.openRecentMember",
-        "key": "ctrl+alt+r",
-        "mac": "cmd+alt+r"
+        "key": "ctrl+alt+t",
+        "mac": "cmd+alt+t"
       },
       {
         "command": "zowe.searchInAllLoadedItems",
@@ -682,6 +682,11 @@
         "command": "zowe.placeholderCommand",
         "title": "%zowe.placeholderCommand%",
         "enablement": "false"
+      },
+      {
+        "command": "zowe.openRecentMember",
+        "title": "%zowe.openRecentMember%",
+        "category": "Zowe Explorer"
       }
     ],
     "menus": {
@@ -1601,6 +1606,11 @@
         {
           "command": "zowe.deleteProfile",
           "when": "never"
+        },
+        {
+          "command": "zowe.openRecentMember",
+          "when": "true",
+          "group": "navigation"
         }
       ]
     },

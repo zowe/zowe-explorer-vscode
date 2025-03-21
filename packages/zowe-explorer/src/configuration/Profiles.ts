@@ -99,6 +99,8 @@ export class Profiles extends ProfilesCache {
     public async checkCurrentProfile(theProfile: imperative.IProfileLoaded): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
         let profileStatus: Validation.IValidationProfile = { name: theProfile.name, status: "unverified" };
+        const usingBasicAuth = theProfile.profile.user && theProfile.profile.password;
+        const usingCertAuth = theProfile.profile.certFile && theProfile.profile.certKeyFile;
         let usingTokenAuth: boolean;
         try {
             usingTokenAuth = await AuthUtils.isUsingTokenAuth(theProfile.name);
@@ -125,7 +127,7 @@ export class Profiles extends ProfilesCache {
                 await AuthUtils.errorHandling(error, { profile: theProfile });
                 return profileStatus;
             }
-        } else if (!usingTokenAuth && (!theProfile.profile.user || !theProfile.profile.password)) {
+        } else if (!usingTokenAuth && !usingBasicAuth && !usingCertAuth) {
             ZoweLogger.debug(`Profile ${theProfile.name} is using basic auth, prompting for missing credentials`);
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(
@@ -145,6 +147,9 @@ export class Profiles extends ProfilesCache {
                 this.validProfile = Validation.ValidationType.INVALID;
                 return { ...profileStatus, status: "inactive" };
             }
+        } else if (!usingTokenAuth && !usingBasicAuth && usingCertAuth) {
+            profileStatus.status = "active";
+            this.profilesForValidation.push(profileStatus);
         }
 
         // Profile should have enough information to allow validation
