@@ -12,16 +12,7 @@
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as path from "path";
-import {
-    FsJobsUtils,
-    imperative,
-    IZoweJobTreeNode,
-    Sorting,
-    ZosEncoding,
-    ZoweExplorerApiType,
-    ZoweScheme,
-    ZoweTreeNode,
-} from "@zowe/zowe-explorer-api";
+import { FsJobsUtils, IZoweJobTreeNode, Sorting, ZosEncoding, ZoweExplorerApiType, ZoweScheme, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { JobFSProvider } from "./JobFSProvider";
 import { JobUtils } from "./JobUtils";
 import { Constants } from "../../configuration/Constants";
@@ -425,11 +416,8 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJob(searchId));
             } else {
                 if (!ZoweExplorerApiRegister.getJesApi(cachedProfile).getSession(cachedProfile)) {
-                    throw new imperative.ImperativeError({
-                        msg: vscode.l10n.t("Profile auth error"),
-                        additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
-                        errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
-                    });
+                    ZoweLogger.warn(`[ZoweJobNode.getJobs] Session undefined for profile ${cachedProfile.name}`);
+                    return undefined;
                 }
                 jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
                     owner,

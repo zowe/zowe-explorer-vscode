@@ -81,7 +81,7 @@ export class USSActions {
                     await vscode.workspace.fs.createDirectory(uri);
                 }
                 if (isTopLevel) {
-                    await SharedActions.refreshAll(ussFileProvider);
+                    await SharedActions.refreshProvider(ussFileProvider);
                 } else {
                     ussFileProvider.refreshElement(node);
                 }

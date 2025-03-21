@@ -38,10 +38,11 @@ describe("AbstractFtpApi", () => {
     });
 
     it("should remove the record in sessionMap when call logout function.", async () => {
-        const instance = new Dummy();
+        const instance = new Dummy(profile);
         const result = instance.getSession(profile);
         const session = new FtpSession(result.ISession);
-        globals.SESSION_MAP.get = jest.fn().mockReturnValue(session);
+        globals.SESSION_MAP.clear();
+        globals.SESSION_MAP.set(profile, session);
         session.releaseConnections = jest.fn();
 
         await instance.logout(session);
@@ -59,13 +60,10 @@ describe("AbstractFtpApi", () => {
         } catch (err) {
             expect(err).not.toBeUndefined();
             expect(err).toBeInstanceOf(Error);
-            expect(Gui.showMessage).toHaveBeenCalledWith(
-                "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.",
-                {
-                    severity: MessageSeverity.FATAL,
-                    logger: globals.LOGGER,
-                }
-            );
+            expect(Gui.showMessage).toHaveBeenCalledWith("Internal error: AbstractFtpApi instance was not initialized with a valid Zowe profile.", {
+                severity: MessageSeverity.FATAL,
+                logger: globals.LOGGER,
+            });
         }
     });
 
@@ -124,13 +122,10 @@ describe("AbstractFtpApi", () => {
             failNotFound: true,
         };
         try {
-            expect(Gui.showMessage).toHaveBeenCalledWith(
-                "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.",
-                {
-                    severity: MessageSeverity.FATAL,
-                    logger: globals.LOGGER,
-                }
-            );
+            expect(Gui.showMessage).toHaveBeenCalledWith("Internal error: AbstractFtpApi instance was not initialized with a valid Zowe profile.", {
+                severity: MessageSeverity.FATAL,
+                logger: globals.LOGGER,
+            });
             instance.checkedProfile();
         } catch (err) {
             expect(err).not.toBeUndefined();

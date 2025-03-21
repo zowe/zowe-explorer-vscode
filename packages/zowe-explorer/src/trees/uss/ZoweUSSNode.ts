@@ -683,11 +683,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     private async getUssFiles(profile: imperative.IProfileLoaded): Promise<zosfiles.IZosFilesResponse> {
         try {
             if (!ZoweExplorerApiRegister.getUssApi(profile).getSession(profile)) {
-                throw new imperative.ImperativeError({
-                    msg: vscode.l10n.t("Profile auth error"),
-                    additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
-                    errorCode: `${imperative.RestConstants.HTTP_STATUS_401 as number}`,
-                });
+                ZoweLogger.warn(`[ZoweUSSNode.getUssFiles] Session undefined for profile ${profile.name}`);
+                return { success: false, commandResponse: "Session is not defined for profile" };
             }
             if (SharedContext.isSession(this)) {
                 return await UssFSProvider.instance.listFiles(

@@ -34,10 +34,12 @@ const readableStream = stream.Readable.from([]);
 const fs = require("fs");
 
 fs.createReadStream = jest.fn().mockReturnValue(readableStream);
-const MvsApi = new FtpMvsApi();
 
 describe("FtpMvsApi", () => {
+    let MvsApi: FtpMvsApi;
     beforeEach(() => {
+        const profile: imperative.IProfileLoaded = { message: "", type: "zftp", failNotFound: false, profile: { host: "example.com", port: 22 } };
+        MvsApi = new FtpMvsApi(profile);
         MvsApi.checkedProfile = jest.fn().mockReturnValue({ message: "success", type: "zftp", profile: { secureFtp: false }, failNotFound: false });
         MvsApi.ftpClient = jest.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
         MvsApi.releaseConnection = jest.fn();

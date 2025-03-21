@@ -26,6 +26,15 @@ import { SharedTreeProviders } from "./SharedTreeProviders";
 import { ZoweExplorerExtender } from "../../extending/ZoweExplorerExtender";
 
 export class SharedActions {
+    private static refreshInProgress = false;
+
+    /**
+     * Returns true if a profile refresh is currently in progress
+     */
+    public static isRefreshInProgress(): boolean {
+        return SharedActions.refreshInProgress;
+    }
+
     /**
      * Search for matching items loaded in data set or USS tree
      *
@@ -235,27 +244,21 @@ export class SharedActions {
         return node;
     }
 
-    /**
-     * View (DATA SETS, JOBS, USS) refresh button
-     * Refreshes treeView and profiles including their validation setting
-     *
-     * @param {IZoweTree} treeProvider
-     */
-    public static async refreshAll(treeProvider?: IZoweTree<IZoweTreeNode>): Promise<void> {
-        ZoweLogger.trace("refresh.refreshAll called.");
-        if (treeProvider == null) {
-            for (const provider of Object.values(SharedTreeProviders.providers)) {
-                await this.refreshAll(provider);
-            }
-            return;
-        }
+    public static async refreshProfiles(): Promise<void> {
+        // Refresh profiles before anything else to ensure we have the latest state
         try {
             await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
         } catch (err) {
             ZoweLogger.error(err);
             ZoweExplorerExtender.showZoweConfigError(err.message);
-            return;
         }
+    }
+
+    public static async refreshProvider(treeProvider: IZoweTree<IZoweTreeNode>, refreshProfiles?: boolean): Promise<void> {
+        if (refreshProfiles) {
+            await SharedActions.refreshProfiles();
+        }
+
         for (const sessNode of treeProvider.mSessionNodes) {
             const profiles = await Profiles.getInstance().fetchAllProfiles();
             const found = profiles.some((prof) => prof.name === sessNode.label.toString().trim());
@@ -273,5 +276,27 @@ export class SharedActions {
             await TreeViewUtils.addDefaultSession(treeProvider, profType);
         }
         treeProvider.refresh();
+    }
+
+    /**
+     * Refreshes profiles and tree providers.
+     */
+    public static async refreshAll(): Promise<void> {
+        ZoweLogger.trace("refresh.refreshAll called.");
+
+        if (SharedActions.refreshInProgress) {
+            // Discard duplicate calls to `refreshAll` when a tree provider isn't specified
+            ZoweLogger.debug("Profile refresh already in progress, skipping");
+            return;
+        }
+        SharedActions.refreshInProgress = true;
+
+        await SharedActions.refreshProfiles();
+
+        for (const provider of Object.values(SharedTreeProviders.providers)) {
+            await SharedActions.refreshProvider(provider);
+        }
+
+        SharedActions.refreshInProgress = false;
     }
 }

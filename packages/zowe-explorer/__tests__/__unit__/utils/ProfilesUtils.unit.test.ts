@@ -33,6 +33,7 @@ import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { Definitions } from "../../../src/configuration/Definitions";
 import { createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets";
+import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 
 jest.mock("../../../src/tools/ZoweLogger");
 jest.mock("fs");
@@ -459,9 +460,12 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn(),
                 configurable: true,
             });
-            await ProfilesUtils.promptCredentials(null as any);
-            expect(mockProfileInstance.getProfileInfo).toHaveBeenCalled();
-            expect(Gui.showMessage).toHaveBeenCalledWith('"Update Credentials" operation not supported when "autoStore" is false');
+            const promptCredentialsMock = jest.spyOn(mockProfileInstance, "promptCredentials").mockResolvedValueOnce(undefined as any);
+            const dsNode = createDatasetSessionNode(createISession(), createIProfile());
+            await ProfilesUtils.promptCredentials(dsNode);
+            expect(Gui.showMessage).not.toHaveBeenCalledWith('"Update Credentials" operation not supported when "autoStore" is false');
+            expect(promptCredentialsMock).toHaveBeenCalledTimes(1);
+            promptCredentialsMock.mockRestore();
         });
 
         it("fires onProfilesUpdate event if secure credentials are enabled", async () => {
