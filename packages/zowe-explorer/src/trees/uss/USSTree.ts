@@ -680,6 +680,30 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     }
 
     /**
+     * Filters by the directory above the current directory
+     *
+     * @param {IZoweUSSTreeNode} node - The session node
+     * @returns {Promise<void>}
+     */
+    public async cdUp(node: IZoweUSSTreeNode): Promise<void> {
+        ZoweLogger.trace("USSTree.cdUp called.");
+
+        // If the path is empty, then the node's filter hasn't been selected yet
+        // TODO: Is this the most robust and proper way of checking if a filter is active?
+        if (node.fullPath !== "") {
+            if (path.posix.dirname(node.fullPath) === "/") {
+                Gui.showMessage(vscode.l10n.t("You are already at the root directory."));
+                return;
+            }
+
+            const parentPath = path.posix.dirname(node.fullPath);
+            await this.filterBy(node, parentPath);
+        } else {
+            Gui.showMessage(vscode.l10n.t("Select a filter first."));
+        }
+    }
+
+    /**
      * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
      *
      * @param {IZoweUSSTreeNode} node - The session node
@@ -759,6 +783,43 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             this.addSearchHistory(sanitizedPath);
             await TreeViewUtils.expandNode(node, this);
             this.refresh();
+        }
+    }
+
+    /**
+     * Populates the [TreeView]{@link vscode.TreeView} based on the path of the node selected to filter by
+     *
+     * @param {IZoweUSSTreeNode} node - The new node to filter by (can only be a directory)
+     * @param {string} newPath - The new path to filter by
+     * @returns {Promise<void>}
+     */
+    public async filterBy(node: IZoweUSSTreeNode, newPath: string): Promise<void> {
+        ZoweLogger.trace("USSTree.filterBy called.");
+        await this.checkCurrentProfile(node);
+        if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
+            const sessionNode = this.mSessionNodes.find((tempNode) => tempNode.getProfileName() === node.getProfileName());
+            if (sessionNode) {
+                // Get session for sessionNode
+                AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), sessionNode);
+                // Sanitization: Replace multiple forward slashes with just one forward slash
+                const sanitizedPath = newPath.replace(/\/+/g, "/").replace(/(\/*)$/, "");
+                sessionNode.fullPath = sanitizedPath;
+                const icon = IconGenerator.getIconByNode(sessionNode);
+                if (icon) {
+                    sessionNode.iconPath = icon.path;
+                }
+                // update the treeview with the new path
+                if (!SharedContext.isFavorite(sessionNode)) {
+                    sessionNode.description = sanitizedPath;
+                }
+                if (!SharedContext.isFilterFolder(sessionNode)) {
+                    sessionNode.contextValue += `_${Constants.FILTER_SEARCH}`;
+                }
+                sessionNode.dirty = true;
+                // this.addSearchHistory(sanitizedPath); // TODO: Should we add to history? I think not as it's not a search
+                await TreeViewUtils.expandNode(sessionNode, this);
+                this.refresh();
+            }
         }
     }
 
