@@ -15,7 +15,6 @@ import {
     Gui,
     imperative,
     Validation,
-    Types,
     ProfilesCache,
     ZoweExplorerApiType,
     ZoweScheme,
@@ -3689,6 +3688,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
         let withProgressSpy: jest.SpyInstance;
         let showMessageSpy: jest.SpyInstance;
         let showInputBoxSpy: jest.SpyInstance;
+        let showQuickPickSpy: jest.SpyInstance;
         let errorMessageSpy: jest.SpyInstance;
         let tableBuilderOptionsSpy: jest.SpyInstance;
         let tableBuilderTitleSpy: jest.SpyInstance;
@@ -3697,6 +3697,24 @@ describe("Dataset Actions Unit Tests - function search", () => {
         let tableBuilderColumnsSpy: jest.SpyInstance;
         let tableBuilderAddRowActionSpy: jest.SpyInstance;
         let tableBuilderBuildSpy: jest.SpyInstance;
+
+        function quickPickPositiveExpect() {
+            expect(showQuickPickSpy).toHaveBeenCalledWith(
+                [
+                    {
+                        label: vscode.l10n.t("Case Sensitive"),
+                        description: vscode.l10n.t("Perform the search with case sensitivity"),
+                        iconPath: new vscode.ThemeIcon("case-sensitive"),
+                    },
+                ],
+                {
+                    title: vscode.l10n.t("Search Options"),
+                    placeHolder: vscode.l10n.t("Select search options"),
+                    ignoreFocusOut: true,
+                    canPickMany: true,
+                }
+            );
+        }
 
         beforeAll(() => {
             tableViewProviderSetTableViewMock = jest.fn();
@@ -3710,6 +3728,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
             showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
             errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation();
             showInputBoxSpy = jest.spyOn(Gui, "showInputBox");
+            showQuickPickSpy = jest.spyOn(Gui, "showQuickPick");
             tableBuilderOptionsSpy = jest.spyOn(TableBuilder.prototype, "options").mockReturnValue(TableBuilder.prototype);
             tableBuilderTitleSpy = jest.spyOn(TableBuilder.prototype, "title").mockReturnValue(TableBuilder.prototype);
             tableBuilderIsViewSpy = jest.spyOn(TableBuilder.prototype, "isView").mockReturnValue(TableBuilder.prototype);
@@ -3741,6 +3760,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
 
             expect(errorMessageSpy).toHaveBeenCalledWith("No search pattern applied. Search for a pattern and try again.");
             expect(showMessageSpy).not.toHaveBeenCalled();
+            expect(showQuickPickSpy).not.toHaveBeenCalled();
             expect(performSearchSpy).not.toHaveBeenCalled();
             expect(getSearchMatchesSpy).not.toHaveBeenCalled();
             expect(tableViewProviderSpy).not.toHaveBeenCalled();
@@ -3761,7 +3781,30 @@ describe("Dataset Actions Unit Tests - function search", () => {
 
             expect(errorMessageSpy).not.toHaveBeenCalled();
             expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
-            expect(showMessageSpy).toHaveBeenCalledWith("Operation Cancelled");
+            expect(showQuickPickSpy).not.toHaveBeenCalled();
+            expect(performSearchSpy).not.toHaveBeenCalled();
+            expect(getSearchMatchesSpy).not.toHaveBeenCalled();
+            expect(tableViewProviderSpy).not.toHaveBeenCalled();
+            expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
+            expect(withProgressSpy).not.toHaveBeenCalled();
+            expect(tableBuilderTitleSpy).not.toHaveBeenCalled();
+        });
+
+        it("should fail to perform a search if the user does not specify search case sensitivity", async () => {
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+            node.pattern = "FAKE.*.DS";
+            const context = { context: "fake" } as any;
+            const searchString = "test";
+
+            showInputBoxSpy.mockResolvedValue(searchString);
+            showQuickPickSpy.mockResolvedValue(undefined);
+
+            await DatasetActions.search(context, node);
+
+            expect(errorMessageSpy).not.toHaveBeenCalled();
+            expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
+            quickPickPositiveExpect();
             expect(performSearchSpy).not.toHaveBeenCalled();
             expect(getSearchMatchesSpy).not.toHaveBeenCalled();
             expect(tableViewProviderSpy).not.toHaveBeenCalled();
@@ -3784,6 +3827,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
             const myProgress = { test: "test" };
 
             showInputBoxSpy.mockResolvedValue(searchString);
+            showQuickPickSpy.mockResolvedValue([]);
             withProgressSpy.mockImplementation((opts: any, fn: any) => {
                 return fn(myProgress, tokenCancellation);
             });
@@ -3793,6 +3837,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
 
             expect(errorMessageSpy).not.toHaveBeenCalled();
             expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
+            quickPickPositiveExpect();
             expect(showMessageSpy).not.toHaveBeenCalled();
             expect(performSearchSpy).toHaveBeenCalledTimes(1);
             expect(getSearchMatchesSpy).not.toHaveBeenCalled();
@@ -3847,6 +3892,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
             const myProgress = { test: "test" };
 
             showInputBoxSpy.mockResolvedValue(searchString);
+            showQuickPickSpy.mockResolvedValue([]);
             withProgressSpy.mockImplementation((opts: any, fn: any) => {
                 return fn(myProgress, tokenCancellation);
             });
@@ -3857,6 +3903,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
 
             expect(errorMessageSpy).not.toHaveBeenCalled();
             expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
+            quickPickPositiveExpect();
             expect(showMessageSpy).not.toHaveBeenCalled();
 
             expect(withProgressSpy.mock.calls[0][0]).toEqual({
@@ -3868,6 +3915,12 @@ describe("Dataset Actions Unit Tests - function search", () => {
             expect(getSearchMatchesSpy).toHaveBeenCalledWith(node, expectedResponse, true, searchString);
 
             expect(performSearchSpy).toHaveBeenCalledTimes(1);
+            expect(performSearchSpy).toHaveBeenCalledWith(myProgress, tokenCancellation, {
+                node,
+                pattern: node.pattern,
+                searchString,
+                caseSensitive: false,
+            });
             expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
 
             expect(tableBuilderTitleSpy).toHaveBeenCalledWith('Search Results for "test"');
@@ -3985,6 +4038,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
             const myProgress = { test: "test" };
 
             showInputBoxSpy.mockResolvedValue(searchString);
+            showQuickPickSpy.mockResolvedValue([]);
             withProgressSpy.mockImplementation((opts: any, fn: any) => {
                 return fn(myProgress, tokenCancellation);
             });
@@ -3995,6 +4049,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
 
             expect(errorMessageSpy).not.toHaveBeenCalled();
             expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
+            quickPickPositiveExpect();
             expect(showMessageSpy).not.toHaveBeenCalled();
 
             expect(withProgressSpy.mock.calls[0][0]).toEqual({
@@ -4006,6 +4061,12 @@ describe("Dataset Actions Unit Tests - function search", () => {
             expect(getSearchMatchesSpy).toHaveBeenCalledWith(pdsNode, expectedResponse, false, searchString);
 
             expect(performSearchSpy).toHaveBeenCalledTimes(1);
+            expect(performSearchSpy).toHaveBeenCalledWith(myProgress, tokenCancellation, {
+                node: pdsNode,
+                pattern: pdsNode.label,
+                searchString,
+                caseSensitive: false,
+            });
             expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
 
             expect(tableBuilderTitleSpy).toHaveBeenCalledWith('Search Results for "test"');
@@ -4099,6 +4160,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
             const myProgress = { test: "test" };
 
             showInputBoxSpy.mockResolvedValue(searchString);
+            showQuickPickSpy.mockResolvedValue([]);
             withProgressSpy.mockImplementation((opts: any, fn: any) => {
                 return fn(myProgress, tokenCancellation);
             });
@@ -4109,6 +4171,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
 
             expect(errorMessageSpy).not.toHaveBeenCalled();
             expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
+            quickPickPositiveExpect();
             expect(showMessageSpy).not.toHaveBeenCalled();
 
             expect(withProgressSpy.mock.calls[0][0]).toEqual({
@@ -4120,6 +4183,12 @@ describe("Dataset Actions Unit Tests - function search", () => {
             expect(getSearchMatchesSpy).toHaveBeenCalledWith(node, expectedResponse, true, searchString);
 
             expect(performSearchSpy).toHaveBeenCalledTimes(1);
+            expect(performSearchSpy).toHaveBeenCalledWith(myProgress, tokenCancellation, {
+                node,
+                pattern: node.label,
+                searchString,
+                caseSensitive: false,
+            });
             expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
 
             expect(tableBuilderTitleSpy).toHaveBeenCalledWith('Search Results for "test"');
@@ -4239,6 +4308,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
             const myProgress = { test: "test" };
 
             showInputBoxSpy.mockResolvedValue(searchString);
+            showQuickPickSpy.mockResolvedValue([]);
             withProgressSpy.mockImplementation((opts: any, fn: any) => {
                 return fn(myProgress, tokenCancellation);
             });
@@ -4249,6 +4319,7 @@ describe("Dataset Actions Unit Tests - function search", () => {
 
             expect(errorMessageSpy).not.toHaveBeenCalled();
             expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
+            quickPickPositiveExpect();
             expect(showMessageSpy).not.toHaveBeenCalled();
 
             expect(withProgressSpy.mock.calls[0][0]).toEqual({
@@ -4260,6 +4331,137 @@ describe("Dataset Actions Unit Tests - function search", () => {
             expect(getSearchMatchesSpy).toHaveBeenCalledWith(pdsNode, expectedResponse, false, searchString);
 
             expect(performSearchSpy).toHaveBeenCalledTimes(1);
+            expect(performSearchSpy).toHaveBeenCalledWith(myProgress, tokenCancellation, {
+                node: pdsNode,
+                pattern: pdsNode.label,
+                searchString,
+                caseSensitive: false,
+            });
+            expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
+
+            expect(tableBuilderTitleSpy).toHaveBeenCalledWith('Search Results for "test"');
+            expect(tableBuilderOptionsSpy).toHaveBeenCalledWith({
+                autoSizeStrategy: { type: "fitCellContents" },
+                pagination: true,
+                rowSelection: "multiple",
+                selectEverything: true,
+                suppressRowClickSelection: true,
+            });
+            expect(tableBuilderIsViewSpy).toHaveBeenCalledTimes(1);
+            expect(tableBuilderRowsSpy).toHaveBeenCalledWith(...expectedMatches);
+            expect(tableBuilderColumnsSpy).toHaveBeenCalledWith(
+                ...[
+                    {
+                        field: "name",
+                        headerName: vscode.l10n.t("Data Set Name"),
+                        filter: true,
+                        initialSort: "asc",
+                    } as Table.ColumnOpts,
+                    {
+                        field: "position",
+                        headerName: vscode.l10n.t("Position"),
+                        filter: false,
+                    },
+                    {
+                        field: "contents",
+                        headerName: vscode.l10n.t("Contents"),
+                        filter: true,
+                    },
+                    {
+                        field: "actions",
+                        hide: true,
+                    },
+                ]
+            );
+            expect(tableBuilderAddRowActionSpy).toHaveBeenCalledWith("all", {
+                title: vscode.l10n.t("Open"),
+                command: "open",
+                callback: {
+                    fn: (DatasetActions as any).openSearchAtLocation,
+                    typ: "multi-row",
+                },
+                type: "secondary",
+            });
+            expect(tableBuilderBuildSpy).toHaveBeenCalledTimes(1);
+            expect(tableViewProviderSpy).toHaveBeenCalledTimes(1);
+            expect(tableViewProviderSetTableViewMock).toHaveBeenCalledTimes(1);
+        });
+        it("should attempt to perform the search with case sensitivity", async () => {
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+            node.pattern = "FAKE.*.DS";
+            const context = { context: "fake" } as any;
+            const searchString = "test";
+
+            const expectedResponse = {
+                success: true,
+                apiResponse: [
+                    {
+                        dsn: "FAKE.DATA.SET.DS",
+                        member: undefined,
+                        matchList: [
+                            {
+                                line: 1,
+                                column: 1,
+                                contents: "test",
+                            },
+                        ],
+                    },
+                ],
+            };
+            const expectedMatches = [
+                {
+                    name: "FAKE.DATA.SET.DS",
+                    line: 1,
+                    column: 1,
+                    position: "1:1",
+                    contents: "test",
+                    uri: "/test/FAKE.DATA.SET.DS",
+                    searchString,
+                },
+            ];
+            const tokenCancellation: vscode.CancellationToken = {
+                isCancellationRequested: false,
+                onCancellationRequested: jest.fn(),
+            };
+            const myProgress = { test: "test" };
+
+            showInputBoxSpy.mockResolvedValue(searchString);
+            showQuickPickSpy.mockResolvedValue([
+                {
+                    label: vscode.l10n.t("Case Sensitive"),
+                    description: vscode.l10n.t("Perform the search with case sensitivity"),
+                    iconPath: new vscode.ThemeIcon("case-sensitive"),
+                } as vscode.QuickPickItem,
+            ]);
+            withProgressSpy.mockImplementation((opts: any, fn: any) => {
+                return fn(myProgress, tokenCancellation);
+            });
+            getSearchMatchesSpy.mockReturnValue(expectedMatches);
+            performSearchSpy.mockResolvedValue(expectedResponse);
+
+            await DatasetActions.search(context, node);
+
+            expect(errorMessageSpy).not.toHaveBeenCalled();
+            expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
+            quickPickPositiveExpect();
+            expect(showMessageSpy).not.toHaveBeenCalled();
+
+            expect(withProgressSpy.mock.calls[0][0]).toEqual({
+                location: vscode.ProgressLocation.Notification,
+                title: 'Searching for "test"',
+                cancellable: true,
+            });
+
+            expect(getSearchMatchesSpy).toHaveBeenCalledWith(node, expectedResponse, true, searchString);
+
+            expect(performSearchSpy).toHaveBeenCalledTimes(1);
+            expect(performSearchSpy).toHaveBeenCalledWith(myProgress, tokenCancellation, {
+                node,
+                pattern: node.pattern,
+                searchString,
+                caseSensitive: true,
+            });
             expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
 
             expect(tableBuilderTitleSpy).toHaveBeenCalledWith('Search Results for "test"');

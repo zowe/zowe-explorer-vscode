@@ -45,6 +45,7 @@ interface ISearchOptions {
     node: IZoweDatasetTreeNode;
     pattern: string;
     searchString: string;
+    caseSensitive: boolean;
 }
 
 export class DatasetActions {
@@ -1890,9 +1891,31 @@ export class DatasetActions {
         // Figure out what text we are looking for.
         const searchString = await Gui.showInputBox({ prompt: vscode.l10n.t("Enter the text to search for.") });
         if (!searchString) {
-            Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
             return;
         }
+
+        // Handle various search options
+        const caseSensitiveQuickPick = await Gui.showQuickPick(
+            [
+                {
+                    label: vscode.l10n.t("Case Sensitive"),
+                    description: vscode.l10n.t("Perform the search with case sensitivity"),
+                    iconPath: new vscode.ThemeIcon("case-sensitive"),
+                },
+            ],
+            {
+                title: vscode.l10n.t("Search Options"),
+                placeHolder: vscode.l10n.t("Select search options"),
+                ignoreFocusOut: true,
+                canPickMany: true,
+            }
+        );
+
+        // Case sensitivity
+        if (caseSensitiveQuickPick == undefined) {
+            return;
+        }
+        const caseSensitive = caseSensitiveQuickPick.some((option) => option.label === vscode.l10n.t("Case Sensitive"));
 
         // Perform the actual search.
         const response: zosfiles.IZosFilesResponse = await Gui.withProgress(
@@ -1902,7 +1925,7 @@ export class DatasetActions {
                 cancellable: true,
             },
             async (progress, token) => {
-                return this.performSearch(progress, token, { node, pattern, searchString });
+                return this.performSearch(progress, token, { node, pattern, searchString, caseSensitive });
             }
         );
 
@@ -2049,6 +2072,7 @@ export class DatasetActions {
                 searchString: options.searchString,
                 progressTask: task,
                 mainframeSearch: false,
+                caseSensitive: options.caseSensitive,
                 continueSearch: function intercept(dataSets: zosfiles.IDataSet[]) {
                     realTotalEntries = dataSets.length;
                     return DatasetActions.continueSearchPrompt(dataSets);

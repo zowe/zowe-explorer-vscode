@@ -180,12 +180,17 @@ export namespace Gui {
      */
     export function showQuickPick<T extends string>(
         items: readonly T[] | Thenable<readonly T[]>,
+        options: vscode.QuickPickOptions & { canPickMany: true },
+        token?: vscode.CancellationToken
+    ): Thenable<T[] | undefined>;
+    export function showQuickPick<T extends string>(
+        items: readonly T[] | Thenable<readonly T[]>,
         options?: vscode.QuickPickOptions,
         token?: vscode.CancellationToken
     ): Thenable<T | undefined>;
-    export function showQuickPick<T extends string>(
+    export function showQuickPick<T extends vscode.QuickPickItem>(
         items: readonly T[] | Thenable<readonly T[]>,
-        options?: vscode.QuickPickOptions & { canPickMany: true },
+        options: vscode.QuickPickOptions & { canPickMany: true },
         token?: vscode.CancellationToken
     ): Thenable<T[] | undefined>;
     export function showQuickPick<T extends vscode.QuickPickItem>(
@@ -195,9 +200,9 @@ export namespace Gui {
     ): Thenable<T | undefined>;
     export function showQuickPick<T extends vscode.QuickPickItem>(
         items: readonly T[] | Thenable<readonly T[]>,
-        options?: vscode.QuickPickOptions & { canPickMany: true },
+        options?: vscode.QuickPickOptions,
         token?: vscode.CancellationToken
-    ): Thenable<T[] | undefined> {
+    ): Thenable<T | T[] | undefined> {
         return vscode.window.showQuickPick(items, options, token);
     }
 
