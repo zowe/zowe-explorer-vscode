@@ -241,8 +241,10 @@ export class SharedActions {
         try {
             await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
         } catch (err) {
-            ZoweLogger.error(err);
-            ZoweExplorerExtender.showZoweConfigError(err.message);
+            if (err instanceof Error) {
+                ZoweLogger.error(err.message);
+                ZoweExplorerExtender.showZoweConfigError(err.message);
+            }
         }
     }
 

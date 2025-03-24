@@ -39,6 +39,7 @@ import { IconGenerator } from "../../../../src/icons/IconGenerator";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
+import { ZoweExplorerExtender } from "../../../../src/extending/ZoweExplorerExtender";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -593,5 +594,42 @@ describe("Shared Actions Unit Tests - Function refreshAll", () => {
         // expect same amount of assertions even though refresh was called twice
         expect(removeSessionSpy).toHaveBeenCalledTimes(6);
         expect(addDefaultSessionSpy).toHaveBeenCalledTimes(3);
+    });
+});
+
+describe("Shared Actions Unit Tests - Function refreshProfiles", () => {
+    it("calls refresh on Profiles instance", async () => {
+        const refresh = jest.fn().mockResolvedValueOnce(undefined);
+        const profilesMock = jest
+            .spyOn(Profiles, "getInstance")
+            .mockClear()
+            .mockReturnValue({
+                refresh,
+            } as any);
+        await expect(SharedActions.refreshProfiles()).resolves.not.toThrow();
+        expect(profilesMock).toHaveBeenCalledTimes(1);
+        expect(refresh).toHaveBeenCalledTimes(1);
+        profilesMock.mockRestore();
+    });
+
+    it("handles any errors in the catch block", async () => {
+        const refreshError = new Error("Unknown error loading profiles");
+        const refresh = jest.fn().mockRejectedValueOnce(refreshError);
+        const errorLoggerSpy = jest.spyOn(ZoweLogger, "error");
+        const showZoweConfigErrorMock = jest.spyOn(ZoweExplorerExtender, "showZoweConfigError").mockReturnValue(undefined);
+        const profilesMock = jest
+            .spyOn(Profiles, "getInstance")
+            .mockClear()
+            .mockReturnValue({
+                refresh,
+            } as any);
+        await expect(SharedActions.refreshProfiles()).resolves.not.toThrow();
+        expect(profilesMock).toHaveBeenCalledTimes(1);
+        expect(refresh).toHaveBeenCalledTimes(1);
+        expect(errorLoggerSpy).toHaveBeenCalledTimes(1);
+        expect(errorLoggerSpy).toHaveBeenCalledWith("Unknown error loading profiles");
+        expect(showZoweConfigErrorMock).toHaveBeenCalledTimes(1);
+        expect(showZoweConfigErrorMock).toHaveBeenCalledWith("Unknown error loading profiles");
+        profilesMock.mockRestore();
     });
 });
