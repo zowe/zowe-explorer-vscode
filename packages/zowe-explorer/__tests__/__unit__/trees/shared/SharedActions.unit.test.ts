@@ -14,6 +14,7 @@ import {
     createGetConfigMock,
     createInstanceOfProfile,
     createIProfile,
+    createISession,
     createISessionWithoutCredentials,
     createQuickPickContent,
     createQuickPickItem,
@@ -21,7 +22,7 @@ import {
     createTreeView,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import { Gui, Sorting, Types } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTree, IZoweTreeNode, Sorting, Types } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { createUSSSessionNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
@@ -40,6 +41,8 @@ import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProv
 import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 import { ZoweExplorerExtender } from "../../../../src/extending/ZoweExplorerExtender";
+import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
+import { AuthUtils } from "../../../../src/utils/AuthUtils";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -630,6 +633,118 @@ describe("Shared Actions Unit Tests - Function refreshProfiles", () => {
         expect(errorLoggerSpy).toHaveBeenCalledWith("Unknown error loading profiles");
         expect(showZoweConfigErrorMock).toHaveBeenCalledTimes(1);
         expect(showZoweConfigErrorMock).toHaveBeenCalledWith("Unknown error loading profiles");
+        profilesMock.mockRestore();
+    });
+});
+
+describe("Shared Actions Unit Tests - Function refreshProvider", () => {
+    it("refreshes the tree provider and adds default sessions for API types", async () => {
+        const addDefaultSessionMock = jest.spyOn(TreeViewUtils, "addDefaultSession").mockResolvedValueOnce(undefined);
+        const registeredApiTypesMock = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValueOnce({
+            registeredApiTypes: jest.fn().mockReturnValue(["zftp", "zosmf"]),
+        } as any);
+        const refresh = jest.fn().mockResolvedValueOnce(undefined);
+        const treeProvider: IZoweTree<IZoweTreeNode> = {
+            mSessionNodes: [],
+            refresh,
+        } as any;
+        await SharedActions.refreshProvider(treeProvider);
+        expect(registeredApiTypesMock).toHaveBeenCalledTimes(1);
+        expect(addDefaultSessionMock).toHaveBeenCalledTimes(2);
+        expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zftp");
+        expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zosmf");
+        expect(refresh).toHaveBeenCalledTimes(1);
+    });
+
+    it("refreshes profiles if refreshProfiles parameter is true", async () => {
+        const addDefaultSessionMock = jest.spyOn(TreeViewUtils, "addDefaultSession").mockClear().mockResolvedValueOnce(undefined);
+        const registeredApiTypesMock = jest
+            .spyOn(ZoweExplorerApiRegister, "getInstance")
+            .mockClear()
+            .mockReturnValueOnce({
+                registeredApiTypes: jest.fn().mockReturnValue(["zftp", "zosmf"]),
+            } as any);
+        const refresh = jest.fn().mockResolvedValueOnce(undefined);
+        const treeProvider: IZoweTree<IZoweTreeNode> = {
+            mSessionNodes: [],
+            refresh,
+        } as any;
+        const refreshProfilesMock = jest.spyOn(SharedActions, "refreshProfiles").mockResolvedValueOnce(undefined);
+        await SharedActions.refreshProvider(treeProvider, true);
+        expect(refreshProfilesMock).toHaveBeenCalledTimes(1);
+        expect(registeredApiTypesMock).toHaveBeenCalledTimes(1);
+        expect(addDefaultSessionMock).toHaveBeenCalledTimes(2);
+        expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zftp");
+        expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zosmf");
+        expect(refresh).toHaveBeenCalledTimes(1);
+    });
+
+    it("refreshes the session nodes in the given provider", async () => {
+        const addDefaultSessionMock = jest.spyOn(TreeViewUtils, "addDefaultSession").mockClear().mockResolvedValueOnce(undefined);
+        const removeSessionMock = jest.spyOn(TreeViewUtils, "removeSession").mockClear().mockResolvedValueOnce(undefined);
+        const registeredApiTypesMock = jest
+            .spyOn(ZoweExplorerApiRegister, "getInstance")
+            .mockClear()
+            .mockReturnValueOnce({
+                registeredApiTypes: jest.fn().mockReturnValue(["zftp", "zosmf"]),
+            } as any);
+        const refresh = jest.fn().mockResolvedValueOnce(undefined);
+        const refreshElement = jest.fn().mockResolvedValueOnce(undefined);
+        const treeProvider: IZoweTree<IZoweTreeNode> = {
+            mSessionNodes: [createDatasetSessionNode(createISession(), createIProfile())],
+            refresh,
+            refreshElement,
+        } as any;
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
+            fetchAllProfiles: jest.fn().mockReturnValue([{ name: "sestest" }]),
+        } as any);
+        const syncSessionNodeMock = jest.spyOn(AuthUtils, "syncSessionNode").mockReturnValueOnce(undefined);
+        const refreshProfilesMock = jest.spyOn(SharedActions, "refreshProfiles").mockClear().mockResolvedValueOnce(undefined);
+        await SharedActions.refreshProvider(treeProvider, true);
+        expect(refreshProfilesMock).toHaveBeenCalledTimes(1);
+        expect(registeredApiTypesMock).toHaveBeenCalledTimes(1);
+        expect(syncSessionNodeMock).toHaveBeenCalledTimes(1);
+        expect(removeSessionMock).not.toHaveBeenCalled();
+        expect(refreshElement).toHaveBeenCalledTimes(1);
+        expect(addDefaultSessionMock).toHaveBeenCalledTimes(2);
+        expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zftp");
+        expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zosmf");
+        expect(refresh).toHaveBeenCalledTimes(1);
+        profilesMock.mockRestore();
+    });
+
+    it("removes a session node in the given provider if the profile no longer exists", async () => {
+        const addDefaultSessionMock = jest.spyOn(TreeViewUtils, "addDefaultSession").mockClear().mockResolvedValueOnce(undefined);
+        const removeSessionMock = jest.spyOn(TreeViewUtils, "removeSession").mockClear().mockResolvedValueOnce(undefined);
+        const registeredApiTypesMock = jest
+            .spyOn(ZoweExplorerApiRegister, "getInstance")
+            .mockClear()
+            .mockReturnValueOnce({
+                registeredApiTypes: jest.fn().mockReturnValue(["zftp", "zosmf"]),
+            } as any);
+        const refresh = jest.fn().mockResolvedValueOnce(undefined);
+        const refreshElement = jest.fn().mockResolvedValueOnce(undefined);
+        const treeProvider: IZoweTree<IZoweTreeNode> = {
+            mSessionNodes: [createDatasetSessionNode(createISession(), createIProfile())],
+            refresh,
+            refreshElement,
+        } as any;
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
+            fetchAllProfiles: jest.fn().mockReturnValue([]),
+        } as any);
+        const syncSessionNodeMock = jest.spyOn(AuthUtils, "syncSessionNode").mockReturnValueOnce(undefined);
+        const refreshProfilesMock = jest.spyOn(SharedActions, "refreshProfiles").mockClear().mockResolvedValueOnce(undefined);
+        await SharedActions.refreshProvider(treeProvider, true);
+        expect(refreshProfilesMock).toHaveBeenCalledTimes(1);
+        expect(registeredApiTypesMock).toHaveBeenCalledTimes(1);
+        expect(syncSessionNodeMock).toHaveBeenCalledTimes(1);
+        expect(removeSessionMock).toHaveBeenCalledTimes(1);
+        expect(removeSessionMock).toHaveBeenCalledWith(treeProvider, "sestest");
+        expect(refreshElement).not.toHaveBeenCalled();
+        expect(addDefaultSessionMock).toHaveBeenCalledTimes(2);
+        expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zftp");
+        expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zosmf");
+        expect(refresh).toHaveBeenCalledTimes(1);
         profilesMock.mockRestore();
     });
 });
