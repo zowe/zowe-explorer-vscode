@@ -1889,27 +1889,63 @@ export class DatasetActions {
         }
 
         // Figure out what text we are looking for.
-        const searchString = await Gui.showInputBox({ prompt: vscode.l10n.t("Enter the text to search for.") });
+        // const searchString = await Gui.showInputBox({ prompt: vscode.l10n.t("Enter the text to search for.") });
+        const firstItem = { label: "> " };
+        const lastItem = { label: "Edit Options (Case Sensitive: On, RegEx: Off)", alwaysShow: true };
+        const qp = Gui.createQuickPick();
+        qp.items = [
+            { label: "search1" },
+            { label: "search2" },
+            { label: "search3" },
+            { label: "search4" },
+            { label: "search5" },
+            { kind: vscode.QuickPickItemKind.Separator, label: "" },
+            lastItem,
+        ];
+        qp.title = vscode.l10n.t("Enter the text to search for.");
+        // Dynamically update first item in quickpick when user types
+        qp.onDidChangeValue((value: string) => {
+            firstItem.label = "> " + value;
+            if (value) {
+                qp.items = [firstItem, ...qp.items.filter((item) => item.label !== firstItem.label)];
+            } else {
+                qp.items = qp.items.filter((item) => item.label !== firstItem.label);
+            }
+        });
+        qp.show();
+        const searchString = await new Promise<string>((resolve) => {
+            // Return input string or value selected from history
+            qp.onDidAccept(() => {
+                qp.hide();
+                resolve(qp.selectedItems[0].label === firstItem.label ? firstItem.label.slice(2) : qp.selectedItems[0].label);
+            });
+            qp.onDidHide(() => resolve(undefined));
+        });
         if (!searchString) {
             return;
         }
 
         // Handle various search options
-        const caseSensitiveQuickPick = await Gui.showQuickPick(
-            [
+        let caseSensitiveQuickPick: any;
+        if (searchString === lastItem.label) {
+            caseSensitiveQuickPick = await Gui.showQuickPick(
+                [
+                    {
+                        label: vscode.l10n.t("Case Sensitive"),
+                        description: vscode.l10n.t("Perform the search with case sensitivity"),
+                        iconPath: new vscode.ThemeIcon("case-sensitive"),
+                    },
+                ],
                 {
-                    label: vscode.l10n.t("Case Sensitive"),
-                    description: vscode.l10n.t("Perform the search with case sensitivity"),
-                    iconPath: new vscode.ThemeIcon("case-sensitive"),
-                },
-            ],
-            {
-                title: vscode.l10n.t("Search Options"),
-                placeHolder: vscode.l10n.t("Select search options"),
-                ignoreFocusOut: true,
-                canPickMany: true,
-            }
-        );
+                    title: vscode.l10n.t("Search Options"),
+                    placeHolder: vscode.l10n.t("Select search options"),
+                    ignoreFocusOut: true,
+                    canPickMany: true,
+                }
+            );
+            // TODO Wait for user input again in first quick pick
+            qp.show();
+        }
 
         // Case sensitivity
         if (caseSensitiveQuickPick == undefined) {
