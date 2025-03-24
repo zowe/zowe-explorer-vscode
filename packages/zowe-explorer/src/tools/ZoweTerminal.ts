@@ -96,17 +96,17 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         if (!this.charArrayCmd.length || this.charArrayCmd.join("") !== this.command) {
             this.charArrayCmd = Array.from(this.command);
         }
-        this.clearLine();
-        this.writeCmd();
-        if (this.charArrayCmd.length > this.cursorPosition) {
-            const getPos = (char: string) => {
-                if (char === ZoweTerminal.invalidChar) return 1;
-                const charBytes = Buffer.from(char).length;
-                return charBytes > 2 ? 2 : 1;
-            };
-            const offset = this.charArrayCmd.slice(this.cursorPosition).reduce((total, curr) => total + getPos(curr), 0);
-            [...Array(offset)].map(() => this.write(ZoweTerminal.Keys.LEFT));
-        }
+        // this.clearLine();
+        // this.writeCmd();
+        // if (this.charArrayCmd.length > this.cursorPosition) {
+        //     const getPos = (char: string) => {
+        //         if (char === ZoweTerminal.invalidChar) return 1;
+        //         const charBytes = Buffer.from(char).length;
+        //         return charBytes > 2 ? 2 : 1;
+        //     };
+        //     const offset = this.charArrayCmd.slice(this.cursorPosition).reduce((total, curr) => total + getPos(curr), 0);
+        //     [...Array(offset)].map(() => this.write(ZoweTerminal.Keys.LEFT));
+        // }
     }
     protected clear() {
         this.write(ZoweTerminal.Keys.CLEAR_ALL);
@@ -257,10 +257,25 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
             case ZoweTerminal.Keys.PAGE_DOWN:
                 this.navigateHistory(1);
                 break;
-            case ZoweTerminal.Keys.LEFT:
+            case ZoweTerminal.Keys.LEFT: {
+                if (this.cursorPosition > 0) {
+                    this.cursorPosition--;
+                    // Move cursor left one position:
+                    this.write(ZoweTerminal.Keys.LEFT);
+                }
+                break;
+            }
             case ZoweTerminal.Keys.OPT_LEFT:
                 this.moveCursor(-1);
                 break;
+            case ZoweTerminal.Keys.RIGHT: {
+                if (this.cursorPosition < this.charArrayCmd.length) {
+                    this.cursorPosition++;
+                    // Move cursor right one position:
+                    this.write(ZoweTerminal.Keys.RIGHT);
+                }
+                break;
+            }
             case ZoweTerminal.Keys.RIGHT:
             case ZoweTerminal.Keys.OPT_RIGHT:
                 this.moveCursor(1);
@@ -291,12 +306,16 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                 // Do nothing
                 break;
             default: {
-                const charArray = this.charArrayCmd;
-                this.command = charArray.slice(0, Math.max(0, this.cursorPosition)).join("") + data + charArray.slice(this.cursorPosition).join("");
-                this.charArrayCmd = Array.from(this.command);
-                this.cursorPosition = Math.min(this.charArrayCmd.length, this.cursorPosition + Array.from(data).length);
-                this.write(data);
+                // Insert the new characters into the command buffer at the cursor position.
+                const left = this.charArrayCmd.slice(0, this.cursorPosition);
+                const right = this.charArrayCmd.slice(this.cursorPosition);
+                left.push(...data);
+                this.charArrayCmd = [...left, ...right];
+                this.command = this.charArrayCmd.join("");
+                this.cursorPosition += data.length;
+                // After updating the internal command, refresh the last line display.
                 this.refreshCmd();
+                break;
             }
         }
     }
