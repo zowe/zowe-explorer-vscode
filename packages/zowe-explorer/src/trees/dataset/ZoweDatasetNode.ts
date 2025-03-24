@@ -41,7 +41,6 @@ import type { Definitions } from "../../configuration/Definitions";
 import type { DatasetTree } from "./DatasetTree";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetUtils } from "./DatasetUtils";
-import { SharedActions } from "../shared/SharedActions";
 
 /**
  * A type of TreeItem used to represent sessions and data sets

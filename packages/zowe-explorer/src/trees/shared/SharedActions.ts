@@ -259,6 +259,7 @@ export class SharedActions {
                     sessNode.dirty = true;
                     SharedActions.returnIconState(sessNode);
                     AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getCommonApi(profile), sessNode);
+                    treeProvider.refreshElement(sessNode);
                 }
             } else {
                 await TreeViewUtils.removeSession(treeProvider, sessNode.label.toString().trim());
