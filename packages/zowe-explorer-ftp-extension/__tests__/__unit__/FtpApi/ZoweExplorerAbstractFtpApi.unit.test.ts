@@ -51,20 +51,9 @@ describe("AbstractFtpApi", () => {
         expect(globals.SESSION_MAP.size).toBe(0);
     });
 
-    it("should show a fatal message when trying to load an invalid profile.", () => {
-        Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
+    it("should throw an error if the profile is not initialized for the FTP API", () => {
         const instance = new Dummy();
-        instance.profile = profile;
-        try {
-            instance.getSession();
-        } catch (err) {
-            expect(err).not.toBeUndefined();
-            expect(err).toBeInstanceOf(Error);
-            expect(Gui.showMessage).toHaveBeenCalledWith("Internal error: AbstractFtpApi instance was not initialized with a valid Zowe profile.", {
-                severity: MessageSeverity.FATAL,
-                logger: globals.LOGGER,
-            });
-        }
+        expect(() => instance.getSession()).toThrow("Internal error: AbstractFtpApi instance was not initialized with a valid Zowe profile.");
     });
 
     it("should show a fatal message when trying to call getStatus with invalid credentials.", async () => {
