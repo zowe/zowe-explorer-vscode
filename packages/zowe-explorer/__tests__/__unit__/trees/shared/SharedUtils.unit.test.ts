@@ -1311,3 +1311,33 @@ describe("Shared utils unit tests - getDefaultSortOptions", () => {
         expect(sortOptions).toEqual(["Name (default)", "Date Created", "Date Modified", "User ID"]);
     });
 });
+
+describe("Shared utils unit tests - function debounceAsync", () => {
+    beforeAll(() => {
+        jest.useFakeTimers();
+    });
+
+    afterAll(() => {
+        jest.useRealTimers();
+    });
+
+    it("executes a function twice when time between calls is long", async () => {
+        const mockEventHandler = jest.fn().mockResolvedValue(undefined);
+        const debouncedFn = SharedUtils.debounceAsync(mockEventHandler, 100);
+        void debouncedFn();
+        jest.runAllTimers();
+        void debouncedFn();
+        jest.runAllTimers();
+        expect(mockEventHandler).toHaveBeenCalledTimes(2);
+    });
+
+    it("executes a function only once when time between calls is short", async () => {
+        const mockEventHandler = jest.fn().mockResolvedValue(undefined);
+        const debouncedFn = SharedUtils.debounceAsync(mockEventHandler, 100);
+        void debouncedFn();
+        jest.advanceTimersByTime(10);
+        void debouncedFn();
+        jest.runAllTimers();
+        expect(mockEventHandler).toHaveBeenCalledTimes(1);
+    });
+});

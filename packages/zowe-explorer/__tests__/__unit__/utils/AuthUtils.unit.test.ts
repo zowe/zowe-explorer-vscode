@@ -15,7 +15,7 @@ import { Constants } from "../../../src/configuration/Constants";
 import { MockedProperty } from "../../__mocks__/mockUtils";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets";
-import { createInstanceOfProfile, createIProfile, createISession } from "../../__mocks__/mockCreators/shared";
+import { createIProfile, createISession } from "../../__mocks__/mockCreators/shared";
 import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
 
 describe("AuthUtils", () => {
