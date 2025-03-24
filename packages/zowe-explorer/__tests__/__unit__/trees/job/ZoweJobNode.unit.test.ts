@@ -1177,6 +1177,20 @@ describe("ZosJobsProvider - getJobs", () => {
         jest.spyOn(Gui, "warningMessage").mockImplementation();
         await expect(globalMocks.testJobNode.getJobs("test", "test", "test", "test")).resolves.not.toThrow();
     });
+
+    it("should return undefined if the session is undefined", async () => {
+        const globalMocks = await createGlobalMocks();
+        const getSessionMock = jest.fn().mockReturnValue(undefined);
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce({
+            getSession: getSessionMock,
+        } as any);
+        const warnLoggerSpy = jest.spyOn(ZoweLogger, "warn");
+        await expect(globalMocks.testJobNode.getJobs("test", "test", "test", "test")).resolves.toBeUndefined();
+        expect(getSessionMock).toHaveBeenCalledTimes(1);
+        expect(warnLoggerSpy).toHaveBeenCalledTimes(1);
+        expect(warnLoggerSpy).toHaveBeenCalledWith("[ZoweJobNode.getJobs] Session undefined for profile sestest");
+        jesApiMock.mockRestore();
+    });
 });
 
 describe("Job - sortJobs", () => {

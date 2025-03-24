@@ -33,7 +33,6 @@ import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { Definitions } from "../../../src/configuration/Definitions";
 import { createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets";
-import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 
 jest.mock("../../../src/tools/ZoweLogger");
 jest.mock("fs");
