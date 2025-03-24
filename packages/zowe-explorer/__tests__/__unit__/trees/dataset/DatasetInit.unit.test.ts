@@ -61,6 +61,10 @@ describe("Test src/dataset/extension", () => {
                 mock: [{ spy: jest.spyOn(SharedActions, "refreshAll"), arg: [] }],
             },
             {
+                name: "zowe.ds.refresh",
+                mock: [{ spy: jest.spyOn(SharedActions, "refreshProvider"), arg: [dsProvider] }],
+            },
+            {
                 name: "zowe.ds.refreshNode",
                 mock: [
                     { spy: jest.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },

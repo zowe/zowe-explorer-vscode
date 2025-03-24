@@ -70,6 +70,10 @@ describe("Test src/jobs/extension", () => {
                 mock: [{ spy: jest.spyOn(SharedActions, "refreshAll"), arg: [] }],
             },
             {
+                name: "zowe.jobs.refresh",
+                mock: [{ spy: jest.spyOn(SharedActions, "refreshProvider"), arg: [jobsProvider] }],
+            },
+            {
                 name: "zowe.jobs.refreshJob",
                 parm: [{ mParent: test.value }],
                 mock: [{ spy: jest.spyOn(JobActions, "refreshJob"), arg: [test.value, jobsProvider] }],

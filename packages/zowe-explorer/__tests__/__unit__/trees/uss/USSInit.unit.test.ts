@@ -50,6 +50,10 @@ describe("Test src/uss/extension", () => {
                 mock: [{ spy: jest.spyOn(SharedActions, "refreshAll"), arg: [] }],
             },
             {
+                name: "zowe.uss.refresh",
+                mock: [{ spy: jest.spyOn(SharedActions, "refreshProvider"), arg: [ussFileProvider] }],
+            },
+            {
                 name: "zowe.uss.refreshUSS",
                 mock: [
                     { spy: jest.spyOn(SharedContext, "isDocument"), arg: [test.value], ret: true },

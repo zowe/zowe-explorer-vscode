@@ -47,6 +47,7 @@ export class USSInit {
             vscode.commands.registerCommand("zowe.uss.addSession", async () => ussFileProvider.createZoweSession(ussFileProvider))
         );
         context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.refreshAll", async () => SharedActions.refreshAll()));
+        context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.refresh", async () => SharedActions.refreshProvider(ussFileProvider)));
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.refreshUSS", async (node, nodeList) => {
                 const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Pulling from Mainframe...")}`);
