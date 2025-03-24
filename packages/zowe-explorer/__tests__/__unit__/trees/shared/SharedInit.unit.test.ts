@@ -52,6 +52,7 @@ describe("Test src/shared/extension", () => {
         };
         const profileMocks = { deleteProfile: jest.fn(), disableValidation: jest.fn(), enableValidation: jest.fn(), refresh: jest.fn() };
         const cmdProviders = { mvs: { issueMvsCommand: jest.fn() }, tso: { issueTsoCommand: jest.fn() }, uss: { issueUnixCommand: jest.fn() } };
+        const onProfileUpdated = jest.fn();
         const treeProvider = {
             addFavorite: jest.fn(),
             deleteSession: jest.fn(),
@@ -65,7 +66,7 @@ describe("Test src/shared/extension", () => {
             ssoLogin: jest.fn(),
             ssoLogout: jest.fn(),
         };
-        jest.replaceProperty(ZoweVsCodeExtension, "onProfileUpdated", jest.fn());
+        jest.replaceProperty(ZoweVsCodeExtension, "onProfileUpdated", onProfileUpdated);
 
         const commands: IJestIt[] = [
             {
@@ -322,6 +323,9 @@ describe("Test src/shared/extension", () => {
         });
 
         processSubscriptions(commands, test);
+        it("registers an onProfileUpdated event", () => {
+            expect(onProfileUpdated).toHaveBeenCalledTimes(1);
+        });
     });
 
     describe("watchConfigProfile", () => {
