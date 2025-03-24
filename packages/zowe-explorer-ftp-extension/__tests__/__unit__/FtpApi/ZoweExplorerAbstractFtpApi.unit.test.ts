@@ -111,14 +111,15 @@ describe("AbstractFtpApi", () => {
             failNotFound: true,
         };
         try {
-            expect(Gui.showMessage).toHaveBeenCalledWith("Internal error: AbstractFtpApi instance was not initialized with a valid Zowe profile.", {
-                severity: MessageSeverity.FATAL,
-                logger: globals.LOGGER,
-            });
             instance.checkedProfile();
+            // intentionally throw error if checkedProfile did not throw error
+            expect(true).toBe(false);
         } catch (err) {
             expect(err).not.toBeUndefined();
             expect(err).toBeInstanceOf(Error);
+            expect(err.message).toBe(
+                "Zowe Explorer FTP Extension: Internal error: AbstractFtpApi instance was not initialized with a valid Zowe profile."
+            );
         }
     });
 
