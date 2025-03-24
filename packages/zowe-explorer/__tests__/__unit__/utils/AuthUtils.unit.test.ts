@@ -105,6 +105,67 @@ describe("AuthUtils", () => {
         });
     });
     describe("promptForSsoLogin", () => {
+        it("should return false if SSO login fails", async () => {
+            const ssoLogin = jest.fn().mockResolvedValueOnce(false);
+            const profilesCacheMockedProp = new MockedProperty(Constants, "PROFILES_CACHE", {
+                value: {
+                    ssoLogin,
+                },
+                configurable: true,
+            });
+            const showMessageMock = jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Log in to Authentication Service");
+            expect(await AuthUtils.promptForSsoLogin("aProfileName")).toBe(false);
+            expect(showMessageMock).toHaveBeenCalledWith(
+                "Your connection is no longer active for profile 'aProfileName'. " +
+                    "Please log in to an authentication service to restore the connection.",
+                { items: ["Log in to Authentication Service"], vsCodeOpts: { modal: true } }
+            );
+            expect(ssoLogin).toHaveBeenCalledWith(null, "aProfileName");
+            profilesCacheMockedProp[Symbol.dispose]();
+        });
+
+        it("should return true if SSO login was successful", async () => {
+            const ssoLogin = jest.fn().mockResolvedValueOnce(true);
+            const unlockProfile = jest.spyOn(AuthHandler, "unlockProfile").mockImplementation();
+            const profilesCacheMockedProp = new MockedProperty(Constants, "PROFILES_CACHE", {
+                value: {
+                    ssoLogin,
+                },
+                configurable: true,
+            });
+            const showMessageMock = jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Log in to Authentication Service");
+            expect(await AuthUtils.promptForSsoLogin("aProfileName")).toBe(true);
+            expect(showMessageMock).toHaveBeenCalledWith(
+                "Your connection is no longer active for profile 'aProfileName'. " +
+                    "Please log in to an authentication service to restore the connection.",
+                { items: ["Log in to Authentication Service"], vsCodeOpts: { modal: true } }
+            );
+            expect(ssoLogin).toHaveBeenCalledWith(null, "aProfileName");
+            expect(unlockProfile).toHaveBeenCalledWith("aProfileName");
+            unlockProfile.mockRestore();
+            profilesCacheMockedProp[Symbol.dispose]();
+        });
+
+        it("should unlock profile if SSO login was successful", async () => {
+            const unlockProfile = jest.spyOn(AuthHandler, "unlockProfile").mockImplementation();
+            const profilesCacheMockedProp = new MockedProperty(Constants, "PROFILES_CACHE", {
+                value: {
+                    ssoLogin: jest.fn().mockResolvedValueOnce(true),
+                },
+                configurable: true,
+            });
+            const showMessageMock = jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Log in to Authentication Service");
+            await AuthUtils.promptForSsoLogin("aProfileName");
+            expect(showMessageMock).toHaveBeenCalledWith(
+                "Your connection is no longer active for profile 'aProfileName'. " +
+                    "Please log in to an authentication service to restore the connection.",
+                { items: ["Log in to Authentication Service"], vsCodeOpts: { modal: true } }
+            );
+            expect(unlockProfile).toHaveBeenCalledWith("aProfileName");
+            unlockProfile.mockRestore();
+            profilesCacheMockedProp[Symbol.dispose]();
+        });
+
         it("should call ProfilesCache.ssoLogin when 'Log In' option is selected", async () => {
             const ssoLogin = jest.fn();
             const profilesCacheMockedProp = new MockedProperty(Constants, "PROFILES_CACHE", {

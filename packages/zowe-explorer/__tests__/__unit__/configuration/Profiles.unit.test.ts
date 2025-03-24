@@ -1134,6 +1134,28 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         expect(errorSpy).toHaveBeenCalledWith(Error("test error"));
         errorSpy.mockClear();
     });
+    it("should show as active in status of profile using certificate auth", async () => {
+        const globalMocks = createGlobalMocks();
+        environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks);
+        const testProfile = {
+            name: "sestest",
+            profile: {
+                type: "zosmf",
+                host: "test",
+                port: 1443,
+                certFile: "test",
+                certKeyFile: "test",
+                rejectUnauthorized: false,
+                name: "testName",
+            },
+            type: "zosmf",
+            message: "",
+            failNotFound: false,
+        };
+        jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
+        await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
+    });
 });
 
 describe("Profiles Unit Tests - function getProfileSetting", () => {

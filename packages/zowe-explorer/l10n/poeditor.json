@@ -404,6 +404,9 @@
   "zowe.security.secureCredentialsEnabled": {
     "Allow credentials to be stored securely. If disabled and autoStore is set to true, z/OS credentials are stored as clear text in zowe.config.json.": ""
   },
+  "zowe.openRecentMember": {
+    "Open Recent Member": ""
+  },
   "issueTsoCmd": {
     "Issue TSO Command": ""
   },
@@ -689,6 +692,7 @@
   "You must enter a pattern.": "",
   "Prompting the user to choose a recent member for editing": "",
   "Select a recent member to open": "",
+  "Profile not found.": "",
   "No recent members found.": "",
   "Use the search button to display jobs": "",
   "No spool files found": "",

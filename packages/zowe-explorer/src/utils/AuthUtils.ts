@@ -132,9 +132,10 @@ export class AuthUtils {
     /**
      * Prompts user to log in to authentication service.
      * @param profileName The name of the profile used to log in
+     * @returns true if the user logged in, false if they dismissed the prompt or the login failed
      */
-    public static promptForSsoLogin(profileName: string): Thenable<string> {
-        return Gui.showMessage(
+    public static async promptForSsoLogin(profileName: string): Promise<boolean> {
+        const selection = await Gui.showMessage(
             vscode.l10n.t({
                 message:
                     "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
@@ -142,12 +143,14 @@ export class AuthUtils {
                 comment: ["Profile name"],
             }),
             { items: [vscode.l10n.t("Log in to Authentication Service")], vsCodeOpts: { modal: true } }
-        ).then(async (selection) => {
-            if (selection) {
-                await Constants.PROFILES_CACHE.ssoLogin(null, profileName);
+        );
+        if (selection) {
+            if (await Constants.PROFILES_CACHE.ssoLogin(null, profileName)) {
+                AuthHandler.unlockProfile(profileName);
+                return true;
             }
-            return selection;
-        });
+        }
+        return false;
     }
 
     /**

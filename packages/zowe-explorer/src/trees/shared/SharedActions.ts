@@ -196,13 +196,21 @@ export class SharedActions {
             if (pattern.indexOf("/") > -1) {
                 // USS file was selected
                 const filePath = pattern.substring(pattern.indexOf("/"));
-                const sessionNode = ussTree.mSessionNodes.find((sessNode) => sessNode.getProfileName() === sessionName);
+                const sessionNode = ussTree.mSessionNodes.find((sessNode) => sessNode.label.toString().toLowerCase() === sessionName.toLowerCase());
+                if (!sessionNode) {
+                    Gui.showMessage(vscode.l10n.t("Profile not found."));
+                    return;
+                }
                 await ussTree.openItemFromPath(filePath, sessionNode);
             } else {
                 // Data set was selected
                 const sessionNode = datasetTree.mSessionNodes.find(
                     (sessNode) => sessNode.label.toString().toLowerCase() === sessionName.toLowerCase()
                 );
+                if (!sessionNode) {
+                    Gui.showMessage(vscode.l10n.t("Profile not found."));
+                    return;
+                }
                 await datasetTree.openItemFromPath(pattern, sessionNode);
             }
         } else {
