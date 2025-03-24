@@ -89,11 +89,14 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
             try {
                 sessionStatus = await this.ftpClient(this.checkedProfile());
             } catch (e) {
-                const imperativeError = new imperative.ImperativeError({
-                    msg: "Rest API failure with HTTP(S) status 401 Authentication error.",
-                    errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
-                });
-                throw imperativeError;
+                if (e instanceof Error && e.message.includes("PASS command failed")) {
+                    const imperativeError = new imperative.ImperativeError({
+                        msg: "Rest API failure with HTTP(S) status 401 Authentication error.",
+                        errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
+                    });
+                    throw imperativeError;
+                }
+                throw e;
             }
             if (sessionStatus) {
                 return "active";

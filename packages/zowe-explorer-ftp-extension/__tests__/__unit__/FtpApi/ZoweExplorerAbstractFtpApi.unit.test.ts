@@ -74,7 +74,7 @@ describe("AbstractFtpApi", () => {
         Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
         jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(
             jest.fn((val) => {
-                throw new Error("Failed: missing credentials");
+                throw new Error("PASS command failed");
             })
         );
         const imperativeError = new imperative.ImperativeError({
@@ -95,16 +95,13 @@ describe("AbstractFtpApi", () => {
 
     it("should show a different fatal message when trying to call getStatus and an exception occurs.", async () => {
         Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
+        const genericError = new Error("Something happened");
         jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(
             jest.fn((prof) => {
-                throw new Error("Something happened");
+                throw genericError;
             })
         );
         const instance = new Dummy();
-        const imperativeError = new imperative.ImperativeError({
-            msg: "Rest API failure with HTTP(S) status 401 Authentication error.",
-            errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
-        });
         instance.profile = {
             profile: {},
             message: undefined,
@@ -113,7 +110,7 @@ describe("AbstractFtpApi", () => {
         };
         await expect(async () => {
             await instance.getStatus(undefined, "zftp");
-        }).rejects.toThrow(imperativeError);
+        }).rejects.toThrow(genericError);
     });
 
     it("should show a fatal message when using checkedProfile on an invalid profile", () => {
