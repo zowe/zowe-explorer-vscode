@@ -87,16 +87,16 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         try {
             // Wait for any ongoing authentication process to complete
-            await AuthHandler.waitForUnlock(entry.metadata.profile);
+            await AuthHandler.waitForUnlock(uriInfo.profile);
 
             // Check if the profile is locked (indicating an auth error is being handled)
             // If it's locked, we should wait and not make additional requests
-            if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
-                ZoweLogger.warn(`[UssFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
+            if (AuthHandler.isProfileLocked(uriInfo.profile)) {
+                ZoweLogger.warn(`[UssFSProvider] Profile ${uriInfo.profile?.name} is locked, waiting for authentication`);
                 return entry;
             }
 
-            const fileResp = await this.listFiles(entry.metadata.profile, uri, true);
+            const fileResp = await this.listFiles(uriInfo.profile, uri, true);
             if (fileResp.success) {
                 // Regardless of the resource type, it will be the first item in a successful response.
                 // When listing a folder, the folder's stats will be represented as the "." entry.
@@ -244,7 +244,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             return parentDir.entries.get(filename) as UssFile;
         }
 
-        const fileList = entryExists ? await this.listFiles(entry.metadata.profile, uri) : resp;
+        const fileList = entryExists ? await this.listFiles(uriInfo.profile, uri) : resp;
         for (const item of fileList.apiResponse?.items ?? []) {
             const itemName = item.name as string;
 
