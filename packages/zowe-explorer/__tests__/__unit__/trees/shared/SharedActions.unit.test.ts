@@ -575,4 +575,23 @@ describe("Shared Actions Unit Tests - Function refreshAll", () => {
         expect(addDefaultSessionSpy).toHaveBeenCalledTimes(3);
         expect([...addedProfTypes]).toEqual(["zosmf"]);
     });
+
+    it("should avoid running the refresh logic twice if a refresh is already in progress", async () => {
+        createGlobalMocks();
+        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(createTreeProviders());
+        const removedProfNames = new Set<string>();
+        const addedProfTypes = new Set<string>();
+        const removeSessionSpy = jest
+            .spyOn(TreeViewUtils, "removeSession")
+            .mockImplementation((treeProvider, profileName) => removedProfNames.add(profileName) as any);
+        const addDefaultSessionSpy = jest
+            .spyOn(TreeViewUtils, "addDefaultSession")
+            .mockImplementation((treeProvider, profileType) => addedProfTypes.add(profileType) as any);
+        void SharedActions.refreshAll();
+        await SharedActions.refreshAll();
+
+        // expect same amount of assertions even though refresh was called twice
+        expect(removeSessionSpy).toHaveBeenCalledTimes(6);
+        expect(addDefaultSessionSpy).toHaveBeenCalledTimes(3);
+    });
 });
