@@ -202,6 +202,7 @@ describe("AuthUtils", () => {
             expect(getChildrenSpy).toHaveBeenCalled();
             expect(refreshElementMock).toHaveBeenCalledWith(sessionNode);
         });
+
         it("should do nothing if there is no profile for the provided node", () => {
             const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
             const initialSession = sessionNode.getSession();
@@ -216,6 +217,26 @@ describe("AuthUtils", () => {
             AuthUtils.syncSessionNode(dummyFn, sessionNode);
             expect(sessionNode.getSession()).toEqual(initialSession);
             expect(sessionNode.getProfile()).toEqual(initialProfile);
+        });
+
+        it("handles an error if getCommonAPI function fails", () => {
+            const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
+            const refreshElementMock = jest.fn();
+            jest.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValueOnce({
+                refreshElement: refreshElementMock,
+            } as any);
+            loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
+            const errorLoggerSpy = jest.spyOn(ZoweLogger, "error");
+            const errorText = "Failed to retrieve common API for profile";
+            AuthUtils.syncSessionNode(
+                () => {
+                    throw new Error(errorText);
+                },
+                sessionNode,
+                sessionNode
+            );
+            expect(errorLoggerSpy).toHaveBeenCalledTimes(1);
+            expect(errorLoggerSpy).toHaveBeenCalledWith(`Error syncing session for sestest: ${errorText}`);
         });
     });
 });

@@ -748,3 +748,13 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
         profilesMock.mockRestore();
     });
 });
+
+describe("Shared Actions Unit Tests - Function isRefreshInProgress", () => {
+    it("returns the state of refresh", () => {
+        (SharedActions as any).refreshInProgress = true;
+        expect(SharedActions.isRefreshInProgress()).toBe(true);
+
+        (SharedActions as any).refreshInProgress = false;
+        expect(SharedActions.isRefreshInProgress()).toBe(false);
+    });
+});
