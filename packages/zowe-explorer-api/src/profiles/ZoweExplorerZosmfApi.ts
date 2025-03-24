@@ -21,7 +21,6 @@ import { MainframeInteraction } from "../extend/MainframeInteraction";
 import { FileManagement } from "../utils";
 import { Types } from "../Types";
 import { ProfilesCache } from "../profiles/ProfilesCache";
-import { ZoweVsCodeExtension } from "../vscode/ZoweVsCodeExtension";
 
 /**
  * Implementations of Zowe Explorer API for z/OSMF profiles
