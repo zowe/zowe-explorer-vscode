@@ -2,8 +2,6 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
 
 - Updated the `@zowe/cli` dependency to v7.29.8 for technical currency. [#3378](https://github.com/zowe/zowe-explorer-vscode/pull/3378)

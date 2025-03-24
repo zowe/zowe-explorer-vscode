@@ -4,8 +4,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
 
 - Fix issue where the Zowe Explorer VS Code command `Refresh Zowe Explorer` failed catastrophically. [#3100](https://github.com/zowe/zowe-explorer-vscode/issues/3100)
