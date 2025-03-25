@@ -350,9 +350,10 @@
       "Node label"
     ]
   },
-  "Current encoding is {0}/Encoding name": {
-    "message": "Current encoding is {0}",
+  "{0} (current is {1})/Quickpick labelEncoding name": {
+    "message": "{0} (current is {1})",
     "comment": [
+      "Quickpick label",
       "Encoding name"
     ]
   },

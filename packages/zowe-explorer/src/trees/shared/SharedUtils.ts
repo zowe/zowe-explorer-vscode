@@ -247,22 +247,19 @@ export class SharedUtils {
             items.push({ label: "IBM-1047" }, { label: "ISO8859-1" });
         }
 
-        let response = (
-            await Gui.showQuickPick(items, {
-                title: vscode.l10n.t({
-                    message: "Choose encoding for {0}",
-                    args: [node.label as string],
-                    comment: ["Node label"],
-                }),
-                placeHolder:
-                    currentEncoding &&
-                    vscode.l10n.t({
-                        message: "Current encoding is {0}",
-                        args: [currentEncoding],
-                        comment: ["Encoding name"],
-                    }),
-            })
-        )?.label;
+        let qpLabel = vscode.l10n.t({
+            message: "Choose encoding for {0}",
+            args: [node.label as string],
+            comment: ["Node label"],
+        });
+        if (currentEncoding) {
+            qpLabel = vscode.l10n.t({
+                message: "{0} (current is {1})",
+                args: [qpLabel, currentEncoding],
+                comment: ["Quickpick label", "Encoding name"],
+            });
+        }
+        let response = (await Gui.showQuickPick(items, { placeHolder: qpLabel }))?.label;
         let encoding: ZosEncoding;
         switch (response) {
             case ebcdicItem.label:

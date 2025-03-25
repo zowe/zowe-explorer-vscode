@@ -421,7 +421,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(await blockMocks.showQuickPick.mock.calls[0][0][0]).toEqual({ label: "IBM-1047", description: "USS file tag" });
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(
-            expect.objectContaining({ placeHolder: "Current encoding is Binary", title: "Choose encoding for testFile" })
+            expect.objectContaining({ placeHolder: "Choose encoding for testFile (current is Binary)" })
         );
     });
 
@@ -459,7 +459,9 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             label: "IBM-1047",
             description: `From profile ${blockMocks.profile.name}`,
         });
-        expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is EBCDIC" }));
+        expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(
+            expect.objectContaining({ placeHolder: "Choose encoding for testFile (current is EBCDIC)" })
+        );
     });
 
     it("prompts for encoding for USS file and shows recent values", async () => {
@@ -479,7 +481,9 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         const encoding = await SharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect((await blockMocks.showQuickPick.mock.calls[0][0]).slice(4)).toEqual(encodingHistory.map((x) => ({ label: x })));
-        expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is IBM-1047" }));
+        expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(
+            expect.objectContaining({ placeHolder: "Choose encoding for testFile (current is IBM-1047)" })
+        );
         expect(encoding).toEqual({ ...otherEncoding, codepage: encodingHistory[0] });
     });
 
@@ -496,7 +500,9 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         blockMocks.getEncodingForFile.mockReturnValueOnce(binaryEncoding);
         await SharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
-        expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is Binary" }));
+        expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(
+            expect.objectContaining({ placeHolder: "Choose encoding for testFile (current is Binary)" })
+        );
     });
 
     it("remembers cached encoding for data set node", async () => {
@@ -513,7 +519,9 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
         await SharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
-        expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is EBCDIC" }));
+        expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(
+            expect.objectContaining({ placeHolder: "Choose encoding for TEST.PS (current is EBCDIC)" })
+        );
     });
 
     it("remembers cached encoding for data set member node", async () => {
@@ -536,7 +544,9 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
         await SharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
-        expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is IBM-1047" }));
+        expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(
+            expect.objectContaining({ placeHolder: "Choose encoding for MEMBER (current is IBM-1047)" })
+        );
     });
 
     it("remembers cached encoding for spool node", async () => {
@@ -559,7 +569,9 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
         await SharedUtils.promptForEncoding(spoolNode);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
-        expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is EBCDIC" }));
+        expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(
+            expect.objectContaining({ placeHolder: "Choose encoding for SPOOL (current is EBCDIC)" })
+        );
     });
 
     it("prompts for text encoding for Spool file", async () => {

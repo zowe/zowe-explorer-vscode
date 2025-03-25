@@ -614,7 +614,7 @@
   "From profile {0}": "",
   "USS file tag": "",
   "Choose encoding for {0}": "",
-  "Current encoding is {0}": "",
+  "{0} (current is {1})": "",
   "Enter a codepage (e.g., 1047, IBM-1047)": "",
   "A search must be set for {0} before it can be added to a workspace.": "",
   "Team config file created, refreshing Zowe Explorer.": "",
