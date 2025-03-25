@@ -639,26 +639,17 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
     });
 });
 
-describe("ZoweJobNode unit tests - Function flipState", () => {
-    it("Tests that flipState is executed successfully", async () => {
+describe("ZoweJobNode unit tests - Function ZoweTreeProvider.flipState for job nodes", () => {
+    it("Tests that flipState is executed successfully for an expanded job node", async () => {
         const globalMocks = await createGlobalMocks();
-        globalMocks.testJobsProvider.addSession("fake");
-        globalMocks.testJobsProvider.mSessionNodes[1].contextValue = Constants.JOBS_SESSION_CONTEXT;
-        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue(globalMocks.testSession);
-
-        await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[1], true);
-        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
-        await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[1], false);
-        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
-        await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[1], true);
-        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
-
         await globalMocks.testJobsProvider.flipState(globalMocks.testJobNode, true);
         expect(JSON.stringify(globalMocks.testJobNode.iconPath)).toContain("folder-open.svg");
+    });
+
+    it("Tests that flipState is executed successfully for a collapsed job node", async () => {
+        const globalMocks = await createGlobalMocks();
         await globalMocks.testJobsProvider.flipState(globalMocks.testJobNode, false);
         expect(JSON.stringify(globalMocks.testJobNode.iconPath)).toContain("folder-closed.svg");
-        await globalMocks.testJobsProvider.flipState(globalMocks.testJobNode, true);
-        expect(JSON.stringify(globalMocks.testJobNode.iconPath)).toContain("folder-open.svg");
     });
 });
 
