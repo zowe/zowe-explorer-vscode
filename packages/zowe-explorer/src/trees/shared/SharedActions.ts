@@ -220,14 +220,38 @@ export class SharedActions {
 
     public static returnIconState(node: Types.IZoweNodeType): Types.IZoweNodeType {
         ZoweLogger.trace("shared.actions.returnIconState called.");
-        const activePathClosed = IconGenerator.getIconById(IconUtils.IconId.sessionActive);
-        const activePathOpen = IconGenerator.getIconById(IconUtils.IconId.sessionActiveOpen);
-        const inactivePathClosed = IconGenerator.getIconById(IconUtils.IconId.sessionInactive);
-        if (node.iconPath === activePathClosed.path || node.iconPath === activePathOpen.path || node.iconPath === inactivePathClosed.path) {
-            const sessionIcon = IconGenerator.getIconById(IconUtils.IconId.session);
-            if (sessionIcon) {
-                node.iconPath = sessionIcon.path;
-            }
+
+        const validationStatus = Profiles.getInstance().profilesForValidation.find((profile) => profile.name === node.getLabel());
+        if (validationStatus == null) {
+            return;
+        }
+
+        let iconId: string;
+        switch (validationStatus.status) {
+            case "unverified":
+                iconId =
+                    node.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed ? IconUtils.IconId.session : IconUtils.IconId.sessionOpen;
+                break;
+            case "active":
+                iconId =
+                    node.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed
+                        ? IconUtils.IconId.sessionActive
+                        : IconUtils.IconId.sessionActiveOpen;
+                break;
+            case "inactive":
+                if (node.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
+                    node.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+                }
+                iconId = IconUtils.IconId.sessionInactive;
+                break;
+            default:
+                return node;
+        }
+
+        const iconById = IconGenerator.getIconById(iconId as IconUtils.IconId)?.path;
+
+        if (iconById && node.iconPath !== iconById) {
+            node.iconPath = iconById;
         }
         return node;
     }
