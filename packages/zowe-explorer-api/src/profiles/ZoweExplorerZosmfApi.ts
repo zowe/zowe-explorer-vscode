@@ -50,7 +50,7 @@ export namespace ZoweExplorerZosmf {
 
         public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
             try {
-                this.session = this._getSession(profile ?? this.profile);
+                this.session = this._getSession(profile || this.profile);
             } catch (error) {
                 // todo: initialize and use logging
                 imperative.Logger.getAppLogger().error(error as string);
