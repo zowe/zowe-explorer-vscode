@@ -218,11 +218,17 @@ export class SharedActions {
         }
     }
 
+    /**
+     * Updates the icon state for a profile/session node to reflect the validation status after a refresh operation.
+     * @param node The node whose icon needs updated
+     * @returns The node after the changes are made (or with no changes if the profile has not been validated)
+     */
     public static returnIconState(node: Types.IZoweNodeType): Types.IZoweNodeType {
         ZoweLogger.trace("shared.actions.returnIconState called.");
 
         const validationStatus = Profiles.getInstance().profilesForValidation.find((profile) => profile.name === node.getLabel());
         if (validationStatus == null) {
+            // Don't change the node's icon if it hasn't been validated
             return;
         }
 
@@ -239,6 +245,7 @@ export class SharedActions {
                         : IconUtils.IconId.sessionActiveOpen;
                 break;
             case "inactive":
+                // Collapse profiles that failed to validate to prevent requests from the node's `getChildren` function
                 if (node.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
                     node.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
                 }
@@ -248,8 +255,8 @@ export class SharedActions {
                 return node;
         }
 
+        // Only apply the new icon if it doesn't match current node icon
         const iconById = IconGenerator.getIconById(iconId as IconUtils.IconId)?.path;
-
         if (iconById && node.iconPath !== iconById) {
             node.iconPath = iconById;
         }
