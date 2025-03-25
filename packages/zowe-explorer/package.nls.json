@@ -136,6 +136,7 @@
   "zowe.pollInterval.info": "Default interval (in milliseconds) when polling spool files.",
   "zowe.security.checkForCustomCredentialManagers": "Check for any installed VS Code extensions for handling credentials when activating Zowe Explorer",
   "zowe.security.secureCredentialsEnabled": "Allow credentials to be stored securely. If disabled and autoStore is set to true, z/OS credentials are stored as clear text in zowe.config.json.",
+  "zowe.openRecentMember": "Open Recent Member",
   "issueTsoCmd": "Issue TSO Command",
   "deleteProfile": "Delete a Profile Permanently...",
   "renameDataSet": "Rename Data Set",

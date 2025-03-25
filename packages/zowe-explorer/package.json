@@ -88,8 +88,8 @@
     "keybindings": [
       {
         "command": "zowe.openRecentMember",
-        "key": "ctrl+alt+r",
-        "mac": "cmd+alt+r"
+        "key": "ctrl+alt+t",
+        "mac": "cmd+alt+t"
       },
       {
         "command": "zowe.searchInAllLoadedItems",
@@ -693,6 +693,11 @@
         "command": "zowe.placeholderCommand",
         "title": "%zowe.placeholderCommand%",
         "enablement": "false"
+      },
+      {
+        "command": "zowe.openRecentMember",
+        "title": "%zowe.openRecentMember%",
+        "category": "Zowe Explorer"
       }
     ],
     "menus": {
@@ -1091,7 +1096,7 @@
           "group": "002_zowe_dsWorkspace@4"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member).*/ && !listMultiSelection",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member|vsam).*/ && !listMultiSelection",
           "command": "zowe.ds.copyName",
           "group": "098_zowe_dsMisc@0"
         },
@@ -1631,6 +1636,11 @@
         {
           "command": "zowe.deleteProfile",
           "when": "never"
+        },
+        {
+          "command": "zowe.openRecentMember",
+          "when": "true",
+          "group": "navigation"
         }
       ]
     },

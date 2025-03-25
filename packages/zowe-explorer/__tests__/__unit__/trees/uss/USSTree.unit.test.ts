@@ -573,7 +573,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
             qpValue: "",
             qpItem: new FilterDescriptor("\uFF0B " + "Create a new filter"),
             resolveQuickPickHelper: jest.spyOn(Gui, "resolveQuickPick"),
-            checkJwtTokenForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtTokenForProfile").mockResolvedValueOnce(true),
+            checkJwtForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtForProfile").mockResolvedValueOnce(true),
         };
         newMocks.resolveQuickPickHelper.mockImplementation(() => Promise.resolve(newMocks.qpItem));
         globalMocks.createQuickPick.mockReturnValue({
@@ -690,7 +690,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         node.fullPath = "/u/myFolder";
         globalMocks.testTree.mFavorites.push(node);
         await expect(globalMocks.testTree.filterPrompt(node)).resolves.not.toThrow();
-        expect(blockMocks.checkJwtTokenForProfile).toHaveBeenCalledWith("ussTestSess2");
+        expect(blockMocks.checkJwtForProfile).toHaveBeenCalledWith("ussTestSess2");
     });
 
     it("Tests that filter() works correctly for favorited search nodes without credentials", async () => {
