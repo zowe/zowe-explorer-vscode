@@ -40,6 +40,7 @@ import { SharedUtils } from "../shared/SharedUtils";
 import { FilterItem } from "../../management/FilterManagement";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { Definitions } from "../../configuration/Definitions";
+import { TreeViewUtils } from "../../utils/TreeViewUtils";
 
 interface ISearchOptions {
     node: IZoweDatasetTreeNode;
@@ -670,6 +671,7 @@ export class DatasetActions {
         // refresh Tree View & favorites
         datasetProvider.refresh();
         for (const member of memberParents) {
+            await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider, member);
             datasetProvider.refreshElement(member);
         }
     }
