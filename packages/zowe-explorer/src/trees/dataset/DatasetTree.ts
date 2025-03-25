@@ -90,8 +90,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             dragAndDropController: this,
             canSelectMany: true,
         });
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.treeView.onDidCollapseElement(TreeViewUtils.refreshIconOnCollapse([SharedContext.isPds, SharedContext.isDsSession], this));
     }
 
     public handleDrag(source: IZoweDatasetTreeNode[], dataTransfer: vscode.DataTransfer, _token: vscode.CancellationToken): void {

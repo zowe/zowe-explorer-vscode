@@ -10,7 +10,7 @@
  */
 
 import { Types, IZoweTree, IZoweTreeNode, PersistenceSchemaEnum, Gui } from "@zowe/zowe-explorer-api";
-import { l10n, TextDocument, TreeViewExpansionEvent, workspace } from "vscode";
+import { l10n, TextDocument, TreeItemCollapsibleState, workspace } from "vscode";
 import { IconGenerator } from "../icons/IconGenerator";
 import type { ZoweTreeProvider } from "../trees/ZoweTreeProvider";
 import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
@@ -42,23 +42,22 @@ export class TreeViewUtils {
     }
 
     /**
-     * Builds an onDidCollapseElement event listener that will refresh node icons depending on the qualifiers given.
-     * If at least one node qualifier passes, it will refresh the icon for that node.
-     * @param qualifiers an array of boolean functions that take a tree node as a parameter
-     * @param treeProvider The tree provider that should update once the icons are changed
-     * @returns An event listener built to update the node icons based on the given qualifiers
+     * Updates the icon for the given tree node
+     * @param node The node that should have its icon updated
+     * @param treeProvider The tree provider that the node belongs to
+     * @param newCollapsibleState New collapsible state for the node. The current collapsible state on the node is used if not provided.
      */
-    public static refreshIconOnCollapse<T extends IZoweTreeNode>(
-        qualifiers: ((node: IZoweTreeNode) => boolean)[],
-        treeProvider: ZoweTreeProvider<T>
-    ): (e: TreeViewExpansionEvent<T>) => any {
-        return (e: TreeViewExpansionEvent<T>): any => {
-            const newIcon = IconGenerator.getIconByNode(e.element);
-            if (qualifiers.some((q) => q(e.element)) && newIcon) {
-                e.element.iconPath = newIcon;
-                treeProvider.mOnDidChangeTreeData.fire(e.element);
-            }
-        };
+    public static updateNodeIcon<T extends IZoweTreeNode>(
+        node: T,
+        treeProvider: ZoweTreeProvider<T>,
+        newCollapsibleState?: TreeItemCollapsibleState
+    ): void {
+        const newIcon = IconGenerator.getIconByNode(newCollapsibleState ? { ...node, collapsibleState: newCollapsibleState } : node);
+        if (!newIcon) {
+            return;
+        }
+        node.iconPath = newIcon;
+        treeProvider.mOnDidChangeTreeData.fire(node);
     }
 
     public static async removeSession(treeProvider: IZoweTree<IZoweTreeNode>, profileName: string): Promise<void> {
