@@ -627,8 +627,7 @@ export class Profiles extends ProfilesCache {
         await this.openConfigFile(filePath);
     }
 
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    public async profileValidationHelper(theProfile: imperative.IProfileLoaded, getStatus: (...args: unknown[]) => Promise<string>) {
+    public async profileValidationHelper(theProfile: imperative.IProfileLoaded, getStatus: (...args: unknown[]) => Promise<string>): Promise<string> {
         return Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
