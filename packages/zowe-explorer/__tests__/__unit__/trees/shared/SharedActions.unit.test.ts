@@ -564,6 +564,118 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
         return newMocks;
     }
 
+    it("Tests that returnIconState applies an inactive icon to an inactive session", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const testNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
+        // reset session node to default
+        testNode.iconPath = IconGenerator.getIconById(IconUtils.IconId.session).path;
+
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            profilesForValidation: [
+                {
+                    name: "sestest",
+                    status: "inactive",
+                },
+            ],
+        } as any);
+
+        SharedActions.returnIconState(testNode);
+        expect(testNode.iconPath).toEqual(IconGenerator.getIconById(IconUtils.IconId.sessionInactive).path);
+        profilesMock.mockRestore();
+    });
+
+    it("Tests that returnIconState applies an unverified icon to an unverified session - collapsed", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const testNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
+        // reset session node to default
+        testNode.iconPath = IconGenerator.getIconById(IconUtils.IconId.session).path;
+        testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            profilesForValidation: [
+                {
+                    name: "sestest",
+                    status: "unverified",
+                },
+            ],
+        } as any);
+
+        SharedActions.returnIconState(testNode);
+        expect(testNode.iconPath).toEqual(IconGenerator.getIconById(IconUtils.IconId.session).path);
+        profilesMock.mockRestore();
+    });
+
+    it("Tests that returnIconState applies an unverified icon to an unverified session - expanded", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const testNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
+        // reset session node to default
+        testNode.iconPath = IconGenerator.getIconById(IconUtils.IconId.session).path;
+
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            profilesForValidation: [
+                {
+                    name: "sestest",
+                    status: "unverified",
+                },
+            ],
+        } as any);
+
+        SharedActions.returnIconState(testNode);
+        expect(testNode.iconPath).toEqual(IconGenerator.getIconById(IconUtils.IconId.sessionOpen).path);
+        profilesMock.mockRestore();
+    });
+
+    it("Tests that returnIconState applies an active icon to a validated session - collapsed", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const testNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
+        // reset session node to default
+        testNode.iconPath = IconGenerator.getIconById(IconUtils.IconId.session).path;
+        testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            profilesForValidation: [
+                {
+                    name: "sestest",
+                    status: "active",
+                },
+            ],
+        } as any);
+
+        SharedActions.returnIconState(testNode);
+        expect(testNode.iconPath).toEqual(IconGenerator.getIconById(IconUtils.IconId.sessionActive).path);
+        profilesMock.mockRestore();
+    });
+
+    it("Tests that returnIconState applies an active icon to a validated session - expanded", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const testNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
+        // reset session node to default
+        testNode.iconPath = IconGenerator.getIconById(IconUtils.IconId.session).path;
+
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            profilesForValidation: [
+                {
+                    name: "sestest",
+                    status: "active",
+                },
+            ],
+        } as any);
+
+        SharedActions.returnIconState(testNode);
+        expect(testNode.iconPath).toEqual(IconGenerator.getIconById(IconUtils.IconId.sessionActiveOpen).path);
+        profilesMock.mockRestore();
+    });
+
     it("Tests that returnIconState is resetting active icons", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);

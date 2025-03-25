@@ -235,12 +235,11 @@ export class SharedActions {
         let iconId: string;
         switch (validationStatus.status) {
             case "unverified":
-                iconId =
-                    node.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed ? IconUtils.IconId.session : IconUtils.IconId.sessionOpen;
+                iconId = node.collapsibleState !== vscode.TreeItemCollapsibleState.Expanded ? IconUtils.IconId.session : IconUtils.IconId.sessionOpen;
                 break;
             case "active":
                 iconId =
-                    node.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed
+                    node.collapsibleState !== vscode.TreeItemCollapsibleState.Expanded
                         ? IconUtils.IconId.sessionActive
                         : IconUtils.IconId.sessionActiveOpen;
                 break;
