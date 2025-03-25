@@ -575,8 +575,8 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
         const sessionIcon = IconGenerator.getIconById(IconUtils.IconId.sessionActive);
         testNode.iconPath = sessionIcon.path;
 
-        const response = await SharedActions.returnIconState(testNode);
-        expect(IconGenerator.getIconByNode(response)).toEqual(IconGenerator.getIconByNode(resultNode));
+        SharedActions.returnIconState(testNode);
+        expect(IconGenerator.getIconByNode(testNode)).toEqual(IconGenerator.getIconByNode(resultNode));
     });
 
     it("Tests that returnIconState is resetting inactive icons", async () => {
@@ -590,8 +590,8 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
         testNode.iconPath = sessionIcon.path;
 
         blockMocks.mockGetIconByNode.mockReturnValueOnce(IconUtils.IconId.sessionInactive);
-        const response = await SharedActions.returnIconState(testNode);
-        expect(IconGenerator.getIconByNode(response)).toEqual(IconGenerator.getIconByNode(resultNode));
+        SharedActions.returnIconState(testNode);
+        expect(IconGenerator.getIconByNode(testNode)).toEqual(IconGenerator.getIconByNode(resultNode));
     });
 });
 
@@ -776,6 +776,7 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
             .mockReturnValueOnce({
                 registeredApiTypes: jest.fn().mockReturnValue(["zftp", "zosmf"]),
             } as any);
+        const returnIconStateMock = jest.spyOn(SharedActions, "returnIconState").mockReturnValueOnce(undefined);
         const refresh = jest.fn().mockResolvedValueOnce(undefined);
         const refreshElement = jest.fn().mockResolvedValueOnce(undefined);
         const treeProvider: IZoweTree<IZoweTreeNode> = {
@@ -791,6 +792,7 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
         await SharedActions.refreshProvider(treeProvider, true);
         expect(refreshProfilesMock).toHaveBeenCalledTimes(1);
         expect(registeredApiTypesMock).toHaveBeenCalledTimes(1);
+        expect(returnIconStateMock).toHaveBeenCalledTimes(1);
         expect(syncSessionNodeMock).toHaveBeenCalledTimes(1);
         expect(removeSessionMock).not.toHaveBeenCalled();
         expect(refreshElement).toHaveBeenCalledTimes(1);

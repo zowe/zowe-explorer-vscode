@@ -223,7 +223,7 @@ export class SharedActions {
      * @param node The node whose icon needs updated
      * @returns The node after the changes are made (or with no changes if the profile has not been validated)
      */
-    public static returnIconState(node: Types.IZoweNodeType): Types.IZoweNodeType {
+    public static returnIconState(node: Types.IZoweNodeType): void {
         ZoweLogger.trace("shared.actions.returnIconState called.");
 
         const validationStatus = Profiles.getInstance().profilesForValidation.find((profile) => profile.name === node.getLabel());
@@ -252,7 +252,7 @@ export class SharedActions {
                 iconId = IconUtils.IconId.sessionInactive;
                 break;
             default:
-                return node;
+                return;
         }
 
         // Only apply the new icon if it doesn't match current node icon
@@ -260,7 +260,6 @@ export class SharedActions {
         if (iconById && node.iconPath !== iconById) {
             node.iconPath = iconById;
         }
-        return node;
     }
 
     public static resetValidationSettings(node: Types.IZoweNodeType, setting: boolean): Types.IZoweNodeType {
