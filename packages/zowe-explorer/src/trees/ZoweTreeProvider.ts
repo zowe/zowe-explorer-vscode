@@ -134,6 +134,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
      */
     public onCollapsibleStateChange(element: T, newState: vscode.TreeItemCollapsibleState): void {
         ZoweLogger.trace("ZoweTreeProvider.onCollapsibleStateChange called.");
+        element.collapsibleState = newState;
         TreeViewUtils.updateNodeIcon(element, this, newState);
         if (newState === vscode.TreeItemCollapsibleState.Collapsed) {
             // Only mark as dirty when the node is collapsing to avoid a duplicate refresh

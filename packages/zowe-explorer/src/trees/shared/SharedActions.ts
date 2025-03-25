@@ -232,27 +232,7 @@ export class SharedActions {
             return;
         }
 
-        let iconId: string;
-        switch (validationStatus.status) {
-            case "unverified":
-                iconId = node.collapsibleState !== vscode.TreeItemCollapsibleState.Expanded ? IconUtils.IconId.session : IconUtils.IconId.sessionOpen;
-                break;
-            case "active":
-                iconId =
-                    node.collapsibleState !== vscode.TreeItemCollapsibleState.Expanded
-                        ? IconUtils.IconId.sessionActive
-                        : IconUtils.IconId.sessionActiveOpen;
-                break;
-            case "inactive":
-                // Collapse profiles that failed to validate to prevent requests from the node's `getChildren` function
-                if (node.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
-                    node.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
-                }
-                iconId = IconUtils.IconId.sessionInactive;
-                break;
-            default:
-                return;
-        }
+        const iconId = TreeViewUtils.getIconForValidationStatus(node, validationStatus.status);
 
         // Only apply the new icon if it doesn't match current node icon
         const iconById = IconGenerator.getIconById(iconId as IconUtils.IconId)?.path;

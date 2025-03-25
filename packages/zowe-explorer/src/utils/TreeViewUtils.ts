@@ -18,6 +18,7 @@ import { ZoweLogger } from "../tools/ZoweLogger";
 import { Profiles } from "../configuration/Profiles";
 import { SharedUtils } from "../trees/shared/SharedUtils";
 import { SharedContext } from "../trees/shared/SharedContext";
+import { IconUtils } from "../icons/IconUtils";
 
 export class TreeViewUtils {
     /**
@@ -41,6 +42,21 @@ export class TreeViewUtils {
         await provider.getTreeView().reveal(node, { expand: true });
     }
 
+    public static getIconForValidationStatus(node: IZoweTreeNode, status: string): IconUtils.IconId | undefined {
+        switch (status) {
+            case "unverified":
+                return node.collapsibleState !== TreeItemCollapsibleState.Expanded ? IconUtils.IconId.session : IconUtils.IconId.sessionOpen;
+            case "active":
+                return node.collapsibleState !== TreeItemCollapsibleState.Expanded
+                    ? IconUtils.IconId.sessionActive
+                    : IconUtils.IconId.sessionActiveOpen;
+            case "inactive":
+                return IconUtils.IconId.sessionInactive;
+            default:
+                return;
+        }
+    }
+
     /**
      * Updates the icon for the given tree node
      * @param node The node that should have its icon updated
@@ -52,11 +68,18 @@ export class TreeViewUtils {
         treeProvider: ZoweTreeProvider<T>,
         newCollapsibleState?: TreeItemCollapsibleState
     ): void {
-        const newIcon = IconGenerator.getIconByNode(newCollapsibleState ? { ...node, collapsibleState: newCollapsibleState } : node);
+        const newIcon = SharedContext.isSession(node)
+            ? IconGenerator.getIconById(
+                  TreeViewUtils.getIconForValidationStatus(
+                      node,
+                      Profiles.getInstance().profilesForValidation.find((p) => p.name === node.label)?.status
+                  )
+              )
+            : IconGenerator.getIconByNode(newCollapsibleState ? { ...node, collapsibleState: newCollapsibleState } : node);
         if (!newIcon) {
             return;
         }
-        node.iconPath = newIcon;
+        node.iconPath = newIcon.path;
         treeProvider.mOnDidChangeTreeData.fire(node);
     }
 
