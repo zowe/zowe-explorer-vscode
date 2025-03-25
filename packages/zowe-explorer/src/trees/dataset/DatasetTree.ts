@@ -1220,10 +1220,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     }
                 }
             }
-            const icon = IconGenerator.getIconByNode(sessionNode);
-            if (icon) {
-                sessionNode.iconPath = icon.path;
-            }
             child.contextValue = SharedContext.withProfile(child);
         }
     }
