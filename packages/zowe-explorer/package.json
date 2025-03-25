@@ -808,7 +808,7 @@
         {
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
           "command": "zowe.uss.cdUp",
-          "group": "000_zowe_ussMainframeInteraction@0"
+          "group": "000_zowe_ussMainframeInteraction@1"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
