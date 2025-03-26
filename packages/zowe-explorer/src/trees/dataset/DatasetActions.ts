@@ -671,9 +671,9 @@ export class DatasetActions {
         // refresh Tree View & favorites
         datasetProvider.refresh();
         for (const member of memberParents) {
-            await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider, member);
             datasetProvider.refreshElement(member);
         }
+        await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider, nodes[0].getParent());
     }
 
     /**
