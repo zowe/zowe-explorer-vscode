@@ -22,7 +22,7 @@ import { FilterItem, FilterDescriptor } from "../../management/FilterManagement"
 import { AuthUtils } from "../../utils/AuthUtils";
 import { SharedTreeProviders } from "./SharedTreeProviders";
 import { ZoweExplorerExtender } from "../../extending/ZoweExplorerExtender";
-import { ZoweTreeProvider } from "../ZoweTreeProvider";
+import type { ZoweTreeProvider } from "../ZoweTreeProvider";
 
 export class SharedActions {
     private static refreshInProgress = false;
