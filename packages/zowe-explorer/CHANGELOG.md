@@ -2,6 +2,9 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+- Fixed an issue where the source data set was removed even though the move operations was not successful. [#3518](https://github.com/zowe/zowe-explorer-vscode/pull/3518)
+
+
 ## TBD Release
 
 ### New features and enhancements
