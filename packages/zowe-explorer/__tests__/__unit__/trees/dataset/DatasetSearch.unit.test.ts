@@ -23,6 +23,8 @@ import { DatasetUtils } from "../../../../src/trees/dataset/DatasetUtils";
 import { Constants } from "../../../../src/configuration/Constants";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
+import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
+import { window } from "../../../__mocks__/vscode";
 
 jest.mock("fs");
 jest.mock("vscode");
@@ -769,8 +771,7 @@ describe("Dataset Search Unit Tests - function search", () => {
         let performSearchSpy: jest.SpyInstance;
         let withProgressSpy: jest.SpyInstance;
         let showMessageSpy: jest.SpyInstance;
-        let showInputBoxSpy: jest.SpyInstance;
-        let showQuickPickSpy: jest.SpyInstance;
+        let createQuickPickSpy: jest.SpyInstance;
         let errorMessageSpy: jest.SpyInstance;
         let tableBuilderOptionsSpy: jest.SpyInstance;
         let tableBuilderTitleSpy: jest.SpyInstance;
@@ -779,9 +780,13 @@ describe("Dataset Search Unit Tests - function search", () => {
         let tableBuilderColumnsSpy: jest.SpyInstance;
         let tableBuilderAddRowActionSpy: jest.SpyInstance;
         let tableBuilderBuildSpy: jest.SpyInstance;
+        let localStorageSetSpy: jest.SpyInstance;
+        let localStorageGetSpy: jest.SpyInstance;
+        let localStorageValue: any = [];
+        let quickPickArray: QuickPick[] = [];
 
         function quickPickPositiveExpect() {
-            expect(showQuickPickSpy).toHaveBeenCalledWith(
+            expect(createQuickPickSpy).toHaveBeenCalledWith(
                 [
                     {
                         label: vscode.l10n.t("Case Sensitive"),
@@ -797,6 +802,12 @@ describe("Dataset Search Unit Tests - function search", () => {
                 }
             );
         }
+{
+        function baseQuickPickImplemnentation() {
+            const quickPick = window.createQuickPick();
+            quickPickArray.push(quickPick);
+            return quickPick;
+        }
 
         beforeAll(() => {
             tableViewProviderSetTableViewMock = jest.fn();
@@ -809,8 +820,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             withProgressSpy = jest.spyOn(Gui, "withProgress");
             showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
             errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation();
-            showInputBoxSpy = jest.spyOn(Gui, "showInputBox");
-            showQuickPickSpy = jest.spyOn(Gui, "showQuickPick");
+            createQuickPickSpy = jest.spyOn(Gui, "createQuickPick").mockImplementation(() => { return baseQuickPickImplemnentation(); });
             tableBuilderOptionsSpy = jest.spyOn(TableBuilder.prototype, "options").mockReturnValue(TableBuilder.prototype);
             tableBuilderTitleSpy = jest.spyOn(TableBuilder.prototype, "title").mockReturnValue(TableBuilder.prototype);
             tableBuilderIsViewSpy = jest.spyOn(TableBuilder.prototype, "isView").mockReturnValue(TableBuilder.prototype);
@@ -818,6 +828,15 @@ describe("Dataset Search Unit Tests - function search", () => {
             tableBuilderColumnsSpy = jest.spyOn(TableBuilder.prototype, "columns").mockReturnValue(TableBuilder.prototype);
             tableBuilderAddRowActionSpy = jest.spyOn(TableBuilder.prototype, "addRowAction").mockReturnValue(TableBuilder.prototype);
             tableBuilderBuildSpy = jest.spyOn(TableBuilder.prototype, "build").mockImplementation();
+            localStorageSetSpy = jest
+                .spyOn(ZoweLocalStorage, "setValue")
+                .mockImplementation(async (key: string, value: any, _setInWorkspace: boolean | undefined): Promise<void> => {
+                    localStorageValue[key] = value;
+                    await Promise.resolve();
+                });
+            localStorageGetSpy = jest.spyOn(ZoweLocalStorage, "getValue").mockImplementation((key: string) => {
+                return localStorageValue[key];
+            });
         });
 
         beforeEach(() => {
@@ -826,6 +845,9 @@ describe("Dataset Search Unit Tests - function search", () => {
             tableViewProviderSpy = jest
                 .spyOn(TableViewProvider, "getInstance")
                 .mockReturnValue({ setTableView: tableViewProviderSetTableViewMock } as any);
+            localStorageValue = [];
+            quickPickArray = [];
+            createQuickPickSpy = jest.spyOn(Gui, "createQuickPick").mockImplementation(() => { return baseQuickPickImplemnentation(); });
         });
 
         afterAll(() => {
@@ -842,7 +864,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             expect(errorMessageSpy).toHaveBeenCalledWith("No search pattern applied. Search for a pattern and try again.");
             expect(showMessageSpy).not.toHaveBeenCalled();
-            expect(showQuickPickSpy).not.toHaveBeenCalled();
+            expect(createQuickPickSpy).not.toHaveBeenCalled();
             expect(performSearchSpy).not.toHaveBeenCalled();
             expect(getSearchMatchesSpy).not.toHaveBeenCalled();
             expect(tableViewProviderSpy).not.toHaveBeenCalled();
@@ -857,13 +879,30 @@ describe("Dataset Search Unit Tests - function search", () => {
             node.pattern = "FAKE.*.DS";
             const context = { context: "fake" } as any;
 
-            showInputBoxSpy.mockResolvedValue("");
+            // We will create two quick picks. The first is the search.
+            // The second is the options.
+            createQuickPickSpy.mockImplementationOnce(() => {
+                const qp = baseQuickPickImplemnentation();
+                qp.selectedItems = [{label: ""}];
+                qp.onDidHide = jest.fn().mockImplementation((listener) => {listener()});
+                return qp;
+            });
 
             await DatasetSearch.search(context, node);
 
             expect(errorMessageSpy).not.toHaveBeenCalled();
-            expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
-            expect(showQuickPickSpy).not.toHaveBeenCalled();
+            expect(createQuickPickSpy).toHaveBeenCalledTimes(2);
+
+            // Expect the search quick pick to have been shown
+            // Do not expect the options quick pick to have been shown
+            expect(quickPickArray[0].show).toHaveBeenCalledTimes(1);
+            expect(quickPickArray[1].show).toHaveBeenCalledTimes(0);
+
+            // Expect the search quick pick to have returned
+            // Do not expect any options to have been selected
+            expect(quickPickArray[0].selectedItems.length).toEqual(1); 
+            expect(quickPickArray[1].selectedItems.length).toEqual(0);
+
             expect(performSearchSpy).not.toHaveBeenCalled();
             expect(getSearchMatchesSpy).not.toHaveBeenCalled();
             expect(tableViewProviderSpy).not.toHaveBeenCalled();
@@ -879,13 +918,11 @@ describe("Dataset Search Unit Tests - function search", () => {
             const context = { context: "fake" } as any;
             const searchString = "test";
 
-            showInputBoxSpy.mockResolvedValue(searchString);
-            showQuickPickSpy.mockResolvedValue(undefined);
 
             await DatasetSearch.search(context, node);
 
             expect(errorMessageSpy).not.toHaveBeenCalled();
-            expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
+            expect(createQuickPickSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
             quickPickPositiveExpect();
             expect(performSearchSpy).not.toHaveBeenCalled();
             expect(getSearchMatchesSpy).not.toHaveBeenCalled();
@@ -908,8 +945,6 @@ describe("Dataset Search Unit Tests - function search", () => {
             };
             const myProgress = { test: "test" };
 
-            showInputBoxSpy.mockResolvedValue(searchString);
-            showQuickPickSpy.mockResolvedValue([]);
             withProgressSpy.mockImplementation((opts: any, fn: any) => {
                 return fn(myProgress, tokenCancellation);
             });
@@ -918,7 +953,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             await DatasetSearch.search(context, node);
 
             expect(errorMessageSpy).not.toHaveBeenCalled();
-            expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
+            expect(createQuickPickSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
             quickPickPositiveExpect();
             expect(showMessageSpy).not.toHaveBeenCalled();
             expect(performSearchSpy).toHaveBeenCalledTimes(1);
@@ -973,8 +1008,6 @@ describe("Dataset Search Unit Tests - function search", () => {
             };
             const myProgress = { test: "test" };
 
-            showInputBoxSpy.mockResolvedValue(searchString);
-            showQuickPickSpy.mockResolvedValue([]);
             withProgressSpy.mockImplementation((opts: any, fn: any) => {
                 return fn(myProgress, tokenCancellation);
             });
@@ -984,7 +1017,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             await DatasetSearch.search(context, node);
 
             expect(errorMessageSpy).not.toHaveBeenCalled();
-            expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
+            expect(createQuickPickSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
             quickPickPositiveExpect();
             expect(showMessageSpy).not.toHaveBeenCalled();
 
@@ -1119,8 +1152,6 @@ describe("Dataset Search Unit Tests - function search", () => {
             };
             const myProgress = { test: "test" };
 
-            showInputBoxSpy.mockResolvedValue(searchString);
-            showQuickPickSpy.mockResolvedValue([]);
             withProgressSpy.mockImplementation((opts: any, fn: any) => {
                 return fn(myProgress, tokenCancellation);
             });
@@ -1130,7 +1161,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             await DatasetSearch.search(context, pdsNode);
 
             expect(errorMessageSpy).not.toHaveBeenCalled();
-            expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
+            expect(createQuickPickSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
             quickPickPositiveExpect();
             expect(showMessageSpy).not.toHaveBeenCalled();
 
@@ -1241,8 +1272,6 @@ describe("Dataset Search Unit Tests - function search", () => {
             };
             const myProgress = { test: "test" };
 
-            showInputBoxSpy.mockResolvedValue(searchString);
-            showQuickPickSpy.mockResolvedValue([]);
             withProgressSpy.mockImplementation((opts: any, fn: any) => {
                 return fn(myProgress, tokenCancellation);
             });
@@ -1252,7 +1281,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             await DatasetSearch.search(context, node);
 
             expect(errorMessageSpy).not.toHaveBeenCalled();
-            expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
+            expect(createQuickPickSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
             quickPickPositiveExpect();
             expect(showMessageSpy).not.toHaveBeenCalled();
 
@@ -1389,8 +1418,6 @@ describe("Dataset Search Unit Tests - function search", () => {
             };
             const myProgress = { test: "test" };
 
-            showInputBoxSpy.mockResolvedValue(searchString);
-            showQuickPickSpy.mockResolvedValue([]);
             withProgressSpy.mockImplementation((opts: any, fn: any) => {
                 return fn(myProgress, tokenCancellation);
             });
@@ -1400,7 +1427,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             await DatasetSearch.search(context, pdsNode);
 
             expect(errorMessageSpy).not.toHaveBeenCalled();
-            expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
+            expect(createQuickPickSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
             quickPickPositiveExpect();
             expect(showMessageSpy).not.toHaveBeenCalled();
 
@@ -1508,14 +1535,6 @@ describe("Dataset Search Unit Tests - function search", () => {
             };
             const myProgress = { test: "test" };
 
-            showInputBoxSpy.mockResolvedValue(searchString);
-            showQuickPickSpy.mockResolvedValue([
-                {
-                    label: vscode.l10n.t("Case Sensitive"),
-                    description: vscode.l10n.t("Perform the search with case sensitivity"),
-                    iconPath: new vscode.ThemeIcon("case-sensitive"),
-                } as vscode.QuickPickItem,
-            ]);
             withProgressSpy.mockImplementation((opts: any, fn: any) => {
                 return fn(myProgress, tokenCancellation);
             });
@@ -1525,7 +1544,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             await DatasetSearch.search(context, node);
 
             expect(errorMessageSpy).not.toHaveBeenCalled();
-            expect(showInputBoxSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
+            expect(createQuickPickSpy).toHaveBeenCalledWith({ prompt: "Enter the text to search for." });
             quickPickPositiveExpect();
             expect(showMessageSpy).not.toHaveBeenCalled();
 

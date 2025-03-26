@@ -681,7 +681,34 @@ export namespace window {
      * @returns A new {@link QuickPick}.
      */
     export function createQuickPick<T extends QuickPickItem>(): QuickPick<T> {
-        return {} as QuickPick<T>;
+        const quickPick: QuickPick<T> = {
+            activeItems: [],
+            busy: false,
+            buttons: [],
+            canSelectMany: false,
+            dispose: jest.fn(),
+            enabled: true,
+            hide: jest.fn(),
+            ignoreFocusOut: false,
+            items: [],
+            matchOnDetail: false,
+            matchOnDescription: false,
+            onDidAccept: jest.fn(),
+            onDidChangeActive: jest.fn(),
+            onDidChangeSelection: jest.fn(),
+            onDidChangeValue: jest.fn(),
+            onDidHide: jest.fn(),
+            onDidTriggerButton: jest.fn(),
+            onDidTriggerItemButton: jest.fn(),
+            placeholder: undefined,
+            selectedItems: [],
+            show: jest.fn(),
+            step: undefined,
+            title: undefined,
+            totalSteps: undefined,
+            value: "",
+        };
+        return quickPick;
     }
 
     /**

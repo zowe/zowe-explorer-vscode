@@ -62,7 +62,6 @@ export class DatasetSearch {
 
         DatasetSearch.constructQuickPicks();
         DatasetSearch.searchQuickPickReset();
-        DatasetSearch.searchQuickPick.show();
 
         // Show the search quick pick
         const searchString = await new Promise<string | undefined>((resolve) => {
