@@ -306,14 +306,11 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                 // Do nothing
                 break;
             default: {
-                // Insert the new characters into the command buffer at the cursor position.
-                const left = this.charArrayCmd.slice(0, this.cursorPosition);
-                const right = this.charArrayCmd.slice(this.cursorPosition);
-                left.push(...data);
-                this.charArrayCmd = [...left, ...right];
-                this.command = this.charArrayCmd.join("");
-                this.cursorPosition += data.length;
-                // After updating the internal command, refresh the last line display.
+                const charArray = this.charArrayCmd;
+                this.command = charArray.slice(0, Math.max(0, this.cursorPosition)).join("") + data + charArray.slice(this.cursorPosition).join("");
+                this.charArrayCmd = Array.from(this.command);
+                this.cursorPosition = Math.min(this.charArrayCmd.length, this.cursorPosition + Array.from(data).length);
+                this.write(data);
                 this.refreshCmd();
                 break;
             }
