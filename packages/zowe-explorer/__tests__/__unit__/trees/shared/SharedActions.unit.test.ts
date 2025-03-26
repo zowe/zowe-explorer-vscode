@@ -556,8 +556,10 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
 
 describe("Shared Actions Unit Tests - Function returnIconState", () => {
     function createBlockMocks(globalMocks) {
+        const datasetSessionNode = createDatasetSessionNode(globalMocks.session, globalMocks.imperativeProfile);
         const newMocks = {
-            datasetSessionNode: createDatasetSessionNode(globalMocks.session, globalMocks.imperativeProfile),
+            datasetSessionNode,
+            datasetTree: createDatasetTree(datasetSessionNode, globalMocks.treeView),
             mockGetIconByNode: jest.fn(),
         };
         newMocks.mockGetIconByNode.mockReturnValue(IconUtils.IconId.sessionActive);
@@ -581,7 +583,7 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
             ],
         } as any);
 
-        SharedActions.returnIconState(testNode);
+        SharedActions.returnIconState(testNode, blockMocks.datasetTree);
         expect(testNode.iconPath).toEqual(IconGenerator.getIconById(IconUtils.IconId.sessionInactive).path);
         profilesMock.mockRestore();
     });
@@ -604,7 +606,7 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
             ],
         } as any);
 
-        SharedActions.returnIconState(testNode);
+        SharedActions.returnIconState(testNode, blockMocks.datasetTree);
         expect(testNode.iconPath).toEqual(IconGenerator.getIconById(IconUtils.IconId.session).path);
         profilesMock.mockRestore();
     });
@@ -626,7 +628,7 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
             ],
         } as any);
 
-        SharedActions.returnIconState(testNode);
+        SharedActions.returnIconState(testNode, blockMocks.datasetTree);
         expect(testNode.iconPath).toEqual(IconGenerator.getIconById(IconUtils.IconId.sessionOpen).path);
         profilesMock.mockRestore();
     });
@@ -649,7 +651,7 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
             ],
         } as any);
 
-        SharedActions.returnIconState(testNode);
+        SharedActions.returnIconState(testNode, blockMocks.datasetTree);
         expect(testNode.iconPath).toEqual(IconGenerator.getIconById(IconUtils.IconId.sessionActive).path);
         profilesMock.mockRestore();
     });
@@ -671,7 +673,7 @@ describe("Shared Actions Unit Tests - Function returnIconState", () => {
             ],
         } as any);
 
-        SharedActions.returnIconState(testNode);
+        SharedActions.returnIconState(testNode, blockMocks.datasetTree);
         expect(testNode.iconPath).toEqual(IconGenerator.getIconById(IconUtils.IconId.sessionActiveOpen).path);
         profilesMock.mockRestore();
     });
@@ -913,7 +915,7 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
             refreshElement,
         } as any;
         const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
-            fetchAllProfiles: jest.fn().mockReturnValue([{ name: "sestest" }]),
+            allProfiles: [{ name: "sestest" }],
         } as any);
         const syncSessionNodeMock = jest.spyOn(AuthUtils, "syncSessionNode").mockReturnValueOnce(undefined);
         const refreshProfilesMock = jest.spyOn(SharedActions, "refreshProfiles").mockClear().mockResolvedValueOnce(undefined);
@@ -949,7 +951,8 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
             refreshElement,
         } as any;
         const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
-            fetchAllProfiles: jest.fn().mockReturnValue([]),
+            allProfiles: [],
+            profilesForValidation: [],
         } as any);
         const syncSessionNodeMock = jest.spyOn(AuthUtils, "syncSessionNode").mockReturnValueOnce(undefined);
         const refreshProfilesMock = jest.spyOn(SharedActions, "refreshProfiles").mockClear().mockResolvedValueOnce(undefined);
