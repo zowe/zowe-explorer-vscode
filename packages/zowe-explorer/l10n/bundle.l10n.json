@@ -85,7 +85,6 @@
   "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.": "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.",
   "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.": "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.",
   "Create New": "Create New",
-  "\"Update Credentials\" operation not supported when \"autoStore\" is false": "\"Update Credentials\" operation not supported when \"autoStore\" is false",
   "Connection Name": "Connection Name",
   "Enter a name for the connection.": "Enter a name for the connection.",
   "Operation cancelled": "Operation cancelled",
@@ -195,8 +194,6 @@
   "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.": "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.",
   "Uploading USS files...": "Uploading USS files...",
   "Error uploading files": "Error uploading files",
-  "Profile auth error": "Profile auth error",
-  "Profile is not authenticated, please log in to continue": "Profile is not authenticated, please log in to continue",
   "Retrieving response from USS list API": "Retrieving response from USS list API",
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
@@ -361,6 +358,7 @@
       "Name of USS session"
     ]
   },
+  "(default)": "(default)",
   "Confirm": "Confirm",
   "One or more items may be overwritten from this drop operation. Confirm or cancel?": "One or more items may be overwritten from this drop operation. Confirm or cancel?",
   "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",
@@ -391,7 +389,6 @@
   "Sort Direction": "Sort Direction",
   "Go to Local Filtering": "Go to Local Filtering",
   "Clear filter for profile": "Clear filter for profile",
-  "(default)": "(default)",
   "Create new...": "Create new...",
   "Submit this query": "Submit this query",
   "Enter job owner ID": "Enter job owner ID",

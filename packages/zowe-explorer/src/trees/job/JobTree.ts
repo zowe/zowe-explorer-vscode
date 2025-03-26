@@ -112,8 +112,6 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             treeDataProvider: this,
             canSelectMany: true,
         });
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.treeView.onDidCollapseElement(TreeViewUtils.refreshIconOnCollapse([SharedContext.isJob, SharedContext.isJobsSession], this));
     }
 
     public rename(_node: IZoweJobTreeNode): void {

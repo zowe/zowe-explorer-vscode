@@ -14,6 +14,7 @@ import {
     createGetConfigMock,
     createInstanceOfProfile,
     createIProfile,
+    createISession,
     createISessionWithoutCredentials,
     createQuickPickContent,
     createQuickPickItem,
@@ -21,7 +22,7 @@ import {
     createTreeView,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import { Gui, Sorting, Types } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTree, IZoweTreeNode, Sorting, Types } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { createUSSSessionNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
@@ -39,6 +40,9 @@ import { IconGenerator } from "../../../../src/icons/IconGenerator";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
+import { ZoweExplorerExtender } from "../../../../src/extending/ZoweExplorerExtender";
+import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
+import { AuthUtils } from "../../../../src/utils/AuthUtils";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -552,42 +556,169 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
 
 describe("Shared Actions Unit Tests - Function returnIconState", () => {
     function createBlockMocks(globalMocks) {
+        const datasetSessionNode = createDatasetSessionNode(globalMocks.session, globalMocks.imperativeProfile);
         const newMocks = {
-            datasetSessionNode: createDatasetSessionNode(globalMocks.session, globalMocks.imperativeProfile),
+            datasetSessionNode,
+            datasetTree: createDatasetTree(datasetSessionNode, globalMocks.treeView),
             mockGetIconByNode: jest.fn(),
         };
         newMocks.mockGetIconByNode.mockReturnValue(IconUtils.IconId.sessionActive);
         return newMocks;
     }
 
-    it("Tests that returnIconState is resetting active icons", async () => {
+    it("Tests that returnIconState applies an inactive icon to an inactive session", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
-        const resultNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
-        const resultIcon = IconGenerator.getIconById(IconUtils.IconId.session);
-        resultNode.iconPath = resultIcon.path;
 
         const testNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
-        const sessionIcon = IconGenerator.getIconById(IconUtils.IconId.sessionActive);
-        testNode.iconPath = sessionIcon.path;
+        // reset session node to default
+        testNode.iconPath = IconGenerator.getIconById(IconUtils.IconId.session).path;
 
-        const response = await SharedActions.returnIconState(testNode);
-        expect(IconGenerator.getIconByNode(response)).toEqual(IconGenerator.getIconByNode(resultNode));
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            profilesForValidation: [
+                {
+                    name: "sestest",
+                    status: "inactive",
+                },
+            ],
+        } as any);
+
+        SharedActions.returnIconState(testNode, blockMocks.datasetTree);
+        expect(testNode.iconPath).toEqual(IconGenerator.getIconById(IconUtils.IconId.sessionInactive).path);
+        profilesMock.mockRestore();
     });
 
-    it("Tests that returnIconState is resetting inactive icons", async () => {
+    it("Tests that returnIconState applies an unverified icon to an unverified session - collapsed", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
-        const resultNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
-        const resultIcon = IconGenerator.getIconById(IconUtils.IconId.session);
-        resultNode.iconPath = resultIcon.path;
-        const testNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
-        const sessionIcon = IconGenerator.getIconById(IconUtils.IconId.sessionInactive);
-        testNode.iconPath = sessionIcon.path;
 
-        blockMocks.mockGetIconByNode.mockReturnValueOnce(IconUtils.IconId.sessionInactive);
-        const response = await SharedActions.returnIconState(testNode);
-        expect(IconGenerator.getIconByNode(response)).toEqual(IconGenerator.getIconByNode(resultNode));
+        const testNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
+        // reset session node to default
+        testNode.iconPath = IconGenerator.getIconById(IconUtils.IconId.session).path;
+        testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            profilesForValidation: [
+                {
+                    name: "sestest",
+                    status: "unverified",
+                },
+            ],
+        } as any);
+
+        SharedActions.returnIconState(testNode, blockMocks.datasetTree);
+        expect(testNode.iconPath).toEqual(IconGenerator.getIconById(IconUtils.IconId.session).path);
+        profilesMock.mockRestore();
+    });
+
+    it("Tests that returnIconState applies an unverified icon to an unverified session - expanded", () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const testNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
+        // reset session node to default
+        testNode.iconPath = IconGenerator.getIconById(IconUtils.IconId.session).path;
+
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            profilesForValidation: [
+                {
+                    name: "sestest",
+                    status: "unverified",
+                },
+            ],
+        } as any);
+
+        SharedActions.returnIconState(testNode, blockMocks.datasetTree);
+        expect(testNode.iconPath).toEqual(IconGenerator.getIconById(IconUtils.IconId.sessionOpen).path);
+        profilesMock.mockRestore();
+    });
+
+    it("Tests that returnIconState applies an active icon to a validated session - collapsed", () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const testNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
+        // reset session node to default
+        testNode.iconPath = IconGenerator.getIconById(IconUtils.IconId.session).path;
+        testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            profilesForValidation: [
+                {
+                    name: "sestest",
+                    status: "active",
+                },
+            ],
+        } as any);
+
+        SharedActions.returnIconState(testNode, blockMocks.datasetTree);
+        expect(testNode.iconPath).toEqual(IconGenerator.getIconById(IconUtils.IconId.sessionActive).path);
+        profilesMock.mockRestore();
+    });
+
+    it("Tests that returnIconState applies an active icon to a validated session - expanded", () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const testNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
+        // reset session node to default
+        testNode.iconPath = IconGenerator.getIconById(IconUtils.IconId.session).path;
+
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            profilesForValidation: [
+                {
+                    name: "sestest",
+                    status: "active",
+                },
+            ],
+        } as any);
+
+        SharedActions.returnIconState(testNode, blockMocks.datasetTree);
+        expect(testNode.iconPath).toEqual(IconGenerator.getIconById(IconUtils.IconId.sessionActiveOpen).path);
+        profilesMock.mockRestore();
+    });
+
+    it("Tests that returnIconState returns early when a profile has not been validated", () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const testNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
+        // reset session node to default
+        const originalPath = IconGenerator.getIconById(IconUtils.IconId.session).path;
+        testNode.iconPath = originalPath;
+
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            profilesForValidation: [],
+        } as any);
+
+        SharedActions.returnIconState(testNode);
+        expect(testNode.iconPath).not.toEqual(IconGenerator.getIconById(IconUtils.IconId.sessionActiveOpen).path);
+        expect(testNode.iconPath).toBe(originalPath);
+        profilesMock.mockRestore();
+    });
+
+    it("Tests that returnIconState returns early if the validation status is unknown", () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const testNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
+        // reset session node to default
+        const originalPath = IconGenerator.getIconById(IconUtils.IconId.session).path;
+        testNode.iconPath = originalPath;
+
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            profilesForValidation: [
+                {
+                    name: "sestest",
+                    status: "impossibleStatusValue",
+                },
+            ],
+        } as any);
+
+        SharedActions.returnIconState(testNode);
+        expect(testNode.iconPath).not.toEqual(IconGenerator.getIconById(IconUtils.IconId.sessionActiveOpen).path);
+        expect(testNode.iconPath).toBe(originalPath);
+        profilesMock.mockRestore();
     });
 });
 
@@ -662,5 +793,190 @@ describe("Shared Actions Unit Tests - Function refreshAll", () => {
         expect([...removedProfNames]).toEqual(["zosmf", "zosmf2"]);
         expect(addDefaultSessionSpy).toHaveBeenCalledTimes(3);
         expect([...addedProfTypes]).toEqual(["zosmf"]);
+    });
+
+    it("should avoid running the refresh logic twice if a refresh is already in progress", async () => {
+        createGlobalMocks();
+        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(createTreeProviders());
+        const removedProfNames = new Set<string>();
+        const addedProfTypes = new Set<string>();
+        const removeSessionSpy = jest
+            .spyOn(TreeViewUtils, "removeSession")
+            .mockImplementation((treeProvider, profileName) => removedProfNames.add(profileName) as any);
+        const addDefaultSessionSpy = jest
+            .spyOn(TreeViewUtils, "addDefaultSession")
+            .mockImplementation((treeProvider, profileType) => addedProfTypes.add(profileType) as any);
+        void SharedActions.refreshAll();
+        await SharedActions.refreshAll();
+
+        // expect same amount of assertions even though refresh was called twice
+        expect(removeSessionSpy).toHaveBeenCalledTimes(6);
+        expect(addDefaultSessionSpy).toHaveBeenCalledTimes(3);
+    });
+});
+
+describe("Shared Actions Unit Tests - Function refreshProfiles", () => {
+    it("calls refresh on Profiles instance", async () => {
+        const refresh = jest.fn().mockResolvedValueOnce(undefined);
+        const profilesMock = jest
+            .spyOn(Profiles, "getInstance")
+            .mockClear()
+            .mockReturnValue({
+                refresh,
+            } as any);
+        await expect(SharedActions.refreshProfiles()).resolves.not.toThrow();
+        expect(profilesMock).toHaveBeenCalledTimes(1);
+        expect(refresh).toHaveBeenCalledTimes(1);
+        profilesMock.mockRestore();
+    });
+
+    it("handles any errors in the catch block", async () => {
+        const refreshError = new Error("Unknown error loading profiles");
+        const refresh = jest.fn().mockRejectedValueOnce(refreshError);
+        const errorLoggerSpy = jest.spyOn(ZoweLogger, "error");
+        const showZoweConfigErrorMock = jest.spyOn(ZoweExplorerExtender, "showZoweConfigError").mockReturnValue(undefined);
+        const profilesMock = jest
+            .spyOn(Profiles, "getInstance")
+            .mockClear()
+            .mockReturnValue({
+                refresh,
+            } as any);
+        await expect(SharedActions.refreshProfiles()).resolves.not.toThrow();
+        expect(profilesMock).toHaveBeenCalledTimes(1);
+        expect(refresh).toHaveBeenCalledTimes(1);
+        expect(errorLoggerSpy).toHaveBeenCalledTimes(1);
+        expect(errorLoggerSpy).toHaveBeenCalledWith("Unknown error loading profiles");
+        expect(showZoweConfigErrorMock).toHaveBeenCalledTimes(1);
+        expect(showZoweConfigErrorMock).toHaveBeenCalledWith("Unknown error loading profiles");
+        profilesMock.mockRestore();
+    });
+});
+
+describe("Shared Actions Unit Tests - Function refreshProvider", () => {
+    it("refreshes the tree provider and adds default sessions for API types", async () => {
+        const addDefaultSessionMock = jest.spyOn(TreeViewUtils, "addDefaultSession").mockResolvedValueOnce(undefined);
+        const registeredApiTypesMock = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValueOnce({
+            registeredApiTypes: jest.fn().mockReturnValue(["zftp", "zosmf"]),
+        } as any);
+        const refresh = jest.fn().mockResolvedValueOnce(undefined);
+        const treeProvider: IZoweTree<IZoweTreeNode> = {
+            mSessionNodes: [],
+            mFavorites: [],
+            refresh,
+        } as any;
+        await SharedActions.refreshProvider(treeProvider);
+        expect(registeredApiTypesMock).toHaveBeenCalledTimes(1);
+        expect(addDefaultSessionMock).toHaveBeenCalledTimes(2);
+        expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zftp");
+        expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zosmf");
+        expect(refresh).toHaveBeenCalledTimes(1);
+    });
+
+    it("refreshes profiles if refreshProfiles parameter is true", async () => {
+        const addDefaultSessionMock = jest.spyOn(TreeViewUtils, "addDefaultSession").mockClear().mockResolvedValueOnce(undefined);
+        const registeredApiTypesMock = jest
+            .spyOn(ZoweExplorerApiRegister, "getInstance")
+            .mockClear()
+            .mockReturnValueOnce({
+                registeredApiTypes: jest.fn().mockReturnValue(["zftp", "zosmf"]),
+            } as any);
+        const refresh = jest.fn().mockResolvedValueOnce(undefined);
+        const treeProvider: IZoweTree<IZoweTreeNode> = {
+            mSessionNodes: [],
+            mFavorites: [],
+            refresh,
+        } as any;
+        const refreshProfilesMock = jest.spyOn(SharedActions, "refreshProfiles").mockResolvedValueOnce(undefined);
+        await SharedActions.refreshProvider(treeProvider, true);
+        expect(refreshProfilesMock).toHaveBeenCalledTimes(1);
+        expect(registeredApiTypesMock).toHaveBeenCalledTimes(1);
+        expect(addDefaultSessionMock).toHaveBeenCalledTimes(2);
+        expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zftp");
+        expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zosmf");
+        expect(refresh).toHaveBeenCalledTimes(1);
+    });
+
+    it("refreshes the session nodes in the given provider", async () => {
+        const addDefaultSessionMock = jest.spyOn(TreeViewUtils, "addDefaultSession").mockClear().mockResolvedValueOnce(undefined);
+        const removeSessionMock = jest.spyOn(TreeViewUtils, "removeSession").mockClear().mockResolvedValueOnce(undefined);
+        const registeredApiTypesMock = jest
+            .spyOn(ZoweExplorerApiRegister, "getInstance")
+            .mockClear()
+            .mockReturnValueOnce({
+                registeredApiTypes: jest.fn().mockReturnValue(["zftp", "zosmf"]),
+            } as any);
+        const returnIconStateMock = jest.spyOn(SharedActions, "returnIconState").mockReturnValueOnce(undefined);
+        const refresh = jest.fn().mockResolvedValueOnce(undefined);
+        const refreshElement = jest.fn().mockResolvedValueOnce(undefined);
+        const treeProvider: IZoweTree<IZoweTreeNode> = {
+            mSessionNodes: [createDatasetSessionNode(createISession(), createIProfile())],
+            mFavorites: [],
+            refresh,
+            refreshElement,
+        } as any;
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
+            allProfiles: [{ name: "sestest" }],
+        } as any);
+        const syncSessionNodeMock = jest.spyOn(AuthUtils, "syncSessionNode").mockReturnValueOnce(undefined);
+        const refreshProfilesMock = jest.spyOn(SharedActions, "refreshProfiles").mockClear().mockResolvedValueOnce(undefined);
+        await SharedActions.refreshProvider(treeProvider, true);
+        expect(refreshProfilesMock).toHaveBeenCalledTimes(1);
+        expect(registeredApiTypesMock).toHaveBeenCalledTimes(1);
+        expect(returnIconStateMock).toHaveBeenCalledTimes(1);
+        expect(syncSessionNodeMock).toHaveBeenCalledTimes(1);
+        expect(removeSessionMock).not.toHaveBeenCalled();
+        expect(refreshElement).toHaveBeenCalledTimes(1);
+        expect(addDefaultSessionMock).toHaveBeenCalledTimes(2);
+        expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zftp");
+        expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zosmf");
+        expect(refresh).toHaveBeenCalledTimes(1);
+        profilesMock.mockRestore();
+    });
+
+    it("removes a session node in the given provider if the profile no longer exists", async () => {
+        const addDefaultSessionMock = jest.spyOn(TreeViewUtils, "addDefaultSession").mockClear().mockResolvedValueOnce(undefined);
+        const removeSessionMock = jest.spyOn(TreeViewUtils, "removeSession").mockClear().mockResolvedValueOnce(undefined);
+        const registeredApiTypesMock = jest
+            .spyOn(ZoweExplorerApiRegister, "getInstance")
+            .mockClear()
+            .mockReturnValueOnce({
+                registeredApiTypes: jest.fn().mockReturnValue(["zftp", "zosmf"]),
+            } as any);
+        const refresh = jest.fn().mockResolvedValueOnce(undefined);
+        const refreshElement = jest.fn().mockResolvedValueOnce(undefined);
+        const treeProvider: IZoweTree<IZoweTreeNode> = {
+            mSessionNodes: [createDatasetSessionNode(createISession(), createIProfile())],
+            mFavorites: [],
+            refresh,
+            refreshElement,
+        } as any;
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
+            allProfiles: [],
+            profilesForValidation: [],
+        } as any);
+        const syncSessionNodeMock = jest.spyOn(AuthUtils, "syncSessionNode").mockReturnValueOnce(undefined);
+        const refreshProfilesMock = jest.spyOn(SharedActions, "refreshProfiles").mockClear().mockResolvedValueOnce(undefined);
+        await SharedActions.refreshProvider(treeProvider, true);
+        expect(refreshProfilesMock).toHaveBeenCalledTimes(1);
+        expect(registeredApiTypesMock).toHaveBeenCalledTimes(1);
+        expect(syncSessionNodeMock).toHaveBeenCalledTimes(1);
+        expect(removeSessionMock).toHaveBeenCalledTimes(1);
+        expect(removeSessionMock).toHaveBeenCalledWith(treeProvider, "sestest");
+        expect(refreshElement).not.toHaveBeenCalled();
+        expect(addDefaultSessionMock).toHaveBeenCalledTimes(2);
+        expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zftp");
+        expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zosmf");
+        expect(refresh).toHaveBeenCalledTimes(1);
+        profilesMock.mockRestore();
+    });
+});
+
+describe("Shared Actions Unit Tests - Function isRefreshInProgress", () => {
+    it("returns the state of refresh", () => {
+        (SharedActions as any).refreshInProgress = true;
+        expect(SharedActions.isRefreshInProgress()).toBe(true);
+
+        (SharedActions as any).refreshInProgress = false;
+        expect(SharedActions.isRefreshInProgress()).toBe(false);
     });
 });

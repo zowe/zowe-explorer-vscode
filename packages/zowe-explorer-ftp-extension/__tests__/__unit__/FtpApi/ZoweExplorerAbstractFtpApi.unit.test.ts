@@ -38,10 +38,11 @@ describe("AbstractFtpApi", () => {
     });
 
     it("should remove the record in sessionMap when call logout function.", async () => {
-        const instance = new Dummy();
+        const instance = new Dummy(profile);
         const result = instance.getSession(profile);
         const session = new FtpSession(result.ISession);
-        globals.SESSION_MAP.get = jest.fn().mockReturnValue(session);
+        globals.SESSION_MAP.clear();
+        globals.SESSION_MAP.set(profile, session);
         session.releaseConnections = jest.fn();
 
         await instance.logout(session);
@@ -50,23 +51,9 @@ describe("AbstractFtpApi", () => {
         expect(globals.SESSION_MAP.size).toBe(0);
     });
 
-    it("should show a fatal message when trying to load an invalid profile.", () => {
-        Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
+    it("should throw an error if the profile is not initialized for the FTP API", () => {
         const instance = new Dummy();
-        instance.profile = profile;
-        try {
-            instance.getSession();
-        } catch (err) {
-            expect(err).not.toBeUndefined();
-            expect(err).toBeInstanceOf(Error);
-            expect(Gui.showMessage).toHaveBeenCalledWith(
-                "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.",
-                {
-                    severity: MessageSeverity.FATAL,
-                    logger: globals.LOGGER,
-                }
-            );
-        }
+        expect(() => instance.getSession()).toThrow("Internal error: AbstractFtpApi instance was not initialized with a valid Zowe profile.");
     });
 
     it("should show a fatal message when trying to call getStatus with invalid credentials.", async () => {
@@ -124,17 +111,15 @@ describe("AbstractFtpApi", () => {
             failNotFound: true,
         };
         try {
-            expect(Gui.showMessage).toHaveBeenCalledWith(
-                "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.",
-                {
-                    severity: MessageSeverity.FATAL,
-                    logger: globals.LOGGER,
-                }
-            );
             instance.checkedProfile();
+            // intentionally throw error if checkedProfile did not throw error
+            expect(true).toBe(false);
         } catch (err) {
             expect(err).not.toBeUndefined();
             expect(err).toBeInstanceOf(Error);
+            expect(err.message).toBe(
+                "Zowe Explorer FTP Extension: Internal error: AbstractFtpApi instance was not initialized with a valid Zowe profile."
+            );
         }
     });
 
