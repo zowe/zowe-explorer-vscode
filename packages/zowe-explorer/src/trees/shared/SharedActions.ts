@@ -270,7 +270,7 @@ export class SharedActions {
             await SharedActions.refreshProfiles();
         }
 
-        for (const sessNode of treeProvider.mSessionNodes) {
+        for (const sessNode of [...treeProvider.mSessionNodes, ...treeProvider.mFavorites]) {
             const profiles = await Profiles.getInstance().fetchAllProfiles();
             const found = profiles.some((prof) => prof.name === sessNode.label.toString().trim());
             if (found || sessNode.label.toString() === vscode.l10n.t("Favorites")) {
@@ -284,6 +284,7 @@ export class SharedActions {
                 await TreeViewUtils.removeSession(treeProvider, sessNode.label.toString().trim());
             }
         }
+
         for (const profType of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
             await TreeViewUtils.addDefaultSession(treeProvider, profType);
         }

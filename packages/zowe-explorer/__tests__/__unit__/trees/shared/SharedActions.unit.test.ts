@@ -859,6 +859,7 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
         const refresh = jest.fn().mockResolvedValueOnce(undefined);
         const treeProvider: IZoweTree<IZoweTreeNode> = {
             mSessionNodes: [],
+            mFavorites: [],
             refresh,
         } as any;
         await SharedActions.refreshProvider(treeProvider);
@@ -880,6 +881,7 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
         const refresh = jest.fn().mockResolvedValueOnce(undefined);
         const treeProvider: IZoweTree<IZoweTreeNode> = {
             mSessionNodes: [],
+            mFavorites: [],
             refresh,
         } as any;
         const refreshProfilesMock = jest.spyOn(SharedActions, "refreshProfiles").mockResolvedValueOnce(undefined);
@@ -906,6 +908,7 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
         const refreshElement = jest.fn().mockResolvedValueOnce(undefined);
         const treeProvider: IZoweTree<IZoweTreeNode> = {
             mSessionNodes: [createDatasetSessionNode(createISession(), createIProfile())],
+            mFavorites: [],
             refresh,
             refreshElement,
         } as any;
@@ -941,6 +944,7 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
         const refreshElement = jest.fn().mockResolvedValueOnce(undefined);
         const treeProvider: IZoweTree<IZoweTreeNode> = {
             mSessionNodes: [createDatasetSessionNode(createISession(), createIProfile())],
+            mFavorites: [],
             refresh,
             refreshElement,
         } as any;
