@@ -16,14 +16,13 @@ import { Constants } from "../../configuration/Constants";
 import { SharedUtils } from "./SharedUtils";
 import { SharedContext } from "./SharedContext";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
-import { IconGenerator } from "../../icons/IconGenerator";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { FilterItem, FilterDescriptor } from "../../management/FilterManagement";
-import { IconUtils } from "../../icons/IconUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { SharedTreeProviders } from "./SharedTreeProviders";
 import { ZoweExplorerExtender } from "../../extending/ZoweExplorerExtender";
+import { ZoweTreeProvider } from "../ZoweTreeProvider";
 
 export class SharedActions {
     private static refreshInProgress = false;
@@ -223,7 +222,7 @@ export class SharedActions {
      * @param node The node whose icon needs updated
      * @returns The node after the changes are made (or with no changes if the profile has not been validated)
      */
-    public static returnIconState(node: Types.IZoweNodeType): void {
+    public static returnIconState(node: Types.IZoweNodeType, treeProvider: IZoweTree<IZoweTreeNode>): void {
         ZoweLogger.trace("shared.actions.returnIconState called.");
 
         const validationStatus = Profiles.getInstance().profilesForValidation.find((profile) => profile.name === node.getLabel());
@@ -232,13 +231,10 @@ export class SharedActions {
             return;
         }
 
-        const iconId = TreeViewUtils.getIconForValidationStatus(node, validationStatus.status);
-
-        // Only apply the new icon if it doesn't match current node icon
-        const iconById = IconGenerator.getIconById(iconId as IconUtils.IconId)?.path;
-        if (iconById && node.iconPath !== iconById) {
-            node.iconPath = iconById;
-        }
+        // This is necessary because our tree providers implement ZoweTreeProvider, but they are passed around as an IZoweTree,
+        // even though the base ZoweTreeProvider class does not implement the IZoweTree interface...
+        // Something that can be addressed in v4.
+        TreeViewUtils.updateNodeIcon(node, treeProvider as unknown as ZoweTreeProvider<IZoweTreeNode>);
     }
 
     public static resetValidationSettings(node: Types.IZoweNodeType, setting: boolean): Types.IZoweNodeType {
@@ -271,15 +267,14 @@ export class SharedActions {
         }
 
         for (const sessNode of [...treeProvider.mSessionNodes, ...treeProvider.mFavorites]) {
-            const profiles = await Profiles.getInstance().fetchAllProfiles();
-            const found = profiles.some((prof) => prof.name === sessNode.label.toString().trim());
-            if (found || sessNode.label.toString() === vscode.l10n.t("Favorites")) {
-                if (SharedContext.isSessionNotFav(sessNode)) {
-                    sessNode.dirty = true;
-                    SharedActions.returnIconState(sessNode);
+            const isFavoritesFolder = sessNode.label.toString() === vscode.l10n.t("Favorites");
+            if (isFavoritesFolder || Profiles.getInstance().allProfiles.some((p) => p.name === sessNode.label.toString().trim())) {
+                sessNode.dirty = true;
+                SharedActions.returnIconState(sessNode, treeProvider);
+                if (!isFavoritesFolder) {
                     AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getCommonApi(profile), sessNode);
-                    treeProvider.refreshElement(sessNode);
                 }
+                treeProvider.refreshElement(sessNode);
             } else {
                 await TreeViewUtils.removeSession(treeProvider, sessNode.label.toString().trim());
             }

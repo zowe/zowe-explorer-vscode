@@ -235,11 +235,14 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
             default:
             case Validation.ValidationType.UNVERIFIED:
                 statusContext = Constants.UNVERIFIED_CONTEXT;
-                iconId = IconUtils.IconId.session;
+                iconId = node.collapsibleState === vscode.TreeItemCollapsibleState.Expanded ? IconUtils.IconId.sessionOpen : IconUtils.IconId.session;
                 break;
             case Validation.ValidationType.VALID:
                 statusContext = Constants.ACTIVE_CONTEXT;
-                iconId = IconUtils.IconId.sessionActive;
+                iconId =
+                    node.collapsibleState === vscode.TreeItemCollapsibleState.Expanded
+                        ? IconUtils.IconId.sessionActiveOpen
+                        : IconUtils.IconId.sessionActive;
                 break;
             case Validation.ValidationType.INVALID:
                 statusContext = Constants.INACTIVE_CONTEXT;
