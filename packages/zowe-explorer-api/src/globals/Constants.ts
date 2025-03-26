@@ -23,6 +23,7 @@ export namespace Constants {
     export const CONTEXT_PREFIX = "_";
     export const DEFAULT_PORT = 443;
     export const DOUBLE_CLICK_SPEED_MS = 500;
+    export const DEFAULT_ITEMS_PER_PAGE = 100;
     export const PERM_VALUES = {
         r: 4,
         w: 2,
