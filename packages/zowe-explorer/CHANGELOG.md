@@ -42,10 +42,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue where users were prompted several times when using a profile with invalid credentials in a VS Code workspace. Now, the user is only prompted once per profile, allowing the user to enter in new credentials. [#3480](https://github.com/zowe/zowe-explorer-vscode/pull/3480)
 - Fixed an issue where profile encoding is not respected when opening job spool files. [#3504](https://github.com/zowe/zowe-explorer-vscode/issues/3504)
 - Fixed an issue where the token expiration check was performed on profiles with APIs that do not support token types. [#3525](https://github.com/zowe/zowe-explorer-vscode/pull/3525)
-- Fixed issue where an invalid session on a profile caused an unexpected `Profile auth error` login dialog to appear. [#3524](https://github.com/zowe/zowe-explorer-vscode/pull/3524)
-- Fixed issue where the `SharedActions.refreshAll` function runs unexpectedly while a user performs an action in the tree views (such as listing data sets, USS files, jobs, etc.). [#3524](https://github.com/zowe/zowe-explorer-vscode/pull/3524)
-- Fixed issue where the first change to a Zowe team configuration did not accurately refresh the data set, USS and job trees. [#3524](https://github.com/zowe/zowe-explorer-vscode/pull/3524)
-- Fixed issue where the `AuthUtils.syncSessionNode` function did not handle errors thrown by the `ZoweTreeNode.setSessionToChoice` function. Now, when an error occurs, the function returns early and the error message is printed to Zowe Explorer's logs & output channel. [#3524](https://github.com/zowe/zowe-explorer-vscode/pull/3524)
+- Fixed an issue where an invalid session on a profile caused an unexpected `Profile auth error` login dialog to appear. [#3524](https://github.com/zowe/zowe-explorer-vscode/pull/3524)
+- Fixed an issue where the `SharedActions.refreshAll` function runs unexpectedly while a user performs an action in the tree views (such as listing data sets, USS files, jobs, etc.). [#3524](https://github.com/zowe/zowe-explorer-vscode/pull/3524)
+- Fixed an issue where the first change to a Zowe team configuration did not accurately refresh the data set, USS and job trees. [#3524](https://github.com/zowe/zowe-explorer-vscode/pull/3524)
+- Fixed an issue where the `AuthUtils.syncSessionNode` function did not handle errors thrown by the `ZoweTreeNode.setSessionToChoice` function. Now, when an error occurs, the function returns early and the error message is printed to Zowe Explorer's logs and output channel. [#3524](https://github.com/zowe/zowe-explorer-vscode/pull/3524)
 
 ## `3.1.1`
 
