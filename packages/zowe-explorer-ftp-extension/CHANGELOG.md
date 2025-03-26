@@ -4,6 +4,8 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### New features and enhancements
 
+- Updated Zowe SDKs to `8.16.0` for technical currency. [#3526](https://github.com/zowe/zowe-explorer-vscode/pull/3526)
+
 ### Bug fixes
 
 - Fixed issue where FTP client errors incorrectly triggered authentication prompts instead of showing appropriate error messages. [#3496](https://github.com/zowe/zowe-explorer-vscode/issues/3496)

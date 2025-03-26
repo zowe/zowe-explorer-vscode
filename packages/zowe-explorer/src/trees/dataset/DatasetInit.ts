@@ -21,6 +21,7 @@ import { SharedContext } from "../shared/SharedContext";
 import { SharedInit } from "../shared/SharedInit";
 import { SharedUtils } from "../shared/SharedUtils";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
+import { DatasetSearch } from "./DatasetSearch";
 
 export class DatasetInit {
     public static async createDatasetTree(log: imperative.Logger): Promise<DatasetTree> {
@@ -193,12 +194,12 @@ export class DatasetInit {
         );
 
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.pdsSearchFor", async (node: IZoweDatasetTreeNode) => DatasetActions.search(context, node))
+            vscode.commands.registerCommand("zowe.ds.pdsSearchFor", async (node: IZoweDatasetTreeNode) => DatasetSearch.search(context, node))
         );
 
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.filteredDataSetsSearchFor", async (node: IZoweDatasetTreeNode) =>
-                DatasetActions.search(context, node)
+                DatasetSearch.search(context, node)
             )
         );
 

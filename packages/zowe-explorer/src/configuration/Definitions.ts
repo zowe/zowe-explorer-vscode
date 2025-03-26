@@ -33,6 +33,11 @@ export namespace Definitions {
         favorites: string[];
         encodingHistory: string[];
     };
+    export type DataSetSearchOptions = {
+        caseSensitive?: boolean;
+        history?: string[];
+        regex?: boolean;
+    };
     export type FavoriteData = {
         profileName: string;
         label: string;
@@ -144,5 +149,6 @@ export namespace Definitions {
         SETTINGS_LOCAL_STORAGE_MIGRATED = "zowe.settings.localStorageMigrated",
         SETTINGS_OLD_SETTINGS_MIGRATED = "zowe.settings.oldSettingsMigrated",
         V1_MIGRATION_STATUS = "zowe.v1MigrationStatus",
+        DS_SEARCH_OPTIONS = "zowe.dsSearchOptions",
     }
 }
