@@ -244,7 +244,11 @@ export class DatasetSearch {
     private static searchUpdateOptionsLabel(): void {
         const caseSensitive = DatasetSearch.savedSearchOptions.caseSensitive ? vscode.l10n.t("On") : vscode.l10n.t("Off");
         const regex = DatasetSearch.savedSearchOptions.regex ? vscode.l10n.t("On") : vscode.l10n.t("Off");
-        DatasetSearch.optionsQuickPickEntry.label = vscode.l10n.t(`Edit Options (Case Sensitive: {0}, Regex: {1})`, [caseSensitive, regex]);
+        DatasetSearch.optionsQuickPickEntry.label = vscode.l10n.t({
+            message: `Edit Options (Case Sensitive: {0}, Regex: {1})`,
+            args: [caseSensitive, regex],
+            comment: ["Case Sensitive", "Regex"],
+        });
     }
 
     private static searchOptionsPrompt(): void {

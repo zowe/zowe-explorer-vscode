@@ -31,6 +31,13 @@ jest.mock("vscode");
 jest.mock("../../../../src/tools/ZoweLogger");
 
 describe("Dataset Search Unit Tests - function search", () => {
+    beforeEach(() => {
+        (DatasetSearch as any).savedSearchOptions = undefined;
+        (DatasetSearch as any).searchQuickPick = undefined;
+        (DatasetSearch as any).searchOptionsQuickPick = undefined;
+        (DatasetSearch as any).optionsQuickPickEntry = undefined;
+    });
+
     describe("Helper function - continueSearchPrompt", () => {
         let infoMessageSpy: jest.SpyInstance;
 
@@ -218,6 +225,80 @@ describe("Dataset Search Unit Tests - function search", () => {
                 mainframeSearch: false,
                 continueSearch: expect.any(Function),
                 abortSearch: expect.any(Function),
+            });
+            expect(authErrorHandlingSpy).not.toHaveBeenCalled();
+            expect(loggerErrorSpy).not.toHaveBeenCalled();
+            expect(reportProgressSpy).toHaveBeenCalledWith(myProgress, 100, 51, "");
+            expect(continueSearchPromptSpy).toHaveBeenCalled();
+            expect(response).toEqual({ success: true, apiResponse: { test: "test" } });
+        });
+
+        it("should perform the search and succeed with options 1", async () => {
+            const myProgress = { test: "test" };
+            const taskExpected = { percentComplete: 51, stageName: 0, statusMessage: "" };
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+
+            searchDataSetsMock.mockImplementation((object) => {
+                object.progressTask.percentComplete = 51;
+                object.continueSearch([]);
+                return Promise.resolve({ success: true, apiResponse: { test: "test" } });
+            });
+
+            const response = await (DatasetSearch as any).performSearch(myProgress, token, {
+                node,
+                pattern: "TEST.*",
+                searchString: "test",
+                caseSensitive: true,
+            });
+
+            expect(showMessageSpy).not.toHaveBeenCalled();
+            expect(getMvsApiSpy).toHaveBeenCalledTimes(1);
+            expect(searchDataSetsMock).toHaveBeenCalledWith({
+                pattern: "TEST.*",
+                searchString: "test",
+                progressTask: taskExpected,
+                mainframeSearch: false,
+                continueSearch: expect.any(Function),
+                abortSearch: expect.any(Function),
+                caseSensitive: true,
+            });
+            expect(authErrorHandlingSpy).not.toHaveBeenCalled();
+            expect(loggerErrorSpy).not.toHaveBeenCalled();
+            expect(reportProgressSpy).toHaveBeenCalledWith(myProgress, 100, 51, "");
+            expect(continueSearchPromptSpy).toHaveBeenCalled();
+            expect(response).toEqual({ success: true, apiResponse: { test: "test" } });
+        });
+
+        it("should perform the search and succeed with options 2", async () => {
+            const myProgress = { test: "test" };
+            const taskExpected = { percentComplete: 51, stageName: 0, statusMessage: "" };
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+
+            searchDataSetsMock.mockImplementation((object) => {
+                object.progressTask.percentComplete = 51;
+                object.continueSearch([]);
+                return Promise.resolve({ success: true, apiResponse: { test: "test" } });
+            });
+
+            const response = await (DatasetSearch as any).performSearch(myProgress, token, {
+                node,
+                pattern: "TEST.*",
+                searchString: "test",
+                regex: true,
+            });
+
+            expect(showMessageSpy).not.toHaveBeenCalled();
+            expect(getMvsApiSpy).toHaveBeenCalledTimes(1);
+            expect(searchDataSetsMock).toHaveBeenCalledWith({
+                pattern: "TEST.*",
+                searchString: "test",
+                progressTask: taskExpected,
+                mainframeSearch: false,
+                continueSearch: expect.any(Function),
+                abortSearch: expect.any(Function),
+                regex: true,
             });
             expect(authErrorHandlingSpy).not.toHaveBeenCalled();
             expect(loggerErrorSpy).not.toHaveBeenCalled();
@@ -763,6 +844,342 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect(fakeEditor.selection).toEqual(new vscode.Selection(new vscode.Position(0, 0), new vscode.Position(0, 4)));
         });
     });
+
+    describe("Helper function - constructQuickPicks", () => {
+        let createQuickPickSpy: jest.SpyInstance;
+        let searchQuickPickResetSpy: jest.SpyInstance;
+        let quickPickArray: vscode.QuickPick<vscode.QuickPickItem>[] = [];
+
+        function baseQuickPickImplemnentation() {
+            const quickPick = window.createQuickPick();
+            quickPickArray.push(quickPick);
+            return quickPick;
+        }
+
+        beforeEach(() => {
+            quickPickArray = [];
+            createQuickPickSpy = jest.spyOn(Gui, "createQuickPick").mockImplementation(() => {
+                return baseQuickPickImplemnentation();
+            });
+            searchQuickPickResetSpy = jest.spyOn(DatasetSearch as any, "searchQuickPickReset").mockReturnValue(undefined);
+            (DatasetSearch as any).savedSearchOptions = { caseSensitive: false, history: [], regex: false };
+        });
+
+        afterEach(() => {
+            jest.clearAllMocks();
+        });
+
+        afterAll(() => {
+            jest.restoreAllMocks();
+        });
+
+        it("should construct the quick picks", () => {
+            (DatasetSearch as any).constructQuickPicks();
+
+            expect(quickPickArray[0].items).toEqual([Constants.SEPARATORS.BLANK, { label: "", alwaysShow: true }]);
+            expect(quickPickArray[0].ignoreFocusOut).toEqual(true);
+            expect(quickPickArray[0].onDidChangeValue).toHaveBeenCalledTimes(1);
+            expect(quickPickArray[0].show).not.toHaveBeenCalled();
+
+            expect(quickPickArray[1].ignoreFocusOut).toEqual(true);
+            expect(quickPickArray[1].canSelectMany).toEqual(true);
+            expect(quickPickArray[1].hide).not.toHaveBeenCalled();
+            expect(quickPickArray[1].onDidAccept).toHaveBeenCalledTimes(1);
+            expect(quickPickArray[1].onDidHide).toHaveBeenCalledTimes(1);
+
+            expect(createQuickPickSpy).toHaveBeenCalledTimes(2);
+            expect(searchQuickPickResetSpy).not.toHaveBeenCalled();
+
+            expect((DatasetSearch as any).savedSearchOptions.caseSensitive).toEqual(false);
+            expect((DatasetSearch as any).savedSearchOptions.regex).toEqual(false);
+        });
+
+        it("should handle the search quick pick being updated", () => {
+            createQuickPickSpy.mockImplementationOnce(() => {
+                const qp = baseQuickPickImplemnentation();
+                qp.selectedItems = [{ label: "" }];
+                qp.onDidChangeValue = jest.fn().mockImplementation((listener) => {
+                    listener("test");
+                });
+                return qp;
+            });
+
+            (DatasetSearch as any).constructQuickPicks();
+
+            expect(quickPickArray[0].items).toEqual([{ label: "test" }, Constants.SEPARATORS.BLANK, { label: "", alwaysShow: true }]);
+            expect(quickPickArray[0].ignoreFocusOut).toEqual(true);
+            expect(quickPickArray[0].onDidChangeValue).toHaveBeenCalledTimes(1);
+            expect(quickPickArray[0].show).not.toHaveBeenCalled();
+
+            expect(quickPickArray[1].ignoreFocusOut).toEqual(true);
+            expect(quickPickArray[1].canSelectMany).toEqual(true);
+            expect(quickPickArray[1].hide).not.toHaveBeenCalled();
+            expect(quickPickArray[1].onDidAccept).toHaveBeenCalledTimes(1);
+            expect(quickPickArray[1].onDidHide).toHaveBeenCalledTimes(1);
+
+            expect(createQuickPickSpy).toHaveBeenCalledTimes(2);
+            expect(searchQuickPickResetSpy).not.toHaveBeenCalled();
+
+            expect((DatasetSearch as any).savedSearchOptions.caseSensitive).toEqual(false);
+            expect((DatasetSearch as any).savedSearchOptions.regex).toEqual(false);
+        });
+
+        it("should handle the search quick pick having a history", () => {
+            createQuickPickSpy.mockImplementationOnce(() => {
+                const qp = baseQuickPickImplemnentation();
+                qp.selectedItems = [{ label: "" }];
+                return qp;
+            });
+
+            (DatasetSearch as any).savedSearchOptions.history = ["history1", "history2"];
+
+            (DatasetSearch as any).constructQuickPicks();
+
+            expect(quickPickArray[0].items).toEqual([
+                { label: "history1" },
+                { label: "history2" },
+                Constants.SEPARATORS.BLANK,
+                { label: "", alwaysShow: true },
+            ]);
+            expect(quickPickArray[0].ignoreFocusOut).toEqual(true);
+            expect(quickPickArray[0].onDidChangeValue).toHaveBeenCalledTimes(1);
+            expect(quickPickArray[0].show).not.toHaveBeenCalled();
+
+            expect(quickPickArray[1].ignoreFocusOut).toEqual(true);
+            expect(quickPickArray[1].canSelectMany).toEqual(true);
+            expect(quickPickArray[1].hide).not.toHaveBeenCalled();
+            expect(quickPickArray[1].onDidAccept).toHaveBeenCalledTimes(1);
+            expect(quickPickArray[1].onDidHide).toHaveBeenCalledTimes(1);
+
+            expect(createQuickPickSpy).toHaveBeenCalledTimes(2);
+            expect(searchQuickPickResetSpy).not.toHaveBeenCalled();
+
+            expect((DatasetSearch as any).savedSearchOptions.caseSensitive).toEqual(false);
+            expect((DatasetSearch as any).savedSearchOptions.regex).toEqual(false);
+        });
+
+        it("should handle the search quick pick having a history and being updated", () => {
+            createQuickPickSpy.mockImplementationOnce(() => {
+                const qp = baseQuickPickImplemnentation();
+                qp.selectedItems = [{ label: "" }];
+                qp.onDidChangeValue = jest.fn().mockImplementation((listener) => {
+                    listener("test");
+                });
+                return qp;
+            });
+
+            (DatasetSearch as any).savedSearchOptions.history = ["history1", "history2"];
+
+            (DatasetSearch as any).constructQuickPicks();
+
+            expect(quickPickArray[0].items).toEqual([
+                { label: "test" },
+                { label: "history1" },
+                { label: "history2" },
+                Constants.SEPARATORS.BLANK,
+                { label: "", alwaysShow: true },
+            ]);
+            expect(quickPickArray[0].ignoreFocusOut).toEqual(true);
+            expect(quickPickArray[0].onDidChangeValue).toHaveBeenCalledTimes(1);
+            expect(quickPickArray[0].show).not.toHaveBeenCalled();
+
+            expect(quickPickArray[1].ignoreFocusOut).toEqual(true);
+            expect(quickPickArray[1].canSelectMany).toEqual(true);
+            expect(quickPickArray[1].hide).not.toHaveBeenCalled();
+            expect(quickPickArray[1].onDidAccept).toHaveBeenCalledTimes(1);
+            expect(quickPickArray[1].onDidHide).toHaveBeenCalledTimes(1);
+
+            expect(createQuickPickSpy).toHaveBeenCalledTimes(2);
+            expect(searchQuickPickResetSpy).not.toHaveBeenCalled();
+
+            expect((DatasetSearch as any).savedSearchOptions.caseSensitive).toEqual(false);
+            expect((DatasetSearch as any).savedSearchOptions.regex).toEqual(false);
+        });
+
+        it("should handle the options quick pick being updated", () => {
+            createQuickPickSpy
+                .mockImplementationOnce(() => {
+                    return baseQuickPickImplemnentation();
+                })
+                .mockImplementationOnce(() => {
+                    const qp = baseQuickPickImplemnentation();
+                    qp.selectedItems = [{ label: vscode.l10n.t("Regex") }, { label: vscode.l10n.t("Case Sensitive") }];
+                    qp.onDidAccept = jest.fn().mockImplementation((listener) => {
+                        listener();
+                    });
+                    return qp;
+                });
+
+            (DatasetSearch as any).constructQuickPicks();
+
+            expect(quickPickArray[0].items).toEqual([Constants.SEPARATORS.BLANK, { label: "", alwaysShow: true }]);
+            expect(quickPickArray[0].ignoreFocusOut).toEqual(true);
+            expect(quickPickArray[0].onDidChangeValue).toHaveBeenCalledTimes(1);
+            expect(quickPickArray[0].show).not.toHaveBeenCalled();
+
+            expect(quickPickArray[1].ignoreFocusOut).toEqual(true);
+            expect(quickPickArray[1].canSelectMany).toEqual(true);
+            expect(quickPickArray[1].hide).toHaveBeenCalledTimes(1);
+            expect(quickPickArray[1].onDidAccept).toHaveBeenCalledTimes(1);
+            expect(quickPickArray[1].onDidHide).toHaveBeenCalledTimes(1);
+
+            expect(createQuickPickSpy).toHaveBeenCalledTimes(2);
+            expect(searchQuickPickResetSpy).not.toHaveBeenCalled();
+
+            expect((DatasetSearch as any).savedSearchOptions.caseSensitive).toEqual(true);
+            expect((DatasetSearch as any).savedSearchOptions.regex).toEqual(true);
+        });
+
+        it("should handle the options quick pick being hidden", () => {
+            createQuickPickSpy
+                .mockImplementationOnce(() => {
+                    return baseQuickPickImplemnentation();
+                })
+                .mockImplementationOnce(() => {
+                    const qp = baseQuickPickImplemnentation();
+                    qp.selectedItems = [];
+                    qp.onDidHide = jest.fn().mockImplementation((listener) => {
+                        listener();
+                    });
+                    return qp;
+                });
+
+            (DatasetSearch as any).constructQuickPicks();
+
+            expect(quickPickArray[0].items).toEqual([Constants.SEPARATORS.BLANK, { label: "", alwaysShow: true }]);
+            expect(quickPickArray[0].ignoreFocusOut).toEqual(true);
+            expect(quickPickArray[0].onDidChangeValue).toHaveBeenCalledTimes(1);
+            expect(quickPickArray[0].show).not.toHaveBeenCalled();
+
+            expect(quickPickArray[1].ignoreFocusOut).toEqual(true);
+            expect(quickPickArray[1].canSelectMany).toEqual(true);
+            expect(quickPickArray[1].hide).not.toHaveBeenCalled();
+            expect(quickPickArray[1].onDidAccept).toHaveBeenCalledTimes(1);
+            expect(quickPickArray[1].onDidHide).toHaveBeenCalledTimes(1);
+
+            expect(createQuickPickSpy).toHaveBeenCalledTimes(2);
+            expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
+
+            expect((DatasetSearch as any).savedSearchOptions.caseSensitive).toEqual(false);
+            expect((DatasetSearch as any).savedSearchOptions.regex).toEqual(false);
+        });
+    });
+
+    describe("Helper function - searchQuickPickReset", () => {
+        let searchUpdateOptionsLabelSpy: jest.SpyInstance;
+        let searchQuickPick: vscode.QuickPick<vscode.QuickPickItem>;
+
+        beforeEach(() => {
+            searchUpdateOptionsLabelSpy = jest.spyOn(DatasetSearch as any, "searchUpdateOptionsLabel").mockReturnValue(undefined);
+            (DatasetSearch as any).savedSearchOptions = { caseSensitive: false, history: [], regex: false };
+            (DatasetSearch as any).searchQuickPick = searchQuickPick = window.createQuickPick();
+        });
+
+        afterEach(() => {
+            jest.clearAllMocks();
+        });
+
+        afterAll(() => {
+            jest.restoreAllMocks();
+        });
+
+        it("should reset the search quick pick", () => {
+            (DatasetSearch as any).searchQuickPickReset();
+
+            expect(searchQuickPick.items).toEqual((DatasetSearch as any).searchQuickPick.items);
+            expect(searchUpdateOptionsLabelSpy).toHaveBeenCalledTimes(1);
+            expect(searchQuickPick.show).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe("Helper function - searchUpdateOptionsLabel", () => {
+        beforeEach(() => {
+            (DatasetSearch as any).optionsQuickPickEntry = { label: "" };
+            (DatasetSearch as any).savedSearchOptions = { caseSensitive: false, history: [], regex: false };
+        });
+
+        it("should update the options quick pick entry - default", () => {
+            (DatasetSearch as any).searchUpdateOptionsLabel();
+
+            expect((DatasetSearch as any).optionsQuickPickEntry).toEqual({ label: "Edit Options (Case Sensitive: Off, Regex: Off)" });
+        });
+
+        it("should update the options quick pick entry - case sensitive", () => {
+            (DatasetSearch as any).savedSearchOptions.caseSensitive = true;
+            (DatasetSearch as any).searchUpdateOptionsLabel();
+
+            expect((DatasetSearch as any).optionsQuickPickEntry).toEqual({ label: "Edit Options (Case Sensitive: On, Regex: Off)" });
+        });
+
+        it("should update the options quick pick entry - regex", () => {
+            (DatasetSearch as any).savedSearchOptions.regex = true;
+            (DatasetSearch as any).searchUpdateOptionsLabel();
+
+            expect((DatasetSearch as any).optionsQuickPickEntry).toEqual({ label: "Edit Options (Case Sensitive: Off, Regex: On)" });
+        });
+
+        it("should update the options quick pick entry - all", () => {
+            (DatasetSearch as any).savedSearchOptions.caseSensitive = true;
+            (DatasetSearch as any).savedSearchOptions.regex = true;
+            (DatasetSearch as any).searchUpdateOptionsLabel();
+
+            expect((DatasetSearch as any).optionsQuickPickEntry).toEqual({ label: "Edit Options (Case Sensitive: On, Regex: On)" });
+        });
+    });
+
+    describe("Helper function - searchOptionsPrompt", () => {
+        let searchOptionsQuickPick: vscode.QuickPick<vscode.QuickPickItem>;
+
+        beforeEach(() => {
+            (DatasetSearch as any).searchOptionsQuickPick = searchOptionsQuickPick = window.createQuickPick();
+            (DatasetSearch as any).savedSearchOptions = { caseSensitive: false, history: [], regex: false };
+        });
+
+        it("should construct the search options - default", () => {
+            (DatasetSearch as any).searchOptionsPrompt();
+
+            expect(searchOptionsQuickPick.show).toHaveBeenCalledTimes(1);
+            expect(searchOptionsQuickPick.items[0].label).toEqual("Case Sensitive");
+            expect(searchOptionsQuickPick.items[1].label).toEqual("Regex");
+            expect(searchOptionsQuickPick.selectedItems.length).toEqual(0);
+        });
+
+        it("should construct the search options - case sensitive", () => {
+            (DatasetSearch as any).savedSearchOptions.caseSensitive = true;
+            (DatasetSearch as any).searchOptionsPrompt();
+
+            expect(searchOptionsQuickPick.show).toHaveBeenCalledTimes(1);
+            expect(searchOptionsQuickPick.items[0].label).toEqual("Case Sensitive");
+            expect(searchOptionsQuickPick.items[1].label).toEqual("Regex");
+            expect(searchOptionsQuickPick.selectedItems.length).toEqual(1);
+            expect(searchOptionsQuickPick.selectedItems[0].label).toEqual("Case Sensitive");
+        });
+
+        it("should construct the search options - regex", () => {
+            (DatasetSearch as any).savedSearchOptions.regex = true;
+            (DatasetSearch as any).searchOptionsPrompt();
+
+            expect(searchOptionsQuickPick.show).toHaveBeenCalledTimes(1);
+            expect(searchOptionsQuickPick.items[0].label).toEqual("Case Sensitive");
+            expect(searchOptionsQuickPick.items[1].label).toEqual("Regex");
+            expect(searchOptionsQuickPick.selectedItems.length).toEqual(1);
+            expect(searchOptionsQuickPick.selectedItems[0].label).toEqual("Regex");
+        });
+
+        it("should construct the search options - all", () => {
+            (DatasetSearch as any).savedSearchOptions.caseSensitive = true;
+            (DatasetSearch as any).savedSearchOptions.regex = true;
+            (DatasetSearch as any).searchOptionsPrompt();
+
+            expect(searchOptionsQuickPick.show).toHaveBeenCalledTimes(1);
+            expect(searchOptionsQuickPick.items[0].label).toEqual("Case Sensitive");
+            expect(searchOptionsQuickPick.items[1].label).toEqual("Regex");
+            expect(searchOptionsQuickPick.selectedItems.length).toEqual(2);
+            expect(searchOptionsQuickPick.selectedItems[0].label).toEqual("Case Sensitive");
+            expect(searchOptionsQuickPick.selectedItems[1].label).toEqual("Regex");
+        });
+    });
+
     describe("Main function - search", () => {
         let tableViewProviderSetTableViewMock = jest.fn();
         let tableViewProviderSpy: jest.SpyInstance;

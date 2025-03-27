@@ -65,13 +65,13 @@ export class LocalStorageAccess extends ZoweLocalStorage {
         [Definitions.LocalStorageKey.SETTINGS_LOCAL_STORAGE_MIGRATED]: StorageAccessLevel.Read,
         [Definitions.LocalStorageKey.SETTINGS_OLD_SETTINGS_MIGRATED]: StorageAccessLevel.Read,
         [Definitions.LocalStorageKey.ENCODING_HISTORY]: StorageAccessLevel.Read | StorageAccessLevel.Write,
+        [Definitions.LocalStorageKey.DS_SEARCH_OPTIONS]: StorageAccessLevel.Read | StorageAccessLevel.Write,
         [PersistenceSchemaEnum.Dataset]: StorageAccessLevel.Read | StorageAccessLevel.Write,
         [PersistenceSchemaEnum.USS]: StorageAccessLevel.Read | StorageAccessLevel.Write,
         [PersistenceSchemaEnum.Job]: StorageAccessLevel.Read | StorageAccessLevel.Write,
         [PersistenceSchemaEnum.MvsCommands]: StorageAccessLevel.Read | StorageAccessLevel.Write,
         [PersistenceSchemaEnum.TsoCommands]: StorageAccessLevel.Read | StorageAccessLevel.Write,
         [PersistenceSchemaEnum.UssCommands]: StorageAccessLevel.Read | StorageAccessLevel.Write,
-        [Definitions.LocalStorageKey.DS_SEARCH_OPTIONS]: StorageAccessLevel.Read | StorageAccessLevel.Write,
         [Definitions.LocalStorageKey.V1_MIGRATION_STATUS]: StorageAccessLevel.None,
     };
 
