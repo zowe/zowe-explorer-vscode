@@ -51,7 +51,6 @@ export class DatasetSearch {
         }
 
         // Figure out what text we are looking for.
-        ZoweLocalStorage.setValue(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS, undefined); // Remove me
         DatasetSearch.savedSearchOptions =
             ZoweLocalStorage.getValue<Definitions.DataSetSearchOptions>(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS) ?? {};
 
