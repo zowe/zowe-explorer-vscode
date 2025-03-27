@@ -141,4 +141,115 @@ describe("Paginator", () => {
             expect(p.setMaxItemsPerPage.bind(1.1)).toThrow("[Paginator.setMaxItemsPerPage] maxItems must be a positive integer");
         });
     });
+
+    describe("getMaxItemsPerPage", () => {
+        it("returns the default maximum if not provided", () => {
+            const getDirectValueMock = jest.spyOn(VscSettings, "getDirectValue").mockReturnValueOnce(Constants.DEFAULT_ITEMS_PER_PAGE);
+            const p = Paginator.default();
+            expect(getDirectValueMock).toHaveBeenCalledTimes(1);
+            expect(getDirectValueMock).toHaveBeenCalledWith("zowe.trees.itemsPerPage", Constants.DEFAULT_ITEMS_PER_PAGE);
+            expect(p.getMaxItemsPerPage()).toBe(Constants.DEFAULT_ITEMS_PER_PAGE);
+        });
+
+        it("returns the maximum provided at initialization", () => {
+            const p = Paginator.default(Constants.DEFAULT_ITEMS_PER_PAGE / 2);
+            expect(p.getMaxItemsPerPage()).toBe(Constants.DEFAULT_ITEMS_PER_PAGE / 2);
+        });
+
+        it("returns the maximum value explicitly set by the user", () => {
+            const p = Paginator.default(Constants.DEFAULT_ITEMS_PER_PAGE / 2);
+            p.setMaxItemsPerPage(Constants.DEFAULT_ITEMS_PER_PAGE * 2);
+            expect(p.getMaxItemsPerPage()).toBe(Constants.DEFAULT_ITEMS_PER_PAGE * 2);
+        });
+    });
+
+    describe("nextPage", () => {
+        const testItems = Array.from({ length: Constants.DEFAULT_ITEMS_PER_PAGE * 2 }).map((v, i) => i);
+
+        it("advances the paginator to the next page", () => {
+            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
+            p.nextPage();
+            expect(p.getCurrentPageIndex()).toBe(1);
+            expect(p.getCurrentPage()).toStrictEqual(testItems.slice(Constants.DEFAULT_ITEMS_PER_PAGE));
+        });
+
+        it("does nothing if the paginator is already at the last page", () => {
+            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
+            p.nextPage();
+            p.nextPage();
+            expect(p.getCurrentPageIndex()).toBe(1);
+            expect(p.getCurrentPage()).toStrictEqual(testItems.slice(Constants.DEFAULT_ITEMS_PER_PAGE));
+        });
+    });
+
+    describe("previousPage", () => {
+        const testItems = Array.from({ length: Constants.DEFAULT_ITEMS_PER_PAGE * 4 }).map((v, i) => i);
+
+        it("moves back to the previous page", () => {
+            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
+            p.nextPage();
+            p.nextPage();
+            p.previousPage();
+            expect(p.getCurrentPageIndex()).toBe(1);
+            expect(p.getCurrentPage()).toStrictEqual(testItems.slice(Constants.DEFAULT_ITEMS_PER_PAGE, Constants.DEFAULT_ITEMS_PER_PAGE * 2));
+        });
+
+        it("does nothing if the paginator is already at the first page", () => {
+            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
+            p.previousPage();
+            expect(p.getCurrentPageIndex()).toBe(0);
+            expect(p.getCurrentPage()).toStrictEqual(testItems.slice(0, Constants.DEFAULT_ITEMS_PER_PAGE));
+        });
+    });
+
+    describe("moveForward", () => {
+        const testItems = Array.from({ length: Constants.DEFAULT_ITEMS_PER_PAGE * 4 }).map((v, i) => i);
+
+        it("moves forward by the given number of pages", () => {
+            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
+            p.moveForward(3);
+            expect(p.getCurrentPageIndex()).toBe(3);
+            expect(p.getCurrentPage()).toStrictEqual(testItems.slice(Constants.DEFAULT_ITEMS_PER_PAGE * 3, Constants.DEFAULT_ITEMS_PER_PAGE * 4));
+        });
+
+        it("moves the paginator to the last page if the number of pages exceeds the total number of pages", () => {
+            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
+            p.moveForward(3);
+            p.moveForward(3);
+            expect(p.getCurrentPageIndex()).toBe(3);
+            expect(p.getCurrentPage()).toStrictEqual(testItems.slice(Constants.DEFAULT_ITEMS_PER_PAGE * 3, Constants.DEFAULT_ITEMS_PER_PAGE * 4));
+        });
+    });
+
+    describe("moveBack", () => {
+        const testItems = Array.from({ length: Constants.DEFAULT_ITEMS_PER_PAGE * 4 }).map((v, i) => i);
+
+        it("moves back by the given number of pages", () => {
+            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
+            p.moveForward(3);
+            p.moveBack(2);
+            expect(p.getCurrentPageIndex()).toBe(1);
+            expect(p.getCurrentPage()).toStrictEqual(testItems.slice(Constants.DEFAULT_ITEMS_PER_PAGE, Constants.DEFAULT_ITEMS_PER_PAGE * 2));
+        });
+
+        it("moves the paginator to the first page if moving back by too many pages", () => {
+            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
+            p.moveForward(3);
+            p.moveBack(5);
+            expect(p.getCurrentPageIndex()).toBe(0);
+            expect(p.getCurrentPage()).toStrictEqual(testItems.slice(0, Constants.DEFAULT_ITEMS_PER_PAGE));
+        });
+    });
+
+    xdescribe("setPage", () => {});
+
+    xdescribe("getPage", () => {});
+
+    xdescribe("getPageCount", () => {});
+
+    xdescribe("getCurrentPageIndex", () => {});
+
+    xdescribe("getCurrentPage", () => {});
+
+    xdescribe("getItemCount", () => {});
 });

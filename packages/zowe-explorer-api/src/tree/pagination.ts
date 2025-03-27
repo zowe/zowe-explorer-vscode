@@ -102,7 +102,7 @@ export class Paginator<T> {
      * This function has bounds-checking and stops at the last possible page.
      */
     public nextPage(): void {
-        this.currentPage = Math.min(this.currentPage + 1, this.totalPageCount) - 1;
+        this.moveForward(1);
     }
 
     /**
@@ -119,7 +119,7 @@ export class Paginator<T> {
      * @param numPages The number of pages to move forward
      */
     public moveForward(numPages: number): void {
-        this.currentPage = this.currentPage + numPages > this.totalPageCount ? this.totalPageCount : this.currentPage + numPages;
+        this.currentPage = Math.min(this.currentPage + numPages, this.getPageCount() - 1);
     }
 
     /**
@@ -128,7 +128,7 @@ export class Paginator<T> {
      * @param numPages The number of pages to move backward
      */
     public moveBack(numPages: number): void {
-        this.currentPage = this.currentPage - numPages < 0 ? 0 : this.currentPage - numPages;
+        this.currentPage = Math.max(this.currentPage - numPages, 0);
     }
 
     /**
