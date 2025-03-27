@@ -1,5 +1,9 @@
 All notable changes to the "eslint-plugin-zowe-explorer" package will be documented in this file.
 
+## TBD Release
+
+### Bug fixes
+
 ## `2.18.1`
 
 ## `2.18.0`
