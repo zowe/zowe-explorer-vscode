@@ -15,7 +15,7 @@ import { VscSettings } from "../vscode/doc/VscSettings";
 /**
  * @brief Provides pagination capabilities for a tree view.
  */
-export class PaginationController<T> {
+export class Paginator<T> {
     private childrenReference: T[] = [];
 
     private currentPage: number = 0;
@@ -37,7 +37,7 @@ export class PaginationController<T> {
     }
 
     /**
-     * Advance the pagination controller to the next page.
+     * Move the paginator forward by one page.
      * This function has bounds-checking and stops at the last possible page.
      */
     public nextPage(): void {
@@ -45,7 +45,7 @@ export class PaginationController<T> {
     }
 
     /**
-     * Advance the pagination controller to the next page.
+     * Move the paginator backward by one page.
      * This function has bounds-checking and stops at the first page.
      */
     public previousPage(): void {
@@ -53,7 +53,7 @@ export class PaginationController<T> {
     }
 
     /**
-     * Move the "pagination window" forward by the given number of pages.
+     * Move the paginator forward by the given number of pages.
      * If moving forward by given number of pages exceeds the total page count, the pagination window reflects the last page of elements.
      * @param numPages The number of pages to move forward
      */
@@ -62,7 +62,7 @@ export class PaginationController<T> {
     }
 
     /**
-     * Move the "pagination window" backward by the given number of pages.
+     * Move the paginator backward by the given number of pages.
      * If moving backward by given number of pages results in a negative page index, the pagination window reflects the first page of elements.
      * @param numPages The number of pages to move backward
      */
