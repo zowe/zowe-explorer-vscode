@@ -783,7 +783,7 @@ describe("Dataset Search Unit Tests - function search", () => {
         let localStorageSetSpy: jest.SpyInstance;
         let localStorageGetSpy: jest.SpyInstance;
         let localStorageValue: any = [];
-        let quickPickArray: QuickPick[] = [];
+        let quickPickArray: vscode.QuickPick<vscode.QuickPickItem>[] = [];
 
         function quickPickPositiveExpect() {
             expect(createQuickPickSpy).toHaveBeenCalledWith(
@@ -802,7 +802,6 @@ describe("Dataset Search Unit Tests - function search", () => {
                 }
             );
         }
-{
         function baseQuickPickImplemnentation() {
             const quickPick = window.createQuickPick();
             quickPickArray.push(quickPick);
@@ -820,7 +819,9 @@ describe("Dataset Search Unit Tests - function search", () => {
             withProgressSpy = jest.spyOn(Gui, "withProgress");
             showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
             errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation();
-            createQuickPickSpy = jest.spyOn(Gui, "createQuickPick").mockImplementation(() => { return baseQuickPickImplemnentation(); });
+            createQuickPickSpy = jest.spyOn(Gui, "createQuickPick").mockImplementation(() => {
+                return baseQuickPickImplemnentation();
+            });
             tableBuilderOptionsSpy = jest.spyOn(TableBuilder.prototype, "options").mockReturnValue(TableBuilder.prototype);
             tableBuilderTitleSpy = jest.spyOn(TableBuilder.prototype, "title").mockReturnValue(TableBuilder.prototype);
             tableBuilderIsViewSpy = jest.spyOn(TableBuilder.prototype, "isView").mockReturnValue(TableBuilder.prototype);
@@ -847,7 +848,9 @@ describe("Dataset Search Unit Tests - function search", () => {
                 .mockReturnValue({ setTableView: tableViewProviderSetTableViewMock } as any);
             localStorageValue = [];
             quickPickArray = [];
-            createQuickPickSpy = jest.spyOn(Gui, "createQuickPick").mockImplementation(() => { return baseQuickPickImplemnentation(); });
+            createQuickPickSpy = jest.spyOn(Gui, "createQuickPick").mockImplementation(() => {
+                return baseQuickPickImplemnentation();
+            });
         });
 
         afterAll(() => {
@@ -883,8 +886,10 @@ describe("Dataset Search Unit Tests - function search", () => {
             // The second is the options.
             createQuickPickSpy.mockImplementationOnce(() => {
                 const qp = baseQuickPickImplemnentation();
-                qp.selectedItems = [{label: ""}];
-                qp.onDidHide = jest.fn().mockImplementation((listener) => {listener()});
+                qp.selectedItems = [{ label: "" }];
+                qp.onDidHide = jest.fn().mockImplementation((listener) => {
+                    listener();
+                });
                 return qp;
             });
 
@@ -900,7 +905,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             // Expect the search quick pick to have returned
             // Do not expect any options to have been selected
-            expect(quickPickArray[0].selectedItems.length).toEqual(1); 
+            expect(quickPickArray[0].selectedItems.length).toEqual(1);
             expect(quickPickArray[1].selectedItems.length).toEqual(0);
 
             expect(performSearchSpy).not.toHaveBeenCalled();
@@ -917,7 +922,6 @@ describe("Dataset Search Unit Tests - function search", () => {
             node.pattern = "FAKE.*.DS";
             const context = { context: "fake" } as any;
             const searchString = "test";
-
 
             await DatasetSearch.search(context, node);
 
