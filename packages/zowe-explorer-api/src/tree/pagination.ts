@@ -9,7 +9,7 @@
  *
  */
 
-import { Constants } from "../globals/Constants";
+import { Constants } from "../globals";
 import { VscSettings } from "../vscode/doc/VscSettings";
 
 /**
@@ -21,11 +21,14 @@ export class Paginator<T> {
     private currentPage: number = 0;
     private maxItemsPerPage: number;
     private totalPageCount: number = 0;
+    private startIndex: number = 0;
+    private endIndex: number = 0;
 
     private constructor() {}
 
     /**
      * Creates a paginator instance and prepares it for use with the given array of items.
+     * @param items The array of items to use for pagination
      * @param maxItemsPerPage The maximum amount of items to return per page
      * @returns A new {@link Paginator} instance, ready to be used for the given array
      * @throws If {@link maxItemsPerPage} is zero, a negative integer or a floating-point value
@@ -68,6 +71,7 @@ export class Paginator<T> {
         }
         this.totalPageCount = Math.ceil(this.items.length / this.maxItemsPerPage);
         this.currentPage = 0;
+        this.updateIndices();
     }
 
     /**
@@ -88,6 +92,7 @@ export class Paginator<T> {
         }
         this.maxItemsPerPage = maxItems;
         this.totalPageCount = Math.ceil(this.items.length / this.maxItemsPerPage);
+        this.updateIndices();
     }
 
     /**
@@ -110,7 +115,7 @@ export class Paginator<T> {
      * This function has bounds-checking and stops at the first page.
      */
     public previousPage(): void {
-        this.currentPage = Math.max(this.currentPage - 1, 0);
+        this.moveBack(1);
     }
 
     /**
@@ -120,6 +125,7 @@ export class Paginator<T> {
      */
     public moveForward(numPages: number): void {
         this.currentPage = Math.min(this.currentPage + numPages, this.getPageCount() - 1);
+        this.updateIndices();
     }
 
     /**
@@ -129,6 +135,7 @@ export class Paginator<T> {
      */
     public moveBack(numPages: number): void {
         this.currentPage = Math.max(this.currentPage - numPages, 0);
+        this.updateIndices();
     }
 
     /**
@@ -140,6 +147,7 @@ export class Paginator<T> {
             throw new Error("[Paginator.setMaxItemsPerPage] page must be a valid integer between 1 and totalPageCount");
         }
         this.currentPage = page;
+        this.updateIndices();
     }
 
     /**
@@ -174,13 +182,16 @@ export class Paginator<T> {
         return this.currentPage;
     }
 
+    private updateIndices(): void {
+        this.startIndex = this.currentPage * this.maxItemsPerPage;
+        this.endIndex = Math.min(this.startIndex + this.maxItemsPerPage, this.items.length);
+    }
+
     /**
      * @returns the current page of items
      */
     public getCurrentPage(): T[] {
-        const startIndex = this.currentPage * this.maxItemsPerPage;
-        const endIndex = Math.min(startIndex + this.maxItemsPerPage, this.items.length);
-        return this.items.slice(startIndex, endIndex);
+        return this.items.slice(this.startIndex, this.endIndex);
     }
 
     /**
