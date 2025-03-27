@@ -12,7 +12,16 @@
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as path from "path";
-import { Gui, imperative, IZoweDatasetTreeNode, Table, TableBuilder, TableViewProvider, ZoweScheme } from "@zowe/zowe-explorer-api";
+import {
+    Gui,
+    imperative,
+    IZoweDatasetTreeNode,
+    PersistenceSchemaEnum,
+    Table,
+    TableBuilder,
+    TableViewProvider,
+    ZoweScheme,
+} from "@zowe/zowe-explorer-api";
 import { SharedContext } from "../shared/SharedContext";
 import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
 import { Definitions } from "../../configuration/Definitions";
@@ -23,6 +32,7 @@ import { DatasetActions } from "./DatasetActions";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { DatasetUtils } from "./DatasetUtils";
+import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
 
 interface ISearchOptions {
     node: IZoweDatasetTreeNode;
@@ -38,11 +48,14 @@ export class DatasetSearch {
     private static searchQuickPick: vscode.QuickPick<vscode.QuickPickItem>;
     private static searchOptionsQuickPick: vscode.QuickPick<vscode.QuickPickItem>;
     private static optionsQuickPickEntry: vscode.QuickPickItem;
+    private static persistentFilter: ZowePersistentFilters;
 
     public static async search(this: void, context: vscode.ExtensionContext, node: IZoweDatasetTreeNode): Promise<void> {
         const isSessionNotFav = SharedContext.isSessionNotFav(node);
         const generateFullUri = (isSessionNotFav && node.pattern != null) || SharedContext.isFavoriteSearch(node);
         const pattern = isSessionNotFav ? node.pattern : (node.label as string);
+
+        DatasetSearch.persistentFilter = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset);
 
         // There may not be a pattern on a session node if there is no filter applied. Warn if this is the case.
         if (!pattern) {
@@ -56,7 +69,6 @@ export class DatasetSearch {
 
         // Set defaults if they are not present on the object in case we add options in the future
         DatasetSearch.savedSearchOptions.caseSensitive ??= false;
-        DatasetSearch.savedSearchOptions.history ??= [];
         DatasetSearch.savedSearchOptions.regex ??= false;
 
         DatasetSearch.constructQuickPicks();
@@ -93,8 +105,7 @@ export class DatasetSearch {
         }
 
         // Update history
-        DatasetSearch.savedSearchOptions.history = DatasetSearch.savedSearchOptions.history.filter((item) => item !== searchString);
-        DatasetSearch.savedSearchOptions.history.unshift(searchString);
+        DatasetSearch.persistentFilter.addSearchedKeywords(searchString);
 
         // Update saved search options
         await ZoweLocalStorage.setValue<Definitions.DataSetSearchOptions>(
@@ -185,7 +196,7 @@ export class DatasetSearch {
         DatasetSearch.searchQuickPick = Gui.createQuickPick();
         DatasetSearch.optionsQuickPickEntry = { label: "", alwaysShow: true };
         const userInputEntry: vscode.QuickPickItem = { label: "" };
-        const historyEntries: vscode.QuickPickItem[] = DatasetSearch.savedSearchOptions.history.map((entry) => ({ label: entry }));
+        const historyEntries: vscode.QuickPickItem[] = DatasetSearch.persistentFilter.getSearchedKeywords().map((entry) => ({ label: entry }));
 
         // Set up the search quick pick
         DatasetSearch.searchQuickPick.items = [...historyEntries, Constants.SEPARATORS.BLANK, DatasetSearch.optionsQuickPickEntry];

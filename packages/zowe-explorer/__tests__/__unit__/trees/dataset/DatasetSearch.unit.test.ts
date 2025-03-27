@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { Gui, Table, TableBuilder, TableViewProvider, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { Gui, PersistenceSchemaEnum, Table, TableBuilder, TableViewProvider, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { DatasetSearch } from "../../../../src/trees/dataset/DatasetSearch";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
@@ -26,17 +26,31 @@ import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvid
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { window } from "../../../__mocks__/vscode";
 import { Definitions } from "../../../../src/configuration/Definitions";
+import * as zpf from "../../../../src/tools/ZowePersistentFilters";
 
 jest.mock("fs");
 jest.mock("vscode");
 jest.mock("../../../../src/tools/ZoweLogger");
 
 describe("Dataset Search Unit Tests - function search", () => {
+    let persistentFilter: zpf.ZowePersistentFilters;
+
+    beforeAll(() => {
+        const localStorageGetSpy = jest.spyOn(ZoweLocalStorage, "getValue").mockImplementation((_key: string) => {
+            return {};
+        });
+        persistentFilter = new zpf.ZowePersistentFilters(PersistenceSchemaEnum.Dataset);
+        localStorageGetSpy.mockRestore();
+    });
+
     beforeEach(() => {
         (DatasetSearch as any).savedSearchOptions = undefined;
         (DatasetSearch as any).searchQuickPick = undefined;
         (DatasetSearch as any).searchOptionsQuickPick = undefined;
         (DatasetSearch as any).optionsQuickPickEntry = undefined;
+        jest.spyOn(zpf, "ZowePersistentFilters").mockImplementation(() => {
+            return persistentFilter;
+        });
     });
 
     describe("Helper function - continueSearchPrompt", () => {
@@ -850,6 +864,8 @@ describe("Dataset Search Unit Tests - function search", () => {
         let createQuickPickSpy: jest.SpyInstance;
         let searchQuickPickResetSpy: jest.SpyInstance;
         let quickPickArray: vscode.QuickPick<vscode.QuickPickItem>[] = [];
+        let historyGetSpy: jest.SpyInstance;
+        let historySetSpy: jest.SpyInstance;
 
         function baseQuickPickImplemnentation() {
             const quickPick = window.createQuickPick();
@@ -863,7 +879,17 @@ describe("Dataset Search Unit Tests - function search", () => {
                 return baseQuickPickImplemnentation();
             });
             searchQuickPickResetSpy = jest.spyOn(DatasetSearch as any, "searchQuickPickReset").mockReturnValue(undefined);
-            (DatasetSearch as any).savedSearchOptions = { caseSensitive: false, history: [], regex: false };
+            jest.spyOn(ZoweLocalStorage, "getValue").mockImplementation((_key: string) => {
+                return {};
+            });
+            jest.spyOn(ZoweLocalStorage, "setValue").mockResolvedValue(undefined);
+
+            (DatasetSearch as any).persistentFilter = persistentFilter;
+
+            historySetSpy = jest.spyOn(persistentFilter, "addSearchedKeywords").mockReturnValue(undefined);
+            historyGetSpy = jest.spyOn(persistentFilter, "getSearchedKeywords").mockReturnValue([]);
+
+            (DatasetSearch as any).savedSearchOptions = { caseSensitive: false, regex: false };
         });
 
         afterEach(() => {
@@ -918,6 +944,9 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect(quickPickArray[1].onDidAccept).toHaveBeenCalledTimes(1);
             expect(quickPickArray[1].onDidHide).toHaveBeenCalledTimes(1);
 
+            expect(historyGetSpy).toHaveBeenCalledTimes(1);
+            expect(historySetSpy).not.toHaveBeenCalled();
+
             expect(createQuickPickSpy).toHaveBeenCalledTimes(2);
             expect(searchQuickPickResetSpy).not.toHaveBeenCalled();
 
@@ -951,6 +980,9 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect(quickPickArray[1].onDidAccept).toHaveBeenCalledTimes(1);
             expect(quickPickArray[1].onDidHide).toHaveBeenCalledTimes(1);
 
+            expect(historyGetSpy).toHaveBeenCalledTimes(1);
+            expect(historySetSpy).not.toHaveBeenCalled();
+
             expect(createQuickPickSpy).toHaveBeenCalledTimes(2);
             expect(searchQuickPickResetSpy).not.toHaveBeenCalled();
 
@@ -965,8 +997,7 @@ describe("Dataset Search Unit Tests - function search", () => {
                 return qp;
             });
 
-            (DatasetSearch as any).savedSearchOptions.history = ["history1", "history2"];
-
+            historyGetSpy.mockReturnValue(["history1", "history2"]);
             (DatasetSearch as any).constructQuickPicks();
 
             expect(quickPickArray[0].items).toEqual([
@@ -985,6 +1016,9 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect(quickPickArray[1].onDidAccept).toHaveBeenCalledTimes(1);
             expect(quickPickArray[1].onDidHide).toHaveBeenCalledTimes(1);
 
+            expect(historyGetSpy).toHaveBeenCalledTimes(1);
+            expect(historySetSpy).not.toHaveBeenCalled();
+
             expect(createQuickPickSpy).toHaveBeenCalledTimes(2);
             expect(searchQuickPickResetSpy).not.toHaveBeenCalled();
 
@@ -1002,7 +1036,7 @@ describe("Dataset Search Unit Tests - function search", () => {
                 return qp;
             });
 
-            (DatasetSearch as any).savedSearchOptions.history = ["history1", "history2"];
+            historyGetSpy.mockReturnValue(["history1", "history2"]);
 
             (DatasetSearch as any).constructQuickPicks();
 
@@ -1022,6 +1056,9 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect(quickPickArray[1].hide).not.toHaveBeenCalled();
             expect(quickPickArray[1].onDidAccept).toHaveBeenCalledTimes(1);
             expect(quickPickArray[1].onDidHide).toHaveBeenCalledTimes(1);
+
+            expect(historyGetSpy).toHaveBeenCalledTimes(1);
+            expect(historySetSpy).not.toHaveBeenCalled();
 
             expect(createQuickPickSpy).toHaveBeenCalledTimes(2);
             expect(searchQuickPickResetSpy).not.toHaveBeenCalled();
@@ -1057,6 +1094,9 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect(quickPickArray[1].onDidAccept).toHaveBeenCalledTimes(1);
             expect(quickPickArray[1].onDidHide).toHaveBeenCalledTimes(1);
 
+            expect(historyGetSpy).toHaveBeenCalledTimes(1);
+            expect(historySetSpy).not.toHaveBeenCalled();
+
             expect(createQuickPickSpy).toHaveBeenCalledTimes(2);
             expect(searchQuickPickResetSpy).not.toHaveBeenCalled();
 
@@ -1091,6 +1131,9 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect(quickPickArray[1].onDidAccept).toHaveBeenCalledTimes(1);
             expect(quickPickArray[1].onDidHide).toHaveBeenCalledTimes(1);
 
+            expect(historyGetSpy).toHaveBeenCalledTimes(1);
+            expect(historySetSpy).not.toHaveBeenCalled();
+
             expect(createQuickPickSpy).toHaveBeenCalledTimes(2);
             expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
 
@@ -1105,7 +1148,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
         beforeEach(() => {
             searchUpdateOptionsLabelSpy = jest.spyOn(DatasetSearch as any, "searchUpdateOptionsLabel").mockReturnValue(undefined);
-            (DatasetSearch as any).savedSearchOptions = { caseSensitive: false, history: [], regex: false };
+            (DatasetSearch as any).savedSearchOptions = { caseSensitive: false, regex: false };
             (DatasetSearch as any).searchQuickPick = searchQuickPick = window.createQuickPick();
         });
 
@@ -1129,7 +1172,7 @@ describe("Dataset Search Unit Tests - function search", () => {
     describe("Helper function - searchUpdateOptionsLabel", () => {
         beforeEach(() => {
             (DatasetSearch as any).optionsQuickPickEntry = { label: "" };
-            (DatasetSearch as any).savedSearchOptions = { caseSensitive: false, history: [], regex: false };
+            (DatasetSearch as any).savedSearchOptions = { caseSensitive: false, regex: false };
         });
 
         it("should update the options quick pick entry - default", () => {
@@ -1166,7 +1209,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
         beforeEach(() => {
             (DatasetSearch as any).searchOptionsQuickPick = searchOptionsQuickPick = window.createQuickPick();
-            (DatasetSearch as any).savedSearchOptions = { caseSensitive: false, history: [], regex: false };
+            (DatasetSearch as any).savedSearchOptions = { caseSensitive: false, regex: false };
         });
 
         it("should construct the search options - default", () => {
@@ -1232,6 +1275,8 @@ describe("Dataset Search Unit Tests - function search", () => {
         let tableBuilderBuildSpy: jest.SpyInstance;
         let localStorageSetSpy: jest.SpyInstance;
         let localStorageGetSpy: jest.SpyInstance;
+        let historyGetSpy: jest.SpyInstance;
+        let historySetSpy: jest.SpyInstance;
         let constructQuickPicksSpy: jest.SpyInstance;
         let searchQuickPickResetSpy: jest.SpyInstance;
         let searchOptionsPromptSpy: jest.SpyInstance;
@@ -1255,15 +1300,6 @@ describe("Dataset Search Unit Tests - function search", () => {
             tableBuilderColumnsSpy = jest.spyOn(TableBuilder.prototype, "columns").mockReturnValue(TableBuilder.prototype);
             tableBuilderAddRowActionSpy = jest.spyOn(TableBuilder.prototype, "addRowAction").mockReturnValue(TableBuilder.prototype);
             tableBuilderBuildSpy = jest.spyOn(TableBuilder.prototype, "build").mockImplementation();
-            localStorageSetSpy = jest
-                .spyOn(ZoweLocalStorage, "setValue")
-                .mockImplementation(async (key: string, value: any, _setInWorkspace: boolean | undefined): Promise<void> => {
-                    localStorageValue[key] = value;
-                    await Promise.resolve();
-                });
-            localStorageGetSpy = jest.spyOn(ZoweLocalStorage, "getValue").mockImplementation((key: string) => {
-                return localStorageValue[key];
-            });
             constructQuickPicksSpy = jest.spyOn(DatasetSearch as any, "constructQuickPicks").mockReturnValue(undefined);
             searchQuickPickResetSpy = jest.spyOn(DatasetSearch as any, "searchQuickPickReset").mockReturnValue(undefined);
             searchOptionsPromptSpy = jest.spyOn(DatasetSearch as any, "searchOptionsPrompt").mockReturnValue(undefined);
@@ -1276,10 +1312,27 @@ describe("Dataset Search Unit Tests - function search", () => {
                 .spyOn(TableViewProvider, "getInstance")
                 .mockReturnValue({ setTableView: tableViewProviderSetTableViewMock } as any);
             localStorageValue = [];
-            (DatasetSearch as any).savedSearchOptions = { caseSensitive: false, history: [], regex: false };
+            localStorageGetSpy = jest.spyOn(ZoweLocalStorage, "getValue").mockImplementation((_key: string) => {
+                return {};
+            });
+            localStorageSetSpy = jest.spyOn(ZoweLocalStorage, "setValue").mockResolvedValue(undefined);
+            (DatasetSearch as any).savedSearchOptions = { caseSensitive: false, regex: false };
             (DatasetSearch as any).searchQuickPick = window.createQuickPick();
             (DatasetSearch as any).searchOptionsQuickPick = window.createQuickPick();
             (DatasetSearch as any).optionsQuickPickEntry = { label: "" };
+            (DatasetSearch as any).persistentFilter = persistentFilter;
+            historySetSpy = jest.spyOn(persistentFilter, "addSearchedKeywords").mockReturnValue(undefined);
+            historyGetSpy = jest.spyOn(persistentFilter, "getSearchedKeywords").mockReturnValue([]);
+
+            localStorageSetSpy
+                .mockClear()
+                .mockImplementation(async (key: string, value: any, _setInWorkspace: boolean | undefined): Promise<void> => {
+                    localStorageValue[key] = value;
+                    await Promise.resolve();
+                });
+            localStorageGetSpy.mockClear().mockImplementation((key: string) => {
+                return localStorageValue[key];
+            });
         });
 
         afterAll(() => {
@@ -1325,7 +1378,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
             expect(searchOptionsPromptSpy).not.toHaveBeenCalled();
 
-            expect(localStorageGetSpy).toHaveBeenCalledTimes(1);
+            expect(historyGetSpy).toHaveBeenCalledTimes(0);
             expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
             expect(localStorageSetSpy).not.toHaveBeenCalled();
 
@@ -1388,14 +1441,14 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
             expect(searchOptionsPromptSpy).not.toHaveBeenCalled();
 
-            expect(localStorageGetSpy).toHaveBeenCalledTimes(1);
+            expect(historyGetSpy).toHaveBeenCalledTimes(0);
             expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
             expect(localStorageSetSpy).toHaveBeenCalledTimes(1);
             expect(localStorageSetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS, {
                 caseSensitive: false,
-                history: [searchString],
                 regex: false,
             });
+            expect(historySetSpy).toHaveBeenCalledTimes(1); // We do set history if we got to searching
 
             // Expect the search quick pick to have returned
             // Do not expect any options to have been selected
@@ -1490,14 +1543,14 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
             expect(searchOptionsPromptSpy).not.toHaveBeenCalled();
 
-            expect(localStorageGetSpy).toHaveBeenCalledTimes(1);
+            expect(historyGetSpy).toHaveBeenCalledTimes(0);
             expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
             expect(localStorageSetSpy).toHaveBeenCalledTimes(1);
             expect(localStorageSetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS, {
                 caseSensitive: false,
-                history: [searchString],
                 regex: false,
             });
+            expect(historySetSpy).toHaveBeenCalledTimes(1);
 
             // Expect the search quick pick to have returned
             // Do not expect any options to have been selected
@@ -1667,14 +1720,14 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
             expect(searchOptionsPromptSpy).not.toHaveBeenCalled();
 
-            expect(localStorageGetSpy).toHaveBeenCalledTimes(1);
+            expect(historyGetSpy).toHaveBeenCalledTimes(0);
             expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
             expect(localStorageSetSpy).toHaveBeenCalledTimes(1);
             expect(localStorageSetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS, {
                 caseSensitive: false,
-                history: [searchString],
                 regex: false,
             });
+            expect(historySetSpy).toHaveBeenCalledTimes(1);
 
             // Expect the search quick pick to have returned
             // Do not expect any options to have been selected
@@ -1820,14 +1873,14 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
             expect(searchOptionsPromptSpy).not.toHaveBeenCalled();
 
-            expect(localStorageGetSpy).toHaveBeenCalledTimes(1);
+            expect(historyGetSpy).toHaveBeenCalledTimes(0);
             expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
             expect(localStorageSetSpy).toHaveBeenCalledTimes(1);
             expect(localStorageSetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS, {
                 caseSensitive: false,
-                history: [searchString],
                 regex: false,
             });
+            expect(historySetSpy).toHaveBeenCalledTimes(1);
 
             // Expect the search quick pick to have returned
             // Do not expect any options to have been selected
@@ -1999,14 +2052,14 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
             expect(searchOptionsPromptSpy).not.toHaveBeenCalled();
 
-            expect(localStorageGetSpy).toHaveBeenCalledTimes(1);
+            expect(historyGetSpy).toHaveBeenCalledTimes(0);
             expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
             expect(localStorageSetSpy).toHaveBeenCalledTimes(1);
             expect(localStorageSetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS, {
                 caseSensitive: false,
-                history: [searchString],
                 regex: false,
             });
+            expect(historySetSpy).toHaveBeenCalledTimes(1);
 
             // Expect the search quick pick to have returned
             // Do not expect any options to have been selected
@@ -2139,7 +2192,7 @@ describe("Dataset Search Unit Tests - function search", () => {
                 listener();
             });
             searchQP.selectedItems = [{ label: searchString }];
-            localStorageGetSpy.mockReturnValue({ caseSensitive: true, history: [], regex: false });
+            localStorageGetSpy.mockReturnValue({ caseSensitive: true, regex: false });
 
             await DatasetSearch.search(context, node);
 
@@ -2150,14 +2203,14 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
             expect(searchOptionsPromptSpy).not.toHaveBeenCalled();
 
-            expect(localStorageGetSpy).toHaveBeenCalledTimes(1);
+            expect(historyGetSpy).toHaveBeenCalledTimes(0);
             expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
             expect(localStorageSetSpy).toHaveBeenCalledTimes(1);
             expect(localStorageSetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS, {
                 caseSensitive: true,
-                history: [searchString],
                 regex: false,
             });
+            expect(historySetSpy).toHaveBeenCalledTimes(1);
 
             // Expect the search quick pick to have returned
             // Do not expect any options to have been selected
@@ -2292,7 +2345,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             });
             searchQP.selectedItems = [{ label: searchString }];
 
-            localStorageGetSpy.mockReturnValue({ caseSensitive: false, history: [], regex: true });
+            localStorageGetSpy.mockReturnValue({ caseSensitive: false, regex: true });
 
             await DatasetSearch.search(context, node);
 
@@ -2303,14 +2356,14 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
             expect(searchOptionsPromptSpy).not.toHaveBeenCalled();
 
-            expect(localStorageGetSpy).toHaveBeenCalledTimes(1);
+            expect(historyGetSpy).toHaveBeenCalledTimes(0);
             expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
             expect(localStorageSetSpy).toHaveBeenCalledTimes(1);
             expect(localStorageSetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS, {
                 caseSensitive: false,
-                history: [searchString],
                 regex: true,
             });
+            expect(historySetSpy).toHaveBeenCalledTimes(1);
 
             // Expect the search quick pick to have returned
             // Do not expect any options to have been selected
@@ -2464,14 +2517,14 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
             expect(searchOptionsPromptSpy).toHaveBeenCalledTimes(1);
 
-            expect(localStorageGetSpy).toHaveBeenCalledTimes(1);
+            expect(historyGetSpy).toHaveBeenCalledTimes(0);
             expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
             expect(localStorageSetSpy).toHaveBeenCalledTimes(1);
             expect(localStorageSetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS, {
                 caseSensitive: false,
-                history: [searchString],
                 regex: false,
             });
+            expect(historySetSpy).toHaveBeenCalledTimes(1);
 
             // Expect the search quick pick to have returned
             // Do not expect any options to have been selected
@@ -2627,14 +2680,14 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
             expect(searchOptionsPromptSpy).toHaveBeenCalledTimes(1);
 
-            expect(localStorageGetSpy).toHaveBeenCalledTimes(1);
+            expect(historyGetSpy).toHaveBeenCalledTimes(0);
             expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
             expect(localStorageSetSpy).toHaveBeenCalledTimes(1);
             expect(localStorageSetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS, {
                 caseSensitive: true,
-                history: [searchString],
                 regex: true,
             });
+            expect(historySetSpy).toHaveBeenCalledTimes(1);
 
             // Expect the search quick pick to have returned
             // Do not expect any options to have been selected

@@ -35,7 +35,6 @@ export namespace Definitions {
     };
     export type DataSetSearchOptions = {
         caseSensitive?: boolean;
-        history?: string[];
         regex?: boolean;
     };
     export type FavoriteData = {
@@ -57,6 +56,7 @@ export namespace Definitions {
         fileHistory: string[];
         encodingHistory: string[];
         templates: Types.DataSetAllocTemplate[];
+        searchedKeywords: string[];
     };
     export type ReplaceDSType = "ps" | "po" | "mem";
     export type ShouldReplace = "replace" | "cancel" | "notFound";
