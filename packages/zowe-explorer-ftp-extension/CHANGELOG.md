@@ -2,8 +2,6 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
 
 - Fixed issue where FTP client errors incorrectly triggered authentication prompts instead of showing appropriate error messages. [#3496](https://github.com/zowe/zowe-explorer-vscode/issues/3496)

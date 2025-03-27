@@ -24,6 +24,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue with a conflicting keybinding for `Open Recent Member`, changed keybinding to `Ctrl`+`Alt`+`T` for Windows and `⌘ Cmd`+`⌥ Opt`+`T` for macOS. [#3447](https://github.com/zowe/zowe-explorer-vscode/issues/3447)
 - Fixed issue where saving data set member to history would save only the member name instead of the full path. [#3447](https://github.com/zowe/zowe-explorer-vscode/pull/3477)
 - Fixed an issue where profile encoding is not respected when opening job spool files. [#3504](https://github.com/zowe/zowe-explorer-vscode/issues/3504)
+- Fixed an issue where cancelling Unix, MVS or TSO command still submits the command. [#3422](https://github.com/zowe/zowe-explorer-vscode/issues/3422)
+- Fixed a bug where edit history does not show the correct information. [#3432](https://github.com/zowe/zowe-explorer-vscode/issues/3432)
 
 ## `3.1.1`
 
@@ -32,8 +34,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Fixed an issue where a TypeError occurred when applying VS Code proxy settings to an invalid session. [#3425](https://github.com/zowe/zowe-explorer-vscode/issues/3425)
-- Fixed an issue where cancelling Unix, MVS or TSO command still submits the command. [#3422](https://github.com/zowe/zowe-explorer-vscode/issues/3422)
-- Fixed a bug where edit history does not show the correct information. [#3432](https://github.com/zowe/zowe-explorer-vscode/issues/3432)
 
 ## `3.1.0`
 
