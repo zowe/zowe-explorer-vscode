@@ -126,9 +126,9 @@ export class DatasetInit {
                 const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList).filter(
                     (element) =>
                         SharedContext.isDs(element) ||
+                        SharedContext.isVsam(element) ||
                         SharedContext.isPds(element) ||
-                        SharedContext.isDsMember(element) ||
-                        SharedContext.isVsam(element)
+                        SharedContext.isDsMember(element)
                 );
                 for (const item of selectedNodes) {
                     await DatasetActions.showAttributes(item as IZoweDatasetTreeNode, datasetProvider);
