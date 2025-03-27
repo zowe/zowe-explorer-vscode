@@ -895,7 +895,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect((DatasetSearch as any).savedSearchOptions.regex).toEqual(false);
         });
 
-        it("should handle the search quick pick being updated", () => {
+        it("should handle the search quick pick being updated 1", () => {
             createQuickPickSpy.mockImplementationOnce(() => {
                 const qp = baseQuickPickImplemnentation();
                 qp.selectedItems = [{ label: "" }];
@@ -908,6 +908,39 @@ describe("Dataset Search Unit Tests - function search", () => {
             (DatasetSearch as any).constructQuickPicks();
 
             expect(quickPickArray[0].items).toEqual([{ label: "test" }, Constants.SEPARATORS.BLANK, { label: "", alwaysShow: true }]);
+            expect(quickPickArray[0].ignoreFocusOut).toEqual(true);
+            expect(quickPickArray[0].onDidChangeValue).toHaveBeenCalledTimes(1);
+            expect(quickPickArray[0].show).not.toHaveBeenCalled();
+
+            expect(quickPickArray[1].ignoreFocusOut).toEqual(true);
+            expect(quickPickArray[1].canSelectMany).toEqual(true);
+            expect(quickPickArray[1].hide).not.toHaveBeenCalled();
+            expect(quickPickArray[1].onDidAccept).toHaveBeenCalledTimes(1);
+            expect(quickPickArray[1].onDidHide).toHaveBeenCalledTimes(1);
+
+            expect(createQuickPickSpy).toHaveBeenCalledTimes(2);
+            expect(searchQuickPickResetSpy).not.toHaveBeenCalled();
+
+            expect((DatasetSearch as any).savedSearchOptions.caseSensitive).toEqual(false);
+            expect((DatasetSearch as any).savedSearchOptions.regex).toEqual(false);
+        });
+
+        it("should handle the search quick pick being updated 2", () => {
+            createQuickPickSpy.mockImplementationOnce(() => {
+                const qp = baseQuickPickImplemnentation();
+                qp.selectedItems = [{ label: "" }];
+                qp.onDidChangeValue = jest.fn().mockImplementation((listener) => {
+                    // Should handle switching the adding the user specified item, and then switching back
+                    listener("test");
+                    expect(qp.items).toEqual([{ label: "test" }, Constants.SEPARATORS.BLANK, { label: "", alwaysShow: true }]);
+                    listener();
+                    expect(qp.items).toEqual([Constants.SEPARATORS.BLANK, { label: "", alwaysShow: true }]);
+                });
+                return qp;
+            });
+
+            (DatasetSearch as any).constructQuickPicks();
+
             expect(quickPickArray[0].ignoreFocusOut).toEqual(true);
             expect(quickPickArray[0].onDidChangeValue).toHaveBeenCalledTimes(1);
             expect(quickPickArray[0].show).not.toHaveBeenCalled();
@@ -1290,6 +1323,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect(errorMessageSpy).not.toHaveBeenCalled();
             expect(constructQuickPicksSpy).toHaveBeenCalledTimes(1);
             expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
+            expect(searchOptionsPromptSpy).not.toHaveBeenCalled();
 
             expect(localStorageGetSpy).toHaveBeenCalledTimes(1);
             expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
@@ -1352,6 +1386,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             expect(constructQuickPicksSpy).toHaveBeenCalledTimes(1);
             expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
+            expect(searchOptionsPromptSpy).not.toHaveBeenCalled();
 
             expect(localStorageGetSpy).toHaveBeenCalledTimes(1);
             expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
@@ -1453,6 +1488,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             expect(constructQuickPicksSpy).toHaveBeenCalledTimes(1);
             expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
+            expect(searchOptionsPromptSpy).not.toHaveBeenCalled();
 
             expect(localStorageGetSpy).toHaveBeenCalledTimes(1);
             expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
@@ -1629,6 +1665,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             expect(constructQuickPicksSpy).toHaveBeenCalledTimes(1);
             expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
+            expect(searchOptionsPromptSpy).not.toHaveBeenCalled();
 
             expect(localStorageGetSpy).toHaveBeenCalledTimes(1);
             expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
@@ -1781,6 +1818,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             expect(constructQuickPicksSpy).toHaveBeenCalledTimes(1);
             expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
+            expect(searchOptionsPromptSpy).not.toHaveBeenCalled();
 
             expect(localStorageGetSpy).toHaveBeenCalledTimes(1);
             expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
@@ -1959,6 +1997,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             expect(constructQuickPicksSpy).toHaveBeenCalledTimes(1);
             expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
+            expect(searchOptionsPromptSpy).not.toHaveBeenCalled();
 
             expect(localStorageGetSpy).toHaveBeenCalledTimes(1);
             expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
@@ -2109,6 +2148,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             expect(constructQuickPicksSpy).toHaveBeenCalledTimes(1);
             expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
+            expect(searchOptionsPromptSpy).not.toHaveBeenCalled();
 
             expect(localStorageGetSpy).toHaveBeenCalledTimes(1);
             expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
@@ -2261,6 +2301,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             expect(constructQuickPicksSpy).toHaveBeenCalledTimes(1);
             expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
+            expect(searchOptionsPromptSpy).not.toHaveBeenCalled();
 
             expect(localStorageGetSpy).toHaveBeenCalledTimes(1);
             expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
@@ -2303,6 +2344,330 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
 
             expect(tableBuilderTitleSpy).toHaveBeenCalledWith('Search Results for "/test/"');
+            expect(tableBuilderOptionsSpy).toHaveBeenCalledWith({
+                autoSizeStrategy: { type: "fitCellContents" },
+                pagination: true,
+                rowSelection: "multiple",
+                selectEverything: true,
+                suppressRowClickSelection: true,
+            });
+            expect(tableBuilderIsViewSpy).toHaveBeenCalledTimes(1);
+            expect(tableBuilderRowsSpy).toHaveBeenCalledWith(...expectedMatches);
+            expect(tableBuilderColumnsSpy).toHaveBeenCalledWith(
+                ...[
+                    {
+                        field: "name",
+                        headerName: vscode.l10n.t("Data Set Name"),
+                        filter: true,
+                        initialSort: "asc",
+                    } as Table.ColumnOpts,
+                    {
+                        field: "position",
+                        headerName: vscode.l10n.t("Position"),
+                        filter: false,
+                    },
+                    {
+                        field: "contents",
+                        headerName: vscode.l10n.t("Contents"),
+                        filter: true,
+                    },
+                    {
+                        field: "actions",
+                        hide: true,
+                    },
+                ]
+            );
+            expect(tableBuilderAddRowActionSpy).toHaveBeenCalledWith("all", {
+                title: vscode.l10n.t("Open"),
+                command: "open",
+                callback: {
+                    fn: (DatasetSearch as any).openSearchAtLocation,
+                    typ: "multi-row",
+                },
+                type: "secondary",
+            });
+            expect(tableBuilderBuildSpy).toHaveBeenCalledTimes(1);
+            expect(tableViewProviderSpy).toHaveBeenCalledTimes(1);
+            expect(tableViewProviderSetTableViewMock).toHaveBeenCalledTimes(1);
+        });
+
+        it("should attempt to perform the search but show the options prompt", async () => {
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+            node.pattern = "FAKE.*.DS";
+            const context = { context: "fake" } as any;
+            const searchString = "test";
+
+            const expectedResponse = {
+                success: true,
+                apiResponse: [
+                    {
+                        dsn: "FAKE.DATA.SET.DS",
+                        member: undefined,
+                        matchList: [
+                            {
+                                line: 1,
+                                column: 1,
+                                contents: "test",
+                            },
+                        ],
+                    },
+                ],
+            };
+            const expectedMatches = [
+                {
+                    name: "FAKE.DATA.SET.DS",
+                    line: 1,
+                    column: 1,
+                    position: "1:1",
+                    contents: "test",
+                    uri: "/test/FAKE.DATA.SET.DS",
+                    searchString,
+                },
+            ];
+            const tokenCancellation: vscode.CancellationToken = {
+                isCancellationRequested: false,
+                onCancellationRequested: jest.fn(),
+            };
+            const myProgress = { test: "test" };
+
+            withProgressSpy.mockImplementation((opts: any, fn: any) => {
+                return fn(myProgress, tokenCancellation);
+            });
+            getSearchMatchesSpy.mockReturnValue(expectedMatches);
+            performSearchSpy.mockResolvedValue(expectedResponse);
+
+            const searchQP = (DatasetSearch as any).searchQuickPick;
+            const optionsQP = (DatasetSearch as any).searchOptionsQuickPick;
+
+            searchQP.onDidAccept = jest.fn().mockImplementation(async (listener) => {
+                searchQP.selectedItems = [{ label: (DatasetSearch as any).optionsQuickPickEntry.label }];
+                listener();
+                await new Promise((resolve) => process.nextTick(resolve));
+                searchQP.selectedItems = [{ label: searchString }];
+                listener();
+            });
+
+            searchQP.onDidHide = jest.fn().mockImplementation(async (listener) => {
+                await new Promise((resolve) => process.nextTick(resolve));
+                listener();
+            });
+
+            localStorageGetSpy.mockReturnValue(undefined);
+
+            await DatasetSearch.search(context, node);
+
+            expect(errorMessageSpy).not.toHaveBeenCalled();
+            expect(showMessageSpy).not.toHaveBeenCalled();
+
+            expect(constructQuickPicksSpy).toHaveBeenCalledTimes(1);
+            expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
+            expect(searchOptionsPromptSpy).toHaveBeenCalledTimes(1);
+
+            expect(localStorageGetSpy).toHaveBeenCalledTimes(1);
+            expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
+            expect(localStorageSetSpy).toHaveBeenCalledTimes(1);
+            expect(localStorageSetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS, {
+                caseSensitive: false,
+                history: [searchString],
+                regex: false,
+            });
+
+            // Expect the search quick pick to have returned
+            // Do not expect any options to have been selected
+            expect(searchQP.selectedItems.length).toEqual(1);
+            expect(optionsQP.selectedItems.length).toEqual(0);
+
+            // Expect the search quick pick to have been given listeners
+            expect(searchQP.onDidAccept).toHaveBeenCalledTimes(1);
+            expect(searchQP.onDidHide).toHaveBeenCalledTimes(1);
+
+            // Expect the quick picks to have been disposed
+            expect(searchQP.dispose).toHaveBeenCalledTimes(1);
+            expect(optionsQP.dispose).toHaveBeenCalledTimes(1);
+
+            expect(withProgressSpy.mock.calls[0][0]).toEqual({
+                location: vscode.ProgressLocation.Notification,
+                title: 'Searching for "test"',
+                cancellable: true,
+            });
+
+            expect(getSearchMatchesSpy).toHaveBeenCalledWith(node, expectedResponse, true, searchString);
+
+            expect(performSearchSpy).toHaveBeenCalledTimes(1);
+            expect(performSearchSpy).toHaveBeenCalledWith(myProgress, tokenCancellation, {
+                node,
+                pattern: node.pattern,
+                regex: false,
+                searchString,
+                caseSensitive: false,
+            });
+            expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
+
+            expect(tableBuilderTitleSpy).toHaveBeenCalledWith('Search Results for "test"');
+            expect(tableBuilderOptionsSpy).toHaveBeenCalledWith({
+                autoSizeStrategy: { type: "fitCellContents" },
+                pagination: true,
+                rowSelection: "multiple",
+                selectEverything: true,
+                suppressRowClickSelection: true,
+            });
+            expect(tableBuilderIsViewSpy).toHaveBeenCalledTimes(1);
+            expect(tableBuilderRowsSpy).toHaveBeenCalledWith(...expectedMatches);
+            expect(tableBuilderColumnsSpy).toHaveBeenCalledWith(
+                ...[
+                    {
+                        field: "name",
+                        headerName: vscode.l10n.t("Data Set Name"),
+                        filter: true,
+                        initialSort: "asc",
+                    } as Table.ColumnOpts,
+                    {
+                        field: "position",
+                        headerName: vscode.l10n.t("Position"),
+                        filter: false,
+                    },
+                    {
+                        field: "contents",
+                        headerName: vscode.l10n.t("Contents"),
+                        filter: true,
+                    },
+                    {
+                        field: "actions",
+                        hide: true,
+                    },
+                ]
+            );
+            expect(tableBuilderAddRowActionSpy).toHaveBeenCalledWith("all", {
+                title: vscode.l10n.t("Open"),
+                command: "open",
+                callback: {
+                    fn: (DatasetSearch as any).openSearchAtLocation,
+                    typ: "multi-row",
+                },
+                type: "secondary",
+            });
+            expect(tableBuilderBuildSpy).toHaveBeenCalledTimes(1);
+            expect(tableViewProviderSpy).toHaveBeenCalledTimes(1);
+            expect(tableViewProviderSetTableViewMock).toHaveBeenCalledTimes(1);
+        });
+
+        it("should attempt to perform the search and save off new options", async () => {
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+            node.pattern = "FAKE.*.DS";
+            const context = { context: "fake" } as any;
+            const searchString = "test";
+
+            const expectedResponse = {
+                success: true,
+                apiResponse: [
+                    {
+                        dsn: "FAKE.DATA.SET.DS",
+                        member: undefined,
+                        matchList: [
+                            {
+                                line: 1,
+                                column: 1,
+                                contents: "test",
+                            },
+                        ],
+                    },
+                ],
+            };
+            const expectedMatches = [
+                {
+                    name: "FAKE.DATA.SET.DS",
+                    line: 1,
+                    column: 1,
+                    position: "1:1",
+                    contents: "test",
+                    uri: "/test/FAKE.DATA.SET.DS",
+                    searchString,
+                },
+            ];
+            const tokenCancellation: vscode.CancellationToken = {
+                isCancellationRequested: false,
+                onCancellationRequested: jest.fn(),
+            };
+            const myProgress = { test: "test" };
+
+            withProgressSpy.mockImplementation((opts: any, fn: any) => {
+                return fn(myProgress, tokenCancellation);
+            });
+            getSearchMatchesSpy.mockReturnValue(expectedMatches);
+            performSearchSpy.mockResolvedValue(expectedResponse);
+
+            const searchQP = (DatasetSearch as any).searchQuickPick;
+            const optionsQP = (DatasetSearch as any).searchOptionsQuickPick;
+
+            searchQP.onDidAccept = jest.fn().mockImplementation(async (listener) => {
+                searchQP.selectedItems = [{ label: (DatasetSearch as any).optionsQuickPickEntry.label }];
+                listener();
+                await new Promise((resolve) => process.nextTick(resolve));
+                searchQP.selectedItems = [{ label: searchString }];
+                listener();
+            });
+
+            searchQP.onDidHide = jest.fn().mockImplementation(async (listener) => {
+                await new Promise((resolve) => process.nextTick(resolve));
+                listener();
+                (DatasetSearch as any).savedSearchOptions.regex = true;
+                (DatasetSearch as any).savedSearchOptions.caseSensitive = true;
+            });
+
+            localStorageGetSpy.mockReturnValue(undefined);
+
+            await DatasetSearch.search(context, node);
+
+            expect(errorMessageSpy).not.toHaveBeenCalled();
+            expect(showMessageSpy).not.toHaveBeenCalled();
+
+            expect(constructQuickPicksSpy).toHaveBeenCalledTimes(1);
+            expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
+            expect(searchOptionsPromptSpy).toHaveBeenCalledTimes(1);
+
+            expect(localStorageGetSpy).toHaveBeenCalledTimes(1);
+            expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
+            expect(localStorageSetSpy).toHaveBeenCalledTimes(1);
+            expect(localStorageSetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS, {
+                caseSensitive: true,
+                history: [searchString],
+                regex: true,
+            });
+
+            // Expect the search quick pick to have returned
+            // Do not expect any options to have been selected
+            expect(searchQP.selectedItems.length).toEqual(1);
+            expect(optionsQP.selectedItems.length).toEqual(0);
+
+            // Expect the search quick pick to have been given listeners
+            expect(searchQP.onDidAccept).toHaveBeenCalledTimes(1);
+            expect(searchQP.onDidHide).toHaveBeenCalledTimes(1);
+
+            // Expect the quick picks to have been disposed
+            expect(searchQP.dispose).toHaveBeenCalledTimes(1);
+            expect(optionsQP.dispose).toHaveBeenCalledTimes(1);
+
+            expect(withProgressSpy.mock.calls[0][0]).toEqual({
+                location: vscode.ProgressLocation.Notification,
+                title: 'Searching for "test"',
+                cancellable: true,
+            });
+
+            expect(getSearchMatchesSpy).toHaveBeenCalledWith(node, expectedResponse, true, searchString);
+
+            expect(performSearchSpy).toHaveBeenCalledTimes(1);
+            expect(performSearchSpy).toHaveBeenCalledWith(myProgress, tokenCancellation, {
+                node,
+                pattern: node.pattern,
+                regex: true,
+                searchString,
+                caseSensitive: true,
+            });
+            expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
+
+            expect(tableBuilderTitleSpy).toHaveBeenCalledWith('Search Results for "test"');
             expect(tableBuilderOptionsSpy).toHaveBeenCalledWith({
                 autoSizeStrategy: { type: "fitCellContents" },
                 pagination: true,
