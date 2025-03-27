@@ -136,7 +136,7 @@ export class Paginator<T> {
      * @param page The new page index
      */
     public setPage(page: number): void {
-        if (page <= 0 || page >= this.totalPageCount || !Number.isInteger(page)) {
+        if (page < 0 || page >= this.totalPageCount || !Number.isInteger(page)) {
             throw new Error("[Paginator.setMaxItemsPerPage] page must be a valid integer between 1 and totalPageCount");
         }
         this.currentPage = page;
@@ -148,7 +148,7 @@ export class Paginator<T> {
      * @returns A slice of items starting at the given page
      */
     public getPage(page: number): T[] {
-        if (page <= 0 || page >= this.totalPageCount || !Number.isInteger(page)) {
+        if (page < 0 || page >= this.totalPageCount || !Number.isInteger(page)) {
             throw new Error("[Paginator.getPage] page must be a valid integer between 1 and totalPageCount");
         }
 

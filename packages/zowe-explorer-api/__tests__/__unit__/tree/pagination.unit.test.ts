@@ -133,12 +133,12 @@ describe("Paginator", () => {
 
         it("throws an error if the given value is not positive", () => {
             const p = Paginator.default(Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.setMaxItemsPerPage.bind(-1)).toThrow("[Paginator.setMaxItemsPerPage] maxItems must be a positive integer");
+            expect(p.setMaxItemsPerPage.bind(p, -1)).toThrow("[Paginator.setMaxItemsPerPage] maxItems must be a positive integer");
         });
 
         it("throws an error if the given value is not an integer", () => {
             const p = Paginator.default(Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.setMaxItemsPerPage.bind(1.1)).toThrow("[Paginator.setMaxItemsPerPage] maxItems must be a positive integer");
+            expect(p.setMaxItemsPerPage.bind(p, 1.1)).toThrow("[Paginator.setMaxItemsPerPage] maxItems must be a positive integer");
         });
     });
 
@@ -241,7 +241,29 @@ describe("Paginator", () => {
         });
     });
 
-    xdescribe("setPage", () => {});
+    describe("setPage", () => {
+        it("sets the page to the given index when valid", () => {
+            const testItems = Array.from({ length: Constants.DEFAULT_ITEMS_PER_PAGE * 4 }).map((v, i) => i);
+            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
+            expect(p.setPage.bind(p, 1)).not.toThrow();
+            expect(p.getCurrentPageIndex()).toBe(1);
+            expect(p.getCurrentPage()).toStrictEqual(testItems.slice(Constants.DEFAULT_ITEMS_PER_PAGE, Constants.DEFAULT_ITEMS_PER_PAGE * 2));
+        });
+        it("throws an error if providing a negative page index", () => {
+            const p = Paginator.fromList(["A", "B", "C"], Constants.DEFAULT_ITEMS_PER_PAGE);
+            expect(p.setPage.bind(p, -1)).toThrow("[Paginator.setMaxItemsPerPage] page must be a valid integer between 1 and totalPageCount");
+        });
+
+        it("throws an error if the page index is greater than the total page count", () => {
+            const p = Paginator.fromList(["A", "B", "C"], Constants.DEFAULT_ITEMS_PER_PAGE);
+            expect(p.setPage.bind(p, 2)).toThrow("[Paginator.setMaxItemsPerPage] page must be a valid integer between 1 and totalPageCount");
+        });
+
+        it("throws an error if the page index is not an integer", () => {
+            const p = Paginator.fromList(["A", "B", "C"], Constants.DEFAULT_ITEMS_PER_PAGE);
+            expect(p.setPage.bind(p, 1.1)).toThrow("[Paginator.setMaxItemsPerPage] page must be a valid integer between 1 and totalPageCount");
+        });
+    });
 
     xdescribe("getPage", () => {});
 
