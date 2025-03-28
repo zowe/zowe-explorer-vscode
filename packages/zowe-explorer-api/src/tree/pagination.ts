@@ -9,9 +9,6 @@
  *
  */
 
-import { Constants } from "../globals";
-import { VscSettings } from "../vscode/doc/VscSettings";
-
 /**
  * @brief Provides pagination capabilities for a tree view.
  */
@@ -33,12 +30,12 @@ export class Paginator<T> {
      * @returns A new {@link Paginator} instance, ready to be used for the given array
      * @throws If {@link maxItemsPerPage} is zero, a negative integer or a floating-point value
      */
-    public static fromList<T>(items: T[], maxItemsPerPage?: number): Paginator<T> {
+    public static fromList<T>(items: T[], maxItemsPerPage: number): Paginator<T> {
         const p = new Paginator<T>();
-        if (maxItemsPerPage != null && (maxItemsPerPage <= 0 || !Number.isInteger(maxItemsPerPage))) {
+        if (maxItemsPerPage <= 0 || !Number.isInteger(maxItemsPerPage)) {
             throw new Error("[Paginator.fromList] maxItemsPerPage must be a positive integer");
         }
-        p.setMaxItemsPerPage(maxItemsPerPage ?? VscSettings.getDirectValue<number>("zowe.trees.itemsPerPage", Constants.DEFAULT_ITEMS_PER_PAGE));
+        p.setMaxItemsPerPage(maxItemsPerPage);
         p.setItems(items);
         return p;
     }
@@ -49,12 +46,12 @@ export class Paginator<T> {
      * @returns A new {@link Paginator} instance
      * @throws If {@link maxItemsPerPage} is zero, a negative integer or a floating-point value
      */
-    public static default<T>(maxItemsPerPage?: number): Paginator<T> {
+    public static create<T>(maxItemsPerPage: number): Paginator<T> {
         const p = new Paginator<T>();
-        if (maxItemsPerPage != null && (maxItemsPerPage <= 0 || !Number.isInteger(maxItemsPerPage))) {
-            throw new Error("[Paginator.default] maxItemsPerPage must be a positive integer");
+        if (maxItemsPerPage <= 0 || !Number.isInteger(maxItemsPerPage)) {
+            throw new Error("[Paginator.create] maxItemsPerPage must be a positive integer");
         }
-        p.setMaxItemsPerPage(maxItemsPerPage ?? VscSettings.getDirectValue<number>("zowe.trees.itemsPerPage", Constants.DEFAULT_ITEMS_PER_PAGE));
+        p.setMaxItemsPerPage(maxItemsPerPage);
         return p;
     }
 
@@ -65,12 +62,11 @@ export class Paginator<T> {
     public setItems(items: T[]): void {
         this.items = items;
         if (this.items.length === 0) {
-            this.totalPageCount = 1;
-            this.currentPage = 0;
+            this.totalPageCount = this.currentPage = this.startIndex = this.endIndex = 0;
             return;
         }
         this.totalPageCount = Math.ceil(this.items.length / this.maxItemsPerPage);
-        this.currentPage = 0;
+        this.currentPage = Math.max(0, Math.min(this.currentPage, this.totalPageCount > 0 ? this.totalPageCount - 1 : 0));
         this.updateIndices();
     }
 
@@ -92,6 +88,7 @@ export class Paginator<T> {
         }
         this.maxItemsPerPage = maxItems;
         this.totalPageCount = Math.ceil(this.items.length / this.maxItemsPerPage);
+        this.currentPage = Math.max(0, Math.min(this.currentPage, this.totalPageCount > 0 ? this.totalPageCount - 1 : 0));
         this.updateIndices();
     }
 
@@ -139,12 +136,13 @@ export class Paginator<T> {
     }
 
     /**
-     * Set the current page for the pagination controller, starting with page 1 as the first page.
+     * Set the current page for the pagination controller.
      * @param page The new page index
+     * @throws If {@link page} is less than zero, greater than the total page count, or a non-integer value
      */
     public setPage(page: number): void {
         if (page < 0 || page >= this.totalPageCount || !Number.isInteger(page)) {
-            throw new Error("[Paginator.setMaxItemsPerPage] page must be a valid integer between 1 and totalPageCount");
+            throw new Error("[Paginator.setPage] page must be a valid integer between 0 and totalPageCount - 1");
         }
         this.currentPage = page;
         this.updateIndices();
@@ -154,18 +152,16 @@ export class Paginator<T> {
      * Returns a slice of items within the given page number.
      * @param page Specify the page of items to return
      * @returns A slice of items starting at the given page
+     * @throws If {@link page} is less than zero, greater than the total page count, or a non-integer value
      */
     public getPage(page: number): T[] {
         if (page < 0 || page >= this.totalPageCount || !Number.isInteger(page)) {
-            throw new Error("[Paginator.getPage] page must be a valid integer between 1 and totalPageCount");
+            throw new Error("[Paginator.getPage] page must be a valid integer between 0 and totalPageCount - 1");
         }
 
-        const lastPage = this.currentPage;
-        this.setPage(page);
-        const items = this.getCurrentPage();
-        this.setPage(lastPage);
-
-        return items;
+        const startIndex = page * this.maxItemsPerPage;
+        const endIndex = Math.min(startIndex + this.maxItemsPerPage, this.getItemCount());
+        return this.items.slice(startIndex, endIndex);
     }
 
     /**

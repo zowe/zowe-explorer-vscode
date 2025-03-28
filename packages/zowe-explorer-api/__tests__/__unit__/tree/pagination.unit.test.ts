@@ -10,7 +10,7 @@
  */
 
 import { Constants } from "../../../src/globals";
-import { Paginator } from "../../../src/tree";
+import { Paginator } from "../../../src";
 import { VscSettings } from "../../../src/vscode/doc/VscSettings";
 
 describe("Paginator", () => {
@@ -20,22 +20,17 @@ describe("Paginator", () => {
 
     describe("default", () => {
         it("creates a default paginator instance, no max items/page provided", () => {
-            const getDirectValueMock = jest.spyOn(VscSettings, "getDirectValue").mockReturnValueOnce(Constants.DEFAULT_ITEMS_PER_PAGE);
             const setMaxItemsPerPage = jest.spyOn(Paginator.prototype, "setMaxItemsPerPage");
-            const p = Paginator.default();
+            const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE);
 
             expect(p.getMaxItemsPerPage()).toBe(Constants.DEFAULT_ITEMS_PER_PAGE);
             expect(setMaxItemsPerPage).toHaveBeenCalledTimes(1);
             expect(setMaxItemsPerPage).toHaveBeenCalledWith(Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(getDirectValueMock).toHaveBeenCalledTimes(1);
-            expect(getDirectValueMock).toHaveBeenCalledWith("zowe.trees.itemsPerPage", Constants.DEFAULT_ITEMS_PER_PAGE);
         });
 
         it("creates a default paginator instance, max items/page provided", () => {
-            const getDirectValue = jest.spyOn(VscSettings, "getDirectValue");
-            const p = Paginator.default(50);
+            const p = Paginator.create(50);
             expect(p.getMaxItemsPerPage()).toBe(50);
-            expect(getDirectValue).not.toHaveBeenCalled();
         });
     });
 
@@ -44,23 +39,19 @@ describe("Paginator", () => {
             const items = Array.from({ length: Constants.DEFAULT_ITEMS_PER_PAGE }).map((v, i) => i);
             const setItems = jest.spyOn(Paginator.prototype, "setItems");
             const setMaxItemsPerPage = jest.spyOn(Paginator.prototype, "setMaxItemsPerPage");
-            const getDirectValueMock = jest.spyOn(VscSettings, "getDirectValue").mockReturnValueOnce(Constants.DEFAULT_ITEMS_PER_PAGE);
-            const p = Paginator.fromList(items);
+            const p = Paginator.fromList(items, Constants.DEFAULT_ITEMS_PER_PAGE);
             expect(p.getItemCount()).toBe(Constants.DEFAULT_ITEMS_PER_PAGE);
             expect(p.getItems()).toBe(items);
             expect(setItems).toHaveBeenCalledTimes(1);
             expect(setItems).toHaveBeenCalledWith(items);
             expect(setMaxItemsPerPage).toHaveBeenCalledWith(Constants.DEFAULT_ITEMS_PER_PAGE);
             expect(p.getMaxItemsPerPage()).toBe(Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(getDirectValueMock).toHaveBeenCalledTimes(1);
-            expect(getDirectValueMock).toHaveBeenCalledWith("zowe.trees.itemsPerPage", Constants.DEFAULT_ITEMS_PER_PAGE);
         });
 
         it("creates a new instance prepared for the given list, max items/page provided", () => {
             const items = Array.from({ length: 100 }).map((v, i) => i);
             const setItems = jest.spyOn(Paginator.prototype, "setItems");
             const setMaxItemsPerPage = jest.spyOn(Paginator.prototype, "setMaxItemsPerPage");
-            const getDirectValue = jest.spyOn(VscSettings, "getDirectValue");
             const p = Paginator.fromList(items, 50);
             expect(p.getItemCount()).toBe(100);
             expect(p.getItems()).toBe(items);
@@ -68,13 +59,12 @@ describe("Paginator", () => {
             expect(setItems).toHaveBeenCalledWith(items);
             expect(setMaxItemsPerPage).toHaveBeenCalledWith(50);
             expect(p.getMaxItemsPerPage()).toBe(50);
-            expect(getDirectValue).not.toHaveBeenCalled();
         });
     });
 
     describe("setItems", () => {
         it("sets the items property on the paginator when called, small list", () => {
-            const p = Paginator.default(Constants.DEFAULT_ITEMS_PER_PAGE);
+            const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE);
             const items = ["A", "B", "C"];
             p.setItems(items);
             expect(p.getItems()).toBe(items);
@@ -84,8 +74,8 @@ describe("Paginator", () => {
         });
 
         it("sets the items property on the paginator when called, large list", () => {
-            const p = Paginator.default(Constants.DEFAULT_ITEMS_PER_PAGE);
-            const items = Array(Constants.DEFAULT_ITEMS_PER_PAGE * 3).map((i, v) => `elem-${i}`);
+            const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE);
+            const items = Array(Constants.DEFAULT_ITEMS_PER_PAGE * 3).map((i, _v) => `elem-${i}`);
             p.setItems(items);
             expect(p.getItems()).toBe(items);
             expect(p.getPageCount()).toBe(3);
@@ -94,11 +84,11 @@ describe("Paginator", () => {
         });
 
         it("resets the total page count when the given list is empty", () => {
-            const p = Paginator.default(Constants.DEFAULT_ITEMS_PER_PAGE);
+            const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE);
             const items = [];
             p.setItems(items);
             expect(p.getItems()).toBe(items);
-            expect(p.getPageCount()).toBe(1);
+            expect(p.getPageCount()).toBe(0);
             expect(p.getCurrentPageIndex()).toBe(0);
             expect(p.getCurrentPage()).toStrictEqual(items);
         });
@@ -108,7 +98,7 @@ describe("Paginator", () => {
         const testItems = ["test1", "test2", "test3"];
 
         it("returns the same reference to array passed to setItems function", () => {
-            const p = Paginator.default(Constants.DEFAULT_ITEMS_PER_PAGE);
+            const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE);
             p.setItems(testItems);
             expect(p.getItems()).toBe(testItems);
         });
@@ -126,38 +116,30 @@ describe("Paginator", () => {
 
     describe("setMaxItemsPerPage", () => {
         it("sets the maximum number of items per page", () => {
-            const p = Paginator.default(Constants.DEFAULT_ITEMS_PER_PAGE * 2);
+            const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE * 2);
             p.setMaxItemsPerPage(100);
             expect(p.getMaxItemsPerPage()).toBe(100);
         });
 
         it("throws an error if the given value is not positive", () => {
-            const p = Paginator.default(Constants.DEFAULT_ITEMS_PER_PAGE);
+            const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE);
             expect(p.setMaxItemsPerPage.bind(p, -1)).toThrow("[Paginator.setMaxItemsPerPage] maxItems must be a positive integer");
         });
 
         it("throws an error if the given value is not an integer", () => {
-            const p = Paginator.default(Constants.DEFAULT_ITEMS_PER_PAGE);
+            const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE);
             expect(p.setMaxItemsPerPage.bind(p, 1.1)).toThrow("[Paginator.setMaxItemsPerPage] maxItems must be a positive integer");
         });
     });
 
     describe("getMaxItemsPerPage", () => {
-        it("returns the default maximum if not provided", () => {
-            const getDirectValueMock = jest.spyOn(VscSettings, "getDirectValue").mockReturnValueOnce(Constants.DEFAULT_ITEMS_PER_PAGE);
-            const p = Paginator.default();
-            expect(getDirectValueMock).toHaveBeenCalledTimes(1);
-            expect(getDirectValueMock).toHaveBeenCalledWith("zowe.trees.itemsPerPage", Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.getMaxItemsPerPage()).toBe(Constants.DEFAULT_ITEMS_PER_PAGE);
-        });
-
         it("returns the maximum provided at initialization", () => {
-            const p = Paginator.default(Constants.DEFAULT_ITEMS_PER_PAGE / 2);
+            const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE / 2);
             expect(p.getMaxItemsPerPage()).toBe(Constants.DEFAULT_ITEMS_PER_PAGE / 2);
         });
 
         it("returns the maximum value explicitly set by the user", () => {
-            const p = Paginator.default(Constants.DEFAULT_ITEMS_PER_PAGE / 2);
+            const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE / 2);
             p.setMaxItemsPerPage(Constants.DEFAULT_ITEMS_PER_PAGE * 2);
             expect(p.getMaxItemsPerPage()).toBe(Constants.DEFAULT_ITEMS_PER_PAGE * 2);
         });
@@ -251,17 +233,17 @@ describe("Paginator", () => {
         });
         it("throws an error if providing a negative page index", () => {
             const p = Paginator.fromList(["A", "B", "C"], Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.setPage.bind(p, -1)).toThrow("[Paginator.setMaxItemsPerPage] page must be a valid integer between 1 and totalPageCount");
+            expect(p.setPage.bind(p, -1)).toThrow("[Paginator.setPage] page must be a valid integer between 0 and totalPageCount - 1");
         });
 
         it("throws an error if the page index is greater than the total page count", () => {
             const p = Paginator.fromList(["A", "B", "C"], Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.setPage.bind(p, 2)).toThrow("[Paginator.setMaxItemsPerPage] page must be a valid integer between 1 and totalPageCount");
+            expect(p.setPage.bind(p, 2)).toThrow("[Paginator.setPage] page must be a valid integer between 0 and totalPageCount - 1");
         });
 
         it("throws an error if the page index is not an integer", () => {
             const p = Paginator.fromList(["A", "B", "C"], Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.setPage.bind(p, 1.1)).toThrow("[Paginator.setMaxItemsPerPage] page must be a valid integer between 1 and totalPageCount");
+            expect(p.setPage.bind(p, 1.1)).toThrow("[Paginator.setPage] page must be a valid integer between 0 and totalPageCount - 1");
         });
     });
 
