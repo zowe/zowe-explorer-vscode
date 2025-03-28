@@ -66,7 +66,7 @@ export class Paginator<T> {
             return;
         }
         this.totalPageCount = Math.ceil(this.items.length / this.maxItemsPerPage);
-        this.currentPage = Math.max(0, Math.min(this.currentPage, this.totalPageCount > 0 ? this.totalPageCount - 1 : 0));
+        this.currentPage = Math.max(0, Math.min(this.currentPage, this.totalPageCount - 1));
         this.updateIndices();
     }
 

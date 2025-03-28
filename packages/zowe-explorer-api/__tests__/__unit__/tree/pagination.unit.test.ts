@@ -17,7 +17,7 @@ describe("Paginator class", () => {
         jest.clearAllMocks();
     });
 
-    describe("default", () => {
+    describe("create", () => {
         it("creates a default paginator instance, no max items/page provided", () => {
             const setMaxItemsPerPage = jest.spyOn(Paginator.prototype, "setMaxItemsPerPage");
             const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE);
@@ -30,6 +30,14 @@ describe("Paginator class", () => {
         it("creates a default paginator instance, max items/page provided", () => {
             const p = Paginator.create(50);
             expect(p.getMaxItemsPerPage()).toBe(50);
+        });
+
+        it("throws an error if the max items per page is a negative integer", () => {
+            expect(Paginator.create.bind(Paginator, -1)).toThrow("[Paginator.create] maxItemsPerPage must be a positive integer");
+        });
+
+        it("throws an error if the max items per page is not an integer", () => {
+            expect(Paginator.create.bind(Paginator, 1.1)).toThrow("[Paginator.create] maxItemsPerPage must be a positive integer");
         });
     });
 
@@ -58,6 +66,26 @@ describe("Paginator class", () => {
             expect(setItems).toHaveBeenCalledWith(items);
             expect(setMaxItemsPerPage).toHaveBeenCalledWith(50);
             expect(p.getMaxItemsPerPage()).toBe(50);
+        });
+
+        it("throws an error if the max items per page is a negative integer", () => {
+            expect(
+                Paginator.fromList.bind(
+                    Paginator,
+                    Array.from({ length: 100 }).map((v, i) => i),
+                    -1
+                )
+            ).toThrow("[Paginator.fromList] maxItemsPerPage must be a positive integer");
+        });
+
+        it("throws an error if the max items per page is not an integer", () => {
+            expect(
+                Paginator.fromList.bind(
+                    Paginator,
+                    Array.from({ length: 100 }).map((v, i) => i),
+                    1.1
+                )
+            ).toThrow("[Paginator.fromList] maxItemsPerPage must be a positive integer");
         });
     });
 
@@ -118,6 +146,12 @@ describe("Paginator class", () => {
             const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE * 2);
             p.setMaxItemsPerPage(100);
             expect(p.getMaxItemsPerPage()).toBe(100);
+        });
+
+        it("sets the maximum number of items per page, total page count > 0", () => {
+            const p = Paginator.fromList(["A", "B", "C", "D"], Constants.DEFAULT_ITEMS_PER_PAGE);
+            p.setMaxItemsPerPage(2);
+            expect(p.getMaxItemsPerPage()).toBe(2);
         });
 
         it("throws an error if the given value is not positive", () => {
