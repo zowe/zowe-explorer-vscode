@@ -44,6 +44,7 @@ import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { mocked } from "../../../__mocks__/mockUtils";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 import * as workspaceUtils from "../../../src/utils/workspace";
+import { TreeViewUtils } from "../../../src/utils/TreeViewUtils";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -612,6 +613,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
             testMemberNode,
             testFavMemberNode,
             testFavoritedNode,
+            fixMultiSelectMock: jest.spyOn(TreeViewUtils, "fixVsCodeMultiSelect"),
         };
     }
 
@@ -629,6 +631,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}`);
+        expect(blockMocks.fixMultiSelectMock).toHaveBeenCalledWith(blockMocks.testDatasetTree, blockMocks.testDatasetNode.getParent());
     });
 
     it("Should delete one member", async () => {
@@ -645,6 +648,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
             `The following 1 item(s) were deleted: ${blockMocks.testMemberNode.getParent().getLabel()}(${blockMocks.testMemberNode.getLabel()})`
         );
+        expect(blockMocks.fixMultiSelectMock).toHaveBeenCalledWith(blockMocks.testDatasetTree, blockMocks.testMemberNode.getParent());
     });
 
     it("Should delete one VSAM", async () => {

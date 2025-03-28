@@ -42,6 +42,7 @@ import { ProfileManagement } from "../utils/ProfileManagement";
 import * as nls from "vscode-nls";
 import { resolveFileConflict } from "../shared/actions";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
+import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -407,6 +408,7 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
     for (const member of memberParents) {
         datasetProvider.refreshElement(member);
     }
+    await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider, nodes[0].getParent());
 }
 
 /**
