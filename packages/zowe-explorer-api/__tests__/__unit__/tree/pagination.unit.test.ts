@@ -11,9 +11,8 @@
 
 import { Constants } from "../../../src/globals";
 import { Paginator } from "../../../src";
-import { VscSettings } from "../../../src/vscode/doc/VscSettings";
 
-describe("Paginator", () => {
+describe("Paginator class", () => {
     afterEach(() => {
         jest.clearAllMocks();
     });
@@ -247,13 +246,99 @@ describe("Paginator", () => {
         });
     });
 
-    xdescribe("getPage", () => {});
+    describe("getPage", () => {
+        it("returns the contents for the given page index", () => {
+            const testItems = Array.from({ length: Constants.DEFAULT_ITEMS_PER_PAGE * 4 }).map((v, i) => i);
+            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
+            expect(p.getPage(2)).toStrictEqual(testItems.slice(Constants.DEFAULT_ITEMS_PER_PAGE * 2, Constants.DEFAULT_ITEMS_PER_PAGE * 3));
+        });
 
-    xdescribe("getPageCount", () => {});
+        it("throws an error if the given index is greater than total page count", () => {
+            const testItems = Array.from({ length: Constants.DEFAULT_ITEMS_PER_PAGE * 4 }).map((v, i) => i);
+            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
+            expect(p.getPage.bind(p, 5)).toThrow("[Paginator.getPage] page must be a valid integer between 0 and totalPageCount - 1");
+        });
 
-    xdescribe("getCurrentPageIndex", () => {});
+        it("throws an error if the given index is less than 0", () => {
+            const testItems = Array.from({ length: Constants.DEFAULT_ITEMS_PER_PAGE }).map((v, i) => i);
+            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
+            expect(p.getPage.bind(p, -1)).toThrow("[Paginator.getPage] page must be a valid integer between 0 and totalPageCount - 1");
+        });
 
-    xdescribe("getCurrentPage", () => {});
+        it("throws an error if the given index is not an integer", () => {
+            const testItems = Array.from({ length: Constants.DEFAULT_ITEMS_PER_PAGE }).map((v, i) => i);
+            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
+            expect(p.getPage.bind(p, 1.1)).toThrow("[Paginator.getPage] page must be a valid integer between 0 and totalPageCount - 1");
+        });
+    });
 
-    xdescribe("getItemCount", () => {});
+    describe("getPageCount", () => {
+        it("returns the total page count", () => {
+            const p = Paginator.fromList(
+                Array.from({ length: 1000 }).map((v, i) => `${i}`),
+                Constants.DEFAULT_ITEMS_PER_PAGE
+            );
+            expect(p.getPageCount()).toBe(10);
+        });
+    });
+
+    describe("getCurrentPageIndex", () => {
+        it("returns 0 when a paginator is just initialized", () => {
+            const p = Paginator.fromList(
+                Array.from({ length: 200 }).map((v, i) => `${i}`),
+                Constants.DEFAULT_ITEMS_PER_PAGE
+            );
+            expect(p.getCurrentPageIndex()).toBe(0);
+        });
+
+        it("returns a new page index after moving forward", () => {
+            const p = Paginator.fromList(
+                Array.from({ length: 200 }).map((v, i) => `${i}`),
+                Constants.DEFAULT_ITEMS_PER_PAGE
+            );
+            p.nextPage();
+            expect(p.getCurrentPageIndex()).toBe(1);
+        });
+
+        it("returns a new page index after moving backward", () => {
+            const p = Paginator.fromList(
+                Array.from({ length: 400 }).map((v, i) => `${i}`),
+                Constants.DEFAULT_ITEMS_PER_PAGE
+            );
+            p.setPage(3);
+            p.previousPage();
+            expect(p.getCurrentPageIndex()).toBe(2);
+        });
+    });
+
+    describe("getCurrentPage", () => {
+        it("returns the first page after a paginator is initialized", () => {
+            const list = Array.from({ length: 200 }).map((v, i) => `${i}`);
+            const p = Paginator.fromList(list, Constants.DEFAULT_ITEMS_PER_PAGE);
+            expect(p.getCurrentPage()).toStrictEqual(list.slice(0, Constants.DEFAULT_ITEMS_PER_PAGE));
+        });
+
+        it("returns a different page after a paginator moves forward", () => {
+            const list = Array.from({ length: 200 }).map((v, i) => `${i}`);
+            const p = Paginator.fromList(list, Constants.DEFAULT_ITEMS_PER_PAGE);
+            p.nextPage();
+            expect(p.getCurrentPage()).toStrictEqual(list.slice(Constants.DEFAULT_ITEMS_PER_PAGE));
+        });
+
+        it("returns a different page after a paginator moves backward", () => {
+            const list = Array.from({ length: 400 }).map((v, i) => `${i}`);
+            const p = Paginator.fromList(list, Constants.DEFAULT_ITEMS_PER_PAGE);
+            p.moveForward(2);
+            p.previousPage();
+            expect(p.getCurrentPage()).toStrictEqual(list.slice(Constants.DEFAULT_ITEMS_PER_PAGE, Constants.DEFAULT_ITEMS_PER_PAGE * 2));
+        });
+    });
+
+    describe("getItemCount", () => {
+        it("returns the total number of items", () => {
+            const list = Array.from({ length: 400 }).map((v, i) => `${i}`);
+            const p = Paginator.fromList(list, Constants.DEFAULT_ITEMS_PER_PAGE);
+            expect(p.getItemCount()).toBe(list.length);
+        });
+    });
 });
