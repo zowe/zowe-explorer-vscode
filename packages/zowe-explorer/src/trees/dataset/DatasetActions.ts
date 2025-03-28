@@ -28,6 +28,7 @@ import { SharedUtils } from "../shared/SharedUtils";
 import { FilterItem } from "../../management/FilterManagement";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { Definitions } from "../../configuration/Definitions";
+import { TreeViewUtils } from "../../utils/TreeViewUtils";
 
 export class DatasetActions {
     public static typeEnum: zosfiles.CreateDataSetTypeEnum;
@@ -654,6 +655,7 @@ export class DatasetActions {
         for (const member of memberParents) {
             datasetProvider.refreshElement(member);
         }
+        await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider, nodes[0].getParent());
     }
 
     /**
