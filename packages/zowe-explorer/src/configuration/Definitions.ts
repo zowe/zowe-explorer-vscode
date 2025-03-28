@@ -32,6 +32,11 @@ export namespace Definitions {
         dsTemplates?: Types.DataSetAllocTemplate[];
         favorites: string[];
         encodingHistory: string[];
+        searchedKeywordHistory: string[];
+    };
+    export type DataSetSearchOptions = {
+        caseSensitive?: boolean;
+        regex?: boolean;
     };
     export type FavoriteData = {
         profileName: string;
@@ -52,6 +57,7 @@ export namespace Definitions {
         fileHistory: string[];
         encodingHistory: string[];
         templates: Types.DataSetAllocTemplate[];
+        searchedKeywordHistory: string[];
     };
     export type ReplaceDSType = "ps" | "po" | "mem";
     export type ShouldReplace = "replace" | "cancel" | "notFound";
@@ -144,5 +150,6 @@ export namespace Definitions {
         SETTINGS_LOCAL_STORAGE_MIGRATED = "zowe.settings.localStorageMigrated",
         SETTINGS_OLD_SETTINGS_MIGRATED = "zowe.settings.oldSettingsMigrated",
         V1_MIGRATION_STATUS = "zowe.v1MigrationStatus",
+        DS_SEARCH_OPTIONS = "zowe.dsSearchOptions",
     }
 }

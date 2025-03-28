@@ -969,6 +969,21 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         return this.mHistory.getSearchHistory();
     }
 
+    public addSearchedKeywordHistory(criteria: string): void {
+        ZoweLogger.trace("DatasetTree.addSearchedKeywordHistory called.");
+        this.mHistory.addSearchedKeywordHistory(criteria);
+    }
+
+    public getSearchedKeywordHistory(): string[] {
+        ZoweLogger.trace("DatasetTree.getSearchedKeywordHistory called.");
+        return this.mHistory.getSearchedKeywordHistory();
+    }
+
+    public removeSearchedKeywordHistory(criteria: string): void {
+        ZoweLogger.trace("DatasetTree.removeSearchedKeywordHistory called.");
+        this.mHistory.removeSearchedKeywordHistory(criteria);
+    }
+
     public addFileHistory(criteria: string): void {
         ZoweLogger.trace("DatasetTree.addFileHistory called.");
         this.mHistory.addFileHistory(criteria);
@@ -998,6 +1013,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public resetSearchHistory(): void {
         ZoweLogger.trace("DatasetTree.resetSearchHistory called.");
         this.mHistory.resetSearchHistory();
+    }
+
+    public resetSearchedKeywordHistory(): void {
+        ZoweLogger.trace("DatasetTree.resetSearchedKeywordHistory called.");
+        this.mHistory.resetSearchedKeywordHistory();
     }
 
     public resetFileHistory(): void {

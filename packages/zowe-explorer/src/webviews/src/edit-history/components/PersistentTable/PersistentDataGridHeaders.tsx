@@ -20,7 +20,7 @@ export default function PersistentDataGridHeaders(): JSXInternal.Element {
 
   const renderSelectHeader = () => {
     const deleteText = l10n.t("Select");
-    return selection[type] === "search" || selection[type] === "fileHistory" ? (
+    return selection[type] === "search" || selection[type] === "fileHistory" || selection[type] === "searchedKeywordHistory" ? (
       <VSCodeDataGridCell cell-type="columnheader" grid-column="2" style={{ maxWidth: "20vw", textAlign: "center" }}>
         {deleteText}
       </VSCodeDataGridCell>

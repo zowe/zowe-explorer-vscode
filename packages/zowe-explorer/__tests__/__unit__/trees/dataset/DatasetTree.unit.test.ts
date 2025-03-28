@@ -795,6 +795,62 @@ describe("Dataset Tree Unit Tests - Function getSearchHistory", () => {
         expect(testTree.getSearchHistory()).toEqual(["testHistory"]);
     });
 });
+
+describe("Dataset Tree Unit Tests - Functions addSearchedKeywordHistory and getSearchedKeywordHistory", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+
+        return {
+            session,
+            datasetSessionNode,
+            treeView,
+        };
+    }
+
+    it("Checking common run of function", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+
+        testTree.addSearchedKeywordHistory("testHistory");
+
+        expect(testTree.getSearchedKeywordHistory()).toEqual(["testHistory"]);
+    });
+});
+
+describe("Dataset Tree Unit Tests - Function removeSearchedKeywordHistory", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+
+        return {
+            session,
+            datasetSessionNode,
+            treeView,
+        };
+    }
+
+    it("Checking common run of function", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+
+        testTree.addSearchedKeywordHistory("testHistory");
+        expect(testTree.getSearchedKeywordHistory()).toEqual(["testHistory"]);
+        testTree.removeSearchedKeywordHistory("testHistory");
+        expect(testTree.getSearchedKeywordHistory()).toEqual([]);
+    });
+});
+
 describe("Dataset Tree Unit Tests - Function addFileHistory", () => {
     function createBlockMocks() {
         const session = createISession();
@@ -3422,6 +3478,18 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(tree["mHistory"]["mSearchHistory"].length).toEqual(4);
             tree.resetSearchHistory();
             expect(tree["mHistory"]["mSearchHistory"].length).toEqual(0);
+        });
+    });
+
+    describe("resetSearchedKeywordHistory", () => {
+        it("clears the entire search keyword history", () => {
+            tree.addSearchedKeywordHistory("test1");
+            tree.addSearchedKeywordHistory("test2");
+            tree.addSearchedKeywordHistory("test3");
+            tree.addSearchedKeywordHistory("test4");
+            expect(tree["mHistory"]["mSearchedKeywordHistory"].length).toEqual(4);
+            tree.resetSearchedKeywordHistory();
+            expect(tree["mHistory"]["mSearchedKeywordHistory"].length).toEqual(0);
         });
     });
 

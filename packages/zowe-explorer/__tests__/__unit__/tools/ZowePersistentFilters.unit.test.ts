@@ -62,12 +62,29 @@ describe("PersistentFilters Unit Test", () => {
             expect(pf.getFileHistory()).toEqual(["TEST3.TXT", "TEST2.TXT"]);
         });
     });
+    describe("addSearchedKeywordHistory()", () => {
+        it("should pop search keyword history if history length is larger than max length", () => {
+            const pf: ZowePersistentFilters = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset, 1, 1);
+            const privatePf = pf as any;
+            privatePf.mSearchedKeywordHistory = ["testOne"];
+            pf.addSearchedKeywordHistory("testTwo");
+            expect(pf.getSearchedKeywordHistory()).toEqual(["testTwo"]);
+        });
+    });
     describe("removeSearchHistory", () => {
         it("should remove the specified item from the persistent object", () => {
             const pf: ZowePersistentFilters = new ZowePersistentFilters(PersistenceSchemaEnum.Job, 2, 2);
             pf["mSearchHistory"] = ["test1", "test2"];
             pf.removeSearchHistory("test1");
             expect(pf.getSearchHistory().length).toEqual(1);
+        });
+    });
+    describe("removeSearchedKeywordHistory", () => {
+        it("should remove the specified item from the persistent object", () => {
+            const pf: ZowePersistentFilters = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset, 2, 2);
+            pf["mSearchedKeywordHistory"] = ["test1", "test2"];
+            pf.removeSearchedKeywordHistory("test1");
+            expect(pf.getSearchedKeywordHistory().length).toEqual(1);
         });
     });
 });

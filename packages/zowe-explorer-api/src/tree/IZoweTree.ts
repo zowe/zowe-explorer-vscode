@@ -375,4 +375,26 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
      * @param {ZosEncoding} encoding File encoding, user will be prompted if undefined
      */
     openWithEncoding?(node: IZoweTreeNode, encoding?: ZosEncoding): void | Promise<void>;
+
+    /**
+     * Adds a search keyword to the history
+     * @param element The search keyword to add
+     */
+    addSearchedKeywordHistory?(element: string): void;
+
+    /**
+     * Gets the search keyword history
+     */
+    getSearchedKeywordHistory?(): string[];
+
+    /**
+     * Removes a search keyword from the history
+     * @param element The search keyword to remove
+     */
+    removeSearchedKeywordHistory?(element: string): void;
+
+    /**
+     * Resets the search keyword history
+     */
+    resetSearchedKeywordHistory?(): void;
 }
