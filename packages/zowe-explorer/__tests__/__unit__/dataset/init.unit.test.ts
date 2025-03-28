@@ -170,6 +170,7 @@ describe("Test src/dataset/extension", () => {
                 name: "zowe.ds.showAttributes",
                 mock: [
                     { spy: jest.spyOn(contextuals, "isDs"), arg: [test.value], ret: false },
+                    { spy: jest.spyOn(contextuals, "isVsam"), arg: [test.value], ret: false },
                     { spy: jest.spyOn(contextuals, "isPds"), arg: [test.value], ret: false },
                     { spy: jest.spyOn(contextuals, "isDsMember"), arg: [test.value], ret: true },
                     { spy: jest.spyOn(dsActions, "showAttributes"), arg: [test.value, dsProvider] },

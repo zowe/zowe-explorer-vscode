@@ -149,7 +149,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.showAttributes", async (node, nodeList) => {
             const selectedNodes = getSelectedNodeList(node, nodeList).filter(
-                (element) => contextuals.isDs(element) || contextuals.isPds(element) || contextuals.isDsMember(element)
+                (element) => contextuals.isDs(element) || contextuals.isVsam(element) || contextuals.isPds(element) || contextuals.isDsMember(element)
             );
             for (const item of selectedNodes) {
                 await dsActions.showAttributes(item, datasetProvider);
