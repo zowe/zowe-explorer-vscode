@@ -330,6 +330,7 @@ describe("HistoryView Unit Tests", () => {
                 favorites: undefined,
                 fileHistory: [],
                 search: undefined,
+                searchedKeywordHistory: [],
                 sessions: [],
                 encodingHistory: [],
             });

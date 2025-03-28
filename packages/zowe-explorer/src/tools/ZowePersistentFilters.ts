@@ -24,7 +24,7 @@ import { Definitions } from "../configuration/Definitions";
 export class ZowePersistentFilters {
     private static readonly favorites: string = "favorites";
     private static readonly searchHistory: string = "searchHistory";
-    private static readonly searchedKeywords: string = "searchedKeywords";
+    private static readonly searchedKeywordHistory: string = "searchedKeywordHistory";
     private static readonly fileHistory: string = "fileHistory";
     private static readonly sessions: string = "sessions";
     private static readonly encodingHistory: string = "encodingHistory";
@@ -34,7 +34,7 @@ export class ZowePersistentFilters {
     private mFileHistory: string[] = [];
     private mSessions: string[] = [];
     private mEncodingHistory: string[] = [];
-    private mSearchedKeywords: string[] = [];
+    private mSearchedKeywordHistory: string[] = [];
 
     public constructor(
         schema: PersistenceSchemaEnum,
@@ -147,22 +147,22 @@ export class ZowePersistentFilters {
      *
      * @param {string} criteria - a line of search criteria
      */
-    public addSearchedKeywords(criteria: string): void {
-        ZoweLogger.trace("PersistentFilters.addSearchedKeywords called.");
+    public addSearchedKeywordHistory(criteria: string): void {
+        ZoweLogger.trace("PersistentFilters.addSearchedKeywordHistory called.");
         if (criteria) {
             // Remove any entries that match
-            this.mSearchedKeywords = this.mSearchedKeywords.filter((element) => {
+            this.mSearchedKeywordHistory = this.mSearchedKeywordHistory.filter((element) => {
                 return element.trim() !== criteria.trim();
             });
 
             // Add value to front of stack
-            this.mSearchedKeywords.unshift(criteria);
+            this.mSearchedKeywordHistory.unshift(criteria);
 
             // If list getting too large remove last entry
-            if (this.mSearchedKeywords.length > this.maxFileHistory) {
-                this.mSearchedKeywords.pop();
+            if (this.mSearchedKeywordHistory.length > this.maxFileHistory) {
+                this.mSearchedKeywordHistory.pop();
             }
-            this.updateSearchedKeywords();
+            this.updateSearchedKeywordHistory();
         }
     }
 
@@ -185,9 +185,9 @@ export class ZowePersistentFilters {
         return this.mFileHistory;
     }
 
-    public getSearchedKeywords(): string[] {
-        ZoweLogger.trace("PersistentFilters.getSearchedKeywords called.");
-        return this.mSearchedKeywords;
+    public getSearchedKeywordHistory(): string[] {
+        ZoweLogger.trace("PersistentFilters.getSearchedKeywordHistory called.");
+        return this.mSearchedKeywordHistory;
     }
 
     public readFavorites(): string[] {
@@ -245,14 +245,14 @@ export class ZowePersistentFilters {
         this.updateEncodingHistory();
     }
 
-    public removeSearchedKeywords(name: string): void {
-        const index = this.mSearchedKeywords.findIndex((keyword) => {
+    public removeSearchedKeywordHistory(name: string): void {
+        const index = this.mSearchedKeywordHistory.findIndex((keyword) => {
             return keyword.includes(name);
         });
         if (index >= 0) {
-            this.mSearchedKeywords.splice(index, 1);
+            this.mSearchedKeywordHistory.splice(index, 1);
         }
-        this.updateSearchedKeywords();
+        this.updateSearchedKeywordHistory();
     }
 
     /*********************************************************************************************************************************************/
@@ -282,9 +282,9 @@ export class ZowePersistentFilters {
         this.updateEncodingHistory();
     }
 
-    public resetSearchedKeywords(): void {
-        this.mSearchedKeywords = [];
-        this.updateSearchedKeywords();
+    public resetSearchedKeywordHistory(): void {
+        this.mSearchedKeywordHistory = [];
+        this.updateSearchedKeywordHistory();
     }
 
     /*********************************************************************************************************************************************/
@@ -335,10 +335,10 @@ export class ZowePersistentFilters {
         }
     }
 
-    private updateSearchedKeywords(): void {
+    private updateSearchedKeywordHistory(): void {
         const settings = { ...ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema) };
         if (settings.persistence) {
-            settings.searchedKeywords = this.mSearchedKeywords;
+            settings.searchedKeywordHistory = this.mSearchedKeywordHistory;
             ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(this.schema, settings);
         }
     }
@@ -351,12 +351,12 @@ export class ZowePersistentFilters {
             this.mSessions = settings[ZowePersistentFilters.sessions] ?? [];
             this.mFileHistory = settings[ZowePersistentFilters.fileHistory] ?? [];
             this.mEncodingHistory = settings[ZowePersistentFilters.encodingHistory] ?? [];
-            this.mSearchedKeywords = settings[ZowePersistentFilters.searchedKeywords] ?? [];
+            this.mSearchedKeywordHistory = settings[ZowePersistentFilters.searchedKeywordHistory] ?? [];
         }
         this.updateSearchHistory();
         this.updateSessions();
         this.updateFileHistory();
         this.updateEncodingHistory();
-        this.updateSearchedKeywords();
+        this.updateSearchedKeywordHistory();
     }
 }

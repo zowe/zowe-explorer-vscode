@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { Gui, PersistenceSchemaEnum, Table, TableBuilder, TableViewProvider, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { Gui, Table, TableBuilder, TableViewProvider, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { DatasetSearch } from "../../../../src/trees/dataset/DatasetSearch";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
@@ -26,31 +26,18 @@ import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvid
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { window } from "../../../__mocks__/vscode";
 import { Definitions } from "../../../../src/configuration/Definitions";
-import * as zpf from "../../../../src/tools/ZowePersistentFilters";
+import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 
 jest.mock("fs");
 jest.mock("vscode");
 jest.mock("../../../../src/tools/ZoweLogger");
 
 describe("Dataset Search Unit Tests - function search", () => {
-    let persistentFilter: zpf.ZowePersistentFilters;
-
-    beforeAll(() => {
-        const localStorageGetSpy = jest.spyOn(ZoweLocalStorage, "getValue").mockImplementation((_key: string) => {
-            return {};
-        });
-        persistentFilter = new zpf.ZowePersistentFilters(PersistenceSchemaEnum.Dataset);
-        localStorageGetSpy.mockRestore();
-    });
-
     beforeEach(() => {
         (DatasetSearch as any).savedSearchOptions = undefined;
         (DatasetSearch as any).searchQuickPick = undefined;
         (DatasetSearch as any).searchOptionsQuickPick = undefined;
         (DatasetSearch as any).optionsQuickPickEntry = undefined;
-        jest.spyOn(zpf, "ZowePersistentFilters").mockImplementation(() => {
-            return persistentFilter;
-        });
     });
 
     describe("Helper function - continueSearchPrompt", () => {
@@ -884,10 +871,13 @@ describe("Dataset Search Unit Tests - function search", () => {
             });
             jest.spyOn(ZoweLocalStorage, "setValue").mockResolvedValue(undefined);
 
-            (DatasetSearch as any).persistentFilter = persistentFilter;
+            historySetSpy = jest.fn().mockReturnValue(undefined);
+            historyGetSpy = jest.fn().mockReturnValue([]);
 
-            historySetSpy = jest.spyOn(persistentFilter, "addSearchedKeywords").mockReturnValue(undefined);
-            historyGetSpy = jest.spyOn(persistentFilter, "getSearchedKeywords").mockReturnValue([]);
+            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
+                getSearchedKeywordHistory: historyGetSpy,
+                setSearchedKeywordHistory: historySetSpy,
+            } as any);
 
             (DatasetSearch as any).savedSearchOptions = { caseSensitive: false, regex: false };
         });
@@ -1320,9 +1310,14 @@ describe("Dataset Search Unit Tests - function search", () => {
             (DatasetSearch as any).searchQuickPick = window.createQuickPick();
             (DatasetSearch as any).searchOptionsQuickPick = window.createQuickPick();
             (DatasetSearch as any).optionsQuickPickEntry = { label: "" };
-            (DatasetSearch as any).persistentFilter = persistentFilter;
-            historySetSpy = jest.spyOn(persistentFilter, "addSearchedKeywords").mockReturnValue(undefined);
-            historyGetSpy = jest.spyOn(persistentFilter, "getSearchedKeywords").mockReturnValue([]);
+
+            historySetSpy = jest.fn().mockReturnValue(undefined);
+            historyGetSpy = jest.fn().mockReturnValue([]);
+
+            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
+                getSearchedKeywordHistory: historyGetSpy,
+                addSearchedKeywordHistory: historySetSpy,
+            } as any);
 
             localStorageSetSpy
                 .mockClear()
