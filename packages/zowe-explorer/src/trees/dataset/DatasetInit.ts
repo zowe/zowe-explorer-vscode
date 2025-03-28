@@ -124,7 +124,11 @@ export class DatasetInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.showAttributes", async (node, nodeList) => {
                 const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList).filter(
-                    (element) => SharedContext.isDs(element) || SharedContext.isPds(element) || SharedContext.isDsMember(element)
+                    (element) =>
+                        SharedContext.isDs(element) ||
+                        SharedContext.isVsam(element) ||
+                        SharedContext.isPds(element) ||
+                        SharedContext.isDsMember(element)
                 );
                 for (const item of selectedNodes) {
                     await DatasetActions.showAttributes(item as IZoweDatasetTreeNode, datasetProvider);
