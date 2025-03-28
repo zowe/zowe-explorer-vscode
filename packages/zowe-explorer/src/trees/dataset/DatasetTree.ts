@@ -126,7 +126,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     );
                 } catch (err) {
                     //error
-                    if (err.errorCode === 404 || err.errorCode === 500) {
+                    if (err.errorCode.toString() === "404" || err.errorCode.toString() === "500") {
                         Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
                         return;
                     }
@@ -167,7 +167,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 }
             } catch (err) {
                 //file might already exist. Ignore the error and try to write it to lpar
-                if (err.errorCode === 404 || err.errorCode === 500) {
+                if (err.errorCode.toString() === "404" || err.errorCode.toString() === "500") {
                     Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
                     return;
                 }
@@ -238,7 +238,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
-            if (node.getParent() === target) {
+            const nodeParent = node.getParent();
+            if (nodeParent === target) {
                 //skip nodes that are direct children of the target node
                 continue;
             }
@@ -250,7 +251,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
             await this.crossLparMove(node, node.resourceUri, newUriForNode);
 
-            parentsToUpdate.add(node.getParent() as IZoweDatasetTreeNode);
+            if (nodeParent != null) {
+                parentsToUpdate.add(nodeParent as IZoweDatasetTreeNode);
+            }
         }
         for (const parent of parentsToUpdate) {
             this.refreshElement(parent);
