@@ -132,6 +132,8 @@
   "zowe.commands.useIntegratedTerminals": "Allow commands to be executed using integrated terminals",
   "zowe.automaticProfileValidation": "Allow automatic validation of profiles.",
   "zowe.pollInterval.info": "Default interval (in milliseconds) when polling spool files.",
+  "zowe.ZESetting.pagination": "Toggle to enable job spool pagination.",
+  "zowe.jobs.recordsToFetch": " Default number of records to fetch when polling spool files.",
   "zowe.security.checkForCustomCredentialManagers": "Check for any installed VS Code extensions for handling credentials when activating Zowe Explorer",
   "zowe.security.secureCredentialsEnabled": "Allow credentials to be stored securely. If disabled and autoStore is set to true, z/OS credentials are stored as clear text in zowe.config.json.",
   "issueTsoCmd": "Issue TSO Command",

@@ -682,6 +682,11 @@
         "command": "zowe.placeholderCommand",
         "title": "%zowe.placeholderCommand%",
         "enablement": "false"
+      },
+      {
+        "command": "zowe.jobs.loadMoreRecords",
+        "title": "%loadMoreRecords%",
+        "category": "Zowe Explorer"
       }
     ],
     "menus": {
@@ -1931,6 +1936,18 @@
           "type": "integer",
           "default": 5000,
           "description": "%zowe.pollInterval.info%",
+          "scope": "window"
+        },
+        "zowe.ZESetting.pagination": {
+          "type": "boolean",
+          "default": false,
+          "description": "%zowe.ZESetting.pagination%",
+          "scope": "window"
+        },
+        "zowe.jobs.recordsToFetch": {
+          "type": "integer",
+          "default": 100,
+          "description": "%zowe.jobs.recordsToFetch%",
           "scope": "window"
         }
       }

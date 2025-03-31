@@ -361,6 +361,7 @@
       "Name of USS session"
     ]
   },
+  "(default)": "(default)",
   "Confirm": "Confirm",
   "One or more items may be overwritten from this drop operation. Confirm or cancel?": "One or more items may be overwritten from this drop operation. Confirm or cancel?",
   "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",
@@ -390,7 +391,6 @@
   "Sort Direction": "Sort Direction",
   "Go to Local Filtering": "Go to Local Filtering",
   "Clear filter for profile": "Clear filter for profile",
-  "(default)": "(default)",
   "Create new...": "Create new...",
   "Submit this query": "Submit this query",
   "Enter job owner ID": "Enter job owner ID",

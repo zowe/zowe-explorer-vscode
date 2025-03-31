@@ -398,6 +398,9 @@
   "zowe.pollInterval.info": {
     "Default interval (in milliseconds) when polling spool files.": ""
   },
+  "zowe.jobs.recordsToFetch": {
+    " Default number of records to fetch when polling spool files.": ""
+  },
   "zowe.security.checkForCustomCredentialManagers": {
     "Check for any installed VS Code extensions for handling credentials when activating Zowe Explorer": ""
   },
@@ -675,6 +678,7 @@
   "Current encoding is {0}": "",
   "Enter a codepage (e.g., 1047, IBM-1047)": "",
   "A search must be set for {0} before it can be added to a workspace.": "",
+  "(default)": "",
   "Confirm": "",
   "One or more items may be overwritten from this drop operation. Confirm or cancel?": "",
   "Team config file created, refreshing Zowe Explorer.": "",
@@ -704,7 +708,6 @@
   "Sort Direction": "",
   "Go to Local Filtering": "",
   "Clear filter for profile": "",
-  "(default)": "",
   "Create new...": "",
   "Submit this query": "",
   "Enter job owner ID": "",
