@@ -48,6 +48,7 @@ async function createGlobalMocks() {
         },
         configurable: true,
     });
+    const profile = createIProfile();
     const globalMocks = {
         mockLoadNamedProfile: jest.fn(),
         mockDefaultProfile: jest.fn(),
@@ -60,7 +61,7 @@ async function createGlobalMocks() {
         mockEnableValidationContext: jest.fn(),
         getConfiguration: jest.fn(),
         refresh: jest.fn(),
-        testProfile: createIProfile(),
+        testProfile: profile,
         testSession: createISession(),
         testResponse: createFileResponse({ items: [] }),
         testUSSTree: null,
@@ -69,7 +70,12 @@ async function createGlobalMocks() {
         testSessionNode: null,
         testTreeProvider: new ZoweTreeProvider(PersistenceSchemaEnum.USS, null),
         mockGetProfileSetting: jest.fn(),
-        mockProfilesForValidation: jest.fn(),
+        mockProfilesForValidation: [
+            {
+                name: profile.name,
+                status: "active",
+            },
+        ],
         mockProfilesValidationSetting: jest.fn(),
         mockSsoLogin: jest.fn(),
         mockSsoLogout: jest.fn(),
@@ -104,46 +110,41 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
-        value: jest.fn(() => {
-            return {
-                allProfiles: [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }],
-                getDefaultProfile: globalMocks.mockDefaultProfile,
-                validProfile: Validation.ValidationType.VALID,
-                validateProfiles: jest.fn(),
-                loadNamedProfile: globalMocks.mockLoadNamedProfile,
-                getBaseProfile: jest.fn(() => {
-                    return globalMocks.testProfile;
-                }),
-                editSession: globalMocks.mockEditSession,
-                disableValidationContext: globalMocks.mockDisableValidationContext,
-                enableValidationContext: globalMocks.mockEnableValidationContext,
-                checkCurrentProfile: globalMocks.mockCheckCurrentProfile.mockReturnValue({
-                    name: globalMocks.testProfile.name,
-                    status: "active",
-                }),
-                showProfileInactiveMsg: jest.fn(),
-                getProfileSetting: globalMocks.mockGetProfileSetting.mockReturnValue({
-                    name: globalMocks.testProfile.name,
-                    status: "active",
-                }),
-                profilesForValidation: globalMocks.mockProfilesForValidation.mockReturnValue({
-                    name: globalMocks.testProfile.name,
-                    status: "active",
-                }),
-                profileValidationSetting: globalMocks.mockProfilesValidationSetting.mockReturnValue({
-                    name: globalMocks.testProfile.name,
-                    setting: true,
-                }),
-                ssoLogin: globalMocks.mockSsoLogin,
-                ssoLogout: globalMocks.mockSsoLogout,
-                getProfileInfo: () => globalMocks.mockProfileInfo,
-                fetchAllProfiles: jest.fn(() => {
-                    return [{ name: "profile1" }, { name: "profile2" }, { name: "base" }];
-                }),
-                fetchAllProfilesByType: jest.fn(() => {
-                    return [{ name: "profile1" }];
-                }),
-            };
+        value: jest.fn().mockReturnValue({
+            allProfiles: [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }],
+            getDefaultProfile: globalMocks.mockDefaultProfile,
+            validProfile: Validation.ValidationType.VALID,
+            validateProfiles: jest.fn(),
+            loadNamedProfile: globalMocks.mockLoadNamedProfile,
+            getBaseProfile: jest.fn(() => {
+                return globalMocks.testProfile;
+            }),
+            editSession: globalMocks.mockEditSession,
+            disableValidationContext: globalMocks.mockDisableValidationContext,
+            enableValidationContext: globalMocks.mockEnableValidationContext,
+            checkCurrentProfile: globalMocks.mockCheckCurrentProfile.mockReturnValue({
+                name: globalMocks.testProfile.name,
+                status: "active",
+            }),
+            showProfileInactiveMsg: jest.fn(),
+            getProfileSetting: globalMocks.mockGetProfileSetting.mockReturnValue({
+                name: globalMocks.testProfile.name,
+                status: "active",
+            }),
+            profilesForValidation: globalMocks.mockProfilesForValidation,
+            profileValidationSetting: globalMocks.mockProfilesValidationSetting.mockReturnValue({
+                name: globalMocks.testProfile.name,
+                setting: true,
+            }),
+            ssoLogin: globalMocks.mockSsoLogin,
+            ssoLogout: globalMocks.mockSsoLogout,
+            getProfileInfo: () => globalMocks.mockProfileInfo,
+            fetchAllProfiles: jest.fn(() => {
+                return [{ name: "profile1" }, { name: "profile2" }, { name: "base" }];
+            }),
+            fetchAllProfilesByType: jest.fn(() => {
+                return [{ name: "profile1" }];
+            }),
         }),
         configurable: true,
     });
@@ -305,6 +306,19 @@ describe("Tree Provider unit tests, function flipState", () => {
         expect(folder.dirty).toBe(true);
         expect(spy).toHaveBeenCalled();
         spy.mockClear();
+    });
+
+    it("Tests that flipState is executed successfully for a collapsed, validated session node", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        await globalMocks.testUSSTree.flipState(globalMocks.testSessionNode, false);
+        expect(JSON.stringify(globalMocks.testSessionNode.iconPath)).toContain("folder-root-connected-closed.svg");
+    });
+
+    it("Tests that flipState is executed successfully for an expanded, validated session node", async () => {
+        const globalMocks = await createGlobalMocks();
+        await globalMocks.testUSSTree.flipState(globalMocks.testSessionNode, true);
+        expect(JSON.stringify(globalMocks.testSessionNode.iconPath)).toContain("folder-root-connected-open.svg");
     });
 });
 
