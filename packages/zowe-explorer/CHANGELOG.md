@@ -22,6 +22,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where user is unable to open a renamed sequential data set from the Data Sets tree view.. [#3345](https://github.com/zowe/zowe-explorer-vscode/issues/3345)
 - Fixed an issue where the token expiration check was performed on profiles with APIs that do not support token types. [#3525](https://github.com/zowe/zowe-explorer-vscode/pull/3525)
 - Fixed an issue where the attributes were not shown for VSAM data sets when using the Show Attributes feature. [#3545](https://github.com/zowe/zowe-explorer-vscode/issues/3545)
+- Fixed an issue where right-click menu for data set shows wrong options after deleting multiple PDS members. [#3516](https://github.com/zowe/zowe-explorer-vscode/issues/3516)
 
 ## `3.1.2`
 
