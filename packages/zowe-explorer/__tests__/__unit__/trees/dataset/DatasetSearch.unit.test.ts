@@ -893,7 +893,11 @@ describe("Dataset Search Unit Tests - function search", () => {
         it("should construct the quick picks", () => {
             (DatasetSearch as any).constructQuickPicks();
 
-            expect(quickPickArray[0].items).toEqual([Constants.SEPARATORS.BLANK, { label: "", alwaysShow: true }]);
+            expect(quickPickArray[0].items).toEqual([
+                Constants.SEPARATORS.RECENT_SEARCHES,
+                Constants.SEPARATORS.BLANK,
+                { label: "", alwaysShow: true },
+            ]);
             expect(quickPickArray[0].ignoreFocusOut).toEqual(true);
             expect(quickPickArray[0].onDidChangeValue).toHaveBeenCalledTimes(1);
             expect(quickPickArray[0].show).not.toHaveBeenCalled();
@@ -923,7 +927,12 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             (DatasetSearch as any).constructQuickPicks();
 
-            expect(quickPickArray[0].items).toEqual([{ label: "test" }, Constants.SEPARATORS.BLANK, { label: "", alwaysShow: true }]);
+            expect(quickPickArray[0].items).toEqual([
+                { label: "test" },
+                Constants.SEPARATORS.RECENT_SEARCHES,
+                Constants.SEPARATORS.BLANK,
+                { label: "", alwaysShow: true },
+            ]);
             expect(quickPickArray[0].ignoreFocusOut).toEqual(true);
             expect(quickPickArray[0].onDidChangeValue).toHaveBeenCalledTimes(1);
             expect(quickPickArray[0].show).not.toHaveBeenCalled();
@@ -951,9 +960,14 @@ describe("Dataset Search Unit Tests - function search", () => {
                 qp.onDidChangeValue = jest.fn().mockImplementation((listener) => {
                     // Should handle switching the adding the user specified item, and then switching back
                     listener("test");
-                    expect(qp.items).toEqual([{ label: "test" }, Constants.SEPARATORS.BLANK, { label: "", alwaysShow: true }]);
+                    expect(qp.items).toEqual([
+                        { label: "test" },
+                        Constants.SEPARATORS.RECENT_SEARCHES,
+                        Constants.SEPARATORS.BLANK,
+                        { label: "", alwaysShow: true },
+                    ]);
                     listener();
-                    expect(qp.items).toEqual([Constants.SEPARATORS.BLANK, { label: "", alwaysShow: true }]);
+                    expect(qp.items).toEqual([Constants.SEPARATORS.RECENT_SEARCHES, Constants.SEPARATORS.BLANK, { label: "", alwaysShow: true }]);
                 });
                 return qp;
             });
@@ -991,6 +1005,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             (DatasetSearch as any).constructQuickPicks();
 
             expect(quickPickArray[0].items).toEqual([
+                Constants.SEPARATORS.RECENT_SEARCHES,
                 { label: "history1" },
                 { label: "history2" },
                 Constants.SEPARATORS.BLANK,
@@ -1032,6 +1047,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             expect(quickPickArray[0].items).toEqual([
                 { label: "test" },
+                Constants.SEPARATORS.RECENT_SEARCHES,
                 { label: "history1" },
                 { label: "history2" },
                 Constants.SEPARATORS.BLANK,
@@ -1073,7 +1089,11 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             (DatasetSearch as any).constructQuickPicks();
 
-            expect(quickPickArray[0].items).toEqual([Constants.SEPARATORS.BLANK, { label: "", alwaysShow: true }]);
+            expect(quickPickArray[0].items).toEqual([
+                Constants.SEPARATORS.RECENT_SEARCHES,
+                Constants.SEPARATORS.BLANK,
+                { label: "", alwaysShow: true },
+            ]);
             expect(quickPickArray[0].ignoreFocusOut).toEqual(true);
             expect(quickPickArray[0].onDidChangeValue).toHaveBeenCalledTimes(1);
             expect(quickPickArray[0].show).not.toHaveBeenCalled();
@@ -1110,7 +1130,11 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             (DatasetSearch as any).constructQuickPicks();
 
-            expect(quickPickArray[0].items).toEqual([Constants.SEPARATORS.BLANK, { label: "", alwaysShow: true }]);
+            expect(quickPickArray[0].items).toEqual([
+                Constants.SEPARATORS.RECENT_SEARCHES,
+                Constants.SEPARATORS.BLANK,
+                { label: "", alwaysShow: true },
+            ]);
             expect(quickPickArray[0].ignoreFocusOut).toEqual(true);
             expect(quickPickArray[0].onDidChangeValue).toHaveBeenCalledTimes(1);
             expect(quickPickArray[0].show).not.toHaveBeenCalled();

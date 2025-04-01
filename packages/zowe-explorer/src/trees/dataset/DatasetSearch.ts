@@ -189,20 +189,38 @@ export class DatasetSearch {
         }));
 
         // Set up the search quick pick
-        DatasetSearch.searchQuickPick.items = [...historyEntries, Constants.SEPARATORS.BLANK, DatasetSearch.optionsQuickPickEntry];
+        DatasetSearch.searchQuickPick.items = [
+            Constants.SEPARATORS.RECENT_SEARCHES,
+            ...historyEntries,
+            Constants.SEPARATORS.BLANK,
+            DatasetSearch.optionsQuickPickEntry,
+        ];
         DatasetSearch.searchQuickPick.title = vscode.l10n.t("Enter the text to search for.");
         DatasetSearch.searchQuickPick.ignoreFocusOut = true;
         DatasetSearch.searchQuickPick.onDidChangeValue((value: string) => {
             userInputEntry.label = value;
             if (value) {
-                DatasetSearch.searchQuickPick.items = [
+                const itemArr = [
                     userInputEntry,
+                    Constants.SEPARATORS.RECENT_SEARCHES,
                     ...historyEntries,
                     Constants.SEPARATORS.BLANK,
                     DatasetSearch.optionsQuickPickEntry,
                 ];
+
+                // Remove duplicates
+                const uniqueItemArr = itemArr.filter((obj, index) => {
+                    return index === itemArr.findIndex((newObj) => obj.label === newObj.label && obj.kind === newObj.kind);
+                });
+
+                DatasetSearch.searchQuickPick.items = uniqueItemArr;
             } else {
-                DatasetSearch.searchQuickPick.items = [...historyEntries, Constants.SEPARATORS.BLANK, DatasetSearch.optionsQuickPickEntry];
+                DatasetSearch.searchQuickPick.items = [
+                    Constants.SEPARATORS.RECENT_SEARCHES,
+                    ...historyEntries,
+                    Constants.SEPARATORS.BLANK,
+                    DatasetSearch.optionsQuickPickEntry,
+                ];
             }
         });
 
