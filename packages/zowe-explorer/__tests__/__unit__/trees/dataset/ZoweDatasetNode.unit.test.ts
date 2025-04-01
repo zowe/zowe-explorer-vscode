@@ -31,6 +31,7 @@ import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { IconUtils } from "../../../../src/icons/IconUtils";
 import { IconGenerator } from "../../../../src/icons/IconGenerator";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
+import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -1081,5 +1082,26 @@ describe("ZoweDatasetNode Unit Tests - getChildren() migration scenarios", () =>
         expect(pdsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
         expect(pdsNode.resourceUri).toBeDefined();
         expect(pdsNode.resourceUri.path).toBe("/sestest/TEST.PDS");
+    });
+});
+
+describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
+    it("returns undefined when getSession returns undefined", async () => {
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce({
+            getSession: jest.fn().mockReturnValue(undefined),
+        } as any);
+        const warnLoggerSpy = jest.spyOn(ZoweLogger, "warn");
+        const dsTreeMock = jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
+            extractPatterns: jest.fn().mockReturnValue([]),
+            buildFinalPattern: jest.fn().mockReturnValue(""),
+        } as any);
+        const profile = createIProfile();
+        const sessionNode = createDatasetSessionNode(createISession(), profile);
+        sessionNode.pattern = "A.B.*";
+        await expect((sessionNode as any).getDatasets(profile)).resolves.toBe(undefined);
+        expect(warnLoggerSpy).toHaveBeenCalledTimes(1);
+        expect(warnLoggerSpy).toHaveBeenCalledWith("[ZoweDatasetNode.getDatasets] Session undefined for profile sestest");
+        mvsApiMock.mockRestore();
+        dsTreeMock.mockRestore();
     });
 });

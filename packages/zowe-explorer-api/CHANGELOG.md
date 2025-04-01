@@ -12,6 +12,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added new `copyDataSetCrossLpar` API to provide ability to copy/paste data sets across LPARs. [#3012](https://github.com/zowe/zowe-explorer-vscode/issues/3012)
 - Added new `directConnectLogin` and `directConnectLogout` to the ZoweVsCodeExtension class. [#3346](https://github.com/zowe/zowe-explorer-vscode/issues/3346)
 - The `certFile` and `certKeyFile` are now supported fields for zosmf session/profile. [#2373](https://github.com/zowe/zowe-explorer-vscode/issues/2373)
+- Deprecated the `flipState` method on the `IZoweTree` interface in favor of the `onCollapsibleStateChange` method. Implement the `onCollapsibleStateChange` method to receive an accurate collapsible state for the given node. [#3515](https://github.com/zowe/zowe-explorer-vscode/issues/3515)
 
 ### Bug fixes
 
@@ -24,8 +25,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
-- Fixes an issue where properties of the `TableViewProvider` class were not accessible when the class was extended by developers. [#3456](https://github.com/zowe/zowe-explorer-vscode/pull/3456)
-- Fixed issue where the `AuthHandler.waitForUnlock` function could hang indefinitely if the profile is never unlocked. Now, as a safety measure, the function returns after a 30-second timeout. This function should be used alongside the `AuthHandler.isProfileLocked` function to verify that the profile is unlocked before making API requests. [#3480](https://github.com/zowe/zowe-explorer-vscode/pull/3480)
+- Fixed an issue where properties of the `TableViewProvider` class were not accessible when the class was extended by developers. [#3456](https://github.com/zowe/zowe-explorer-vscode/pull/3456)
+- Fixed an issue where the `AuthHandler.waitForUnlock` function could hang indefinitely if the profile is never unlocked. Now, as a safety measure, the function returns after a 30-second timeout. This function should be used alongside the `AuthHandler.isProfileLocked` function to verify that the profile is unlocked before making API requests. [#3480](https://github.com/zowe/zowe-explorer-vscode/pull/3480)
 - Added optional `encoding` argument which was missing from the `MainframeInteraction.IJes.getSpoolContentById` method. [#3504](https://github.com/zowe/zowe-explorer-vscode/issues/3504)
 
 ## `3.1.1`

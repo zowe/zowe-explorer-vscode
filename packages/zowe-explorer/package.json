@@ -359,7 +359,7 @@
         }
       },
       {
-        "command": "zowe.ds.refreshAll",
+        "command": "zowe.ds.refresh",
         "title": "%refreshAll%",
         "category": "Zowe Explorer",
         "icon": {
@@ -452,7 +452,7 @@
         }
       },
       {
-        "command": "zowe.uss.refreshAll",
+        "command": "zowe.uss.refresh",
         "title": "%uss.refreshAll%",
         "category": "Zowe Explorer",
         "icon": {
@@ -532,7 +532,7 @@
         }
       },
       {
-        "command": "zowe.jobs.refreshAllJobs",
+        "command": "zowe.jobs.refresh",
         "title": "%refreshAllJobs%",
         "category": "Zowe Explorer",
         "icon": {
@@ -719,7 +719,7 @@
       "view/title": [
         {
           "when": "view == zowe.ds.explorer",
-          "command": "zowe.ds.refreshAll",
+          "command": "zowe.ds.refresh",
           "group": "navigation"
         },
         {
@@ -729,7 +729,7 @@
         },
         {
           "when": "view == zowe.uss.explorer",
-          "command": "zowe.uss.refreshAll",
+          "command": "zowe.uss.refresh",
           "group": "navigation"
         },
         {
@@ -739,7 +739,7 @@
         },
         {
           "when": "view == zowe.jobs.explorer",
-          "command": "zowe.jobs.refreshAllJobs",
+          "command": "zowe.jobs.refresh",
           "group": "navigation"
         },
         {

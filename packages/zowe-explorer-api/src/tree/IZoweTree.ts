@@ -162,8 +162,21 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
      * Change the state of an expandable node
      * @param element the node being flipped
      * @param isOpen the intended state of the the tree view provider, true or false
+     *
+     * @deprecated Use `onCollapsibleStateChange` instead.
      */
     flipState(element: IZoweTreeNode, isOpen: boolean): void;
+
+    /**
+     * Handle updates to a node when the collapsible state is changed by the user.
+     *
+     * @param element The node whose collapsible state is changing
+     * @param newState The new collapsible state of the node
+     *
+     * Note that the new collapsible state is not guaranteed to be set on the node when this function is called.
+     * The `newState` parameter contains the accurate collapsible state for the node.
+     */
+    onCollapsibleStateChange?(element: IZoweTreeNode, newState: vscode.TreeItemCollapsibleState): void | Promise<void>;
 
     /**
      * Rename the node. Begins a dialog.
