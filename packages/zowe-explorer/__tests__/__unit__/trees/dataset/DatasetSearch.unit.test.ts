@@ -1435,10 +1435,11 @@ describe("Dataset Search Unit Tests - function search", () => {
             const searchQP = (DatasetSearch as any).searchQuickPick;
             const optionsQP = (DatasetSearch as any).searchOptionsQuickPick;
 
-            searchQP.onDidAccept = jest.fn().mockImplementation((listener) => {
-                listener();
-            });
+            searchQP.value = searchString;
             searchQP.selectedItems = [{ label: searchString }];
+            searchQP.onDidAccept = jest.fn().mockImplementation((listener) => {
+                listener(searchString);
+            });
 
             localStorageGetSpy.mockReturnValue(undefined);
             const tokenCancellation: vscode.CancellationToken = {
@@ -1547,10 +1548,12 @@ describe("Dataset Search Unit Tests - function search", () => {
             const searchQP = (DatasetSearch as any).searchQuickPick;
             const optionsQP = (DatasetSearch as any).searchOptionsQuickPick;
 
+            searchQP.value = searchString;
+            searchQP.selectedItems = [{ label: searchString }];
             searchQP.onDidAccept = jest.fn().mockImplementation((listener) => {
                 listener();
             });
-            searchQP.selectedItems = [{ label: searchString }];
+
             localStorageGetSpy.mockReturnValue(undefined);
 
             await DatasetSearch.search(context, node);
@@ -1725,10 +1728,11 @@ describe("Dataset Search Unit Tests - function search", () => {
             const searchQP = (DatasetSearch as any).searchQuickPick;
             const optionsQP = (DatasetSearch as any).searchOptionsQuickPick;
 
+            searchQP.value = searchString;
+            searchQP.selectedItems = [{ label: searchString }];
             searchQP.onDidAccept = jest.fn().mockImplementation((listener) => {
                 listener();
             });
-            searchQP.selectedItems = [{ label: searchString }];
 
             await DatasetSearch.search(context, pdsNode);
 
@@ -1878,10 +1882,11 @@ describe("Dataset Search Unit Tests - function search", () => {
             const searchQP = (DatasetSearch as any).searchQuickPick;
             const optionsQP = (DatasetSearch as any).searchOptionsQuickPick;
 
+            searchQP.value = searchString;
+            searchQP.selectedItems = [{ label: searchString }];
             searchQP.onDidAccept = jest.fn().mockImplementation((listener) => {
                 listener();
             });
-            searchQP.selectedItems = [{ label: searchString }];
 
             await DatasetSearch.search(context, node);
 
@@ -2057,10 +2062,11 @@ describe("Dataset Search Unit Tests - function search", () => {
             const searchQP = (DatasetSearch as any).searchQuickPick;
             const optionsQP = (DatasetSearch as any).searchOptionsQuickPick;
 
+            searchQP.value = searchString;
+            searchQP.selectedItems = [{ label: searchString }];
             searchQP.onDidAccept = jest.fn().mockImplementation((listener) => {
                 listener();
             });
-            searchQP.selectedItems = [{ label: searchString }];
 
             await DatasetSearch.search(context, pdsNode);
 
@@ -2207,10 +2213,12 @@ describe("Dataset Search Unit Tests - function search", () => {
             const searchQP = (DatasetSearch as any).searchQuickPick;
             const optionsQP = (DatasetSearch as any).searchOptionsQuickPick;
 
+            searchQP.value = searchString;
+            searchQP.selectedItems = [{ label: searchString }];
             searchQP.onDidAccept = jest.fn().mockImplementation((listener) => {
                 listener();
             });
-            searchQP.selectedItems = [{ label: searchString }];
+
             localStorageGetSpy.mockReturnValue({ caseSensitive: true, regex: false });
 
             await DatasetSearch.search(context, node);
@@ -2359,10 +2367,11 @@ describe("Dataset Search Unit Tests - function search", () => {
             const searchQP = (DatasetSearch as any).searchQuickPick;
             const optionsQP = (DatasetSearch as any).searchOptionsQuickPick;
 
+            searchQP.value = searchString;
+            searchQP.selectedItems = [{ label: searchString }];
             searchQP.onDidAccept = jest.fn().mockImplementation((listener) => {
                 listener();
             });
-            searchQP.selectedItems = [{ label: searchString }];
 
             localStorageGetSpy.mockReturnValue({ caseSensitive: false, regex: true });
 
@@ -2516,6 +2525,7 @@ describe("Dataset Search Unit Tests - function search", () => {
                 searchQP.selectedItems = [{ label: (DatasetSearch as any).optionsQuickPickEntry.label }];
                 listener();
                 await new Promise((resolve) => process.nextTick(resolve));
+                searchQP.value = searchString;
                 searchQP.selectedItems = [{ label: searchString }];
                 listener();
             });
@@ -2677,6 +2687,7 @@ describe("Dataset Search Unit Tests - function search", () => {
                 searchQP.selectedItems = [{ label: (DatasetSearch as any).optionsQuickPickEntry.label }];
                 listener();
                 await new Promise((resolve) => process.nextTick(resolve));
+                searchQP.value = searchString;
                 searchQP.selectedItems = [{ label: searchString }];
                 listener();
             });
@@ -2736,6 +2747,168 @@ describe("Dataset Search Unit Tests - function search", () => {
                 regex: true,
                 searchString,
                 caseSensitive: true,
+            });
+            expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
+
+            expect(tableBuilderTitleSpy).toHaveBeenCalledWith('Search Results for "test"');
+            expect(tableBuilderOptionsSpy).toHaveBeenCalledWith({
+                autoSizeStrategy: { type: "fitCellContents" },
+                pagination: true,
+                rowSelection: "multiple",
+                selectEverything: true,
+                suppressRowClickSelection: true,
+            });
+            expect(tableBuilderIsViewSpy).toHaveBeenCalledTimes(1);
+            expect(tableBuilderRowsSpy).toHaveBeenCalledWith(...expectedMatches);
+            expect(tableBuilderColumnsSpy).toHaveBeenCalledWith(
+                ...[
+                    {
+                        field: "name",
+                        headerName: vscode.l10n.t("Data Set Name"),
+                        filter: true,
+                        initialSort: "asc",
+                    } as Table.ColumnOpts,
+                    {
+                        field: "position",
+                        headerName: vscode.l10n.t("Position"),
+                        filter: false,
+                    },
+                    {
+                        field: "contents",
+                        headerName: vscode.l10n.t("Contents"),
+                        filter: true,
+                    },
+                    {
+                        field: "actions",
+                        hide: true,
+                    },
+                ]
+            );
+            expect(tableBuilderAddRowActionSpy).toHaveBeenCalledWith("all", {
+                title: vscode.l10n.t("Open"),
+                command: "open",
+                callback: {
+                    fn: (DatasetSearch as any).openSearchAtLocation,
+                    typ: "multi-row",
+                },
+                type: "secondary",
+            });
+            expect(tableBuilderBuildSpy).toHaveBeenCalledTimes(1);
+            expect(tableViewProviderSpy).toHaveBeenCalledTimes(1);
+            expect(tableViewProviderSetTableViewMock).toHaveBeenCalledTimes(1);
+        });
+
+        it("should attempt to perform the search and update the value to the history item selected", async () => {
+            const profile = createIProfile();
+            const node = createDatasetSessionNode(createISession(), profile);
+            node.pattern = "FAKE.*.DS";
+            const context = { context: "fake" } as any;
+            const searchString = "test";
+
+            const expectedResponse = {
+                success: true,
+                apiResponse: [
+                    {
+                        dsn: "FAKE.DATA.SET.DS",
+                        member: undefined,
+                        matchList: [
+                            {
+                                line: 1,
+                                column: 1,
+                                contents: "test",
+                            },
+                        ],
+                    },
+                ],
+            };
+            const expectedMatches = [
+                {
+                    name: "FAKE.DATA.SET.DS",
+                    line: 1,
+                    column: 1,
+                    position: "1:1",
+                    contents: "test",
+                    uri: "/test/FAKE.DATA.SET.DS",
+                    searchString,
+                },
+            ];
+            const tokenCancellation: vscode.CancellationToken = {
+                isCancellationRequested: false,
+                onCancellationRequested: jest.fn(),
+            };
+            const myProgress = { test: "test" };
+
+            withProgressSpy.mockImplementation((opts: any, fn: any) => {
+                return fn(myProgress, tokenCancellation);
+            });
+            getSearchMatchesSpy.mockReturnValue(expectedMatches);
+            performSearchSpy.mockResolvedValue(expectedResponse);
+
+            const searchQP = (DatasetSearch as any).searchQuickPick;
+            const optionsQP = (DatasetSearch as any).searchOptionsQuickPick;
+
+            searchQP.onDidAccept = jest.fn().mockImplementation(async (listener) => {
+                expect(searchQP.value).toEqual("");
+                searchQP.selectedItems = [{ label: searchString }];
+                listener();
+                await new Promise((resolve) => process.nextTick(resolve));
+                expect(searchQP.value).toEqual(searchString);
+                listener();
+            });
+
+            searchQP.onDidHide = jest.fn().mockImplementation(async (listener) => {
+                await new Promise((resolve) => process.nextTick(resolve));
+                listener();
+            });
+
+            localStorageGetSpy.mockReturnValue(undefined);
+
+            await DatasetSearch.search(context, node);
+
+            expect(errorMessageSpy).not.toHaveBeenCalled();
+            expect(showMessageSpy).not.toHaveBeenCalled();
+
+            expect(constructQuickPicksSpy).toHaveBeenCalledTimes(1);
+            expect(searchQuickPickResetSpy).toHaveBeenCalledTimes(1);
+            expect(searchOptionsPromptSpy).toHaveBeenCalledTimes(0);
+
+            expect(historyGetSpy).toHaveBeenCalledTimes(0);
+            expect(localStorageGetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS);
+            expect(localStorageSetSpy).toHaveBeenCalledTimes(1);
+            expect(localStorageSetSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS, {
+                caseSensitive: false,
+                regex: false,
+            });
+            expect(historySetSpy).toHaveBeenCalledTimes(1);
+
+            // Expect the search quick pick to have returned
+            // Do not expect any options to have been selected
+            expect(searchQP.selectedItems.length).toEqual(1);
+            expect(optionsQP.selectedItems.length).toEqual(0);
+
+            // Expect the search quick pick to have been given listeners
+            expect(searchQP.onDidAccept).toHaveBeenCalledTimes(1);
+            expect(searchQP.onDidHide).toHaveBeenCalledTimes(1);
+
+            // Expect the quick picks to have been disposed
+            expect(searchQP.dispose).toHaveBeenCalledTimes(1);
+            expect(optionsQP.dispose).toHaveBeenCalledTimes(1);
+
+            expect(withProgressSpy.mock.calls[0][0]).toEqual({
+                location: vscode.ProgressLocation.Notification,
+                title: 'Searching for "test"',
+                cancellable: true,
+            });
+
+            expect(getSearchMatchesSpy).toHaveBeenCalledWith(node, expectedResponse, true, searchString);
+
+            expect(performSearchSpy).toHaveBeenCalledTimes(1);
+            expect(performSearchSpy).toHaveBeenCalledWith(myProgress, tokenCancellation, {
+                node,
+                pattern: node.pattern,
+                regex: false,
+                searchString,
+                caseSensitive: false,
             });
             expect(openSearchAtLocationSpy).not.toHaveBeenCalled();
 

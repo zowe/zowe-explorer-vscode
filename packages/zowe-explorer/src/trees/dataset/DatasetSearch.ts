@@ -67,11 +67,15 @@ export class DatasetSearch {
             let accepted = false;
             // Return input string or value selected from history
             DatasetSearch.searchQuickPick.onDidAccept(() => {
-                accepted = true;
-                DatasetSearch.searchQuickPick.hide();
                 if (DatasetSearch.searchQuickPick.selectedItems[0].label === DatasetSearch.optionsQuickPickEntry.label) {
+                    accepted = true;
+                    DatasetSearch.searchQuickPick.hide();
                     DatasetSearch.searchOptionsPrompt();
+                } else if (DatasetSearch.searchQuickPick.selectedItems[0].label != DatasetSearch.searchQuickPick.value) {
+                    DatasetSearch.searchQuickPick.value = DatasetSearch.searchQuickPick.selectedItems[0].label;
                 } else {
+                    accepted = true;
+                    DatasetSearch.searchQuickPick.hide();
                     resolve(DatasetSearch.searchQuickPick.selectedItems[0].label);
                 }
             });
