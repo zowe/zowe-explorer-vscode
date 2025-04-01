@@ -200,6 +200,20 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
         if (profileTypeConfigurations) {
             try {
                 for (const typeConfig of profileTypeConfigurations) {
+                    const schemaInstance = profileInfo.getSchemaForType(typeConfig.type);
+                    if (schemaInstance && schemaInstance !== typeConfig.schema) {
+                        console.log(typeConfig.type);
+                        console.log("schema don't match");
+                        // remove type object from extenders.json
+                        const file = fs.readFileSync(path.posix.join(FileManagement.getZoweDir(), "/extenders.json"), "utf8");
+                        console.log(file);
+                        const jsonObj = JSON.parse(file);
+                        delete jsonObj.profileTypes[typeConfig.type];
+                        console.log(jsonObj);
+                        fs.writeFileSync(path.posix.join(FileManagement.getZoweDir(), "/extenders.json"), JSON.parse(jsonObj), {
+                            encoding: "utf8",
+                        });
+                    }
                     const addResult = profileInfo.addProfileTypeToSchema(typeConfig.type, {
                         schema: typeConfig.schema,
                         sourceApp: "Zowe Explorer (for VS Code)",
