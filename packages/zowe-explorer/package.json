@@ -684,13 +684,13 @@
         "enablement": "false"
       },
       {
-<<<<<<< HEAD
         "command": "zowe.jobs.loadMoreRecords",
         "title": "%loadMoreRecords%",
-=======
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.openRecentMember",
         "title": "%zowe.openRecentMember%",
->>>>>>> main
         "category": "Zowe Explorer"
       }
     ],
