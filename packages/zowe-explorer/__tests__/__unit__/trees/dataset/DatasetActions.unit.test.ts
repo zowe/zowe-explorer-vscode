@@ -1414,6 +1414,66 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, dsNode)).resolves.not.toThrow();
     });
 
+    it("Testing copyPartitionedDatasets() successfully runs for copy pasting an empty PDS within same profile", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const parentNode = new ZoweDatasetNode({
+            label: "parent",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        const dsNode = new ZoweDatasetNode({
+            label: "dsNode",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            session: blockMocks.zosmfSession,
+            profile: blockMocks.imperativeProfile,
+        });
+        dsNode.contextValue = Constants.DS_PDS_CONTEXT;
+        const profile = blockMocks.imperativeProfile;
+        const fakeEncoding = 9999;
+        profile.profile.encoding = fakeEncoding;
+        jest.spyOn(dsNode, "getChildren").mockResolvedValue([parentNode, parentNode]);
+        clipboard.writeText(
+            JSON.stringify([
+                {
+                    dataSetName: "HLQ.TEST.BEFORE.NODE",
+                    memberName: "MEMBER1",
+                    profileName: blockMocks.imperativeProfile.name,
+                    contextValue: Constants.DS_PDS_CONTEXT,
+                },
+                {
+                    dataSetName: "HLQ.TEST.BEFORE.NODE",
+                    memberName: "No data sets found",
+                    profileName: blockMocks.imperativeProfile.name,
+                    contextValue: Constants.DS_PDS_CONTEXT,
+                },
+                {
+                    dataSetName: "HLQ.TEST.BEFORE.NODE",
+                    memberName: "MEMBER2",
+                    profileName: blockMocks.imperativeProfile.name,
+                    contextValue: Constants.DS_PDS_CONTEXT,
+                },
+            ])
+        );
+        mocked(vscode.window.showInputBox).mockImplementationOnce((options) => {
+            options.validateInput("pdsTest");
+            return Promise.resolve("pdsTest");
+        });
+        const copySpy = jest.spyOn(blockMocks.mvsApi, "copyDataSetMember");
+        copySpy.mockResolvedValue({
+            success: true,
+            commandResponse: "myRes",
+            apiResponse: {},
+        });
+        mocked(vscode.window.withProgress).mockImplementation((prm, fnc) => {
+            fnc();
+            return Promise.resolve(prm);
+        });
+        jest.spyOn(DatasetFSProvider.instance, "stat").mockReturnValue({ etag: "123ABC" } as any);
+        await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, dsNode)).resolves.not.toThrow();
+        expect(copySpy).toHaveBeenCalledTimes(2);
+    });
+
     it("Testing copyPartitionedDatasets() successfully runs on cross profile", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
