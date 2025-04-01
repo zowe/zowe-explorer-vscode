@@ -361,6 +361,31 @@ export class SharedUtils {
         };
     }
 
+    /**
+     * Debounces an async event callback to prevent duplicate triggers.
+     * @param callback Async event callback
+     * @param delay Number of milliseconds to delay
+     */
+    public static debounceAsync<T extends (...args: any[]) => Promise<any>>(
+        callback: T,
+        delay: number
+    ): (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> {
+        let timeoutId: ReturnType<typeof setTimeout>;
+
+        return (...args: Parameters<T>): Promise<Awaited<ReturnType<T>>> => {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+
+            // Returns a promise that is fulfilled after the debounced callback finishes
+            return new Promise<Awaited<ReturnType<T>>>((resolve, reject) => {
+                timeoutId = setTimeout(() => {
+                    callback(...args).then(resolve, reject);
+                }, delay);
+            });
+        };
+    }
+
     public static updateSortOptionsWithDefault<T>(sortMethod: T, sortOptions: string[]): void {
         ZoweLogger.trace("shared.utils.updateSortOptionsWithDefault called.");
         for (let i = 0; i < sortOptions.length; i++) {

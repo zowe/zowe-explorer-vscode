@@ -80,8 +80,6 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             dragAndDropController: this,
             canSelectMany: true,
         });
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.treeView.onDidCollapseElement(TreeViewUtils.refreshIconOnCollapse([SharedContext.isUssDirectory, SharedContext.isUssSession], this));
     }
 
     public handleDrag(source: IZoweUSSTreeNode[], dataTransfer: vscode.DataTransfer, _token: vscode.CancellationToken): void {
