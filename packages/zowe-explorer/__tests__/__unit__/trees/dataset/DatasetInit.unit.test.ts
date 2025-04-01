@@ -58,7 +58,11 @@ describe("Test src/dataset/extension", () => {
             },
             {
                 name: "zowe.ds.refreshAll",
-                mock: [{ spy: jest.spyOn(SharedActions, "refreshAll"), arg: [dsProvider] }],
+                mock: [{ spy: jest.spyOn(SharedActions, "refreshAll"), arg: [] }],
+            },
+            {
+                name: "zowe.ds.refresh",
+                mock: [{ spy: jest.spyOn(SharedActions, "refreshProvider"), arg: [dsProvider] }],
             },
             {
                 name: "zowe.ds.refreshNode",
@@ -138,6 +142,7 @@ describe("Test src/dataset/extension", () => {
                 name: "zowe.ds.showAttributes",
                 mock: [
                     { spy: jest.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
+                    { spy: jest.spyOn(SharedContext, "isVsam"), arg: [test.value], ret: false },
                     { spy: jest.spyOn(SharedContext, "isPds"), arg: [test.value], ret: false },
                     { spy: jest.spyOn(SharedContext, "isDsMember"), arg: [test.value], ret: true },
                     { spy: jest.spyOn(DatasetActions, "showAttributes"), arg: [test.value, dsProvider] },

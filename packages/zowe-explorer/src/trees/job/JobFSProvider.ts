@@ -222,19 +222,24 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             recordRange = `${startLine}-${endLine}`;
         }
         try {
+            const spoolEncoding = spoolEntry.encoding?.kind === "other" ? spoolEntry.encoding.codepage : profileEncoding;
             if (jesApi.downloadSingleSpool) {
                 const spoolDownloadObject: IDownloadSpoolContentParms = {
                     jobFile: spoolEntry.spool,
                     stream: bufBuilder,
                     binary: spoolEntry.encoding?.kind === "binary",
+<<<<<<< HEAD
                     encoding: spoolEntry.encoding?.kind === "other" ? spoolEntry.encoding.codepage : profileEncoding,
                     recordRange: recordRange
+=======
+                    encoding: spoolEncoding,
+>>>>>>> main
                 };
 
                 await jesApi.downloadSingleSpool(spoolDownloadObject);
             } else {
                 const jobEntry = this._lookupParentDirectory(uri) as JobEntry;
-                bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id));
+                bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id, spoolEncoding));
             }
         } catch (err) {
             await AuthUtils.handleProfileAuthOnError(err, spoolEntry.metadata.profile);

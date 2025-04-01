@@ -639,26 +639,17 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
     });
 });
 
-describe("ZoweJobNode unit tests - Function flipState", () => {
-    it("Tests that flipState is executed successfully", async () => {
+describe("ZoweJobNode unit tests - Function ZoweTreeProvider.flipState for job nodes", () => {
+    it("Tests that flipState is executed successfully for an expanded job node", async () => {
         const globalMocks = await createGlobalMocks();
-        globalMocks.testJobsProvider.addSession("fake");
-        globalMocks.testJobsProvider.mSessionNodes[1].contextValue = Constants.JOBS_SESSION_CONTEXT;
-        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue(globalMocks.testSession);
-
-        await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[1], true);
-        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
-        await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[1], false);
-        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
-        await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[1], true);
-        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
-
         await globalMocks.testJobsProvider.flipState(globalMocks.testJobNode, true);
         expect(JSON.stringify(globalMocks.testJobNode.iconPath)).toContain("folder-open.svg");
+    });
+
+    it("Tests that flipState is executed successfully for a collapsed job node", async () => {
+        const globalMocks = await createGlobalMocks();
         await globalMocks.testJobsProvider.flipState(globalMocks.testJobNode, false);
         expect(JSON.stringify(globalMocks.testJobNode.iconPath)).toContain("folder-closed.svg");
-        await globalMocks.testJobsProvider.flipState(globalMocks.testJobNode, true);
-        expect(JSON.stringify(globalMocks.testJobNode.iconPath)).toContain("folder-open.svg");
     });
 });
 
@@ -969,7 +960,6 @@ describe("ZosJobsProvider - Function searchPrompt", () => {
         const addSearchHistory = jest.spyOn(globalMocks.testJobsProvider, "addSearchHistory");
         const refreshElement = jest.spyOn(globalMocks.testJobsProvider, "refreshElement");
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
-        expect(globalMocks.testJobsProvider);
         expect(addSearchHistory).not.toHaveBeenCalled();
         expect(refreshElement).not.toHaveBeenCalled();
     });
@@ -978,7 +968,6 @@ describe("ZosJobsProvider - Function searchPrompt", () => {
         jest.spyOn(globalMocks.testJobsProvider, "applyRegularSessionSearchLabel").mockReturnValue("Owner:kristina Prefix:* Status:*");
         const addSearchHistory = jest.spyOn(globalMocks.testJobsProvider, "addSearchHistory");
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
-        expect(globalMocks.testJobsProvider);
         expect(addSearchHistory).toHaveBeenCalled();
     });
     it("testing fav node to call applySearchLabelToNode", async () => {
@@ -1176,6 +1165,20 @@ describe("ZosJobsProvider - getJobs", () => {
         });
         jest.spyOn(Gui, "warningMessage").mockImplementation();
         await expect(globalMocks.testJobNode.getJobs("test", "test", "test", "test")).resolves.not.toThrow();
+    });
+
+    it("should return undefined if the session is undefined", async () => {
+        const globalMocks = await createGlobalMocks();
+        const getSessionMock = jest.fn().mockReturnValue(undefined);
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce({
+            getSession: getSessionMock,
+        } as any);
+        const warnLoggerSpy = jest.spyOn(ZoweLogger, "warn");
+        await expect(globalMocks.testJobNode.getJobs("test", "test", "test", "test")).resolves.toBeUndefined();
+        expect(getSessionMock).toHaveBeenCalledTimes(1);
+        expect(warnLoggerSpy).toHaveBeenCalledTimes(1);
+        expect(warnLoggerSpy).toHaveBeenCalledWith("[ZoweJobNode.getJobs] Session undefined for profile sestest");
+        jesApiMock.mockRestore();
     });
 });
 

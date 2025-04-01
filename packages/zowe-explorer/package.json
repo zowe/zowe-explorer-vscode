@@ -88,8 +88,8 @@
     "keybindings": [
       {
         "command": "zowe.openRecentMember",
-        "key": "ctrl+alt+r",
-        "mac": "cmd+alt+r"
+        "key": "ctrl+alt+t",
+        "mac": "cmd+alt+t"
       },
       {
         "command": "zowe.searchInAllLoadedItems",
@@ -359,7 +359,7 @@
         }
       },
       {
-        "command": "zowe.ds.refreshAll",
+        "command": "zowe.ds.refresh",
         "title": "%refreshAll%",
         "category": "Zowe Explorer",
         "icon": {
@@ -452,7 +452,7 @@
         }
       },
       {
-        "command": "zowe.uss.refreshAll",
+        "command": "zowe.uss.refresh",
         "title": "%uss.refreshAll%",
         "category": "Zowe Explorer",
         "icon": {
@@ -532,7 +532,7 @@
         }
       },
       {
-        "command": "zowe.jobs.refreshAllJobs",
+        "command": "zowe.jobs.refresh",
         "title": "%refreshAllJobs%",
         "category": "Zowe Explorer",
         "icon": {
@@ -684,8 +684,13 @@
         "enablement": "false"
       },
       {
+<<<<<<< HEAD
         "command": "zowe.jobs.loadMoreRecords",
         "title": "%loadMoreRecords%",
+=======
+        "command": "zowe.openRecentMember",
+        "title": "%zowe.openRecentMember%",
+>>>>>>> main
         "category": "Zowe Explorer"
       }
     ],
@@ -719,7 +724,7 @@
       "view/title": [
         {
           "when": "view == zowe.ds.explorer",
-          "command": "zowe.ds.refreshAll",
+          "command": "zowe.ds.refresh",
           "group": "navigation"
         },
         {
@@ -729,7 +734,7 @@
         },
         {
           "when": "view == zowe.uss.explorer",
-          "command": "zowe.uss.refreshAll",
+          "command": "zowe.uss.refresh",
           "group": "navigation"
         },
         {
@@ -739,7 +744,7 @@
         },
         {
           "when": "view == zowe.jobs.explorer",
-          "command": "zowe.jobs.refreshAllJobs",
+          "command": "zowe.jobs.refresh",
           "group": "navigation"
         },
         {
@@ -1606,6 +1611,11 @@
         {
           "command": "zowe.deleteProfile",
           "when": "never"
+        },
+        {
+          "command": "zowe.openRecentMember",
+          "when": "true",
+          "group": "navigation"
         }
       ]
     },

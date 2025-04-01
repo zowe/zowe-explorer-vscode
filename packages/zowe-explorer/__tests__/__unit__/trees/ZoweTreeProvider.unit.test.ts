@@ -20,7 +20,7 @@ import {
     createInstanceOfProfileInfo,
     createGetConfigMock,
 } from "../../__mocks__/mockCreators/shared";
-import { Constants } from "../../../src/configuration/Constants";
+import { Constants, JwtCheckResult } from "../../../src/configuration/Constants";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
@@ -37,6 +37,7 @@ import { createDatasetFavoritesNode, createDatasetSessionNode } from "../../__mo
 import { DatasetInit } from "../../../src/trees/dataset/DatasetInit";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { IconGenerator } from "../../../src/icons/IconGenerator";
+import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
 
 async function createGlobalMocks() {
     Object.defineProperty(ZoweLocalStorage, "globalState", {
@@ -47,6 +48,7 @@ async function createGlobalMocks() {
         },
         configurable: true,
     });
+    const profile = createIProfile();
     const globalMocks = {
         mockLoadNamedProfile: jest.fn(),
         mockDefaultProfile: jest.fn(),
@@ -59,7 +61,7 @@ async function createGlobalMocks() {
         mockEnableValidationContext: jest.fn(),
         getConfiguration: jest.fn(),
         refresh: jest.fn(),
-        testProfile: createIProfile(),
+        testProfile: profile,
         testSession: createISession(),
         testResponse: createFileResponse({ items: [] }),
         testUSSTree: null,
@@ -68,7 +70,12 @@ async function createGlobalMocks() {
         testSessionNode: null,
         testTreeProvider: new ZoweTreeProvider(PersistenceSchemaEnum.USS, null),
         mockGetProfileSetting: jest.fn(),
-        mockProfilesForValidation: jest.fn(),
+        mockProfilesForValidation: [
+            {
+                name: profile.name,
+                status: "active",
+            },
+        ],
         mockProfilesValidationSetting: jest.fn(),
         mockSsoLogin: jest.fn(),
         mockSsoLogout: jest.fn(),
@@ -103,46 +110,41 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
-        value: jest.fn(() => {
-            return {
-                allProfiles: [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }],
-                getDefaultProfile: globalMocks.mockDefaultProfile,
-                validProfile: Validation.ValidationType.VALID,
-                validateProfiles: jest.fn(),
-                loadNamedProfile: globalMocks.mockLoadNamedProfile,
-                getBaseProfile: jest.fn(() => {
-                    return globalMocks.testProfile;
-                }),
-                editSession: globalMocks.mockEditSession,
-                disableValidationContext: globalMocks.mockDisableValidationContext,
-                enableValidationContext: globalMocks.mockEnableValidationContext,
-                checkCurrentProfile: globalMocks.mockCheckCurrentProfile.mockReturnValue({
-                    name: globalMocks.testProfile.name,
-                    status: "active",
-                }),
-                showProfileInactiveMsg: jest.fn(),
-                getProfileSetting: globalMocks.mockGetProfileSetting.mockReturnValue({
-                    name: globalMocks.testProfile.name,
-                    status: "active",
-                }),
-                profilesForValidation: globalMocks.mockProfilesForValidation.mockReturnValue({
-                    name: globalMocks.testProfile.name,
-                    status: "active",
-                }),
-                profileValidationSetting: globalMocks.mockProfilesValidationSetting.mockReturnValue({
-                    name: globalMocks.testProfile.name,
-                    setting: true,
-                }),
-                ssoLogin: globalMocks.mockSsoLogin,
-                ssoLogout: globalMocks.mockSsoLogout,
-                getProfileInfo: () => globalMocks.mockProfileInfo,
-                fetchAllProfiles: jest.fn(() => {
-                    return [{ name: "profile1" }, { name: "profile2" }, { name: "base" }];
-                }),
-                fetchAllProfilesByType: jest.fn(() => {
-                    return [{ name: "profile1" }];
-                }),
-            };
+        value: jest.fn().mockReturnValue({
+            allProfiles: [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }],
+            getDefaultProfile: globalMocks.mockDefaultProfile,
+            validProfile: Validation.ValidationType.VALID,
+            validateProfiles: jest.fn(),
+            loadNamedProfile: globalMocks.mockLoadNamedProfile,
+            getBaseProfile: jest.fn(() => {
+                return globalMocks.testProfile;
+            }),
+            editSession: globalMocks.mockEditSession,
+            disableValidationContext: globalMocks.mockDisableValidationContext,
+            enableValidationContext: globalMocks.mockEnableValidationContext,
+            checkCurrentProfile: globalMocks.mockCheckCurrentProfile.mockReturnValue({
+                name: globalMocks.testProfile.name,
+                status: "active",
+            }),
+            showProfileInactiveMsg: jest.fn(),
+            getProfileSetting: globalMocks.mockGetProfileSetting.mockReturnValue({
+                name: globalMocks.testProfile.name,
+                status: "active",
+            }),
+            profilesForValidation: globalMocks.mockProfilesForValidation,
+            profileValidationSetting: globalMocks.mockProfilesValidationSetting.mockReturnValue({
+                name: globalMocks.testProfile.name,
+                setting: true,
+            }),
+            ssoLogin: globalMocks.mockSsoLogin,
+            ssoLogout: globalMocks.mockSsoLogout,
+            getProfileInfo: () => globalMocks.mockProfileInfo,
+            fetchAllProfiles: jest.fn(() => {
+                return [{ name: "profile1" }, { name: "profile2" }, { name: "base" }];
+            }),
+            fetchAllProfilesByType: jest.fn(() => {
+                return [{ name: "profile1" }];
+            }),
         }),
         configurable: true,
     });
@@ -305,6 +307,19 @@ describe("Tree Provider unit tests, function flipState", () => {
         expect(spy).toHaveBeenCalled();
         spy.mockClear();
     });
+
+    it("Tests that flipState is executed successfully for a collapsed, validated session node", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        await globalMocks.testUSSTree.flipState(globalMocks.testSessionNode, false);
+        expect(JSON.stringify(globalMocks.testSessionNode.iconPath)).toContain("folder-root-connected-closed.svg");
+    });
+
+    it("Tests that flipState is executed successfully for an expanded, validated session node", async () => {
+        const globalMocks = await createGlobalMocks();
+        await globalMocks.testUSSTree.flipState(globalMocks.testSessionNode, true);
+        expect(JSON.stringify(globalMocks.testSessionNode.iconPath)).toContain("folder-root-connected-open.svg");
+    });
 });
 
 describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
@@ -313,7 +328,7 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
             testIJob: createIJobObject(),
             testJobsProvider: await JobInit.createJobsTree(imperative.Logger.getAppLogger()),
             jobNode: null,
-            checkJwtTokenForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtTokenForProfile").mockResolvedValueOnce(true),
+            checkJwtForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtForProfile").mockResolvedValueOnce(true),
         };
 
         newMocks.jobNode = new ZoweJobNode({
@@ -638,8 +653,8 @@ describe("Tree Provider Unit Tests - function isGlobalProfileNode", () => {
     });
 });
 
-describe("Tree Provider Unit Tests - function checkJwtTokenForProfile", () => {
-    function getBlockMocks() {
+describe("Tree Provider Unit Tests - function checkJwtForProfile", () => {
+    function getBlockMocks(supportTokens: boolean = true) {
         const getAllProfiles = jest.fn().mockReturnValue([
             {
                 profName: "zosmf",
@@ -654,6 +669,15 @@ describe("Tree Provider Unit Tests - function checkJwtTokenForProfile", () => {
         ]);
         const hasTokenExpiredForProfile = jest.fn();
         const mergeArgsForProfile = jest.fn();
+        const profile = createIProfile();
+        profile.profile.tokenValue = "abcdefgh12345678";
+
+        const getTokenTypeName = jest.fn().mockReturnValue(supportTokens ? "apimlAuthenticationToken" : undefined);
+        const getCommonApiMock = jest.spyOn(ZoweExplorerApiRegister.prototype, "getCommonApi").mockReturnValue({
+            getTokenTypeName,
+        } as any);
+
+        const loadNamedProfile = jest.fn().mockResolvedValue(profile);
         const showProfileInactiveMsg = jest.fn();
         const profilesGetInstance = jest.spyOn(Profiles, "getInstance").mockReturnValue({
             getProfileInfo: jest.fn().mockResolvedValue({
@@ -661,32 +685,72 @@ describe("Tree Provider Unit Tests - function checkJwtTokenForProfile", () => {
                 getAllProfiles,
                 mergeArgsForProfile,
             } as any),
+            loadNamedProfile,
             showProfileInactiveMsg,
         } as any);
 
         return {
             getAllProfiles,
+            getCommonApiMock,
+            getTokenTypeName,
             hasTokenExpiredForProfile,
             mergeArgsForProfile,
             profilesGetInstance,
         };
     }
 
-    it("returns early if the profile's token has not expired", async () => {
+    it("returns early if the profile's token is valid", async () => {
         const blockMocks = getBlockMocks();
         blockMocks.hasTokenExpiredForProfile.mockReturnValueOnce(false);
-        blockMocks.mergeArgsForProfile.mockReturnValue({ knownArgs: [{ argName: "tokenType", argValue: "LtpaToken2" }] });
-        await (ZoweTreeProvider as any).checkJwtTokenForProfile("zosmf");
+        blockMocks.mergeArgsForProfile.mockReturnValueOnce({ knownArgs: [{ argName: "tokenType", argValue: "apimlAuthenticationToken" }] });
+        expect(await (ZoweTreeProvider as any).checkJwtForProfile("zosmf")).toBe(JwtCheckResult.TokenValid);
         expect(blockMocks.hasTokenExpiredForProfile).toHaveBeenCalledWith("zosmf");
     });
 
-    it("prompts the user to log in if a JWT token is present and has expired", async () => {
+    it("returns early if the profile's token is LTPA2 without checking for expiration", async () => {
         const blockMocks = getBlockMocks();
-        blockMocks.hasTokenExpiredForProfile.mockReturnValueOnce(true);
-        const promptForSsoLogin = jest.spyOn(AuthUtils, "promptForSsoLogin").mockImplementation();
-        await (ZoweTreeProvider as any).checkJwtTokenForProfile("zosmf");
-        expect(blockMocks.hasTokenExpiredForProfile).toHaveBeenCalledWith("zosmf");
-        expect(promptForSsoLogin).toHaveBeenCalled();
+        blockMocks.hasTokenExpiredForProfile.mockReturnValueOnce(false);
+        blockMocks.getTokenTypeName.mockClear().mockReturnValueOnce("LtpaToken2");
+        expect(await (ZoweTreeProvider as any).checkJwtForProfile("zosmf")).toBe(JwtCheckResult.TokenUnusedOrUnsupported);
+        expect(blockMocks.hasTokenExpiredForProfile).not.toHaveBeenCalledWith("zosmf");
+    });
+
+    it("returns early if the profile's getTokenTypeName API throws an error (tokens unsupported)", async () => {
+        const blockMocks = getBlockMocks();
+        blockMocks.hasTokenExpiredForProfile.mockReturnValueOnce(false);
+        blockMocks.getTokenTypeName.mockClear().mockImplementationOnce(() => {
+            throw new Error("Tokens not supported for this profile");
+        });
+        expect(await (ZoweTreeProvider as any).checkJwtForProfile("zosmf")).toBe(JwtCheckResult.TokenUnusedOrUnsupported);
+        expect(blockMocks.hasTokenExpiredForProfile).not.toHaveBeenCalledWith("zosmf");
+    });
+
+    it("returns early if the profile's API does not support tokens", async () => {
+        const blockMocks = getBlockMocks(false);
+        blockMocks.hasTokenExpiredForProfile.mockReturnValueOnce(false);
+        blockMocks.getTokenTypeName.mockClear().mockReturnValueOnce(undefined);
+        expect(await (ZoweTreeProvider as any).checkJwtForProfile("zosmf")).toBe(JwtCheckResult.TokenUnusedOrUnsupported);
+        expect(blockMocks.hasTokenExpiredForProfile).not.toHaveBeenCalledWith("zosmf");
+    });
+
+    describe("JWT token expired", () => {
+        it("prompts user to log in and returns valid if successful", async () => {
+            const blockMocks = getBlockMocks();
+            blockMocks.hasTokenExpiredForProfile.mockReturnValueOnce(true);
+            const promptForSsoLogin = jest.spyOn(AuthUtils, "promptForSsoLogin").mockResolvedValueOnce(true);
+            expect(await (ZoweTreeProvider as any).checkJwtForProfile("zosmf")).toBe(JwtCheckResult.TokenValid);
+            expect(blockMocks.hasTokenExpiredForProfile).toHaveBeenCalledWith("zosmf");
+            expect(promptForSsoLogin).toHaveBeenCalled();
+        });
+
+        it("prompts user to log in and returns expired if user dismisses login prompt", async () => {
+            const blockMocks = getBlockMocks();
+            blockMocks.hasTokenExpiredForProfile.mockReturnValueOnce(true);
+            const promptForSsoLogin = jest.spyOn(AuthUtils, "promptForSsoLogin").mockResolvedValueOnce(false);
+            expect(await (ZoweTreeProvider as any).checkJwtForProfile("zosmf")).toBe(JwtCheckResult.TokenExpired);
+            expect(blockMocks.hasTokenExpiredForProfile).toHaveBeenCalledWith("zosmf");
+            expect(promptForSsoLogin).toHaveBeenCalled();
+        });
     });
 });
 

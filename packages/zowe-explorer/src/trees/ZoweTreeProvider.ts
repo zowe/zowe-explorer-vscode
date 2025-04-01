@@ -15,7 +15,7 @@ import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { Profiles } from "../configuration/Profiles";
 import { SharedContext } from "./shared/SharedContext";
-import { Constants } from "../configuration/Constants";
+import { Constants, JwtCheckResult } from "../configuration/Constants";
 import { IconGenerator } from "../icons/IconGenerator";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { SharedTreeProviders } from "./shared/SharedTreeProviders";
@@ -23,6 +23,7 @@ import { SharedActions } from "./shared/SharedActions";
 import { IconUtils } from "../icons/IconUtils";
 import { AuthUtils } from "../utils/AuthUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 
 export class ZoweTreeProvider<T extends IZoweTreeNode> {
     // Event Emitters used to notify subscribers that the refresh event has fired
@@ -116,22 +117,28 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
     }
 
     /**
-     * Change the state of an expandable node
-     * @param provider the tree view provider
-     * @param element the node being flipped
-     * @param isOpen the intended state of the the tree view provider, true or false
+     * Handles updates to the node when it is expanded or collapsed by the user
+     * @param element The node being flipped
+     * @param isOpen Whether the node is expanding or collapsing. Note that the collapsible state on the node is not yet updated to the new state.
      */
     public flipState(element: T, isOpen: boolean = false): void {
         ZoweLogger.trace("ZoweTreeProvider.flipState called.");
-        element.collapsibleState = isOpen ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
-        const icon = IconGenerator.getIconByNode(element);
-        if (icon) {
-            element.iconPath = icon.path;
-        }
-        if (isOpen) {
-            this.mOnDidChangeTreeData.fire(element);
-        } else {
-            // Don't mark as dirty when expanded to avoid duplicate refresh
+        this.onCollapsibleStateChange(element, isOpen ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed);
+    }
+
+    /**
+     * Handles updates to the node when it is expanded or collapsed by the user.
+     *
+     * @param element The node whose collapsible state is changing
+     * @param newState The new collapsible state of the node
+     */
+    public onCollapsibleStateChange(element: T, newState: vscode.TreeItemCollapsibleState): void {
+        ZoweLogger.trace("ZoweTreeProvider.onCollapsibleStateChange called.");
+        element.collapsibleState = newState;
+        TreeViewUtils.updateNodeIcon(element, this, newState);
+        if (newState === vscode.TreeItemCollapsibleState.Collapsed) {
+            // Only mark as dirty when the node is collapsing to avoid a duplicate refresh
+            // This prepares the node for a refresh once it is expanded again
             element.dirty = true;
         }
     }
@@ -228,11 +235,14 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
             default:
             case Validation.ValidationType.UNVERIFIED:
                 statusContext = Constants.UNVERIFIED_CONTEXT;
-                iconId = IconUtils.IconId.session;
+                iconId = node.collapsibleState === vscode.TreeItemCollapsibleState.Expanded ? IconUtils.IconId.sessionOpen : IconUtils.IconId.session;
                 break;
             case Validation.ValidationType.VALID:
                 statusContext = Constants.ACTIVE_CONTEXT;
-                iconId = IconUtils.IconId.sessionActive;
+                iconId =
+                    node.collapsibleState === vscode.TreeItemCollapsibleState.Expanded
+                        ? IconUtils.IconId.sessionActiveOpen
+                        : IconUtils.IconId.sessionActive;
                 break;
             case Validation.ValidationType.INVALID:
                 statusContext = Constants.INACTIVE_CONTEXT;
@@ -261,9 +271,9 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         const profile = node.getProfile();
         const profileName = profile.name ?? node.getProfileName();
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
-        const tokenUnusedOrValid = await ZoweTreeProvider.checkJwtTokenForProfile(profileName);
-        if (!tokenUnusedOrValid) {
-            // Mark profile as inactive if user dismissed "token expired/login" prompt
+        const jwtCheckResult = await ZoweTreeProvider.checkJwtForProfile(profileName);
+        if (jwtCheckResult === JwtCheckResult.TokenExpired) {
+            // Mark profile as inactive if user dismissed "token expired/login" prompt or login failed
             profileStatus.status = "inactive";
             Profiles.getInstance().validProfile = Validation.ValidationType.INVALID;
         }
@@ -333,33 +343,42 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
     }
 
     /**
-     * Checks if a JWT token is used for authenticating the given profile name.
-     * If so, it will grab and decode the token to determine its expire date.
-     * If the token has expired, it will prompt the user to log in again.
+     * Checks if a JSON Web Token (JWT) is used for authenticating the given profile name.
+     * If so, it grabs and decodes the token to determine its expiration date.
+     * If the token has expired, it prompts the user to log in again and returns a result based on the login attempt.
      *
      * @param profileName The name of the profile to check the JWT token for
-     * @returns
-     * `true` if:
-     * - the user attempted to log in
-     * - the profile does not have a token
-     * - the token has not expired on the profile
-     *
-     * `false` if:
-     * - they selected "Cancel" / closed the login prompt
+     * @returns The result of the JWT token check (expired, unsupported, or valid)
      */
-    protected static async checkJwtTokenForProfile(profileName: string): Promise<boolean> {
-        const profInfo = await Profiles.getInstance().getProfileInfo();
+    protected static async checkJwtForProfile(profileName: string): Promise<JwtCheckResult> {
+        const loadedProfile = Profiles.getInstance().loadNamedProfile(profileName);
 
-        if (profInfo.hasTokenExpiredForProfile(profileName)) {
-            const userResponse = await AuthUtils.promptForSsoLogin(profileName);
-            if (userResponse === vscode.l10n.t("Log in to Authentication Service")) {
-                return true;
-            }
-
-            return false;
+        // Check if the profile uses a token-based authentication method
+        let tokenType: string;
+        try {
+            tokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(loadedProfile).getTokenTypeName();
+        } catch (err) {
+            // The API doesn't support tokens, so no expiration check needed
+            return JwtCheckResult.TokenUnusedOrUnsupported;
         }
 
-        return true;
+        // Skip token validation for falsy token types or LTPA2 tokens
+        if (tokenType == null || tokenType === "LtpaToken2") {
+            return JwtCheckResult.TokenUnusedOrUnsupported;
+        }
+
+        // Check if token has expired
+        const profInfo = await Profiles.getInstance().getProfileInfo();
+        if (profInfo.hasTokenExpiredForProfile(profileName)) {
+            // Token expired - prompt user to login again
+            const loginSuccessful = await AuthUtils.promptForSsoLogin(profileName);
+            // Return "token expired" as the user is currently logging into the authentication service.
+            // The profile cannot be used until the user finishes logging in.
+            return loginSuccessful ? JwtCheckResult.TokenValid : JwtCheckResult.TokenExpired;
+        }
+
+        // Token is valid and not expired
+        return JwtCheckResult.TokenValid;
     }
 
     private async loadProfileBySessionName(

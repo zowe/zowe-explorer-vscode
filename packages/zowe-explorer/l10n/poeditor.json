@@ -407,6 +407,9 @@
   "zowe.security.secureCredentialsEnabled": {
     "Allow credentials to be stored securely. If disabled and autoStore is set to true, z/OS credentials are stored as clear text in zowe.config.json.": ""
   },
+  "zowe.openRecentMember": {
+    "Open Recent Member": ""
+  },
   "issueTsoCmd": {
     "Issue TSO Command": ""
   },
@@ -571,7 +574,6 @@
   "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.": "",
   "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.": "",
   "Create New": "",
-  "\"Update Credentials\" operation not supported when \"autoStore\" is false": "",
   "Connection Name": "",
   "Enter a name for the connection.": "",
   "Operation cancelled": "",
@@ -615,8 +617,6 @@
   "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.": "",
   "Uploading USS files...": "",
   "Error uploading files": "",
-  "Profile auth error": "",
-  "Profile is not authenticated, please log in to continue": "",
   "Retrieving response from USS list API": "",
   "The 'move' function is not implemented for this USS API.": "",
   "Failed to move {0}": "",
@@ -695,6 +695,7 @@
   "You must enter a pattern.": "",
   "Prompting the user to choose a recent member for editing": "",
   "Select a recent member to open": "",
+  "Profile not found.": "",
   "No recent members found.": "",
   "Use the search button to display jobs": "",
   "No spool files found": "",

@@ -40,6 +40,7 @@ import { SharedUtils } from "../shared/SharedUtils";
 import { FilterItem } from "../../management/FilterManagement";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { Definitions } from "../../configuration/Definitions";
+import { TreeViewUtils } from "../../utils/TreeViewUtils";
 
 interface ISearchOptions {
     node: IZoweDatasetTreeNode;
@@ -672,6 +673,7 @@ export class DatasetActions {
         for (const member of memberParents) {
             datasetProvider.refreshElement(member);
         }
+        await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider, nodes[0].getParent());
     }
 
     /**
@@ -1672,14 +1674,16 @@ export class DatasetActions {
      */
     public static async copyPartitionedDatasets(clipboardContent, node: ZoweDatasetNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.copyPartitionedDatasets called.");
-        const groupedContent = clipboardContent.reduce((result, current) => {
+        const newClipboardContent = clipboardContent.filter(
+            (item) => item.memberName !== 'No data sets found'
+        );
+        const groupedContent = newClipboardContent.reduce((result, current) => {
             const { dataSetName, memberName, ...rest } = current;
             let group = result.find((item: any) => item.dataSetName === dataSetName);
             if (!group) {
                 group = { ...rest, dataSetName, members: [] };
                 result.push(group);
             }
-            group.members.push(memberName);
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             return result;
         }, []);
