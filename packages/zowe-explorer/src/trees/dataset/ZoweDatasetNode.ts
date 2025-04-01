@@ -27,6 +27,7 @@ import {
     PdsEntry,
     FsDatasetsUtils,
     ZoweExplorerApiType,
+    Paginator,
 } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -41,6 +42,7 @@ import type { Definitions } from "../../configuration/Definitions";
 import type { DatasetTree } from "./DatasetTree";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetUtils } from "./DatasetUtils";
+import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 /**
  * A type of TreeItem used to represent sessions and data sets
@@ -62,6 +64,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public sort?: Sorting.NodeSort;
     public filter?: Sorting.DatasetFilter;
     public resourceUri?: vscode.Uri;
+
+    private paginator?: Paginator<ZoweDatasetNode>;
 
     /**
      * Creates an instance of ZoweDatasetNode
@@ -124,6 +128,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 });
                 this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
             } else {
+                this.paginator = Paginator.fromList(
+                    this.children,
+                    SettingsConfig.getDirectValue<number>("zowe.ds.itemsPerPage") ?? Constants.DEFAULT_ITEMS_PER_PAGE
+                );
                 this.resourceUri = vscode.Uri.from({
                     scheme: ZoweScheme.DS,
                     path: `/${sessionLabel}/`,
@@ -256,7 +264,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      *
      * @returns {Promise<ZoweDatasetNode[]>}
      */
-    public async getChildren(): Promise<ZoweDatasetNode[]> {
+    public async getChildren(paginate?: boolean): Promise<ZoweDatasetNode[]> {
         ZoweLogger.trace(`ZoweDatasetNode.getChildren called for ${this.label as string}.`);
         if (!this.pattern && SharedContext.isSessionNotFav(this)) {
             const placeholder = new ZoweDatasetNode({
@@ -282,7 +290,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-        const responses = await this.getDatasets(cachedProfile);
+        const responses = await this.getDatasets(cachedProfile, paginate);
         if (responses == null) {
             return [];
         }
@@ -598,7 +606,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return fileEntry?.etag;
     }
 
-    private async getDatasets(profile: imperative.IProfileLoaded): Promise<zosfiles.IZosFilesResponse[] | undefined> {
+    private async getDatasets(profile: imperative.IProfileLoaded, paginate?: boolean): Promise<zosfiles.IZosFilesResponse[] | undefined> {
         ZoweLogger.trace("ZoweDatasetNode.getDatasets called.");
         const responses: zosfiles.IZosFilesResponse[] = [];
         const options: zosfiles.IListOptions = {
@@ -638,11 +646,16 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
                     });
                 }
+                const currentPage = this.paginator?.getCurrentPage();
+                const listOptions =
+                    paginate && currentPage?.length > 0
+                        ? { start: currentPage[currentPage.length - 1].label?.toString(), maxLength: this.paginator.getMaxItemsPerPage() }
+                        : null;
                 if (mvsApi.dataSetsMatchingPattern) {
-                    responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
+                    responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns, listOptions));
                 } else {
                     for (const dsp of dsPatterns) {
-                        responses.push(await mvsApi.dataSet(dsp));
+                        responses.push(await mvsApi.dataSet(dsp, listOptions));
                     }
                 }
             } else if (this.memberPattern) {

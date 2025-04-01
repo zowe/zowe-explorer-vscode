@@ -26,6 +26,7 @@ import {
     DatasetMatch,
     ZoweExplorerApiType,
     ZoweScheme,
+    NavigationTreeItem,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetFSProvider } from "./DatasetFSProvider";
@@ -314,7 +315,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (element.contextValue && element.contextValue === Constants.FAV_PROFILE_CONTEXT) {
                 return this.loadProfilesForFavorites(this.log, element);
             }
-            const response = await element.getChildren();
+            const isUsingPagination = SettingsConfig.getDirectValue<boolean>("zowe.ds.paginateDatasets");
+            const response = await element.getChildren(isUsingPagination);
 
             const finalResponse: IZoweDatasetTreeNode[] = [];
             for (const item of response) {
@@ -330,6 +332,20 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 item.contextValue = SharedContext.withProfile(item);
             }
 
+            if (isUsingPagination) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                return [
+                    new NavigationTreeItem("Previous page", "arrow-small-left", false, () => {
+                        (element as any).paginator.previousPage();
+                        this.mOnDidChangeTreeData.fire(element);
+                    }) as any,
+                    ...finalResponse,
+                    new NavigationTreeItem("Next page", "arrow-small-right", false, () => {
+                        (element as any).paginator.nextPage();
+                        this.mOnDidChangeTreeData.fire(element);
+                    }) as any,
+                ];
+            }
             return finalResponse;
         }
         return this.mSessionNodes;

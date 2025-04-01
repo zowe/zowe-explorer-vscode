@@ -191,7 +191,7 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      *
      * @returns {Promise<IZoweDatasetTreeNode[]>}
      */
-    getChildren(): Promise<IZoweDatasetTreeNode[]>;
+    getChildren(paginate?: boolean): Promise<IZoweDatasetTreeNode[]>;
 
     /**
      * Retrieves the etag value for the file

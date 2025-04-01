@@ -9,6 +9,25 @@
  *
  */
 
+import { ThemeIcon, TreeItem } from "vscode";
+
+export class NavigationTreeItem extends TreeItem {
+    public constructor(label: string, icon: string, disabled: boolean, navigateCallback: () => void) {
+        super(label);
+        this.iconPath = new ThemeIcon(icon);
+        this.command = disabled
+            ? {
+                  command: "paginationSample.disabled",
+                  title: "",
+              }
+            : {
+                  command: "paginationSample.navigate",
+                  title: label,
+                  arguments: [navigateCallback],
+              };
+    }
+}
+
 /**
  * @brief Provides pagination capabilities for a tree view.
  */
