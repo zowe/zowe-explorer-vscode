@@ -55,7 +55,7 @@ describe("AuthHandler.waitForUnlock", () => {
 });
 
 describe("AuthHandler.unlockAllProfiles", () => {
-    it("unlocks all profiles in the AuthHandler.profileLocks map", async () => {
+    it("unlocks all profiles in the AuthHandler.profileLocks map", () => {
         const mutexAuthPrompt = new Mutex();
         const mutexProfile = new Mutex();
         const releaseAuthPromptMutex = jest.spyOn(mutexAuthPrompt, "release");
@@ -78,11 +78,11 @@ describe("AuthHandler.isProfileLocked", () => {
         AuthHandler.unlockProfile(TEST_PROFILE_NAME);
     });
 
-    it("returns false if the profile is not locked", async () => {
+    it("returns false if the profile is not locked", () => {
         expect(AuthHandler.isProfileLocked(TEST_PROFILE_NAME)).toBe(false);
     });
 
-    it("returns false if no mutex is present for the given profile", async () => {
+    it("returns false if no mutex is present for the given profile", () => {
         expect(AuthHandler.isProfileLocked("unused_lpar.zosmf")).toBe(false);
     });
 });
@@ -185,7 +185,7 @@ describe("AuthHandler.unlockProfile", () => {
         expect((AuthHandler as any).profileLocks.get(TEST_PROFILE_NAME)!.isLocked()).toBe(false);
     });
 
-    it("does nothing if there is no mutex in the profile map", async () => {
+    it("does nothing if there is no mutex in the profile map", () => {
         const releaseSpy = jest.spyOn(Mutex.prototype, "release").mockClear();
         AuthHandler.unlockProfile("unused_lpar.zosmf");
         expect(releaseSpy).not.toHaveBeenCalled();
