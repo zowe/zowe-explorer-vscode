@@ -777,6 +777,7 @@
   "Date Modified": "",
   "User ID": "",
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "",
+  "Failed to move {0}: {1}": "",
   "Cannot drop a sequential dataset or a partitioned dataset onto another PDS.": "",
   "Cannot drop a member onto a sequential dataset.": "",
   "Moving MVS files...": "",
