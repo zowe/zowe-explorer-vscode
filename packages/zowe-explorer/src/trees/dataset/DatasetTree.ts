@@ -26,7 +26,6 @@ import {
     DatasetMatch,
     ZoweExplorerApiType,
     ZoweScheme,
-    NavigationTreeItem,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetFSProvider } from "./DatasetFSProvider";
@@ -333,18 +332,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
 
             if (isUsingPagination) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                return [
-                    new NavigationTreeItem("Previous page", "arrow-small-left", false, () => {
-                        (element as any).paginator.previousPage();
-                        this.mOnDidChangeTreeData.fire(element);
-                    }) as any,
-                    ...finalResponse,
-                    new NavigationTreeItem("Next page", "arrow-small-right", false, () => {
-                        (element as any).paginator.nextPage();
-                        this.mOnDidChangeTreeData.fire(element);
-                    }) as any,
-                ];
+                // TODO: Update with pagination controls
+                return finalResponse;
             }
             return finalResponse;
         }

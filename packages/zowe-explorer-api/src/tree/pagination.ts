@@ -9,210 +9,203 @@
  *
  */
 
-import { ThemeIcon, TreeItem } from "vscode";
-
-export class NavigationTreeItem extends TreeItem {
-    public constructor(label: string, icon: string, disabled: boolean, navigateCallback: () => void) {
-        super(label);
-        this.iconPath = new ThemeIcon(icon);
-        this.command = disabled
-            ? {
-                  command: "paginationSample.disabled",
-                  title: "",
-              }
-            : {
-                  command: "paginationSample.navigate",
-                  title: label,
-                  arguments: [navigateCallback],
-              };
-    }
+/**
+ * Result type expected from the fetch function.
+ */
+export interface IFetchResult<T, Cursor> {
+    items: T[];
+    /** The cursor to use for fetching the *next* page, or `undefined` if no more pages exist. */
+    nextPageCursor?: Cursor;
+    /** Total number of items if known (e.g., from an initial estimate) */
+    totalItems?: number;
+    /** Number of items to render from the API (might differ from `items.length` if error items are present) */
+    returnedRows?: number;
 }
 
 /**
- * @brief Provides pagination capabilities for a tree view.
+ * Expected function signature for the paginator to leverage. Used to fetch a page of data.
+ * @param cursor The cursor indicating where to start fetching (e.g., the last item name of the previous page). Use `undefined` for the first page.
+ * @param limit The maximum number of items to fetch for the page.
+ * @returns A promise resolving to an object containing the fetched items and an optional cursor for the next page.
  */
-export class Paginator<T> {
-    private items: T[] = [];
+export type FetchFn<T, Cursor> = (cursor: Cursor | undefined, limit: number) => IFetchResult<T, Cursor> | Promise<IFetchResult<T, Cursor>>;
 
-    private currentPage: number = 0;
+/**
+ * @brief Provides cursor-based pagination capabilities for a tree view or list of items.
+ * It fetches data dynamically page by page using the provided fetch function.
+ *
+ * @typeParam `T` The type of items to be paginated
+ * @typeParam `Cursor` The type of the cursor used to fetch the next page
+ */
+export class Paginator<T, Cursor = string> {
+    private currentPageItems: T[] = [];
     private maxItemsPerPage: number;
-    private totalPageCount: number = 0;
-    private startIndex: number = 0;
-    private endIndex: number = 0;
-
-    private constructor() {}
+    private currentPageCursor: Cursor | undefined = undefined;
+    private nextPageCursor: Cursor | undefined = undefined;
+    private previousPageCursors: (Cursor | undefined)[] = [];
+    private hasNextPage: boolean = false;
+    private loading: boolean = false;
+    private fetchFn: FetchFn<T, Cursor>;
 
     /**
-     * Creates a paginator instance and prepares it for use with the given array of items.
-     * @param items The array of items to use for pagination
-     * @param maxItemsPerPage The maximum amount of items to return per page
-     * @returns A new {@link Paginator} instance, ready to be used for the given array
-     * @throws If {@link maxItemsPerPage} is zero, a negative integer or a floating-point value
+     * Creates a Paginator instance. Call `initialize` to fetch the first page.
+     * @param maxItemsPerPage The maximum number of items to display per page. Must be a positive integer.
+     * @param fetchFn The function used to fetch pages of data.
+     * @throws If {@link maxItemsPerPage} is zero, a negative integer, or a floating-point value.
      */
-    public static fromList<T>(items: T[], maxItemsPerPage: number): Paginator<T> {
-        const p = new Paginator<T>();
+    public constructor(maxItemsPerPage: number, fetchFn: FetchFn<T, Cursor>) {
         if (maxItemsPerPage <= 0 || !Number.isInteger(maxItemsPerPage)) {
-            throw new Error("[Paginator.fromList] maxItemsPerPage must be a positive integer");
+            throw new Error("[Paginator.constructor] maxItemsPerPage must be a positive integer");
         }
-        p.setMaxItemsPerPage(maxItemsPerPage);
-        p.setItems(items);
-        return p;
+        this.maxItemsPerPage = maxItemsPerPage;
+        this.fetchFn = fetchFn;
     }
 
     /**
-     * Creates and sets up a default paginator instance.
-     * @param maxItemsPerPage The maximum amount of items to return per page
-     * @returns A new {@link Paginator} instance
-     * @throws If {@link maxItemsPerPage} is zero, a negative integer or a floating-point value
+     * Initializes the paginator by fetching the first page of data.
+     * Should be called after the Paginator is constructed.
+     * @throws Error if fetching fails.
      */
-    public static create<T>(maxItemsPerPage: number): Paginator<T> {
-        const p = new Paginator<T>();
-        if (maxItemsPerPage <= 0 || !Number.isInteger(maxItemsPerPage)) {
-            throw new Error("[Paginator.create] maxItemsPerPage must be a positive integer");
-        }
-        p.setMaxItemsPerPage(maxItemsPerPage);
-        return p;
-    }
-
-    /**
-     * Hold a reference to the given items to use for pagination.
-     * @param items The array of items to keep a reference to
-     */
-    public setItems(items: T[]): void {
-        this.items = items;
-        if (this.items.length === 0) {
-            this.totalPageCount = this.currentPage = this.startIndex = this.endIndex = 0;
+    public async initialize(): Promise<void> {
+        if (this.loading) {
             return;
         }
-        this.totalPageCount = Math.ceil(this.items.length / this.maxItemsPerPage);
-        this.currentPage = Math.max(0, Math.min(this.currentPage, this.totalPageCount - 1));
-        this.updateIndices();
-    }
-
-    /**
-     * @returns the reference to the array of items used for pagination.
-     */
-    public getItems(): T[] {
-        return this.items;
-    }
-
-    /**
-     * Sets the maximum amount of items to return per page.
-     * @param maxItems The desired number of items per page
-     * @throws If {@link maxItems} is zero, a negative integer or a floating-point value
-     */
-    public setMaxItemsPerPage(maxItems: number): void {
-        if (maxItems <= 0 || !Number.isInteger(maxItems)) {
-            throw new Error("[Paginator.setMaxItemsPerPage] maxItems must be a positive integer");
+        this.loading = true;
+        try {
+            // The cursor used to fetch the first page is undefined
+            this.currentPageCursor = undefined;
+            const result = await this.fetchFn(undefined, this.maxItemsPerPage);
+            this.currentPageItems = result.items;
+            this.nextPageCursor = result.nextPageCursor;
+            // hasNextPage: if a cursor is returned AND (items fetched equals limit OR totalItems suggests more)
+            this.hasNextPage =
+                !!result.nextPageCursor &&
+                (result.items.length === this.maxItemsPerPage ||
+                    (result.totalItems != null && this.previousPageCursors.length * this.maxItemsPerPage + result.items.length < result.totalItems));
+            this.previousPageCursors = [];
+        } catch (error) {
+            this.currentPageItems = [];
+            this.hasNextPage = false;
+            this.nextPageCursor = undefined;
+            this.previousPageCursors = [];
+            // Propagate error to caller
+            throw error;
+        } finally {
+            this.loading = false;
         }
-        this.maxItemsPerPage = maxItems;
-        this.totalPageCount = Math.ceil(this.items.length / this.maxItemsPerPage);
-        this.currentPage = Math.max(0, Math.min(this.currentPage, this.totalPageCount > 0 ? this.totalPageCount - 1 : 0));
-        this.updateIndices();
     }
 
     /**
-     * @returns the maximum amount of items per page.
+     * Fetches and displays the next page of items.
+     * @returns The items for the next page.
+     * @throws Error if fetching fails or if there is no next page.
+     */
+    public async fetchNextPage(): Promise<T[]> {
+        if (this.loading) {
+            throw new Error("[Paginator.fetchNextPage] Paginator is already loading.");
+        }
+        if (!this.hasNextPage || this.nextPageCursor === undefined) {
+            throw new Error("[Paginator.fetchNextPage] No next page available or cursor is missing.");
+        }
+
+        this.loading = true;
+
+        // Cache the previous page cursor that led to the current page
+        this.previousPageCursors.push(this.currentPageCursor);
+        try {
+            // Fetch the next page of items
+            const result = await this.fetchFn(this.nextPageCursor, this.maxItemsPerPage);
+
+            // The next page cursor is now the current page cursor
+            this.currentPageItems = result.items;
+            this.currentPageCursor = this.nextPageCursor;
+            // Prepare the cursor for a "next page" fetch
+            this.nextPageCursor = result.nextPageCursor;
+
+            this.hasNextPage =
+                !!result.nextPageCursor &&
+                (result.items.length === this.maxItemsPerPage ||
+                    (result.totalItems != null && this.previousPageCursors.length * this.maxItemsPerPage + result.items.length < result.totalItems));
+        } catch (error) {
+            // Remove previous page cursor if an error occurred as the page transition failed
+            this.previousPageCursors.pop();
+            throw error;
+        } finally {
+            this.loading = false;
+        }
+        return this.currentPageItems;
+    }
+
+    /**
+     * Fetches and displays the previous page of items.
+     * @returns The items for the previous page.
+     * @throws Error if fetching fails or if there is no previous page.
+     */
+    public async fetchPreviousPage(): Promise<T[]> {
+        if (this.loading) {
+            throw new Error("[Paginator.fetchPreviousPage] Paginator is already loading.");
+        }
+        if (!this.canGoPrevious()) {
+            throw new Error("[Paginator.fetchPreviousPage] No previous page available.");
+        }
+
+        this.loading = true;
+        const previousCursor = this.previousPageCursors.pop(); // Get the cursor needed to fetch the page before the current one
+
+        try {
+            const result = await this.fetchFn(previousCursor, this.maxItemsPerPage);
+            this.currentPageItems = result.items;
+            // The cursor we just used to go back is now the "current" page's cursor
+            this.currentPageCursor = previousCursor;
+            // The next cursor returned by fetching the previous page should ideally
+            // point back to the start of the page we just came from.
+            // We assume the API provides this correctly.
+            this.nextPageCursor = result.nextPageCursor;
+            this.hasNextPage =
+                !!result.nextPageCursor &&
+                (result.items.length === this.maxItemsPerPage ||
+                    (result.totalItems != null && this.previousPageCursors.length * this.maxItemsPerPage + result.items.length < result.totalItems));
+        } catch (error) {
+            this.previousPageCursors.push(previousCursor); // Push the cursor back if fetch failed to maintain state
+            throw error;
+        } finally {
+            this.loading = false;
+        }
+        return this.currentPageItems;
+    }
+
+    /**
+     * @returns The items currently displayed on the page.
+     */
+    public getCurrentPageItems(): T[] {
+        return this.currentPageItems;
+    }
+
+    /**
+     * @returns The maximum number of items configured per page.
      */
     public getMaxItemsPerPage(): number {
         return this.maxItemsPerPage;
     }
 
     /**
-     * Move the paginator forward by one page.
-     * This function has bounds-checking and stops at the last possible page.
+     * @returns `true` if there is potentially a next page available, `false` otherwise.
      */
-    public nextPage(): void {
-        this.moveForward(1);
+    public canGoNext(): boolean {
+        return this.hasNextPage && !this.loading;
     }
 
     /**
-     * Move the paginator backward by one page.
-     * This function has bounds-checking and stops at the first page.
+     * @returns `true` if there is a previous page available in the history, `false` otherwise.
      */
-    public previousPage(): void {
-        this.moveBack(1);
+    public canGoPrevious(): boolean {
+        return this.previousPageCursors.length > 0 && !this.loading;
     }
 
     /**
-     * Move the paginator forward by the given number of pages.
-     * If moving forward by given number of pages exceeds the total page count, the pagination window reflects the last page of elements.
-     * @param numPages The number of pages to move forward
+     * @returns `true` if the paginator is currently fetching data, `false` otherwise.
      */
-    public moveForward(numPages: number): void {
-        this.currentPage = Math.min(this.currentPage + numPages, this.getPageCount() - 1);
-        this.updateIndices();
-    }
-
-    /**
-     * Move the paginator backward by the given number of pages.
-     * If moving backward by given number of pages results in a negative page index, the pagination window reflects the first page of elements.
-     * @param numPages The number of pages to move backward
-     */
-    public moveBack(numPages: number): void {
-        this.currentPage = Math.max(this.currentPage - numPages, 0);
-        this.updateIndices();
-    }
-
-    /**
-     * Set the current page for the pagination controller.
-     * @param page The new page index
-     * @throws If {@link page} is less than zero, greater than the total page count, or a non-integer value
-     */
-    public setPage(page: number): void {
-        if (page < 0 || page >= this.totalPageCount || !Number.isInteger(page)) {
-            throw new Error("[Paginator.setPage] page must be a valid integer between 0 and totalPageCount - 1");
-        }
-        this.currentPage = page;
-        this.updateIndices();
-    }
-
-    /**
-     * Returns a slice of items within the given page number.
-     * @param page Specify the page of items to return
-     * @returns A slice of items starting at the given page
-     * @throws If {@link page} is less than zero, greater than the total page count, or a non-integer value
-     */
-    public getPage(page: number): T[] {
-        if (page < 0 || page >= this.totalPageCount || !Number.isInteger(page)) {
-            throw new Error("[Paginator.getPage] page must be a valid integer between 0 and totalPageCount - 1");
-        }
-
-        const startIndex = page * this.maxItemsPerPage;
-        const endIndex = Math.min(startIndex + this.maxItemsPerPage, this.getItemCount());
-        return this.items.slice(startIndex, endIndex);
-    }
-
-    /**
-     * @returns the total number of pages for the current list of items in the paginator.
-     */
-    public getPageCount(): number {
-        return this.totalPageCount;
-    }
-
-    /**
-     * @returns the current page # (zero-indexed)
-     */
-    public getCurrentPageIndex(): number {
-        return this.currentPage;
-    }
-
-    private updateIndices(): void {
-        this.startIndex = this.currentPage * this.maxItemsPerPage;
-        this.endIndex = Math.min(this.startIndex + this.maxItemsPerPage, this.items.length);
-    }
-
-    /**
-     * @returns the current page of items
-     */
-    public getCurrentPage(): T[] {
-        return this.items.slice(this.startIndex, this.endIndex);
-    }
-
-    /**
-     * @returns the current number of items
-     */
-    public getItemCount(): number {
-        return this.items.length;
+    public isLoading(): boolean {
+        return this.loading;
     }
 }

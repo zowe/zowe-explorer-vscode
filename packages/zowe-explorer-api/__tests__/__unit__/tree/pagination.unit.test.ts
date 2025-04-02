@@ -9,370 +9,507 @@
  *
  */
 
-import { Constants } from "../../../src/globals";
-import { Paginator } from "../../../src";
+import { Paginator, FetchFn, IFetchResult } from "../../../src";
 
-describe("Paginator class", () => {
+// Helper type for mock data items
+type MockDataItem = { id: number; name: string };
+
+// Helper function to create mock data
+const createMockData = (count: number, prefix = "item-"): MockDataItem[] => {
+    return Array.from({ length: count }, (_, i) => ({ id: i, name: `${prefix}${i}` }));
+};
+
+// Interface for mock function options
+interface MockFetchOptions {
+    failOnCursor?: string | undefined;
+    returnLessItemsOnCursor?: string | undefined;
+}
+
+const createMockFetchFunction = (totalItems: number, options?: MockFetchOptions): FetchFn<MockDataItem, string> => {
+    const failOnCursor = options?.failOnCursor;
+    const returnLessItemsOnCursor = options?.returnLessItemsOnCursor;
+    const failOnCursorProvided = !!options && Object.prototype.hasOwnProperty.call(options, "failOnCursor");
+
+    return jest.fn(async (cursor: string | undefined, limit: number): Promise<IFetchResult<MockDataItem, string>> => {
+        if (failOnCursorProvided && cursor === failOnCursor) {
+            throw new Error(`Simulated fetch error for cursor: ${cursor}`);
+        }
+
+        const startIndex = cursor ? parseInt(cursor.split("-")[1], 10) + 1 : 0;
+        if (startIndex >= totalItems) {
+            return { items: [], nextPageCursor: undefined, totalItems }; // No more items
+        }
+
+        let actualLimit = limit;
+        // Check if returnLessItemsOnCursor was provided AND it matches the current cursor
+        const returnLessProvided = !!options && Object.prototype.hasOwnProperty.call(options, "returnLessItemsOnCursor");
+        if (returnLessProvided && cursor === returnLessItemsOnCursor) {
+            actualLimit = Math.floor(limit / 2); // Return fewer items than requested
+        }
+
+        const endIndex = Math.min(startIndex + actualLimit, totalItems);
+        const items = createMockData(endIndex - startIndex, `item-${startIndex}-`);
+        // Adjust IDs to be globally unique if needed, here using startIndex
+        items.forEach((item, idx) => (item.id = startIndex + idx));
+
+        const nextPageCursor = endIndex < totalItems ? `cursor-${items[items.length - 1].id}` : undefined;
+
+        // Simulate API returning totalItems and returnedRows
+        return {
+            items,
+            nextPageCursor,
+            totalItems,
+            returnedRows: items.length,
+        };
+    });
+};
+
+describe("Paginator", () => {
+    const MAX_ITEMS_PER_PAGE = 5;
+    let mockFetch: FetchFn<MockDataItem, string>;
+    let paginator: Paginator<MockDataItem>;
+
     afterEach(() => {
         jest.clearAllMocks();
     });
 
-    describe("create", () => {
-        it("creates a default paginator instance, no max items/page provided", () => {
-            const setMaxItemsPerPage = jest.spyOn(Paginator.prototype, "setMaxItemsPerPage");
-            const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE);
-
-            expect(p.getMaxItemsPerPage()).toBe(Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(setMaxItemsPerPage).toHaveBeenCalledTimes(1);
-            expect(setMaxItemsPerPage).toHaveBeenCalledWith(Constants.DEFAULT_ITEMS_PER_PAGE);
+    describe("constructor", () => {
+        it("should create a Paginator instance successfully", () => {
+            mockFetch = createMockFetchFunction(20);
+            expect(() => new Paginator(MAX_ITEMS_PER_PAGE, mockFetch)).not.toThrow();
         });
 
-        it("creates a default paginator instance, max items/page provided", () => {
-            const p = Paginator.create(50);
-            expect(p.getMaxItemsPerPage()).toBe(50);
+        it("should throw an error if maxItemsPerPage is zero", () => {
+            mockFetch = createMockFetchFunction(20);
+            expect(() => new Paginator(0, mockFetch)).toThrow("[Paginator.constructor] maxItemsPerPage must be a positive integer");
         });
 
-        it("throws an error if the max items per page is a negative integer", () => {
-            expect(Paginator.create.bind(Paginator, -1)).toThrow("[Paginator.create] maxItemsPerPage must be a positive integer");
+        it("should throw an error if maxItemsPerPage is negative", () => {
+            mockFetch = createMockFetchFunction(20);
+            expect(() => new Paginator(-1, mockFetch)).toThrow("[Paginator.constructor] maxItemsPerPage must be a positive integer");
         });
 
-        it("throws an error if the max items per page is not an integer", () => {
-            expect(Paginator.create.bind(Paginator, 1.1)).toThrow("[Paginator.create] maxItemsPerPage must be a positive integer");
-        });
-    });
-
-    describe("fromList", () => {
-        it("creates a new instance prepared for the given list, no max items/page provided", () => {
-            const items = Array.from({ length: Constants.DEFAULT_ITEMS_PER_PAGE }).map((v, i) => i);
-            const setItems = jest.spyOn(Paginator.prototype, "setItems");
-            const setMaxItemsPerPage = jest.spyOn(Paginator.prototype, "setMaxItemsPerPage");
-            const p = Paginator.fromList(items, Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.getItemCount()).toBe(Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.getItems()).toBe(items);
-            expect(setItems).toHaveBeenCalledTimes(1);
-            expect(setItems).toHaveBeenCalledWith(items);
-            expect(setMaxItemsPerPage).toHaveBeenCalledWith(Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.getMaxItemsPerPage()).toBe(Constants.DEFAULT_ITEMS_PER_PAGE);
+        it("should throw an error if maxItemsPerPage is not an integer", () => {
+            mockFetch = createMockFetchFunction(20);
+            expect(() => new Paginator(3.5, mockFetch)).toThrow("[Paginator.constructor] maxItemsPerPage must be a positive integer");
         });
 
-        it("creates a new instance prepared for the given list, max items/page provided", () => {
-            const items = Array.from({ length: 100 }).map((v, i) => i);
-            const setItems = jest.spyOn(Paginator.prototype, "setItems");
-            const setMaxItemsPerPage = jest.spyOn(Paginator.prototype, "setMaxItemsPerPage");
-            const p = Paginator.fromList(items, 50);
-            expect(p.getItemCount()).toBe(100);
-            expect(p.getItems()).toBe(items);
-            expect(setItems).toHaveBeenCalledTimes(1);
-            expect(setItems).toHaveBeenCalledWith(items);
-            expect(setMaxItemsPerPage).toHaveBeenCalledWith(50);
-            expect(p.getMaxItemsPerPage()).toBe(50);
-        });
-
-        it("throws an error if the max items per page is a negative integer", () => {
-            expect(
-                Paginator.fromList.bind(
-                    Paginator,
-                    Array.from({ length: 100 }).map((v, i) => i),
-                    -1
-                )
-            ).toThrow("[Paginator.fromList] maxItemsPerPage must be a positive integer");
-        });
-
-        it("throws an error if the max items per page is not an integer", () => {
-            expect(
-                Paginator.fromList.bind(
-                    Paginator,
-                    Array.from({ length: 100 }).map((v, i) => i),
-                    1.1
-                )
-            ).toThrow("[Paginator.fromList] maxItemsPerPage must be a positive integer");
+        it("should initialize with default state", () => {
+            mockFetch = createMockFetchFunction(20);
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, mockFetch);
+            expect(paginator.getCurrentPageItems()).toEqual([]);
+            expect(paginator.getMaxItemsPerPage()).toBe(MAX_ITEMS_PER_PAGE);
+            expect(paginator.canGoNext()).toBe(false);
+            expect(paginator.canGoPrevious()).toBe(false);
+            expect(paginator.isLoading()).toBe(false);
         });
     });
 
-    describe("setItems", () => {
-        it("sets the items property on the paginator when called, small list", () => {
-            const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE);
-            const items = ["A", "B", "C"];
-            p.setItems(items);
-            expect(p.getItems()).toBe(items);
-            expect(p.getPageCount()).toBe(1);
-            expect(p.getCurrentPageIndex()).toBe(0);
-            expect(p.getCurrentPage()).toStrictEqual(items);
+    describe("initialize", () => {
+        beforeEach(() => {
+            mockFetch = createMockFetchFunction(12);
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, mockFetch);
         });
 
-        it("sets the items property on the paginator when called, large list", () => {
-            const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE);
-            const items = Array(Constants.DEFAULT_ITEMS_PER_PAGE * 3).map((i, _v) => `elem-${i}`);
-            p.setItems(items);
-            expect(p.getItems()).toBe(items);
-            expect(p.getPageCount()).toBe(3);
-            expect(p.getCurrentPageIndex()).toBe(0);
-            expect(p.getCurrentPage()).toStrictEqual(items.slice(0, Constants.DEFAULT_ITEMS_PER_PAGE));
+        it("should fetch the first page successfully", async () => {
+            await paginator.initialize();
+            expect(mockFetch).toHaveBeenCalledWith(undefined, MAX_ITEMS_PER_PAGE);
+            expect(paginator.getCurrentPageItems().length).toBe(MAX_ITEMS_PER_PAGE);
+            expect(paginator.getCurrentPageItems()[0].id).toBe(0);
+            expect(paginator.getCurrentPageItems()[MAX_ITEMS_PER_PAGE - 1].id).toBe(MAX_ITEMS_PER_PAGE - 1);
+            expect(paginator.canGoNext()).toBe(true);
+            expect(paginator.canGoPrevious()).toBe(false);
+            expect(paginator.isLoading()).toBe(false);
         });
 
-        it("resets the total page count when the given list is empty", () => {
-            const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE);
-            const items = [];
-            p.setItems(items);
-            expect(p.getItems()).toBe(items);
-            expect(p.getPageCount()).toBe(0);
-            expect(p.getCurrentPageIndex()).toBe(0);
-            expect(p.getCurrentPage()).toStrictEqual(items);
-        });
-    });
-
-    describe("getItems", () => {
-        const testItems = ["test1", "test2", "test3"];
-
-        it("returns the same reference to array passed to setItems function", () => {
-            const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE);
-            p.setItems(testItems);
-            expect(p.getItems()).toBe(testItems);
-        });
-        it("returns the same reference to array passed to fromList function", () => {
-            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.getItems()).toBe(testItems);
-        });
-        it("reflects mutations to referenced array", () => {
-            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.getItems()).toBe(testItems);
-            testItems.pop();
-            expect(p.getItems()).toBe(testItems);
-        });
-    });
-
-    describe("setMaxItemsPerPage", () => {
-        it("sets the maximum number of items per page", () => {
-            const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE * 2);
-            p.setMaxItemsPerPage(100);
-            expect(p.getMaxItemsPerPage()).toBe(100);
+        it("should determine hasNextPage correctly when fetch returns fewer items than limit but has cursor", async () => {
+            // Simulate scenario where API returns a next cursor even if fewer items were returned than the limit
+            // (e.g., due to filtering or reaching the end soon)
+            const lessItemsFetch = jest.fn(async (cursor: string | undefined, limit: number): Promise<IFetchResult<MockDataItem, string>> => {
+                if (cursor === undefined) {
+                    return {
+                        items: createMockData(MAX_ITEMS_PER_PAGE - 1, "item-0-"), // Return 4 items
+                        nextPageCursor: "cursor-3", // Still provide a cursor
+                        totalItems: 12,
+                    };
+                }
+                // Subsequent fetches (not tested here, but needed for mock completeness)
+                const startIndex = cursor ? parseInt(cursor.split("-")[1], 10) + 1 : 0;
+                const endIndex = Math.min(startIndex + limit, 12);
+                const items = createMockData(endIndex - startIndex, `item-${startIndex}-`);
+                items.forEach((item, idx) => (item.id = startIndex + idx));
+                const nextCursor = endIndex < 12 ? `cursor-${items[items.length - 1].id}` : undefined;
+                return { items, nextPageCursor: nextCursor, totalItems: 12 };
+            });
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, lessItemsFetch);
+            await paginator.initialize();
+            expect(paginator.getCurrentPageItems().length).toBe(MAX_ITEMS_PER_PAGE - 1); // 4 items
+            expect(paginator.canGoNext()).toBe(true); // Should still be true because cursor was returned
         });
 
-        it("sets the maximum number of items per page, total page count > 0", () => {
-            const p = Paginator.fromList(["A", "B", "C", "D"], Constants.DEFAULT_ITEMS_PER_PAGE);
-            p.setMaxItemsPerPage(2);
-            expect(p.getMaxItemsPerPage()).toBe(2);
+        it("should determine hasNextPage correctly based on totalItems when returned items equal limit", async () => {
+            // 10 total items, 5 per page. First fetch gets 5. Should know there's a next page.
+            mockFetch = createMockFetchFunction(10);
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, mockFetch);
+            await paginator.initialize();
+            expect(paginator.getCurrentPageItems().length).toBe(MAX_ITEMS_PER_PAGE);
+            expect(paginator.canGoNext()).toBe(true);
         });
 
-        it("throws an error if the given value is not positive", () => {
-            const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.setMaxItemsPerPage.bind(p, -1)).toThrow("[Paginator.setMaxItemsPerPage] maxItems must be a positive integer");
+        it("should determine hasNextPage correctly based on totalItems when returned items are less than limit", async () => {
+            // 7 total items, 5 per page. First fetch gets 5. Should know there's a next page.
+            mockFetch = createMockFetchFunction(7);
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, mockFetch);
+            await paginator.initialize();
+            expect(paginator.getCurrentPageItems().length).toBe(MAX_ITEMS_PER_PAGE); // Gets first 5
+            expect(paginator.canGoNext()).toBe(true); // Knows 5 < 7
         });
 
-        it("throws an error if the given value is not an integer", () => {
-            const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.setMaxItemsPerPage.bind(p, 1.1)).toThrow("[Paginator.setMaxItemsPerPage] maxItems must be a positive integer");
-        });
-    });
-
-    describe("getMaxItemsPerPage", () => {
-        it("returns the maximum provided at initialization", () => {
-            const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE / 2);
-            expect(p.getMaxItemsPerPage()).toBe(Constants.DEFAULT_ITEMS_PER_PAGE / 2);
+        it("should handle initialization when total items are less than or equal to page size", async () => {
+            mockFetch = createMockFetchFunction(3); // 3 items total
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, mockFetch);
+            await paginator.initialize();
+            expect(mockFetch).toHaveBeenCalledWith(undefined, MAX_ITEMS_PER_PAGE);
+            expect(paginator.getCurrentPageItems().length).toBe(3);
+            expect(paginator.canGoNext()).toBe(false);
+            expect(paginator.canGoPrevious()).toBe(false);
         });
 
-        it("returns the maximum value explicitly set by the user", () => {
-            const p = Paginator.create(Constants.DEFAULT_ITEMS_PER_PAGE / 2);
-            p.setMaxItemsPerPage(Constants.DEFAULT_ITEMS_PER_PAGE * 2);
-            expect(p.getMaxItemsPerPage()).toBe(Constants.DEFAULT_ITEMS_PER_PAGE * 2);
-        });
-    });
-
-    describe("nextPage", () => {
-        const testItems = Array.from({ length: Constants.DEFAULT_ITEMS_PER_PAGE * 2 }).map((v, i) => i);
-
-        it("advances the paginator to the next page", () => {
-            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
-            p.nextPage();
-            expect(p.getCurrentPageIndex()).toBe(1);
-            expect(p.getCurrentPage()).toStrictEqual(testItems.slice(Constants.DEFAULT_ITEMS_PER_PAGE));
+        it("should handle initialization when there are exactly itemsPerPage items", async () => {
+            mockFetch = createMockFetchFunction(MAX_ITEMS_PER_PAGE);
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, mockFetch);
+            await paginator.initialize();
+            expect(mockFetch).toHaveBeenCalledWith(undefined, MAX_ITEMS_PER_PAGE);
+            expect(paginator.getCurrentPageItems().length).toBe(MAX_ITEMS_PER_PAGE);
+            expect(paginator.canGoNext()).toBe(false);
+            expect(paginator.canGoPrevious()).toBe(false);
         });
 
-        it("does nothing if the paginator is already at the last page", () => {
-            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
-            p.nextPage();
-            p.nextPage();
-            expect(p.getCurrentPageIndex()).toBe(1);
-            expect(p.getCurrentPage()).toStrictEqual(testItems.slice(Constants.DEFAULT_ITEMS_PER_PAGE));
-        });
-    });
-
-    describe("previousPage", () => {
-        const testItems = Array.from({ length: Constants.DEFAULT_ITEMS_PER_PAGE * 4 }).map((v, i) => i);
-
-        it("moves back to the previous page", () => {
-            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
-            p.nextPage();
-            p.nextPage();
-            p.previousPage();
-            expect(p.getCurrentPageIndex()).toBe(1);
-            expect(p.getCurrentPage()).toStrictEqual(testItems.slice(Constants.DEFAULT_ITEMS_PER_PAGE, Constants.DEFAULT_ITEMS_PER_PAGE * 2));
+        it("should set isLoading flag during initialization", async () => {
+            const promise = paginator.initialize();
+            expect(paginator.isLoading()).toBe(true);
+            await promise;
+            expect(paginator.isLoading()).toBe(false);
         });
 
-        it("does nothing if the paginator is already at the first page", () => {
-            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
-            p.previousPage();
-            expect(p.getCurrentPageIndex()).toBe(0);
-            expect(p.getCurrentPage()).toStrictEqual(testItems.slice(0, Constants.DEFAULT_ITEMS_PER_PAGE));
-        });
-    });
-
-    describe("moveForward", () => {
-        const testItems = Array.from({ length: Constants.DEFAULT_ITEMS_PER_PAGE * 4 }).map((v, i) => i);
-
-        it("moves forward by the given number of pages", () => {
-            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
-            p.moveForward(3);
-            expect(p.getCurrentPageIndex()).toBe(3);
-            expect(p.getCurrentPage()).toStrictEqual(testItems.slice(Constants.DEFAULT_ITEMS_PER_PAGE * 3, Constants.DEFAULT_ITEMS_PER_PAGE * 4));
+        it("should handle fetch errors during initialization", async () => {
+            const errorFetch = jest.fn().mockRejectedValue(new Error("Fetch failed"));
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, errorFetch);
+            await expect(paginator.initialize()).rejects.toThrow("Fetch failed");
+            expect(paginator.getCurrentPageItems()).toEqual([]);
+            expect(paginator.canGoNext()).toBe(false);
+            expect(paginator.canGoPrevious()).toBe(false);
+            expect(paginator.isLoading()).toBe(false);
         });
 
-        it("moves the paginator to the last page if the number of pages exceeds the total number of pages", () => {
-            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
-            p.moveForward(3);
-            p.moveForward(3);
-            expect(p.getCurrentPageIndex()).toBe(3);
-            expect(p.getCurrentPage()).toStrictEqual(testItems.slice(Constants.DEFAULT_ITEMS_PER_PAGE * 3, Constants.DEFAULT_ITEMS_PER_PAGE * 4));
-        });
-    });
-
-    describe("moveBack", () => {
-        const testItems = Array.from({ length: Constants.DEFAULT_ITEMS_PER_PAGE * 4 }).map((v, i) => i);
-
-        it("moves back by the given number of pages", () => {
-            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
-            p.moveForward(3);
-            p.moveBack(2);
-            expect(p.getCurrentPageIndex()).toBe(1);
-            expect(p.getCurrentPage()).toStrictEqual(testItems.slice(Constants.DEFAULT_ITEMS_PER_PAGE, Constants.DEFAULT_ITEMS_PER_PAGE * 2));
-        });
-
-        it("moves the paginator to the first page if moving back by too many pages", () => {
-            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
-            p.moveForward(3);
-            p.moveBack(5);
-            expect(p.getCurrentPageIndex()).toBe(0);
-            expect(p.getCurrentPage()).toStrictEqual(testItems.slice(0, Constants.DEFAULT_ITEMS_PER_PAGE));
-        });
-    });
-
-    describe("setPage", () => {
-        it("sets the page to the given index when valid", () => {
-            const testItems = Array.from({ length: Constants.DEFAULT_ITEMS_PER_PAGE * 4 }).map((v, i) => i);
-            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.setPage.bind(p, 1)).not.toThrow();
-            expect(p.getCurrentPageIndex()).toBe(1);
-            expect(p.getCurrentPage()).toStrictEqual(testItems.slice(Constants.DEFAULT_ITEMS_PER_PAGE, Constants.DEFAULT_ITEMS_PER_PAGE * 2));
-        });
-        it("throws an error if providing a negative page index", () => {
-            const p = Paginator.fromList(["A", "B", "C"], Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.setPage.bind(p, -1)).toThrow("[Paginator.setPage] page must be a valid integer between 0 and totalPageCount - 1");
-        });
-
-        it("throws an error if the page index is greater than the total page count", () => {
-            const p = Paginator.fromList(["A", "B", "C"], Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.setPage.bind(p, 2)).toThrow("[Paginator.setPage] page must be a valid integer between 0 and totalPageCount - 1");
-        });
-
-        it("throws an error if the page index is not an integer", () => {
-            const p = Paginator.fromList(["A", "B", "C"], Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.setPage.bind(p, 1.1)).toThrow("[Paginator.setPage] page must be a valid integer between 0 and totalPageCount - 1");
-        });
-    });
-
-    describe("getPage", () => {
-        it("returns the contents for the given page index", () => {
-            const testItems = Array.from({ length: Constants.DEFAULT_ITEMS_PER_PAGE * 4 }).map((v, i) => i);
-            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.getPage(2)).toStrictEqual(testItems.slice(Constants.DEFAULT_ITEMS_PER_PAGE * 2, Constants.DEFAULT_ITEMS_PER_PAGE * 3));
-        });
-
-        it("throws an error if the given index is greater than total page count", () => {
-            const testItems = Array.from({ length: Constants.DEFAULT_ITEMS_PER_PAGE * 4 }).map((v, i) => i);
-            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.getPage.bind(p, 5)).toThrow("[Paginator.getPage] page must be a valid integer between 0 and totalPageCount - 1");
-        });
-
-        it("throws an error if the given index is less than 0", () => {
-            const testItems = Array.from({ length: Constants.DEFAULT_ITEMS_PER_PAGE }).map((v, i) => i);
-            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.getPage.bind(p, -1)).toThrow("[Paginator.getPage] page must be a valid integer between 0 and totalPageCount - 1");
-        });
-
-        it("throws an error if the given index is not an integer", () => {
-            const testItems = Array.from({ length: Constants.DEFAULT_ITEMS_PER_PAGE }).map((v, i) => i);
-            const p = Paginator.fromList(testItems, Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.getPage.bind(p, 1.1)).toThrow("[Paginator.getPage] page must be a valid integer between 0 and totalPageCount - 1");
-        });
-    });
-
-    describe("getPageCount", () => {
-        it("returns the total page count", () => {
-            const p = Paginator.fromList(
-                Array.from({ length: 1000 }).map((v, i) => `${i}`),
-                Constants.DEFAULT_ITEMS_PER_PAGE
+        it("should not fetch if already loading", async () => {
+            const slowFetch = jest.fn(
+                () =>
+                    new Promise<IFetchResult<MockDataItem, string>>((resolve) =>
+                        setTimeout(() => resolve({ items: [], nextPageCursor: undefined }), 50)
+                    )
             );
-            expect(p.getPageCount()).toBe(10);
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, slowFetch);
+            const p1 = paginator.initialize(); // Start loading
+            expect(paginator.isLoading()).toBe(true);
+            const p2 = paginator.initialize(); // Try starting again while loading
+            await Promise.all([p1, p2]);
+            expect(slowFetch).toHaveBeenCalledTimes(1); // Should only be called once
         });
     });
 
-    describe("getCurrentPageIndex", () => {
-        it("returns 0 when a paginator is just initialized", () => {
-            const p = Paginator.fromList(
-                Array.from({ length: 200 }).map((v, i) => `${i}`),
-                Constants.DEFAULT_ITEMS_PER_PAGE
-            );
-            expect(p.getCurrentPageIndex()).toBe(0);
+    describe("fetchNextPage", () => {
+        beforeEach(async () => {
+            // 12 items total, 5 per page => Page 1 (0-4), Page 2 (5-9), Page 3 (10-11)
+            mockFetch = createMockFetchFunction(12);
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, mockFetch);
+            await paginator.initialize(); // Load first page (items 0-4)
+            // Reset mock calls after initialize
+            (mockFetch as jest.Mock).mockClear();
         });
 
-        it("returns a new page index after moving forward", () => {
-            const p = Paginator.fromList(
-                Array.from({ length: 200 }).map((v, i) => `${i}`),
-                Constants.DEFAULT_ITEMS_PER_PAGE
-            );
-            p.nextPage();
-            expect(p.getCurrentPageIndex()).toBe(1);
+        it("should fetch the next page successfully", async () => {
+            expect(paginator.canGoNext()).toBe(true);
+            const currentPage1 = paginator.getCurrentPageItems();
+            expect(currentPage1.length).toBe(5);
+            expect(currentPage1[0].id).toBe(0);
+
+            const nextPageItems = await paginator.fetchNextPage(); // Fetch page 2 (items 5-9)
+
+            expect(mockFetch).toHaveBeenCalledWith("cursor-4", MAX_ITEMS_PER_PAGE); // Cursor from last item of page 1
+            expect(nextPageItems.length).toBe(MAX_ITEMS_PER_PAGE);
+            expect(nextPageItems[0].id).toBe(5);
+            expect(nextPageItems[MAX_ITEMS_PER_PAGE - 1].id).toBe(9);
+            expect(paginator.getCurrentPageItems()).toEqual(nextPageItems);
+            expect(paginator.canGoNext()).toBe(true); // Page 3 exists
+            expect(paginator.canGoPrevious()).toBe(true); // Came from page 1
+            expect(paginator.isLoading()).toBe(false);
         });
 
-        it("returns a new page index after moving backward", () => {
-            const p = Paginator.fromList(
-                Array.from({ length: 400 }).map((v, i) => `${i}`),
-                Constants.DEFAULT_ITEMS_PER_PAGE
+        it("should fetch the last page successfully", async () => {
+            await paginator.fetchNextPage(); // Fetch page 2 (items 5-9)
+            (mockFetch as jest.Mock).mockClear();
+
+            expect(paginator.canGoNext()).toBe(true);
+            const nextPageItems = await paginator.fetchNextPage(); // Fetch page 3 (items 10-11)
+
+            expect(mockFetch).toHaveBeenCalledWith("cursor-9", MAX_ITEMS_PER_PAGE); // Cursor from last item of page 2
+            expect(nextPageItems.length).toBe(2); // Only 2 items left
+            expect(nextPageItems[0].id).toBe(10);
+            expect(nextPageItems[1].id).toBe(11);
+            expect(paginator.getCurrentPageItems()).toEqual(nextPageItems);
+            expect(paginator.canGoNext()).toBe(false); // No more pages
+            expect(paginator.canGoPrevious()).toBe(true); // Came from page 2
+        });
+
+        it("should handle hasNextPage correctly when fetch returns fewer items but provides a cursor", async () => {
+            // 12 items total, 5 per page. Fetch for page 2 returns only 3 items but still a cursor.
+            mockFetch = createMockFetchFunction(12, {
+                returnLessItemsOnCursor: "cursor-4",
+            });
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, mockFetch);
+            await paginator.initialize(); // Page 1 (0-4)
+            (mockFetch as jest.Mock).mockClear();
+
+            await paginator.fetchNextPage(); // Fetch page 2 (should get 2 items: 5-6, based on mock)
+
+            expect(mockFetch).toHaveBeenCalledWith("cursor-4", MAX_ITEMS_PER_PAGE);
+            expect(paginator.getCurrentPageItems().length).toBe(Math.floor(MAX_ITEMS_PER_PAGE / 2)); // Should be 2 items based on mock helper
+            expect(paginator.canGoNext()).toBe(true); // Still true because cursor was returned
+            expect(paginator.canGoPrevious()).toBe(true);
+        });
+
+        it("should throw error if trying to fetch next page when not possible", async () => {
+            await paginator.fetchNextPage(); // Page 2
+            await paginator.fetchNextPage(); // Page 3 (last page)
+            expect(paginator.canGoNext()).toBe(false);
+            await expect(paginator.fetchNextPage()).rejects.toThrow("[Paginator.fetchNextPage] No next page available or cursor is missing.");
+        });
+
+        it("should throw error if trying to fetch next page while already loading", async () => {
+            const slowFetch = jest.fn(
+                () =>
+                    new Promise<IFetchResult<MockDataItem, string>>((resolve) =>
+                        setTimeout(() => resolve({ items: createMockData(MAX_ITEMS_PER_PAGE, "slow-"), nextPageCursor: "slow-cursor" }), 50)
+                    )
             );
-            p.setPage(3);
-            p.previousPage();
-            expect(p.getCurrentPageIndex()).toBe(2);
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, slowFetch);
+            await paginator.initialize();
+
+            const promise = paginator.fetchNextPage(); // Start loading next page
+            expect(paginator.isLoading()).toBe(true);
+            await expect(paginator.fetchNextPage()).rejects.toThrow("[Paginator.fetchNextPage] Paginator is already loading.");
+            await promise; // Wait for the first fetch to complete
+        });
+
+        it("should handle fetch errors during fetchNextPage", async () => {
+            // Setup to fail when fetching the second page (cursor "cursor-4")
+            mockFetch = createMockFetchFunction(12, {
+                failOnCursor: "cursor-4",
+            });
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, mockFetch);
+            await paginator.initialize(); // Page 1 (0-4) successful
+
+            const initialItems = paginator.getCurrentPageItems();
+            const initialCanGoPrevious = paginator.canGoPrevious();
+
+            await expect(paginator.fetchNextPage()).rejects.toThrow("Simulated fetch error for cursor: cursor-4");
+
+            // State should remain as it was before the failed fetch attempt
+            expect(paginator.isLoading()).toBe(false);
+            expect(paginator.getCurrentPageItems()).toEqual(initialItems); // Still on page 1
+            expect(paginator.canGoNext()).toBe(true); // Still thinks it can go next
+            expect(paginator.canGoPrevious()).toBe(initialCanGoPrevious); // Should be false
+            // The cursor stack should NOT have been pushed to
         });
     });
 
-    describe("getCurrentPage", () => {
-        it("returns the first page after a paginator is initialized", () => {
-            const list = Array.from({ length: 200 }).map((v, i) => `${i}`);
-            const p = Paginator.fromList(list, Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.getCurrentPage()).toStrictEqual(list.slice(0, Constants.DEFAULT_ITEMS_PER_PAGE));
+    describe("fetchPreviousPage", () => {
+        beforeEach(async () => {
+            // 12 items total, 5 per page => Page 1 (0-4), Page 2 (5-9), Page 3 (10-11)
+            mockFetch = createMockFetchFunction(12);
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, mockFetch);
+            await paginator.initialize(); // Load page 1 (0-4)
+            await paginator.fetchNextPage(); // Load page 2 (5-9)
+            await paginator.fetchNextPage(); // Load page 3 (10-11)
+            // Now on page 3, previous cursors should be [undefined, "cursor-4"]
+            // (cursor to get page 1, cursor to get page 2)
+            (mockFetch as jest.Mock).mockClear();
         });
 
-        it("returns a different page after a paginator moves forward", () => {
-            const list = Array.from({ length: 200 }).map((v, i) => `${i}`);
-            const p = Paginator.fromList(list, Constants.DEFAULT_ITEMS_PER_PAGE);
-            p.nextPage();
-            expect(p.getCurrentPage()).toStrictEqual(list.slice(Constants.DEFAULT_ITEMS_PER_PAGE));
+        it("should fetch the previous page successfully", async () => {
+            expect(paginator.canGoPrevious()).toBe(true);
+            const currentPage3 = paginator.getCurrentPageItems();
+            expect(currentPage3.length).toBe(2); // Items 10-11
+
+            const prevPageItems = await paginator.fetchPreviousPage(); // Fetch page 2 (items 5-9)
+
+            // Should request page 2 using the cursor that *led* to page 2, which is "cursor-4"
+            expect(mockFetch).toHaveBeenCalledWith("cursor-4", MAX_ITEMS_PER_PAGE);
+            expect(prevPageItems.length).toBe(MAX_ITEMS_PER_PAGE);
+            expect(prevPageItems[0].id).toBe(5);
+            expect(prevPageItems[MAX_ITEMS_PER_PAGE - 1].id).toBe(9);
+            expect(paginator.getCurrentPageItems()).toEqual(prevPageItems);
+            expect(paginator.canGoNext()).toBe(true); // Came from page 3, so next should exist
+            expect(paginator.canGoPrevious()).toBe(true); // Can go back to page 1
+            expect(paginator.isLoading()).toBe(false);
         });
 
-        it("returns a different page after a paginator moves backward", () => {
-            const list = Array.from({ length: 400 }).map((v, i) => `${i}`);
-            const p = Paginator.fromList(list, Constants.DEFAULT_ITEMS_PER_PAGE);
-            p.moveForward(2);
-            p.previousPage();
-            expect(p.getCurrentPage()).toStrictEqual(list.slice(Constants.DEFAULT_ITEMS_PER_PAGE, Constants.DEFAULT_ITEMS_PER_PAGE * 2));
+        it("should fetch back to the first page successfully", async () => {
+            await paginator.fetchPreviousPage(); // Go back to page 2 (5-9)
+            (mockFetch as jest.Mock).mockClear();
+
+            expect(paginator.canGoPrevious()).toBe(true);
+            const firstPageItems = await paginator.fetchPreviousPage(); // Fetch page 1 (items 0-4)
+
+            // Should request page 1 using the cursor that *led* to page 1, which is undefined
+            expect(mockFetch).toHaveBeenCalledWith(undefined, MAX_ITEMS_PER_PAGE);
+            expect(firstPageItems.length).toBe(MAX_ITEMS_PER_PAGE);
+            expect(firstPageItems[0].id).toBe(0);
+            expect(firstPageItems[MAX_ITEMS_PER_PAGE - 1].id).toBe(MAX_ITEMS_PER_PAGE - 1);
+            expect(paginator.getCurrentPageItems()).toEqual(firstPageItems);
+            expect(paginator.canGoNext()).toBe(true); // Came from page 2
+            expect(paginator.canGoPrevious()).toBe(false); // Cannot go back further
+        });
+
+        it("should throw error if trying to fetch previous page when not possible", async () => {
+            await paginator.fetchPreviousPage(); // page 2
+            await paginator.fetchPreviousPage(); // page 1
+            expect(paginator.canGoPrevious()).toBe(false);
+            await expect(paginator.fetchPreviousPage()).rejects.toThrow("[Paginator.fetchPreviousPage] No previous page available.");
+        });
+
+        it("should throw error if trying to fetch previous page while already loading", async () => {
+            await paginator.fetchPreviousPage(); // Go back to page 2 first to ensure canGoPrevious is true
+
+            const slowFetch = jest.fn(
+                () =>
+                    new Promise<IFetchResult<MockDataItem, string>>((resolve) =>
+                        setTimeout(() => resolve({ items: createMockData(MAX_ITEMS_PER_PAGE, "slow-prev-"), nextPageCursor: "slow-prev-cursor" }), 50)
+                    )
+            );
+            // Need to replace the fetch function *after* setup
+            (paginator as any).fetchFunction = slowFetch; // Use 'any' to bypass private access check
+
+            const promise = paginator.fetchPreviousPage(); // Start loading previous page
+            expect(paginator.isLoading()).toBe(true);
+            await expect(paginator.fetchPreviousPage()).rejects.toThrow("[Paginator.fetchPreviousPage] Paginator is already loading.");
+            await promise; // Wait for the first fetch to complete
+        });
+
+        it("should handle fetch errors during fetchPreviousPage and restore cursor stack", async () => {
+            // Setup to fail when fetching the first page (cursor undefined)
+            mockFetch = createMockFetchFunction(12, {
+                failOnCursor: undefined, // Explicitly fail when cursor is undefined
+            });
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, mockFetch);
+            // Manually set state to simulate being on page 2 after successful fetches
+            (paginator as any).currentPageItems = createMockData(MAX_ITEMS_PER_PAGE, "page2-").map((item, idx) => ({ ...item, id: 5 + idx }));
+            (paginator as any).nextPageCursor = "cursor-9"; // Cursor needed to get page 3
+            (paginator as any).previousPageCursors = [undefined]; // Cursor needed to get page 1
+            (paginator as any).hasNextPage = true;
+            (paginator as any).loading = false;
+
+            const initialItems = paginator.getCurrentPageItems();
+            const initialCursorStack = [...(paginator as any).previousPageCursors]; // Copy stack
+
+            await expect(paginator.fetchPreviousPage()).rejects.toThrow("Simulated fetch error for cursor: undefined");
+
+            // State should remain as it was before the failed fetch attempt
+            expect(paginator.isLoading()).toBe(false);
+            expect(paginator.getCurrentPageItems()).toEqual(initialItems); // Still on page 2
+            expect(paginator.canGoNext()).toBe(true); // Still thinks it can go next
+            expect(paginator.canGoPrevious()).toBe(true); // Still thinks it can go previous
+            expect((paginator as any).previousPageCursors).toEqual(initialCursorStack); // Cursor stack restored
         });
     });
 
-    describe("getItemCount", () => {
-        it("returns the total number of items", () => {
-            const list = Array.from({ length: 400 }).map((v, i) => `${i}`);
-            const p = Paginator.fromList(list, Constants.DEFAULT_ITEMS_PER_PAGE);
-            expect(p.getItemCount()).toBe(list.length);
+    describe("Getter Methods", () => {
+        beforeEach(async () => {
+            mockFetch = createMockFetchFunction(12);
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, mockFetch);
+        });
+
+        it("getMaxItemsPerPage should return the correct value", () => {
+            expect(paginator.getMaxItemsPerPage()).toBe(MAX_ITEMS_PER_PAGE);
+        });
+
+        it("getCurrentPageItems should return current items", async () => {
+            expect(paginator.getCurrentPageItems()).toEqual([]); // Before init
+            await paginator.initialize();
+            expect(paginator.getCurrentPageItems().length).toBe(MAX_ITEMS_PER_PAGE);
+            expect(paginator.getCurrentPageItems()[0].id).toBe(0);
+            await paginator.fetchNextPage();
+            expect(paginator.getCurrentPageItems().length).toBe(MAX_ITEMS_PER_PAGE);
+            expect(paginator.getCurrentPageItems()[0].id).toBe(5);
+        });
+
+        it("isLoading should reflect loading state", async () => {
+            const slowFetch = jest.fn(
+                () =>
+                    new Promise<IFetchResult<MockDataItem, string>>((resolve) =>
+                        setTimeout(() => resolve({ items: [], nextPageCursor: undefined }), 10)
+                    )
+            );
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, slowFetch);
+            expect(paginator.isLoading()).toBe(false);
+            const promise = paginator.initialize();
+            expect(paginator.isLoading()).toBe(true);
+            await promise;
+            expect(paginator.isLoading()).toBe(false);
+        });
+
+        it("canGoNext and canGoPrevious should work correctly through lifecycle", async () => {
+            expect(paginator.canGoNext()).toBe(false); // Not initialized
+            expect(paginator.canGoPrevious()).toBe(false);
+
+            // After init (on page 1 of 3)
+            await paginator.initialize();
+            expect(paginator.canGoNext()).toBe(true);
+            expect(paginator.canGoPrevious()).toBe(false);
+
+            // After fetching page 2
+            await paginator.fetchNextPage();
+            expect(paginator.canGoNext()).toBe(true);
+            expect(paginator.canGoPrevious()).toBe(true);
+
+            // After fetching page 3 (last page)
+            await paginator.fetchNextPage();
+            expect(paginator.canGoNext()).toBe(false);
+            expect(paginator.canGoPrevious()).toBe(true);
+
+            // After fetching back to page 2
+            await paginator.fetchPreviousPage();
+            expect(paginator.canGoNext()).toBe(true);
+            expect(paginator.canGoPrevious()).toBe(true);
+
+            // After fetching back to page 1
+            await paginator.fetchPreviousPage();
+            expect(paginator.canGoNext()).toBe(true);
+            expect(paginator.canGoPrevious()).toBe(false);
+        });
+
+        it("canGoNext and canGoPrevious should be false while loading", async () => {
+            const slowFetch = jest.fn(
+                () =>
+                    new Promise<IFetchResult<MockDataItem, string>>((resolve) =>
+                        setTimeout(() => resolve({ items: createMockData(MAX_ITEMS_PER_PAGE), nextPageCursor: "cursor-next" }), 50)
+                    )
+            );
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, slowFetch);
+            await paginator.initialize(); // Page 1 loaded
+
+            const promiseNext = paginator.fetchNextPage();
+            expect(paginator.isLoading()).toBe(true);
+            expect(paginator.canGoNext()).toBe(false); // Should be false while loading
+            expect(paginator.canGoPrevious()).toBe(false); // Should be false while loading
+            await promiseNext; // Page 2 loaded
+
+            const promisePrev = paginator.fetchPreviousPage();
+            expect(paginator.isLoading()).toBe(true);
+            expect(paginator.canGoNext()).toBe(false); // Should be false while loading
+            expect(paginator.canGoPrevious()).toBe(false); // Should be false while loading
+            await promisePrev; // Back to page 1
         });
     });
 });
