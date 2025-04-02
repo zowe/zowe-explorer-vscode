@@ -1618,6 +1618,18 @@
       "type": "object",
       "title": "%configuration.title%",
       "properties": {
+        "zowe.ds.paginate": {
+          "default": false,
+          "type": "boolean",
+          "description": "%zowe.ds.paginate%",
+          "scope": "window"
+        },
+        "zowe.ds.datasetsPerPage": {
+          "default": 100,
+          "type": "integer",
+          "description": "%zowe.ds.datasetsPerPage%",
+          "scope": "window"
+        },
         "zowe.ds.default.binary": {
           "default": {
             "dsorg": "PO",

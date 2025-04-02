@@ -68,6 +68,8 @@
   "cancelJobs": "Cancel Job",
   "getJobJcl": "Get JCL",
   "configuration.title": "Zowe Explorer",
+  "zowe.ds.paginate": "Paginate data set nodes in the tree view",
+  "zowe.ds.datasetsPerPage": "Maximum data sets to list per page",
   "zowe.ds.default.binary": "Default values of Binary data set creation",
   "zowe.ds.default.c": "Default values of C data set creation",
   "zowe.ds.default.classic": "Default values of Classic data set creation",

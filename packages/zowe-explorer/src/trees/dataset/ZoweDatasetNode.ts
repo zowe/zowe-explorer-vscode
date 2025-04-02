@@ -28,6 +28,7 @@ import {
     FsDatasetsUtils,
     ZoweExplorerApiType,
     Paginator,
+    IFetchResult,
 } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -42,6 +43,7 @@ import type { Definitions } from "../../configuration/Definitions";
 import type { DatasetTree } from "./DatasetTree";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetUtils } from "./DatasetUtils";
+import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 /**
  * A type of TreeItem used to represent sessions and data sets
@@ -63,6 +65,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public sort?: Sorting.NodeSort;
     public filter?: Sorting.DatasetFilter;
     public resourceUri?: vscode.Uri;
+
+    private paginator?: Paginator<zosfiles.IZosFilesResponse>;
 
     /**
      * Creates an instance of ZoweDatasetNode
@@ -125,6 +129,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 });
                 this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
             } else {
+                this.paginator = new Paginator(
+                    SettingsConfig.getDirectValue<number>("zowe.ds.datasetsPerPage") ?? Constants.DEFAULT_ITEMS_PER_PAGE,
+                    this.fetchDatasetsInRange.bind(this)
+                );
                 this.resourceUri = vscode.Uri.from({
                     scheme: ZoweScheme.DS,
                     path: `/${sessionLabel}/`,
@@ -141,6 +149,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
         }
     }
+
     public updateStats(item: any): void {
         if ("c4date" in item && "m4date" in item) {
             const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
@@ -599,6 +608,52 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return fileEntry?.etag;
     }
 
+    public async fetchDatasetsInRange(start?: string, limit?: number): Promise<IFetchResult<zosfiles.IZosFilesResponse, string>> {
+        const responses: zosfiles.IZosFilesResponse[] = [];
+        await this.fetchDatasets(responses, start, limit);
+
+        const successfulResponses = responses.filter((response) => response.success);
+        const items = successfulResponses.reduce((prev: any[], resp): any[] => [...prev, ...(resp.apiResponse.items ?? resp.apiResponse)], []);
+
+        const lastItem = items.length > 0 ? items.at(items.length - 1) : undefined;
+
+        return {
+            items: successfulResponses,
+            nextPageCursor: lastItem ? lastItem.dsname : undefined,
+            totalItems: responses.reduce(
+                (prev: number, cur: zosfiles.IZosFilesResponse, i): number => prev + Number(cur.apiResponse?.returnedRows),
+                0
+            ),
+        };
+    }
+
+    public async fetchDatasets(responses: zosfiles.IZosFilesResponse[], start?: string, limit?: number): Promise<void> {
+        const dsPatterns = [
+            ...new Set(
+                this.pattern
+                    .toUpperCase()
+                    .split(",")
+                    .map((p) => p.trim())
+            ),
+        ];
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(this.getProfile());
+        if (!mvsApi.getSession(this.getProfile())) {
+            throw new imperative.ImperativeError({
+                msg: vscode.l10n.t("Profile auth error"),
+                additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
+                errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
+            });
+        }
+        const listOptions = { start, maxLength: limit };
+        if (mvsApi.dataSetsMatchingPattern) {
+            responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns, listOptions));
+        } else {
+            for (const dsp of dsPatterns) {
+                responses.push(await mvsApi.dataSet(dsp, listOptions));
+            }
+        }
+    }
+
     private async getDatasets(profile: imperative.IProfileLoaded, paginate?: boolean): Promise<zosfiles.IZosFilesResponse[] | undefined> {
         ZoweLogger.trace("ZoweDatasetNode.getDatasets called.");
         const responses: zosfiles.IZosFilesResponse[] = [];
@@ -623,28 +678,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         try {
             if (isSession) {
-                const dsPatterns = [
-                    ...new Set(
-                        this.pattern
-                            .toUpperCase()
-                            .split(",")
-                            .map((p) => p.trim())
-                    ),
-                ];
-                const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
-                if (!mvsApi.getSession(profile)) {
-                    throw new imperative.ImperativeError({
-                        msg: vscode.l10n.t("Profile auth error"),
-                        additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
-                        errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
-                    });
-                }
-                if (mvsApi.dataSetsMatchingPattern) {
-                    responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
+                if (paginate) {
+                    await this.paginator.initialize();
+                    return this.paginator.getCurrentPageItems();
                 } else {
-                    for (const dsp of dsPatterns) {
-                        responses.push(await mvsApi.dataSet(dsp));
-                    }
+                    await this.fetchDatasets(responses);
                 }
             } else if (this.memberPattern) {
                 this.memberPattern = this.memberPattern.toUpperCase();
