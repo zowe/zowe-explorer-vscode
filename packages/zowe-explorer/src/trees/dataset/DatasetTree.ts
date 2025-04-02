@@ -90,8 +90,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             dragAndDropController: this,
             canSelectMany: true,
         });
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.treeView.onDidCollapseElement(TreeViewUtils.refreshIconOnCollapse([SharedContext.isPds, SharedContext.isDsSession], this));
     }
 
     public handleDrag(source: IZoweDatasetTreeNode[], dataTransfer: vscode.DataTransfer, _token: vscode.CancellationToken): void {
@@ -113,17 +111,23 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         recursiveCall?: boolean
     ): Promise<void> {
         const destinationInfo = FsAbstractUtils.getInfoForUri(destUri, Profiles.getInstance());
+        let dsname = destUri.path.substring(destinationInfo.slashAfterProfilePos);
         if (SharedContext.isPds(sourceNode)) {
             if (!DatasetFSProvider.instance.exists(destUri)) {
                 // create a PDS on remote
                 try {
+                    dsname = sourceNode.getLabel() as string;
                     await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
                         zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
-                        sourceNode.getLabel() as string,
+                        dsname,
                         {}
                     );
                 } catch (err) {
                     //error
+                    if (err.errorCode.toString() === "404" || err.errorCode.toString() === "500") {
+                        Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
+                        return;
+                    }
                 }
                 // create directory entry in local
                 DatasetFSProvider.instance.createDirectory(destUri);
@@ -148,18 +152,23 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 const entry = await DatasetFSProvider.instance.fetchDatasetAtUri(destUri);
                 if (entry == null) {
                     if (sourceNode.contextValue === Constants.DS_MEMBER_CONTEXT) {
-                        const dsname: string = destUri.path.match(/^\/[^/]+\/(.*?)\/[^/]+$/)[1] + "(" + (sourceNode.getLabel() as string) + ")";
+                        dsname = destUri.path.match(/^\/[^/]+\/(.*?)\/[^/]+$/)[1] + "(" + (sourceNode.getLabel() as string) + ")";
                         await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, {});
                     } else {
+                        dsname = sourceNode.getLabel() as string;
                         await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
                             zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
-                            sourceNode.getLabel() as string,
+                            dsname,
                             {}
                         );
                     }
                 }
             } catch (err) {
                 //file might already exist. Ignore the error and try to write it to lpar
+                if (err.errorCode.toString() === "404" || err.errorCode.toString() === "500") {
+                    Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
+                    return;
+                }
             }
             // read the contents from the source LPAR
             const contents = await DatasetFSProvider.instance.readFile(sourceNode.resourceUri);
@@ -175,9 +184,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             } catch (err) {
                 // If the write fails, we cannot move to the next file
                 if (err instanceof Error) {
-                    Gui.errorMessage(
-                        vscode.l10n.t("Failed to move file {0}: {1}", destUri.path.substring(destinationInfo.slashAfterProfilePos), err.message)
-                    );
+                    Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
                 }
                 return;
             }
@@ -229,7 +236,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
-            if (node.getParent() === target) {
+            const nodeParent = node.getParent();
+            if (nodeParent === target) {
                 //skip nodes that are direct children of the target node
                 continue;
             }
@@ -241,7 +249,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
             await this.crossLparMove(node, node.resourceUri, newUriForNode);
 
-            parentsToUpdate.add(node.getParent() as IZoweDatasetTreeNode);
+            if (nodeParent != null) {
+                parentsToUpdate.add(nodeParent as IZoweDatasetTreeNode);
+            }
         }
         for (const parent of parentsToUpdate) {
             this.refreshElement(parent);
@@ -1219,10 +1229,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         child.iconPath = setIcon.path;
                     }
                 }
-            }
-            const icon = IconGenerator.getIconByNode(sessionNode);
-            if (icon) {
-                sessionNode.iconPath = icon.path;
             }
             child.contextValue = SharedContext.withProfile(child);
         }

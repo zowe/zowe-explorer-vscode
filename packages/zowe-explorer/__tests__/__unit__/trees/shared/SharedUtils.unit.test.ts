@@ -88,81 +88,6 @@ describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
     });
 });
 
-describe("syncSessionNode shared util function", () => {
-    const serviceProfile = {
-        name: "sestest",
-        profile: {},
-        type: "zosmf",
-        message: "",
-        failNotFound: false,
-    };
-
-    const sessionNode = createDatasetSessionNode(undefined, serviceProfile);
-
-    it("should update a session and a profile in the provided node", async () => {
-        const globalMocks = createGlobalMocks();
-        // given
-        Object.defineProperty(globalMocks.mockProfilesCache, "loadNamedProfile", {
-            value: jest.fn().mockReturnValue(createIProfile()),
-        });
-        const expectedSession = new imperative.Session({});
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        const sessionForProfile = (_profile) =>
-            ({
-                getSession: () => new imperative.Session({}),
-            } as any);
-        // when
-        AuthUtils.syncSessionNode(sessionForProfile, sessionNode);
-        expect(sessionNode.getSession()).toEqual(expectedSession);
-        expect(sessionNode.getProfile()).toEqual(createIProfile());
-    });
-    it("should update session node and refresh tree node if provided", async () => {
-        const globalMocks = createGlobalMocks();
-        // given
-        Object.defineProperty(globalMocks.mockProfilesCache, "loadNamedProfile", {
-            value: jest.fn().mockReturnValue(createIProfile()),
-        });
-        const getChildrenSpy = jest.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
-        const refreshElementMock = jest.fn();
-        jest.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValueOnce({
-            refreshElement: refreshElementMock,
-        } as any);
-        const getSessionMock = jest.fn().mockReturnValue(new imperative.Session({}));
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        const sessionForProfile = (_profile) =>
-            ({
-                getSession: getSessionMock,
-            } as any);
-        // when
-        AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
-        expect(getSessionMock).toHaveBeenCalled();
-        expect(sessionNode.dirty).toBe(true);
-        expect(await getChildrenSpy).toHaveBeenCalled();
-        expect(refreshElementMock).toHaveBeenCalledWith(sessionNode);
-    });
-    it("should do nothing, if there is no profile from provided node in the file system", () => {
-        const profiles = createInstanceOfProfile(serviceProfile);
-        profiles.loadNamedProfile = jest.fn(() =>
-            jest.fn(() => {
-                throw new Error(`There is no such profile with name: ${serviceProfile.name}`);
-            })
-        );
-        profiles.getBaseProfile = jest.fn(() => undefined);
-        // when
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        const dummyFn = (_profile) =>
-            ({
-                getSession: () => new imperative.Session({}),
-            } as any);
-        AuthUtils.syncSessionNode(dummyFn, sessionNode);
-        // then
-        const initialSession = sessionNode.getSession();
-        const initialProfile = sessionNode.getProfile();
-        expect(sessionNode.getSession()).toEqual(initialSession);
-        expect(sessionNode.getProfile()).toEqual(initialProfile);
-    });
-});
-
 describe("Positive testing", () => {
     it("should pass for ZoweDatasetTreeNode with ZoweDatasetNode node type", () => {
         const dsNode = new ZoweDatasetNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
@@ -1384,5 +1309,35 @@ describe("Shared utils unit tests - getDefaultSortOptions", () => {
             direction: Sorting.SortDirection.Ascending,
         });
         expect(sortOptions).toEqual(["Name (default)", "Date Created", "Date Modified", "User ID"]);
+    });
+});
+
+describe("Shared utils unit tests - function debounceAsync", () => {
+    beforeAll(() => {
+        jest.useFakeTimers();
+    });
+
+    afterAll(() => {
+        jest.useRealTimers();
+    });
+
+    it("executes a function twice when time between calls is long", async () => {
+        const mockEventHandler = jest.fn().mockResolvedValue(undefined);
+        const debouncedFn = SharedUtils.debounceAsync(mockEventHandler, 100);
+        void debouncedFn();
+        jest.runAllTimers();
+        void debouncedFn();
+        jest.runAllTimers();
+        expect(mockEventHandler).toHaveBeenCalledTimes(2);
+    });
+
+    it("executes a function only once when time between calls is short", async () => {
+        const mockEventHandler = jest.fn().mockResolvedValue(undefined);
+        const debouncedFn = SharedUtils.debounceAsync(mockEventHandler, 100);
+        void debouncedFn();
+        jest.advanceTimersByTime(10);
+        void debouncedFn();
+        jest.runAllTimers();
+        expect(mockEventHandler).toHaveBeenCalledTimes(1);
     });
 });
