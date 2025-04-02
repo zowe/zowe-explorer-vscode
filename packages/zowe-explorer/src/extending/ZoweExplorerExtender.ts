@@ -30,6 +30,7 @@ import { ProfilesUtils } from "../utils/ProfilesUtils";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { LocalStorageAccess } from "../tools/ZoweLocalStorage";
 import { ILocalStorageAccess } from "@zowe/zowe-explorer-api/src/extend/ILocalStorageAccess";
+import * as jsonfile from "jsonfile";
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
@@ -182,7 +183,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
 
         if (profileTypeConfigurations !== undefined) {
             this.getProfilesCache().addToConfigArray(profileTypeConfigurations);
-            this.updateSchema(profileInfo, profileTypeConfigurations);
+            await this.updateSchema(profileInfo, profileTypeConfigurations);
         }
 
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
@@ -196,24 +197,48 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
      * @param profileInfo the ProfileInfo object that has been prepared with `readProfilesFromDisk`, such as the one initialized in `initForZowe`.
      * @param profileTypeConfigurations (optional) Profile type configurations to add to the schema
      */
-    private updateSchema(profileInfo: imperative.ProfileInfo, profileTypeConfigurations?: imperative.ICommandProfileTypeConfiguration[]): void {
+    private async updateSchema(
+        profileInfo: imperative.ProfileInfo,
+        profileTypeConfigurations?: imperative.ICommandProfileTypeConfiguration[]
+    ): Promise<void> {
         if (profileTypeConfigurations) {
             try {
                 for (const typeConfig of profileTypeConfigurations) {
-                    const schemaInstance = profileInfo.getSchemaForType(typeConfig.type);
-                    if (schemaInstance && schemaInstance !== typeConfig.schema) {
-                        console.log(typeConfig.type);
-                        console.log("schema don't match");
-                        // remove type object from extenders.json
-                        const file = fs.readFileSync(path.posix.join(FileManagement.getZoweDir(), "/extenders.json"), "utf8");
-                        console.log(file);
-                        const jsonObj = JSON.parse(file);
-                        delete jsonObj.profileTypes[typeConfig.type];
-                        console.log(jsonObj);
-                        fs.writeFileSync(path.posix.join(FileManagement.getZoweDir(), "/extenders.json"), JSON.parse(jsonObj), {
-                            encoding: "utf8",
-                        });
-                    }
+                    await this.checkSchema(profileInfo, typeConfig);
+                    // const schemaInstance = profileInfo.getSchemaForType(typeConfig.type);
+                    // if (schemaInstance && schemaInstance !== typeConfig.schema) {
+                    //     const schemaPath = path.join(FileManagement.getZoweDir(), "extenders.json");
+                    //     console.log(typeConfig.type);
+                    //     console.log("schema don't match");
+                    //     // remove type object from extenders.json
+                    //     const file = fs.readFileSync(schemaPath, "utf8");
+                    //     const jsonObj = JSON.parse(file);
+                    //     console.log(jsonObj.profileTypes[typeConfig.type]);
+                    //     const typeInfo = jsonObj.profileTypes[typeConfig.type];
+                    //     if (typeInfo.from.length > 1) {
+                    //         if (typeInfo.latestFrom === "Zowe Explorer (for VS Code)") {
+                    //             jsonObj.profileTypes[typeConfig.type] = {
+                    //                 ...typeInfo,
+                    //                 from: typeInfo.from.filter((v) => v !== "Zowe Explorer (for VS Code)"),
+                    //                 latestFrom: undefined,
+                    //                 version: undefined,
+                    //             };
+                    //         } else {
+                    //             jsonObj.profileTypes[typeConfig.type] = {
+                    //                 ...typeInfo,
+                    //                 from: typeInfo.from.filter((v) => v !== "Zowe Explorer (for VS Code)"),
+                    //             };
+                    //         }
+                    //     }
+                    //     await jsonfile.writeFileSync(schemaPath, jsonObj, { spaces: 4 });
+
+                    //     // delete jsonObj.profileTypes[typeConfig.type];
+                    //     // console.log(jsonObj);
+                    //     // fs.writeFileSync(path.posix.join(FileManagement.getZoweDir(), "/extenders.json"), JSON.parse(jsonObj), {
+                    //     //     flag: "w",
+                    //     //     encoding: "utf8",
+                    //     // });
+                    // }
                     const addResult = profileInfo.addProfileTypeToSchema(typeConfig.type, {
                         schema: typeConfig.schema,
                         sourceApp: "Zowe Explorer (for VS Code)",
@@ -234,6 +259,45 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
                     );
                 }
             }
+        }
+    }
+
+    private checkSchema(profileInfo: imperative.ProfileInfo, typeConfig: imperative.ICommandProfileTypeConfiguration): void {
+        console.log(typeConfig);
+        const schemaInstance = profileInfo.getSchemaForType(typeConfig.type);
+        console.log(schemaInstance);
+        if (schemaInstance && schemaInstance !== typeConfig.schema) {
+            const schemaPath = path.join(FileManagement.getZoweDir(), "extenders.json");
+            console.log("schema don't match");
+            // remove type object from extenders.json
+            const file = fs.readFileSync(schemaPath, "utf8");
+            const jsonObj = JSON.parse(file);
+            console.log(jsonObj.profileTypes[typeConfig.type]);
+            // const typeInfo = jsonObj.profileTypes[typeConfig.type];
+            // if (typeInfo.from.length > 1) {
+            //     if (typeInfo.latestFrom === "Zowe Explorer (for VS Code)") {
+            //         jsonObj.profileTypes[typeConfig.type] = {
+            //             ...typeInfo,
+            //             from: typeInfo.from.filter((v) => v !== "Zowe Explorer (for VS Code)"),
+            //             latestFrom: undefined,
+            //             version: undefined,
+            //         };
+            //     } else {
+            //         jsonObj.profileTypes[typeConfig.type] = {
+            //             ...typeInfo,
+            //             from: typeInfo.from.filter((v) => v !== "Zowe Explorer (for VS Code)"),
+            //         };
+            //     }
+            // }
+            delete jsonObj.profileTypes[typeConfig.type];
+            jsonfile.writeFileSync(schemaPath, jsonObj, { spaces: 4 });
+
+            // delete jsonObj.profileTypes[typeConfig.type];
+            // console.log(jsonObj);
+            // fs.writeFileSync(path.posix.join(FileManagement.getZoweDir(), "/extenders.json"), JSON.parse(jsonObj), {
+            //     flag: "w",
+            //     encoding: "utf8",
+            // });
         }
     }
 
