@@ -11,13 +11,16 @@
 
 import * as semver from "semver";
 import * as vscode from "vscode";
+import * as path from "path";
 import { ProfilesCache } from "../profiles/ProfilesCache";
-import { Login, Logout } from "@zowe/core-for-zowe-sdk";
+import { Login, Logout, ProfileConstants } from "@zowe/core-for-zowe-sdk";
 import * as imperative from "@zowe/imperative";
 import { Gui } from "../globals/Gui";
 import type { PromptCredentialsOptions } from "./doc/PromptCredentials";
 import { Types } from "../Types";
 import type { BaseProfileAuthOptions } from "./doc/BaseProfileAuth";
+import { FileManagement } from "../utils";
+import { VscSettings } from "./doc/VscSettings";
 
 /**
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
@@ -336,6 +339,98 @@ export class ZoweVsCodeExtension {
     }
 
     /**
+     * Prompt users through process of creating a Zowe team configuration file including Zowe Explorer registered types
+     * Upon successful completion, editor will open team configuration file.
+     *
+     * @returns void
+     */
+    public static async createTeamConfiguration(): Promise<void> {
+        let user = false;
+        let global = true;
+        let rootPath = FileManagement.getZoweDir();
+        const workspaceDir = ZoweVsCodeExtension.workspaceRoot;
+        if (workspaceDir != null) {
+            const choice = await this.getConfigLocationPrompt("create");
+            if (choice === undefined) {
+                Gui.infoMessage(`Operation cancelled`);
+                return;
+            }
+            if (choice === "project") {
+                rootPath = workspaceDir.uri.fsPath;
+                global = false;
+            }
+        }
+        // call check for existing and prompt here
+        const existingFile = await this.checkExistingConfig(rootPath);
+        if (existingFile === false) {
+            // handle prompt cancellation
+            return;
+        }
+        if (existingFile != null) {
+            user = existingFile.includes("user");
+        }
+        const config = await imperative.Config.load("zowe", {
+            homeDir: FileManagement.getZoweDir(),
+            projectDir: FileManagement.getFullPath(rootPath),
+        });
+        if (workspaceDir != null) {
+            config.api.layers.activate(user, global, rootPath);
+        }
+
+        const knownCliConfig: imperative.ICommandProfileTypeConfiguration[] = ZoweVsCodeExtension.profilesCache.getCoreProfileTypes();
+        knownCliConfig.push(...ZoweVsCodeExtension.profilesCache.getConfigArray());
+        knownCliConfig.push(ProfileConstants.BaseProfile);
+        config.setSchema(imperative.ConfigSchema.buildSchema(knownCliConfig));
+
+        // Note: IConfigBuilderOpts not exported
+        // const opts: IConfigBuilderOpts = {
+        const opts: any = {
+            // getSecureValue: this.promptForProp.bind(this),
+            populateProperties: true,
+        };
+
+        // Build new config and merge with existing layer
+        const impConfig: Partial<imperative.IImperativeConfig> = {
+            profiles: [...knownCliConfig],
+            baseProfile: ProfileConstants.BaseProfile,
+        };
+        const newConfig: imperative.IConfig = await imperative.ConfigBuilder.build(impConfig, global, opts);
+
+        // Create non secure profile if VS Code setting is false
+        this.createNonSecureProfile(newConfig);
+
+        config.api.layers.merge(newConfig);
+        await config.save(false);
+        let configName;
+        if (user) {
+            configName = config.userConfigName;
+        } else {
+            configName = config.configName;
+        }
+        await this.openConfigFile(path.join(rootPath, configName));
+    }
+
+    public static async openConfigFile(filePath: string): Promise<void> {
+        const document = await vscode.workspace.openTextDocument(filePath);
+        await Gui.showTextDocument(document, { preview: false });
+    }
+
+    public static async getConfigLayers(): Promise<imperative.IConfigLayer[]> {
+        const existingLayers: imperative.IConfigLayer[] = [];
+        const config = await imperative.Config.load("zowe", {
+            homeDir: FileManagement.getZoweDir(),
+            projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath,
+        });
+        const layers = config.layers;
+        layers.forEach((layer) => {
+            if (layer.exists) {
+                existingLayers.push(layer);
+            }
+        });
+        return existingLayers;
+    }
+
+    /**
      * This method is intended to be used for authentication (login, logout) purposes
      *
      * Note: this method calls the `getServiceProfileForAuthPurposes()` which creates a new instance of the ProfileInfo APIs
@@ -431,5 +526,59 @@ export class ZoweVsCodeExtension {
         });
         options.session.cert = response.cert;
         options.session.certKey = response.certKey;
+    }
+
+    private static async checkExistingConfig(filePath: string): Promise<string | false> {
+        const existingLayers = await this.getConfigLayers();
+        const foundLayer = existingLayers.find((layer) => layer.path.includes(filePath));
+        if (foundLayer == null) {
+            return null;
+        }
+        const createButton = "Create New";
+        const message =
+            `A Team Configuration File already exists in this location\n{0}\n` + `Continuing may alter the existing file, would you like to proceed?`;
+        const response = await Gui.infoMessage(message, { items: [createButton], vsCodeOpts: { modal: true } });
+        if (response) {
+            return path.basename(foundLayer.path);
+        } else {
+            await this.openConfigFile(foundLayer.path);
+        }
+        return false;
+    }
+
+    private static async getConfigLocationPrompt(action: string): Promise<string> {
+        let placeHolderText: string;
+        if (action === "create") {
+            placeHolderText = "Select the location where the config file will be initialized";
+        } else {
+            placeHolderText = "Select the location of the config file to edit";
+        }
+        const quickPickOptions: vscode.QuickPickOptions = {
+            placeHolder: placeHolderText,
+            ignoreFocusOut: true,
+            canPickMany: false,
+        };
+        const globalText = "Global: in the Zowe home directory";
+        const projectText = "Project: in the current working directory";
+        const location = await Gui.showQuickPick([globalText, projectText], quickPickOptions);
+        // call check for existing and prompt here
+        switch (location) {
+            case globalText:
+                return "global";
+            case projectText:
+                return "project";
+        }
+    }
+
+    // Temporary solution for handling unsecure profiles until CLI team's work is made
+    // Remove secure properties and set autoStore to false when vscode setting is true
+    private static createNonSecureProfile(newConfig: imperative.IConfig): void {
+        const isSecureCredsEnabled: boolean = VscSettings.getDirectValue("zowe.security.secureCredentialsEnabled");
+        if (!isSecureCredsEnabled) {
+            for (const profile of Object.entries(newConfig.profiles)) {
+                delete newConfig.profiles[profile[0]].secure;
+            }
+            newConfig.autoStore = false;
+        }
     }
 }
