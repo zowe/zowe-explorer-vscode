@@ -9,6 +9,8 @@
  *
  */
 
+import { ThemeIcon, TreeItem } from "vscode";
+
 /**
  * Result type expected from the fetch function.
  */
@@ -20,6 +22,23 @@ export interface IFetchResult<T, Cursor> {
     totalItems?: number;
     /** Number of items to render from the API (might differ from `items.length` if error items are present) */
     returnedRows?: number;
+}
+
+export class NavigationTreeItem extends TreeItem {
+    public constructor(label: string, icon: string, disabled: boolean, command: string, navigateCallback: () => void | PromiseLike<void>) {
+        super(label);
+        this.iconPath = new ThemeIcon(icon);
+        this.command = disabled
+            ? {
+                  command: "zowe.placeholderCommand",
+                  title: "",
+              }
+            : {
+                  command,
+                  title: label,
+                  arguments: [navigateCallback],
+              };
+    }
 }
 
 /**

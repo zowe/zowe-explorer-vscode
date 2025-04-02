@@ -26,6 +26,7 @@ import {
     DatasetMatch,
     ZoweExplorerApiType,
     ZoweScheme,
+    NavigationTreeItem,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetFSProvider } from "./DatasetFSProvider";
@@ -319,6 +320,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
             const finalResponse: IZoweDatasetTreeNode[] = [];
             for (const item of response) {
+                if (item instanceof NavigationTreeItem) {
+                    finalResponse.push(item);
+                    continue;
+                }
                 if (item.pattern && item.memberPattern) {
                     finalResponse.push(item);
                 }
@@ -331,10 +336,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 item.contextValue = SharedContext.withProfile(item);
             }
 
-            if (isUsingPagination) {
-                // TODO: Update with pagination controls
-                return finalResponse;
-            }
             return finalResponse;
         }
         return this.mSessionNodes;

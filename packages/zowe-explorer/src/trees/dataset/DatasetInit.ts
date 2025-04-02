@@ -202,6 +202,12 @@ export class DatasetInit {
             )
         );
 
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.ds.prevPage", async (callback) => {
+                await callback();
+            })
+        );
+
         SharedInit.initSubscribers(context, datasetProvider);
         return datasetProvider;
     }

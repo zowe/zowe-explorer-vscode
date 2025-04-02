@@ -29,6 +29,7 @@ import {
     ZoweExplorerApiType,
     Paginator,
     IFetchResult,
+    NavigationTreeItem,
 } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -479,7 +480,17 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
         }
 
-        return this.children;
+        return paginate && SharedContext.isSession(this)
+            ? [
+                  new NavigationTreeItem("Previous page", "arrow-small-left", !this.paginator.canGoPrevious(), "zowe.ds.prevPage", () =>
+                      this.paginator.fetchPreviousPage()
+                  ) as any,
+                  ...this.children,
+                  new NavigationTreeItem("Next page", "arrow-small-right", !this.paginator.canGoNext(), "zowe.ds.nextPage", () =>
+                      this.paginator.fetchNextPage()
+                  ) as any,
+              ]
+            : this.children;
     }
 
     /**
@@ -612,7 +623,20 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         const responses: zosfiles.IZosFilesResponse[] = [];
         await this.fetchDatasets(responses, start, limit);
 
-        const successfulResponses = responses.filter((response) => response.success);
+        const successfulResponses = responses
+            .filter((response) => response.success)
+            .map((resp) => {
+                if (start != null && (resp.apiResponse?.items ?? resp.apiResponse)?.find((it) => it.dsname === start)) {
+                    return {
+                        ...resp,
+                        apiResponse: Array.isArray(resp.apiResponse)
+                            ? resp.apiResponse.filter((it) => it.dsname !== start)
+                            : { items: resp.apiResponse.filter((it) => it.dsname !== start) },
+                    };
+                } else {
+                    return resp;
+                }
+            });
         const items = successfulResponses.reduce((prev: any[], resp): any[] => [...prev, ...(resp.apiResponse.items ?? resp.apiResponse)], []);
 
         const lastItem = items.length > 0 ? items.at(items.length - 1) : undefined;
@@ -620,10 +644,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return {
             items: successfulResponses,
             nextPageCursor: lastItem ? lastItem.dsname : undefined,
-            totalItems: responses.reduce(
-                (prev: number, cur: zosfiles.IZosFilesResponse, i): number => prev + Number(cur.apiResponse?.returnedRows),
-                0
-            ),
         };
     }
 
