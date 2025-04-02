@@ -27,6 +27,7 @@ import {
     PdsEntry,
     FsDatasetsUtils,
     ZoweExplorerApiType,
+    PersistenceSchemaEnum,
 } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -41,6 +42,7 @@ import type { Definitions } from "../../configuration/Definitions";
 import type { DatasetTree } from "./DatasetTree";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetUtils } from "./DatasetUtils";
+import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
 
 /**
  * A type of TreeItem used to represent sessions and data sets
@@ -62,6 +64,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public sort?: Sorting.NodeSort;
     public filter?: Sorting.DatasetFilter;
     public resourceUri?: vscode.Uri;
+    public persistence = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset);
 
     /**
      * Creates an instance of ZoweDatasetNode
@@ -88,7 +91,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         if (this.getParent() == null || this.getParent().label === vscode.l10n.t("Favorites")) {
-            // read sort options from settings file
+            // read default sort options from settings file
             const sortSetting = SharedUtils.getDefaultSortOptions(
                 DatasetUtils.DATASET_SORT_OPTS,
                 Constants.SETTINGS_DS_DEFAULT_SORT,
@@ -446,15 +449,25 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 .filter((label) => this.children.find((c) => (c.label as string) === label) == null)
                 .map((label) => elementChildren[label]);
 
-            // get sort settings for session
+            // use the default sort settings if defined; otherwise, use session sort method
             const sessionSort = SharedContext.isSession(this) ? this.sort : this.getSessionNode().sort;
+            let sortOpts = this.sort ?? sessionSort;
 
-            // use the PDS sort settings if defined; otherwise, use session sort method
-            const sortOpts = this.sort ?? sessionSort;
+            // Override sortOpts with persistence settings if available
+            const persistenceSortOpts = this.persistence.getSortSetting(this);
+            if (persistenceSortOpts) {
+                sortOpts = persistenceSortOpts;
+            }
 
-            // use the PDS filter if one is set, otherwise try using the session filter
+            // use the default filter if one is set, otherwise try using the session filter
             const sessionFilter = SharedContext.isSession(this) ? this.filter : this.getSessionNode().filter;
-            const filter = this.filter ?? sessionFilter;
+            let filter = this.filter ?? sessionFilter;
+
+            // Override filter with persistence settings if available
+            const persistenceFilter = this.persistence.getFilterSetting(this);
+            if (persistenceFilter) {
+                filter = persistenceFilter;
+            }
 
             this.children = this.children
                 .concat(newChildren)
