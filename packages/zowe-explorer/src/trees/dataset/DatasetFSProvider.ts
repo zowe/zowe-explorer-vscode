@@ -565,7 +565,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         parentDir.entries.set(fileName, entry);
     }
 
-    private async uploadEntry(parent: DirEntry, entry: DsEntry, content: Uint8Array, forceUpload?: boolean): Promise<IZosFilesResponse> {
+    private async uploadEntry(entry: DsEntry, content: Uint8Array, forceUpload?: boolean): Promise<IZosFilesResponse> {
         const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Saving data set...")}`);
         let resp: IZosFilesResponse;
         try {
@@ -628,7 +628,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
                 if (content.byteLength > 0) {
                     // Update e-tag if write was successful.
-                    const resp = await this.uploadEntry(parent, entry as DsEntry, content, forceUpload);
+                    const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload);
                     entry.etag = resp.apiResponse.etag;
                     entry.data = content;
                 }
@@ -647,7 +647,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 }
 
                 if (entry.wasAccessed || content.length > 0) {
-                    const resp = await this.uploadEntry(parent, entry as DsEntry, content, forceUpload);
+                    const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload);
                     entry.etag = resp.apiResponse.etag;
                 }
                 entry.data = content;
