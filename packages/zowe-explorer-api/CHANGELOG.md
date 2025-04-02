@@ -8,6 +8,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Added new `copyDataSetCrossLpar` API to provide ability to copy/paste data sets across LPARs. [#3012](https://github.com/zowe/zowe-explorer-vscode/issues/3012)
 - Added new `directConnectLogin` and `directConnectLogout` to the ZoweVsCodeExtension class. [#3346](https://github.com/zowe/zowe-explorer-vscode/issues/3346)
+- Added new API, `ZoweVsCodeExtension.createTeamConfiguration`, allowing extenders to use the same prompting process adopted by Zowe Explorer for Zowe team configuration creation including all registered profile types. [#3088](https://github.com/zowe/zowe-explorer-vscode/issues/3088)
 - The `certFile` and `certKeyFile` are now supported fields for zosmf session/profile. [#2373](https://github.com/zowe/zowe-explorer-vscode/issues/2373)
 - Deprecated the `flipState` method on the `IZoweTree` interface in favor of the `onCollapsibleStateChange` method. Implement the `onCollapsibleStateChange` method to receive an accurate collapsible state for the given node. [#3515](https://github.com/zowe/zowe-explorer-vscode/issues/3515)
 
