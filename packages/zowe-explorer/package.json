@@ -143,7 +143,12 @@
       {
         "command": "zowe.manualPoll",
         "key": "f5",
-        "when": "editorIsOpen && resourceScheme == zosspool"
+        "when": "editorIsOpen && resourceScheme == zowe-jobs"
+      },
+      {
+        "command": "zowe.jobs.loadMoreRecords",
+        "key": "ctrl+l",
+        "when": "editorTextFocus && resourceScheme == zowe-jobs"
       }
     ],
     "commands": [

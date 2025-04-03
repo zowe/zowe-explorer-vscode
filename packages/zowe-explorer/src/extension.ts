@@ -43,11 +43,18 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     await Profiles.createInstance(ZoweLogger.imperativeLogger);
 
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.loadMoreRecords", async (document: vscode.TextDocument) => {
-            const uri = document.uri;
-            if(uri.scheme == ZoweScheme.Jobs) {
-                await JobFSProvider.instance.fetchSpoolAtUri(uri);
-            }
+        vscode.commands.registerCommand("zowe.jobs.loadMoreRecords", async () => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            vscode.window.showErrorMessage("No active editor found.");
+            return;
+        }
+
+        const document = editor.document;
+        const uri = document.uri;
+        if(uri.scheme == ZoweScheme.Jobs) {
+            await JobFSProvider.instance.fetchSpoolAtUri(uri);
+        }
         }),
         vscode.languages.registerCodeLensProvider({ scheme: ZoweScheme.Jobs }, new LoadMoreCodeLens("zowe.jobs.loadMoreRecords"))
     );
