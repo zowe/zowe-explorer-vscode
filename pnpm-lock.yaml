@@ -168,12 +168,6 @@ importers:
       isbinaryfile:
         specifier: 4.0.4
         version: 4.0.4
-      jsonfile:
-        specifier: ^6.0.0
-        version: 6.1.0
-      lodash:
-        specifier: 4.17.21
-        version: 4.17.21
       promise-queue:
         specifier: 2.2.5
         version: 2.2.5
@@ -187,12 +181,6 @@ importers:
       '@types/fs-extra':
         specifier: ^7.0.0
         version: 7.0.0
-      '@types/jsonfile':
-        specifier: ^6.0.0
-        version: 6.1.4
-      '@types/lodash':
-        specifier: ^4.17.6
-        version: 4.17.16
       '@types/promise-queue':
         specifier: ^2.2.0
         version: 2.2.3
@@ -2776,16 +2764,6 @@ packages:
 
   /@types/json-schema@7.0.15:
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
-    dev: true
-
-  /@types/jsonfile@6.1.4:
-    resolution: {integrity: sha512-D5qGUYwjvnNNextdU59/+fI+spnwtTFmyQP0h+PfIOSkNfpU6AOICUOkm4i0OnSk+NyjdPJrxCDro0sJsWlRpQ==}
-    dependencies:
-      '@types/node': 20.17.6
-    dev: true
-
-  /@types/lodash@4.17.16:
-    resolution: {integrity: sha512-HX7Em5NYQAXKW+1T+FiuG27NGwzJfCX3s1GjOa7ujxZa52kjJLOr4FUxT+giF6Tgxv1e+/czV/iTtBw27WTU9g==}
     dev: true
 
   /@types/mocha@10.0.6:

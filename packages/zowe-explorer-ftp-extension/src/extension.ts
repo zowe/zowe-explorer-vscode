@@ -40,9 +40,13 @@ async function registerFtpApis(): Promise<boolean> {
         zoweExplorerApi.registerMvsApi(new FtpMvsApi());
         zoweExplorerApi.registerJesApi(new FtpJesApi());
 
-        const schema = await CoreUtils.getProfileSchema();
+        const schemas = await CoreUtils.getProfileSchema();
+        for (const schema of schemas) {
+            // can open PR with the cli package to add version, this is quick fix with version from package-lock.
+            schema.schema.version = "3.0.0"; // will need to update when zFTP CLI version updates with a new schema property.
+        }
         const pType = AbstractFtpApi.getProfileTypeName();
-        await zoweExplorerApi.getExplorerExtenderApi().initForZowe(pType, schema);
+        await zoweExplorerApi.getExplorerExtenderApi().initForZowe(pType, schemas);
         await zoweExplorerApi.getExplorerExtenderApi().reloadProfiles(pType);
 
         globals.LOGGER.logImperativeMessage("Zowe Explorer was modified for FTP support.", MessageSeverity.INFO);
