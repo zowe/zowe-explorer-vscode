@@ -1993,6 +1993,7 @@
     "@napi-rs/cli": "^2.16.1",
     "@types/fs-extra": "^7.0.0",
     "@types/jsonfile": "^6.0.0",
+    "@types/lodash": "^4.17.6",
     "@types/promise-queue": "^2.2.0",
     "@types/sinon": "^17.0.3",
     "@wdio/cli": "^8.40.5",
@@ -2006,7 +2007,6 @@
     "eslint-plugin-zowe-explorer": "3.2.0-SNAPSHOT",
     "expect-webdriverio": "^4.15.4",
     "glob": "^7.1.6",
-    "jsonfile": "^6.0.0",
     "jest-silent-reporter": "^0.5.0",
     "log4js": "^6.4.6",
     "markdownlint-cli": "^0.33.0",
@@ -2027,6 +2027,8 @@
     "dayjs": "^1.11.10",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
+    "jsonfile": "^6.0.0",
+    "lodash": "4.17.21",
     "promise-queue": "2.2.5"
   },
   "jest": {

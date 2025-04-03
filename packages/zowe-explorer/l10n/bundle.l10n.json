@@ -943,6 +943,12 @@
       "Error message"
     ]
   },
+  "Failed to compare schema type configurations with the following reason, moving to next step updating schema. {0}/Error message": {
+    "message": "Failed to compare schema type configurations with the following reason, moving to next step updating schema. {0}",
+    "comment": [
+      "Error message"
+    ]
+  },
   "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.": "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.",
   "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.": "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.",
   "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.": "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.",

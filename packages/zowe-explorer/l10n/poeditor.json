@@ -916,6 +916,7 @@
   "Profile {0} doesn't specify an authentication method. Choose a profile action.": "",
   "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.": "",
   "Failed to update Zowe schema: insufficient permissions or read-only file. {0}": "",
+  "Failed to compare schema type configurations with the following reason, moving to next step updating schema. {0}": "",
   "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.": "",
   "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.": "",
   "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.": "",
