@@ -170,8 +170,8 @@ See Zowe Docs for a complete list of use cases explaining how to work with [data
 
 - Open Recent Member
 
-  - Windows: `ctrl`+`alt`+`r`
-  - Mac: `⌘`+`⌥`+`r`
+  - Windows: `ctrl`+`alt`+`t`
+  - Mac: `⌘`+`⌥`+`t`
 
 - Search in all Loaded Items
   - Windows: `ctrl`+`alt`+`p`
