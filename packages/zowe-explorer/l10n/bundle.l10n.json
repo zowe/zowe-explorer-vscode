@@ -15,6 +15,7 @@
   "File History": "File History",
   "Sessions": "Sessions",
   "Encoding History": "Encoding History",
+  "Search Keyword History": "Search Keyword History",
   "Delete Selected": "Delete Selected",
   "Select an item before deleting": "Select an item before deleting",
   "Delete": "Delete",
@@ -569,6 +570,7 @@
   "Date Modified": "Date Modified",
   "User ID": "User ID",
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
+  "Failed to move {0}: {1}": "Failed to move {0}: {1}",
   "Cannot drop a sequential dataset or a partitioned dataset onto another PDS.": "Cannot drop a sequential dataset or a partitioned dataset onto another PDS.",
   "Cannot drop a member onto a sequential dataset.": "Cannot drop a member onto a sequential dataset.",
   "Moving MVS files...": "Moving MVS files...",
@@ -673,6 +675,45 @@
   "Choose the setting location to save the data set template...": "Choose the setting location to save the data set template...",
   "Save as User setting": "Save as User setting",
   "Save as Workspace setting": "Save as Workspace setting",
+  "No search pattern applied. Search for a pattern and try again.": "No search pattern applied. Search for a pattern and try again.",
+  "Searching for \"{0}\"/The string to search data sets for.": {
+    "message": "Searching for \"{0}\"",
+    "comment": [
+      "The string to search data sets for."
+    ]
+  },
+  "Search Results for \"{0}\"/The string to search data sets for.": {
+    "message": "Search Results for \"{0}\"",
+    "comment": [
+      "The string to search data sets for."
+    ]
+  },
+  "Data Set Name": "Data Set Name",
+  "Position": "Position",
+  "Contents": "Contents",
+  "Open": "Open",
+  "Enter the text to search for.": "Enter the text to search for.",
+  "Search Options": "Search Options",
+  "Select search options": "Select search options",
+  "Case Sensitive": "Case Sensitive",
+  "Regex": "Regex",
+  "On": "On",
+  "Off": "Off",
+  "Edit Options (Case Sensitive: {0}, Regex: {1})/Case SensitiveRegex": {
+    "message": "Edit Options (Case Sensitive: {0}, Regex: {1})",
+    "comment": [
+      "Case Sensitive",
+      "Regex"
+    ]
+  },
+  "Perform the search with case sensitivity": "Perform the search with case sensitivity",
+  "Treat the search query as a regex": "Treat the search query as a regex",
+  "Are you sure you want to search {0} data sets and members?/The number of data sets that are about to be searched": {
+    "message": "Are you sure you want to search {0} data sets and members?",
+    "comment": [
+      "The number of data sets that are about to be searched"
+    ]
+  },
   "Failed to list datasets": "Failed to list datasets",
   "Failed to read {0}/File path": {
     "message": "Failed to read {0}",
@@ -857,31 +898,6 @@
   "The physical sequential (PS) data set already exists.\nDo you want to replace it?": "The physical sequential (PS) data set already exists.\nDo you want to replace it?",
   "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?": "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?",
   "Unable to copy data set.": "Unable to copy data set.",
-  "No search pattern applied. Search for a pattern and try again.": "No search pattern applied. Search for a pattern and try again.",
-  "Enter the text to search for.": "Enter the text to search for.",
-  "Operation Cancelled": "Operation Cancelled",
-  "Searching for \"{0}\"/The string to search data sets for.": {
-    "message": "Searching for \"{0}\"",
-    "comment": [
-      "The string to search data sets for."
-    ]
-  },
-  "Search Results for \"{0}\"/The string to search data sets for.": {
-    "message": "Search Results for \"{0}\"",
-    "comment": [
-      "The string to search data sets for."
-    ]
-  },
-  "Data Set Name": "Data Set Name",
-  "Position": "Position",
-  "Contents": "Contents",
-  "Open": "Open",
-  "Are you sure you want to search {0} data sets and members?/The number of data sets that are about to be searched": {
-    "message": "Are you sure you want to search {0} data sets and members?",
-    "comment": [
-      "The number of data sets that are about to be searched"
-    ]
-  },
   "Failed to upload changes for {0}: {1}/Build file hyperlinkError message": {
     "message": "Failed to upload changes for {0}: {1}",
     "comment": [
@@ -1099,6 +1115,7 @@
   "Enter the volume serial on which the data set should be placed": "Enter the volume serial on which the data set should be placed",
   "Recent": "Recent",
   "Recent Filters": "Recent Filters",
+  "Recent Searches": "Recent Searches",
   "Options": "Options",
   "Disabled": "Disabled",
   "Your jobs": "Your jobs",
