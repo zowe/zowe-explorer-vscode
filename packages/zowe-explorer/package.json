@@ -684,11 +684,6 @@
         "enablement": "false"
       },
       {
-        "command": "zowe.jobs.loadMoreRecords",
-        "title": "%loadMoreRecords%",
-        "category": "Zowe Explorer"
-      },
-      {
         "command": "zowe.openRecentMember",
         "title": "%zowe.openRecentMember%",
         "category": "Zowe Explorer"

@@ -16,7 +16,7 @@ import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import type { Profiles } from "./Profiles";
 
 export class Constants {
-    public static readonly COMMAND_COUNT = 108;
+    public static readonly COMMAND_COUNT = 109;
     public static readonly MAX_SEARCH_HISTORY = 5;
     public static readonly MAX_FILE_HISTORY = 10;
     public static readonly MAX_DISPLAYED_DELETE_NAMES = 10;

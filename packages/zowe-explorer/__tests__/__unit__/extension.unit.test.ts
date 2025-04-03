@@ -50,6 +50,7 @@ async function createGlobalMocks() {
         mockCreateTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         mockExecuteCommand: jest.fn(),
         mockRegisterCommand: jest.fn(),
+        mockRegisterCodeLensProvider: jest.fn(),
         mockRegisterWebviewViewProvider: jest.fn(),
         mockOnDidCloseTextDocument: jest.fn(),
         mockOnDidSaveTextDocument: jest.fn(),
@@ -141,6 +142,7 @@ async function createGlobalMocks() {
         appName: vscode.env.appName,
         uriScheme: vscode.env.uriScheme,
         expectedCommands: [
+            "zowe.jobs.loadMoreRecords",
             "zowe.all.config.init",
             "zowe.ds.addSession",
             "zowe.ds.refreshAll",
@@ -280,6 +282,10 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode.window, "onDidExpandElement", {
         value: globalMocks.mockOnDidExpandElement,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.languages, "registerCodeLensProvider", {
+        value: globalMocks.mockRegisterCodeLensProvider,
         configurable: true,
     });
 
