@@ -1656,6 +1656,7 @@ export class DatasetActions {
      */
     public static async copyPartitionedDatasets(clipboardContent, node: ZoweDatasetNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.copyPartitionedDatasets called.");
+
         const groupedContent = clipboardContent.reduce((result, current) => {
             const { dataSetName, memberName, ...rest } = current;
             let group = result.find((item: any) => item.dataSetName === dataSetName);
@@ -1663,7 +1664,9 @@ export class DatasetActions {
                 group = { ...rest, dataSetName, members: [] };
                 result.push(group);
             }
-            group.members.push(memberName);
+            if(memberName && memberName !== 'No data sets found') {
+                group.members.push(memberName);
+            }
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             return result;
         }, []);
