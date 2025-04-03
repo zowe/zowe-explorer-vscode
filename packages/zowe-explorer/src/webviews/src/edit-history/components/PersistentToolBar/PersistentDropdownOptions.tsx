@@ -38,11 +38,18 @@ export default function PersistentDropdownOptions({ handleChange }: Readonly<{ h
     </VSCodeOption>,
   ].filter((option) => dataPanelContext.type === "uss" || dataPanelContext.type === "ds" || option.props.value !== "encodingHistory");
 
+  const searchKeywordsHistory = [
+    <VSCodeOption value="searchedKeywordHistory" key="searchedKeywordHistory">
+      {l10n.t("Search Keyword History")}
+    </VSCodeOption>,
+  ].filter((option) => dataPanelContext.type === "ds" || option.props.value !== "searchedKeywordHistory");
+
   return (
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center", margin: "15px 15px 15px 0px" }}>
       <VSCodeDropdown id="dropdown-persistent-items" style={{ maxWidth: "20vw" }} onChange={(event: any) => handleChange(event.target.value)}>
         {options}
         {optionsEncodingHistory}
+        {searchKeywordsHistory}
       </VSCodeDropdown>
     </div>
   );

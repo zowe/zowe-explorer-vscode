@@ -67,17 +67,17 @@ export class DataSetTemplates {
         }
     }
 
-    private static promptForSaveLocation<T extends string>(): Thenable<T | undefined> {
+    private static promptForSaveLocation(): Thenable<vscode.QuickPickItem | undefined> {
         const qpOptions: vscode.QuickPickOptions = {
             title: vscode.l10n.t("Data Set Template Save Location"),
             placeHolder: vscode.l10n.t("Choose the setting location to save the data set template..."),
             ignoreFocusOut: true,
             canPickMany: false,
         };
-        const qpItems = [];
+        const qpItems: vscode.QuickPickItem[] = [];
         qpItems.push(new FilterItem({ text: vscode.l10n.t("Save as User setting"), show: true }));
         qpItems.push(new FilterItem({ text: vscode.l10n.t("Save as Workspace setting"), show: true }));
-        return Gui.showQuickPick<T>(qpItems, qpOptions);
+        return Gui.showQuickPick(qpItems, qpOptions);
     }
 
     private static getTemplatesPerLocation(target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global): Types.DataSetAllocTemplate[] {

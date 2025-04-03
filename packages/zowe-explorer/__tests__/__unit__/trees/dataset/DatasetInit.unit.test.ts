@@ -18,6 +18,7 @@ import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
 import { DatasetInit } from "../../../../src/trees/dataset/DatasetInit";
 import { SharedInit } from "../../../../src/trees/shared/SharedInit";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
+import { DatasetSearch } from "../../../../src/trees/dataset/DatasetSearch";
 
 describe("Test src/dataset/extension", () => {
     describe("initDatasetProvider", () => {
@@ -102,11 +103,11 @@ describe("Test src/dataset/extension", () => {
             },
             {
                 name: "zowe.ds.pdsSearchFor",
-                mock: [{ spy: jest.spyOn(DatasetActions, "search"), arg: [test.context, test.value] }],
+                mock: [{ spy: jest.spyOn(DatasetSearch, "search"), arg: [test.context, test.value] }],
             },
             {
                 name: "zowe.ds.filteredDataSetsSearchFor",
-                mock: [{ spy: jest.spyOn(DatasetActions, "search"), arg: [test.context, test.value] }],
+                mock: [{ spy: jest.spyOn(DatasetSearch, "search"), arg: [test.context, test.value] }],
             },
             {
                 name: "zowe.ds.uploadDialog",
