@@ -495,13 +495,8 @@ export namespace window {
         return undefined as any;
     }
 
-    export function showQuickPick<T extends QuickPickItem>(
-        _items: readonly T[] | Thenable<readonly T[]>,
-        _options?: QuickPickOptions & { canPickMany: true },
-        _token?: CancellationToken
-    ): Thenable<T[] | undefined> {
-        return Promise.resolve(undefined);
-    }
+    const { window: mockWindow } = require("jest-mock-vscode").createVSCodeMock(jest);
+    export const showQuickPick = mockWindow.showQuickPick;
 
     /**
      * Options to configure the behavior of the message.
