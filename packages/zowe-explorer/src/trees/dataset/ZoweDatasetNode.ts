@@ -480,14 +480,27 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return paginate && SharedContext.isSession(this)
             ? [
-                  new NavigationTreeItem("Previous page", "arrow-small-left", !this.paginator.canGoPrevious(), "zowe.ds.prevPage", () =>
-                      this.paginator.fetchPreviousPage()
+                  new NavigationTreeItem(
+                      "Previous page",
+                      "arrow-small-left",
+                      !this.paginator.canGoPrevious(),
+                      "zowe.ds.prevPage",
+                      async (): Promise<void> => {
+                          await this.paginator.fetchPreviousPage();
+                      }
                   ) as any,
                   ...this.children,
-                  new NavigationTreeItem("Next page", "arrow-small-right", !this.paginator.canGoNext(), "zowe.ds.nextPage", () =>
-                      this.paginator.fetchNextPage()
+                  new NavigationTreeItem(
+                      "Next page",
+                      "arrow-small-right",
+                      !this.paginator.canGoNext(),
+                      "zowe.ds.nextPage",
+                      async (): Promise<void> => {
+                          await this.paginator.fetchPreviousPage();
+                      }
                   ) as any,
               ]
             : this.children;
@@ -621,7 +634,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
     public async fetchDatasetsInRange(start?: string, limit?: number): Promise<IFetchResult<zosfiles.IZosFilesResponse, string>> {
         const responses: zosfiles.IZosFilesResponse[] = [];
-        await this.fetchDatasets(responses, start, limit);
+        const allDatasets: zosfiles.IZosFilesResponse[] = [];
+        await this.fetchDatasets(allDatasets, { attributes: false });
+        await this.fetchDatasets(responses, { start, maxLength: limit });
 
         const successfulResponses = responses
             .filter((response) => response.success)
@@ -637,6 +652,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     return resp;
                 }
             });
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         const items = successfulResponses.reduce((prev: any[], resp): any[] => [...prev, ...(resp.apiResponse.items ?? resp.apiResponse)], []);
 
         const lastItem = items.length > 0 ? items.at(items.length - 1) : undefined;
@@ -644,10 +660,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return {
             items: successfulResponses,
             nextPageCursor: lastItem ? lastItem.dsname : undefined,
+            totalItems: allDatasets.length,
         };
     }
 
-    public async fetchDatasets(responses: zosfiles.IZosFilesResponse[], start?: string, limit?: number): Promise<void> {
+    public async fetchDatasets(
+        responses: zosfiles.IZosFilesResponse[],
+        options?: Pick<zosfiles.IDsmListOptions, "attributes" | "start" | "maxLength">
+    ): Promise<void> {
         const dsPatterns = [
             ...new Set(
                 this.pattern
@@ -664,12 +684,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
             });
         }
-        const listOptions = { start, maxLength: limit };
         if (mvsApi.dataSetsMatchingPattern) {
-            responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns, listOptions));
+            responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns, options));
         } else {
             for (const dsp of dsPatterns) {
-                responses.push(await mvsApi.dataSet(dsp, listOptions));
+                responses.push(await mvsApi.dataSet(dsp, options));
             }
         }
     }
