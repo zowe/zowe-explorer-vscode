@@ -35,6 +35,8 @@ Steps to reproduce the behavior:
 - OS:
 - Zowe Explorer Version:
 - (Optional) Zowe CLI Version:
+- (Optional) Do you have secure credentials enabled?
+- (Optional) Are you using a custom credential manager?
 
 **Additional context**
 
