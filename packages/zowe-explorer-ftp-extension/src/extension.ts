@@ -41,10 +41,8 @@ async function registerFtpApis(): Promise<boolean> {
         zoweExplorerApi.registerJesApi(new FtpJesApi());
 
         const schemas = await CoreUtils.getProfileSchema();
-        for (const schema of schemas) {
-            // can open PR with the cli package to add version, this is quick fix with version from package-lock.
-            schema.schema.version = "3.0.0"; // will need to update when zFTP CLI version updates with a new schema property.
-        }
+        // can open PR with the cli package to add version, this is quick fix with version from package-lock.
+        schemas[0].schema.version = "3.0.0";
         const pType = AbstractFtpApi.getProfileTypeName();
         await zoweExplorerApi.getExplorerExtenderApi().initForZowe(pType, schemas);
         await zoweExplorerApi.getExplorerExtenderApi().reloadProfiles(pType);
