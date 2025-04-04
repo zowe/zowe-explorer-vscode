@@ -210,9 +210,9 @@ export class AuthUtils {
      * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not
      */
     public static async isUsingTokenAuth(profileName: string): Promise<boolean> {
-        const secureProps = await Constants.PROFILES_CACHE.getSecurePropsForProfile(profileName);
+        const props = await Constants.PROFILES_CACHE.getPropsForProfile(profileName, false);
         const baseProfile = Constants.PROFILES_CACHE.getDefaultProfile("base");
-        const baseSecureProps = await Constants.PROFILES_CACHE.getSecurePropsForProfile(baseProfile?.name);
-        return AuthHandler.isUsingTokenAuth(secureProps, baseSecureProps);
+        const baseProps = await Constants.PROFILES_CACHE.getPropsForProfile(baseProfile?.name, false);
+        return AuthHandler.isUsingTokenAuth(props, baseProps);
     }
 }

@@ -890,7 +890,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
             }),
         } as any);
         jest.spyOn(Profiles.getInstance(), "getLoadedProfConfig").mockResolvedValue(globalMocks.testProfile);
-        jest.spyOn(Profiles.getInstance(), "getSecurePropsForProfile").mockResolvedValue([]);
+        jest.spyOn(Profiles.getInstance(), "getPropsForProfile").mockResolvedValue([]);
         Object.defineProperty(Constants, "PROFILES_CACHE", { value: Profiles.getInstance(), configurable: true });
     };
 
@@ -947,7 +947,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         const globalMocks = await createGlobalMocks();
         setupProfilesCheck(globalMocks);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockRejectedValueOnce(new Error("test error"));
-        jest.spyOn(Profiles.getInstance(), "getSecurePropsForProfile").mockImplementationOnce(Profiles.getInstance().getProfileInfo as any);
+        jest.spyOn(Profiles.getInstance(), "getPropsForProfile").mockImplementationOnce(Profiles.getInstance().getProfileInfo as any);
         jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("");
         const errorSpy = jest.spyOn(ZoweLogger, "error");
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
@@ -1825,7 +1825,7 @@ describe("Profiles Unit Tests - function validationArraySetup", () => {
     });
 });
 
-describe("Profiles Unit Tests - function getSecurePropsForProfile", () => {
+describe("Profiles Unit Tests - function getPropsForProfile", () => {
     afterEach(() => {
         jest.clearAllMocks();
         jest.resetAllMocks();
@@ -1844,7 +1844,7 @@ describe("Profiles Unit Tests - function getSecurePropsForProfile", () => {
             }),
             getAllProfiles: () => [],
         } as any);
-        await expect(Profiles.getInstance().getSecurePropsForProfile(globalMocks.testProfile.name ?? "")).resolves.toEqual(["tokenValue"]);
+        await expect(Profiles.getInstance().getPropsForProfile(globalMocks.testProfile.name ?? "")).resolves.toEqual(["tokenValue"]);
     });
 });
 

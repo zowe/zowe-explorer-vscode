@@ -1055,19 +1055,19 @@ export class Profiles extends ProfilesCache {
      * @param profileName the name of the profile
      * @returns {string[]} an array with the secure properties
      */
-    public async getSecurePropsForProfile(profileName: string): Promise<string[]> {
+    public async getPropsForProfile(profileName: string, onlySecure = true): Promise<string[]> {
         if (!profileName) {
             return [];
         }
         const usingSecureCreds = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
         const profInfo = await this.getProfileInfo();
-        if (usingSecureCreds && profInfo.getTeamConfig().exists) {
+        if (usingSecureCreds && profInfo.getTeamConfig().exists && onlySecure) {
             return profInfo.getTeamConfig().api.secure.securePropsForProfile(profileName);
         }
         const profAttrs = await this.getProfileFromConfig(profileName);
         const mergedArgs = profInfo.mergeArgsForProfile(profAttrs);
         return mergedArgs.knownArgs
-            .filter((arg) => arg.secure || arg.argName === "tokenType" || arg.argName === "tokenValue")
+            .filter((arg) => (onlySecure ? arg.secure : arg.argValue) || arg.argName === "tokenType" || arg.argName === "tokenValue")
             .map((arg) => arg.argName);
     }
 

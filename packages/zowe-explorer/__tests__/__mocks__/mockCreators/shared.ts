@@ -367,7 +367,7 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         }),
         convertV1ProfToConfig: jest.fn(),
         getLoadedProfConfig: jest.fn(),
-        getSecurePropsForProfile: jest.fn(),
+        getPropsForProfile: jest.fn(),
         showProfileInactiveMsg: jest.fn(),
     } as any;
 }
