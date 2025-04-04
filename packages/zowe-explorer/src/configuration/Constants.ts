@@ -256,6 +256,7 @@ export class Constants {
         BLANK: { kind: vscode.QuickPickItemKind.Separator, label: "" },
         RECENT: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t("Recent") },
         RECENT_FILTERS: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t(`Recent Filters`) },
+        RECENT_SEARCHES: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t(`Recent Searches`) },
         OPTIONS: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t(`Options`) },
     };
     public static JOB_SUBMIT_DIALOG_OPTS = [

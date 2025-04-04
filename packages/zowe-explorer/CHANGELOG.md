@@ -4,8 +4,15 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
+### Bug fixes
+
+- Fixed an issue where copy-and-pasting an empty PDS within the same LPAR would result in an error. [#3541](https://github.com/zowe/zowe-explorer-vscode/issues/3541)
+
 ### New features and enhancements
 
+- Added case sensitive and regular expression search options to Data Set searches. [#3455](https://github.com/zowe/zowe-explorer-vscode/issues/3455)
+- Added filtered and partitioned data set search history. [#3455](https://github.com/zowe/zowe-explorer-vscode/issues/3455)
+- Updated Zowe SDKs to `8.16.0` to include the latest enhancements from Imperative and the z/OS Files SDK. [#3526](https://github.com/zowe/zowe-explorer-vscode/pull/3526)
 - Added Time Started, Time Ended, and Time Submitted job properties to the Jobs table view. [#3055](https://github.com/zowe/zowe-explorer-vscode/issues/3055)
 - Implemented copy/paste functionality of data sets within and across LPARs. [#3012](https://github.com/zowe/zowe-explorer-vscode/issues/3012)
 - Implemented drag and drop functionality of data sets within and across LPARs. [#3413](https://github.com/zowe/zowe-explorer-vscode/pull/3413)

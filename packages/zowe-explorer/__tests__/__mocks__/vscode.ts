@@ -681,7 +681,34 @@ export namespace window {
      * @returns A new {@link QuickPick}.
      */
     export function createQuickPick<T extends QuickPickItem>(): QuickPick<T> {
-        return {} as QuickPick<T>;
+        const quickPick: QuickPick<T> = {
+            activeItems: [],
+            busy: false,
+            buttons: [],
+            canSelectMany: false,
+            dispose: jest.fn(),
+            enabled: true,
+            hide: jest.fn(),
+            ignoreFocusOut: false,
+            items: [],
+            matchOnDetail: false,
+            matchOnDescription: false,
+            onDidAccept: jest.fn(),
+            onDidChangeActive: jest.fn(),
+            onDidChangeSelection: jest.fn(),
+            onDidChangeValue: jest.fn(),
+            onDidHide: jest.fn(),
+            onDidTriggerButton: jest.fn(),
+            onDidTriggerItemButton: jest.fn(),
+            placeholder: undefined,
+            selectedItems: [],
+            show: jest.fn(),
+            step: undefined,
+            title: undefined,
+            totalSteps: undefined,
+            value: "",
+        };
+        return quickPick;
     }
 
     /**
@@ -1317,7 +1344,7 @@ export enum FileSystemProviderErrorCode {
  * This class has factory methods for common error-cases, like `FileNotFound` when
  * a file or folder doesn't exist, use them like so: `throw vscode.FileSystemError.FileNotFound(someUri);`
  */
-export const { FileSystemError, Selection, Position } = require("jest-mock-vscode").createVSCodeMock(jest);
+export const { FileSystemError, Selection, Position, ThemeIcon } = require("jest-mock-vscode").createVSCodeMock(jest);
 
 /**
  * Namespace for dealing with the current workspace. A workspace is the representation
