@@ -193,6 +193,20 @@ describe("HistoryView Unit Tests", () => {
             expect(removeFileHistorySpy).toHaveBeenCalledWith("test");
         });
 
+        it("should handle the case where 'remove-item' is the command sent and the selection is 'searchedKeywordHistory'", async () => {
+            const globalMocks = await createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
+            jest.spyOn(historyView as any, "refreshView").mockImplementation();
+            const removeSearchedKeywordHistorySpy = jest.spyOn(historyView["treeProviders"].ds, "removeSearchedKeywordHistory");
+            await historyView["onDidReceiveMessage"]({
+                command: "remove-item",
+                attrs: { type: "ds", selection: "searchedKeywordHistory", selectedItems: { test: "test1" } },
+            });
+            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search", cmds: "mvs" });
+            expect(removeSearchedKeywordHistorySpy).toHaveBeenCalledWith("test");
+        });
+
         it("should handle the case where 'remove-item' is the command sent and the selection is not supported", async () => {
             const globalMocks = await createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
@@ -253,6 +267,22 @@ describe("HistoryView Unit Tests", () => {
             });
             expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search", cmds: "mvs" });
             expect(resetFileHistorySpy).toHaveBeenCalledTimes(1);
+        });
+
+        it("should handle the case where 'clear-all' is the command sent and the selection is 'searchedKeywordHistory'", async () => {
+            const globalMocks = await createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
+            jest.spyOn(historyView as any, "refreshView").mockImplementation();
+            jest.spyOn(Gui, "showMessage").mockResolvedValue("Yes");
+
+            const resetSearchedKeywordHistorySpy = jest.spyOn(historyView["treeProviders"].ds, "resetSearchedKeywordHistory");
+            await historyView["onDidReceiveMessage"]({
+                command: "clear-all",
+                attrs: { type: "ds", selection: "searchedKeywordHistory" },
+            });
+            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search", cmds: "mvs" });
+            expect(resetSearchedKeywordHistorySpy).toHaveBeenCalledTimes(1);
         });
 
         it("should handle the case where 'clear-all' is the command sent and the selection is 'fileHistory'", async () => {
@@ -330,6 +360,7 @@ describe("HistoryView Unit Tests", () => {
                 favorites: undefined,
                 fileHistory: [],
                 search: undefined,
+                searchedKeywordHistory: [],
                 sessions: [],
                 encodingHistory: [],
             });

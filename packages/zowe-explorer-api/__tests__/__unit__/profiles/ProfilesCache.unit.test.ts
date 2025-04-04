@@ -170,16 +170,24 @@ describe("ProfilesCache", () => {
         expect(Object.keys(keyring).length).toBe(5);
     });
 
-    it("addToConfigArray should set the profileTypeConfigurations array", () => {
+    it("addToConfigArray should set the profileTypeConfigurations array (deprecated value test)", () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
         profileMetadata.push(profileMetadata[0]);
         profCache.addToConfigArray(profileMetadata);
+        // eslint-disable-next-line deprecation/deprecation
         expect(profCache.profileTypeConfigurations).toEqual(profileMetadata.filter((a, index) => index == 0));
+    });
+
+    it("addToConfigArray should set the sessionProfileTypeConfigurations array", () => {
+        const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+        profileMetadata.push(profileMetadata[0]);
+        profCache.addToConfigArray(profileMetadata);
+        expect(ProfilesCache.sessionProfileTypeConfigurations).toEqual(profileMetadata.filter((a, index) => index == 0));
     });
 
     it("getConfigArray should return the data of profileTypeConfigurations Array", () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-        profCache.profileTypeConfigurations = profileMetadata;
+        ProfilesCache.sessionProfileTypeConfigurations = profileMetadata;
         const res = profCache.getConfigArray();
         expect(res).toEqual(profileMetadata);
     });
