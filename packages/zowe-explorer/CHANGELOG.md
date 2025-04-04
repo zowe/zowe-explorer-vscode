@@ -24,6 +24,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Users can now update the credentials for a profile when the `autoStore` property is set to `false` in a team configuration. When `autoStore` is `false`, the new credentials are only saved in memory, and these credentials persist until the user updates them again or closes VS Code. [#3524](https://github.com/zowe/zowe-explorer-vscode/pull/3524)
 - Optimized the refresh functionality in Zowe Explorer for performance and stability. Now, the profiles are refreshed once before refreshing all the tree providers. [#3524](https://github.com/zowe/zowe-explorer-vscode/pull/3524)
 - Implemented the `SharedActions.refreshProvider` function to allow refreshing a single tree provider. [#3524](https://github.com/zowe/zowe-explorer-vscode/pull/3524)
+- Added an new VS Code command palette option `Zowe Explorer: Update Profile Configuration Schema`, allowing users to manually trigger an update to global and project level configuration schema files with registered Zowe Explorer extender types. [#1642](https://github.com/zowe/zowe-explorer-vscode/issues/1642)
 
 ### Bug fixes
 
