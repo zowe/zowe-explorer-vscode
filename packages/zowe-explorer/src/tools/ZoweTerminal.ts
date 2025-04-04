@@ -218,6 +218,8 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         }
         this.fullRefresh();
 
+        // determine the offset between the end (prompt length plus command length) and the desired position (prompt length plus cursorPosition)
+        // then shift the cursor left using an ANSI escape sequence
         const promptPrefix = ZoweTerminal.Keys.EMPTY_LINE; // e.g., "> "
         const promptLength = promptPrefix.length;
         const cursor = promptLength + this.command.length;

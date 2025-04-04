@@ -3,15 +3,13 @@
 exports[`ZoweTerminal Unit Tests should not change the keys 1`] = `
 {
   "BACKSPACE": "",
-  "CLEAR_ALL": "[2J[3J[;H",
-  "CLEAR_LINE": "[2K
-",
+  "CLEAR_ALL": "[2J[H",
   "CMD_BACKSPACE": "",
   "CMD_LEFT": "",
-  "CMD_RIGHT": "",
+  "CMD_RIGHT": "",
   "CTRL_BACKSPACE": "",
-  "CTRL_C": "",
-  "CTRL_D": "",
+  "CTRL_C": "",
+  "CTRL_D": "",
   "DEL": "[3~",
   "DOWN": "[B",
   "EMPTY_LINE": "> ",
