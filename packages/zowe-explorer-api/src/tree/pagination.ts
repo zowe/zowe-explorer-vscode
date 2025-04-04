@@ -64,6 +64,7 @@ export class Paginator<T, Cursor = string> {
     private previousPageCursors: (Cursor | undefined)[] = [];
     private hasNextPage: boolean = false;
     private loading: boolean = false;
+    private wasInitialized: boolean = false;
     private fetchFn: FetchFn<T, Cursor>;
 
     /**
@@ -80,16 +81,20 @@ export class Paginator<T, Cursor = string> {
         this.fetchFn = fetchFn;
     }
 
+    public isInitialized(): boolean {
+        return this.wasInitialized;
+    }
+
     /**
      * Initializes the paginator by fetching the first page of data.
      * Should be called after the Paginator is constructed.
      * @throws Error if fetching fails.
      */
     public async initialize(): Promise<void> {
-        if (this.loading) {
+        if (this.loading || this.wasInitialized) {
             return;
         }
-        this.loading = true;
+        this.loading = this.wasInitialized = true;
         try {
             // The cursor used to fetch the first page is undefined
             this.currentPageCursor = undefined;

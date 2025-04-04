@@ -487,9 +487,18 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                       "Previous page",
                       "arrow-small-left",
                       !this.paginator.canGoPrevious(),
-                      "zowe.ds.prevPage",
+                      "zowe.executeNavCallback",
                       async (): Promise<void> => {
-                          await this.paginator.fetchPreviousPage();
+                          await Gui.withProgress(
+                              {
+                                  location: { viewId: "zowe.ds.explorer" },
+                              },
+                              async () => {
+                                  await this.paginator.fetchPreviousPage();
+                                  this.dirty = true;
+                                  SharedTreeProviders.ds.refreshElement(this);
+                              }
+                          );
                       }
                   ) as any,
                   ...this.children,
@@ -497,9 +506,18 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                       "Next page",
                       "arrow-small-right",
                       !this.paginator.canGoNext(),
-                      "zowe.ds.nextPage",
+                      "zowe.executeNavCallback",
                       async (): Promise<void> => {
-                          await this.paginator.fetchPreviousPage();
+                          await Gui.withProgress(
+                              {
+                                  location: { viewId: "zowe.ds.explorer" },
+                              },
+                              async () => {
+                                  await this.paginator.fetchNextPage();
+                                  this.dirty = true;
+                                  SharedTreeProviders.ds.refreshElement(this);
+                              }
+                          );
                       }
                   ) as any,
               ]
@@ -634,9 +652,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
     public async fetchDatasetsInRange(start?: string, limit?: number): Promise<IFetchResult<zosfiles.IZosFilesResponse, string>> {
         const responses: zosfiles.IZosFilesResponse[] = [];
-        const allDatasets: zosfiles.IZosFilesResponse[] = [];
-        await this.fetchDatasets(allDatasets, { attributes: false });
-        await this.fetchDatasets(responses, { start, maxLength: limit });
+        const basicResponses: zosfiles.IZosFilesResponse[] = [];
+        await this.fetchDatasets(basicResponses, { attributes: false });
+        await this.fetchDatasets(responses, { attributes: true, start, maxLength: start ? limit + 1 : limit });
 
         const successfulResponses = responses
             .filter((response) => response.success)
@@ -656,6 +674,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         const items = successfulResponses.reduce((prev: any[], resp): any[] => [...prev, ...(resp.apiResponse.items ?? resp.apiResponse)], []);
 
         const lastItem = items.length > 0 ? items.at(items.length - 1) : undefined;
+
+        const allDatasets = basicResponses.filter((r) => r.success).reduce((arr, r) => [...arr, ...(r.apiResponse?.items ?? r.apiResponse)], []);
 
         return {
             items: successfulResponses,
@@ -718,10 +738,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         try {
             if (isSession) {
                 if (paginate) {
-                    await this.paginator.initialize();
+                    if (!this.paginator.isInitialized()) {
+                        await this.paginator.initialize();
+                    }
                     return this.paginator.getCurrentPageItems();
                 } else {
-                    await this.fetchDatasets(responses);
+                    await this.fetchDatasets(responses, { attributes: true });
                 }
             } else if (this.memberPattern) {
                 this.memberPattern = this.memberPattern.toUpperCase();
