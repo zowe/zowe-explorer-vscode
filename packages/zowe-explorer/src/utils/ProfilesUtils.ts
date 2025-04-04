@@ -635,6 +635,46 @@ export class ProfilesUtils {
         throw new Error(vscode.l10n.t("Tree item is not a Zowe Explorer item."));
     }
 
+    /**
+     * Adds new types to the Zowe schema.
+     * @param profileInfo the ProfileInfo object that has been prepared with `readProfilesFromDisk`, such as the one initialized in `initForZowe`.
+     * @param profileTypeConfigurations (optional) Profile type configurations to add to the schema
+     */
+    public static updateSchema(
+        profileInfo: imperative.ProfileInfo,
+        profileTypeConfigurations?: imperative.ICommandProfileTypeConfiguration[],
+        updateProjectSchema = false
+    ): void {
+        if (profileTypeConfigurations) {
+            try {
+                for (const typeConfig of profileTypeConfigurations) {
+                    const addResult = profileInfo.addProfileTypeToSchema(
+                        typeConfig.type,
+                        {
+                            schema: typeConfig.schema,
+                            sourceApp: "Zowe Explorer (for VS Code)",
+                        },
+                        updateProjectSchema
+                    );
+                    if (addResult.info.length > 0) {
+                        ZoweLogger.warn(addResult.info);
+                    }
+                }
+            } catch (err) {
+                // Only show an error if we failed to update the on-disk schema.
+                if (err.code === "EACCES" || err.code === "EPERM") {
+                    Gui.errorMessage(
+                        vscode.l10n.t({
+                            message: "Failed to update Zowe schema: insufficient permissions or read-only file. {0}",
+                            args: [err.message ?? ""],
+                            comment: ["Error message"],
+                        })
+                    );
+                }
+            }
+        }
+    }
+
     private static async convertV1Profs(): Promise<void> {
         const profileInfo = await ProfilesUtils.setupProfileInfo();
         const convertResult: imperative.IConvertV1ProfResult = await ProfilesCache.convertV1ProfToConfig(profileInfo);

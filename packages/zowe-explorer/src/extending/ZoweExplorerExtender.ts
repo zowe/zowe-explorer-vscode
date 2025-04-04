@@ -182,46 +182,13 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
 
         if (profileTypeConfigurations !== undefined) {
             this.getProfilesCache().addToConfigArray(profileTypeConfigurations);
-            await this.updateSchema(profileInfo, profileTypeConfigurations);
+            ProfilesUtils.updateSchema(profileInfo, profileTypeConfigurations);
         }
 
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(async (): Promise<void> => {
             await this.getProfilesCache().refresh();
         });
-    }
-
-    /**
-     * Adds new types to the Zowe schema.
-     * @param profileInfo the ProfileInfo object that has been prepared with `readProfilesFromDisk`, such as the one initialized in `initForZowe`.
-     * @param profileTypeConfigurations (optional) Profile type configurations to add to the schema
-     */
-    private updateSchema(profileInfo: imperative.ProfileInfo, profileTypeConfigurations?: imperative.ICommandProfileTypeConfiguration[]): void {
-        if (profileTypeConfigurations) {
-            try {
-                for (const typeConfig of profileTypeConfigurations) {
-                    typeConfig.schema.version = "3.2.0"; // using to mock extender passing a version/schema update
-                    const addResult = profileInfo.addProfileTypeToSchema(typeConfig.type, {
-                        schema: typeConfig.schema,
-                        sourceApp: "Zowe Explorer (for VS Code)",
-                    });
-                    if (addResult.info.length > 0) {
-                        ZoweLogger.warn(addResult.info);
-                    }
-                }
-            } catch (err) {
-                // Only show an error if we failed to update the on-disk schema.
-                if (err.code === "EACCES" || err.code === "EPERM") {
-                    Gui.errorMessage(
-                        vscode.l10n.t({
-                            message: "Failed to update Zowe schema: insufficient permissions or read-only file. {0}",
-                            args: [err.message ?? ""],
-                            comment: ["Error message"],
-                        })
-                    );
-                }
-            }
-        }
     }
 
     public getLocalStorage(): ILocalStorageAccess {
