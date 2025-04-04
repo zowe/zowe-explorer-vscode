@@ -164,6 +164,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.updateSchema",
+        "title": "%zowe.updateSchema%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.editHistory",
         "title": "%zowe.editHistory%",
         "category": "Zowe Explorer",

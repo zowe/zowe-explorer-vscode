@@ -9,6 +9,7 @@
   "zowe.placeholderCommand": "Placeholder",
   "zowe.promptCredentials": "Update Credentials",
   "zowe.profileManagement": "Manage Profile",
+  "zowe.updateSchema": "Update Profile Configuration Schema",
   "zowe.editHistory": "Edit History",
   "zowe.ds.explorer": "Data Sets",
   "zowe.uss.explorer": "Unix System Services (USS)",
