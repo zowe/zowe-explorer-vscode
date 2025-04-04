@@ -311,6 +311,10 @@ export class SharedActions {
         SharedActions.refreshInProgress = false;
     }
 
+    /**
+     * Zowe Explorer VS Code command `zowe.updateSchema` prompting user which if multiple levels in use,
+     * to update profile configuration schemas
+     */
     public static async updateSchemaCommand(): Promise<void> {
         let profileInfo: imperative.ProfileInfo;
         const zoweDir = FileManagement.getZoweDir();
