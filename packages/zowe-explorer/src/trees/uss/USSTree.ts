@@ -702,6 +702,35 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     }
 
     /**
+     * Helper function to update the TreeView based on the provided path.
+     *
+     * @param {IZoweUSSTreeNode} node - The node to update
+     * @param {string} filterPath - The path to filter by
+     * @returns {Promise<void>}
+     */
+    public async updateTreeView(node: IZoweUSSTreeNode, filterPath: string, addHistory: boolean): Promise<void> {
+        AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), node);
+        const sanitizedPath = filterPath.replace(/\/+/g, "/").replace(/(\/*)$/, "");
+        node.fullPath = sanitizedPath;
+        const icon = IconGenerator.getIconByNode(node);
+        if (icon) {
+            node.iconPath = icon.path;
+        }
+        if (!SharedContext.isFavorite(node)) {
+            node.description = sanitizedPath;
+        }
+        if (!SharedContext.isFilterFolder(node)) {
+            node.contextValue += `_${Constants.FILTER_SEARCH}`;
+        }
+        node.dirty = true;
+        if (addHistory) {
+            this.addSearchHistory(sanitizedPath);
+        }
+        await TreeViewUtils.expandNode(node, this);
+        this.refresh();
+    }
+
+    /**
      * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
      *
      * @param {IZoweUSSTreeNode} node - The session node
@@ -761,26 +790,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     node.getSession().ISession.base64EncodedAuth = nonFavNode.getSession().ISession.base64EncodedAuth;
                 }
             }
-            // Get session for sessionNode
-            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), node);
-            // Sanitization: Replace multiple forward slashes with just one forward slash
-            const sanitizedPath = remotepath.replace(/\/+/g, "/").replace(/(\/*)$/, "");
-            node.fullPath = sanitizedPath;
-            const icon = IconGenerator.getIconByNode(node);
-            if (icon) {
-                node.iconPath = icon.path;
-            }
-            // update the treeview with the new path
-            if (!SharedContext.isFavorite(node)) {
-                node.description = sanitizedPath;
-            }
-            if (!SharedContext.isFilterFolder(node)) {
-                node.contextValue += `_${Constants.FILTER_SEARCH}`;
-            }
-            node.dirty = true;
-            this.addSearchHistory(sanitizedPath);
-            await TreeViewUtils.expandNode(node, this);
-            this.refresh();
+            await this.updateTreeView(node, remotepath, true);
         }
     }
 
@@ -797,26 +807,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             const sessionNode = this.mSessionNodes.find((tempNode) => tempNode.getProfileName() === node.getProfileName());
             if (sessionNode) {
-                // Get session for sessionNode
-                AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), sessionNode);
-                // Sanitization: Replace multiple forward slashes with just one forward slash
-                const sanitizedPath = newPath.replace(/\/+/g, "/").replace(/(\/*)$/, "");
-                sessionNode.fullPath = sanitizedPath;
-                const icon = IconGenerator.getIconByNode(sessionNode);
-                if (icon) {
-                    sessionNode.iconPath = icon.path;
-                }
-                // update the treeview with the new path
-                if (!SharedContext.isFavorite(sessionNode)) {
-                    sessionNode.description = sanitizedPath;
-                }
-                if (!SharedContext.isFilterFolder(sessionNode)) {
-                    sessionNode.contextValue += `_${Constants.FILTER_SEARCH}`;
-                }
-                sessionNode.dirty = true;
-                // this.addSearchHistory(sanitizedPath); // TODO: Should we add to history? I think not as it's not a search
-                await TreeViewUtils.expandNode(sessionNode, this);
-                this.refresh();
+                await this.updateTreeView(sessionNode, newPath, false);
             }
         }
     }
