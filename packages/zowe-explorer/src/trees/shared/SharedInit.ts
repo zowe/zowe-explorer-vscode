@@ -150,8 +150,7 @@ export class SharedInit {
 
         context.subscriptions.push(
             ZoweVsCodeExtension.onProfileUpdated(async (profile) => {
-                const providers = Object.values(SharedTreeProviders.providers);
-                for (const provider of providers) {
+                for (const provider of Object.values(providers)) {
                     try {
                         const node = (await provider.getChildren()).find((n) => n.label === profile?.name);
                         node?.setProfileToChoice?.(profile);
@@ -343,23 +342,23 @@ export class SharedInit {
 
         watchers.forEach((watcher) => {
             watcher.onDidCreate(
-                SharedUtils.debounce(() => {
+                SharedUtils.debounceAsync(async () => {
                     ZoweLogger.info(vscode.l10n.t("Team config file created, refreshing Zowe Explorer."));
-                    void SharedActions.refreshAll();
+                    await SharedActions.refreshAll();
                     ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.CREATE);
                 }, 100) // eslint-disable-line no-magic-numbers
             );
             watcher.onDidDelete(
-                SharedUtils.debounce(() => {
+                SharedUtils.debounceAsync(async () => {
                     ZoweLogger.info(vscode.l10n.t("Team config file deleted, refreshing Zowe Explorer."));
-                    void SharedActions.refreshAll();
+                    await SharedActions.refreshAll();
                     ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.DELETE);
                 }, 100) // eslint-disable-line no-magic-numbers
             );
             watcher.onDidChange(
-                SharedUtils.debounce(() => {
+                SharedUtils.debounceAsync(async () => {
                     ZoweLogger.info(vscode.l10n.t("Team config file updated, refreshing Zowe Explorer."));
-                    void SharedActions.refreshAll();
+                    await SharedActions.refreshAll();
                     ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
                 }, 100) // eslint-disable-line no-magic-numbers
             );
@@ -399,11 +398,11 @@ export class SharedInit {
         const theTreeView = theProvider.getTreeView();
         context.subscriptions.push(theTreeView);
         context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async (e) => SharedInit.setupRemoteWorkspaceFolders(e)));
-        theTreeView.onDidCollapseElement((e) => {
-            theProvider.flipState(e.element, false);
+        theTreeView.onDidCollapseElement(async (e) => {
+            await theProvider.onCollapsibleStateChange?.(e.element, vscode.TreeItemCollapsibleState.Collapsed);
         });
-        theTreeView.onDidExpandElement((e) => {
-            theProvider.flipState(e.element, true);
+        theTreeView.onDidExpandElement(async (e) => {
+            await theProvider.onCollapsibleStateChange?.(e.element, vscode.TreeItemCollapsibleState.Expanded);
         });
     }
 

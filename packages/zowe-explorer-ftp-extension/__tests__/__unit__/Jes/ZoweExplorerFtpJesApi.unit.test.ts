@@ -24,10 +24,11 @@ import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
 jest.mock("../../../src/extension.ts");
 
-const JesApi = new FtpJesApi();
-
 describe("FtpJesApi", () => {
+    let JesApi: FtpJesApi;
     beforeAll(() => {
+        const profile: imperative.IProfileLoaded = { message: "", type: "zftp", failNotFound: false, profile: { host: "example.com", port: 22 } };
+        JesApi = new FtpJesApi(profile);
         JesApi.checkedProfile = jest.fn().mockReturnValue({ message: "success", type: "zftp", failNotFound: false });
         JesApi.ftpClient = jest.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
         JesApi.releaseConnection = jest.fn();

@@ -199,13 +199,13 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
 
         globalMocks.mockShowInputBox.mockResolvedValueOnce("/u/myuser/");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("folderName");
-        const refreshAllMock = jest.spyOn(SharedActions, "refreshAll").mockImplementation();
+        const refreshProviderMock = jest.spyOn(SharedActions, "refreshProvider").mockImplementation();
         const createApiMock = jest.spyOn(blockMocks.ussApi, "create").mockImplementation();
         blockMocks.ussNode.getParent().fullPath = "";
 
         await USSActions.createUSSNode(blockMocks.ussNode.getParent(), blockMocks.testUSSTree, "directory");
         expect(createApiMock).toHaveBeenCalledWith("/u/myuser/folderName", "directory");
-        expect(refreshAllMock).toHaveBeenCalled();
+        expect(refreshProviderMock).toHaveBeenCalled();
         createApiMock.mockRestore();
     });
 
@@ -229,14 +229,14 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("/u/myuser/aDir/");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("testFile.txt");
         const createApiMock = jest.spyOn(blockMocks.ussApi, "create").mockImplementation();
-        const refreshAllMock = jest.spyOn(SharedActions, "refreshAll").mockImplementation();
+        const refreshProviderMock = jest.spyOn(SharedActions, "refreshProvider").mockImplementation();
         blockMocks.ussNode.getParent().fullPath = "";
 
         await USSActions.createUSSNode(blockMocks.ussNode.getParent(), blockMocks.testUSSTree, "file");
         expect(createApiMock).toHaveBeenCalledWith("/u/myuser/aDir/testFile.txt", "file");
-        expect(refreshAllMock).toHaveBeenCalled();
+        expect(refreshProviderMock).toHaveBeenCalled();
         createApiMock.mockRestore();
-        refreshAllMock.mockRestore();
+        refreshProviderMock.mockRestore();
     });
 
     it("Tests if createUSSNode is executed successfully with Unverified profile", async () => {
@@ -256,11 +256,11 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
             }),
         });
         globalMocks.mockShowInputBox.mockReturnValueOnce("USSFolder");
-        const refreshAllMock = jest.spyOn(SharedActions, "refreshAll").mockImplementation();
+        const refreshProviderMock = jest.spyOn(SharedActions, "refreshProvider").mockImplementation();
         const createApiMock = jest.spyOn(blockMocks.ussApi, "create").mockImplementation();
 
         await USSActions.createUSSNode(blockMocks.ussNode.getParent(), blockMocks.testUSSTree, "directory");
-        expect(refreshAllMock).toHaveBeenCalled();
+        expect(refreshProviderMock).toHaveBeenCalled();
         expect(createApiMock).toHaveBeenCalled();
         expect(blockMocks.testUSSTree.refreshElement).not.toHaveBeenCalled();
         createApiMock.mockRestore();

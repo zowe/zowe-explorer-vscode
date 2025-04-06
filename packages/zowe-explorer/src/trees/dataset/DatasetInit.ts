@@ -21,6 +21,7 @@ import { SharedContext } from "../shared/SharedContext";
 import { SharedInit } from "../shared/SharedInit";
 import { SharedUtils } from "../shared/SharedUtils";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
+import { DatasetSearch } from "./DatasetSearch";
 
 export class DatasetInit {
     public static async createDatasetTree(log: imperative.Logger): Promise<DatasetTree> {
@@ -55,11 +56,8 @@ export class DatasetInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.addSession", async () => datasetProvider.createZoweSession(datasetProvider))
         );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.refreshAll", async () => {
-                await SharedActions.refreshAll(datasetProvider);
-            })
-        );
+        context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.refreshAll", async () => SharedActions.refreshAll()));
+        context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.refresh", async () => SharedActions.refreshProvider(datasetProvider)));
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.refreshNode", async (node, nodeList) => {
                 const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Pulling from Mainframe...")}`);
@@ -124,7 +122,11 @@ export class DatasetInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.showAttributes", async (node, nodeList) => {
                 const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList).filter(
-                    (element) => SharedContext.isDs(element) || SharedContext.isPds(element) || SharedContext.isDsMember(element)
+                    (element) =>
+                        SharedContext.isDs(element) ||
+                        SharedContext.isVsam(element) ||
+                        SharedContext.isPds(element) ||
+                        SharedContext.isDsMember(element)
                 );
                 for (const item of selectedNodes) {
                     await DatasetActions.showAttributes(item as IZoweDatasetTreeNode, datasetProvider);
@@ -193,12 +195,12 @@ export class DatasetInit {
         );
 
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.pdsSearchFor", async (node: IZoweDatasetTreeNode) => DatasetActions.search(context, node))
+            vscode.commands.registerCommand("zowe.ds.pdsSearchFor", async (node: IZoweDatasetTreeNode) => DatasetSearch.search(context, node))
         );
 
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.filteredDataSetsSearchFor", async (node: IZoweDatasetTreeNode) =>
-                DatasetActions.search(context, node)
+                DatasetSearch.search(context, node)
             )
         );
 

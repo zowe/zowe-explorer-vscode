@@ -117,22 +117,28 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
     }
 
     /**
-     * Change the state of an expandable node
-     * @param provider the tree view provider
-     * @param element the node being flipped
-     * @param isOpen the intended state of the the tree view provider, true or false
+     * Handles updates to the node when it is expanded or collapsed by the user
+     * @param element The node being flipped
+     * @param isOpen Whether the node is expanding or collapsing. Note that the collapsible state on the node is not yet updated to the new state.
      */
     public flipState(element: T, isOpen: boolean = false): void {
         ZoweLogger.trace("ZoweTreeProvider.flipState called.");
-        element.collapsibleState = isOpen ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
-        const icon = IconGenerator.getIconByNode(element);
-        if (icon) {
-            element.iconPath = icon.path;
-        }
-        if (isOpen) {
-            this.mOnDidChangeTreeData.fire(element);
-        } else {
-            // Don't mark as dirty when expanded to avoid duplicate refresh
+        this.onCollapsibleStateChange(element, isOpen ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed);
+    }
+
+    /**
+     * Handles updates to the node when it is expanded or collapsed by the user.
+     *
+     * @param element The node whose collapsible state is changing
+     * @param newState The new collapsible state of the node
+     */
+    public onCollapsibleStateChange(element: T, newState: vscode.TreeItemCollapsibleState): void {
+        ZoweLogger.trace("ZoweTreeProvider.onCollapsibleStateChange called.");
+        element.collapsibleState = newState;
+        TreeViewUtils.updateNodeIcon(element, this, newState);
+        if (newState === vscode.TreeItemCollapsibleState.Collapsed) {
+            // Only mark as dirty when the node is collapsing to avoid a duplicate refresh
+            // This prepares the node for a refresh once it is expanded again
             element.dirty = true;
         }
     }
@@ -229,11 +235,14 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
             default:
             case Validation.ValidationType.UNVERIFIED:
                 statusContext = Constants.UNVERIFIED_CONTEXT;
-                iconId = IconUtils.IconId.session;
+                iconId = node.collapsibleState === vscode.TreeItemCollapsibleState.Expanded ? IconUtils.IconId.sessionOpen : IconUtils.IconId.session;
                 break;
             case Validation.ValidationType.VALID:
                 statusContext = Constants.ACTIVE_CONTEXT;
-                iconId = IconUtils.IconId.sessionActive;
+                iconId =
+                    node.collapsibleState === vscode.TreeItemCollapsibleState.Expanded
+                        ? IconUtils.IconId.sessionActiveOpen
+                        : IconUtils.IconId.sessionActive;
                 break;
             case Validation.ValidationType.INVALID:
                 statusContext = Constants.INACTIVE_CONTEXT;

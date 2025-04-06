@@ -359,7 +359,7 @@
         }
       },
       {
-        "command": "zowe.ds.refreshAll",
+        "command": "zowe.ds.refresh",
         "title": "%refreshAll%",
         "category": "Zowe Explorer",
         "icon": {
@@ -458,7 +458,7 @@
         "icon": "$(arrow-up)"
       },
       {
-        "command": "zowe.uss.refreshAll",
+        "command": "zowe.uss.refresh",
         "title": "%uss.refreshAll%",
         "category": "Zowe Explorer",
         "icon": {
@@ -543,7 +543,7 @@
         }
       },
       {
-        "command": "zowe.jobs.refreshAllJobs",
+        "command": "zowe.jobs.refresh",
         "title": "%refreshAllJobs%",
         "category": "Zowe Explorer",
         "icon": {
@@ -730,7 +730,7 @@
       "view/title": [
         {
           "when": "view == zowe.ds.explorer",
-          "command": "zowe.ds.refreshAll",
+          "command": "zowe.ds.refresh",
           "group": "navigation"
         },
         {
@@ -740,7 +740,7 @@
         },
         {
           "when": "view == zowe.uss.explorer",
-          "command": "zowe.uss.refreshAll",
+          "command": "zowe.uss.refresh",
           "group": "navigation"
         },
         {
@@ -750,7 +750,7 @@
         },
         {
           "when": "view == zowe.jobs.explorer",
-          "command": "zowe.jobs.refreshAllJobs",
+          "command": "zowe.jobs.refresh",
           "group": "navigation"
         },
         {
@@ -2046,11 +2046,11 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "@zowe/core-for-zowe-sdk": "^8.13.0",
+    "@zowe/core-for-zowe-sdk": "^8.16.0",
     "@zowe/secrets-for-zowe-sdk": "^8.10.4",
-    "@zowe/zos-files-for-zowe-sdk": "^8.13.0",
-    "@zowe/zos-jobs-for-zowe-sdk": "^8.13.0",
-    "@zowe/zosmf-for-zowe-sdk": "^8.13.0",
+    "@zowe/zos-files-for-zowe-sdk": "^8.16.0",
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.16.0",
+    "@zowe/zosmf-for-zowe-sdk": "^8.16.0",
     "@zowe/zowe-explorer-api": "3.2.0-SNAPSHOT",
     "dayjs": "^1.11.10",
     "fs-extra": "8.0.1",
