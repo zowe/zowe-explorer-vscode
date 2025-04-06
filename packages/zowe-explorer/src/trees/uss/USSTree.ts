@@ -708,7 +708,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      * @param {string} filterPath - The path to filter by
      * @returns {Promise<void>}
      */
-    public async updateTreeView(node: IZoweUSSTreeNode, filterPath: string, addHistory: boolean): Promise<void> {
+    private async updateTreeView(node: IZoweUSSTreeNode, filterPath: string, addHistory: boolean): Promise<void> {
         AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), node);
         const sanitizedPath = filterPath.replace(/\/+/g, "/").replace(/(\/*)$/, "");
         node.fullPath = sanitizedPath;
