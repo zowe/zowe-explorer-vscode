@@ -476,14 +476,14 @@ export class ProfilesCache {
         return parentProfile;
     }
 
-    private shouldRemoveTokenFromProfile(profile: imperative.IProfileLoaded, baseProfile: imperative.IProfileLoaded): boolean {
+    public shouldRemoveTokenFromProfile(profile: imperative.IProfileLoaded, baseProfile: imperative.IProfileLoaded): boolean {
         return ((baseProfile?.profile?.host || baseProfile?.profile?.port) &&
             profile?.profile?.host &&
             profile?.profile?.port &&
             (baseProfile?.profile.host !== profile?.profile.host ||
                 baseProfile?.profile.port !== profile?.profile.port ||
                 (profile?.profile.user && profile?.profile.password)) &&
-            profile?.profile.tokenType?.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)) as boolean;
+            baseProfile?.profile.tokenType?.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)) as boolean;
     }
 
     public async updateBaseProfileFileLogin(
