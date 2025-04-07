@@ -45,11 +45,14 @@ const getLatestInfoApiUrl = new URL(`artifactory/api/storage/${artifactPath}?las
 
             // Files inside the zip are relative to top-level Zowe directory
             const targetDir = path.normalize(path.join(__dirname, "../../.."));
-            console.log(`Extrcating zip file to ${targetDir}`);
+            console.log(`Extracting zip file to ${targetDir}`);
             const zip = new admZip(tempFile);
             zip.extractAllTo(targetDir, true);
             fs.unlinkSync(tempFile);
             console.log("Unzipped and removed zip file successfully.");
         })
-        .catch((error) => console.error("Error retrieving or unzipping translations zip file:", error));
+        .catch((error) => {
+            console.warn(`WARNING. Error retrieving or unzipping translations zip file. Error: ${error}. Zowe Explorer build will not be localized.`);
+            process.exit(0);
+        });
 })();
