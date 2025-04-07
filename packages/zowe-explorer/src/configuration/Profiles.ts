@@ -163,6 +163,14 @@ export class Profiles extends ProfilesCache {
             toolTipList[autoStoreIndex] = `Auto Store: ${autoStoreValue.toString()}`;
         }
 
+        const layers = await this.uniqueExistingLayers();
+        const configFileIndex = toolTipList.findIndex((key) => key.startsWith("Config File: "));
+        if (configFileIndex === -1) {
+            toolTipList.push(`Config File: ${layers[0].global ? "Global" : "Project"}`);
+        } else {
+            toolTipList[configFileIndex] = `Config File: ${layers[0].global ? "Global" : "Project"}`;
+        }
+
         node.tooltip = toolTipList.join("\n");
 
         // Profile should have enough information to allow validation
