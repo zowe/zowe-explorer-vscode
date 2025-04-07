@@ -1537,3 +1537,22 @@ describe("ZoweUSSNode Unit Tests - Function node.getBaseName", () => {
         expect(node.getBaseName()).toBe("testFile");
     });
 });
+
+describe("ZoweUSSNode Unit Tests - Function getUssFiles", () => {
+    it("returns an unsuccessful response if the session is undefined", async () => {
+        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const getSessionMock = jest.fn().mockReturnValue(undefined);
+        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
+            getSession: getSessionMock,
+        } as any);
+        const warnLoggerSpy = jest.spyOn(ZoweLogger, "warn");
+        await expect((node as any).getUssFiles(createIProfile())).resolves.toStrictEqual({
+            success: false,
+            commandResponse: "Session is not defined for profile",
+        });
+        expect(getSessionMock).toHaveBeenCalledTimes(1);
+        expect(warnLoggerSpy).toHaveBeenCalledTimes(1);
+        expect(warnLoggerSpy).toHaveBeenCalledWith("[ZoweUSSNode.getUssFiles] Session undefined for profile sestest");
+        ussApiMock.mockRestore();
+    });
+});

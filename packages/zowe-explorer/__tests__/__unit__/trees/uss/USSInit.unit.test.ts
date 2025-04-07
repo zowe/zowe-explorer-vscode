@@ -47,7 +47,11 @@ describe("Test src/uss/extension", () => {
             },
             {
                 name: "zowe.uss.refreshAll",
-                mock: [{ spy: jest.spyOn(SharedActions, "refreshAll"), arg: [ussFileProvider] }],
+                mock: [{ spy: jest.spyOn(SharedActions, "refreshAll"), arg: [] }],
+            },
+            {
+                name: "zowe.uss.refresh",
+                mock: [{ spy: jest.spyOn(SharedActions, "refreshProvider"), arg: [ussFileProvider] }],
             },
             {
                 name: "zowe.uss.refreshUSS",

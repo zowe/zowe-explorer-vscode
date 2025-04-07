@@ -715,6 +715,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
     private async getDatasets(profile: imperative.IProfileLoaded, paginate?: boolean): Promise<zosfiles.IZosFilesResponse[] | undefined> {
         ZoweLogger.trace("ZoweDatasetNode.getDatasets called.");
+
         const responses: zosfiles.IZosFilesResponse[] = [];
         const options: zosfiles.IListOptions = {
             attributes: true,

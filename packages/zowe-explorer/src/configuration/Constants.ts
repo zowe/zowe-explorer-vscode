@@ -16,7 +16,7 @@ import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import type { Profiles } from "./Profiles";
 
 export class Constants {
-    public static readonly COMMAND_COUNT = 105;
+    public static readonly COMMAND_COUNT = 108;
     public static readonly MAX_SEARCH_HISTORY = 5;
     public static readonly MAX_FILE_HISTORY = 10;
     public static readonly MAX_DISPLAYED_DELETE_NAMES = 10;
@@ -257,6 +257,7 @@ export class Constants {
         BLANK: { kind: vscode.QuickPickItemKind.Separator, label: "" },
         RECENT: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t("Recent") },
         RECENT_FILTERS: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t(`Recent Filters`) },
+        RECENT_SEARCHES: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t(`Recent Searches`) },
         OPTIONS: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t(`Options`) },
     };
     public static JOB_SUBMIT_DIALOG_OPTS = [
