@@ -271,7 +271,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         const profile = node.getProfile();
         const profileName = profile.name ?? node.getProfileName();
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
-        const jwtCheckResult = AuthUtils.isUsingTokenAuth(profileName)
+        const jwtCheckResult = (await AuthUtils.isUsingTokenAuth(profileName))
             ? await ZoweTreeProvider.checkJwtForProfile(profileName)
             : JwtCheckResult.TokenUnusedOrUnsupported;
         if (jwtCheckResult === JwtCheckResult.TokenExpired) {
