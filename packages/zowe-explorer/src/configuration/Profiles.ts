@@ -171,6 +171,14 @@ export class Profiles extends ProfilesCache {
             toolTipList[configFileIndex] = `Config File: ${layers[0].global ? "Global" : "Project"}`;
         }
 
+        const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        const secureCredentialsIndex = toolTipList.findIndex((key) => key.startsWith("Secure Credentials Enabled: "));
+        if (secureCredentialsIndex === -1) {
+            toolTipList.push(`Secure Credentials Enabled: ${isSecureCredsEnabled.toString()}`);
+        } else {
+            toolTipList[secureCredentialsIndex] = `Secure Credentials Enabled: ${isSecureCredsEnabled.toString()}`;
+        }
+
         node.tooltip = toolTipList.join("\n");
 
         // Profile should have enough information to allow validation
