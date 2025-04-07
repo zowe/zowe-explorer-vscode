@@ -259,7 +259,15 @@ export class DatasetActions {
         datasetProvider: Types.IZoweDatasetTreeType,
         theFilter: any
     ): Promise<void> {
-        node.tooltip = node.pattern = theFilter.toUpperCase();
+        node.pattern = theFilter.toUpperCase();
+        const toolTipList: string[] = node.tooltip.split("\n");
+        const patternIndex = toolTipList.findIndex((key) => key.startsWith("Pattern: "));
+        if (patternIndex === -1) {
+            toolTipList.push(`Pattern: ${node.pattern}`);
+        } else {
+            toolTipList[patternIndex] = `Pattern: ${node.pattern}`;
+        }
+        node.tooltip = toolTipList.join("\n");
         node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
         const icon = IconGenerator.getIconByNode(node);
         if (icon) {
@@ -1664,7 +1672,7 @@ export class DatasetActions {
                 group = { ...rest, dataSetName, members: [] };
                 result.push(group);
             }
-            if(memberName && memberName !== 'No data sets found') {
+            if (memberName && memberName !== "No data sets found") {
                 group.members.push(memberName);
             }
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
