@@ -159,11 +159,11 @@ export class AuthUtils {
      * @param getSessionForProfile is a function to build a valid specific session based on provided profile
      * @param sessionNode is a tree node, containing session information
      */
-    public static syncSessionNode(
+    public static async syncSessionNode(
         getCommonApi: (profile: imperative.IProfileLoaded) => MainframeInteraction.ICommon,
         sessionNode: IZoweTreeNode,
         nodeToRefresh?: IZoweTreeNode
-    ): void {
+    ): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.syncSessionNode called.");
 
         const profileType = sessionNode.getProfile()?.type;
@@ -179,6 +179,55 @@ export class AuthUtils {
         sessionNode.setProfileToChoice(profile);
         try {
             const commonApi = getCommonApi(profile);
+            const usingBasicAuth = profile.profile.user && profile.profile.password;
+            const usingCertAuth = profile.profile.certFile && profile.profile.certKeyFile;
+            let usingTokenAuth: boolean;
+            try {
+                usingTokenAuth = await AuthUtils.isUsingTokenAuth(profile.name);
+            } catch (err) {
+                ZoweLogger.error(err);
+            }
+            const toolTipList = sessionNode.tooltip === "" ? [] : (sessionNode.tooltip as string).split("\n");
+            const authMethodIndex = toolTipList.findIndex((key) => key.startsWith("Auth method: "));
+            const userIDIndex = toolTipList.findIndex((key) => key.startsWith("User: "));
+            const patternIndex = toolTipList.findIndex((key) => key.startsWith("Pattern: "));
+
+            if (authMethodIndex === -1) {
+                if (usingTokenAuth) {
+                    toolTipList.push(`Auth method: Token-based Authentication`);
+                } else if (usingBasicAuth) {
+                    toolTipList.push(`Auth method: Basic Authentication`);
+                    toolTipList.push(`User: ${profile.profile.user as string}`);
+                } else if (usingCertAuth) {
+                    toolTipList.push(`Auth method: Certificate Authentication`);
+                } else if (!usingTokenAuth && !usingBasicAuth && !usingCertAuth) {
+                    toolTipList.push(`Auth method: Unknown`);
+                }
+            } else {
+                if (usingBasicAuth) {
+                    toolTipList[authMethodIndex] = `Auth method: Basic Authentication`;
+                    if (userIDIndex !== -1) {
+                        toolTipList[userIDIndex] = `User: ${profile.profile.user as string}`;
+                    } else {
+                        toolTipList.splice(authMethodIndex + 1, 0, `User: ${profile.profile.user as string}`);
+                    }
+                } else {
+                    if (usingTokenAuth) {
+                        toolTipList[authMethodIndex] = `Auth method: Token-based Authentication`;
+                    } else if (usingCertAuth) {
+                        toolTipList[authMethodIndex] = `Auth method: Certificate Authentication`;
+                    } else if (!usingTokenAuth && !usingBasicAuth && !usingCertAuth) {
+                        toolTipList[authMethodIndex] = `Auth method: Unknown`;
+                        if (patternIndex !== -1) {
+                            toolTipList.splice(patternIndex, 1);
+                        }
+                    }
+                    if (userIDIndex !== -1) {
+                        toolTipList.splice(userIDIndex, 1);
+                    }
+                }
+            }
+            sessionNode.tooltip = toolTipList.join("\n");
             sessionNode.setSessionToChoice(commonApi.getSession());
         } catch (err) {
             if (err instanceof Error) {
