@@ -488,14 +488,12 @@ describe("Extension Unit Tests", () => {
             });
 
             JobFSProvider.instance.fetchSpoolAtUri = jest.fn();
-            loadMoreRecordsCommand = allCommands.find(c => c.cmd === "zowe.jobs.loadMoreRecords");
+            loadMoreRecordsCommand = allCommands.find((c) => c.cmd === "zowe.jobs.loadMoreRecords");
         });
 
         it("should call fetchSpoolAtUri when triggered", async () => {
             await loadMoreRecordsCommand.fun();
-            expect(JobFSProvider.instance.fetchSpoolAtUri).toHaveBeenCalledWith(
-                vscode.window.activeTextEditor?.document.uri
-            );
+            expect(JobFSProvider.instance.fetchSpoolAtUri).toHaveBeenCalledWith(vscode.window.activeTextEditor?.document.uri);
         });
 
         it("should show an error message if no active editor", async () => {

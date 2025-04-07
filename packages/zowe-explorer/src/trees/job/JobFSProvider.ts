@@ -216,9 +216,11 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         await AuthHandler.waitForUnlock(spoolEntry.metadata.profile);
         const query = new URLSearchParams(uri.query);
         let recordRange = "";
-        if(query.has("startLine")) {
+        if (query.has("startLine")) {
             const startLine = parseInt(query.get("startLine")!);
-            const endLine = query.has("endLine") ? parseInt(query.get("endLine")!) : SettingsConfig.getDirectValue<number>("zowe.jobs.recordsToFetch") ?? 0;
+            const endLine = query.has("endLine")
+                ? parseInt(query.get("endLine")!)
+                : SettingsConfig.getDirectValue<number>("zowe.jobs.recordsToFetch") ?? 0;
             recordRange = `${startLine}-${endLine}`;
         }
         try {

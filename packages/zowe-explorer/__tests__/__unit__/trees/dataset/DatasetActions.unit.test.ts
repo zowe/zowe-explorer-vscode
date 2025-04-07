@@ -11,22 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-<<<<<<< HEAD
-import {
-    Gui,
-    imperative,
-    Validation,
-    ProfilesCache,
-    ZoweExplorerApiType,
-    ZoweScheme,
-    TableViewProvider,
-    TableBuilder,
-    Table,
-    Sorting,
-} from "@zowe/zowe-explorer-api";
-=======
 import { Gui, imperative, Validation, ProfilesCache, ZoweExplorerApiType, Sorting } from "@zowe/zowe-explorer-api";
->>>>>>> main
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import {

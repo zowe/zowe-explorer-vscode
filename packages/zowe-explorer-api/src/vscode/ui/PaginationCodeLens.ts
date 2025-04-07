@@ -9,7 +9,7 @@
  *
  */
 
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 
 export class LoadMoreCodeLens implements vscode.CodeLensProvider {
     public constructor(private commandId: string) {}

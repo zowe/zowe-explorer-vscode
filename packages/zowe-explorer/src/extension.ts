@@ -26,7 +26,6 @@ import { ProfilesUtils } from "./utils/ProfilesUtils";
 import { LoadMoreCodeLens, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { JobFSProvider } from "./trees/job/JobFSProvider";
 
-
 /**
  * The function that runs when the extension is loaded
  *
@@ -44,17 +43,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.loadMoreRecords", async () => {
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            vscode.window.showErrorMessage("No active editor found.");
-            return;
-        }
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) {
+                vscode.window.showErrorMessage("No active editor found.");
+                return;
+            }
 
-        const document = editor.document;
-        const uri = document.uri;
-        if(uri.scheme == ZoweScheme.Jobs) {
-            await JobFSProvider.instance.fetchSpoolAtUri(uri);
-        }
+            const document = editor.document;
+            const uri = document.uri;
+            if (uri.scheme == ZoweScheme.Jobs) {
+                await JobFSProvider.instance.fetchSpoolAtUri(uri);
+            }
         }),
         vscode.languages.registerCodeLensProvider({ scheme: ZoweScheme.Jobs }, new LoadMoreCodeLens("zowe.jobs.loadMoreRecords"))
     );
