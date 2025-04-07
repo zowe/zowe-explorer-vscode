@@ -328,7 +328,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     finalResponse.push(item);
                 }
                 if (!item.memberPattern && !item.pattern) {
-                    if (item.contextValue.includes(Constants.DS_MEMBER_CONTEXT) && element.memberPattern) {
+                    if (item.contextValue?.includes(Constants.DS_MEMBER_CONTEXT) && element.memberPattern) {
                         item.contextValue += Constants.FILTER_SEARCH;
                     }
                     finalResponse.push(item);

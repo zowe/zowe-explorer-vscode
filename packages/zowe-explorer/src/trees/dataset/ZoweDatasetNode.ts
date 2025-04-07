@@ -679,7 +679,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         return {
             items: successfulResponses,
-            nextPageCursor: lastItem ? lastItem.dsname : undefined,
+            nextPageCursor: lastItem && allDatasets.slice(-1)[0]?.dsname !== lastItem.dsname ? lastItem.dsname : undefined,
             totalItems: allDatasets.length,
         };
     }
