@@ -1991,6 +1991,7 @@
   "devDependencies": {
     "@cucumber/cucumber": "9.5.1",
     "@napi-rs/cli": "^2.16.1",
+    "@types/adm-zip": "^0.5.7",
     "@types/fs-extra": "^7.0.0",
     "@types/promise-queue": "^2.2.0",
     "@types/sinon": "^17.0.3",
@@ -2001,6 +2002,7 @@
     "@wdio/mocha-framework": "^8.40.3",
     "@wdio/spec-reporter": "^8.40.3",
     "@wdio/types": "^8.40.3",
+    "adm-zip": "^0.5.16",
     "chalk": "^2.4.1",
     "eslint-plugin-zowe-explorer": "3.2.0-SNAPSHOT",
     "expect-webdriverio": "^4.15.4",
