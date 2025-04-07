@@ -228,10 +228,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                     jobFile: spoolEntry.spool,
                     stream: bufBuilder,
                     binary: spoolEntry.encoding?.kind === "binary",
-<<<<<<< HEAD
                     recordRange: recordRange,
-=======
->>>>>>> main
                     encoding: spoolEncoding,
                 };
 

@@ -29,15 +29,6 @@ import { FilterItem } from "../../management/FilterManagement";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { Definitions } from "../../configuration/Definitions";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
-<<<<<<< HEAD
-
-interface ISearchOptions {
-    node: IZoweDatasetTreeNode;
-    pattern: string;
-    searchString: string;
-}
-=======
->>>>>>> main
 
 export class DatasetActions {
     public static typeEnum: zosfiles.CreateDataSetTypeEnum;
@@ -1665,27 +1656,17 @@ export class DatasetActions {
      */
     public static async copyPartitionedDatasets(clipboardContent, node: ZoweDatasetNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.copyPartitionedDatasets called.");
-<<<<<<< HEAD
-        const newClipboardContent = clipboardContent.filter(
-            (item) => item.memberName !== 'No data sets found'
-        );
-        const groupedContent = newClipboardContent.reduce((result, current) => {
-=======
 
         const groupedContent = clipboardContent.reduce((result, current) => {
->>>>>>> main
             const { dataSetName, memberName, ...rest } = current;
             let group = result.find((item: any) => item.dataSetName === dataSetName);
             if (!group) {
                 group = { ...rest, dataSetName, members: [] };
                 result.push(group);
             }
-<<<<<<< HEAD
-=======
             if(memberName && memberName !== 'No data sets found') {
                 group.members.push(memberName);
             }
->>>>>>> main
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             return result;
         }, []);
