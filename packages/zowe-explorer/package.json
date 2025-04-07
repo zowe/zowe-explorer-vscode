@@ -1992,7 +1992,6 @@
   "devDependencies": {
     "@cucumber/cucumber": "9.5.1",
     "@napi-rs/cli": "^2.16.1",
-    "@types/adm-zip": "^0.5.7",
     "@types/fs-extra": "^7.0.0",
     "@types/promise-queue": "^2.2.0",
     "@types/sinon": "^17.0.3",
@@ -2012,6 +2011,7 @@
     "log4js": "^6.4.6",
     "markdownlint-cli": "^0.33.0",
     "sinon": "^19.0.2",
+    "tmp": "^0.2.3",
     "ts-node": "^10.9.2",
     "wdio-vscode-service": "^6.1.1",
     "wdio-wait-for": "^3.0.11",

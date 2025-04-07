@@ -179,9 +179,6 @@ importers:
       '@napi-rs/cli':
         specifier: ^2.16.1
         version: 2.18.3
-      '@types/adm-zip':
-        specifier: ^0.5.7
-        version: 0.5.7
       '@types/fs-extra':
         specifier: ^7.0.0
         version: 7.0.0
@@ -239,6 +236,9 @@ importers:
       sinon:
         specifier: ^19.0.2
         version: 19.0.2
+      tmp:
+        specifier: ^0.2.3
+        version: 0.2.3
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@20.17.6)(typescript@5.8.2)
@@ -2837,12 +2837,6 @@ packages:
       '@tufjs/canonical-json': 2.0.0
       minimatch: 9.0.5
     dev: false
-
-  /@types/adm-zip@0.5.7:
-    resolution: {integrity: sha512-DNEs/QvmyRLurdQPChqq0Md4zGvPwHerAJYWk9l2jCbD1VPpnzRJorOdiq4zsw09NFbYnhfsoEhWtxIzXpn2yw==}
-    dependencies:
-      '@types/node': 20.17.6
-    dev: true
 
   /@types/babel__core@7.20.5:
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}

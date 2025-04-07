@@ -15,10 +15,10 @@
  * and copies them into the provides them into the top-level and l10n for building a localized extension.
  */
 
-const os = require("os");
 const path = require("path");
 const fs = require("fs");
 const process = require("process");
+const tmp = require("tmp");
 const admZip = require("adm-zip");
 
 const artifactPath = "libs-snapshot-local/org/zowe/vscode/zowe-explorer-g11n";
@@ -39,7 +39,7 @@ const getLatestInfoApiUrl = new URL(`artifactory/api/storage/${artifactPath}?las
     fetch(downloadUrl)
         .then((response) => response.arrayBuffer())
         .then((arrayBuffer) => {
-            const tempFile = path.join(os.tmpdir(), "zowe-explorer-g11n.zip");
+            const tempFile = tmp.fileSync({ postfix: ".zip" }).name;
             console.log(`Writing zip file to ${tempFile}`);
             fs.writeFileSync(tempFile, Buffer.from(arrayBuffer));
 
