@@ -1318,7 +1318,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             } else {
                 sessionNode.pattern = pattern.toUpperCase();
             }
-            const toolTipList: string[] = node.tooltip.split("\n");
+            const toolTipList: string[] = (node.tooltip as string).split("\n");
             const patternIndex = toolTipList.findIndex((key) => key.startsWith("Pattern: "));
             if (patternIndex === -1) {
                 toolTipList.push(`Pattern: ${sessionNode.pattern}`);

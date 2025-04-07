@@ -260,7 +260,7 @@ export class DatasetActions {
         theFilter: any
     ): Promise<void> {
         node.pattern = theFilter.toUpperCase();
-        const toolTipList: string[] = node.tooltip.split("\n");
+        const toolTipList: string[] = (node.tooltip as string).split("\n");
         const patternIndex = toolTipList.findIndex((key) => key.startsWith("Pattern: "));
         if (patternIndex === -1) {
             toolTipList.push(`Pattern: ${node.pattern}`);

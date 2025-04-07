@@ -622,7 +622,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     dsTree.resetFilterForChildren(this.children);
                 }
                 this.pattern = dsPattern.toUpperCase();
-                const toolTipList: string[] = this.tooltip.split("\n");
+                const toolTipList: string[] = (this.tooltip as string).split("\n");
                 const patternIndex = toolTipList.findIndex((key) => key.startsWith("Pattern: "));
                 if (patternIndex === -1) {
                     toolTipList.push(`Pattern: ${this.pattern}`);
