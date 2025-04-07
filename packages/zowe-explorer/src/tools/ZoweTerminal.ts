@@ -25,9 +25,9 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         HOME: "\x1b[H",
         END: "\x1b[F",
         CMD_LEFT: "\x01", // MacOS HOME
-        CTRL_C: "\x1b",
-        CTRL_D: "\x1b",
-        CMD_RIGHT: "\x1b", // MacOS END
+        CTRL_C: "\x03",
+        CTRL_D: "\x04",
+        CMD_RIGHT: "\x05", // MacOS END
         CTRL_BACKSPACE: "\x08",
         TAB: "\x09",
         CMD_BACKSPACE: "\x15",
