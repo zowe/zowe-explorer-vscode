@@ -637,7 +637,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     return undefined;
                 }
                 if (mvsApi.dataSetsMatchingPattern) {
-                    responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
+                    responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns, { attributes: true }));
                 } else {
                     for (const dsp of dsPatterns) {
                         responses.push(await mvsApi.dataSet(dsp));
