@@ -13,7 +13,6 @@ import { imperative } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 
 export class ZoweTerminal implements vscode.Pseudoterminal {
-    // --- Static Constants (Escape Sequences, etc.) ---
     public static readonly mTermX = ">";
     public static readonly invalidChar = "�";
     public static readonly Keys = {
@@ -48,7 +47,6 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         },
     };
 
-    // --- Instance Variables ---
     private screenBuffer: string[] = []; // Buffer that holds all output (one line per element)
     private charArrayCmd: string[] = [];
     private mMessage: string;
@@ -68,7 +66,6 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     private closeEmitter = new vscode.EventEmitter<void>();
     public onDidClose?: vscode.Event<void> = this.closeEmitter.event;
 
-    // --- Constructor ---
     public constructor(
         terminalName: string,
         private processCmd: (cmd: string) => Promise<string>,
@@ -85,7 +82,6 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.chalk = imperative.TextUtils.chalk;
     }
 
-    // --- Public Methods ---
     public open(_initialDimensions?: vscode.TerminalDimensions | undefined): void {
         if (this.screenBuffer.length === 0) {
             this.writeLine(this.chalk.dim.italic(this.mMessage));
@@ -182,7 +178,6 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         }
     }
 
-    // --- Rendering Helpers ---
     // Append text to the output buffer only.
     private appendToBuffer(text: string): void {
         this.screenBuffer.push(text);
@@ -242,7 +237,6 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.writeLine(this.chalk.dim.italic(this.mMessage));
     }
 
-    // --- Input Processing Helpers ---
     private navigateHistory(offset: number): void {
         this.historyIndex = Math.max(0, Math.min(this.mHistory.length, this.historyIndex + offset));
         this.command = this.mHistory[this.historyIndex] ?? "";
@@ -312,7 +306,6 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.fullRefresh();
     }
 
-    // --- Utility Functions ---
     private isPrintable(char: string): boolean {
         const codePoint = char.codePointAt(0);
         if (codePoint === undefined) return false;
