@@ -27,6 +27,7 @@ export interface IFetchResult<T, Cursor> {
 export class NavigationTreeItem extends TreeItem {
     public constructor(label: string, icon: string, disabled: boolean, command: string, navigateCallback: () => void | PromiseLike<void>) {
         super(label);
+        this.contextValue = "";
         this.iconPath = new ThemeIcon(icon);
         this.command = disabled
             ? {

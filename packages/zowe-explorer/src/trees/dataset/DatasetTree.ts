@@ -1168,7 +1168,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     }
 
     public resetFilterForChildren(children: IZoweDatasetTreeNode[]): void {
-        for (const child of children) {
+        for (const child of children.filter((c) => !(c instanceof NavigationTreeItem))) {
             let resetIcon: IconUtils.IIconItem;
             if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
                 resetIcon = IconGenerator.getIconById(IconUtils.IconId.folder);
@@ -1207,7 +1207,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     }
 
     public applyPatternsToChildren(children: IZoweDatasetTreeNode[], patterns: DatasetMatch[], sessionNode: IZoweDatasetTreeNode): void {
-        for (const child of children.filter((c) => c.label !== "No data sets found")) {
+        for (const child of children.filter((c) => !(c instanceof NavigationTreeItem) && c.label !== "No data sets found")) {
             for (const item of patterns.filter((p) => p.member && this.patternAppliesToChild(child, p))) {
                 // Only apply to PDS that match the given patterns
                 if (SharedContext.isPds(child)) {
