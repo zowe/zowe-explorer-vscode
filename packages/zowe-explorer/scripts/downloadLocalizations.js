@@ -38,10 +38,10 @@ const getLatestInfoApiUrl = new URL(`artifactory/api/storage/${artifactPath}?las
 
     fetch(downloadUrl)
         .then((response) => response.arrayBuffer())
-        .then((buffer) => {
+        .then((arrayBuffer) => {
             const tempFile = path.join(os.tmpdir(), "zowe-explorer-g11n.zip");
             console.log(`Writing zip file to ${tempFile}`);
-            fs.writeFileSync(tempFile, Buffer.from(buffer));
+            fs.writeFileSync(tempFile, Buffer.from(arrayBuffer));
 
             // Files inside the zip are relative to top-level Zowe directory
             const targetDir = path.normalize(path.join(__dirname, "../../.."));
@@ -49,7 +49,7 @@ const getLatestInfoApiUrl = new URL(`artifactory/api/storage/${artifactPath}?las
             const zip = new admZip(tempFile);
             zip.extractAllTo(targetDir, true);
             fs.unlinkSync(tempFile);
-            console.log("Unzipped successfully and remove zip file.");
+            console.log("Unzipped and removed zip file successfully.");
         })
         .catch((error) => console.error("Error retrieving or unzipping translations zip file:", error));
 })();
