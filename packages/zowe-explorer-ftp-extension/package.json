@@ -49,10 +49,10 @@
   "dependencies": {
     "@zowe/zos-ftp-for-zowe-cli": "^2.1.8",
     "@zowe/zowe-explorer-api": "2.18.2-SNAPSHOT",
-    "tmp": "^0.2.1"
+    "tmp": "^0.2.3"
   },
   "devDependencies": {
-    "@types/tmp": "0.2.0",
+    "@types/tmp": "^0.2.0",
     "concurrently": "^5.2.0"
   },
   "jest": {
