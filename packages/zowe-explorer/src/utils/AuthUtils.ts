@@ -225,6 +225,14 @@ export class AuthUtils {
                         if (pathIndex !== -1) {
                             toolTipList.splice(pathIndex, 1);
                         }
+                        const searchCriteriaIndex = toolTipList.findIndex((key) => key.startsWith("Owner: "));
+                        if (searchCriteriaIndex !== -1) {
+                            toolTipList.splice(searchCriteriaIndex, 1);
+                        }
+                        const jobIdIndex = toolTipList.findIndex((key) => key.startsWith("JobId: "));
+                        if (jobIdIndex !== -1) {
+                            toolTipList.splice(jobIdIndex, 1);
+                        }
                     }
                     const userIDIndex = toolTipList.findIndex((key) => key.startsWith("User: "));
                     if (userIDIndex !== -1) {
@@ -233,12 +241,38 @@ export class AuthUtils {
                 }
             }
 
-            if (sessionNode.fullPath && (usingBasicAuth || usingTokenAuth || usingCertAuth)) {
-                const pathIndex = toolTipList.findIndex((key) => key.startsWith("Path: "));
-                if (pathIndex === -1) {
-                    toolTipList.push(`Path: ${sessionNode.fullPath}`);
-                } else {
-                    toolTipList[pathIndex] = `Path: ${sessionNode.fullPath}`;
+            if (usingBasicAuth || usingTokenAuth || usingCertAuth) {
+                if (sessionNode.fullPath) {
+                    const pathIndex = toolTipList.findIndex((key) => key.startsWith("Path: "));
+                    if (pathIndex === -1) {
+                        toolTipList.push(`Path: ${sessionNode.fullPath}`);
+                    } else {
+                        toolTipList[pathIndex] = `Path: ${sessionNode.fullPath}`;
+                    }
+                } else if (sessionNode.description) {
+                    if ((sessionNode.description as string).includes("Owner: ")) {
+                        const jobIdIndex = toolTipList.findIndex((key) => key.startsWith("JobId: "));
+                        if (jobIdIndex !== -1) {
+                            toolTipList.splice(jobIdIndex, 1);
+                        }
+                        const searchCriteriaIndex = toolTipList.findIndex((key) => key.startsWith("Owner: "));
+                        if (searchCriteriaIndex === -1) {
+                            toolTipList.push(sessionNode.description as string);
+                        } else {
+                            toolTipList[searchCriteriaIndex] = sessionNode.description as string;
+                        }
+                    } else if ((sessionNode.description as string).includes("JobId: ")) {
+                        const searchFilterIndex = toolTipList.findIndex((key) => key.startsWith("Owner: "));
+                        if (searchFilterIndex !== -1) {
+                            toolTipList.splice(searchFilterIndex, 1);
+                        }
+                        const jobIdIndex = toolTipList.findIndex((key) => key.startsWith("JobId: "));
+                        if (jobIdIndex === -1) {
+                            toolTipList.push(sessionNode.description as string);
+                        } else {
+                            toolTipList[jobIdIndex] = sessionNode.description as string;
+                        }
+                    }
                 }
             }
             sessionNode.tooltip = toolTipList.join("\n");
