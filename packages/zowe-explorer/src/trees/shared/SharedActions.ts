@@ -332,7 +332,7 @@ export class SharedActions {
         // if project config prompt for options
         const configLayers = await Profiles.getInstance().getConfigLayers();
         const uniquePaths = new Set();
-        const existingLayers = configLayers.filter((layer) => {
+        const existingLayers = configLayers?.filter((layer) => {
             const normalized = path.normalize(layer.path);
             if (!uniquePaths.has(normalized)) {
                 uniquePaths.add(normalized);
@@ -341,7 +341,7 @@ export class SharedActions {
             return false;
         });
         const layersInUse: imperative.IConfigLayer[] = [];
-        existingLayers.forEach((layer) => {
+        existingLayers?.forEach((layer) => {
             if (layer.global) {
                 layersInUse.push(layer);
             }
@@ -349,7 +349,6 @@ export class SharedActions {
                 layersInUse.push(layer);
             }
         });
-
         if (layersInUse.length > 1) {
             const qpOptions: vscode.QuickPickOptions = {
                 title: vscode.l10n.t("Update Zowe configuration schema"),
@@ -372,7 +371,7 @@ export class SharedActions {
                 updateProjectSchema = true;
             }
         } else {
-            if (!layersInUse[0].global) {
+            if (!layersInUse[0]?.global) {
                 updateProjectSchema = true;
             }
         }

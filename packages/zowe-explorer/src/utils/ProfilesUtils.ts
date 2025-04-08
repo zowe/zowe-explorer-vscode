@@ -636,15 +636,15 @@ export class ProfilesUtils {
     }
 
     /**
-     * Adds new types to the Zowe schema.
-     * @param profileInfo the ProfileInfo object that has been prepared with `readProfilesFromDisk`, such as the one initialized in `initForZowe`.
-     * @param profileTypeConfigurations (optional) Profile type configurations to add to the schema
-     * @param updateProjectSchema (optional) Update project level schema along with global level
+     * Adds new types and updates the Zowe schema.
+     * @param {imperative.ProfileInfo} profileInfo an imperative ProfileInfo object that has been prepared with a `readProfilesFromDisk`
+     * @param {imperative.ICommandProfileTypeConfiguration[]} profileTypeConfigurations Profile type configurations to add to the schema
+     * @param {boolean} updateProjectSchema (optional) false by default. pass true to update project level schema along with global level
      */
     public static updateSchema(
         profileInfo: imperative.ProfileInfo,
-        profileTypeConfigurations?: imperative.ICommandProfileTypeConfiguration[],
-        updateProjectSchema = false
+        profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[],
+        updateProjectSchema: boolean = false
     ): void {
         if (profileTypeConfigurations) {
             try {
