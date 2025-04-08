@@ -281,10 +281,12 @@ export class SharedUtils {
                     }),
                     placeHolder: vscode.l10n.t("Enter a codepage (e.g., 1047, IBM-1047)"),
                 });
-                if (response != null) {
+                if (response) {
                     encoding = { kind: "other", codepage: response };
                     encodingHistory.push(encoding.codepage);
                     ZoweLocalStorage.setValue(Definitions.LocalStorageKey.ENCODING_HISTORY, encodingHistory.slice(0, Constants.MAX_FILE_HISTORY));
+                } else {
+                    Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
                 }
                 break;
             default:
