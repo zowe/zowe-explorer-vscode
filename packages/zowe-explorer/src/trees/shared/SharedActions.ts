@@ -363,11 +363,11 @@ export class SharedActions {
             qpItems.push(global);
             qpItems.push(both);
             const response = await Gui.showQuickPick(qpItems, qpOptions);
-
             if (!response) {
                 Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
+                return;
             }
-            if (response === both) {
+            if (response.label === both.label) {
                 updateProjectSchema = true;
             }
         } else {
