@@ -829,8 +829,33 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 if (searchCriteria != null) {
                     node.filtered = true;
                     node.label = node.getProfileName();
-                    node.tooltip = node.description = searchCriteria;
+                    node.description = searchCriteria;
                     node.dirty = true;
+                    const toolTipList = (node.tooltip as string).split("\n");
+                    if (searchCriteria.includes("Owner: ")) {
+                        const jobIdIndex = toolTipList.findIndex((key) => key.startsWith("JobId: "));
+                        if (jobIdIndex !== -1) {
+                            toolTipList.splice(jobIdIndex, 1);
+                        }
+                        const searchCriteriaIndex = toolTipList.findIndex((key) => key.startsWith("Owner: "));
+                        if (searchCriteriaIndex === -1) {
+                            toolTipList.push(searchCriteria);
+                        } else {
+                            toolTipList[searchCriteriaIndex] = searchCriteria;
+                        }
+                    } else if (searchCriteria.includes("JobId: ")) {
+                        const searchFilterIndex = toolTipList.findIndex((key) => key.startsWith("Owner: "));
+                        if (searchFilterIndex !== -1) {
+                            toolTipList.splice(searchFilterIndex, 1);
+                        }
+                        const jobIdIndex = toolTipList.findIndex((key) => key.startsWith("JobId: "));
+                        if (jobIdIndex === -1) {
+                            toolTipList.push(searchCriteria);
+                        } else {
+                            toolTipList[jobIdIndex] = searchCriteria;
+                        }
+                    }
+                    node.tooltip = toolTipList.join("\n");
                     this.addSearchHistory(searchCriteria);
                     await TreeViewUtils.expandNode(node, this);
                 }
