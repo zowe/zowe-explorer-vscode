@@ -70,6 +70,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public constructor(opts: Definitions.IZoweUssTreeOpts) {
         super(opts.label, opts.collapsibleState, opts.parentNode, opts.session, opts.profile);
         this.parentPath = opts.parentPath;
+        this.tooltip = "";
         if (opts.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = Constants.USS_DIR_CONTEXT;
         } else if (opts.encoding?.kind === "binary") {
@@ -100,6 +101,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const isSession = this.getParent() == null;
         if (isSession) {
             this.id = `uss.${this.label.toString()}`;
+            this.tooltip += `Profile: ${opts.label}`;
         }
         if (opts.profile) {
             this.profile = opts.profile;
