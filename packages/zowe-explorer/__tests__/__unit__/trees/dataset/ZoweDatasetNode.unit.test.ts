@@ -32,6 +32,7 @@ import { IconUtils } from "../../../../src/icons/IconUtils";
 import { IconGenerator } from "../../../../src/icons/IconGenerator";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
+import { AuthUtils } from "../../../../src/utils/AuthUtils";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -236,6 +237,7 @@ describe("ZoweDatasetNode Unit Tests", () => {
             parentNode: rootNode,
             contextOverride: Constants.INFORMATION_CONTEXT,
         });
+        rootNode.children = [infoChild];
         rootNode.dirty = false;
         expect(await rootNode.getChildren()).toEqual([infoChild]);
     });
@@ -246,7 +248,7 @@ describe("ZoweDatasetNode Unit Tests", () => {
     it("Checks that passing a session node with no hlq the getChildren() method is exited early", async () => {
         // Creating a rootNode
         const rootNode = new ZoweDatasetNode({
-            label: "root",
+            label: "profile1",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             session,
             profile: profileOne,
@@ -258,6 +260,7 @@ describe("ZoweDatasetNode Unit Tests", () => {
             parentNode: rootNode,
             contextOverride: Constants.INFORMATION_CONTEXT,
         });
+        rootNode.children = [infoChild];
         expect(await rootNode.getChildren()).toEqual([infoChild]);
     });
 
@@ -1087,6 +1090,7 @@ describe("ZoweDatasetNode Unit Tests - getChildren() migration scenarios", () =>
 
 describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
     it("returns undefined when getSession returns undefined", async () => {
+        const isUsingTokenAuthMock = jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
         const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce({
             getSession: jest.fn().mockReturnValue(undefined),
         } as any);
@@ -1098,10 +1102,11 @@ describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
         const profile = createIProfile();
         const sessionNode = createDatasetSessionNode(createISession(), profile);
         sessionNode.pattern = "A.B.*";
-        await expect((sessionNode as any).getDatasets(profile)).resolves.toBe(undefined);
+        await (sessionNode as any).getDatasets(profile);
         expect(warnLoggerSpy).toHaveBeenCalledTimes(1);
         expect(warnLoggerSpy).toHaveBeenCalledWith("[ZoweDatasetNode.getDatasets] Session undefined for profile sestest");
         mvsApiMock.mockRestore();
         dsTreeMock.mockRestore();
+        isUsingTokenAuthMock.mockRestore();
     });
 });

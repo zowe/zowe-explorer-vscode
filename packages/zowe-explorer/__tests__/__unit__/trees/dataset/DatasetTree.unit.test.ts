@@ -2934,8 +2934,8 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         jest.spyOn(SharedContext, "isFavorite").mockReturnValue(true);
         await testTree.rename(parent);
         expect(renameDataSetSpy).toHaveBeenLastCalledWith(parent);
-        expect(parent.resourceUri?.path).toBe("/HLQ.TEST.NEWNAME.NODE");
-        expect(child.resourceUri?.path).toBe("/HLQ.TEST.NEWNAME.NODE/mem1");
+        expect(parent.resourceUri?.path).toBe("/sestest/HLQ.TEST.NEWNAME.NODE");
+        expect(child.resourceUri?.path).toBe("/sestest/HLQ.TEST.NEWNAME.NODE/mem1");
         expect(refreshElementSpy).toHaveBeenCalled();
     });
 

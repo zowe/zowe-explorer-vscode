@@ -73,6 +73,9 @@ function createGlobalMocks() {
         mvsApi: null,
         mockShowWarningMessage: jest.fn(),
         showInputBox: jest.fn(),
+        getConfiguration: jest
+            .spyOn(vscode.workspace, "getConfiguration")
+            .mockReturnValue({ has: jest.fn(), get: jest.fn().mockImplementation((_key, def) => def), inspect: jest.fn(), update: jest.fn() }),
     };
     newMocks.fspDelete.mockClear();
 
@@ -106,7 +109,6 @@ function createGlobalMocks() {
     });
     Object.defineProperty(vscode.window, "showInputBox", { value: newMocks.showInputBox, configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: jest.fn(), configurable: true });
