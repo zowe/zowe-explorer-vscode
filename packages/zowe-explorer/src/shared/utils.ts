@@ -539,7 +539,7 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
     const profile = node.getProfile();
     if (profile.profile?.encoding != null) {
         items.splice(0, 0, {
-            label: profile.profile?.encoding,
+            label: String(profile.profile?.encoding),
             description: localize("zowe.shared.utils.promptForEncoding.profile.description", "From profile {0}", profile.name),
         });
     }
