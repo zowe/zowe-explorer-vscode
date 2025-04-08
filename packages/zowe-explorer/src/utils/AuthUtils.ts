@@ -232,6 +232,15 @@ export class AuthUtils {
                     }
                 }
             }
+
+            if (sessionNode.fullPath && (usingBasicAuth || usingTokenAuth || usingCertAuth)) {
+                const pathIndex = toolTipList.findIndex((key) => key.startsWith("Path: "));
+                if (pathIndex === -1) {
+                    toolTipList.push(`Path: ${sessionNode.fullPath}`);
+                } else {
+                    toolTipList[pathIndex] = `Path: ${sessionNode.fullPath}`;
+                }
+            }
             sessionNode.tooltip = toolTipList.join("\n");
             sessionNode.setSessionToChoice(commonApi.getSession());
         } catch (err) {
