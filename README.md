@@ -15,7 +15,7 @@ Client-side prerequisites for development:
 
 - Install [Node.js](https://nodejs.org/en/download/) v16.0 or later.
 - Install [PNPM 8](https://pnpm.io/8.x/installation). 
-    -**Important**: Use this version of pnpm. Zowe Explorer is not compatible with later versions.
+    - **Important**: Use this version of pnpm. Zowe Explorer is not compatible with later versions.
 
 Host-side prerequisites for connection:
 
