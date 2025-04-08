@@ -211,7 +211,7 @@ export class SharedUtils {
         const profile = node.getProfile();
         if (profile.profile?.encoding != null) {
             items.splice(0, 0, {
-                label: profile.profile?.encoding,
+                label: String(profile.profile?.encoding),
                 description: vscode.l10n.t({
                     message: "From profile {0}",
                     args: [profile.name],
