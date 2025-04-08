@@ -189,8 +189,6 @@ export class AuthUtils {
             }
             const toolTipList = sessionNode.tooltip === "" ? [] : (sessionNode.tooltip as string).split("\n");
             const authMethodIndex = toolTipList.findIndex((key) => key.startsWith("Auth method: "));
-            const userIDIndex = toolTipList.findIndex((key) => key.startsWith("User: "));
-            const patternIndex = toolTipList.findIndex((key) => key.startsWith("Pattern: "));
 
             if (authMethodIndex === -1) {
                 if (usingTokenAuth) {
@@ -206,6 +204,7 @@ export class AuthUtils {
             } else {
                 if (usingBasicAuth) {
                     toolTipList[authMethodIndex] = `Auth method: Basic Authentication`;
+                    const userIDIndex = toolTipList.findIndex((key) => key.startsWith("User: "));
                     if (userIDIndex !== -1) {
                         toolTipList[userIDIndex] = `User: ${profile.profile.user as string}`;
                     } else {
@@ -218,10 +217,16 @@ export class AuthUtils {
                         toolTipList[authMethodIndex] = `Auth method: Certificate Authentication`;
                     } else if (!usingTokenAuth && !usingBasicAuth && !usingCertAuth) {
                         toolTipList[authMethodIndex] = `Auth method: Unknown`;
+                        const patternIndex = toolTipList.findIndex((key) => key.startsWith("Pattern: "));
                         if (patternIndex !== -1) {
                             toolTipList.splice(patternIndex, 1);
                         }
+                        const pathIndex = toolTipList.findIndex((key) => key.startsWith("Path: "));
+                        if (pathIndex !== -1) {
+                            toolTipList.splice(pathIndex, 1);
+                        }
                     }
+                    const userIDIndex = toolTipList.findIndex((key) => key.startsWith("User: "));
                     if (userIDIndex !== -1) {
                         toolTipList.splice(userIDIndex, 1);
                     }
