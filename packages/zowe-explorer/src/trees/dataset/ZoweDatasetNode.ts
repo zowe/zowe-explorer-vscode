@@ -465,7 +465,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             if (SharedContext.isSession(this)) {
                 const dsTree = SharedTreeProviders.ds as DatasetTree;
                 // set new search patterns for each child of getChildren
-                dsTree.applyPatternsToChildren(this.children, this.patternMatches, this);
+                dsTree.applyPatternsToChildren(this.children, this.patternMatches);
             }
         }
 
