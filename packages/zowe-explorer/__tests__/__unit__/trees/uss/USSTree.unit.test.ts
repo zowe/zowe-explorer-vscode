@@ -174,10 +174,7 @@ function createGlobalMocks() {
         value: globalMocks.mockTextDocuments,
         configurable: true,
     });
-    Object.defineProperty(Profiles, "getInstance", {
-        value: jest.fn().mockReturnValue(globalMocks.mockProfilesInstance),
-        configurable: true,
-    });
+    jest.spyOn(Profiles, "getInstance").mockReturnValue(globalMocks.mockProfilesInstance as unknown as any);
     Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({
@@ -576,7 +573,7 @@ describe("USSTee Unit Tests - Function cdUp", () => {
             session: globalMocks.testSession,
         });
         globalMocks.testTree.mSessionNodes.push(testNode);
-        
+
         await globalMocks.testTree.cdUp(testNode);
         expect(globalMocks.showInformationMessage).toHaveBeenCalledWith("Select a filter first.", undefined);
     });
@@ -609,7 +606,7 @@ describe("USSTee Unit Tests - Function cdUp", () => {
 
         await globalMocks.testTree.cdUp(globalMocks.testTree.mSessionNodes[1]);
         expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/u");
-        
+
         expect(globalMocks.showInformationMessage).toHaveBeenCalledWith("You are already at the root directory.", undefined);
     });
 });
@@ -782,7 +779,7 @@ describe("USSTree Unit Tests - Function filterBy", () => {
 
     it("Tests that filterBy() makes the call to get the combined session information", async () => {
         const globalMocks = createGlobalMocks();
-        const syncSessionNodeSpy = jest.spyOn(AuthUtils, "syncSessionNode");
+        const syncSessionNodeSpy = jest.spyOn(AuthUtils, "syncSessionNode").mockClear();
 
         await globalMocks.testTree.filterBy(globalMocks.testTree.mSessionNodes[1], "/U/HLQ");
 
@@ -791,20 +788,6 @@ describe("USSTree Unit Tests - Function filterBy", () => {
 
     it("Tests that filterBy() works properly when user enters path with Unverified profile", async () => {
         const globalMocks = createGlobalMocks();
-
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    checkCurrentProfile: globalMocks.mockCheckCurrentProfile.mockReturnValueOnce({
-                        name: globalMocks.testProfile.name,
-                        status: "unverified",
-                    }),
-                    showProfileInactiveMsg: jest.fn(),
-                    validProfile: Validation.ValidationType.UNVERIFIED,
-                };
-            }),
-            configurable: true,
-        });
 
         await globalMocks.testTree.filterBy(globalMocks.testTree.mSessionNodes[1], "/U/HARRY");
         expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/U/HARRY");
