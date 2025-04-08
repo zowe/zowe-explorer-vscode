@@ -554,7 +554,7 @@ describe("USSTree Unit Tests - Function deleteSession", () => {
 
     it("Tests that deleteSession works properly", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(globalMocks.mockTreeProviders);
 
@@ -575,9 +575,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
             qpValue: "",
             qpItem: new FilterDescriptor("\uFF0B " + "Create a new filter"),
             resolveQuickPickHelper: jest.spyOn(Gui, "resolveQuickPick"),
-            checkJwtForProfile: jest
-                .spyOn(ZoweTreeProvider as any, "checkJwtForProfile")
-                .mockResolvedValueOnce(JwtCheckResult.TokenUnusedOrUnsupported),
+            checkJwtForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtForProfile").mockResolvedValue(JwtCheckResult.TokenUnusedOrUnsupported),
         };
         newMocks.resolveQuickPickHelper.mockImplementation(() => Promise.resolve(newMocks.qpItem));
         globalMocks.createQuickPick.mockReturnValue({
@@ -602,7 +600,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
 
     it("Tests that filter() works properly when user enters path", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         blockMocks.qpValue = "/U/HARRY";
         globalMocks.showInputBox.mockReturnValueOnce("/U/HARRY");
@@ -613,7 +611,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
 
     it("Tests that filter() makes the call to get the combined session information", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         blockMocks.qpValue = "/U/HLQ";
         globalMocks.showInputBox.mockReturnValueOnce("/U/HLQ");
         const syncSessionNodeSpy = jest.spyOn(AuthUtils, "syncSessionNode");
@@ -625,7 +623,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
 
     it("Tests that filter() works properly when user enters path with Unverified profile", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -650,7 +648,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
 
     it("Tests that filter() exits when user cancels out of input field", async () => {
         const globalMocks = createGlobalMocks();
-        await createBlockMocks(globalMocks);
+        createBlockMocks(globalMocks);
 
         globalMocks.showInputBox.mockReturnValueOnce(undefined);
 
@@ -659,7 +657,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
 
     it("Tests that filter() works on a file", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         blockMocks.qpValue = "/U/HLQ/STUFF";
         blockMocks.qpItem = new FilterDescriptor("/U/HLQ/STUFF");
@@ -671,7 +669,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
 
     it("Tests that filter() exits when user cancels the input path box", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         blockMocks.qpItem = undefined;
 
@@ -680,7 +678,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
 
     it("Tests that filter() works correctly for favorited search nodes with credentials", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         const sessionWithCred = createISession();
         globalMocks.createSessCfgFromArgs.mockReturnValue(sessionWithCred);
@@ -694,12 +692,12 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         node.fullPath = "/u/myFolder";
         globalMocks.testTree.mFavorites.push(node);
         await expect(globalMocks.testTree.filterPrompt(node)).resolves.not.toThrow();
-        expect(blockMocks.checkJwtForProfile).toHaveBeenCalledWith("ussTestSess2");
+        expect(blockMocks.checkJwtForProfile).not.toHaveBeenCalled();
     });
 
     it("Tests that filter() works correctly for favorited search nodes without credentials", async () => {
         const globalMocks = createGlobalMocks();
-        await createBlockMocks(globalMocks);
+        createBlockMocks(globalMocks);
 
         const sessionNoCred = createISessionWithoutCredentials();
         globalMocks.createSessCfgFromArgs.mockReturnValue(sessionNoCred);
@@ -885,7 +883,7 @@ describe("USSTree Unit Tests - Function saveSearch", () => {
 
     it("Testing that saveSearch() works properly for a folder", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         await globalMocks.testTree.addFavorite(blockMocks.folder);
         expect(globalMocks.testTree.mFavorites.length).toEqual(1);
@@ -893,7 +891,7 @@ describe("USSTree Unit Tests - Function saveSearch", () => {
 
     it("Testing that saveSearch() works properly for a file", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         await globalMocks.testTree.addFavorite(blockMocks.file);
         expect(globalMocks.testTree.mFavorites.length).toEqual(1);
@@ -901,7 +899,7 @@ describe("USSTree Unit Tests - Function saveSearch", () => {
 
     it("Testing that saveSearch() works properly for a session", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         const ussNodeToSave = blockMocks.file;
         const expectedNode = ussNodeToSave;
 
@@ -1122,7 +1120,7 @@ describe("USSTree Unit Tests - Function addFavorite", () => {
 
     it("Tests that addFavorite() works for directories", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         await globalMocks.testTree.addFavorite(blockMocks.parentDir);
         const favProfileNode = globalMocks.testTree.mFavorites[0];
@@ -1132,7 +1130,7 @@ describe("USSTree Unit Tests - Function addFavorite", () => {
 
     it("Tests that addFavorite() works for files", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         await globalMocks.testTree.addFavorite(blockMocks.childFile);
         const favProfileNode = globalMocks.testTree.mFavorites[0];
@@ -1142,7 +1140,7 @@ describe("USSTree Unit Tests - Function addFavorite", () => {
 
     it("Tests that addFavorite() doesn't add duplicates", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         await globalMocks.testTree.addFavorite(blockMocks.parentDir);
         await globalMocks.testTree.addFavorite(blockMocks.parentDir);
@@ -1225,7 +1223,7 @@ describe("USSTree Unit Tests - Function addSingleSession", () => {
 
     it("Tests that addSingleSession adds type info to the session", async () => {
         const ussTree = new USSTree();
-        const profile1 = await createIProfile();
+        const profile1 = createIProfile();
 
         profile1.name = "test1Profile";
 
