@@ -160,7 +160,7 @@ export class DatasetActions {
         }
         DatasetActions.newDSProperties?.forEach((property) => {
             Object.keys(propertiesFromDsType).forEach((typeProperty) => {
-                if (typeProperty === property.key) {
+                if (typeProperty === property.key && propertiesFromDsType[typeProperty] != null) {
                     if (property.value !== propertiesFromDsType[typeProperty].toString()) {
                         isMatch = false;
                         return;
@@ -190,13 +190,13 @@ export class DatasetActions {
         if (!propertiesFromDsType) {
             propertiesFromDsType = DatasetActions.getDefaultDsTypeProperties(type);
         }
+        const propertyKeys = Object.keys(propertiesFromDsType);
         DatasetActions.newDSProperties?.forEach((property) => {
-            Object.keys(propertiesFromDsType).forEach((typeProperty) => {
-                if (typeProperty === property.key) {
-                    property.value = propertiesFromDsType[typeProperty].toString();
-                    property.placeHolder = propertiesFromDsType[typeProperty];
-                }
-            });
+            const typeProperty = propertyKeys.find((prop) => prop === property.key);
+            if (typeProperty != null && propertiesFromDsType[typeProperty] != null) {
+                property.value = propertiesFromDsType[typeProperty].toString();
+                property.placeHolder = propertiesFromDsType[typeProperty];
+            }
         });
         return propertiesFromDsType;
     }
@@ -1664,7 +1664,7 @@ export class DatasetActions {
                 group = { ...rest, dataSetName, members: [] };
                 result.push(group);
             }
-            if(memberName && memberName !== 'No data sets found') {
+            if (memberName && memberName !== "No data sets found") {
                 group.members.push(memberName);
             }
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return

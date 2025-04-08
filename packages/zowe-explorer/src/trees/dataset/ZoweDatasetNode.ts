@@ -112,12 +112,17 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         if (this.label !== vscode.l10n.t("Favorites") && this.contextValue !== Constants.DS_MIGRATED_FILE_CONTEXT) {
             const sessionLabel = opts.profile?.name ?? SharedUtils.getSessionLabel(this);
-            if (this.contextValue === Constants.DS_DS_CONTEXT || this.contextValue === Constants.DS_PDS_CONTEXT) {
+            if (
+                this.contextValue === Constants.DS_DS_CONTEXT ||
+                this.contextValue === Constants.DS_FAV_CONTEXT ||
+                this.contextValue === Constants.DS_PDS_CONTEXT ||
+                this.contextValue === Constants.PDS_FAV_CONTEXT
+            ) {
                 this.resourceUri = vscode.Uri.from({
                     scheme: ZoweScheme.DS,
                     path: `/${sessionLabel}/${this.label as string}`,
                 });
-                if (this.contextValue === Constants.DS_DS_CONTEXT) {
+                if (this.contextValue === Constants.DS_DS_CONTEXT || this.contextValue === Constants.DS_FAV_CONTEXT) {
                     const extension = DatasetUtils.getExtension(this.label as string);
                     this.resourceUri = this.resourceUri.with({ path: `${this.resourceUri.path}${extension ?? ""}` });
                     this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
@@ -130,15 +135,19 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 });
                 this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
             } else {
-                this.paginator = new Paginator(
-                    SettingsConfig.getDirectValue<number>("zowe.ds.datasetsPerPage") ?? Constants.DEFAULT_ITEMS_PER_PAGE,
-                    this.fetchDatasetsInRange.bind(this)
-                );
                 this.resourceUri = vscode.Uri.from({
                     scheme: ZoweScheme.DS,
                     path: `/${sessionLabel}/`,
                 });
-                if (this.getParent() == null || this.getParent().label === vscode.l10n.t("Favorites")) {
+                const parentLabelIsFavorites = this.getParent()?.label === vscode.l10n.t("Favorites");
+                if (this.getParent() == null || parentLabelIsFavorites) {
+                    // session nodes
+                    if (!parentLabelIsFavorites) {
+                        this.paginator = new Paginator(
+                            SettingsConfig.getDirectValue<number>("zowe.ds.datasetsPerPage") ?? Constants.DEFAULT_ITEMS_PER_PAGE,
+                            this.fetchDatasetsInRange.bind(this)
+                        );
+                    }
                     DatasetFSProvider.instance.createDirectory(this.resourceUri);
                 } else if (this.contextValue === Constants.INFORMATION_CONTEXT) {
                     this.command = { command: "zowe.placeholderCommand", title: "Placeholder" };
@@ -734,6 +743,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
                 this.tooltip = this.pattern = dsPattern.toUpperCase();
             }
+        }
+
+        if (!ZoweExplorerApiRegister.getMvsApi(profile).getSession()) {
+            ZoweLogger.warn("[ZoweDatasetNode.getDatasets] Session undefined for profile " + profile.name);
+            return;
         }
 
         try {
