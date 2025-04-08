@@ -37,7 +37,7 @@ import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { ZowePersistentFilters } from "../../../../src/tools/ZowePersistentFilters";
 import { USSInit } from "../../../../src/trees/uss/USSInit";
-import { Constants } from "../../../../src/configuration/Constants";
+import { Constants, JwtCheckResult } from "../../../../src/configuration/Constants";
 import { IconGenerator } from "../../../../src/icons/IconGenerator";
 import { IconUtils } from "../../../../src/icons/IconUtils";
 import { FilterDescriptor } from "../../../../src/management/FilterManagement";
@@ -104,6 +104,7 @@ function createGlobalMocks() {
             createDirectory: jest.fn(),
             rename: jest.fn(),
         },
+        isUsingTokenAuth: jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(false),
     };
 
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
@@ -157,6 +158,7 @@ function createGlobalMocks() {
         },
         configurable: true,
     });
+    Object.defineProperty(Constants, "PROFILES_CACHE", { value: globalMocks.mockProfilesInstance!, configurable: true });
     Object.defineProperty(zosfiles, "Utilities", { value: globalMocks.Utilities, configurable: true });
     Object.defineProperty(zosfiles.Utilities, "isFileTagBinOrAscii", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", {
@@ -573,7 +575,9 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
             qpValue: "",
             qpItem: new FilterDescriptor("\uFF0B " + "Create a new filter"),
             resolveQuickPickHelper: jest.spyOn(Gui, "resolveQuickPick"),
-            checkJwtForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtForProfile").mockResolvedValueOnce(true),
+            checkJwtForProfile: jest
+                .spyOn(ZoweTreeProvider as any, "checkJwtForProfile")
+                .mockResolvedValueOnce(JwtCheckResult.TokenUnusedOrUnsupported),
         };
         newMocks.resolveQuickPickHelper.mockImplementation(() => Promise.resolve(newMocks.qpItem));
         globalMocks.createQuickPick.mockReturnValue({

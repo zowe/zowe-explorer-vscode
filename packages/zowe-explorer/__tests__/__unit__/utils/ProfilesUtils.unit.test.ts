@@ -173,6 +173,8 @@ describe("ProfilesUtils unit tests", () => {
                     getLoadedProfConfig: () => profile,
                     getDefaultProfile: () => ({}),
                     getPropsForProfile: () => [],
+                    loadNamedProfile: () => profile,
+                    shouldRemoveTokenFromProfile: () => jest.fn(),
                 },
                 configurable: true,
             });
@@ -202,6 +204,8 @@ describe("ProfilesUtils unit tests", () => {
                     getLoadedProfConfig: () => profile,
                     getDefaultProfile: () => ({}),
                     getPropsForProfile: () => ["tokenValue"],
+                    loadNamedProfile: () => profile,
+                    shouldRemoveTokenFromProfile: () => jest.fn(),
                     ssoLogin: ssoLoginSpy,
                     promptCredentials: promptCredentialsSpy,
                 },
@@ -242,6 +246,8 @@ describe("ProfilesUtils unit tests", () => {
                     getLoadedProfConfig: () => profile,
                     getDefaultProfile: () => ({}),
                     getPropsForProfile: () => [],
+                    loadNamedProfile: () => profile,
+                    shouldRemoveTokenFromProfile: () => jest.fn(),
                 },
                 configurable: true,
             });
@@ -719,6 +725,7 @@ describe("ProfilesUtils unit tests", () => {
             });
             jest.spyOn(Constants.PROFILES_CACHE, "getLoadedProfConfig").mockResolvedValue({ type: "test" } as any);
             jest.spyOn(Constants.PROFILES_CACHE, "getPropsForProfile").mockResolvedValue([]);
+            jest.spyOn(Constants.PROFILES_CACHE, "shouldRemoveTokenFromProfile").mockResolvedValue(false as never);
             await expect(AuthUtils.isUsingTokenAuth("test")).resolves.toEqual(false);
         });
     });

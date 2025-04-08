@@ -65,6 +65,7 @@ export class AuthHandler {
      * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not
      */
     public static isUsingTokenAuth(secureProfileProps: string[], baseSecureProfileProps?: string[]): boolean {
+        console.trace(secureProfileProps);
         const profileUsesBasicAuth = secureProfileProps.includes("user") && secureProfileProps.includes("password");
         if (secureProfileProps.includes("tokenValue")) {
             return !profileUsesBasicAuth;

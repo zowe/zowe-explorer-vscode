@@ -99,7 +99,7 @@ async function createGlobalMocks() {
     };
 
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
-
+    jest.spyOn(ZoweTreeProvider.prototype, "checkCurrentProfile").mockResolvedValue({ status: "active", name: createIProfile().name! });
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
         value: jest.fn(() => {
             return { value: globalMocks.mockProfileInfo, configurable: true };
@@ -328,7 +328,6 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
             testIJob: createIJobObject(),
             testJobsProvider: await JobInit.createJobsTree(imperative.Logger.getAppLogger()),
             jobNode: null,
-            checkJwtForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtForProfile").mockResolvedValueOnce(true),
         };
 
         newMocks.jobNode = new ZoweJobNode({
@@ -344,7 +343,7 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
         return newMocks;
     }
 
-    it("Tests that checkCurrentProfile is executed successfully with active status ", async () => {
+    it("Tests that checkCurrentProfile is executed successfully with active status", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 

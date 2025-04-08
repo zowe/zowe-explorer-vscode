@@ -358,14 +358,17 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         // Check if the profile uses a token-based authentication method
         let tokenType: string;
         try {
+            console.log("test1");
             tokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(loadedProfile).getTokenTypeName();
         } catch (err) {
             // The API doesn't support tokens, so no expiration check needed
+            console.log("test2");
             return JwtCheckResult.TokenUnusedOrUnsupported;
         }
-
+        console.log("test3");
         // Skip token validation for falsy token types or LTPA2 tokens
         if (tokenType == null || tokenType === "LtpaToken2") {
+            console.log("test4");
             return JwtCheckResult.TokenUnusedOrUnsupported;
         }
 
