@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 
-export class LoadMoreCodeLens implements vscode.CodeLensProvider {
+export class PaginationCodeLens implements vscode.CodeLensProvider {
     public constructor(private commandId: string) {}
     public provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CodeLens[]> {
         const lineCount = document.lineCount;

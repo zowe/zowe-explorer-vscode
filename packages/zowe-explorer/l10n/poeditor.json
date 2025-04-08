@@ -398,6 +398,9 @@
   "zowe.pollInterval.info": {
     "Default interval (in milliseconds) when polling spool files.": ""
   },
+  "zowe.ZESetting.pagination": {
+    "Toggle to enable job spool pagination.": ""
+  },
   "zowe.jobs.recordsToFetch": {
     " Default number of records to fetch when polling spool files.": ""
   },

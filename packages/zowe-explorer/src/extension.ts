@@ -23,7 +23,7 @@ import { SharedInit } from "./trees/shared/SharedInit";
 import { SharedTreeProviders } from "./trees/shared/SharedTreeProviders";
 import { USSInit } from "./trees/uss/USSInit";
 import { ProfilesUtils } from "./utils/ProfilesUtils";
-import { LoadMoreCodeLens, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { PaginationCodeLens, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { JobFSProvider } from "./trees/job/JobFSProvider";
 
 /**
@@ -55,7 +55,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                 await JobFSProvider.instance.fetchSpoolAtUri(uri);
             }
         }),
-        vscode.languages.registerCodeLensProvider({ scheme: ZoweScheme.Jobs }, new LoadMoreCodeLens("zowe.jobs.loadMoreRecords"))
+        vscode.languages.registerCodeLensProvider({ scheme: ZoweScheme.Jobs }, new PaginationCodeLens("zowe.jobs.loadMoreRecords"))
     );
 
     const providers = await SharedTreeProviders.initializeProviders(
