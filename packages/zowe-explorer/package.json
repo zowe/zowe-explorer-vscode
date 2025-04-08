@@ -766,7 +766,7 @@
           "group": "inline"
         },
         {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*isFilterSearch/ && !listMultiSelection",
           "command": "zowe.uss.cdUp",
           "group": "inline"
         },
@@ -811,7 +811,7 @@
           "group": "000_zowe_ussMainframeInteraction@0"
         },
         {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*isFilterSearch/ && !listMultiSelection",
           "command": "zowe.uss.cdUp",
           "group": "000_zowe_ussMainframeInteraction@1"
         },
