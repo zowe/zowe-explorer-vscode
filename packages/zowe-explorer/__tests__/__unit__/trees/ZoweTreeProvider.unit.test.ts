@@ -60,6 +60,7 @@ async function createGlobalMocks() {
         mockDisableValidationContext: jest.fn(),
         mockEnableValidationContext: jest.fn(),
         getConfiguration: jest.fn(),
+        isUsingTokenAuth: jest.fn(),
         refresh: jest.fn(),
         testProfile: profile,
         testSession: createISession(),
@@ -99,7 +100,7 @@ async function createGlobalMocks() {
     };
 
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
-    jest.spyOn(ZoweTreeProvider.prototype, "checkCurrentProfile").mockImplementation(() => globalMocks.mockCheckCurrentProfile());
+
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
         value: jest.fn(() => {
             return { value: globalMocks.mockProfileInfo, configurable: true };
@@ -108,6 +109,7 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode, "ConfigurationTarget", { value: globalMocks.enums, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
+    Object.defineProperty(AuthUtils, "isUsingTokenAuth", { value: globalMocks.isUsingTokenAuth, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn().mockReturnValue({
