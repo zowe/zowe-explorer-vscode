@@ -16,9 +16,9 @@ const tmp = require("tmp");
 const admZip = require("adm-zip");
 
 /**
- * Downloads the latest translations submitted to Artifactory to
+ * Downloads the latest translations submitted to Artifactory in
  * https://zowe.jfrog.io/ui/repos/tree/General/libs-snapshot-local/org/zowe/vscode/zowe-explorer-g11n
- * and copies them into the provides them into the top-level and l10n for building a localized extension.
+ * and copies them into the top-level and l10n folders for building a localized extension.
  */
 (async () => {
     const artifactPath = "libs-snapshot-local/org/zowe/vscode/zowe-explorer-g11n";
