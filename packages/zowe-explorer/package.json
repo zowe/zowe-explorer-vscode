@@ -2004,7 +2004,7 @@
     "@wdio/types": "^9.0.0",
     "chalk": "^2.4.1",
     "eslint-plugin-zowe-explorer": "3.2.0-SNAPSHOT",
-    "expect-webdriverio": "^4.15.4",
+    "expect-webdriverio": "^5.0.0",
     "fs-extra": "8.0.1",
     "glob": "^7.1.6",
     "jest-silent-reporter": "^0.5.0",

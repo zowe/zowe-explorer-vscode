@@ -213,8 +213,8 @@ importers:
         specifier: 3.2.0-SNAPSHOT
         version: link:../eslint-plugin-zowe-explorer
       expect-webdriverio:
-        specifier: ^4.15.4
-        version: 4.15.4
+        specifier: ^5.0.0
+        version: 5.1.0(@wdio/globals@9.12.4)(@wdio/logger@9.4.4)(webdriverio@9.12.4)
       fs-extra:
         specifier: 8.0.1
         version: 8.0.1
@@ -3181,22 +3181,6 @@ packages:
       chalk: 5.3.0
     dev: true
 
-  /@wdio/globals@8.43.0:
-    resolution: {integrity: sha512-RCkldSApdoCAMsQhU7Qy9uXlFoPy8OFWOxbiE8O2WcRpTpSwAwWksN9tOLmevCTn1Ovj+onnxkiZQ0spnAUDbw==}
-    engines: {node: ^16.13 || >=18}
-    requiresBuild: true
-    optionalDependencies:
-      expect-webdriverio: 4.15.4
-      webdriverio: 9.12.4
-    transitivePeerDependencies:
-      - bare-buffer
-      - bufferutil
-      - puppeteer-core
-      - supports-color
-      - utf-8-validate
-    dev: true
-    optional: true
-
   /@wdio/globals@9.12.4(@wdio/logger@9.4.4):
     resolution: {integrity: sha512-p5t6r0QLOqZbEeNoJc6zv6beYeQm+olIQmuMONbQKLxj1BO5uHRUUCI7BAyYuiPVnPpEhvTYEKQuSZ3mh4Dw8Q==}
     engines: {node: '>=18.20.0'}
@@ -5992,26 +5976,6 @@ packages:
     dev: true
     optional: true
 
-  /expect-webdriverio@4.15.4:
-    resolution: {integrity: sha512-Op1xZoevlv1pohCq7g2Og5Gr3xP2NhY7MQueOApmopVxgweoJ/BqJxyvMNP0A//QsMg8v0WsN/1j81Sx2er9Wg==}
-    engines: {node: '>=16 || >=18 || >=20'}
-    dependencies:
-      '@vitest/snapshot': 2.1.1
-      expect: 29.7.0
-      jest-matcher-utils: 29.7.0
-      lodash.isequal: 4.5.0
-    optionalDependencies:
-      '@wdio/globals': 8.43.0
-      '@wdio/logger': 8.38.0
-      webdriverio: 9.12.4
-    transitivePeerDependencies:
-      - bare-buffer
-      - bufferutil
-      - puppeteer-core
-      - supports-color
-      - utf-8-validate
-    dev: true
-
   /expect-webdriverio@5.1.0(@wdio/globals@9.12.4)(@wdio/logger@9.4.4)(webdriverio@9.12.4):
     resolution: {integrity: sha512-4u3q+Dqx/lXNgvCx1gKia4CfS28z1UxGGfVUkoMNbrsBlTBB2fYqXG+4+YtYoerxvp/XPwIb/+89IGEdyPbDXQ==}
     engines: {node: '>=18 || >=20 || >=22'}
@@ -8406,6 +8370,7 @@ packages:
 
   /lodash.isequal@4.5.0:
     resolution: {integrity: sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==}
+    deprecated: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
     dev: true
 
   /lodash.isinteger@4.0.4:
