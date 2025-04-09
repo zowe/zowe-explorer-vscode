@@ -1230,8 +1230,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         return includes;
     }
 
-    public applyPatternsToChildren(children: IZoweDatasetTreeNode[], patterns: DatasetMatch[], sessionNode: IZoweDatasetTreeNode): void {
-        for (const child of children.filter((c) => c.label !== "No data sets found")) {
+    public applyPatternsToChildren(children: IZoweDatasetTreeNode[], patterns: DatasetMatch[]): void {
+        for (const child of children.filter((c) => c.label !== vscode.l10n.t("No data sets found"))) {
             for (const item of patterns.filter((p) => p.member && this.patternAppliesToChild(child, p))) {
                 // Only apply to PDS that match the given patterns
                 if (SharedContext.isPds(child)) {
@@ -1341,7 +1341,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             // reset and remove previous search patterns for each child of getChildren
             this.resetFilterForChildren(response);
             // set new search patterns for each child of getChildren
-            this.applyPatternsToChildren(response, dsSets, sessionNode);
+            this.applyPatternsToChildren(response, dsSets);
             this.addSearchHistory(pattern);
         }
         if (!SharedContext.isFavorite(sessionNode)) {

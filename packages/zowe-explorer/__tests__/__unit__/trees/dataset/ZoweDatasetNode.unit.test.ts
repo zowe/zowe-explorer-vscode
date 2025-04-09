@@ -1104,4 +1104,23 @@ describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
         mvsApiMock.mockRestore();
         dsTreeMock.mockRestore();
     });
+
+    it("calls mvsApi.dataSet when dataSetsMatchingPattern API is not available", async () => {
+        const dataSet = jest.fn();
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce({
+            getSession: jest.fn().mockReturnValue(createISession()),
+            dataSet,
+        } as any);
+        const dsTreeMock = jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
+            extractPatterns: jest.fn().mockReturnValue([]),
+            buildFinalPattern: jest.fn().mockReturnValue(""),
+        } as any);
+        const profile = createIProfile();
+        const sessionNode = createDatasetSessionNode(createISession(), profile);
+        sessionNode.pattern = "A.B.*";
+        await expect((sessionNode as any).getDatasets(profile)).resolves.not.toThrow();
+        expect(dataSet).toHaveBeenCalledWith("A.B.*", { attributes: true });
+        dsTreeMock.mockRestore();
+        mvsApiMock.mockRestore();
+    });
 });

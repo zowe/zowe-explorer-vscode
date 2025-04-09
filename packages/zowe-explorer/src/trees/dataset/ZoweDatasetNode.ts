@@ -469,7 +469,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             if (SharedContext.isSession(this)) {
                 const dsTree = SharedTreeProviders.ds as DatasetTree;
                 // set new search patterns for each child of getChildren
-                dsTree.applyPatternsToChildren(this.children, this.patternMatches, this);
+                dsTree.applyPatternsToChildren(this.children, this.patternMatches);
             }
         }
 
@@ -649,10 +649,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     return undefined;
                 }
                 if (mvsApi.dataSetsMatchingPattern) {
-                    responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
+                    responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns, { attributes: true }));
                 } else {
                     for (const dsp of dsPatterns) {
-                        responses.push(await mvsApi.dataSet(dsp));
+                        responses.push(await mvsApi.dataSet(dsp, { attributes: true }));
                     }
                 }
             } else if (this.memberPattern) {

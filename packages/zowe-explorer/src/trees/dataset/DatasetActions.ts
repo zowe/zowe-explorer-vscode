@@ -1672,7 +1672,7 @@ export class DatasetActions {
                 group = { ...rest, dataSetName, members: [] };
                 result.push(group);
             }
-            if (memberName && memberName !== "No data sets found") {
+            if (memberName && memberName !== vscode.l10n.t("No data sets found")) {
                 group.members.push(memberName);
             }
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
