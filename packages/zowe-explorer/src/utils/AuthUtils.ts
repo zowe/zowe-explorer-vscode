@@ -189,35 +189,35 @@ export class AuthUtils {
             }
             const toolTipList = sessionNode.tooltip === "" ? [] : (sessionNode.tooltip as string).split("\n");
 
-            const authMethodIndex = toolTipList.findIndex((key) => key.startsWith("Auth method: "));
+            const authMethodIndex = toolTipList.findIndex((key) => key.startsWith("Auth Method: "));
             if (authMethodIndex === -1) {
                 switch (true) {
                     case Boolean(usingTokenAuth): {
-                        toolTipList.push(`Auth method: Token-based Authentication`);
+                        toolTipList.push(`Auth Method: Token-based Authentication`);
                         break;
                     }
                     case Boolean(usingBasicAuth): {
-                        toolTipList.push(`Auth method: Basic Authentication`);
+                        toolTipList.push(`Auth Method: Basic Authentication`);
                         toolTipList.push(`User: ${profile.profile.user as string}`);
                         break;
                     }
                     case Boolean(usingCertAuth): {
-                        toolTipList.push(`Auth method: Certificate Authentication`);
+                        toolTipList.push(`Auth Method: Certificate Authentication`);
                         break;
                     }
                     case !usingTokenAuth && !usingBasicAuth && !usingCertAuth: {
-                        toolTipList.push(`Auth method: Unknown`);
+                        toolTipList.push(`Auth Method: Unknown`);
                         break;
                     }
                 }
             } else {
                 switch (true) {
                     case Boolean(usingTokenAuth): {
-                        toolTipList[authMethodIndex] = `Auth method: Token-based Authentication`;
+                        toolTipList[authMethodIndex] = `Auth Method: Token-based Authentication`;
                         break;
                     }
                     case Boolean(usingBasicAuth): {
-                        toolTipList[authMethodIndex] = `Auth method: Basic Authentication`;
+                        toolTipList[authMethodIndex] = `Auth Method: Basic Authentication`;
                         const userIDIndex = toolTipList.findIndex((key) => key.startsWith("User: "));
                         if (userIDIndex !== -1) {
                             toolTipList[userIDIndex] = `User: ${profile.profile.user as string}`;
@@ -227,11 +227,11 @@ export class AuthUtils {
                         break;
                     }
                     case Boolean(usingCertAuth): {
-                        toolTipList[authMethodIndex] = `Auth method: Certificate Authentication`;
+                        toolTipList[authMethodIndex] = `Auth Method: Certificate Authentication`;
                         break;
                     }
                     case !usingTokenAuth && !usingBasicAuth && !usingCertAuth: {
-                        toolTipList[authMethodIndex] = `Auth method: Unknown`;
+                        toolTipList[authMethodIndex] = `Auth Method: Unknown`;
                         const patternIndex = toolTipList.findIndex((key) => key.startsWith("Pattern: "));
                         if (patternIndex !== -1) {
                             toolTipList.splice(patternIndex, 1);
