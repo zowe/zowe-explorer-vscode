@@ -717,7 +717,7 @@ export class DatasetActions {
             parent.dirty = true;
             datasetProvider.refreshElement(parent);
 
-            const memberUri = parent.children.find((ds) => ds.label === name).resourceUri;
+            const memberUri = parent.children.find((ds) => ds.label === name)?.resourceUri;
 
             // Refresh corresponding tree parent to reflect addition
             const otherTreeParent = datasetProvider.findEquivalentNode(parent, SharedContext.isFavorite(parent));
@@ -725,7 +725,9 @@ export class DatasetActions {
                 datasetProvider.refreshElement(otherTreeParent);
             }
 
-            await vscode.commands.executeCommand("vscode.open", memberUri);
+            if (memberUri != null) {
+                await vscode.commands.executeCommand("vscode.open", memberUri);
+            }
             datasetProvider.refresh();
         }
     }
