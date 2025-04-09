@@ -410,7 +410,7 @@ export class DatasetActions {
         }
 
         const theFilter = datasetProvider.createFilterString(newDSName, currSession);
-        currSession.tooltip = currSession.pattern = theFilter.toUpperCase();
+        currSession.pattern = theFilter.toUpperCase();
         datasetProvider.refresh();
         currSession.dirty = true;
         datasetProvider.refreshElement(currSession);
