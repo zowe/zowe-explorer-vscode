@@ -20,6 +20,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Users can now update the credentials for a profile when the `autoStore` property is set to `false` in a team configuration. When `autoStore` is `false`, the new credentials are only saved in memory, and these credentials persist until the user updates them again or closes VS Code. [#3524](https://github.com/zowe/zowe-explorer-vscode/pull/3524)
 - Optimized the refresh functionality in Zowe Explorer for performance and stability. Now, the profiles are refreshed once before refreshing all the tree providers. [#3524](https://github.com/zowe/zowe-explorer-vscode/pull/3524)
 - Implemented the `SharedActions.refreshProvider` function to allow refreshing a single tree provider. [#3524](https://github.com/zowe/zowe-explorer-vscode/pull/3524)
+- Added script that will fetch latest localizations at every build now. [#3573](https://github.com/zowe/zowe-explorer-vscode/pull/3573)
 
 ### Bug fixes
 
@@ -31,7 +32,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where the attributes were not shown for VSAM data sets when using the Show Attributes feature. [#3545](https://github.com/zowe/zowe-explorer-vscode/issues/3545)
 - Fixed an issue where right-click menu for data set shows wrong options after deleting multiple PDS members. [#3516](https://github.com/zowe/zowe-explorer-vscode/issues/3516)
 - Fixed an issue where the source data set was removed even though the move operation was not successful. [#3518](https://github.com/zowe/zowe-explorer-vscode/pull/3518)
+- Updated dependencies for technical currency purposes. [#3576](https://github.com/zowe/zowe-explorer-vscode/pull/3576)
 - Fixed an issue where copy-and-pasting an empty PDS within the same LPAR would result in an error. [#3541](https://github.com/zowe/zowe-explorer-vscode/issues/3541)
+- Fixed an issue where data sets were not requested with attributes if the profile type's API did not implement the `dataSetsMatchingPattern` function. [#3578](https://github.com/zowe/zowe-explorer-vscode/pull/3578)
 - Fixed an issue where remote changes to a data set member are not detected by Zowe Explorer if the member's resource path ends in an extension. [#3555](https://github.com/zowe/zowe-explorer-vscode/issues/3555)
 - Fixed an issue where a newly-created data set member might be opened without an extension. [#3555](https://github.com/zowe/zowe-explorer-vscode/issues/3555)
 
