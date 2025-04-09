@@ -82,7 +82,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.contextValue = isBinary ? Constants.DS_DS_BINARY_CONTEXT : Constants.DS_DS_CONTEXT;
         }
         if (opts.contextOverride?.includes(Constants.DS_SESSION_CONTEXT)) {
-            this.tooltip = `Profile: ${this.label as string}`;
+            const toolTipList: string[] = [];
+            toolTipList.push(`Profile: ${this.label as string}`);
+            toolTipList.push(`Profile Type: ${this.profile.type}`);
+            this.tooltip = toolTipList.join("\n");
         } else {
             this.tooltip = this.label as string;
         }
