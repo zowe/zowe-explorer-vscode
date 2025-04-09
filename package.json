@@ -60,7 +60,7 @@
   "pnpm": {
     "overrides": {
       "tar-fs@3": "^3.0.8",
-      "ws": "^8.17.1"
+      "webdriverio@8": "^9.0.0"
     }
   },
   "scripts": {

@@ -81,6 +81,7 @@ export const config: Options.Testrunner = {
             browserName: "vscode",
             // version can be "stable", "insiders", or a specific version e.g. "1.80.0"
             browserVersion: process.env.ZE_TEST_VSCODE_VER || "stable",
+            "wdio:enforceWebDriverClassic": true,
             "wdio:vscodeOptions": {
                 // points to directory where extension package.json is located
                 extensionPath: joinPath(__dirname, "..", "..", ".."),
@@ -120,11 +121,9 @@ export const config: Options.Testrunner = {
     // If you are using Cucumber you need to specify the location of your step definitions.
     cucumberOpts: {
         // <string[]> (file/dir) require files before executing features
-        require: ["./step_definitions/**/*.steps.ts"],
+        import: ["./step_definitions/**/*.steps.ts"],
         // <boolean> show full backtrace for errors
         backtrace: false,
-        // <string[]> ("extension:module") require files with the given EXTENSION after requiring MODULE (repeatable)
-        requireModule: ["ts-node/register"],
         // <boolean> invoke formatters without executing steps
         dryRun: false,
         // <boolean> abort the run on first failure
