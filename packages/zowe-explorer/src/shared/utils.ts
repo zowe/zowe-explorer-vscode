@@ -539,7 +539,7 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
     const profile = node.getProfile();
     if (profile.profile?.encoding != null) {
         items.splice(0, 0, {
-            label: profile.profile?.encoding,
+            label: String(profile.profile?.encoding),
             description: localize("zowe.shared.utils.promptForEncoding.profile.description", "From profile {0}", profile.name),
         });
     }
@@ -586,11 +586,13 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
                 title: localize("zowe.shared.utils.promptForEncoding.qp.title", "Choose encoding for {0}", node.label as string),
                 placeHolder: localize("zowe.shared.utils.promptForEncoding.input.placeHolder", "Enter a codepage (e.g., 1047, IBM-1047)"),
             });
-            if (response != null) {
+            if (response) {
                 encoding = { kind: "other", codepage: response };
                 const filterEncodingList = encodingHistory.filter((codepage) => codepage.toUpperCase() !== response.toUpperCase());
                 filterEncodingList.unshift(encoding.codepage.toUpperCase());
                 ZoweLocalStorage.setValue(LocalStorageKey.ENCODING_HISTORY, filterEncodingList.slice(0, globals.MAX_FILE_HISTORY));
+            } else {
+                Gui.infoMessage(localize("zowe.shared.utils.promptForEncoding.qp.cancelled", "Operation cancelled"));
             }
             break;
         default:

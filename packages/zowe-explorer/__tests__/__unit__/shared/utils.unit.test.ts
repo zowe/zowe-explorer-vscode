@@ -1016,6 +1016,26 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is EBCDIC" }));
     });
 
+    it("prompts for encoding for USS file when profile contains encoding as number", async () => {
+        const blockMocks = createBlockMocks();
+        (blockMocks.profile.profile as any).encoding = 1047;
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.profile,
+            parentPath: "/root",
+        });
+        node.setEncoding(textEncoding);
+        await sharedUtils.promptForEncoding(node);
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(await blockMocks.showQuickPick.mock.calls[0][0][0]).toEqual({
+            label: "1047",
+            description: `From profile ${blockMocks.profile.name}`,
+        });
+        expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is EBCDIC" }));
+    });
+
     it("prompts for encoding for USS file and shows recent values", async () => {
         const blockMocks = createBlockMocks();
         const node = new ZoweUSSNode({

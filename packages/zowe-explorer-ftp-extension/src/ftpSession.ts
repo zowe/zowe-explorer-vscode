@@ -10,6 +10,7 @@
  */
 
 import { imperative } from "@zowe/cli";
+
 export class FtpSession extends imperative.Session {
     public ussListConnection;
     public mvsListConnection;
