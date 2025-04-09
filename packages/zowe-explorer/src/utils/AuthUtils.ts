@@ -188,34 +188,49 @@ export class AuthUtils {
                 ZoweLogger.error(err);
             }
             const toolTipList = sessionNode.tooltip === "" ? [] : (sessionNode.tooltip as string).split("\n");
-            const authMethodIndex = toolTipList.findIndex((key) => key.startsWith("Auth method: "));
 
+            const authMethodIndex = toolTipList.findIndex((key) => key.startsWith("Auth method: "));
             if (authMethodIndex === -1) {
-                if (usingTokenAuth) {
-                    toolTipList.push(`Auth method: Token-based Authentication`);
-                } else if (usingBasicAuth) {
-                    toolTipList.push(`Auth method: Basic Authentication`);
-                    toolTipList.push(`User: ${profile.profile.user as string}`);
-                } else if (usingCertAuth) {
-                    toolTipList.push(`Auth method: Certificate Authentication`);
-                } else if (!usingTokenAuth && !usingBasicAuth && !usingCertAuth) {
-                    toolTipList.push(`Auth method: Unknown`);
+                switch (true) {
+                    case Boolean(usingTokenAuth): {
+                        toolTipList.push(`Auth method: Token-based Authentication`);
+                        break;
+                    }
+                    case Boolean(usingBasicAuth): {
+                        toolTipList.push(`Auth method: Basic Authentication`);
+                        toolTipList.push(`User: ${profile.profile.user as string}`);
+                        break;
+                    }
+                    case Boolean(usingCertAuth): {
+                        toolTipList.push(`Auth method: Certificate Authentication`);
+                        break;
+                    }
+                    case !usingTokenAuth && !usingBasicAuth && !usingCertAuth: {
+                        toolTipList.push(`Auth method: Unknown`);
+                        break;
+                    }
                 }
             } else {
-                if (usingBasicAuth) {
-                    toolTipList[authMethodIndex] = `Auth method: Basic Authentication`;
-                    const userIDIndex = toolTipList.findIndex((key) => key.startsWith("User: "));
-                    if (userIDIndex !== -1) {
-                        toolTipList[userIDIndex] = `User: ${profile.profile.user as string}`;
-                    } else {
-                        toolTipList.splice(authMethodIndex + 1, 0, `User: ${profile.profile.user as string}`);
-                    }
-                } else {
-                    if (usingTokenAuth) {
+                switch (true) {
+                    case Boolean(usingTokenAuth): {
                         toolTipList[authMethodIndex] = `Auth method: Token-based Authentication`;
-                    } else if (usingCertAuth) {
+                        break;
+                    }
+                    case Boolean(usingBasicAuth): {
+                        toolTipList[authMethodIndex] = `Auth method: Basic Authentication`;
+                        const userIDIndex = toolTipList.findIndex((key) => key.startsWith("User: "));
+                        if (userIDIndex !== -1) {
+                            toolTipList[userIDIndex] = `User: ${profile.profile.user as string}`;
+                        } else {
+                            toolTipList.splice(authMethodIndex + 1, 0, `User: ${profile.profile.user as string}`);
+                        }
+                        break;
+                    }
+                    case Boolean(usingCertAuth): {
                         toolTipList[authMethodIndex] = `Auth method: Certificate Authentication`;
-                    } else if (!usingTokenAuth && !usingBasicAuth && !usingCertAuth) {
+                        break;
+                    }
+                    case !usingTokenAuth && !usingBasicAuth && !usingCertAuth: {
                         toolTipList[authMethodIndex] = `Auth method: Unknown`;
                         const patternIndex = toolTipList.findIndex((key) => key.startsWith("Pattern: "));
                         if (patternIndex !== -1) {
@@ -234,6 +249,8 @@ export class AuthUtils {
                             toolTipList.splice(jobIdIndex, 1);
                         }
                     }
+                }
+                if (!usingBasicAuth) {
                     const userIDIndex = toolTipList.findIndex((key) => key.startsWith("User: "));
                     if (userIDIndex !== -1) {
                         toolTipList.splice(userIDIndex, 1);
@@ -241,16 +258,18 @@ export class AuthUtils {
                 }
             }
 
-            if (usingBasicAuth || usingTokenAuth || usingCertAuth) {
-                if (sessionNode.fullPath) {
-                    const pathIndex = toolTipList.findIndex((key) => key.startsWith("Path: "));
-                    if (pathIndex === -1) {
-                        toolTipList.push(`Path: ${sessionNode.fullPath}`);
-                    } else {
-                        toolTipList[pathIndex] = `Path: ${sessionNode.fullPath}`;
+            if (usingTokenAuth || usingBasicAuth || usingCertAuth) {
+                switch (true) {
+                    case Boolean(sessionNode.fullPath): {
+                        const pathIndex = toolTipList.findIndex((key) => key.startsWith("Path: "));
+                        if (pathIndex === -1) {
+                            toolTipList.push(`Path: ${sessionNode.fullPath}`);
+                        } else {
+                            toolTipList[pathIndex] = `Path: ${sessionNode.fullPath}`;
+                        }
+                        break;
                     }
-                } else if (sessionNode.description) {
-                    if ((sessionNode.description as string).includes("Owner: ")) {
+                    case sessionNode.description && (sessionNode.description as string).includes("Owner: "): {
                         const jobIdIndex = toolTipList.findIndex((key) => key.startsWith("JobId: "));
                         if (jobIdIndex !== -1) {
                             toolTipList.splice(jobIdIndex, 1);
@@ -261,7 +280,9 @@ export class AuthUtils {
                         } else {
                             toolTipList[searchCriteriaIndex] = sessionNode.description as string;
                         }
-                    } else if ((sessionNode.description as string).includes("JobId: ")) {
+                        break;
+                    }
+                    case sessionNode.description && (sessionNode.description as string).includes("JobId: "): {
                         const searchFilterIndex = toolTipList.findIndex((key) => key.startsWith("Owner: "));
                         if (searchFilterIndex !== -1) {
                             toolTipList.splice(searchFilterIndex, 1);
@@ -272,6 +293,7 @@ export class AuthUtils {
                         } else {
                             toolTipList[jobIdIndex] = sessionNode.description as string;
                         }
+                        break;
                     }
                 }
             }
