@@ -153,33 +153,35 @@ export class Profiles extends ProfilesCache {
             this.profilesForValidation.push(profileStatus);
         }
 
-        const toolTipList = (node.tooltip as string).split("\n");
+        if (node !== undefined) {
+            const toolTipList = (node.tooltip as string).split("\n");
 
-        const autoStoreValue = (await this.getProfileInfo()).getTeamConfig().properties.autoStore;
-        const autoStoreIndex = toolTipList.findIndex((key) => key.startsWith("Auto Store: "));
-        if (autoStoreIndex === -1) {
-            toolTipList.push(`Auto Store: ${autoStoreValue.toString()}`);
-        } else {
-            toolTipList[autoStoreIndex] = `Auto Store: ${autoStoreValue.toString()}`;
+            const autoStoreValue = (await this.getProfileInfo()).getTeamConfig().properties.autoStore;
+            const autoStoreIndex = toolTipList.findIndex((key) => key.startsWith("Auto Store: "));
+            if (autoStoreIndex === -1) {
+                toolTipList.push(`Auto Store: ${autoStoreValue.toString()}`);
+            } else {
+                toolTipList[autoStoreIndex] = `Auto Store: ${autoStoreValue.toString()}`;
+            }
+
+            const layers = await this.uniqueExistingLayers();
+            const configFileIndex = toolTipList.findIndex((key) => key.startsWith("Config File: "));
+            if (configFileIndex === -1) {
+                toolTipList.push(`Config File: ${layers[0].global ? "Global" : "Project"}`);
+            } else {
+                toolTipList[configFileIndex] = `Config File: ${layers[0].global ? "Global" : "Project"}`;
+            }
+
+            const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+            const secureCredentialsIndex = toolTipList.findIndex((key) => key.startsWith("Secure Credentials Enabled: "));
+            if (secureCredentialsIndex === -1) {
+                toolTipList.push(`Secure Credentials Enabled: ${isSecureCredsEnabled.toString()}`);
+            } else {
+                toolTipList[secureCredentialsIndex] = `Secure Credentials Enabled: ${isSecureCredsEnabled.toString()}`;
+            }
+
+            node.tooltip = toolTipList.join("\n");
         }
-
-        const layers = await this.uniqueExistingLayers();
-        const configFileIndex = toolTipList.findIndex((key) => key.startsWith("Config File: "));
-        if (configFileIndex === -1) {
-            toolTipList.push(`Config File: ${layers[0].global ? "Global" : "Project"}`);
-        } else {
-            toolTipList[configFileIndex] = `Config File: ${layers[0].global ? "Global" : "Project"}`;
-        }
-
-        const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
-        const secureCredentialsIndex = toolTipList.findIndex((key) => key.startsWith("Secure Credentials Enabled: "));
-        if (secureCredentialsIndex === -1) {
-            toolTipList.push(`Secure Credentials Enabled: ${isSecureCredsEnabled.toString()}`);
-        } else {
-            toolTipList[secureCredentialsIndex] = `Secure Credentials Enabled: ${isSecureCredsEnabled.toString()}`;
-        }
-
-        node.tooltip = toolTipList.join("\n");
 
         // Profile should have enough information to allow validation
         profileStatus = await this.getProfileSetting(theProfile);
