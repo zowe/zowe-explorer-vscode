@@ -18,6 +18,7 @@ import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import { Profiles } from "../../../../src/configuration/Profiles";
+import * as vscode from "vscode";
 
 const testProfile = createIProfile();
 
@@ -214,6 +215,33 @@ describe("fetchSpoolAtUri", () => {
     afterAll(() => {
         jest.restoreAllMocks();
     });
+
+    it("fetches spool contents and correctly applies recordRange parameters", async () => {
+        const lookupAsFileMock = jest
+            .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
+            .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array() });
+
+        const newData = "spool contents";
+        const mockJesApi = {
+            downloadSingleSpool: jest.fn((opts) => {
+                expect(opts.recordRange).toBe("10-50");
+                opts.stream.write(newData);
+            }),
+        };
+
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+
+        const uriWithQuery = vscode.Uri.parse(testUris.spool.toString() + "?startLine=10&endLine=50");
+
+        const entry = await JobFSProvider.instance.fetchSpoolAtUri(uriWithQuery);
+
+        expect(mockJesApi.downloadSingleSpool).toHaveBeenCalled();
+        expect(entry.data.toString()).toStrictEqual(newData.toString());
+
+        jesApiMock.mockRestore();
+        lookupAsFileMock.mockRestore();
+    });
+
     it("fetches the spool contents for a given URI - downloadSingleSpool", async () => {
         const lookupAsFileMock = jest
             .spyOn(JobFSProvider.instance as any, "_lookupAsFile")

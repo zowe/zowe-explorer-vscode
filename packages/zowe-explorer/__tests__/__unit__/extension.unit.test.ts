@@ -30,6 +30,7 @@ import { ZoweDatasetNode } from "../../src/trees/dataset/ZoweDatasetNode";
 import { USSTree } from "../../src/trees/uss/USSTree";
 import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 import { JobTree } from "../../src/trees/job/JobTree";
+import { JobFSProvider } from "../../src/trees/job/JobFSProvider";
 
 jest.mock("../../src/utils/LoggerUtils");
 jest.mock("../../src/tools/ZoweLogger");
@@ -50,6 +51,7 @@ async function createGlobalMocks() {
         mockCreateTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         mockExecuteCommand: jest.fn(),
         mockRegisterCommand: jest.fn(),
+        mockRegisterCodeLensProvider: jest.fn(),
         mockRegisterWebviewViewProvider: jest.fn(),
         mockOnDidCloseTextDocument: jest.fn(),
         mockOnDidSaveTextDocument: jest.fn(),
@@ -141,6 +143,7 @@ async function createGlobalMocks() {
         appName: vscode.env.appName,
         uriScheme: vscode.env.uriScheme,
         expectedCommands: [
+            "zowe.jobs.loadMoreRecords",
             "zowe.all.config.init",
             "zowe.ds.addSession",
             "zowe.ds.refreshAll",
@@ -280,6 +283,10 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode.window, "onDidExpandElement", {
         value: globalMocks.mockOnDidExpandElement,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.languages, "registerCodeLensProvider", {
+        value: globalMocks.mockRegisterCodeLensProvider,
         configurable: true,
     });
 
@@ -462,6 +469,44 @@ describe("Extension Unit Tests", () => {
             expect(call[0]).toStrictEqual(globalMocks.expectedCommands[i]);
             expect(call[1]).toBeInstanceOf(Function);
             allCommands.push({ cmd: call[0], fun: call[1], toMock: jest.fn() });
+        });
+    });
+
+    describe("Zowe Jobs Commands", () => {
+        let loadMoreRecordsCommand;
+
+        beforeEach(() => {
+            const mockActiveTextEditor = {
+                document: {
+                    uri: vscode.Uri.parse("zowe-jobs://some-uri"),
+                },
+            } as unknown as vscode.TextEditor;
+
+            Object.defineProperty(vscode.window, "activeTextEditor", {
+                get: jest.fn(() => mockActiveTextEditor),
+                configurable: true,
+            });
+
+            JobFSProvider.instance.fetchSpoolAtUri = jest.fn();
+            loadMoreRecordsCommand = allCommands.find((c) => c.cmd === "zowe.jobs.loadMoreRecords");
+        });
+
+        it("should call fetchSpoolAtUri when triggered", async () => {
+            await loadMoreRecordsCommand.fun();
+            expect(JobFSProvider.instance.fetchSpoolAtUri).toHaveBeenCalledWith(vscode.window.activeTextEditor?.document.uri);
+        });
+
+        it("should show an error message if no active editor", async () => {
+            const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage").mockImplementation(jest.fn());
+
+            Object.defineProperty(vscode.window, "activeTextEditor", {
+                get: jest.fn(() => undefined),
+                configurable: true,
+            });
+
+            await loadMoreRecordsCommand.fun();
+
+            expect(showErrorMessageSpy).toHaveBeenCalledWith("No active editor found.");
         });
     });
 
