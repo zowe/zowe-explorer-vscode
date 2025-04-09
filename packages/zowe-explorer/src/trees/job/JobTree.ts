@@ -832,27 +832,34 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                     node.description = searchCriteria;
                     node.dirty = true;
                     const toolTipList = (node.tooltip as string).split("\n");
-                    if (searchCriteria.includes("Owner: ")) {
-                        const jobIdIndex = toolTipList.findIndex((key) => key.startsWith("JobId: "));
-                        if (jobIdIndex !== -1) {
-                            toolTipList.splice(jobIdIndex, 1);
+                    switch (true) {
+                        case searchCriteria.includes("Owner: "): {
+                            const jobIdIndex = toolTipList.findIndex((key) => key.startsWith("JobId: "));
+                            if (jobIdIndex !== -1) {
+                                toolTipList.splice(jobIdIndex, 1);
+                            }
+
+                            const searchCriteriaIndex = toolTipList.findIndex((key) => key.startsWith("Owner: "));
+                            if (searchCriteriaIndex === -1) {
+                                toolTipList.push(searchCriteria);
+                            } else {
+                                toolTipList[searchCriteriaIndex] = searchCriteria;
+                            }
+                            break;
                         }
-                        const searchCriteriaIndex = toolTipList.findIndex((key) => key.startsWith("Owner: "));
-                        if (searchCriteriaIndex === -1) {
-                            toolTipList.push(searchCriteria);
-                        } else {
-                            toolTipList[searchCriteriaIndex] = searchCriteria;
-                        }
-                    } else if (searchCriteria.includes("JobId: ")) {
-                        const searchFilterIndex = toolTipList.findIndex((key) => key.startsWith("Owner: "));
-                        if (searchFilterIndex !== -1) {
-                            toolTipList.splice(searchFilterIndex, 1);
-                        }
-                        const jobIdIndex = toolTipList.findIndex((key) => key.startsWith("JobId: "));
-                        if (jobIdIndex === -1) {
-                            toolTipList.push(searchCriteria);
-                        } else {
-                            toolTipList[jobIdIndex] = searchCriteria;
+                        case searchCriteria.includes("JobId: "): {
+                            const searchFilterIndex = toolTipList.findIndex((key) => key.startsWith("Owner: "));
+                            if (searchFilterIndex !== -1) {
+                                toolTipList.splice(searchFilterIndex, 1);
+                            }
+
+                            const jobIdIndex = toolTipList.findIndex((key) => key.startsWith("JobId: "));
+                            if (jobIdIndex === -1) {
+                                toolTipList.push(searchCriteria);
+                            } else {
+                                toolTipList[jobIdIndex] = searchCriteria;
+                            }
+                            break;
                         }
                     }
                     node.tooltip = toolTipList.join("\n");
