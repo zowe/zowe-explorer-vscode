@@ -26,6 +26,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Implemented the `SharedActions.refreshProvider` function to allow refreshing a single tree provider. [#3524](https://github.com/zowe/zowe-explorer-vscode/pull/3524)
 - Added command to filter USS tree by the path of a selected node. [#1783](https://github.com/zowe/zowe-explorer-vscode/issues/1783).
 - Added button to filter USS tree by the parent path of the current filter. [#1783](https://github.com/zowe/zowe-explorer-vscode/issues/1783).
+- Added script that will fetch latest localizations at every build now. [#3573](https://github.com/zowe/zowe-explorer-vscode/pull/3573)
 
 ### Bug fixes
 
