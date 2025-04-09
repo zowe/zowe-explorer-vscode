@@ -9,7 +9,7 @@
  *
  */
 
-import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
+import { IZosmfListResponse, IDsmListOptions, IZosFilesResponse, IListOptions } from "@zowe/zos-files-for-zowe-sdk";
 import * as vscode from "vscode";
 import * as dayjs from "dayjs";
 import {
@@ -67,7 +67,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public filter?: Sorting.DatasetFilter;
     public resourceUri?: vscode.Uri;
 
-    private paginator?: Paginator<zosfiles.IZosFilesResponse>;
+    private paginator?: Paginator<IZosFilesResponse>;
+    private paginatorData?: {
+        totalItems?: number;
+        lastDatasetName?: string;
+    };
 
     /**
      * Creates an instance of ZoweDatasetNode
@@ -659,44 +663,70 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return fileEntry?.etag;
     }
 
-    public async fetchDatasetsInRange(start?: string, limit?: number): Promise<IFetchResult<zosfiles.IZosFilesResponse, string>> {
-        const responses: zosfiles.IZosFilesResponse[] = [];
-        const basicResponses: zosfiles.IZosFilesResponse[] = [];
-        await this.fetchDatasets(basicResponses, { attributes: false });
+    public async fetchDatasetsInRange(start?: string, limit?: number): Promise<IFetchResult<IZosFilesResponse, string>> {
+        let totalItems = this.paginatorData?.totalItems;
+        let lastDatasetName = this.paginatorData?.lastDatasetName;
+        let allDatasets: IZosmfListResponse[] = [];
+
+        if (totalItems == null || lastDatasetName == null) {
+            const basicResponses: IZosFilesResponse[] = [];
+            await this.fetchDatasets(basicResponses, { attributes: false });
+
+            allDatasets = basicResponses
+                .filter((r) => r.success)
+                .reduce((arr: IZosmfListResponse[], r) => {
+                    const responseItems: IZosmfListResponse[] = Array.isArray(r.apiResponse) ? r.apiResponse : r.apiResponse?.items;
+                    return responseItems ? [...arr, ...responseItems] : arr;
+                }, []);
+
+            this.paginatorData = {
+                totalItems: allDatasets.length,
+                lastDatasetName: allDatasets.at(-1)?.dsname,
+            };
+            totalItems = this.paginatorData.totalItems;
+            lastDatasetName = this.paginatorData.lastDatasetName;
+        } else {
+            // Using cached data from the refresh to handle the page change
+        }
+
+        const responses: IZosFilesResponse[] = [];
         await this.fetchDatasets(responses, { attributes: true, start, maxLength: start ? limit + 1 : limit });
 
         const successfulResponses = responses
             .filter((response) => response.success)
             .map((resp) => {
-                if (start != null && (resp.apiResponse?.items ?? resp.apiResponse)?.find((it) => it.dsname === start)) {
-                    return {
-                        ...resp,
-                        apiResponse: Array.isArray(resp.apiResponse)
-                            ? resp.apiResponse.filter((it) => it.dsname !== start)
-                            : { items: resp.apiResponse.filter((it) => it.dsname !== start) },
-                    };
-                } else {
+                if (start == null || (resp.apiResponse?.items ?? resp.apiResponse)?.find((it: IZosmfListResponse) => it.dsname === start) == null) {
                     return resp;
                 }
+
+                // Assuming apiResponse is IZosmfListResponse[] or { items: IZosmfListResponse[] } (dataSetsMatchingPattern, dataSet)
+                const items = Array.isArray(resp.apiResponse) ? resp.apiResponse : resp.apiResponse?.items;
+                const filteredItems = items?.filter((it) => it.dsname !== start);
+
+                return {
+                    ...resp,
+                    // Reconstruct apiResponse based on its original structure
+                    apiResponse: Array.isArray(resp.apiResponse) ? filteredItems : { ...(resp.apiResponse ?? {}), items: filteredItems },
+                };
             });
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        const items = successfulResponses.reduce((prev: any[], resp): any[] => [...prev, ...(resp.apiResponse.items ?? resp.apiResponse)], []);
 
-        const lastItem = items.length > 0 ? items.at(items.length - 1) : undefined;
+        const items: IZosmfListResponse[] = successfulResponses.reduce((prev: IZosmfListResponse[], resp): IZosmfListResponse[] => {
+            const responseItems: IZosmfListResponse[] = Array.isArray(resp.apiResponse) ? resp.apiResponse : resp.apiResponse?.items;
+            return responseItems ? [...prev, ...responseItems] : prev;
+        }, []);
 
-        const allDatasets = basicResponses.filter((r) => r.success).reduce((arr, r) => [...arr, ...(r.apiResponse?.items ?? r.apiResponse)], []);
+        const lastItem = items.length > 0 ? items.at(-1) : undefined;
+
+        const nextPageCursor = lastItem && lastDatasetName !== lastItem.dsname ? lastItem.dsname : undefined;
 
         return {
             items: successfulResponses,
-            nextPageCursor: lastItem && allDatasets.slice(-1)[0]?.dsname !== lastItem.dsname ? lastItem.dsname : undefined,
-            totalItems: allDatasets.length,
+            nextPageCursor,
+            totalItems,
         };
     }
 
-    public async fetchDatasets(
-        responses: zosfiles.IZosFilesResponse[],
-        options?: Pick<zosfiles.IDsmListOptions, "attributes" | "start" | "maxLength">
-    ): Promise<void> {
+    public async fetchDatasets(responses: IZosFilesResponse[], options?: Pick<IDsmListOptions, "attributes" | "start" | "maxLength">): Promise<void> {
         const dsPatterns = [
             ...new Set(
                 this.pattern
@@ -722,11 +752,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
     }
 
-    private async getDatasets(profile: imperative.IProfileLoaded, paginate?: boolean): Promise<zosfiles.IZosFilesResponse[] | undefined> {
+    private async getDatasets(profile: imperative.IProfileLoaded, paginate?: boolean): Promise<IZosFilesResponse[] | undefined> {
         ZoweLogger.trace("ZoweDatasetNode.getDatasets called.");
 
-        const responses: zosfiles.IZosFilesResponse[] = [];
-        const options: zosfiles.IListOptions = {
+        const responses: IZosFilesResponse[] = [];
+        const options: IListOptions = {
             attributes: true,
             responseTimeout: profile.profile.responseTimeout,
         };
@@ -738,8 +768,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             const dsPattern = dsTree.buildFinalPattern(this.patternMatches);
             if (dsPattern.length != 0) {
                 if (dsPattern !== this.pattern) {
-                    // reset and remove previous search patterns if pattern has changed
+                    // Reset and remove previous search patterns if pattern has changed
                     dsTree.resetFilterForChildren(this.children);
+                    // Force paginator and data to be re-initialized
+                    this.paginator = this.paginatorData = undefined;
                 }
                 this.tooltip = this.pattern = dsPattern.toUpperCase();
             }
@@ -752,21 +784,32 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         try {
             if (isSession) {
-                if (paginate) {
+                // Ensure paginator exists when `paginate` is enabled
+                if (paginate && !this.paginator) {
+                    this.paginator = new Paginator(
+                        SettingsConfig.getDirectValue<number>("zowe.ds.datasetsPerPage") ?? Constants.DEFAULT_ITEMS_PER_PAGE,
+                        this.fetchDatasetsInRange.bind(this)
+                    );
+                }
+
+                if (paginate && this.paginator) {
                     if (!this.paginator.isInitialized()) {
                         await this.paginator.initialize();
                     }
-                    return this.paginator.getCurrentPageItems();
+                    return this.paginator.getCurrentPageItems() as IZosFilesResponse[];
                 } else {
+                    // Fetch all datasets if not paginating
                     await this.fetchDatasets(responses, { attributes: true });
                 }
             } else if (this.memberPattern) {
+                // Fetching members for this PDS w/ matching member pattern(s)
                 this.memberPattern = this.memberPattern.toUpperCase();
                 for (const memPattern of this.memberPattern.split(",")) {
                     options.pattern = memPattern;
                     responses.push(await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(this.label as string, options));
                 }
             } else {
+                // Fetching all members for this PDS
                 responses.push(await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(this.label as string, options));
             }
         } catch (error) {
