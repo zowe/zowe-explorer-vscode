@@ -10,6 +10,7 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 ### Bug fixes
 
 - Fixed an issue with the `AbstractFtpApi.getSession` function where the wrong property was used to store a new session, specifically when the profile is provided as a parameter. [#3524](https://github.com/zowe/zowe-explorer-vscode/pull/3524)
+- Updated dependencies for technical currency purposes. [#3576](https://github.com/zowe/zowe-explorer-vscode/pull/3576)
 
 ## `3.1.2`
 
