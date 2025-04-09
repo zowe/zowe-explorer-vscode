@@ -565,19 +565,6 @@ describe("USSTree Unit Tests - Function deleteSession", () => {
 });
 
 describe("USSTee Unit Tests - Function cdUp", () => {
-    it("Tests that cdUp() handles when filter is not set yet", async () => {
-        const globalMocks = createGlobalMocks();
-        const testNode = new ZoweUSSNode({
-            label: "/u/myuser/usstest",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            session: globalMocks.testSession,
-        });
-        globalMocks.testTree.mSessionNodes.push(testNode);
-
-        await globalMocks.testTree.cdUp(testNode);
-        expect(globalMocks.showInformationMessage).toHaveBeenCalledWith("Select a filter first.", undefined);
-    });
-
     it("Tests that cdUp() handles when current filter set but not as a root path", async () => {
         const globalMocks = createGlobalMocks();
 

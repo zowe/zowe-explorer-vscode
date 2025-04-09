@@ -686,19 +686,14 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     public async cdUp(node: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("USSTree.cdUp called.");
 
-        // If the path is empty, then the node's filter hasn't been selected yet
-        // TODO: Is this the most robust and proper way of checking if a filter is active?
-        if (node.fullPath !== "") {
-            if (path.posix.dirname(node.fullPath) === "/") {
-                Gui.showMessage(vscode.l10n.t("You are already at the root directory."));
-                return;
-            }
-
-            const parentPath = path.posix.dirname(node.fullPath);
-            await this.filterBy(node, parentPath);
-        } else {
-            Gui.showMessage(vscode.l10n.t("Select a filter first."));
+        // Check if the path is a root path already
+        if (path.posix.dirname(node.fullPath) === "/") {
+            Gui.showMessage(vscode.l10n.t("You are already at the root directory."));
+            return;
         }
+
+        const parentPath = path.posix.dirname(node.fullPath);
+        await this.filterBy(node, parentPath);
     }
 
     /**
