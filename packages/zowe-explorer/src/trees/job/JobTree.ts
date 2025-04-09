@@ -877,6 +877,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 }
                 node.dirty = true;
             }
+            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), node);
             this.refresh();
         }
     }
