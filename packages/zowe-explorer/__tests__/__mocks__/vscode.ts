@@ -839,6 +839,9 @@ export namespace languages {
     export function setTextDocumentLanguage(document: TextDocument, languageId: string): Thenable<TextDocument> {
         return {} as Thenable<TextDocument>;
     }
+    export function registerCodeLensProvider(selector: any, provider: any): Disposable {
+        return new Disposable();
+    }
 }
 
 export namespace commands {

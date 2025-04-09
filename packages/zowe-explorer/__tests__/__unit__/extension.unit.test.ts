@@ -51,7 +51,6 @@ async function createGlobalMocks() {
         mockCreateTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         mockExecuteCommand: jest.fn(),
         mockRegisterCommand: jest.fn(),
-        mockRegisterCodeLensProvider: jest.fn(),
         mockRegisterWebviewViewProvider: jest.fn(),
         mockOnDidCloseTextDocument: jest.fn(),
         mockOnDidSaveTextDocument: jest.fn(),
@@ -283,10 +282,6 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode.window, "onDidExpandElement", {
         value: globalMocks.mockOnDidExpandElement,
-        configurable: true,
-    });
-    Object.defineProperty(vscode.languages, "registerCodeLensProvider", {
-        value: globalMocks.mockRegisterCodeLensProvider,
         configurable: true,
     });
 
