@@ -16,7 +16,7 @@
     "vscode": "^1.53.2"
   },
   "dependencies": {
-    "@zowe/cli": "^7.29.12",
+    "@zowe/cli": "^7.29.13",
     "vscode-nls": "^4.1.2"
   },
   "devDependencies": {
@@ -54,7 +54,7 @@
     "yarn": "1.22.19"
   },
   "resolutions": {
-    "**/yamljs/glob": "^9.0.0",
+    "**/copyfiles/glob": "^9.0.0",
     "glob-parent": "^5.1.2",
     "xml2js": "^0.5.0"
   },
