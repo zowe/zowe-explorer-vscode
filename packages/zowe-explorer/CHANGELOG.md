@@ -26,7 +26,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Optimized the refresh functionality in Zowe Explorer for performance and stability. Now, the profiles are refreshed once before refreshing all the tree providers. [#3524](https://github.com/zowe/zowe-explorer-vscode/pull/3524)
 - Implemented the `SharedActions.refreshProvider` function to allow refreshing a single tree provider. [#3524](https://github.com/zowe/zowe-explorer-vscode/pull/3524)
 - Added script that will fetch latest localizations at every build now. [#3573](https://github.com/zowe/zowe-explorer-vscode/pull/3573)
-- Implemented Hover for Zowe Explorer Profiles with Connection Information. [#3580](https://github.com/zowe/zowe-explorer-vscode/pull/3580)
+- Implemented Rich Hover for Zowe Explorer Profiles with Connection Information. [#3580](https://github.com/zowe/zowe-explorer-vscode/pull/3580)
 
 ### Bug fixes
 
