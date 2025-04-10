@@ -370,6 +370,7 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         shouldRemoveTokenFromProfile: jest.fn(),
         getPropsForProfile: jest.fn(),
         showProfileInactiveMsg: jest.fn(),
+        getConfigLayers: jest.fn(),
     } as any;
 }
 
