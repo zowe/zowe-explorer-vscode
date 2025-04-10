@@ -866,9 +866,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     dsTree.resetFilterForChildren(this.children);
                     // Force paginator and data to be re-initialized
                     this.paginator = this.paginatorData = undefined;
-                    patternChanged = true;
                 }
-                patternChanged = this.prevPattern !== dsPattern;
+                patternChanged = this.prevPattern !== dsPattern || this.pattern !== dsPattern;
                 this.pattern = this.prevPattern = dsPattern;
             }
         }
