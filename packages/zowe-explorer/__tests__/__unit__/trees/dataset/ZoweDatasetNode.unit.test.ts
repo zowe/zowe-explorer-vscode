@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { BaseProvider, DsEntry, Gui, imperative, Paginator, PdsEntry, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { BaseProvider, DsEntry, Gui, imperative, NavigationTreeItem, Paginator, PdsEntry, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import {
     createSessCfgFromArgs,
@@ -931,7 +931,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetMigrated", () => {
     });
 });
 
-describe("ZoweDatasetNode Unit Tests - getChildren() migration scenarios", () => {
+describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
     const session = createISession();
     const profileOne: imperative.IProfileLoaded = createIProfile();
 
@@ -939,152 +939,203 @@ describe("ZoweDatasetNode Unit Tests - getChildren() migration scenarios", () =>
         jest.resetAllMocks();
     });
 
-    it("should handle a dataset that was migrated", async () => {
-        const sessionNode = new ZoweDatasetNode({
-            label: "sestest",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            session,
-            profile: profileOne,
-            contextOverride: Constants.DS_SESSION_CONTEXT,
-        });
+    describe("migration/recall", () => {
+        it("should handle a dataset that was migrated", async () => {
+            const sessionNode = new ZoweDatasetNode({
+                label: "sestest",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                session,
+                profile: profileOne,
+                contextOverride: Constants.DS_SESSION_CONTEXT,
+            });
 
-        const pdsNode = new ZoweDatasetNode({
-            label: "TEST.PDS",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            parentNode: sessionNode,
-            profile: profileOne,
-            contextOverride: Constants.DS_PDS_CONTEXT,
-        });
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: sessionNode,
+                profile: profileOne,
+                contextOverride: Constants.DS_PDS_CONTEXT,
+            });
 
-        sessionNode.pattern = "TEST.*";
-        sessionNode.children = [pdsNode];
+            sessionNode.pattern = "TEST.*";
+            sessionNode.children = [pdsNode];
 
-        jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
-            applyPatternsToChildren: jest.fn(),
-        } as any);
-        jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
-            loadNamedProfile: jest.fn().mockReturnValueOnce(profileOne),
-        } as any);
-        jest.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
-            {
-                success: true,
-                apiResponse: {
-                    items: [
-                        {
-                            dsname: "TEST.PDS",
-                            migr: "YES",
-                            dsorg: "PO",
-                        },
-                    ],
+            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
+                applyPatternsToChildren: jest.fn(),
+            } as any);
+            jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
+                loadNamedProfile: jest.fn().mockReturnValueOnce(profileOne),
+            } as any);
+            jest.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
+                {
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            {
+                                dsname: "TEST.PDS",
+                                migr: "YES",
+                                dsorg: "PO",
+                            },
+                        ],
+                    },
                 },
-            },
-        ]);
+            ]);
 
-        await sessionNode.getChildren();
+            await sessionNode.getChildren();
 
-        expect(pdsNode.contextValue).toBe(Constants.DS_MIGRATED_FILE_CONTEXT);
-        expect(pdsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
-        expect(pdsNode.resourceUri).toBeUndefined();
-        expect(pdsNode.command).toBeUndefined();
+            expect(pdsNode.contextValue).toBe(Constants.DS_MIGRATED_FILE_CONTEXT);
+            expect(pdsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
+            expect(pdsNode.resourceUri).toBeUndefined();
+            expect(pdsNode.command).toBeUndefined();
+        });
+
+        it("should handle a PS that was recalled", async () => {
+            const sessionNode = new ZoweDatasetNode({
+                label: "sestest",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                session,
+                profile: profileOne,
+                contextOverride: Constants.DS_SESSION_CONTEXT,
+            });
+
+            const dsNode = new ZoweDatasetNode({
+                label: "TEST.DS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: sessionNode,
+                profile: profileOne,
+                contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
+            });
+
+            sessionNode.pattern = "TEST.*";
+            sessionNode.children = [dsNode];
+
+            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
+                applyPatternsToChildren: jest.fn(),
+            } as any);
+            jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
+                loadNamedProfile: jest.fn().mockReturnValueOnce(profileOne),
+            } as any);
+            jest.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
+                {
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            {
+                                dsname: "TEST.DS",
+                                migr: "NO",
+                                dsorg: "PS",
+                            },
+                        ],
+                    },
+                },
+            ]);
+
+            await sessionNode.getChildren();
+
+            expect(dsNode.contextValue).toBe(Constants.DS_DS_CONTEXT);
+            expect(dsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
+            expect(dsNode.resourceUri).toBeDefined();
+            expect(dsNode.resourceUri.path).toBe("/sestest/TEST.DS");
+            expect(dsNode.command).toBeDefined();
+        });
+
+        it("should handle a PDS that was recalled", async () => {
+            const sessionNode = new ZoweDatasetNode({
+                label: "sestest",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                session,
+                profile: profileOne,
+                contextOverride: Constants.DS_SESSION_CONTEXT,
+            });
+
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: sessionNode,
+                profile: profileOne,
+                contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
+            });
+
+            sessionNode.pattern = "TEST.*";
+            sessionNode.children = [pdsNode];
+
+            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
+                applyPatternsToChildren: jest.fn(),
+            } as any);
+            jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
+                loadNamedProfile: jest.fn().mockReturnValueOnce(profileOne),
+            } as any);
+            jest.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
+                {
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            {
+                                dsname: "TEST.PDS",
+                                migr: "NO",
+                                dsorg: "PO",
+                            },
+                        ],
+                    },
+                },
+            ]);
+
+            await sessionNode.getChildren();
+
+            expect(pdsNode.contextValue).toBe(Constants.DS_PDS_CONTEXT);
+            expect(pdsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
+            expect(pdsNode.resourceUri).toBeDefined();
+            expect(pdsNode.resourceUri.path).toBe("/sestest/TEST.PDS");
+        });
     });
 
-    it("should handle a PS that was recalled", async () => {
-        const sessionNode = new ZoweDatasetNode({
-            label: "sestest",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            session,
-            profile: profileOne,
-            contextOverride: Constants.DS_SESSION_CONTEXT,
-        });
+    describe("pagination", () => {
+        it("returns children wrapped in navigation controls - session node", async () => {
+            const sessionNode = new ZoweDatasetNode({
+                label: "sestest",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                session,
+                profile: profileOne,
+                contextOverride: Constants.DS_SESSION_CONTEXT,
+            });
+            sessionNode.pattern = "PDS.*";
+            (sessionNode as any).paginator = new Paginator(Constants.DEFAULT_ITEMS_PER_PAGE, jest.fn());
 
-        const dsNode = new ZoweDatasetNode({
-            label: "TEST.DS",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: sessionNode,
-            profile: profileOne,
-            contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
-        });
-
-        sessionNode.pattern = "TEST.*";
-        sessionNode.children = [dsNode];
-
-        jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
-            applyPatternsToChildren: jest.fn(),
-        } as any);
-        jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
-            loadNamedProfile: jest.fn().mockReturnValueOnce(profileOne),
-        } as any);
-        jest.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
-            {
-                success: true,
-                apiResponse: {
-                    items: [
-                        {
-                            dsname: "TEST.DS",
-                            migr: "NO",
-                            dsorg: "PS",
-                        },
-                    ],
+            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
+                applyPatternsToChildren: jest.fn(),
+            } as any);
+            jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
+                loadNamedProfile: jest.fn().mockReturnValueOnce(profileOne),
+            } as any);
+            jest.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
+                {
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            {
+                                dsname: "PDS.EXAMPLE1",
+                                migr: "NO",
+                                dsorg: "PO",
+                            },
+                            {
+                                dsname: "PDS.EXAMPLE2",
+                                migr: "NO",
+                                dsorg: "PO",
+                            },
+                        ],
+                        returnedRows: 2,
+                    },
+                    commandResponse: "2 data set(s) returned successfully",
                 },
-            },
-        ]);
+            ]);
 
-        await sessionNode.getChildren();
-
-        expect(dsNode.contextValue).toBe(Constants.DS_DS_CONTEXT);
-        expect(dsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
-        expect(dsNode.resourceUri).toBeDefined();
-        expect(dsNode.resourceUri.path).toBe("/sestest/TEST.DS");
-        expect(dsNode.command).toBeDefined();
-    });
-
-    it("should handle a PDS that was recalled", async () => {
-        const sessionNode = new ZoweDatasetNode({
-            label: "sestest",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            session,
-            profile: profileOne,
-            contextOverride: Constants.DS_SESSION_CONTEXT,
+            const children = await sessionNode.getChildren(true);
+            expect(children[0]).toBeInstanceOf(NavigationTreeItem);
+            expect(children[0].label).toBe("Previous page");
+            expect(children.at(-1)).toBeInstanceOf(NavigationTreeItem);
+            expect(children.at(-1)?.label).toBe("Next page");
+            children.slice(1, -1).forEach((child) => expect(child).toBeInstanceOf(ZoweDatasetNode));
         });
-
-        const pdsNode = new ZoweDatasetNode({
-            label: "TEST.PDS",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: sessionNode,
-            profile: profileOne,
-            contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
-        });
-
-        sessionNode.pattern = "TEST.*";
-        sessionNode.children = [pdsNode];
-
-        jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
-            applyPatternsToChildren: jest.fn(),
-        } as any);
-        jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
-            loadNamedProfile: jest.fn().mockReturnValueOnce(profileOne),
-        } as any);
-        jest.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
-            {
-                success: true,
-                apiResponse: {
-                    items: [
-                        {
-                            dsname: "TEST.PDS",
-                            migr: "NO",
-                            dsorg: "PO",
-                        },
-                    ],
-                },
-            },
-        ]);
-
-        await sessionNode.getChildren();
-
-        expect(pdsNode.contextValue).toBe(Constants.DS_PDS_CONTEXT);
-        expect(pdsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
-        expect(pdsNode.resourceUri).toBeDefined();
-        expect(pdsNode.resourceUri.path).toBe("/sestest/TEST.PDS");
     });
 });
 
