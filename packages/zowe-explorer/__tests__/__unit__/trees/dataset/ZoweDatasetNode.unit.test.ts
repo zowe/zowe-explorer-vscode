@@ -1140,7 +1140,7 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
 });
 
 describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
-    it("returns undefined from listDatasets() when session is undefined on a profile node", async () => {
+    it("returns undefined from listDatasets() when session is invalid - profile node", async () => {
         const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce({
             getSession: jest.fn().mockReturnValue(undefined),
         } as any);
@@ -1159,6 +1159,36 @@ describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
         expect(listDatasetsSpy).toHaveBeenCalledTimes(1);
         expect(listDatasetsSpy).toHaveBeenCalledWith([], { attributes: true, profile });
         expect(listDatasetsSpy).toHaveReturnedWith(Promise.resolve(undefined));
+        mvsApiMock.mockRestore();
+        dsTreeMock.mockRestore();
+    });
+
+    it("returns undefined from listDatasets() when session is invalid - PDS node", async () => {
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce({
+            getSession: jest.fn().mockReturnValue(undefined),
+        } as any);
+        const warnLoggerSpy = jest.spyOn(ZoweLogger, "warn").mockClear();
+        const dsTreeMock = jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
+            extractPatterns: jest.fn().mockReturnValue([]),
+            buildFinalPattern: jest.fn().mockReturnValue(""),
+        } as any);
+        const profile = createIProfile();
+        const sessionNode = createDatasetSessionNode(createISession(), profile);
+        sessionNode.pattern = "PDS.*";
+        const pdsNode = new ZoweDatasetNode({
+            label: "PDS.EXAMPLE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+            parentNode: sessionNode,
+        });
+        sessionNode.pattern = "A.B.*";
+        const listMembersSpy = jest.spyOn(pdsNode as any, "listMembers");
+        await (pdsNode as any).getDatasets(profile);
+        expect(warnLoggerSpy).toHaveBeenCalledTimes(1);
+        expect(warnLoggerSpy).toHaveBeenCalledWith("[ZoweDatasetNode.listMembers] Session undefined for profile sestest");
+        expect(listMembersSpy).toHaveBeenCalledTimes(1);
+        expect(listMembersSpy).toHaveBeenCalledWith([], { attributes: true, profile });
+        expect(listMembersSpy).toHaveReturnedWith(Promise.resolve(undefined));
         mvsApiMock.mockRestore();
         dsTreeMock.mockRestore();
     });
@@ -1297,7 +1327,7 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
         });
         (sessionNode as any).paginatorData = {
             totalItems: 4,
-            lastItemName: "PDS.EXAMPLE2",
+            lastItemName: "PDS.EXAMPLE4",
         };
         const actualResponses: zosfiles.IZosFilesResponse[] = [];
         const listDatasetsMock = jest.spyOn(sessionNode, "listDatasets").mockImplementationOnce(async (responses) => {
@@ -1316,23 +1346,25 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
             actualResponses.push(resp);
         });
 
-        expect(await (sessionNode as any).listDatasetsInRange(undefined, 2)).toStrictEqual({
+        expect(await (sessionNode as any).listDatasetsInRange("PDS.EXAMPLE2", 2)).toStrictEqual({
             items: actualResponses,
-            nextPageCursor: "PDS.EXAMPLE4",
+            nextPageCursor: undefined,
             totalItems: 4,
         });
         expect(listDatasetsMock).toHaveBeenCalledTimes(1);
-        expect(listDatasetsMock.mock.calls[0][1]).toStrictEqual({ attributes: true, start: undefined, maxLength: 2 });
+        // maxLength: given limit parameter in listDatasets + 1 to account for filtering the start DS
+        expect(listDatasetsMock.mock.calls[0][1]).toStrictEqual({ attributes: true, start: "PDS.EXAMPLE2", maxLength: 3 });
     });
 });
 
 describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
-    it("calls listMembers to fetch basic list when cached data is null", async () => {
+    it("calls listMembers to fetch basic list when cached data is null - start param undefined", async () => {
         const pdsNode = new ZoweDatasetNode({
             label: "PDS.EXAMPLE",
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
             contextOverride: Constants.DS_PDS_CONTEXT,
         });
+        const actualResponses: zosfiles.IZosFilesResponse[] = [];
         const listMembersMock = jest
             .spyOn(pdsNode, "listMembers")
             .mockImplementationOnce(async (responses) => {
@@ -1357,15 +1389,19 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
                     },
                     commandResponse: "2 data set(s) were listed successfully",
                 });
+                actualResponses.push(responses.at(-1)!);
             });
-
-        await (pdsNode as any).listMembersInRange(undefined, 2);
+        expect(await (pdsNode as any).listMembersInRange(undefined, 2)).toStrictEqual({
+            items: actualResponses,
+            nextPageCursor: "EX2",
+            totalItems: 4,
+        });
         expect(listMembersMock).toHaveBeenCalledTimes(2);
         expect(listMembersMock.mock.calls[0][1]).toStrictEqual({ attributes: false });
         expect(listMembersMock.mock.calls[1][1]).toStrictEqual({ attributes: true, start: undefined, maxLength: 2 });
     });
 
-    it("uses cached data to fetch next page", async () => {
+    it("uses cached data to fetch next page - start param defined", async () => {
         const pdsNode = new ZoweDatasetNode({
             label: "PDS.EXAMPLE",
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
@@ -1392,12 +1428,13 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
             actualResponses.push(resp);
         });
 
-        expect(await (pdsNode as any).listMembersInRange(undefined, 2)).toStrictEqual({
+        expect(await (pdsNode as any).listMembersInRange("EX2", 2)).toStrictEqual({
             items: actualResponses,
             nextPageCursor: undefined,
             totalItems: 4,
         });
         expect(listMembersMock).toHaveBeenCalledTimes(1);
-        expect(listMembersMock.mock.calls[0][1]).toStrictEqual({ attributes: true, start: undefined, maxLength: 2 });
+        // maxLength: given limit parameter in listMembersInRange + 1 to account for filtering the start member
+        expect(listMembersMock.mock.calls[0][1]).toStrictEqual({ attributes: true, start: "EX2", maxLength: 3 });
     });
 });
