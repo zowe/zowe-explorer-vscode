@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { BaseProvider, DsEntry, Gui, imperative, PdsEntry, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { BaseProvider, DsEntry, Gui, imperative, Paginator, PdsEntry, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import {
     createSessCfgFromArgs,
@@ -1089,8 +1089,7 @@ describe("ZoweDatasetNode Unit Tests - getChildren() migration scenarios", () =>
 });
 
 describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
-    it("returns undefined when getSession returns undefined", async () => {
-        const isUsingTokenAuthMock = jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+    it("returns undefined from listDatasets() when session is undefined on a profile node", async () => {
         const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce({
             getSession: jest.fn().mockReturnValue(undefined),
         } as any);
@@ -1102,11 +1101,76 @@ describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
         const profile = createIProfile();
         const sessionNode = createDatasetSessionNode(createISession(), profile);
         sessionNode.pattern = "A.B.*";
+        const listDatasetsSpy = jest.spyOn(sessionNode as any, "listDatasets");
         await (sessionNode as any).getDatasets(profile);
         expect(warnLoggerSpy).toHaveBeenCalledTimes(1);
-        expect(warnLoggerSpy).toHaveBeenCalledWith("[ZoweDatasetNode.getDatasets] Session undefined for profile sestest");
+        expect(warnLoggerSpy).toHaveBeenCalledWith("[ZoweDatasetNode.listDatasets] Session undefined for profile sestest");
+        expect(listDatasetsSpy).toHaveBeenCalledTimes(1);
+        expect(listDatasetsSpy).toHaveBeenCalledWith([], { attributes: true });
+        expect(listDatasetsSpy).toHaveReturnedWith(Promise.resolve(undefined));
         mvsApiMock.mockRestore();
         dsTreeMock.mockRestore();
-        isUsingTokenAuthMock.mockRestore();
+    });
+
+    it("calls listMembers() - pagination off, node is a PDS", async () => {
+        const profile = createIProfile();
+        const sessionNode = new ZoweDatasetNode({
+            label: "PDS.EXAMPLE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+
+        const listMembersMock = jest.spyOn(sessionNode as any, "listMembers").mockResolvedValueOnce(undefined);
+        await (sessionNode as any).getDatasets(profile);
+        expect(listMembersMock).toHaveBeenCalledTimes(1);
+        expect(listMembersMock).toHaveBeenCalledWith([], { attributes: true });
+    });
+
+    it("calls getCurrentPageItems() - pagination on, node is a PDS", async () => {
+        const profile = createIProfile();
+        const sessionNode = new ZoweDatasetNode({
+            label: "PDS.EXAMPLE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+
+        const paginatorInitSpy = jest.spyOn(Paginator.prototype, "initialize");
+
+        // two cases where paginator is initialized:
+        // case 1: paginator not yet instantiated
+        expect((sessionNode as any).paginator).toBeUndefined();
+        expect((sessionNode as any).paginatorData).toBeUndefined();
+        await (sessionNode as any).getDatasets(profile, true);
+        expect((sessionNode as any).paginator).toBeDefined();
+        expect(paginatorInitSpy).toHaveBeenCalledTimes(1);
+
+        const ds = [
+            {
+                success: true,
+                apiResponse: {
+                    items: [
+                        {
+                            member: "EX1",
+                        },
+                        {
+                            member: "EX2",
+                        },
+                    ],
+                    returnedRows: 2,
+                },
+            },
+        ];
+        const getCurrentPageItemsMock = jest
+            .spyOn((sessionNode as any).paginator, "getCurrentPageItems")
+            .mockResolvedValueOnce(ds)
+            .mockResolvedValueOnce(ds);
+
+        // case 2: paginator is defined, but paginator max items has changed
+        ((sessionNode as any).paginator as Paginator<zosfiles.IZosFilesResponse>).setMaxItemsPerPage(Constants.DEFAULT_ITEMS_PER_PAGE / 4);
+        paginatorInitSpy.mockClear();
+        await expect((sessionNode as any).getDatasets(profile, true)).resolves.toBe(ds);
+        // paginator should be re-initialized
+        expect(paginatorInitSpy).toHaveBeenCalledTimes(1);
+        expect(getCurrentPageItemsMock).toHaveBeenCalledTimes(1);
     });
 });
