@@ -56,6 +56,7 @@ import { SettingsConfig } from "../../configuration/SettingsConfig";
 export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNode {
     public command: vscode.Command;
     public pattern = "";
+    public prevPattern = "";
     public memberPattern = "";
     public patternMatches = [];
     public dirty = true;
@@ -758,19 +759,20 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             const basicResponses: IZosFilesResponse[] = [];
             await this.listMembers(basicResponses, { ...options, attributes: false });
 
+            totalItems = 0;
             allMembers = basicResponses
                 .filter((r) => r.success)
                 .reduce((arr: IZosmfListResponse[], r) => {
                     // TODO: verify apiResponse structure for allMembers to remove the need for this check
                     const responseItems: IZosmfListResponse[] = Array.isArray(r.apiResponse) ? r.apiResponse : r.apiResponse?.items;
+                    totalItems += responseItems.length;
                     return responseItems ? [...arr, ...responseItems] : arr;
                 }, []);
 
             this.paginatorData = {
-                totalItems: allMembers.length,
+                totalItems,
                 lastItemName: allMembers.at(-1)?.member,
             };
-            totalItems = this.paginatorData.totalItems;
             lastMemberName = this.paginatorData.lastItemName;
         } else {
             // Using cached data from the refresh to handle the page change
@@ -852,6 +854,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             return;
         }
 
+        let patternChanged = false;
         if (isSession) {
             const fullPattern = SharedContext.isFavoriteSearch(this) ? (this.label as string) : this.pattern;
             const dsTree = SharedTreeProviders.ds as DatasetTree;
@@ -863,8 +866,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     dsTree.resetFilterForChildren(this.children);
                     // Force paginator and data to be re-initialized
                     this.paginator = this.paginatorData = undefined;
+                    patternChanged = true;
                 }
-                this.tooltip = this.pattern = dsPattern;
+                patternChanged = this.prevPattern !== dsPattern;
+                this.pattern = this.prevPattern = dsPattern;
             }
         }
 
@@ -872,13 +877,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             // Lazy initialization or re-initialization of paginator if needed
             const fetchFunction = isSession ? this.listDatasetsInRange.bind(this) : this.listMembersInRange.bind(this);
             const itemsPerPage = SettingsConfig.getDirectValue<number>("zowe.ds.datasetsPerPage") ?? Constants.DEFAULT_ITEMS_PER_PAGE;
+            
+            if (isSession && patternChanged) {
+                // Check if pattern changed for session
+                this.paginator = this.paginatorData = undefined;
+            }
 
             if (!this.paginator || this.paginator.getMaxItemsPerPage() !== itemsPerPage) {
-                // Force paginator and data to be re-initialized if fetch function or page size changes, or if pattern changes (for sessions)
-                if (isSession && this.pattern !== this.tooltip) {
-                    // Check if pattern changed for session
-                    this.paginator = this.paginatorData = undefined;
-                }
+                // Force paginator and data to be re-initialized if fetch function or page size changes, or if pattern changes
                 if (!this.paginator) {
                     this.paginator = new Paginator(itemsPerPage, fetchFunction);
                 } else {
@@ -888,13 +894,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
             }
 
-            if (isSession && this.pattern !== this.tooltip) {
-                // Update tooltip after potential reset
-                this.tooltip = this.pattern;
-            }
-
             if (paginate && this.paginator) {
-                if (this.paginatorData == null || this.paginator.getMaxItemsPerPage() !== itemsPerPage) {
+                if (patternChanged || this.paginatorData == null || this.paginator.getMaxItemsPerPage() !== itemsPerPage) {
                     await this.paginator.initialize();
                 }
                 return this.paginator.getCurrentPageItems() as IZosFilesResponse[];

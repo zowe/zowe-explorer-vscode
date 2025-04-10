@@ -86,6 +86,12 @@ export class Paginator<T, Cursor = string> {
         return this.wasInitialized;
     }
 
+    private reset(): void {
+        this.currentPageCursor = this.nextPageCursor = undefined;
+        this.previousPageCursors = [];
+        this.hasNextPage = this.wasInitialized = false;
+    }
+
     /**
      * Initializes the paginator by fetching the first page of data.
      * Should be called after the Paginator is constructed.
@@ -95,6 +101,7 @@ export class Paginator<T, Cursor = string> {
         if (this.loading) {
             return;
         }
+        this.reset();
         this.loading = this.wasInitialized = true;
         try {
             // The cursor used to fetch the first page is undefined

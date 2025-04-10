@@ -1315,15 +1315,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
             // looking for members in pattern
             node.dirty = true;
-            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getMvsApi(profile), sessionNode);
-
-            const dsSets = this.extractPatterns(pattern);
-            const dsPattern = this.buildFinalPattern(dsSets);
-            if (dsPattern.length != 0) {
-                sessionNode.tooltip = sessionNode.pattern = dsPattern.toUpperCase();
-            } else {
-                sessionNode.tooltip = sessionNode.pattern = pattern.toUpperCase();
-            }
+            sessionNode.pattern = pattern;
 
             let response: IZoweDatasetTreeNode[] = [];
             try {
@@ -1336,10 +1328,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (response.length === 0) {
                 return;
             }
-            // reset and remove previous search patterns for each child of getChildren
-            this.resetFilterForChildren(response);
-            // set new search patterns for each child of getChildren
-            this.applyPatternsToChildren(response, dsSets, sessionNode);
             this.addSearchHistory(pattern);
         }
         if (!SharedContext.isFavorite(sessionNode)) {
