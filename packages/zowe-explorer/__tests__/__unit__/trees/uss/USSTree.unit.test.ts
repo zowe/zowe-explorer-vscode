@@ -564,7 +564,7 @@ describe("USSTree Unit Tests - Function deleteSession", () => {
     });
 });
 
-describe("USSTee Unit Tests - Function cdUp", () => {
+describe("USSTree Unit Tests - Function cdUp", () => {
     it("Tests that cdUp() handles when current filter set but not as a root path", async () => {
         const globalMocks = createGlobalMocks();
 
