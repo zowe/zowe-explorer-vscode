@@ -901,6 +901,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     if (error instanceof Error) {
                         ZoweLogger.error(`[ZoweDatasetNode.getDatasets]: Error refetching current page: ${error.message}`);
                     }
+                    if (
+                        (error instanceof imperative.ImperativeError &&
+                            Number(error.mDetails.errorCode) === imperative.RestConstants.HTTP_STATUS_401) ||
+                        error.message.includes("All configured authentication methods failed")
+                    ) {
+                        throw error;
+                    }
                     this.paginatorData = undefined;
                 }
             }
