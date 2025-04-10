@@ -83,8 +83,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
         if (opts.contextOverride?.includes(Constants.DS_SESSION_CONTEXT)) {
             const toolTipList: string[] = [];
-            toolTipList.push(`Profile: ${this.label as string}`);
-            toolTipList.push(`Profile Type: ${this.profile.type}`);
+            toolTipList.push(`Profile: ${opts.label}`);
+            toolTipList.push(`Profile Type: ${opts.profile.type}`);
             this.tooltip = toolTipList.join("\n");
         } else {
             this.tooltip = this.label as string;
