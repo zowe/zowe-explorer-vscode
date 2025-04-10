@@ -92,7 +92,7 @@ export class Paginator<T, Cursor = string> {
      * @throws Error if fetching fails.
      */
     public async initialize(): Promise<void> {
-        if (this.loading || this.wasInitialized) {
+        if (this.loading) {
             return;
         }
         this.loading = this.wasInitialized = true;
@@ -211,6 +211,17 @@ export class Paginator<T, Cursor = string> {
      */
     public getMaxItemsPerPage(): number {
         return this.maxItemsPerPage;
+    }
+
+    /**
+     * @param maxItemsPerPage The new maximum number of items per page.
+     * @throws {Error} If {@link maxItemsPerPage} is zero, a negative integer, or a floating-point value.
+     */
+    public setMaxItemsPerPage(maxItemsPerPage: number): void {
+        if (maxItemsPerPage <= 0 || !Number.isInteger(maxItemsPerPage)) {
+            throw new Error("[Paginator.setMaxItemsPerPage] maxItemsPerPage must be a positive integer");
+        }
+        this.maxItemsPerPage = maxItemsPerPage;
     }
 
     /**

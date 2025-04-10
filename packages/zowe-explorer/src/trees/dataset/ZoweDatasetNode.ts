@@ -9,7 +9,7 @@
  *
  */
 
-import { IZosmfListResponse, IDsmListOptions, IZosFilesResponse, IListOptions } from "@zowe/zos-files-for-zowe-sdk";
+import { IZosmfListResponse, IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import * as vscode from "vscode";
 import * as dayjs from "dayjs";
 import {
@@ -70,7 +70,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     private paginator?: Paginator<IZosFilesResponse>;
     private paginatorData?: {
         totalItems?: number;
-        lastDatasetName?: string;
+        lastItemName?: string;
     };
 
     /**
@@ -143,15 +143,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     scheme: ZoweScheme.DS,
                     path: `/${sessionLabel}/`,
                 });
-                const parentLabelIsFavorites = this.getParent()?.label === vscode.l10n.t("Favorites");
-                if (this.getParent() == null || parentLabelIsFavorites) {
+                if (this.getParent() == null || this.getParent()?.label === vscode.l10n.t("Favorites")) {
                     // session nodes
-                    if (!parentLabelIsFavorites) {
-                        this.paginator = new Paginator(
-                            SettingsConfig.getDirectValue<number>("zowe.ds.datasetsPerPage") ?? Constants.DEFAULT_ITEMS_PER_PAGE,
-                            this.fetchDatasetsInRange.bind(this)
-                        );
-                    }
                     DatasetFSProvider.instance.createDirectory(this.resourceUri);
                 } else if (this.contextValue === Constants.INFORMATION_CONTEXT) {
                     this.command = { command: "zowe.placeholderCommand", title: "Placeholder" };
@@ -494,7 +487,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return paginate && SharedContext.isSession(this)
+        return paginate && (SharedContext.isSession(this) || SharedContext.isPds(this))
             ? [
                   new NavigationTreeItem(
                       "Previous page",
@@ -663,14 +656,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return fileEntry?.etag;
     }
 
-    public async fetchDatasetsInRange(start?: string, limit?: number): Promise<IFetchResult<IZosFilesResponse, string>> {
+    private async listDatasetsInRange(start?: string, limit?: number): Promise<IFetchResult<IZosFilesResponse, string>> {
         let totalItems = this.paginatorData?.totalItems;
-        let lastDatasetName = this.paginatorData?.lastDatasetName;
+        let lastDatasetName = this.paginatorData?.lastItemName;
         let allDatasets: IZosmfListResponse[] = [];
 
         if (totalItems == null || lastDatasetName == null) {
             const basicResponses: IZosFilesResponse[] = [];
-            await this.fetchDatasets(basicResponses, { attributes: false });
+            await this.listDatasets(basicResponses, { attributes: false });
 
             allDatasets = basicResponses
                 .filter((r) => r.success)
@@ -681,16 +674,16 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
             this.paginatorData = {
                 totalItems: allDatasets.length,
-                lastDatasetName: allDatasets.at(-1)?.dsname,
+                lastItemName: allDatasets.at(-1)?.dsname,
             };
             totalItems = this.paginatorData.totalItems;
-            lastDatasetName = this.paginatorData.lastDatasetName;
+            lastDatasetName = this.paginatorData.lastItemName;
         } else {
             // Using cached data from the refresh to handle the page change
         }
 
         const responses: IZosFilesResponse[] = [];
-        await this.fetchDatasets(responses, { attributes: true, start, maxLength: start ? limit + 1 : limit });
+        await this.listDatasets(responses, { attributes: true, start, maxLength: start ? limit + 1 : limit });
 
         const successfulResponses = responses
             .filter((response) => response.success)
@@ -726,7 +719,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         };
     }
 
-    public async fetchDatasets(responses: IZosFilesResponse[], options?: Pick<IDsmListOptions, "attributes" | "start" | "maxLength">): Promise<void> {
+    public async listDatasets(responses: IZosFilesResponse[], options?: Definitions.DatasetListOpts): Promise<void> {
         const dsPatterns = [
             ...new Set(
                 this.pattern
@@ -735,13 +728,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     .map((p) => p.trim())
             ),
         ];
-        const mvsApi = ZoweExplorerApiRegister.getMvsApi(this.getProfile());
-        if (!mvsApi.getSession(this.getProfile())) {
-            throw new imperative.ImperativeError({
-                msg: vscode.l10n.t("Profile auth error"),
-                additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
-                errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
-            });
+        const profile = options?.profile ?? this.getProfile();
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
+        if (!mvsApi.getSession(profile)) {
+            ZoweLogger.warn("[ZoweDatasetNode.listDatasets] Session undefined for profile " + profile.name);
+            return;
         }
         if (mvsApi.dataSetsMatchingPattern) {
             responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns, options));
@@ -752,20 +743,120 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
     }
 
+    private async listMembersInRange(start?: string, limit?: number): Promise<IFetchResult<IZosFilesResponse, string>> {
+        let totalItems = this.paginatorData?.totalItems;
+        let lastMemberName = this.paginatorData?.lastItemName;
+        let allMembers: IZosmfListResponse[] = [];
+
+        const profile = this.getProfile();
+        const options = {
+            attributes: true,
+            responseTimeout: profile.profile.responseTimeout,
+        };
+
+        if (totalItems == null || lastMemberName == null) {
+            const basicResponses: IZosFilesResponse[] = [];
+            await this.listMembers(basicResponses, { ...options, attributes: false });
+
+            allMembers = basicResponses
+                .filter((r) => r.success)
+                .reduce((arr: IZosmfListResponse[], r) => {
+                    // TODO: verify apiResponse structure for allMembers to remove the need for this check
+                    const responseItems: IZosmfListResponse[] = Array.isArray(r.apiResponse) ? r.apiResponse : r.apiResponse?.items;
+                    return responseItems ? [...arr, ...responseItems] : arr;
+                }, []);
+
+            this.paginatorData = {
+                totalItems: allMembers.length,
+                lastItemName: allMembers.at(-1)?.member,
+            };
+            totalItems = this.paginatorData.totalItems;
+            lastMemberName = this.paginatorData.lastItemName;
+        } else {
+            // Using cached data from the refresh to handle the page change
+        }
+
+        const responses: IZosFilesResponse[] = [];
+        await this.listMembers(responses, { ...options, attributes: true, start, maxLength: start ? limit + 1 : limit });
+
+        const successfulResponses = responses
+            .filter((response) => response.success)
+            .map((resp) => {
+                // TODO: verify apiResponse structure for allMembers to remove the need for this check
+                const items = Array.isArray(resp.apiResponse) ? resp.apiResponse : resp.apiResponse?.items;
+                if (start == null || items?.find((it: IZosmfListResponse) => it.member === start) == null) {
+                    return resp;
+                }
+
+                // Remove the cursor item from the list as its already known/present in the page
+                const filteredItems = items?.filter((it) => it.member !== start);
+
+                return {
+                    ...resp,
+                    apiResponse: Array.isArray(resp.apiResponse) ? filteredItems : { ...(resp.apiResponse ?? {}), items: filteredItems },
+                };
+            });
+
+        const items: IZosmfListResponse[] = successfulResponses.reduce((prev: IZosmfListResponse[], resp): IZosmfListResponse[] => {
+            const responseItems: IZosmfListResponse[] = Array.isArray(resp.apiResponse) ? resp.apiResponse : resp.apiResponse?.items;
+            return responseItems ? [...prev, ...responseItems] : prev;
+        }, []);
+
+        // The last item in the page is the cursor for the next page
+        const lastItem = items.length > 0 ? items.at(-1) : undefined;
+
+        // Use member name for cursor
+        const nextPageCursor = lastItem && lastMemberName !== lastItem.member ? lastItem.member : undefined;
+
+        return {
+            items: successfulResponses,
+            nextPageCursor,
+            totalItems,
+        };
+    }
+
+    public async listMembers(responses: IZosFilesResponse[], options?: Definitions.DatasetListOpts): Promise<void> {
+        const profile = options?.profile ?? this.getProfile();
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
+        if (!mvsApi.getSession(profile)) {
+            ZoweLogger.warn("[ZoweDatasetNode.listMembers] Session undefined for profile " + profile.name);
+            return;
+        }
+
+        const baseOptions = {
+            attributes: true,
+            responseTimeout: profile.profile.responseTimeout,
+            ...options,
+        };
+
+        if (this.memberPattern) {
+            // Fetching members for this PDS w/ matching member pattern(s)
+            this.memberPattern = this.memberPattern.toUpperCase();
+            for (const memPattern of this.memberPattern.split(",")) {
+                baseOptions.pattern = memPattern.trim();
+                responses.push(await mvsApi.allMembers(this.label as string, baseOptions));
+            }
+        } else {
+            // Fetching members for this PDS
+            responses.push(await mvsApi.allMembers(this.label as string, baseOptions));
+        }
+    }
+
     private async getDatasets(profile: imperative.IProfileLoaded, paginate?: boolean): Promise<IZosFilesResponse[] | undefined> {
         ZoweLogger.trace("ZoweDatasetNode.getDatasets called.");
 
         const responses: IZosFilesResponse[] = [];
-        const options: IListOptions = {
-            attributes: true,
-            responseTimeout: profile.profile.responseTimeout,
-        };
         const isSession = SharedContext.isSession(this) || SharedContext.isFavoriteSearch(this);
+
+        if (!isSession && !SharedContext.isPds(this)) {
+            return;
+        }
+
         if (isSession) {
             const fullPattern = SharedContext.isFavoriteSearch(this) ? (this.label as string) : this.pattern;
             const dsTree = SharedTreeProviders.ds as DatasetTree;
             this.patternMatches = dsTree.extractPatterns(fullPattern);
-            const dsPattern = dsTree.buildFinalPattern(this.patternMatches);
+            const dsPattern = dsTree.buildFinalPattern(this.patternMatches).toUpperCase();
             if (dsPattern.length != 0) {
                 if (dsPattern !== this.pattern) {
                     // Reset and remove previous search patterns if pattern has changed
@@ -773,44 +864,47 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     // Force paginator and data to be re-initialized
                     this.paginator = this.paginatorData = undefined;
                 }
-                this.tooltip = this.pattern = dsPattern.toUpperCase();
+                this.tooltip = this.pattern = dsPattern;
             }
         }
 
-        if (!ZoweExplorerApiRegister.getMvsApi(profile).getSession()) {
-            ZoweLogger.warn("[ZoweDatasetNode.getDatasets] Session undefined for profile " + profile.name);
-            return;
-        }
-
         try {
-            if (isSession) {
-                // Ensure paginator exists when `paginate` is enabled
-                if (paginate && !this.paginator) {
-                    this.paginator = new Paginator(
-                        SettingsConfig.getDirectValue<number>("zowe.ds.datasetsPerPage") ?? Constants.DEFAULT_ITEMS_PER_PAGE,
-                        this.fetchDatasetsInRange.bind(this)
-                    );
-                }
+            // Lazy initialization or re-initialization of paginator if needed
+            const fetchFunction = isSession ? this.listDatasetsInRange.bind(this) : this.listMembersInRange.bind(this);
+            const itemsPerPage = SettingsConfig.getDirectValue<number>("zowe.ds.datasetsPerPage") ?? Constants.DEFAULT_ITEMS_PER_PAGE;
 
-                if (paginate && this.paginator) {
-                    if (!this.paginator.isInitialized()) {
-                        await this.paginator.initialize();
-                    }
-                    return this.paginator.getCurrentPageItems() as IZosFilesResponse[];
+            if (!this.paginator || this.paginator.getMaxItemsPerPage() !== itemsPerPage) {
+                // Force paginator and data to be re-initialized if fetch function or page size changes, or if pattern changes (for sessions)
+                if (isSession && this.pattern !== this.tooltip) {
+                    // Check if pattern changed for session
+                    this.paginator = this.paginatorData = undefined;
+                }
+                if (!this.paginator) {
+                    this.paginator = new Paginator(itemsPerPage, fetchFunction);
                 } else {
-                    // Fetch all datasets if not paginating
-                    await this.fetchDatasets(responses, { attributes: true });
+                    // Update existing paginator if only function/page size changed
+                    this.paginator.setMaxItemsPerPage(itemsPerPage);
+                    this.paginatorData = undefined; // Reset cached data
                 }
-            } else if (this.memberPattern) {
-                // Fetching members for this PDS w/ matching member pattern(s)
-                this.memberPattern = this.memberPattern.toUpperCase();
-                for (const memPattern of this.memberPattern.split(",")) {
-                    options.pattern = memPattern;
-                    responses.push(await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(this.label as string, options));
+            }
+
+            if (isSession && this.pattern !== this.tooltip) {
+                // Update tooltip after potential reset
+                this.tooltip = this.pattern;
+            }
+
+            if (paginate && this.paginator) {
+                if (this.paginatorData == null || this.paginator.getMaxItemsPerPage() !== itemsPerPage) {
+                    await this.paginator.initialize();
                 }
+                return this.paginator.getCurrentPageItems() as IZosFilesResponse[];
             } else {
-                // Fetching all members for this PDS
-                responses.push(await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(this.label as string, options));
+                // Fetch all data sets or members when paginate is false
+                if (isSession) {
+                    await this.listDatasets(responses, { attributes: true });
+                } else {
+                    await this.listMembers(responses, { attributes: true });
+                }
             }
         } catch (error) {
             const updated = await AuthUtils.errorHandling(error, {
