@@ -1099,15 +1099,18 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
                 contextOverride: Constants.DS_SESSION_CONTEXT,
             });
             sessionNode.pattern = "PDS.*";
-            (sessionNode as any).paginator = new Paginator(Constants.DEFAULT_ITEMS_PER_PAGE, jest.fn());
-
+            (sessionNode as any).paginator = new Paginator(2, jest.fn());
+            (sessionNode as any).paginatorData = {
+                lastItemName: "PDS.EXAMPLE2",
+                totalItems: 4,
+            };
             jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
                 applyPatternsToChildren: jest.fn(),
             } as any);
             jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: jest.fn().mockReturnValueOnce(profileOne),
             } as any);
-            jest.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
+            const getDatasetsSpy = jest.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
                 {
                     success: true,
                     apiResponse: {
@@ -1130,6 +1133,8 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             ]);
 
             const children = await sessionNode.getChildren(true);
+            expect(getDatasetsSpy).toHaveBeenCalledTimes(1);
+            expect(getDatasetsSpy).toHaveBeenCalledWith(profileOne, true);
             expect(children[0]).toBeInstanceOf(NavigationTreeItem);
             expect(children[0].label).toBe("Previous page");
             expect(children.at(-1)).toBeInstanceOf(NavigationTreeItem);

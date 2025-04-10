@@ -504,8 +504,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                               },
                               async () => {
                                   await this.paginator.fetchPreviousPage();
-                                  this.dirty = true;
-                                  SharedTreeProviders.ds.refreshElement(this);
+                                  SharedTreeProviders.ds.nodeDataChanged?.(this);
                               }
                           );
                       }
@@ -523,8 +522,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                               },
                               async () => {
                                   await this.paginator.fetchNextPage();
-                                  this.dirty = true;
-                                  SharedTreeProviders.ds.refreshElement(this);
+                                  SharedTreeProviders.ds.nodeDataChanged?.(this);
                               }
                           );
                       }
@@ -889,12 +887,27 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 } else {
                     // Update existing paginator if only function/page size changed
                     this.paginator.setMaxItemsPerPage(itemsPerPage);
-                    this.paginatorData = undefined; // Reset cached data
+                }
+            }
+
+            // If node is dirty and pagination is enabled, refetch the current page's data
+            // to reflect potential changes without changing the page itself.
+
+            // If the page fetch fails, reset the paginator data to take the user back to the first page.
+            if (this.dirty && paginate) {
+                try {
+                    await this.paginator.refetchCurrentPage();
+                } catch (error) {
+                    if (error instanceof Error) {
+                        ZoweLogger.error(`[ZoweDatasetNode.getDatasets]: Error refetching current page: ${error.message}`);
+                    }
+                    this.paginatorData = undefined;
                 }
             }
 
             if (paginate && this.paginator) {
-                if (this.paginatorData == null) {
+                // Ensure paginator is initialized if it hasn't been (first load or invalidated cache)
+                if (!this.paginator.isInitialized() || this.paginatorData == null) {
                     await this.paginator.initialize();
                 }
                 responses.push(...this.paginator.getCurrentPageItems());

@@ -426,6 +426,31 @@ describe("Paginator", () => {
         });
     });
 
+    describe("refetchCurrentPage", () => {
+        it("should refetch the current page", async () => {
+            const refetchTest = jest.fn().mockReturnValue({
+                items: createMockData(MAX_ITEMS_PER_PAGE),
+                nextPageCursor: "cursor-5",
+                totalItems: 12,
+            });
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, refetchTest);
+            await paginator.initialize();
+            await paginator.refetchCurrentPage();
+            expect(refetchTest).toHaveBeenCalledTimes(2);
+            expect(refetchTest).toHaveBeenCalledWith(undefined, MAX_ITEMS_PER_PAGE);
+            expect(paginator.getCurrentPageItems().length).toBe(MAX_ITEMS_PER_PAGE);
+            expect(paginator.getCurrentPageItems()[0].id).toBe(0);
+            expect(paginator.getCurrentPageItems()[MAX_ITEMS_PER_PAGE - 1].id).toBe(MAX_ITEMS_PER_PAGE - 1);
+        });
+
+        it("should throw error if called and paginator is not initialized", async () => {
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, mockFetch);
+            await expect(paginator.refetchCurrentPage()).rejects.toThrow(
+                "[Paginator.refetchCurrentPage] Call received but paginator is not initialized."
+            );
+        });
+    });
+
     describe("Getter Methods", () => {
         beforeEach(async () => {
             mockFetch = createMockFetchFunction(12);

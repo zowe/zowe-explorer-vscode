@@ -207,6 +207,41 @@ export class Paginator<T, Cursor = string> {
     }
 
     /**
+     * Refetches the data for the current page using the existing cursor.
+     * Useful for refreshing the view after data modifications without changing the page.
+     * @throws Error if fetching fails.
+     */
+    public async refetchCurrentPage(): Promise<void> {
+        if (this.loading) {
+            // Avoid concurrent fetches
+            return;
+        }
+        if (!this.wasInitialized) {
+            // Cannot refetch if not initialized
+            throw new Error("[Paginator.refetchCurrentPage] Call received but paginator is not initialized.");
+        }
+
+        this.loading = true;
+        try {
+            // Refetch using the cursor that corresponds to the start of the current page
+            const result = await this.fetchFn(this.currentPageCursor, this.maxItemsPerPage);
+
+            this.currentPageItems = result.items;
+            // Update the next page cursor based on the refreshed data
+            this.nextPageCursor = result.nextPageCursor;
+
+            // Recalculate hasNextPage based on the refreshed data
+            // Note: Accuracy depends on fetchFn providing reliable totalItems on refresh
+            this.hasNextPage =
+                !!result.nextPageCursor &&
+                (result.items.length === this.maxItemsPerPage ||
+                    (result.totalItems != null && this.previousPageCursors.length * this.maxItemsPerPage + result.items.length < result.totalItems));
+        } finally {
+            this.loading = false;
+        }
+    }
+
+    /**
      * @returns The items currently displayed on the page.
      */
     public getCurrentPageItems(): T[] {
