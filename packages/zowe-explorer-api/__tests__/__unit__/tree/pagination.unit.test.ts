@@ -9,7 +9,9 @@
  *
  */
 
-import { Paginator, FetchFn, IFetchResult } from "../../../src";
+import { Paginator, FetchFn, IFetchResult, NavigationTreeItem } from "../../../src";
+import * as vscode from "vscode";
+import { MockedProperty } from "../../../__mocks__/mockUtils";
 
 // Helper type for mock data items
 type MockDataItem = { id: number; name: string };
@@ -459,6 +461,13 @@ describe("Paginator", () => {
             expect(paginator.isLoading()).toBe(false);
         });
 
+        it("isInitialized should reflect initialized state", async () => {
+            expect(paginator.isInitialized()).toBe(false);
+
+            await paginator.initialize();
+            expect(paginator.isInitialized()).toBe(true);
+        });
+
         it("canGoNext and canGoPrevious should work correctly through lifecycle", async () => {
             expect(paginator.canGoNext()).toBe(false); // Not initialized
             expect(paginator.canGoPrevious()).toBe(false);
@@ -537,5 +546,32 @@ describe("Paginator", () => {
             expect(() => paginator.setMaxItemsPerPage(2.1)).toThrow("[Paginator.setMaxItemsPerPage] maxItemsPerPage must be a positive integer");
             expect(() => paginator.setMaxItemsPerPage(-1)).toThrow("[Paginator.setMaxItemsPerPage] maxItemsPerPage must be a positive integer");
         });
+    });
+});
+
+describe("NavigationTreeItem", () => {
+    it("can successfully construct an instance with the given arguments", () => {
+        const callback = jest.fn();
+        const command = "zowe.navTreeItem.testCommand";
+        const themeIconConstructor = jest.fn();
+        const themeIconMockedProp = new MockedProperty(vscode, "ThemeIcon", {
+            constructor: themeIconConstructor,
+        } as any);
+        const navItem = new NavigationTreeItem("Navigate somewhere", "arrow-up", false, command, callback);
+        expect(navItem.label).toBe("Navigate somewhere");
+        expect(navItem.command).toStrictEqual({ command, title: "Navigate somewhere", arguments: [callback] });
+        themeIconMockedProp[Symbol.dispose]();
+    });
+
+    it("can successfully construct a instance with the given arguments - disabled nav item", () => {
+        const callback = jest.fn();
+        const themeIconConstructor = jest.fn();
+        const themeIconMockedProp = new MockedProperty(vscode, "ThemeIcon", {
+            constructor: themeIconConstructor,
+        } as any);
+        const navItem = new NavigationTreeItem("Navigate somewhere", "arrow-up", true, "zowe.navTreeItem.testCommand", callback);
+        expect(navItem.label).toBe("Navigate somewhere");
+        expect(navItem.command).toStrictEqual({ command: "zowe.placeholderCommand", title: "" });
+        themeIconMockedProp[Symbol.dispose]();
     });
 });
