@@ -249,7 +249,7 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
         await globalMocks.testJobsProvider.addSession("sestest");
         expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();
         expect(globalMocks.testJobsProvider.mSessionNodes[1].label).toEqual("sestest");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toEqual("sestest");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toEqual("Profile: sestest\nProfile Type: zosmf");
     });
 
     it("Tests that addSession adds the session to the tree with disabled global setting", async () => {
@@ -873,7 +873,16 @@ describe("ZoweJobNode unit tests - Function setEncoding", () => {
     });
 
     it("should error if the resource does not exist", () => {
-        const testNode = new ZoweSpoolNode({ label: "SPOOL", collapsibleState: vscode.TreeItemCollapsibleState.None, spool: createIJobFile() });
+        const testNode = new ZoweSpoolNode({
+            label: "SPOOL",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            spool: createIJobFile(),
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
+        });
         const updateEncodingSpy = jest.spyOn(testNode, "updateEncodingInMap");
         testNode.dirty = false;
 
@@ -901,6 +910,11 @@ describe("ZoweJobNode unit tests - Function setEncoding", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             spool: createIJobFile(),
             parentNode: testParentNode,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
         });
         const updateEncodingSpy = jest.spyOn(testNode, "updateEncodingInMap").mockImplementation();
         const nodePath = testNode.resourceUri.path;
@@ -931,6 +945,11 @@ describe("ZoweJobNode unit tests - Function setEncoding", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             spool: createIJobFile(),
             parentNode: testParentNode,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
         });
         const nodePath = testNode.resourceUri.path;
         const updateEncodingSpy = jest.spyOn(testNode, "updateEncodingInMap").mockImplementation();
