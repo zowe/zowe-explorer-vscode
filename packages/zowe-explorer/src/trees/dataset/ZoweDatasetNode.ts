@@ -488,7 +488,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return paginate && (SharedContext.isSession(this) || SharedContext.isPds(this))
+        return paginate &&
+            (SharedContext.isSession(this) || SharedContext.isPds(this)) &&
+            this.paginatorData.totalItems > this.paginator.getMaxItemsPerPage()
             ? [
                   new NavigationTreeItem(
                       "Previous page",
@@ -757,10 +759,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             allMembers = basicResponses
                 .filter((r) => r.success)
                 .reduce((arr: IZosmfListResponse[], r) => {
-                    // TODO: verify apiResponse structure for allMembers to remove the need for this check
-                    const responseItems: IZosmfListResponse[] = Array.isArray(r.apiResponse) ? r.apiResponse : r.apiResponse?.items;
-                    totalItems += responseItems.length;
-                    return responseItems ? [...arr, ...responseItems] : arr;
+                    const items: IZosmfListResponse[] = r.apiResponse?.items;
+                    totalItems += items.length;
+                    return items ? [...arr, ...items] : arr;
                 }, []);
 
             this.paginatorData = {
