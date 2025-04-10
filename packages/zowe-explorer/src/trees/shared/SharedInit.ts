@@ -104,6 +104,12 @@ export class SharedInit {
         );
 
         context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.updateSchema", async () => {
+                await SharedActions.updateSchemaCommand();
+            })
+        );
+
+        context.subscriptions.push(
             vscode.commands.registerCommand("zowe.diff.useLocalContent", async (localUri) => {
                 if (localUri.scheme === ZoweScheme.USS) {
                     await UssFSProvider.instance.diffOverwrite(localUri);
