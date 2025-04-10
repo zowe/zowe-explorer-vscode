@@ -512,4 +512,30 @@ describe("Paginator", () => {
             await promisePrev; // Back to page 1
         });
     });
+
+    describe("Setter Methods", () => {
+        it("setMaxItemsPerPage updates the maxItemsPerPage when given a valid number", () => {
+            const slowFetch = jest.fn(
+                () =>
+                    new Promise<IFetchResult<MockDataItem, string>>((resolve) =>
+                        setTimeout(() => resolve({ items: createMockData(MAX_ITEMS_PER_PAGE), nextPageCursor: "cursor-next" }), 50)
+                    )
+            );
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, slowFetch);
+            paginator.setMaxItemsPerPage(MAX_ITEMS_PER_PAGE * 2);
+            expect((paginator as any).maxItemsPerPage).toBe(MAX_ITEMS_PER_PAGE * 2);
+        });
+
+        it("setMaxItemsPerPage throws when the given number is invalid", () => {
+            const slowFetch = jest.fn(
+                () =>
+                    new Promise<IFetchResult<MockDataItem, string>>((resolve) =>
+                        setTimeout(() => resolve({ items: createMockData(MAX_ITEMS_PER_PAGE), nextPageCursor: "cursor-next" }), 50)
+                    )
+            );
+            paginator = new Paginator(MAX_ITEMS_PER_PAGE, slowFetch);
+            expect(() => paginator.setMaxItemsPerPage(2.1)).toThrow("[Paginator.setMaxItemsPerPage] maxItemsPerPage must be a positive integer");
+            expect(() => paginator.setMaxItemsPerPage(-1)).toThrow("[Paginator.setMaxItemsPerPage] maxItemsPerPage must be a positive integer");
+        });
+    });
 });
