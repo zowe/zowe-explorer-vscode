@@ -229,7 +229,7 @@ describe("AuthUtils", () => {
             failNotFound: false,
         };
 
-        it("should update a session and a profile in the provided node", () => {
+        it("should update a session and a profile in the provided node", async () => {
             const session = createISession();
             const sessionNode = createDatasetSessionNode(undefined as any, serviceProfile);
             const getSessionMock = jest.fn().mockReturnValue(session);
@@ -237,7 +237,7 @@ describe("AuthUtils", () => {
                 ({
                     getSession: getSessionMock,
                 } as any);
-            AuthUtils.syncSessionNode(sessionForProfile, sessionNode);
+            await AuthUtils.syncSessionNode(sessionForProfile, sessionNode);
             expect(sessionNode.getSession()).toEqual(session);
             expect(sessionNode.getProfile()).toEqual(createIProfile());
         });
@@ -255,7 +255,7 @@ describe("AuthUtils", () => {
                     getSession: getSessionMock,
                 } as any);
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
-            AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
+            await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
             expect(sessionNode.dirty).toBe(true);
             // await the promise since its result is discarded in the called function
@@ -264,7 +264,7 @@ describe("AuthUtils", () => {
             expect(refreshElementMock).toHaveBeenCalledWith(sessionNode);
         });
 
-        it("should do nothing if there is no profile for the provided node", () => {
+        it("should do nothing if there is no profile for the provided node", async () => {
             const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
             const initialSession = sessionNode.getSession();
             const initialProfile = sessionNode.getProfile();
@@ -275,12 +275,12 @@ describe("AuthUtils", () => {
                 ({
                     getSession: () => new imperative.Session({}),
                 } as any);
-            AuthUtils.syncSessionNode(dummyFn, sessionNode);
+            await AuthUtils.syncSessionNode(dummyFn, sessionNode);
             expect(sessionNode.getSession()).toEqual(initialSession);
             expect(sessionNode.getProfile()).toEqual(initialProfile);
         });
 
-        it("handles an error if getCommonAPI function fails", () => {
+        it("handles an error if getCommonAPI function fails", async () => {
             const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
             const refreshElementMock = jest.fn();
             jest.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValueOnce({
@@ -289,7 +289,7 @@ describe("AuthUtils", () => {
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
             const errorLoggerSpy = jest.spyOn(ZoweLogger, "error");
             const errorText = "Failed to retrieve common API for profile";
-            AuthUtils.syncSessionNode(
+            await AuthUtils.syncSessionNode(
                 () => {
                     throw new Error(errorText);
                 },
