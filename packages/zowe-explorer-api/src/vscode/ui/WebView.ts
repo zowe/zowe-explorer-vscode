@@ -163,6 +163,7 @@ export class WebView {
         }
         this.disposables = [];
         this.panel = undefined;
+        this.eventsRegistered = false;
     }
 
     /**
