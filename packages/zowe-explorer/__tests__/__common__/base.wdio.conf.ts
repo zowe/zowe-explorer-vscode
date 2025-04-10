@@ -210,4 +210,5 @@ export const baseConfig: Partial<Options.Testrunner> = {
     // }
 };
 
+// IPC path lengths are limited on MacOS - see https://nodejs.org/api/net.html#identifying-paths-for-ipc-connections
 export const dataDir = joinPath(process.platform === "darwin" ? tmpdir() : __dirname, ".wdio-vscode-service", "data");
