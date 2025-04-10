@@ -209,6 +209,12 @@
   "configuration.title": {
     "Zowe Explorer": ""
   },
+  "zowe.ds.paginate.enabled": {
+    "Paginate data set nodes in the tree view": ""
+  },
+  "zowe.ds.paginate.datasetsPerPage": {
+    "Maximum data sets to list per page": ""
+  },
   "zowe.ds.default.binary": {
     "Default values of Binary data set creation": ""
   },
@@ -620,15 +626,6 @@
   "Uploading USS files...": "",
   "Error uploading files": "",
   "Retrieving response from USS list API": "",
-  "The 'move' function is not implemented for this USS API.": "",
-  "Failed to move {0}": "",
-  "Profile does not exist for this file.": "",
-  "Saving USS file...": "",
-  "Failed to rename {0}": "",
-  "Failed to delete {0}": "",
-  "No error details given": "",
-  "Error fetching destination {0} for paste action: {1}": "",
-  "Failed to copy {0} to {1}": "",
   "Downloaded: {0}": "",
   "Encoding: {0}": "",
   "Binary": "",
@@ -654,6 +651,15 @@
   "initializeUSSFavorites.error.buttonRemove": "",
   "File does not exist. It may have been deleted.": "",
   "Pulling from Mainframe...": "",
+  "The 'move' function is not implemented for this USS API.": "",
+  "Failed to move {0}": "",
+  "Profile does not exist for this file.": "",
+  "Saving USS file...": "",
+  "Failed to rename {0}": "",
+  "Failed to delete {0}": "",
+  "No error details given": "",
+  "Error fetching destination {0} for paste action: {1}": "",
+  "Failed to copy {0} to {1}": "",
   "{0} location": "",
   "Choose a location to create the {0}": "",
   "Name of file or directory": "",
@@ -780,6 +786,8 @@
   "The response from Zowe CLI was not successful": "",
   "{0} members failed to load due to invalid name errors for {1}": "",
   "No data sets found": "",
+  "Previous page": "",
+  "Next page": "",
   "Retrieving response from MVS list API": "",
   "Cannot download, item invalid.": "",
   "Date Created": "",

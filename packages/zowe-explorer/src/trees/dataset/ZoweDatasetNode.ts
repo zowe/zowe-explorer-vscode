@@ -493,7 +493,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.paginatorData.totalItems > this.paginator.getMaxItemsPerPage()
             ? [
                   new NavigationTreeItem(
-                      "Previous page",
+                      vscode.l10n.t("Previous page"),
                       "arrow-small-left",
                       !this.paginator.canGoPrevious(),
                       "zowe.executeNavCallback",
@@ -511,7 +511,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                   ) as any,
                   ...this.children,
                   new NavigationTreeItem(
-                      "Next page",
+                      vscode.l10n.t("Next page"),
                       "arrow-small-right",
                       !this.paginator.canGoNext(),
                       "zowe.executeNavCallback",
