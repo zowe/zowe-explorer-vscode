@@ -19,6 +19,7 @@ export class Constants {
     public static readonly COMMAND_COUNT = 110;
     public static readonly MAX_SEARCH_HISTORY = 5;
     public static readonly MAX_FILE_HISTORY = 10;
+    public static readonly MAX_USS_TEMPORARY_HISTORY = 10;
     public static readonly MAX_DISPLAYED_DELETE_NAMES = 10;
     public static readonly MS_PER_SEC = 1000;
     public static readonly STATUS_BAR_TIMEOUT_MS = 5000;
@@ -61,6 +62,7 @@ export class Constants {
     public static readonly ICON_STATE_OPEN = "open";
     public static readonly ICON_STATE_CLOSED = "closed";
     public static readonly FILTER_SEARCH = "isFilterSearch";
+    public static readonly USS_TEMP_NAVIGATION_HISTORY = "ussTempNavHistory";
     public static readonly VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
     public static ROOTPATH = path.join(__dirname, "..", "..");
     public static readonly SETTINGS_LOGS_FOLDER_PATH = "zowe.files.logsFolder.path";

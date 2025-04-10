@@ -490,4 +490,13 @@ export class SharedContext {
     public static isDatasetNode(node: any): node is IZoweDatasetTreeNode {
         return node.getStats !== undefined;
     }
+
+    /**
+     * Helper function to determine if the USS node has a temporary navigation history
+     * @param node The node to check
+     * @returns true if the node has a temporary navigation history, false otherwise
+     */
+    public static ussHasNavigationHistory(node: TreeItem): boolean {
+        return new RegExp(Constants.USS_TEMP_NAVIGATION_HISTORY).test(node.contextValue);
+    }
 }

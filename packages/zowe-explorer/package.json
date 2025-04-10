@@ -458,6 +458,23 @@
         "icon": "$(arrow-up)"
       },
       {
+        "command": "zowe.uss.back",
+        "title": "%uss.back%",
+        "category": "Zowe Explorer",
+        "icon": "$(arrow-left)"
+      },
+      {
+        "command": "zowe.uss.forward",
+        "title": "%uss.forward%",
+        "category": "Zowe Explorer",
+        "icon": "$(arrow-right)"
+      },
+      {
+        "command": "zowe.uss.resetTempHistory",
+        "title": "%uss.resetTempHistory%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.uss.refresh",
         "title": "%uss.refreshAll%",
         "category": "Zowe Explorer",
@@ -766,8 +783,18 @@
           "group": "inline"
         },
         {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*isFilterSearch/ && !listMultiSelection",
+          "when": "viewItem =~ /^(?!.*_fav.*)(ussSession.*_isFilterSearch)/ && !listMultiSelection",
           "command": "zowe.uss.cdUp",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem =~ /^(?!.*_fav.*)(ussSession.*_isFilterSearch_ussTempNavHistory)/ && !listMultiSelection",
+          "command": "zowe.uss.back",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem =~ /^(?!.*_fav.*)(ussSession.*_isFilterSearch_ussTempNavHistory)/ && !listMultiSelection",
+          "command": "zowe.uss.forward",
           "group": "inline"
         },
         {
@@ -811,8 +838,13 @@
           "group": "000_zowe_ussMainframeInteraction@0"
         },
         {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*isFilterSearch/ && !listMultiSelection",
+          "when": "viewItem =~ /^(?!.*_fav.*)(ussSession.*_isFilterSearch)/ && !listMultiSelection",
           "command": "zowe.uss.cdUp",
+          "group": "000_zowe_ussMainframeInteraction@1"
+        },
+        {
+          "when": "viewItem =~ /^(?!.*_fav.*)(ussSession.*_isFilterSearch_ussTempNavHistory)/ && !listMultiSelection",
+          "command": "zowe.uss.resetTempHistory",
           "group": "000_zowe_ussMainframeInteraction@1"
         },
         {
@@ -1475,6 +1507,18 @@
         },
         {
           "command": "zowe.uss.cdUp",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.back",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.forward",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.resetTempHistory",
           "when": "never"
         },
         {
