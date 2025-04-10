@@ -749,15 +749,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         let lastMemberName = this.paginatorData?.lastItemName;
         let allMembers: IZosmfListResponse[] = [];
 
-        const profile = Profiles.getInstance().loadNamedProfile(this.getProfile().name);
-        const options = {
-            attributes: true,
-            responseTimeout: profile.profile?.responseTimeout,
-        };
-
         if (totalItems == null || lastMemberName == null) {
             const basicResponses: IZosFilesResponse[] = [];
-            await this.listMembers(basicResponses, { ...options, attributes: false });
+            await this.listMembers(basicResponses, { attributes: false });
 
             totalItems = 0;
             allMembers = basicResponses
@@ -779,7 +773,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         const responses: IZosFilesResponse[] = [];
-        await this.listMembers(responses, { ...options, attributes: true, start, maxLength: start ? limit + 1 : limit });
+        await this.listMembers(responses, { attributes: true, start, maxLength: start ? limit + 1 : limit });
 
         const successfulResponses = responses
             .filter((response) => response.success)

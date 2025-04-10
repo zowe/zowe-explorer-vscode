@@ -1274,3 +1274,79 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
         expect(listDatasetsMock.mock.calls[0][1]).toStrictEqual({ attributes: true, start: undefined, maxLength: 2 });
     });
 });
+
+describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
+    it("calls listMembers to fetch basic list when cached data is null", async () => {
+        const pdsNode = new ZoweDatasetNode({
+            label: "PDS.EXAMPLE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+        const listMembersMock = jest
+            .spyOn(pdsNode, "listMembers")
+            .mockImplementationOnce(async (responses) => {
+                responses.push({
+                    success: true,
+                    apiResponse: {
+                        items: [{ member: "EX1" }, { member: "EX2" }, { member: "EX3" }, { member: "EX4" }],
+                        returnedRows: 4,
+                    },
+                    commandResponse: "4 data set(s) were listed successfully",
+                });
+            })
+            .mockImplementationOnce(async (responses) => {
+                responses.push({
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            { member: "EX1", m4date: new Date() },
+                            { member: "EX2", m4date: new Date() },
+                        ],
+                        returnedRows: 2,
+                    },
+                    commandResponse: "2 data set(s) were listed successfully",
+                });
+            });
+
+        await (pdsNode as any).listMembersInRange(undefined, 2);
+        expect(listMembersMock).toHaveBeenCalledTimes(2);
+        expect(listMembersMock.mock.calls[0][1]).toStrictEqual({ attributes: false });
+        expect(listMembersMock.mock.calls[1][1]).toStrictEqual({ attributes: true, start: undefined, maxLength: 2 });
+    });
+
+    it("uses cached data to fetch next page", async () => {
+        const pdsNode = new ZoweDatasetNode({
+            label: "PDS.EXAMPLE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+        (pdsNode as any).paginatorData = {
+            totalItems: 4,
+            lastItemName: "EX4",
+        };
+        const actualResponses: zosfiles.IZosFilesResponse[] = [];
+        const listMembersMock = jest.spyOn(pdsNode, "listMembers").mockImplementationOnce(async (responses) => {
+            const resp = {
+                success: true,
+                apiResponse: {
+                    items: [
+                        { member: "EX3", m4date: new Date() },
+                        { member: "EX4", m4date: new Date() },
+                    ],
+                    returnedRows: 2,
+                },
+                commandResponse: "2 data set(s) were listed successfully",
+            };
+            responses.push(resp);
+            actualResponses.push(resp);
+        });
+
+        expect(await (pdsNode as any).listMembersInRange(undefined, 2)).toStrictEqual({
+            items: actualResponses,
+            nextPageCursor: undefined,
+            totalItems: 4,
+        });
+        expect(listMembersMock).toHaveBeenCalledTimes(1);
+        expect(listMembersMock.mock.calls[0][1]).toStrictEqual({ attributes: true, start: undefined, maxLength: 2 });
+    });
+});
