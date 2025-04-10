@@ -784,18 +784,23 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         const successfulResponses = responses
             .filter((response) => response.success)
             .map((resp) => {
-                // TODO: verify apiResponse structure for allMembers to remove the need for this check
-                const items = Array.isArray(resp.apiResponse) ? resp.apiResponse : resp.apiResponse?.items;
-                if (start == null || items?.find((it: IZosmfListResponse) => it.member === start) == null) {
+                const items = resp.apiResponse?.items;
+                if (start == null || items == null || items.find((it: IZosmfListResponse) => it.member === start) == null) {
                     return resp;
                 }
 
                 // Remove the cursor item from the list as its already known/present in the page
-                const filteredItems = items?.filter((it) => it.member !== start);
+                const filteredItems = items.filter((it) => it.member !== start);
 
                 return {
                     ...resp,
-                    apiResponse: Array.isArray(resp.apiResponse) ? filteredItems : { ...(resp.apiResponse ?? {}), items: filteredItems },
+                    apiResponse: Array.isArray(resp.apiResponse)
+                        ? filteredItems
+                        : {
+                              ...(resp.apiResponse ?? {}),
+                              items: filteredItems,
+                              returnedRows: resp.apiResponse.returnedRows - (items.length - filteredItems.length),
+                          },
                 };
             });
 
