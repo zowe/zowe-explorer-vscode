@@ -1096,7 +1096,7 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    private async getConfigLayers(): Promise<imperative.IConfigLayer[]> {
+    public async getConfigLayers(): Promise<imperative.IConfigLayer[]> {
         ZoweLogger.trace("Profiles.getConfigLayers called.");
         const existingLayers: imperative.IConfigLayer[] = [];
         const config = await imperative.Config.load("zowe", {

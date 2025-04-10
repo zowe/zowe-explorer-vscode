@@ -11,8 +11,10 @@
 
 import * as vscode from "vscode";
 import {
+    createConfigLoad,
     createGetConfigMock,
     createInstanceOfProfile,
+    createInstanceOfProfileInfo,
     createIProfile,
     createISession,
     createISessionWithoutCredentials,
@@ -22,7 +24,7 @@ import {
     createTreeView,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import { Gui, IZoweTree, IZoweTreeNode, Sorting, Types } from "@zowe/zowe-explorer-api";
+import { FileManagement, Gui, IZoweTree, IZoweTreeNode, Sorting, Types } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { createUSSSessionNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
@@ -43,6 +45,7 @@ import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 import { ZoweExplorerExtender } from "../../../../src/extending/ZoweExplorerExtender";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
+import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -978,5 +981,114 @@ describe("Shared Actions Unit Tests - Function isRefreshInProgress", () => {
 
         (SharedActions as any).refreshInProgress = false;
         expect(SharedActions.isRefreshInProgress()).toBe(false);
+    });
+});
+
+describe("Shared Actions Unit Tests - Function updateSchemaCommand", () => {
+    function createBlockMocks() {
+        const newMocks = {
+            updateSpy: jest.spyOn(ProfilesUtils, "updateSchema").mockImplementation(() => jest.fn()),
+            guiSpy: jest.spyOn(Gui, "showQuickPick"),
+            mockGlobalPath: "file://globalPath/.zowe",
+            mockProjectDir: { fsPath: "file://projectPath/", scheme: "file" },
+            profInstance: createInstanceOfProfile(createIProfile()),
+            testConfig: createConfigLoad(),
+            globalLayer: {
+                path: "file://globalPath/.zowe/zowe.config.json",
+                exists: true,
+                properties: undefined,
+                global: true,
+                user: false,
+            },
+            projectLayer: {
+                path: "file://projectPath/zowe.config.user.json",
+                exists: true,
+                properties: undefined,
+                global: false,
+                user: true,
+            },
+            mockProfileInfo: createInstanceOfProfileInfo(),
+            mockGetConfigLayers: jest.fn(),
+            globalChoice: new FilterItem({ text: vscode.l10n.t("Update Global schema only"), show: true }),
+            bothChoice: new FilterItem({ text: vscode.l10n.t("Update Global and Project level schemas"), show: true }),
+            opCancelledSpy: jest.spyOn(Gui, "infoMessage"),
+        };
+
+        jest.spyOn(FileManagement, "getZoweDir").mockReturnValue(newMocks.mockGlobalPath);
+        Object.defineProperty(vscode.workspace, "workspaceFolders", { value: [{ uri: newMocks.mockProjectDir }], configurable: true });
+        Object.defineProperty(FileManagement, "getFullPath", {
+            value: jest.fn().mockReturnValue(newMocks.mockProjectDir.fsPath),
+            configurable: true,
+        });
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    getConfigLayers: newMocks.mockGetConfigLayers,
+                };
+            }),
+        });
+        Object.defineProperty(ProfilesUtils, "setupProfileInfo", {
+            value: jest.fn().mockResolvedValue(newMocks.mockProfileInfo),
+            configurable: true,
+        });
+        Object.defineProperty(Constants, "PROFILES_CACHE", {
+            value: newMocks.profInstance,
+            configurable: true,
+        });
+        Object.defineProperty(Constants.PROFILES_CACHE, "getConfigArray", { value: jest.fn().mockReturnValue([]), configurable: true });
+
+        return newMocks;
+    }
+    beforeEach(() => {
+        jest.restoreAllMocks();
+    });
+    it("updates only global layer without prompt", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.mockProjectDir = { fsPath: "", scheme: "" };
+        blockMocks.mockGetConfigLayers.mockResolvedValueOnce([blockMocks.globalLayer]);
+
+        await SharedActions.updateSchemaCommand();
+        expect(blockMocks.guiSpy).not.toHaveBeenCalled();
+        expect(blockMocks.updateSpy).toHaveBeenCalledWith(blockMocks.mockProfileInfo, [], false);
+    });
+    it("updates only project layer without prompt", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.mockProjectDir = { fsPath: "file://projectPath/", scheme: "file" };
+        blockMocks.mockGetConfigLayers.mockResolvedValueOnce([blockMocks.projectLayer]);
+
+        await SharedActions.updateSchemaCommand();
+        expect(blockMocks.guiSpy).not.toHaveBeenCalled();
+        expect(blockMocks.updateSpy).toHaveBeenCalledWith(blockMocks.mockProfileInfo, [], true);
+    });
+    it("updates only global layer with prompt", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.mockProjectDir = { fsPath: "file://projectPath/", scheme: "file" };
+        blockMocks.mockGetConfigLayers.mockResolvedValueOnce([blockMocks.globalLayer, blockMocks.projectLayer]);
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce(blockMocks.globalChoice);
+
+        await SharedActions.updateSchemaCommand();
+        expect(blockMocks.guiSpy).toHaveBeenCalled();
+        expect(blockMocks.updateSpy).toHaveBeenCalledWith(blockMocks.mockProfileInfo, [], false);
+    });
+    it("updates both layers with prompt", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.mockProjectDir = { fsPath: "file://projectPath/", scheme: "file" };
+        blockMocks.mockGetConfigLayers.mockResolvedValueOnce([blockMocks.globalLayer, blockMocks.projectLayer]);
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce(blockMocks.bothChoice);
+
+        await SharedActions.updateSchemaCommand();
+        expect(blockMocks.guiSpy).toHaveBeenCalled();
+        expect(blockMocks.updateSpy).toHaveBeenCalledWith(blockMocks.mockProfileInfo, [], true);
+    });
+    it("displays operation cancelled with escaping prompt", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.mockProjectDir = { fsPath: "file://projectPath/", scheme: "file" };
+        blockMocks.mockGetConfigLayers.mockResolvedValueOnce([blockMocks.globalLayer, blockMocks.projectLayer]);
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce(undefined);
+
+        await SharedActions.updateSchemaCommand();
+        expect(blockMocks.guiSpy).toHaveBeenCalled();
+        expect(blockMocks.opCancelledSpy).toHaveBeenCalledWith("Operation cancelled");
+        expect(blockMocks.updateSpy).not.toHaveBeenCalled();
     });
 });
