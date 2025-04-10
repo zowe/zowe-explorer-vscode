@@ -32,7 +32,7 @@ import { IconUtils } from "../../../../src/icons/IconUtils";
 import { IconGenerator } from "../../../../src/icons/IconGenerator";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
-import { AuthUtils } from "../../../../src/utils/AuthUtils";
+import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -1106,7 +1106,7 @@ describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
         expect(warnLoggerSpy).toHaveBeenCalledTimes(1);
         expect(warnLoggerSpy).toHaveBeenCalledWith("[ZoweDatasetNode.listDatasets] Session undefined for profile sestest");
         expect(listDatasetsSpy).toHaveBeenCalledTimes(1);
-        expect(listDatasetsSpy).toHaveBeenCalledWith([], { attributes: true });
+        expect(listDatasetsSpy).toHaveBeenCalledWith([], { attributes: true, profile });
         expect(listDatasetsSpy).toHaveReturnedWith(Promise.resolve(undefined));
         mvsApiMock.mockRestore();
         dsTreeMock.mockRestore();
@@ -1123,25 +1123,25 @@ describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
         const listMembersMock = jest.spyOn(sessionNode as any, "listMembers").mockResolvedValueOnce(undefined);
         await (sessionNode as any).getDatasets(profile);
         expect(listMembersMock).toHaveBeenCalledTimes(1);
-        expect(listMembersMock).toHaveBeenCalledWith([], { attributes: true });
+        expect(listMembersMock).toHaveBeenCalledWith([], { attributes: true, profile });
     });
 
     it("calls getCurrentPageItems() - pagination on, node is a PDS", async () => {
         const profile = createIProfile();
-        const sessionNode = new ZoweDatasetNode({
+        const pdsNode = new ZoweDatasetNode({
             label: "PDS.EXAMPLE",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             contextOverride: Constants.DS_PDS_CONTEXT,
         });
 
-        const paginatorInitSpy = jest.spyOn(Paginator.prototype, "initialize");
+        const paginatorInitSpy = jest.spyOn(Paginator.prototype, "initialize").mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined);
 
         // two cases where paginator is initialized:
         // case 1: paginator not yet instantiated
-        expect((sessionNode as any).paginator).toBeUndefined();
-        expect((sessionNode as any).paginatorData).toBeUndefined();
-        await (sessionNode as any).getDatasets(profile, true);
-        expect((sessionNode as any).paginator).toBeDefined();
+        expect((pdsNode as any).paginator).toBeUndefined();
+        expect((pdsNode as any).paginatorData).toBeUndefined();
+        await (pdsNode as any).getDatasets(profile, true);
+        expect((pdsNode as any).paginator).toBeDefined();
         expect(paginatorInitSpy).toHaveBeenCalledTimes(1);
 
         const ds = [
@@ -1161,16 +1161,17 @@ describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
             },
         ];
         const getCurrentPageItemsMock = jest
-            .spyOn((sessionNode as any).paginator, "getCurrentPageItems")
-            .mockResolvedValueOnce(ds)
-            .mockResolvedValueOnce(ds);
+            .spyOn((pdsNode as any).paginator, "getCurrentPageItems")
+            .mockReturnValueOnce(ds)
+            .mockReturnValueOnce(ds);
 
         // case 2: paginator is defined, but paginator max items has changed
-        ((sessionNode as any).paginator as Paginator<zosfiles.IZosFilesResponse>).setMaxItemsPerPage(Constants.DEFAULT_ITEMS_PER_PAGE / 4);
+        const getDirectValueMock = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(Constants.DEFAULT_ITEMS_PER_PAGE / 4);
         paginatorInitSpy.mockClear();
-        await expect((sessionNode as any).getDatasets(profile, true)).resolves.toBe(ds);
+        await expect((pdsNode as any).getDatasets(profile, true)).resolves.toStrictEqual(ds);
         // paginator should be re-initialized
         expect(paginatorInitSpy).toHaveBeenCalledTimes(1);
         expect(getCurrentPageItemsMock).toHaveBeenCalledTimes(1);
+        getDirectValueMock.mockRestore();
     });
 });

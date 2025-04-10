@@ -1716,7 +1716,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD, HLQ.PROD1*");
+        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD(STUF*),HLQ.PROD1*");
     });
     it("Checking adding of new filter with data set member", async () => {
         const globalMocks = createGlobalMocks();
