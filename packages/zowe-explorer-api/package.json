@@ -29,7 +29,7 @@
   "dependencies": {
     "@types/vscode": "^1.53.2",
     "@zowe/core-for-zowe-sdk": "^8.18.0",
-    "@zowe/imperative": "^8.16.0",
+    "@zowe/imperative": "^8.18.0",
     "@zowe/secrets-for-zowe-sdk": "^8.10.4",
     "@zowe/zos-console-for-zowe-sdk": "^8.18.0",
     "@zowe/zos-files-for-zowe-sdk": "^8.18.0",

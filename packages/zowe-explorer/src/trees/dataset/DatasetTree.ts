@@ -1236,8 +1236,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         return includes;
     }
 
-    public applyPatternsToChildren(children: IZoweDatasetTreeNode[], patterns: DatasetMatch[], sessionNode: IZoweDatasetTreeNode): void {
-        for (const child of children.filter((c) => !(c instanceof NavigationTreeItem) && c.label !== "No data sets found")) {
+    public applyPatternsToChildren(children: IZoweDatasetTreeNode[], patterns: DatasetMatch[]): void {
+        for (const child of children.filter((c) => c.label !== vscode.l10n.t("No data sets found"))) {
             for (const item of patterns.filter((p) => p.member && this.patternAppliesToChild(child, p))) {
                 // Only apply to PDS that match the given patterns
                 if (SharedContext.isPds(child)) {
