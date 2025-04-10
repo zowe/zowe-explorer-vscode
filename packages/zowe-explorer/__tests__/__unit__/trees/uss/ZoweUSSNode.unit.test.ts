@@ -565,7 +565,15 @@ describe("ZoweUSSNode Unit Tests - node.setEncoding() and encoding behaviors", (
     it("sets encoding to binary", () => {
         const binaryEncoding = { kind: "binary" };
         getEncodingMock.mockReturnValue(binaryEncoding);
-        const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const node = new ZoweUSSNode({
+            label: "encodingTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
+        });
         node.setEncoding(binaryEncoding);
         expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, binaryEncoding);
         expect(node.tooltip).toContain("Encoding: Binary");
@@ -576,7 +584,15 @@ describe("ZoweUSSNode Unit Tests - node.setEncoding() and encoding behaviors", (
     it("sets encoding to text", () => {
         const textEncoding = { kind: "text" };
         getEncodingMock.mockReturnValue(textEncoding);
-        const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const node = new ZoweUSSNode({
+            label: "encodingTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
+        });
         node.setEncoding(textEncoding);
         expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, textEncoding);
         expect(node.tooltip).not.toContain("Encoding:");
@@ -586,7 +602,15 @@ describe("ZoweUSSNode Unit Tests - node.setEncoding() and encoding behaviors", (
     it("sets encoding to other codepage", () => {
         const otherEncoding = { kind: "other", codepage: "IBM-1047" };
         getEncodingMock.mockReturnValue(otherEncoding);
-        const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const node = new ZoweUSSNode({
+            label: "encodingTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
+        });
         node.setEncoding(otherEncoding);
         expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, otherEncoding);
         expect(node.tooltip).toContain("Encoding: IBM-1047");
@@ -596,6 +620,11 @@ describe("ZoweUSSNode Unit Tests - node.setEncoding() and encoding behaviors", (
         const parentNode = new ZoweUSSNode({
             label: "favoriteTest",
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
         });
         parentNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         const textEncoding = { kind: "text" };
@@ -607,7 +636,15 @@ describe("ZoweUSSNode Unit Tests - node.setEncoding() and encoding behaviors", (
     });
 
     it("resets encoding to undefined", () => {
-        const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const node = new ZoweUSSNode({
+            label: "encodingTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
+        });
         getEncodingMock.mockReturnValue(undefined);
         node.setEncoding(undefined as any);
         expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, undefined);
@@ -617,6 +654,11 @@ describe("ZoweUSSNode Unit Tests - node.setEncoding() and encoding behaviors", (
         const node = new ZoweUSSNode({
             label: "sessionTest",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
         });
         node.contextValue = Constants.USS_SESSION_CONTEXT;
         expect(node.setEncoding.bind(node)).toThrow("Cannot set encoding for node with context ussSession");
@@ -1387,7 +1429,15 @@ describe("ZoweUSSNode Unit Tests - Function node.setEtag", () => {
         const fileEntry = new UssFile("testFile");
         const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(fileEntry);
 
-        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
+        });
         node.setEtag("123ETAG");
         expect(lookupMock).toHaveBeenCalled();
         expect(fileEntry.etag).toBe("123ETAG");
@@ -1398,7 +1448,15 @@ describe("ZoweUSSNode Unit Tests - Function node.setEtag", () => {
         const dirEntry = new UssDirectory("testDir");
         const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(dirEntry);
 
-        const node = new ZoweUSSNode({ label: "testDir", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
+        const node = new ZoweUSSNode({
+            label: "testDir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
+        });
         node.setEtag("123ETAG");
         expect(lookupMock).toHaveBeenCalled();
         expect(dirEntry).not.toHaveProperty("etag");
@@ -1413,14 +1471,30 @@ describe("ZoweUSSNode Unit Tests - Function node.getAttributes", () => {
         fileEntry.attributes = attrs;
         const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(fileEntry);
 
-        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
+        });
         expect(node.getAttributes()).toStrictEqual(attrs);
         lookupMock.mockRestore();
     });
 
     it("returns undefined if no entry is found", () => {
         const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(undefined);
-        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
+        });
         expect(node.getAttributes()).toBeUndefined();
         lookupMock.mockRestore();
     });
@@ -1442,7 +1516,15 @@ describe("ZoweUSSNode Unit Tests - Function node.fetchAttributes", () => {
         const fileEntry = new UssFile("testFile");
         fileEntry.attributes = attrs1;
         const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(fileEntry);
-        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
+        });
         jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
             success: true,
             apiResponse: { items: fileAttrs },
@@ -1454,14 +1536,30 @@ describe("ZoweUSSNode Unit Tests - Function node.fetchAttributes", () => {
     });
     it("returns undefined if no entry is found", async () => {
         const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(undefined);
-        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
+        });
         expect(await node.fetchAttributes()).toBeUndefined();
         lookupMock.mockRestore();
     });
     it("returns undefined if API response success is false", async () => {
         const fileEntry = new UssFile("testFile");
         const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(fileEntry);
-        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
+        });
         jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
             success: false,
             apiResponse: { items: [] },
@@ -1472,7 +1570,15 @@ describe("ZoweUSSNode Unit Tests - Function node.fetchAttributes", () => {
     });
     it("returns undefined if API response apiResponse is empty array", async () => {
         const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(undefined);
-        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
+        });
         jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
             success: true,
             apiResponse: { items: [] },
@@ -1483,7 +1589,15 @@ describe("ZoweUSSNode Unit Tests - Function node.fetchAttributes", () => {
     });
     it("returns undefined if API response apiResponse is more than 1 array/file attrs", async () => {
         const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(undefined);
-        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
+        });
         jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
             success: true,
             apiResponse: { items: fileAttrs, fileAttrs },
@@ -1501,7 +1615,15 @@ describe("ZoweUSSNode Unit Tests - Function node.setAttributes", () => {
         fileEntry.attributes = { ...attrs };
         const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(fileEntry);
 
-        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
+        });
         node.setAttributes({ perms: "r-xr-xr-x" });
 
         // verify that attributes were never updated
@@ -1512,7 +1634,15 @@ describe("ZoweUSSNode Unit Tests - Function node.setAttributes", () => {
 
     it("returns early if no entry is found", () => {
         const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValue(undefined);
-        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
+        });
         expect(node.setAttributes({ perms: "r-xr-xr-x" })).toBeUndefined();
         lookupMock.mockRestore();
     });
@@ -1522,7 +1652,15 @@ describe("ZoweUSSNode Unit Tests - Function node.setAttributes", () => {
         const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockClear().mockReturnValueOnce(dirEntry);
         dirEntry.attributes = { ...attrs };
 
-        const node = new ZoweUSSNode({ label: "testFolder", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
+        const node = new ZoweUSSNode({
+            label: "testFolder",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
+        });
         node.setAttributes({ perms: "r-xr-xr-x" });
         expect(lookupMock).toHaveBeenCalled();
         expect(dirEntry.attributes).toStrictEqual({ ...attrs, perms: "r-xr-xr-x" });
@@ -1532,7 +1670,15 @@ describe("ZoweUSSNode Unit Tests - Function node.setAttributes", () => {
 
 describe("ZoweUSSNode Unit Tests - Function node.getBaseName", () => {
     it("returns the base name for a USS node based on its URI", () => {
-        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
+        });
         node.resourceUri = vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/someProfile/a/b/c/testFile" });
         expect(node.getBaseName()).toBe("testFile");
     });
@@ -1540,7 +1686,15 @@ describe("ZoweUSSNode Unit Tests - Function node.getBaseName", () => {
 
 describe("ZoweUSSNode Unit Tests - Function getUssFiles", () => {
     it("returns an unsuccessful response if the session is undefined", async () => {
-        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
+        });
         const getSessionMock = jest.fn().mockReturnValue(undefined);
         const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
             getSession: getSessionMock,
