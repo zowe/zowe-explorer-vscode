@@ -272,7 +272,7 @@ describe("ZoweExplorerExtender unit tests", () => {
             const addProfTypeToSchema = jest
                 .spyOn(imperative.ProfileInfo.prototype, "addProfileTypeToSchema")
                 .mockImplementation(addProfileTypeToSchemaMock as unknown as any);
-            await (blockMocks.instTest as any).updateSchema(profInfo, [
+            ProfilesUtils.updateSchema(profInfo, [
                 {
                     type: "test-type",
                     schema: {} as any,
@@ -308,7 +308,7 @@ describe("ZoweExplorerExtender unit tests", () => {
                 info: "Schema version is older than the installed version",
             });
             const warnSpy = jest.spyOn(ZoweLogger, "warn");
-            await (blockMocks.instTest as any).updateSchema(profInfo, [
+            ProfilesUtils.updateSchema(profInfo, [
                 {
                     type: "test-type",
                     schema: {} as any,
