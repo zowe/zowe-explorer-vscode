@@ -1061,14 +1061,19 @@ export class Profiles extends ProfilesCache {
         }
         const usingSecureCreds = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
         const profInfo = await this.getProfileInfo();
+
+        const secureProps = profInfo.getTeamConfig().api.secure.securePropsForProfile(profileName);
+
         if (usingSecureCreds && profInfo.getTeamConfig().exists && onlySecure) {
-            return profInfo.getTeamConfig().api.secure.securePropsForProfile(profileName);
+            return secureProps;
         }
+
         const profAttrs = await this.getProfileFromConfig(profileName);
         const mergedArgs = profInfo.mergeArgsForProfile(profAttrs);
         return mergedArgs.knownArgs
             .filter((arg) => (onlySecure ? arg.secure : arg.argValue) || arg.argName === "tokenType" || arg.argName === "tokenValue")
-            .map((arg) => arg.argName);
+            .map((arg) => arg.argName)
+            .concat(secureProps);
     }
 
     private async getConfigLocationPrompt(action: string): Promise<string> {
