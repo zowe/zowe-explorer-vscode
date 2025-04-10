@@ -210,4 +210,4 @@ export const baseConfig: Partial<Options.Testrunner> = {
     // }
 };
 
-export const dataDir = joinPath(process.platform === "darwin" ? tmpdir() : __dirname, ".wdio-vscode-service", "data");
+export const dataDir = joinPath(tmpdir(), ".wdio-vscode-service", "data");
