@@ -792,6 +792,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         : {
                               ...(resp.apiResponse ?? {}),
                               items: filteredItems,
+                              // Update returnedRows to reflect the list without the cursor item
+                              // (difference between array length of `items` and `filteredItems`)
                               returnedRows: resp.apiResponse.returnedRows - (items.length - filteredItems.length),
                           },
                 };
