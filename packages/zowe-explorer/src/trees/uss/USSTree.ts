@@ -840,15 +840,13 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             const favProfileNode =
                 this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ?? (await this.createProfileNodeForFavs(fav.profileName));
 
-            if (favProfileNode == null || fav.contextValue == null) {
+            if (favProfileNode == null || fav.contextValue == null || favProfileNode.children.some((child) => child.label === fav.label)) {
                 continue;
             }
 
             // Initialize and attach favorited item nodes under their respective profile node in Favorrites
             const favChildNode = await this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
-            if (favChildNode != null) {
-                favProfileNode.children.push(favChildNode);
-            }
+            favProfileNode.children.push(favChildNode);
         }
     }
 

@@ -350,16 +350,16 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         for (const fav of favorites) {
             // The profile node used for grouping respective favorited items.
             // Create a node if it does not already exist in the Favorites array
-            const profileNodeInFavorites =
+            const favProfileNode =
                 this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ?? (await this.createProfileNodeForFavs(fav.profileName));
 
-            if (profileNodeInFavorites == null || fav.contextValue == null) {
+            if (favProfileNode == null || fav.contextValue == null || favProfileNode.children.some((child) => child.label === fav.label)) {
                 continue;
             }
 
             // Initialize and attach favorited item nodes under their respective profile node in Favorrites
-            const favChildNodeForProfile = this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, profileNodeInFavorites);
-            profileNodeInFavorites.children.push(favChildNodeForProfile);
+            const favChildNode = this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
+            favProfileNode.children.push(favChildNode);
         }
     }
 
