@@ -1330,6 +1330,8 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
             profile: createIProfile(),
             session: createISession(),
         });
+        // session using cached data
+        sessionNode.dirty = false;
         (sessionNode as any).paginatorData = {
             totalItems: 4,
             lastItemName: "PDS.EXAMPLE4",
@@ -1411,7 +1413,10 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
             label: "PDS.EXAMPLE",
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
             contextOverride: Constants.DS_PDS_CONTEXT,
+            profile: createIProfile(),
         });
+        // PDS using cached data
+        pdsNode.dirty = false;
         (pdsNode as any).paginatorData = {
             totalItems: 4,
             lastItemName: "EX4",
