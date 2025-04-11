@@ -300,7 +300,7 @@ describe("AuthUtils", () => {
             expect(errorLoggerSpy).toHaveBeenCalledWith(`Error syncing session for sestest: ${errorText}`);
         });
 
-        it("To check for node tooltip when profile is using Token based authentication", async () => {
+        it("To check for node tooltip when profile is using Token based authentication and when Auth Method is not initially present in the toolTip", async () => {
             const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
             const getChildrenSpy = jest.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
             const refreshElementMock = jest.fn();
@@ -323,6 +323,45 @@ describe("AuthUtils", () => {
             expect(getChildrenSpy).toHaveBeenCalled();
             expect(refreshElementMock).toHaveBeenCalledWith(sessionNode);
             expect(sessionNode.tooltip).toContain("Auth Method: Token-based Authentication");
+        });
+
+        it("To check for node tooltip when profile is using Basic authentication and when Auth Method is not initially present in the toolTip", async () => {
+            const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
+            const getChildrenSpy = jest.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
+            const refreshElementMock = jest.fn();
+            jest.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValueOnce({
+                refreshElement: refreshElementMock,
+            } as any);
+            const getSessionMock = jest.fn().mockReturnValue(createISession());
+            const sessionForProfile = (_profile) =>
+                ({
+                    getSession: getSessionMock,
+                } as any);
+
+            const testProfile = {
+                name: "sestest",
+                profile: {
+                    host: "fake",
+                    port: 999,
+                    user: "testuser",
+                    password: "testPassword",
+                    rejectUnauthorize: false,
+                },
+                type: "zosmf",
+                message: "",
+                failNotFound: false,
+            };
+            loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
+
+            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+            await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
+            expect(getSessionMock).toHaveBeenCalled();
+            expect(sessionNode.dirty).toBe(true);
+            // await the promise since its result is discarded in the called function
+            await getChildrenSpy;
+            expect(getChildrenSpy).toHaveBeenCalled();
+            expect(refreshElementMock).toHaveBeenCalledWith(sessionNode);
+            expect(sessionNode.tooltip).toContain("Auth Method: Basic Authentication");
         });
     });
 });
