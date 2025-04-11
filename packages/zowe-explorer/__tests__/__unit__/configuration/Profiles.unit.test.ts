@@ -1859,7 +1859,7 @@ describe("Profiles Unit Tests - function getPropsForProfile", () => {
     });
 
     it("should return empty array if profileName is undefined", async () => {
-        const globalMocks = createGlobalMocks();
+        createGlobalMocks();
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValueOnce({
             mergeArgsForProfile: () => ({
                 knownArgs: [
@@ -1879,7 +1879,7 @@ describe("Profiles Unit Tests - function getPropsForProfile", () => {
     });
 
     it("should return all props if invoked with invoked with onlySecure as false", async () => {
-        const globalMocks = createGlobalMocks();
+        createGlobalMocks();
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValueOnce({
             mergeArgsForProfile: () => ({
                 knownArgs: [

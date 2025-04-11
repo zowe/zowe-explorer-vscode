@@ -108,7 +108,7 @@ describe("AuthUtils", () => {
     describe("isUsingTokenAuth", () => {
         it("should return false if shouldRemoveTokenFromProfile() returns true", async () => {
             const profile = { name: "aProfile", type: "zosmf" } as any;
-            const profilesCacheMock = new MockedProperty(Constants, "PROFILES_CACHE", {
+            new MockedProperty(Constants, "PROFILES_CACHE", {
                 value: {
                     ssoLogin: jest.fn().mockImplementation(),
                     promptCredentials: jest.fn().mockImplementation(),
@@ -124,7 +124,7 @@ describe("AuthUtils", () => {
         });
         it("should return true if getPropsForProfile() returns tokenValue", async () => {
             const profile = { name: "aProfile", type: "zosmf" } as any;
-            const profilesCacheMock = new MockedProperty(Constants, "PROFILES_CACHE", {
+            new MockedProperty(Constants, "PROFILES_CACHE", {
                 value: {
                     ssoLogin: jest.fn().mockImplementation(),
                     promptCredentials: jest.fn().mockImplementation(),
