@@ -1995,13 +1995,13 @@
     "vscode": "^1.79.0"
   },
   "devDependencies": {
-    "@cucumber/cucumber": "9.5.1",
+    "@cucumber/cucumber": "^10.0.0",
     "@napi-rs/cli": "^2.16.1",
     "@types/fs-extra": "^7.0.0",
     "@types/promise-queue": "^2.2.0",
     "@types/sinon": "^17.0.3",
     "@wdio/cli": "^8.40.5",
-    "@wdio/cucumber-framework": "^8.40.5",
+    "@wdio/cucumber-framework": "^9.0.0",
     "@wdio/junit-reporter": "^8.40.3",
     "@wdio/local-runner": "^8.40.5",
     "@wdio/mocha-framework": "^8.40.3",
