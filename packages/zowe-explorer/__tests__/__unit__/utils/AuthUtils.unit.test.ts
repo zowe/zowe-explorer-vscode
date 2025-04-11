@@ -299,5 +299,30 @@ describe("AuthUtils", () => {
             expect(errorLoggerSpy).toHaveBeenCalledTimes(1);
             expect(errorLoggerSpy).toHaveBeenCalledWith(`Error syncing session for sestest: ${errorText}`);
         });
+
+        it("To check for node tooltip when profile is using Token based authentication", async () => {
+            const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
+            const getChildrenSpy = jest.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
+            const refreshElementMock = jest.fn();
+            jest.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValueOnce({
+                refreshElement: refreshElementMock,
+            } as any);
+            const getSessionMock = jest.fn().mockReturnValue(createISession());
+            const sessionForProfile = (_profile) =>
+                ({
+                    getSession: getSessionMock,
+                } as any);
+            loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
+
+            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
+            await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
+            expect(getSessionMock).toHaveBeenCalled();
+            expect(sessionNode.dirty).toBe(true);
+            // await the promise since its result is discarded in the called function
+            await getChildrenSpy;
+            expect(getChildrenSpy).toHaveBeenCalled();
+            expect(refreshElementMock).toHaveBeenCalledWith(sessionNode);
+            expect(sessionNode.tooltip).toContain("Auth Method: Token-based Authentication");
+        });
     });
 });
