@@ -1716,7 +1716,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD, HLQ.PROD1*");
+        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD(STUF*),HLQ.PROD1*");
     });
     it("Checking adding of new filter with data set member", async () => {
         const globalMocks = createGlobalMocks();
@@ -2934,8 +2934,8 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         jest.spyOn(SharedContext, "isFavorite").mockReturnValue(true);
         await testTree.rename(parent);
         expect(renameDataSetSpy).toHaveBeenLastCalledWith(parent);
-        expect(parent.resourceUri?.path).toBe("/HLQ.TEST.NEWNAME.NODE");
-        expect(child.resourceUri?.path).toBe("/HLQ.TEST.NEWNAME.NODE/mem1");
+        expect(parent.resourceUri?.path).toBe("/sestest/HLQ.TEST.NEWNAME.NODE");
+        expect(child.resourceUri?.path).toBe("/sestest/HLQ.TEST.NEWNAME.NODE/mem1");
         expect(refreshElementSpy).toHaveBeenCalled();
     });
 

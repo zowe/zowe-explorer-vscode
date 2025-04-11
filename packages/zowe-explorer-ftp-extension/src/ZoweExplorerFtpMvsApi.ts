@@ -24,7 +24,7 @@ import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IMvs {
-    public async dataSet(filter: string, _options?: zosfiles.IListOptions): Promise<zosfiles.IZosFilesResponse> {
+    public async dataSet(filter: string, options?: zosfiles.IListOptions): Promise<zosfiles.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         const session = this.getSession(this.profile);
         try {
@@ -44,6 +44,19 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
                         lrecl: element.recordLength,
                         migr: element.isMigrated ? "YES" : "NO",
                     }));
+                    if (options?.start) {
+                        let startIndex = undefined;
+                        result.apiResponse.items = result.apiResponse.items.filter((item, i) => {
+                            if (item.dsname === options.start) {
+                                startIndex = i;
+                            }
+                            return startIndex == null ? false : i >= startIndex;
+                        });
+                    }
+
+                    if (options?.maxLength) {
+                        result.apiResponse.items = result.apiResponse.items.slice(0, options.maxLength);
+                    }
                 }
             }
             return result;
@@ -52,7 +65,7 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
         }
     }
 
-    public async allMembers(dataSetName: string, _options?: zosfiles.IListOptions): Promise<zosfiles.IZosFilesResponse> {
+    public async allMembers(dataSetName: string, options?: zosfiles.IListOptions): Promise<zosfiles.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         let connection;
         try {
@@ -70,6 +83,18 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
                         version: element.version,
                         // id: element.id, // Removed in zos-node-accessor v2
                     }));
+                    if (options?.start) {
+                        let startIndex = undefined;
+                        result.apiResponse.items = result.apiResponse.items.filter((item, i) => {
+                            if (item.member === options.start) {
+                                startIndex = i;
+                            }
+                            return startIndex == null ? false : i >= startIndex;
+                        });
+                    }
+                    if (options?.maxLength) {
+                        result.apiResponse.items = result.apiResponse.items.slice(0, options.maxLength);
+                    }
                 }
             }
             return result;

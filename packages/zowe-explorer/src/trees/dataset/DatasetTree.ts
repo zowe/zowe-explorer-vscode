@@ -26,6 +26,7 @@ import {
     DatasetMatch,
     ZoweExplorerApiType,
     ZoweScheme,
+    NavigationTreeItem,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetFSProvider } from "./DatasetFSProvider";
@@ -324,15 +325,20 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (element.contextValue && element.contextValue === Constants.FAV_PROFILE_CONTEXT) {
                 return this.loadProfilesForFavorites(this.log, element);
             }
-            const response = await element.getChildren();
+            const isUsingPagination = SettingsConfig.getDirectValue<boolean>("zowe.ds.paginate.enabled");
+            const response = await element.getChildren(isUsingPagination);
 
             const finalResponse: IZoweDatasetTreeNode[] = [];
             for (const item of response) {
+                if (item instanceof NavigationTreeItem) {
+                    finalResponse.push(item);
+                    continue;
+                }
                 if (item.pattern && item.memberPattern) {
                     finalResponse.push(item);
                 }
                 if (!item.memberPattern && !item.pattern) {
-                    if (item.contextValue.includes(Constants.DS_MEMBER_CONTEXT) && element.memberPattern) {
+                    if (item.contextValue?.includes(Constants.DS_MEMBER_CONTEXT) && element.memberPattern) {
                         item.contextValue += Constants.FILTER_SEARCH;
                     }
                     finalResponse.push(item);
@@ -1192,7 +1198,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     }
 
     public resetFilterForChildren(children: IZoweDatasetTreeNode[]): void {
-        for (const child of children) {
+        for (const child of children.filter((c) => !(c instanceof NavigationTreeItem))) {
             let resetIcon: IconUtils.IIconItem;
             if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
                 resetIcon = IconGenerator.getIconById(IconUtils.IconId.folder);
@@ -1309,15 +1315,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
             // looking for members in pattern
             node.dirty = true;
-            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getMvsApi(profile), sessionNode);
-
-            const dsSets = this.extractPatterns(pattern);
-            const dsPattern = this.buildFinalPattern(dsSets);
-            if (dsPattern.length != 0) {
-                sessionNode.tooltip = sessionNode.pattern = dsPattern.toUpperCase();
-            } else {
-                sessionNode.tooltip = sessionNode.pattern = pattern.toUpperCase();
-            }
+            sessionNode.pattern = pattern;
 
             let response: IZoweDatasetTreeNode[] = [];
             try {
@@ -1330,10 +1328,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (response.length === 0) {
                 return;
             }
-            // reset and remove previous search patterns for each child of getChildren
-            this.resetFilterForChildren(response);
-            // set new search patterns for each child of getChildren
-            this.applyPatternsToChildren(response, dsSets);
             this.addSearchHistory(pattern);
         }
         if (!SharedContext.isFavorite(sessionNode)) {
