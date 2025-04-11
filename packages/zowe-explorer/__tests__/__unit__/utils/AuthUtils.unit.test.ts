@@ -501,5 +501,44 @@ describe("AuthUtils", () => {
             expect(getChildrenSpy).toHaveBeenCalled();
             expect(sessionNode.tooltip).toContain("Auth Method: Certificate Authentication");
         });
+
+        it("To check for node tooltip when profile is not in any authentication and when Auth Method is initially present in the toolTip", async () => {
+            const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
+            const getChildrenSpy = jest.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
+            const refreshElementMock = jest.fn();
+            jest.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValueOnce({
+                refreshElement: refreshElementMock,
+            } as any);
+            const getSessionMock = jest.fn().mockReturnValue(createISession());
+            const sessionForProfile = (_profile) =>
+                ({
+                    getSession: getSessionMock,
+                } as any);
+            const testProfile = {
+                name: "sestest",
+                profile: {
+                    host: "fake",
+                    port: 999,
+                    user: undefined,
+                    password: undefined,
+                    rejectUnauthorize: false,
+                    certFile: undefined,
+                    certKeyFile: undefined,
+                },
+                type: "zosmf",
+                message: "",
+                failNotFound: false,
+            };
+            loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
+            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+            sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Unknown`;
+            await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
+            expect(getSessionMock).toHaveBeenCalled();
+            expect(sessionNode.dirty).toBe(true);
+            // await the promise since its result is discarded in the called function
+            await getChildrenSpy;
+            expect(getChildrenSpy).toHaveBeenCalled();
+            expect(sessionNode.tooltip).toContain("Auth Method: Unknown");
+        });
     });
 });
