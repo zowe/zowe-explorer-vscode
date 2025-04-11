@@ -43,6 +43,8 @@ export class WebView {
     public panel: WebviewPanel;
     public view: WebviewView;
 
+    private eventsRegistered: boolean = false;
+
     // Resource identifiers for the on-disk content and vscode-webview resource.
     protected uris: UriPair = {};
 
@@ -140,8 +142,9 @@ export class WebView {
             title: this.title,
         });
         this.webviewContent = builtHtml;
-        if (this.webviewOpts?.onDidReceiveMessage) {
+        if (this.webviewOpts?.onDidReceiveMessage && !this.eventsRegistered) {
             webviewView.webview.onDidReceiveMessage(async (message) => this.webviewOpts.onDidReceiveMessage(message));
+            this.eventsRegistered = true;
         }
         webviewView.onDidDispose(() => this.dispose(), null, this.disposables);
         webviewView.webview.html = this.webviewContent;
@@ -160,6 +163,7 @@ export class WebView {
         }
         this.disposables = [];
         this.panel = undefined;
+        this.eventsRegistered = false;
     }
 
     /**

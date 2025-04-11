@@ -94,6 +94,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         // Locate the resource using the profile in the given URI.
         let resp;
         const isPdsMember = !FsDatasetsUtils.isPdsEntry(entry) && (entry as DsEntry).isMember;
+        const dsPath = (entry.metadata as DsEntryMetadata).extensionRemovedFromPath();
+
         try {
             // Wait for any ongoing authentication process to complete
             await AuthHandler.waitForUnlock(uriInfo.profile);
@@ -111,7 +113,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 resp = await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(pds.name, { attributes: true });
             } else {
                 // Data Set
-                const dsPath = (entry.metadata as DsEntryMetadata).extensionRemovedFromPath();
                 resp = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(path.posix.basename(dsPath), {
                     attributes: true,
                 });
@@ -127,7 +128,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         // Attempt to parse a successful API response and update the data set's cached stats.
         if (resp.success) {
             const items = resp.apiResponse?.items ?? [];
-            const ds = isPdsMember ? items.find((it) => it.member === entry.name) : items?.[0];
+            const ds = isPdsMember ? items.find((it) => it.member === path.posix.basename(dsPath)) : items?.[0];
             if (ds != null && "m4date" in ds) {
                 const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = ds;
                 const newTime = dayjs(`${m4date} ${mtime}:${msec}`).valueOf();

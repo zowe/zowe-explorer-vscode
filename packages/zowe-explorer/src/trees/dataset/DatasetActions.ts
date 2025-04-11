@@ -685,10 +685,6 @@ export class DatasetActions {
             const label = parent.label as string;
             const profile = parent.getProfile();
             let replace: Definitions.ShouldReplace;
-            const memberUri = vscode.Uri.from({
-                scheme: ZoweScheme.DS,
-                path: path.posix.join(parent.resourceUri.path, name),
-            });
             try {
                 replace = await DatasetActions.determineReplacement(profile, `${label}(${name})`, "mem");
                 if (replace !== "cancel") {
@@ -710,15 +706,18 @@ export class DatasetActions {
                 const newNode = new ZoweDatasetNode({
                     label: name,
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    contextOverride: Constants.DS_MEMBER_CONTEXT,
                     parentNode: parent,
                     profile: parent.getProfile(),
                 });
                 parent.children.push(newNode);
-                await vscode.workspace.fs.writeFile(memberUri, new Uint8Array());
+                await vscode.workspace.fs.writeFile(newNode.resourceUri, new Uint8Array());
             }
 
             parent.dirty = true;
             datasetProvider.refreshElement(parent);
+
+            const memberUri = parent.children.find((ds) => ds.label === name)?.resourceUri;
 
             // Refresh corresponding tree parent to reflect addition
             const otherTreeParent = datasetProvider.findEquivalentNode(parent, SharedContext.isFavorite(parent));
@@ -726,7 +725,9 @@ export class DatasetActions {
                 datasetProvider.refreshElement(otherTreeParent);
             }
 
-            await vscode.commands.executeCommand("vscode.open", memberUri);
+            if (memberUri != null) {
+                await vscode.commands.executeCommand("vscode.open", memberUri);
+            }
             datasetProvider.refresh();
         }
     }
