@@ -1843,6 +1843,9 @@ describe("Profiles Unit Tests - function getPropsForProfile", () => {
                 missingArgs: [],
             }),
             getAllProfiles: () => [],
+            getTeamConfig: () => ({
+                api: { secure: { securePropsForProfile: jest.fn() } },
+            }),
         } as any);
         await expect(Profiles.getInstance().getPropsForProfile(globalMocks.testProfile.name ?? "")).resolves.toEqual(["tokenValue"]);
     });
