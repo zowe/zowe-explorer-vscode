@@ -172,7 +172,9 @@ describe("ProfilesUtils unit tests", () => {
                     getProfileInfo: profileInfoMock,
                     getLoadedProfConfig: () => profile,
                     getDefaultProfile: () => ({}),
-                    getSecurePropsForProfile: () => [],
+                    getPropsForProfile: () => ["tokenValue"],
+                    loadNamedProfile: () => profile,
+                    shouldRemoveTokenFromProfile: () => jest.fn(),
                 },
                 configurable: true,
             });
@@ -201,7 +203,9 @@ describe("ProfilesUtils unit tests", () => {
                     getProfileInfo: profileInfoMock,
                     getLoadedProfConfig: () => profile,
                     getDefaultProfile: () => ({}),
-                    getSecurePropsForProfile: () => ["tokenValue"],
+                    getPropsForProfile: () => ["tokenValue"],
+                    loadNamedProfile: () => profile,
+                    shouldRemoveTokenFromProfile: () => jest.fn(),
                     ssoLogin: ssoLoginSpy,
                     promptCredentials: promptCredentialsSpy,
                 },
@@ -241,7 +245,9 @@ describe("ProfilesUtils unit tests", () => {
                     getProfileInfo: profileInfoMock,
                     getLoadedProfConfig: () => profile,
                     getDefaultProfile: () => ({}),
-                    getSecurePropsForProfile: () => [],
+                    getPropsForProfile: () => ["tokenValue"],
+                    loadNamedProfile: () => profile,
+                    shouldRemoveTokenFromProfile: () => jest.fn(),
                 },
                 configurable: true,
             });
@@ -718,8 +724,24 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
             jest.spyOn(Constants.PROFILES_CACHE, "getLoadedProfConfig").mockResolvedValue({ type: "test" } as any);
-            jest.spyOn(Constants.PROFILES_CACHE, "getSecurePropsForProfile").mockResolvedValue([]);
+            jest.spyOn(Constants.PROFILES_CACHE, "getPropsForProfile").mockResolvedValue([]);
+            jest.spyOn(Constants.PROFILES_CACHE, "shouldRemoveTokenFromProfile").mockResolvedValue(false as never);
             await expect(AuthUtils.isUsingTokenAuth("test")).resolves.toEqual(false);
+        });
+
+        it("should return false when token is marked for removal", async () => {
+            const mocks = createBlockMocks();
+            jest.spyOn(Constants.PROFILES_CACHE, "shouldRemoveTokenFromProfile").mockResolvedValue(true as never);
+
+            Object.defineProperty(mocks.profInstance, "getDefaultProfile", {
+                value: jest.fn().mockReturnValue({
+                    name: "baseProfile",
+                    type: "base",
+                }),
+                configurable: true,
+            });
+
+            await expect(AuthUtils.isUsingTokenAuth("testProfile")).resolves.toEqual(false);
         });
     });
 

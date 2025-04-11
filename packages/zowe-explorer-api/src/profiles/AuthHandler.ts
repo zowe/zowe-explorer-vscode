@@ -60,16 +60,16 @@ export class AuthHandler {
 
     /**
      * Function that checks whether a profile is using token based authentication
-     * @param {string[]} secureProfileProps Secure properties for the service profile
-     * @param {string[]} baseSecureProfileProps Base profile's secure properties (optional)
+     * @param {string[]} profileProps Secure properties for the service profile
+     * @param {string[]} baseProfileProps Base profile's secure properties (optional)
      * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not
      */
-    public static isUsingTokenAuth(secureProfileProps: string[], baseSecureProfileProps?: string[]): boolean {
-        const profileUsesBasicAuth = secureProfileProps.includes("user") && secureProfileProps.includes("password");
-        if (secureProfileProps.includes("tokenValue")) {
+    public static isUsingTokenAuth(profileProps: string[], baseProfileProps?: string[]): boolean {
+        const profileUsesBasicAuth = profileProps.includes("user") && profileProps.includes("password");
+        if (profileProps.includes("tokenValue")) {
             return !profileUsesBasicAuth;
         }
-        return baseSecureProfileProps?.includes("tokenValue") && !profileUsesBasicAuth;
+        return baseProfileProps?.includes("tokenValue") && !profileUsesBasicAuth;
     }
 
     /**

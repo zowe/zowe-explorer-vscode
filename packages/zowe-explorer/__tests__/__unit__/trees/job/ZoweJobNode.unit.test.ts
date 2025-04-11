@@ -35,6 +35,7 @@ import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { JobInit } from "../../../../src/trees/job/JobInit";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
+import { AuthUtils } from "../../../../src/utils/AuthUtils";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -96,6 +97,7 @@ async function createGlobalMocks() {
             createDirectory: jest.fn(),
             writeFile: jest.fn(),
         },
+        isUsingTokenAuth: jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(false),
     };
 
     jest.spyOn(JobFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
@@ -149,6 +151,7 @@ async function createGlobalMocks() {
         value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
         configurable: true,
     });
+    Object.defineProperty(Constants, "PROFILES_CACHE", { value: globalMocks.mockProfileInstance!, configurable: true });
     Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
