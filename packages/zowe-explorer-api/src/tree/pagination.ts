@@ -25,11 +25,13 @@ export interface IFetchResult<T, Cursor> {
 }
 
 export class NavigationTreeItem extends TreeItem {
+    public disabled = false;
     public constructor(label: string, icon: string, disabled: boolean, command: string, navigateCallback: () => void | PromiseLike<void>) {
         super(label);
         this.contextValue = "";
         this.iconPath = new ThemeIcon(icon);
-        this.command = disabled
+        this.disabled = disabled;
+        this.command = this.disabled
             ? {
                   command: "zowe.placeholderCommand",
                   title: "",
@@ -60,6 +62,9 @@ export type FetchFn<T, Cursor> = (cursor: Cursor | undefined, limit: number) => 
 export class Paginator<T, Cursor = string> {
     private currentPageItems: T[] = [];
     private maxItemsPerPage: number;
+
+    private pageCount: number = 0;
+    private currentPage: number = 0;
     private currentPageCursor: Cursor | undefined = undefined;
     private nextPageCursor: Cursor | undefined = undefined;
     private previousPageCursors: (Cursor | undefined)[] = [];
@@ -115,6 +120,10 @@ export class Paginator<T, Cursor = string> {
                 (result.items.length === this.maxItemsPerPage ||
                     (result.totalItems != null && this.previousPageCursors.length * this.maxItemsPerPage + result.items.length < result.totalItems));
             this.previousPageCursors = [];
+            if (result.totalItems) {
+                this.pageCount = Math.ceil(result.totalItems / this.maxItemsPerPage);
+                this.currentPage = 0;
+            }
         } catch (error) {
             this.currentPageItems = [];
             this.hasNextPage = false;
@@ -158,6 +167,11 @@ export class Paginator<T, Cursor = string> {
                 !!result.nextPageCursor &&
                 (result.items.length === this.maxItemsPerPage ||
                     (result.totalItems != null && this.previousPageCursors.length * this.maxItemsPerPage + result.items.length < result.totalItems));
+
+            if (result.totalItems) {
+                this.pageCount = Math.ceil(result.totalItems / this.maxItemsPerPage);
+            }
+            this.currentPage = Math.min(this.currentPage + 1, this.pageCount);
         } catch (error) {
             // Remove previous page cursor if an error occurred as the page transition failed
             this.previousPageCursors.pop();
@@ -197,6 +211,11 @@ export class Paginator<T, Cursor = string> {
                 !!result.nextPageCursor &&
                 (result.items.length === this.maxItemsPerPage ||
                     (result.totalItems != null && this.previousPageCursors.length * this.maxItemsPerPage + result.items.length < result.totalItems));
+
+            if (result.totalItems) {
+                this.pageCount = Math.ceil(result.totalItems / this.maxItemsPerPage);
+            }
+            this.currentPage = Math.max(this.currentPage - 1, 0);
         } catch (error) {
             this.previousPageCursors.push(previousCursor); // Push the cursor back if fetch failed to maintain state
             throw error;
@@ -246,6 +265,20 @@ export class Paginator<T, Cursor = string> {
      */
     public getCurrentPageItems(): T[] {
         return this.currentPageItems;
+    }
+
+    /**
+     * @returns The current page index (starting at 0)
+     */
+    public getCurrentPageIndex(): number {
+        return this.currentPage;
+    }
+
+    /**
+     * @returns The total number of pages
+     */
+    public getPageCount(): number {
+        return this.pageCount;
     }
 
     /**

@@ -73,6 +73,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         totalItems?: number;
         lastItemName?: string;
     };
+    private itemsPerPage?: number;
 
     /**
      * Creates an instance of ZoweDatasetNode
@@ -324,7 +325,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             for (const element of this.children) {
                 existingItems[element.label.toString()] = element;
             }
-            for (const item of response.apiResponse.items ?? response.apiResponse) {
+            for (const item of (response.apiResponse.items ?? response.apiResponse) as IZosmfListResponse[]) {
                 let dsNode = existingItems[item.dsname ?? item.member];
                 if (dsNode != null) {
                     elementChildren[dsNode.label.toString()] = dsNode;
@@ -355,7 +356,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         profile: cachedProfile,
                     });
                     elementChildren[dsNode.label.toString()] = dsNode;
-                } else if (item.error instanceof imperative.ImperativeError) {
+                } else if ((item as any).error instanceof imperative.ImperativeError) {
                     // Creates a ZoweDatasetNode for a dataset with imperative errors
                     dsNode = new ZoweDatasetNode({
                         label: item.dsname,
@@ -365,7 +366,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         profile: cachedProfile,
                     });
                     dsNode.command = { command: "zowe.placeholderCommand", title: "" };
-                    dsNode.errorDetails = item.error; // Save imperative error to avoid extra z/OS requests
+                    dsNode.errorDetails = (item as any).error; // Save imperative error to avoid extra z/OS requests
                     elementChildren[dsNode.label.toString()] = dsNode;
                 } else if (item.dsorg === "VS") {
                     // Creates a ZoweDatasetNode for a VSAM file
@@ -400,7 +401,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     elementChildren[dsNode.label.toString()] = dsNode;
                 } else if (item.member) {
                     // Creates a ZoweDatasetNode for a PDS member
-                    const cachedEncoding = this.getEncodingInMap(`${item.dsname as string}(${item.member as string})`);
+                    const cachedEncoding = this.getEncodingInMap(`${item.dsname}(${item.member})`);
                     dsNode = new ZoweDatasetNode({
                         label: item.member,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -487,48 +488,58 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return paginate &&
+        if (
+            paginate &&
             (SharedContext.isSession(this) || SharedContext.isPds(this)) &&
             this.paginatorData.totalItems > this.paginator.getMaxItemsPerPage()
-            ? [
-                  new NavigationTreeItem(
-                      vscode.l10n.t("Previous page"),
-                      "arrow-small-left",
-                      !this.paginator.canGoPrevious(),
-                      "zowe.executeNavCallback",
-                      async (): Promise<void> => {
-                          await Gui.withProgress(
-                              {
-                                  location: { viewId: "zowe.ds.explorer" },
-                              },
-                              async () => {
-                                  await this.paginator.fetchPreviousPage();
-                                  SharedTreeProviders.ds.nodeDataChanged?.(this);
-                              }
-                          );
-                      }
-                  ) as any,
-                  ...this.children,
-                  new NavigationTreeItem(
-                      vscode.l10n.t("Next page"),
-                      "arrow-small-right",
-                      !this.paginator.canGoNext(),
-                      "zowe.executeNavCallback",
-                      async (): Promise<void> => {
-                          await Gui.withProgress(
-                              {
-                                  location: { viewId: "zowe.ds.explorer" },
-                              },
-                              async () => {
-                                  await this.paginator.fetchNextPage();
-                                  SharedTreeProviders.ds.nodeDataChanged?.(this);
-                              }
-                          );
-                      }
-                  ) as any,
-              ]
-            : this.children;
+        ) {
+            const prevPage = new NavigationTreeItem(
+                vscode.l10n.t("Previous page"),
+                "arrow-small-left",
+                !this.paginator.canGoPrevious(),
+                "zowe.executeNavCallback",
+                () =>
+                    Gui.withProgress(
+                        {
+                            location: { viewId: "zowe.ds.explorer" },
+                        },
+                        async () => {
+                            await this.paginator.fetchPreviousPage();
+                            SharedTreeProviders.ds.nodeDataChanged?.(this);
+                        }
+                    )
+            );
+            // Add one to the give 
+            const pageNum = this.paginator.getCurrentPageIndex() + 1;
+            if (!prevPage.disabled) {
+                prevPage.description = `${pageNum - 1}/${this.paginator.getPageCount()}`;
+            }
+
+            const nextPage = new NavigationTreeItem(
+                vscode.l10n.t("Next page"),
+                "arrow-small-right",
+                !this.paginator.canGoNext(),
+                "zowe.executeNavCallback",
+                () =>
+                    Gui.withProgress(
+                        {
+                            location: { viewId: "zowe.ds.explorer" },
+                        },
+                        async () => {
+                            await this.paginator.fetchNextPage();
+                            SharedTreeProviders.ds.nodeDataChanged?.(this);
+                        }
+                    )
+            );
+            if (!nextPage.disabled) {
+                nextPage.description = `${pageNum + 1}/${this.paginator.getPageCount()}`;
+            }
+
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            return [prevPage as any, ...this.children, nextPage as any];
+        }
+
+        return this.children;
     }
 
     /**
@@ -662,7 +673,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         let lastDatasetName = this.paginatorData?.lastItemName;
         let allDatasets: IZosmfListResponse[] = [];
 
-        if (totalItems == null || lastDatasetName == null) {
+        if (this.dirty || totalItems == null || lastDatasetName == null) {
             const basicResponses: IZosFilesResponse[] = [];
             await this.listDatasets(basicResponses, { attributes: false });
 
@@ -749,7 +760,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         let lastMemberName = this.paginatorData?.lastItemName;
         let allMembers: IZosmfListResponse[] = [];
 
-        if (totalItems == null || lastMemberName == null) {
+        if (this.dirty || totalItems == null || lastMemberName == null) {
             const basicResponses: IZosFilesResponse[] = [];
             await this.listMembers(basicResponses, { attributes: false });
 
@@ -875,20 +886,20 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         try {
             // Lazy initialization or re-initialization of paginator if needed
             const fetchFunction = isSession ? this.listDatasetsInRange.bind(this) : this.listMembersInRange.bind(this);
-            const itemsPerPage = SettingsConfig.getDirectValue<number>("zowe.ds.paginate.datasetsPerPage") ?? Constants.DEFAULT_ITEMS_PER_PAGE;
+            this.itemsPerPage = SettingsConfig.getDirectValue<number>("zowe.ds.paginate.datasetsPerPage") ?? Constants.DEFAULT_ITEMS_PER_PAGE;
 
             if (isSession && patternChanged) {
                 // Check if pattern changed for session
                 this.paginator = this.paginatorData = undefined;
             }
 
-            if (!this.paginator || this.paginator.getMaxItemsPerPage() !== itemsPerPage) {
+            if (!this.paginator || this.paginator.getMaxItemsPerPage() !== this.itemsPerPage) {
                 // Force paginator and data to be re-initialized if fetch function or page size changes, or if pattern changes
                 if (!this.paginator) {
-                    this.paginator = new Paginator(itemsPerPage, fetchFunction);
+                    this.paginator = new Paginator(this.itemsPerPage, fetchFunction);
                 } else {
                     // Update existing paginator if only function/page size changed
-                    this.paginator.setMaxItemsPerPage(itemsPerPage);
+                    this.paginator.setMaxItemsPerPage(this.itemsPerPage);
                 }
             }
 

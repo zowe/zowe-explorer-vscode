@@ -461,6 +461,19 @@ describe("Paginator", () => {
             expect(paginator.getMaxItemsPerPage()).toBe(MAX_ITEMS_PER_PAGE);
         });
 
+        it("getCurrentPageIndex should return the current page index", async () => {
+            await paginator.initialize();
+            await paginator.fetchNextPage();
+            expect(paginator.getCurrentPageIndex()).toBe(1);
+            await paginator.fetchPreviousPage();
+            expect(paginator.getCurrentPageIndex()).toBe(0);
+        });
+
+        it("getPageCount should return the total number of pages", async () => {
+            await paginator.initialize();
+            expect(paginator.getPageCount()).toBe(3);
+        });
+
         it("getCurrentPageItems should return current items", async () => {
             expect(paginator.getCurrentPageItems()).toEqual([]); // Before init
             await paginator.initialize();
