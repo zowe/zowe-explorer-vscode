@@ -353,6 +353,15 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
         expect(globalMocks.mockCheckCurrentProfile).toHaveBeenCalled();
     });
 
+    it("Tests that checkCurrentProfile is executed successfully with active status", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(true);
+        const checkJwtSpy = jest.spyOn(ZoweTreeProvider as any, "checkJwtForProfile");
+
+        await blockMocks.testJobsProvider.checkCurrentProfile(blockMocks.jobNode);
+        expect(checkJwtSpy).toHaveBeenCalled();
+    });
     it("Tests that checkCurrentProfile is executed successfully with unverified status", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);

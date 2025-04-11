@@ -104,6 +104,42 @@ describe("AuthUtils", () => {
             isUsingTokenAuthMock.mockRestore();
         });
     });
+
+    describe("isUsingTokenAuth", () => {
+        it("should return false if shouldRemoveTokenFromProfile() returns true", async () => {
+            const profile = { name: "aProfile", type: "zosmf" } as any;
+            const profilesCacheMock = new MockedProperty(Constants, "PROFILES_CACHE", {
+                value: {
+                    ssoLogin: jest.fn().mockImplementation(),
+                    promptCredentials: jest.fn().mockImplementation(),
+                    getDefaultProfile: jest.fn().mockReturnValue("sestest"),
+                    shouldRemoveTokenFromProfile: jest.fn().mockReturnValue(true),
+                    loadNamedProfile: jest.fn(),
+                } as any,
+                configurable: true,
+            });
+
+            const usingTokenAuth = await AuthUtils.isUsingTokenAuth(profile.name);
+            expect(usingTokenAuth).toBe(false);
+        });
+        it("should return true if getPropsForProfile() returns tokenValue", async () => {
+            const profile = { name: "aProfile", type: "zosmf" } as any;
+            const profilesCacheMock = new MockedProperty(Constants, "PROFILES_CACHE", {
+                value: {
+                    ssoLogin: jest.fn().mockImplementation(),
+                    promptCredentials: jest.fn().mockImplementation(),
+                    getDefaultProfile: jest.fn().mockReturnValue("sestest"),
+                    shouldRemoveTokenFromProfile: jest.fn().mockReturnValue(false),
+                    loadNamedProfile: jest.fn(),
+                    getPropsForProfile: jest.fn().mockReturnValue(["tokenValue"]),
+                } as any,
+                configurable: true,
+            });
+
+            const usingTokenAuth = await AuthUtils.isUsingTokenAuth(profile.name);
+            expect(usingTokenAuth).toBe(true);
+        });
+    });
     describe("promptForSsoLogin", () => {
         it("should return false if SSO login fails", async () => {
             const ssoLogin = jest.fn().mockResolvedValueOnce(false);
