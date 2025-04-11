@@ -710,6 +710,11 @@ describe("ZoweDatasetNode Unit Tests - Function node.setEncoding()", () => {
             label: "sessionTest",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             contextOverride: Constants.DS_SESSION_CONTEXT,
+            profile: {
+                type: "sampleType",
+                message: "",
+                failNotFound: false,
+            },
         });
         expect(node.setEncoding.bind(node)).toThrow("Cannot set encoding for node with context session");
     });

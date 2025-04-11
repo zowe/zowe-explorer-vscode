@@ -75,6 +75,8 @@ ZoweUSSNode {
           "user": "fake",
         },
       },
+      "tooltip": "Profile: sestest
+Profile Type: zosmf",
     },
     "onUpdateEmitter": EventEmitter {},
     "parentPath": "/",

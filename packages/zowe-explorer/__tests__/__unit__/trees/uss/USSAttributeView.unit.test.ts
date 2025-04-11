@@ -31,6 +31,11 @@ describe("AttributeView unit tests", () => {
         label: "example_node",
         collapsibleState: vscode.TreeItemCollapsibleState.None,
         parentPath: "/z/some",
+        profile: {
+            type: "sampleType",
+            message: "",
+            failNotFound: false,
+        },
     });
     const updateAttrsApiMock = jest.fn();
     const updateAttributesMock = jest.spyOn(node, "setAttributes").mockImplementation();
