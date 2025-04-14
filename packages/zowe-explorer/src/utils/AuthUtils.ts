@@ -205,7 +205,7 @@ export class AuthUtils {
                         toolTipList.push(`Auth Method: Certificate Authentication`);
                         break;
                     }
-                    case !usingTokenAuth && !usingBasicAuth && !usingCertAuth: {
+                    default: {
                         toolTipList.push(`Auth Method: Unknown`);
                         break;
                     }
