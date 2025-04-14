@@ -144,7 +144,7 @@ export class Paginator<T, Cursor = string> {
      */
     public async fetchNextPage(): Promise<T[]> {
         if (this.loading) {
-            throw new Error("[Paginator.fetchNextPage] Paginator is already loading.");
+            return;
         }
         if (!this.hasNextPage || this.nextPageCursor === undefined) {
             throw new Error("[Paginator.fetchNextPage] No next page available or cursor is missing.");
@@ -190,7 +190,7 @@ export class Paginator<T, Cursor = string> {
      */
     public async fetchPreviousPage(): Promise<T[]> {
         if (this.loading) {
-            throw new Error("[Paginator.fetchPreviousPage] Paginator is already loading.");
+            return;
         }
         if (!this.canGoPrevious()) {
             throw new Error("[Paginator.fetchPreviousPage] No previous page available.");
@@ -256,6 +256,10 @@ export class Paginator<T, Cursor = string> {
                 !!result.nextPageCursor &&
                 (result.items.length === this.maxItemsPerPage ||
                     (result.totalItems != null && this.previousPageCursors.length * this.maxItemsPerPage + result.items.length < result.totalItems));
+
+            if (result.totalItems) {
+                this.pageCount = Math.ceil(result.totalItems / this.maxItemsPerPage);
+            }
         } finally {
             this.loading = false;
         }

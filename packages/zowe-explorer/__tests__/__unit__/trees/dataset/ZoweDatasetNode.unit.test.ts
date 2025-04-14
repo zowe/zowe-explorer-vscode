@@ -1265,10 +1265,7 @@ describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
                 },
             },
         ];
-        const getCurrentPageItemsMock = jest
-            .spyOn((pdsNode as any).paginator, "getCurrentPageItems")
-            .mockReturnValueOnce(ds)
-            .mockReturnValueOnce(ds);
+        const getCurrentPageItemsMock = jest.spyOn(Paginator.prototype, "getCurrentPageItems").mockReturnValueOnce(ds).mockReturnValueOnce(ds);
 
         // case 2: paginator is defined, but paginator max items has changed
         const getDirectValueMock = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(Constants.DEFAULT_ITEMS_PER_PAGE / 4);

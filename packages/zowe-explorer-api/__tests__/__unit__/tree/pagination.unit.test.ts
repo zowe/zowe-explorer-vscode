@@ -288,7 +288,7 @@ describe("Paginator", () => {
             await expect(paginator.fetchNextPage()).rejects.toThrow("[Paginator.fetchNextPage] No next page available or cursor is missing.");
         });
 
-        it("should throw error if trying to fetch next page while already loading", async () => {
+        it("should resolve gracefully if trying to fetch next page while already loading", async () => {
             const slowFetch = jest.fn(
                 () =>
                     new Promise<IFetchResult<MockDataItem, string>>((resolve) =>
@@ -300,7 +300,7 @@ describe("Paginator", () => {
 
             const promise = paginator.fetchNextPage(); // Start loading next page
             expect(paginator.isLoading()).toBe(true);
-            await expect(paginator.fetchNextPage()).rejects.toThrow("[Paginator.fetchNextPage] Paginator is already loading.");
+            await expect(paginator.fetchNextPage()).resolves.not.toThrow();
             await promise; // Wait for the first fetch to complete
         });
 
@@ -381,7 +381,7 @@ describe("Paginator", () => {
             await expect(paginator.fetchPreviousPage()).rejects.toThrow("[Paginator.fetchPreviousPage] No previous page available.");
         });
 
-        it("should throw error if trying to fetch previous page while already loading", async () => {
+        it("should resolve gracefully if trying to fetch previous page while already loading", async () => {
             await paginator.fetchPreviousPage(); // Go back to page 2 first to ensure canGoPrevious is true
 
             const slowFetch = jest.fn(
@@ -395,7 +395,7 @@ describe("Paginator", () => {
 
             const promise = paginator.fetchPreviousPage(); // Start loading previous page
             expect(paginator.isLoading()).toBe(true);
-            await expect(paginator.fetchPreviousPage()).rejects.toThrow("[Paginator.fetchPreviousPage] Paginator is already loading.");
+            await expect(paginator.fetchPreviousPage()).resolves.not.toThrow();
             await promise; // Wait for the first fetch to complete
         });
 

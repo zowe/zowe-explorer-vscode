@@ -509,7 +509,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         }
                     )
             );
-            // Add one to the give 
             const pageNum = this.paginator.getCurrentPageIndex() + 1;
             if (!prevPage.disabled) {
                 prevPage.description = `${pageNum - 1}/${this.paginator.getPageCount()}`;
@@ -672,30 +671,39 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         let totalItems = this.paginatorData?.totalItems;
         let lastDatasetName = this.paginatorData?.lastItemName;
         let allDatasets: IZosmfListResponse[] = [];
-
-        if (this.dirty || totalItems == null || lastDatasetName == null) {
-            const basicResponses: IZosFilesResponse[] = [];
-            await this.listDatasets(basicResponses, { attributes: false });
-
-            allDatasets = basicResponses
-                .filter((r) => r.success)
-                .reduce((arr: IZosmfListResponse[], r) => {
-                    const responseItems: IZosmfListResponse[] = Array.isArray(r.apiResponse) ? r.apiResponse : r.apiResponse?.items;
-                    return responseItems ? [...arr, ...responseItems] : arr;
-                }, []);
-
-            this.paginatorData = {
-                totalItems: allDatasets.length,
-                lastItemName: allDatasets.at(-1)?.dsname,
-            };
-            totalItems = this.paginatorData.totalItems;
-            lastDatasetName = this.paginatorData.lastItemName;
-        } else {
-            // Using cached data from the refresh to handle the page change
-        }
-
         const responses: IZosFilesResponse[] = [];
-        await this.listDatasets(responses, { attributes: true, start, maxLength: start ? limit + 1 : limit });
+
+        try {
+            if (this.dirty || totalItems == null || lastDatasetName == null) {
+                const basicResponses: IZosFilesResponse[] = [];
+                await this.listDatasets(basicResponses, { attributes: false });
+
+                allDatasets = basicResponses
+                    .filter((r) => r.success)
+                    .reduce((arr: IZosmfListResponse[], r) => {
+                        const responseItems: IZosmfListResponse[] = Array.isArray(r.apiResponse) ? r.apiResponse : r.apiResponse?.items;
+                        return responseItems ? [...arr, ...responseItems] : arr;
+                    }, []);
+
+                this.paginatorData = {
+                    totalItems: allDatasets.length,
+                    lastItemName: allDatasets.at(-1)?.dsname,
+                };
+                totalItems = this.paginatorData.totalItems;
+                lastDatasetName = this.paginatorData.lastItemName;
+            } else {
+                // Using cached data from the refresh to handle the page change
+            }
+            await this.listDatasets(responses, { attributes: true, start, maxLength: start ? limit + 1 : limit });
+        } catch (err) {
+            const updated = await AuthUtils.errorHandling(err, {
+                apiType: ZoweExplorerApiType.Mvs,
+                profile: this.getProfile(),
+                scenario: vscode.l10n.t("Retrieving response from MVS list API"),
+            });
+            AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
+            return;
+        }
 
         const successfulResponses = responses
             .filter((response) => response.success)
@@ -759,31 +767,41 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         let totalItems = this.paginatorData?.totalItems;
         let lastMemberName = this.paginatorData?.lastItemName;
         let allMembers: IZosmfListResponse[] = [];
-
-        if (this.dirty || totalItems == null || lastMemberName == null) {
-            const basicResponses: IZosFilesResponse[] = [];
-            await this.listMembers(basicResponses, { attributes: false });
-
-            totalItems = 0;
-            allMembers = basicResponses
-                .filter((r) => r.success)
-                .reduce((arr: IZosmfListResponse[], r) => {
-                    const items: IZosmfListResponse[] = r.apiResponse?.items;
-                    totalItems += items.length;
-                    return items ? [...arr, ...items] : arr;
-                }, []);
-
-            this.paginatorData = {
-                totalItems,
-                lastItemName: allMembers.at(-1)?.member,
-            };
-            lastMemberName = this.paginatorData.lastItemName;
-        } else {
-            // Using cached data from the refresh to handle the page change
-        }
-
         const responses: IZosFilesResponse[] = [];
-        await this.listMembers(responses, { attributes: true, start, maxLength: start ? limit + 1 : limit });
+
+        try {
+            if (this.dirty || totalItems == null || lastMemberName == null) {
+                const basicResponses: IZosFilesResponse[] = [];
+                await this.listMembers(basicResponses, { attributes: false });
+
+                totalItems = 0;
+                allMembers = basicResponses
+                    .filter((r) => r.success)
+                    .reduce((arr: IZosmfListResponse[], r) => {
+                        const items: IZosmfListResponse[] = r.apiResponse?.items;
+                        totalItems += items.length;
+                        return items ? [...arr, ...items] : arr;
+                    }, []);
+
+                this.paginatorData = {
+                    totalItems,
+                    lastItemName: allMembers.at(-1)?.member,
+                };
+                lastMemberName = this.paginatorData.lastItemName;
+            } else {
+                // Using cached data from the refresh to handle the page change
+            }
+
+            await this.listMembers(responses, { attributes: true, start, maxLength: start ? limit + 1 : limit });
+        } catch (err) {
+            const updated = await AuthUtils.errorHandling(err, {
+                apiType: ZoweExplorerApiType.Mvs,
+                profile: this.getProfile(),
+                scenario: vscode.l10n.t("Retrieving response from MVS list API"),
+            });
+            AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
+            return;
+        }
 
         const successfulResponses = responses
             .filter((response) => response.success)
@@ -895,12 +913,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
             if (!this.paginator || this.paginator.getMaxItemsPerPage() !== this.itemsPerPage) {
                 // Force paginator and data to be re-initialized if fetch function or page size changes, or if pattern changes
-                if (!this.paginator) {
-                    this.paginator = new Paginator(this.itemsPerPage, fetchFunction);
-                } else {
-                    // Update existing paginator if only function/page size changed
-                    this.paginator.setMaxItemsPerPage(this.itemsPerPage);
-                }
+                this.paginator = new Paginator(this.itemsPerPage, fetchFunction);
             }
 
             // If node is dirty and pagination is enabled, refetch the current page's data
