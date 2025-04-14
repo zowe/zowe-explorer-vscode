@@ -874,5 +874,32 @@ describe("AuthUtils", () => {
             expect(sessionNode.tooltip).toContain(`Path: /a/user/fileNameTwo`);
             expect(sessionNode.tooltip).toContain("Auth Method: Token-based Authentication");
         });
+
+        it("To check for ZoweJobNode tooltip when job search pattern is updated", async () => {
+            const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
+            const getChildrenSpy = jest.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
+            const refreshElementMock = jest.fn();
+            jest.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValueOnce({
+                refreshElement: refreshElementMock,
+            } as any);
+            const getSessionMock = jest.fn().mockReturnValue(createISession());
+            const sessionForProfile = (_profile) =>
+                ({
+                    getSession: getSessionMock,
+                } as any);
+            loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
+
+            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
+            sessionNode.tooltip = `Auth Method: Token Authentication\nOwner: * | Prefix: * | Status: *`;
+            sessionNode.description = "Owner: * | Prefix: * | Status: ACTIVE";
+            await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
+            expect(getSessionMock).toHaveBeenCalled();
+            expect(sessionNode.dirty).toBe(true);
+            // await the promise since its result is discarded in the called function
+            await getChildrenSpy;
+            expect(getChildrenSpy).toHaveBeenCalled();
+            expect(sessionNode.tooltip).toContain("Owner: * | Prefix: * | Status: ACTIVE");
+            expect(sessionNode.tooltip).toContain("Auth Method: Token-based Authentication");
+        });
     });
 });
