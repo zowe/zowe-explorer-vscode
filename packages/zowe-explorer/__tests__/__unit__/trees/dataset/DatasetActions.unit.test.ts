@@ -282,22 +282,28 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
     it("should not replace existing member when user cancels the replacement prompt", async () => {
         const blockMocks = createBlockMocksShared();
         const parent = new ZoweDatasetNode({
-            label: "parent",
+            label: "PDS.EXAMPLE",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: blockMocks.datasetSessionNode,
-            session: blockMocks.session,
         });
+        const pdsMember = new ZoweDatasetNode({
+            label: "EX1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: parent,
+            contextOverride: Constants.DS_MEMBER_CONTEXT,
+        });
+        parent.children = [pdsMember];
 
-        blockMocks.testDatasetTree.getChildren = jest.fn().mockResolvedValueOnce([{ ...parent, label: "TESTMEMBER" } as any] as any);
+        blockMocks.testDatasetTree.getChildren = jest.fn().mockResolvedValueOnce([parent]);
 
         jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("cancel" as any);
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("TESTMEMBER");
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("EX1");
 
         jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValueOnce(true as any);
 
         await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
 
-        expect(vscode.commands.executeCommand).toHaveBeenCalledWith("vscode.open", { path: "/parent/parent/TESTMEMBER", scheme: "zowe-ds" });
+        expect(vscode.commands.executeCommand).toHaveBeenCalledWith("vscode.open", { path: "/sestest/PDS.EXAMPLE/EX1", scheme: "zowe-ds" });
         expect(blockMocks.testDatasetTree.refresh).toHaveBeenCalled();
     });
 });
