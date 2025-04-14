@@ -443,9 +443,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             }
         }
 
-        if (file == null) {
-            throw vscode.FileSystemError.FileNotFound(uri);
-        }
         if (FsAbstractUtils.isDirectoryEntry(file)) {
             throw vscode.FileSystemError.FileIsADirectory(uri);
         }
@@ -457,12 +454,13 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         const urlQuery = new URLSearchParams(uri.query);
+        const shouldFetch = urlQuery.get("fetch") === "true";
         const isConflict = urlQuery.has("conflict");
 
         // Fetch contents from the mainframe if:
         // - the file hasn't been accessed yet
         // - fetching a conflict from the remote FS
-        if ((!file.wasAccessed && !urlQuery.has("inDiff")) || isConflict) {
+        if (file == null || shouldFetch || (!file.wasAccessed && !urlQuery.has("inDiff")) || isConflict) {
             await this.fetchFileAtUri(uri, { isConflict });
         }
 

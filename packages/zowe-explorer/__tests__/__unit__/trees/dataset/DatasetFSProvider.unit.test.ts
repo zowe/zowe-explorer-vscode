@@ -394,6 +394,23 @@ describe("readFile", () => {
         _getInfoFromUriMock.mockRestore();
     });
 
+    it("calls fetchDatasetAtUri if the URI has the fetch=true query parameter", async () => {
+        const _lookupAsFileMock = jest
+            .spyOn(DatasetFSProvider.instance as any, "_lookupAsFile")
+            .mockReturnValueOnce({ ...testEntries.ps, wasAccessed: true });
+        const _getInfoFromUriMock = jest.spyOn(DatasetFSProvider.instance as any, "_getInfoFromUri").mockReturnValueOnce({
+            profile: testProfile,
+            path: "/USER.DATA.PS",
+        });
+        const fetchDatasetAtUriMock = jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValueOnce(new DsEntry("USER.DATA.PS"));
+
+        await DatasetFSProvider.instance.readFile(testUris.ps.with({ query: "fetch=true" }));
+        expect(_lookupAsFileMock).toHaveBeenCalledWith(testUris.ps);
+        expect(fetchDatasetAtUriMock).toHaveBeenCalledTimes(1);
+        fetchDatasetAtUriMock.mockRestore();
+        _getInfoFromUriMock.mockRestore();
+    });
+
     it("calls fetchDatasetAtUri if entry does not exist locally", async () => {
         const _lookupAsFileMock = jest
             .spyOn(DatasetFSProvider.instance as any, "_lookupAsFile")

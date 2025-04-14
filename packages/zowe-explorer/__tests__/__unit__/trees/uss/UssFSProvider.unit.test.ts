@@ -668,6 +668,20 @@ describe("readFile", () => {
         lookupAsFileMock.mockRestore();
     });
 
+    it("fetches latest data when fetch=true query parameter provided", async () => {
+        const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile");
+        lookupAsFileMock.mockReturnValue(testEntries.file);
+        getInfoFromUriMock.mockReturnValueOnce({
+            profile: testProfile,
+            path: "/aFile.txt",
+        });
+        const fetchFileAtUriMock = jest.spyOn(UssFSProvider.instance, "fetchFileAtUri").mockResolvedValueOnce(undefined);
+        await UssFSProvider.instance.readFile(testUris.file.with({ query: "fetch=true" }));
+        expect(fetchFileAtUriMock).toHaveBeenCalledTimes(1);
+        fetchFileAtUriMock.mockRestore();
+        lookupAsFileMock.mockRestore();
+    });
+
     it("returns conflict data for a file with the conflict query parameter", async () => {
         const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile");
         lookupAsFileMock.mockReturnValue(testEntries.file);

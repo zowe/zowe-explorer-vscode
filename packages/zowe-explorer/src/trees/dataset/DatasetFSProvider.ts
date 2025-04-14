@@ -505,6 +505,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let ds: DsEntry | DirEntry;
         const urlQuery = new URLSearchParams(uri.query);
         const isConflict = urlQuery.has("conflict");
+        const shouldFetch = urlQuery.get("fetch") === "true";
         try {
             ds = this._lookupAsFile(uri) as DsEntry;
         } catch (err) {
@@ -533,7 +534,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
 
         // we need to fetch the contents from the mainframe if the file hasn't been accessed yet
-        if (!ds || (!ds.wasAccessed && !urlQuery.has("inDiff")) || isConflict) {
+        if (!ds || shouldFetch || (!ds.wasAccessed && !urlQuery.has("inDiff")) || isConflict) {
             //try and fetch its contents from remote
             ds = (await this.fetchDatasetAtUri(uri, { isConflict })) as DsEntry;
             if (!isConflict && ds) {
