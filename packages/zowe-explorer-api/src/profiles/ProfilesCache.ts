@@ -33,6 +33,7 @@ export class ProfilesCache {
     protected allExternalTypes = new Set<string>();
     protected profilesByType = new Map<string, imperative.IProfileLoaded[]>();
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
+    protected overrideWithEnv = false;
 
     public constructor(protected log: imperative.Logger, protected cwd?: string) {
         this.cwd = cwd != null ? FileManagement.getFullPath(cwd) : undefined;
@@ -80,9 +81,20 @@ export class ProfilesCache {
     public async getProfileInfo(_envTheia = false): Promise<imperative.ProfileInfo> {
         const mProfileInfo = new imperative.ProfileInfo("zowe", {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            overrideWithEnv: this.overrideWithEnv,
             credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
         });
         await mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: this.cwd ?? undefined });
+        for (const profile of this.allProfiles) {
+            if (profile.profile.user?.startsWith("$")) {
+                const userEnvVar = profile.profile.user.match(/^\$(\w+)$/)?.[1];
+                profile.profile.user = process.env[userEnvVar];
+            }
+            if (profile.profile.password?.startsWith("$")) {
+                const passwordEnvVar = profile.profile.password.match(/^\$(\w+)$/)?.[1];
+                profile.profile.password = process.env[passwordEnvVar];
+            }
+        }
         return mProfileInfo;
     }
 
