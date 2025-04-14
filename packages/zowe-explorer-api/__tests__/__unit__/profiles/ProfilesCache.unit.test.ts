@@ -16,6 +16,7 @@ import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
 import { FileManagement, Types } from "../../../src";
 import { mocked } from "../../../__mocks__/mockUtils";
 import { VscSettings } from "../../../src/vscode/doc/VscSettings";
+import { profile } from "console";
 
 jest.mock("fs");
 
@@ -161,6 +162,33 @@ describe("ProfilesCache", () => {
             path.join(fakeZoweDir, teamConfig.userConfigName),
             path.join(fakeZoweDir, teamConfig.configName),
         ]);
+        existsSync.mockRestore();
+    });
+
+    it("getProfileInfo should replace user and password with environment variables", async () => {
+        process.env.ZOWE_OPT_USER = "fake";
+        process.env.ZOWE_OPT_PASSWORD = "fake";
+
+        const profileMock = {
+            name: "fake",
+            profile: {
+                user: "$ZOWE_OPT_USER",
+                password: "$ZOWE_OPT_PASSWORD",
+            },
+            type: "zosmf",
+            failNotFound: true,
+            message: "fake",
+        };
+        const existsSync = jest.spyOn(fs, "existsSync").mockImplementation();
+        jest.spyOn(FileManagement, "getZoweDir").mockReturnValue(fakeZoweDir);
+        const profilesCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger, __dirname);
+        profilesCache.allProfiles = [profileMock];
+        await profilesCache.getProfileInfo();
+        expect(readProfilesFromDiskSpy).toHaveBeenCalledTimes(1);
+        expect(defaultCredMgrWithKeytarSpy).toHaveBeenCalledTimes(1);
+        expect(defaultCredMgrWithKeytarSpy).toHaveBeenCalledWith(ProfilesCache.requireKeyring);
+        expect(profileMock.profile.user).toBe("fake");
+        expect(profileMock.profile.password).toBe("fake");
         existsSync.mockRestore();
     });
 
