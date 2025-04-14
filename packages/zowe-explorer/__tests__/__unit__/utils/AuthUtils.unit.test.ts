@@ -618,5 +618,43 @@ describe("AuthUtils", () => {
             expect(sessionNode.tooltip).toContain(`${sessionNode.description}`);
             expect(sessionNode.tooltip).toContain("Auth Method: Token-based Authentication");
         });
+
+        it("To check for node tooltip when profile is using Basic authentication and User ID is present in the toolTip", async () => {
+            const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
+            const getChildrenSpy = jest.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
+            const refreshElementMock = jest.fn();
+            jest.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValueOnce({
+                refreshElement: refreshElementMock,
+            } as any);
+            const getSessionMock = jest.fn().mockReturnValue(createISession());
+            const sessionForProfile = (_profile) =>
+                ({
+                    getSession: getSessionMock,
+                } as any);
+            const testProfile = {
+                name: "sestest",
+                profile: {
+                    host: "fake",
+                    port: 999,
+                    user: "testuser",
+                    password: "testPassword",
+                    rejectUnauthorize: false,
+                },
+                type: "zosmf",
+                message: "",
+                failNotFound: false,
+            };
+            loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
+            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+            sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Unknown\nUser: sampleUser`;
+            await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
+            expect(getSessionMock).toHaveBeenCalled();
+            expect(sessionNode.dirty).toBe(true);
+            // await the promise since its result is discarded in the called function
+            await getChildrenSpy;
+            expect(getChildrenSpy).toHaveBeenCalled();
+            expect(sessionNode.tooltip).toContain(testProfile.profile.user);
+            expect(sessionNode.tooltip).toContain("Auth Method: Basic Authentication");
+        });
     });
 });
