@@ -210,4 +210,5 @@ export const baseConfig: Partial<Options.Testrunner> = {
     // }
 };
 
+// IPC path lengths are limited on Unix - see https://nodejs.org/api/net.html#identifying-paths-for-ipc-connections
 export const dataDir = joinPath(tmpdir(), ".wdio-vscode-service", "data");
