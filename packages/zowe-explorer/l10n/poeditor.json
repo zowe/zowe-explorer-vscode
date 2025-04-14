@@ -29,6 +29,9 @@
   "zowe.profileManagement": {
     "Manage Profile": ""
   },
+  "zowe.updateSchema": {
+    "Update Profile Configuration Schema": ""
+  },
   "zowe.editHistory": {
     "Edit History": ""
   },
@@ -592,6 +595,7 @@
   "Zowe V1 profiles in use.\nZowe Explorer no longer supports V1 profiles. Choose to convert existing profiles to a team configuration or create new profiles.": "",
   "Convert existing profiles": "",
   "Tree item is not a Zowe Explorer item.": "",
+  "Failed to update Zowe schema: insufficient permissions or read-only file. {0}": "",
   "Zowe Explorer": "",
   "Initialized logger for Zowe Explorer": "",
   "This log file can be found at {0}": "",
@@ -701,6 +705,10 @@
   "Select a recent member to open": "",
   "Profile not found.": "",
   "No recent members found.": "",
+  "Update Zowe configuration schema": "",
+  "Choose the schema location(s) to update.": "",
+  "Update Global schema only": "",
+  "Update Global and Project level schemas": "",
   "Use the search button to display jobs": "",
   "No spool files found": "",
   "No jobs found": "",
@@ -931,7 +939,6 @@
   "Profile {0} is using token authentication. Choose a profile action.": "",
   "Profile {0} doesn't specify an authentication method. Choose a profile action.": "",
   "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.": "",
-  "Failed to update Zowe schema: insufficient permissions or read-only file. {0}": "",
   "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.": "",
   "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.": "",
   "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.": "",

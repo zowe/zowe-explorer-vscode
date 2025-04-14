@@ -5,10 +5,12 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 ### New features and enhancements
 
 - Updated Zowe SDKs to `8.16.0` for technical currency. [#3526](https://github.com/zowe/zowe-explorer-vscode/pull/3526)
+- Updated the zFTP profile type schema meta-data to include a version to better track changes in the schema for updates needed on disk in the profile configuration schema files. [#1642](https://github.com/zowe/zowe-explorer-vscode/issues/1642)
 
 ### Bug fixes
 
 - Fixed an issue with the `AbstractFtpApi.getSession` function where the wrong property was used to store a new session, specifically when the profile is provided as a parameter. [#3524](https://github.com/zowe/zowe-explorer-vscode/pull/3524)
+- Updated dependencies for technical currency purposes. [#3576](https://github.com/zowe/zowe-explorer-vscode/pull/3576)
 
 ## `3.1.2`
 
