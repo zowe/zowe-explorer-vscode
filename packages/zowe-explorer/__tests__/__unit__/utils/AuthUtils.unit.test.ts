@@ -592,6 +592,7 @@ describe("AuthUtils", () => {
             await getChildrenSpy;
             expect(getChildrenSpy).toHaveBeenCalled();
             expect(sessionNode.tooltip).toContain(`${sessionNode.description}`);
+            expect(sessionNode.tooltip).not.toContain("JobId: JOB0001");
             expect(sessionNode.tooltip).toContain("Auth Method: Token-based Authentication");
         });
 
@@ -610,6 +611,7 @@ describe("AuthUtils", () => {
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
             jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
+            sessionNode.tooltip = `Auth Method: Token Authentication\nOwner: * | Prefix: * | Status: *`;
             sessionNode.description = "JobId: JOB0001";
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -618,6 +620,7 @@ describe("AuthUtils", () => {
             await getChildrenSpy;
             expect(getChildrenSpy).toHaveBeenCalled();
             expect(sessionNode.tooltip).toContain(`${sessionNode.description}`);
+            expect(sessionNode.tooltip).not.toContain("Owner: * | Prefix: * | Status: *");
             expect(sessionNode.tooltip).toContain("Auth Method: Token-based Authentication");
         });
 
