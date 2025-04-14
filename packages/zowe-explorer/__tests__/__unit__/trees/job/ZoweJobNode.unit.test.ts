@@ -1026,6 +1026,14 @@ describe("ZosJobsProvider - Function searchPrompt", () => {
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
         expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toContain("JobId: JOB0001");
     });
+
+    it("To check ZoweJobNode when search criteria is updated with new Job ID ", async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.testJobsProvider.mSessionNodes[1].tooltip = "JobId: JOB0001";
+        jest.spyOn(globalMocks.testJobsProvider, "applyRegularSessionSearchLabel").mockReturnValue("JobId: JOB0002");
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toContain("JobId: JOB0002");
+    });
 });
 
 describe("ZosJobsProvider - Function applyRegularSessionSearchLabel", () => {
