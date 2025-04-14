@@ -210,4 +210,5 @@ export const baseConfig: Partial<Options.Testrunner> = {
     // }
 };
 
-export const dataDir = joinPath(process.platform === "darwin" ? tmpdir() : __dirname, ".wdio-vscode-service", "data");
+// IPC path lengths are limited on Unix - see https://nodejs.org/api/net.html#identifying-paths-for-ipc-connections
+export const dataDir = joinPath(tmpdir(), ".wdio-vscode-service", "data");
