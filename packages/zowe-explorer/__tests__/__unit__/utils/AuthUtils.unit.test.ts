@@ -17,7 +17,6 @@ import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets";
 import { createIProfile, createISession } from "../../__mocks__/mockCreators/shared";
 import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
-import exp from "constants";
 
 describe("AuthUtils", () => {
     describe("handleProfileAuthOnError", () => {
