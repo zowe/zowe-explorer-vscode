@@ -12,7 +12,6 @@ jobs:
     steps:
       - uses: actions/stale@v9
         with:
-          any-of-issue-labels: "needs more info, pending closure"
           close-issue-message: >
             This issue has been automatically closed due to lack of activity. In an
             effort to reduce noise, please do not comment any further.

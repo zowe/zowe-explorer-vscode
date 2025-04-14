@@ -222,6 +222,7 @@ async function createGlobalMocks() {
             "zowe.editHistory",
             "zowe.promptCredentials",
             "zowe.profileManagement",
+            "zowe.updateSchema",
             "zowe.diff.useLocalContent",
             "zowe.diff.useRemoteContent",
             "zowe.certificateWizard",
