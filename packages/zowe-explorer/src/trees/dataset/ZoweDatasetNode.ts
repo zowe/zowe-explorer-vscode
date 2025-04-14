@@ -488,8 +488,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
         }
 
+        const canNavigate = this.paginator && (this.paginator.canGoPrevious() || this.paginator.canGoNext());
+
         if (
             paginate &&
+            canNavigate &&
             (SharedContext.isSession(this) || SharedContext.isPds(this)) &&
             this.paginatorData.totalItems > this.paginator.getMaxItemsPerPage()
         ) {

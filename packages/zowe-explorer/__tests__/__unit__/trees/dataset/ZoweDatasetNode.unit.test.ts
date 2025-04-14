@@ -1104,6 +1104,7 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
                 lastItemName: "PDS.EXAMPLE2",
                 totalItems: 4,
             };
+            jest.spyOn((sessionNode as any).paginator, "canGoNext").mockReturnValueOnce(true);
             jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
                 applyPatternsToChildren: jest.fn(),
             } as any);
