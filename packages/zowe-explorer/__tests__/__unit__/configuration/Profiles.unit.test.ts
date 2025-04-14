@@ -977,6 +977,40 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
         await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
     });
+
+    it("To check updated autoStore value", async () => {
+        const globalMocks = createGlobalMocks();
+        environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks);
+        const testNode = new (ZoweTreeNode as any)(
+            "test",
+            vscode.TreeItemCollapsibleState.None,
+            undefined,
+            globalMocks.testSession,
+            globalMocks.testProfile
+        );
+        jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: () => ({
+                properties: {
+                    autoStore: false,
+                },
+                set: jest.fn(),
+                delete: jest.fn(),
+                save: jest.fn(),
+            }),
+            getAllProfiles: jest.fn(),
+            mergeArgsForProfile: jest.fn(),
+        } as any);
+        const promptCredentialsSpy = jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValueOnce(["sestest", "12345"]);
+        testNode.tooltip = "Auto Store: true\n";
+        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile, testNode)).resolves.toEqual({
+            name: "sestest",
+            status: "active",
+        });
+        expect(promptCredentialsSpy).toHaveBeenCalledTimes(1);
+        expect(testNode.tooltip).toContain("Auto Store: false");
+    });
 });
 
 describe("Profiles Unit Tests - function getProfileSetting", () => {
