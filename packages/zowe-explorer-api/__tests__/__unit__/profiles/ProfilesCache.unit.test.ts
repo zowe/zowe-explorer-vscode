@@ -16,7 +16,6 @@ import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
 import { FileManagement, Types } from "../../../src";
 import { mocked } from "../../../__mocks__/mockUtils";
 import { VscSettings } from "../../../src/vscode/doc/VscSettings";
-import { profile } from "console";
 
 jest.mock("fs");
 
