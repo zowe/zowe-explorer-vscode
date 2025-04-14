@@ -1011,6 +1011,14 @@ describe("ZosJobsProvider - Function searchPrompt", () => {
         expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toContain("Owner: * | Prefix: * | Status : *");
     });
 
+    it("To check ZoweJobNode when search criteria is updated with new Job filter", async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.testJobsProvider.mSessionNodes[1].tooltip = "Owner: * | Prefix: * | Status : *";
+        jest.spyOn(globalMocks.testJobsProvider, "applyRegularSessionSearchLabel").mockReturnValue("Owner: * | Prefix: * | Status : ACTIVE");
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toContain("Owner: * | Prefix: * | Status : ACTIVE");
+    });
+
     it("To check ZoweJobNode when search criteria with Job ID is updated", async () => {
         const globalMocks = await createGlobalMocks();
         globalMocks.testJobsProvider.mSessionNodes[1].tooltip = "Owner: * | Prefix: * | Status : *";
