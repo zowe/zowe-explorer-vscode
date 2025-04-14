@@ -269,7 +269,7 @@ export class AuthUtils {
                         }
                         break;
                     }
-                    case sessionNode.description && (sessionNode.description as string).includes("Owner: "): {
+                    case `${sessionNode.description}`.includes("Owner: "): {
                         const jobIdIndex = toolTipList.findIndex((key) => key.startsWith("JobId: "));
                         if (jobIdIndex !== -1) {
                             toolTipList.splice(jobIdIndex, 1);
@@ -282,7 +282,7 @@ export class AuthUtils {
                         }
                         break;
                     }
-                    case sessionNode.description && (sessionNode.description as string).includes("JobId: "): {
+                    case `${sessionNode.description}`.includes("JobId: "): {
                         const searchFilterIndex = toolTipList.findIndex((key) => key.startsWith("Owner: "));
                         if (searchFilterIndex !== -1) {
                             toolTipList.splice(searchFilterIndex, 1);
