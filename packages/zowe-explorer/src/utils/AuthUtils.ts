@@ -230,7 +230,7 @@ export class AuthUtils {
                         toolTipList[authMethodIndex] = `Auth Method: Certificate Authentication`;
                         break;
                     }
-                    case !usingTokenAuth && !usingBasicAuth && !usingCertAuth: {
+                    default: {
                         toolTipList[authMethodIndex] = `Auth Method: Unknown`;
                         const patternIndex = toolTipList.findIndex((key) => key.startsWith("Pattern: "));
                         if (patternIndex !== -1) {
