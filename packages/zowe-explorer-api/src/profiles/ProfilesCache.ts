@@ -483,7 +483,7 @@ export class ProfilesCache {
             (baseProfile?.profile.host !== profile?.profile.host ||
                 baseProfile?.profile.port !== profile?.profile.port ||
                 (profile?.profile.user && profile?.profile.password)) &&
-            baseProfile?.profile.tokenType?.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)) as boolean;
+            profile?.profile.tokenType?.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)) as boolean;
     }
 
     public async updateBaseProfileFileLogin(
