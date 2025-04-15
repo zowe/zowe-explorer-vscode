@@ -275,6 +275,8 @@
   },
   "Continue": "Continue",
   "Prompting the user to choose a member from the filtered list": "Prompting the user to choose a member from the filtered list",
+  "You are already at the root directory.": "You are already at the root directory.",
+  "Select a filter first.": "Select a filter first.",
   "Prompting the user for a USS path": "Prompting the user for a USS path",
   "Select a filter": "Select a filter",
   "No selection made. Operation cancelled.": "No selection made. Operation cancelled.",
