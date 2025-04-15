@@ -1895,7 +1895,29 @@ describe("Profiles Unit Tests - function getPropsForProfile", () => {
                 api: { secure: { securePropsForProfile: jest.fn() } },
             }),
         } as any);
-        await expect(Profiles.getInstance().getPropsForProfile("asdf", false)).resolves.toEqual(["tokenValue"]);
+        await expect(Profiles.getInstance().getPropsForProfile("dummyProfile", false)).resolves.toEqual(["tokenValue"]);
+    });
+
+    it("should return only secure props if onlySecure and usingSecureCreds are true", async () => {
+        createGlobalMocks();
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValueOnce({
+            mergeArgsForProfile: () => ({
+                knownArgs: [
+                    {
+                        argName: "tokenValue",
+                        secure: true,
+                    } as any,
+                ],
+                missingArgs: [],
+            }),
+            getAllProfiles: () => [],
+            getTeamConfig: () => ({
+                api: { secure: { securePropsForProfile: jest.fn().mockReturnValue(["tokenValue"]) } },
+                exists: true,
+            }),
+        } as any);
+        await expect(Profiles.getInstance().getPropsForProfile("dummyProfile", true)).resolves.toEqual(["tokenValue"]);
     });
 });
 
