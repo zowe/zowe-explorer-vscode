@@ -31,6 +31,7 @@ import { USSTree } from "../../src/trees/uss/USSTree";
 import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 import { JobTree } from "../../src/trees/job/JobTree";
 import { JobFSProvider } from "../../src/trees/job/JobFSProvider";
+import { PaginationCodeLens } from "../../../zowe-explorer-api/src";
 
 jest.mock("../../src/utils/LoggerUtils");
 jest.mock("../../src/tools/ZoweLogger");
@@ -449,6 +450,14 @@ describe("Extension Unit Tests", () => {
                     globalValue: undefined,
                 };
             },
+        });
+
+        const originalGetDirectValue = SettingsConfig.getDirectValue;
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key: string) => {
+            if (key === "zowe.jobs.settings.pagination") {
+                return true;
+            }
+            return originalGetDirectValue.call(SettingsConfig, key);
         });
 
         await extension.activate(globalMocks.mockExtension);
