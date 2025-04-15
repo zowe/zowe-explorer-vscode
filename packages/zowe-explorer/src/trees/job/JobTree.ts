@@ -332,8 +332,8 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * Initialize the favorites and history information
      * @param log - Logger
      */
-    public async initializeJobsTree(log: imperative.Logger): Promise<void> {
-        ZoweLogger.trace("JobTree.initializeJobsTree called.");
+    public async initializeFavorites(log: imperative.Logger): Promise<void> {
+        ZoweLogger.trace("JobTree.initializeFavorites called.");
         this.log = log;
         ZoweLogger.debug(vscode.l10n.t("Initializing profiles with jobs favorites."));
         await this.refreshFavorites();
@@ -357,7 +357,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 continue;
             }
 
-            // Initialize and attach favorited item nodes under their respective profile node in Favorrites
+            // Initialize and attach favorited item nodes under their respective profile node in Favorites
             const favChildNode = this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
             favProfileNode.children.push(favChildNode);
         }
