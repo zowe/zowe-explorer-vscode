@@ -209,9 +209,6 @@
   "configuration.title": {
     "Zowe Explorer": ""
   },
-  "zowe.ds.paginate.enabled": {
-    "Paginate data set nodes in the tree view": ""
-  },
   "zowe.ds.paginate.datasetsPerPage": {
     "Maximum data sets to list per page": ""
   },

@@ -408,7 +408,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
 
         const testError = new imperative.ImperativeError({ msg: "test" });
         const spyOnDataSetsMatchingPattern = jest.spyOn(zosfiles.List, "dataSetsMatchingPattern");
-        spyOnDataSetsMatchingPattern.mockResolvedValueOnce({
+        spyOnDataSetsMatchingPattern.mockResolvedValue({
             success: true,
             commandResponse: null,
             apiResponse: [
@@ -465,7 +465,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
 
         const spyOnDataSetsMatchingPattern = jest.spyOn(zosfiles.List, "dataSetsMatchingPattern");
         const spyOnDataSet = jest.spyOn(zosfiles.List, "dataSet");
-        spyOnDataSet.mockResolvedValueOnce({
+        spyOnDataSet.mockResolvedValue({
             success: true,
             commandResponse: null,
             apiResponse: {

@@ -325,8 +325,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (element.contextValue && element.contextValue === Constants.FAV_PROFILE_CONTEXT) {
                 return this.loadProfilesForFavorites(this.log, element);
             }
-            const isUsingPagination = SettingsConfig.getDirectValue<boolean>("zowe.ds.paginate.enabled");
-            const response = await element.getChildren(isUsingPagination);
+            const response = await element.getChildren(true);
 
             const finalResponse: IZoweDatasetTreeNode[] = [];
             for (const item of response) {
