@@ -25,6 +25,7 @@ import { USSInit } from "./trees/uss/USSInit";
 import { ProfilesUtils } from "./utils/ProfilesUtils";
 import { PaginationCodeLens, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { JobFSProvider } from "./trees/job/JobFSProvider";
+import { SettingsConfig } from "./configuration/SettingsConfig";
 
 /**
  * The function that runs when the extension is loaded
@@ -41,23 +42,25 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     await ProfilesUtils.handleV1MigrationStatus();
     await Profiles.createInstance(ZoweLogger.imperativeLogger);
 
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.loadMoreRecords", async () => {
-            const editor = vscode.window.activeTextEditor;
-            if (!editor) {
-                vscode.window.showErrorMessage("No active editor found.");
-                return;
-            }
+    const paginationEnabled = SettingsConfig.getDirectValue<boolean>("zowe.jobs.settings.pagination");
+    if(paginationEnabled) {
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.jobs.loadMoreRecords", async () => {
+                const editor = vscode.window.activeTextEditor;
+                if (!editor) {
+                    vscode.window.showErrorMessage("No active editor found.");
+                    return;
+                }
 
-            const document = editor.document;
-            const uri = document.uri;
-            if (uri.scheme == ZoweScheme.Jobs) {
-                await JobFSProvider.instance.fetchSpoolAtUri(uri);
-            }
-        }),
-        vscode.languages.registerCodeLensProvider({ scheme: ZoweScheme.Jobs }, new PaginationCodeLens("zowe.jobs.loadMoreRecords"))
-    );
-
+                const document = editor.document;
+                const uri = document.uri;
+                if (uri.scheme == ZoweScheme.Jobs) {
+                    await JobFSProvider.instance.fetchSpoolAtUri(uri);
+                }
+            }),
+            vscode.languages.registerCodeLensProvider({ scheme: ZoweScheme.Jobs }, new PaginationCodeLens("zowe.jobs.loadMoreRecords"))
+        );
+    }
     const providers = await SharedTreeProviders.initializeProviders(
         {
             ds: () => DatasetInit.initDatasetProvider(context),

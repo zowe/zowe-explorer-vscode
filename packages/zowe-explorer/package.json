@@ -1953,10 +1953,10 @@
           "description": "%zowe.pollInterval.info%",
           "scope": "window"
         },
-        "zowe.ZESetting.pagination": {
+        "zowe.jobs.settings.pagination": {
           "type": "boolean",
-          "default": false,
-          "description": "%zowe.ZESetting.pagination%",
+          "default": true,
+          "description": "%zowe.jobs.settings.pagination%",
           "scope": "window"
         },
         "zowe.jobs.recordsToFetch": {
