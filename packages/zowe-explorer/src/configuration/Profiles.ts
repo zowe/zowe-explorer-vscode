@@ -79,8 +79,7 @@ export class Profiles extends ProfilesCache {
     public async getProfileInfo(): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("Profiles.getProfileInfo called.");
         if (this.mProfileInfo == null) {
-            const override: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_OVERRIDE_WITH_ENV_VAR);
-            this.overrideWithEnv = override;
+            this.overrideWithEnv = SettingsConfig.getDirectValue(Constants.SETTINGS_OVERRIDE_WITH_ENV_VAR) ?? false;
             this.mProfileInfo = await super.getProfileInfo();
             // Cache profile info object until current thread is done executing
             setImmediate(() => (this.mProfileInfo = null));

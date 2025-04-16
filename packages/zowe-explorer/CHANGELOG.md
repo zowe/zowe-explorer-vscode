@@ -24,7 +24,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added a button to filter the USS tree by the parent path of the current filter. [#1783](https://github.com/zowe/zowe-explorer-vscode/issues/1783).
 - Added an new VS Code command palette option `Zowe Explorer: Update Profile Configuration Schema`, allowing users to manually trigger an update to global and project level configuration schema files with registered Zowe Explorer extender types. [#1642](https://github.com/zowe/zowe-explorer-vscode/issues/1642)
 - Added script that will fetch latest localizations at every build now. [#3573](https://github.com/zowe/zowe-explorer-vscode/pull/3573)
-- Added new zowe setting : Override with environment variables when selected, loads profiles from config with environment variables. [#3591](https://github.com/zowe/zowe-explorer-vscode/pull/3591)
+- Added a new "Override with Environment Variables" setting. When selected, Zowe Explorer prioritizes values from environment variables for properties when loading the user's team configuration. [#3591](https://github.com/zowe/zowe-explorer-vscode/pull/3591)
 
 ### Bug fixes
 
