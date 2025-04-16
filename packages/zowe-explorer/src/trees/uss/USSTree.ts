@@ -679,6 +679,54 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     }
 
     /**
+     * Filters by the directory above the current directory
+     *
+     * @param {IZoweUSSTreeNode} node - The session node
+     * @returns {Promise<void>}
+     */
+    public async cdUp(node: IZoweUSSTreeNode): Promise<void> {
+        ZoweLogger.trace("USSTree.cdUp called.");
+
+        // Check if the path is a root path already
+        if (path.posix.dirname(node.fullPath) === "/") {
+            Gui.showMessage(vscode.l10n.t("You are already at the root directory."));
+            return;
+        }
+
+        const parentPath = path.posix.dirname(node.fullPath);
+        await this.filterBy(node, parentPath);
+    }
+
+    /**
+     * Helper function to update the TreeView based on the provided path.
+     *
+     * @param {IZoweUSSTreeNode} node - The node to update
+     * @param {string} filterPath - The path to filter by
+     * @returns {Promise<void>}
+     */
+    private async updateTreeView(node: IZoweUSSTreeNode, filterPath: string, addHistory: boolean): Promise<void> {
+        AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), node);
+        const sanitizedPath = filterPath.replace(/\/+/g, "/").replace(/(\/*)$/, "");
+        node.fullPath = sanitizedPath;
+        const icon = IconGenerator.getIconByNode(node);
+        if (icon) {
+            node.iconPath = icon.path;
+        }
+        if (!SharedContext.isFavorite(node)) {
+            node.description = sanitizedPath;
+        }
+        if (!SharedContext.isFilterFolder(node)) {
+            node.contextValue += `_${Constants.FILTER_SEARCH}`;
+        }
+        node.dirty = true;
+        if (addHistory) {
+            this.addSearchHistory(sanitizedPath);
+        }
+        await TreeViewUtils.expandNode(node, this);
+        this.refresh();
+    }
+
+    /**
      * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
      *
      * @param {IZoweUSSTreeNode} node - The session node
@@ -738,26 +786,25 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     node.getSession().ISession.base64EncodedAuth = nonFavNode.getSession().ISession.base64EncodedAuth;
                 }
             }
-            // Get session for sessionNode
-            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), node);
-            // Sanitization: Replace multiple forward slashes with just one forward slash
-            const sanitizedPath = remotepath.replace(/\/+/g, "/").replace(/(\/*)$/, "");
-            node.fullPath = sanitizedPath;
-            const icon = IconGenerator.getIconByNode(node);
-            if (icon) {
-                node.iconPath = icon.path;
+            await this.updateTreeView(node, remotepath, true);
+        }
+    }
+
+    /**
+     * Populates the [TreeView]{@link vscode.TreeView} based on the path of the node selected to filter by
+     *
+     * @param {IZoweUSSTreeNode} node - The new node to filter by (can only be a directory)
+     * @param {string} newPath - The new path to filter by
+     * @returns {Promise<void>}
+     */
+    public async filterBy(node: IZoweUSSTreeNode, newPath: string): Promise<void> {
+        ZoweLogger.trace("USSTree.filterBy called.");
+        await this.checkCurrentProfile(node);
+        if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
+            const sessionNode = this.mSessionNodes.find((tempNode) => tempNode.getProfileName() === node.getProfileName());
+            if (sessionNode) {
+                await this.updateTreeView(sessionNode, newPath, false);
             }
-            // update the treeview with the new path
-            if (!SharedContext.isFavorite(node)) {
-                node.description = sanitizedPath;
-            }
-            if (!SharedContext.isFilterFolder(node)) {
-                node.contextValue += `_${Constants.FILTER_SEARCH}`;
-            }
-            node.dirty = true;
-            this.addSearchHistory(sanitizedPath);
-            await TreeViewUtils.expandNode(node, this);
-            this.refresh();
         }
     }
 
