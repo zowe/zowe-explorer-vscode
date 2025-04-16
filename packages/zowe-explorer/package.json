@@ -457,6 +457,12 @@
         }
       },
       {
+        "command": "zowe.uss.cdUp",
+        "title": "%uss.cd%",
+        "category": "Zowe Explorer",
+        "icon": "$(arrow-up)"
+      },
+      {
         "command": "zowe.uss.refresh",
         "title": "%uss.refreshAll%",
         "category": "Zowe Explorer",
@@ -506,6 +512,11 @@
       {
         "command": "zowe.uss.copyRelativePath",
         "title": "%uss.copyRelativePath%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.uss.filterBy",
+        "title": "%uss.filterBy%",
         "category": "Zowe Explorer"
       },
       {
@@ -760,6 +771,11 @@
           "group": "inline"
         },
         {
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*isFilterSearch/ && !listMultiSelection",
+          "command": "zowe.uss.cdUp",
+          "group": "inline"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
           "command": "zowe.addFavorite",
           "group": "inline"
@@ -785,6 +801,11 @@
           "group": "inline"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/ && !listMultiSelection",
+          "command": "zowe.uss.filterBy",
+          "group": "000_zowe_ussMainframeInteraction@1"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(textFile.*|binaryFile.*)/",
           "command": "zowe.openWithEncoding",
           "group": "000_zowe_ussMainframeInteraction@3"
@@ -793,6 +814,11 @@
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
           "command": "zowe.uss.fullPath",
           "group": "000_zowe_ussMainframeInteraction@0"
+        },
+        {
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*isFilterSearch/ && !listMultiSelection",
+          "command": "zowe.uss.cdUp",
+          "group": "000_zowe_ussMainframeInteraction@1"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
@@ -1450,6 +1476,10 @@
         },
         {
           "command": "zowe.uss.fullPath",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.cdUp",
           "when": "never"
         },
         {

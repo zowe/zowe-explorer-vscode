@@ -57,6 +57,8 @@
   "uss.uploadDialog": "Upload Files...",
   "uss.uploadDialogBinary": "Upload Files (Binary)...",
   "uss.text": "Toggle Text",
+  "uss.filterBy": "Search by Directory",
+  "uss.cd": "Go Up One Level",
   "jobs.search": "Search Jobs",
   "deleteJob": "Delete Job",
   "runModifyCommand": "Issue Modify Command",
