@@ -14,6 +14,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added new API, `ZoweVsCodeExtension.createTeamConfiguration`, allowing extenders to use the same prompting process adopted by Zowe Explorer for Zowe team configuration creation including all registered profile types. [#3088](https://github.com/zowe/zowe-explorer-vscode/issues/3088)
 - The `certFile` and `certKeyFile` are now supported fields for zosmf session/profile. [#2373](https://github.com/zowe/zowe-explorer-vscode/issues/2373)
 - Deprecated the `flipState` method on the `IZoweTree` interface in favor of the `onCollapsibleStateChange` method. Implement the `onCollapsibleStateChange` method to receive an accurate collapsible state for the given node. [#3515](https://github.com/zowe/zowe-explorer-vscode/issues/3515)
+- Generalized and updated the README. [#3367](https://github.com/zowe/zowe-explorer-vscode/issues/3367)
 
 ### Bug fixes
 
