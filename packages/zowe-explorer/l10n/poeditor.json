@@ -173,6 +173,12 @@
   "uss.text": {
     "Toggle Text": ""
   },
+  "uss.filterBy": {
+    "Filter By": ""
+  },
+  "uss.cd": {
+    "Go Up One Level": ""
+  },
   "jobs.search": {
     "Search Jobs": ""
   },
@@ -635,6 +641,8 @@
   "This will remove all favorited USS items for profile {0}. Continue?": "",
   "Continue": "",
   "Prompting the user to choose a member from the filtered list": "",
+  "You are already at the root directory.": "",
+  "Select a filter first.": "",
   "Prompting the user for a USS path": "",
   "Select a filter": "",
   "No selection made. Operation cancelled.": "",
