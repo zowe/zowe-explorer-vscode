@@ -85,22 +85,7 @@ export class ProfilesCache {
             credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
         });
         await mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: this.cwd ?? undefined });
-        for (const profile of this.allProfiles) {
-            if (profile.profile.user?.startsWith("$")) {
-                const userEnvVar = profile.profile.user.match(/^\$(\w+)$/)?.[1];
-                if (!userEnvVar || !process.env[userEnvVar]) {
-                    continue;
-                }
-                profile.profile.user = process.env[userEnvVar];
-            }
-            if (profile.profile.password?.startsWith("$")) {
-                const passwordEnvVar = profile.profile.password.match(/^\$(\w+)$/)?.[1];
-                if (!passwordEnvVar || !process.env[passwordEnvVar]) {
-                    continue;
-                }
-                profile.profile.password = process.env[passwordEnvVar];
-            }
-        }
+        this.checkForEnvVarAndUpdate();
         return mProfileInfo;
     }
 
@@ -242,6 +227,7 @@ export class ProfilesCache {
         }
         // check for proper merging of apiml tokens
         this.checkMergingConfigAllProfiles();
+        this.checkForEnvVarAndUpdate();
         this.profilesForValidation = [];
     }
 
@@ -523,5 +509,24 @@ export class ProfilesCache {
         const mergedArgs = mProfileInfo.mergeArgsForProfile(prof);
         await mProfileInfo.updateKnownProperty({ mergedArgs, property: "tokenValue", value: undefined, setSecure });
         await mProfileInfo.updateKnownProperty({ mergedArgs, property: "tokenType", value: undefined });
+    }
+
+    public checkForEnvVarAndUpdate(): void {
+        for (const profile of this.allProfiles) {
+            if (profile.profile.user?.startsWith("$")) {
+                const userEnvVar = profile.profile.user.match(/^\$(\w+)$/)?.[1];
+                if (!userEnvVar || !process.env[userEnvVar]) {
+                    continue;
+                }
+                profile.profile.user = process.env[userEnvVar];
+            }
+            if (profile.profile.password?.startsWith("$")) {
+                const passwordEnvVar = profile.profile.password.match(/^\$(\w+)$/)?.[1];
+                if (!passwordEnvVar || !process.env[passwordEnvVar]) {
+                    continue;
+                }
+                profile.profile.password = process.env[passwordEnvVar];
+            }
+        }
     }
 }
