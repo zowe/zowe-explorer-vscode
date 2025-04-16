@@ -12,12 +12,11 @@ jobs:
     steps:
       - uses: actions/stale@v9
         with:
-          any-of-issue-labels: "needs more info, pending closure"
           close-issue-message: >
             This issue has been automatically closed due to lack of activity. In an
             effort to reduce noise, please do not comment any further.
-          days-before-issue-stale: 14
-          days-before-issue-close: 90
+          days-before-issue-stale: 90
+          days-before-issue-close: 14
           exempt-all-assignees: true
           exempt-all-milestones: true
           exempt-issue-labels: "bug, priority-critical, priority-high, Epic, community-upvoted, for-review, keep, security"

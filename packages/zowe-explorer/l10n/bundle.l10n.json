@@ -131,6 +131,12 @@
   "Zowe V1 profiles in use.\nZowe Explorer no longer supports V1 profiles. Choose to convert existing profiles to a team configuration or create new profiles.": "Zowe V1 profiles in use.\nZowe Explorer no longer supports V1 profiles. Choose to convert existing profiles to a team configuration or create new profiles.",
   "Convert existing profiles": "Convert existing profiles",
   "Tree item is not a Zowe Explorer item.": "Tree item is not a Zowe Explorer item.",
+  "Failed to update Zowe schema: insufficient permissions or read-only file. {0}/Error message": {
+    "message": "Failed to update Zowe schema: insufficient permissions or read-only file. {0}",
+    "comment": [
+      "Error message"
+    ]
+  },
   "Zowe Explorer": "Zowe Explorer",
   "Initialized logger for Zowe Explorer": "Initialized logger for Zowe Explorer",
   "This log file can be found at {0}/Log file location": {
@@ -234,8 +240,9 @@
   "Continue": "Continue",
   "Prompting the user to choose a member from the filtered list": "Prompting the user to choose a member from the filtered list",
   "You are already at the root directory.": "You are already at the root directory.",
-  "No previous path in history.": "No previous path in history.",
+  "Select a filter first.": "Select a filter first.",
   "No next path in history.": "No next path in history.",
+  "No previous path in history.": "No previous path in history.",
   "Prompting the user for a USS path": "Prompting the user for a USS path",
   "Select a filter": "Select a filter",
   "No selection made. Operation cancelled.": "No selection made. Operation cancelled.",
@@ -381,6 +388,10 @@
   "Select a recent member to open": "Select a recent member to open",
   "Profile not found.": "Profile not found.",
   "No recent members found.": "No recent members found.",
+  "Update Zowe configuration schema": "Update Zowe configuration schema",
+  "Choose the schema location(s) to update.": "Choose the schema location(s) to update.",
+  "Update Global schema only": "Update Global schema only",
+  "Update Global and Project level schemas": "Update Global and Project level schemas",
   "Use the search button to display jobs": "Use the search button to display jobs",
   "No spool files found": "No spool files found",
   "No jobs found": "No jobs found",
@@ -956,12 +967,6 @@
     ]
   },
   "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.": "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.",
-  "Failed to update Zowe schema: insufficient permissions or read-only file. {0}/Error message": {
-    "message": "Failed to update Zowe schema: insufficient permissions or read-only file. {0}",
-    "comment": [
-      "Error message"
-    ]
-  },
   "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.": "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.",
   "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.": "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.",
   "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.": "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.",
