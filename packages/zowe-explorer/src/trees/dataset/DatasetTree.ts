@@ -210,7 +210,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
             if (SharedContext.isPds(target) || SharedContext.isDsMember(target)) {
-                if (SharedContext.isPds(node) || SharedContext.isDs(node)) {
+                if (SharedContext.isPds(node) && node.children.length > 0 || SharedContext.isDs(node)) {
                     Gui.errorMessage(vscode.l10n.t("Cannot drop a sequential dataset or a partitioned dataset onto another PDS."));
                     return;
                 }
@@ -221,9 +221,13 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
         }
 
-        //get the closest parent folder if the target is not a pds
-        if (!SharedContext.isPds(target)) {
-            target = target.getParent() as IZoweDatasetTreeNode;
+        const isProfileNode = (node: IZoweDatasetTreeNode): boolean => {
+            const segments = node.resourceUri.path.split("/").filter(Boolean);
+            return segments.length === 1;
+        };
+
+        if (!target || (!SharedContext.isPds(target) && !isProfileNode(target))) {
+            target = target?.getParent() as IZoweDatasetTreeNode;
         }
 
         const overwrite = await SharedUtils.handleDragAndDropOverwrite(target, this.draggedNodes);
