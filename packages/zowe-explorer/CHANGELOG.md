@@ -36,6 +36,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where copy-and-pasting an empty PDS within the same LPAR would result in an error. [#3541](https://github.com/zowe/zowe-explorer-vscode/issues/3541)
 - Updated dependencies for technical currency purposes. [#3576](https://github.com/zowe/zowe-explorer-vscode/pull/3576)
 - Fixed an issue where data sets were not requested with attributes if the profile type's API did not implement the `dataSetsMatchingPattern` function. [#3578](https://github.com/zowe/zowe-explorer-vscode/pull/3578)
+- Fixed an issue where favorites for extender profile types were duplicated in the tree views. [#3548](https://github.com/zowe/zowe-explorer-vscode/issues/3548)
+- Fixed an issue where multiple directories with the same name could not be favorited in the USS tree. [#3590](https://github.com/zowe/zowe-explorer-vscode/pull/3590)
 
 ## `3.1.2`
 
