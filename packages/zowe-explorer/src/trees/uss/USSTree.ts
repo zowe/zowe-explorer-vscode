@@ -776,6 +776,9 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         const key = node.getProfileName();
         this.navigateHistories[key] = [];
         this.navigateHistoryIndices[key] = -1;
+        node.contextValue = node.contextValue.replace(`_${Constants.USS_TEMP_NAVIGATION_HISTORY}`, "");
+        node.dirty = true;
+        this.refreshElement(node);
     }
 
     /**
@@ -821,7 +824,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     }
 
     /**
-     * Helper function to update the TreeView based on the provided path.
+     * Helper function to update the [TreeView]{@link vscode.TreeView} based on the provided path.
      *
      * @param {IZoweUSSTreeNode} node - The node to update
      * @param {string} filterPath - The path to filter by
