@@ -88,14 +88,14 @@ export class ProfilesCache {
         for (const profile of this.allProfiles) {
             if (profile.profile.user?.startsWith("$")) {
                 const userEnvVar = profile.profile.user.match(/^\$(\w+)$/)?.[1];
-                if (!userEnvVar) {
+                if (!userEnvVar || !process.env[userEnvVar]) {
                     continue;
                 }
                 profile.profile.user = process.env[userEnvVar];
             }
             if (profile.profile.password?.startsWith("$")) {
                 const passwordEnvVar = profile.profile.password.match(/^\$(\w+)$/)?.[1];
-                if (!passwordEnvVar) {
+                if (!passwordEnvVar || !process.env[passwordEnvVar]) {
                     continue;
                 }
                 profile.profile.password = process.env[passwordEnvVar];

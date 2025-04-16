@@ -191,6 +191,41 @@ describe("ProfilesCache", () => {
         existsSync.mockRestore();
     });
 
+    it("getProfileInfo should skip setting user and pw if env var are invalid", async () => {
+        const profileMock = [
+            {
+                name: "fake",
+                profile: {
+                    user: "$fake-user",
+                    password: "$ZOWE_PASSWORD",
+                },
+                type: "zosmf",
+                failNotFound: true,
+                message: "fake",
+            },
+            {
+                name: "fakeprofile",
+                profile: {
+                    user: "$ZOWE_USER",
+                    password: "$fake-pw",
+                },
+                type: "zosmf",
+                failNotFound: true,
+                message: "fake",
+            },
+        ];
+        process.env.ZOWE_USER = "fakeuser";
+        const existsSync = jest.spyOn(fs, "existsSync").mockImplementation();
+        jest.spyOn(FileManagement, "getZoweDir").mockReturnValue(fakeZoweDir);
+        const profilesCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger, __dirname);
+        profilesCache.allProfiles = profileMock;
+        await profilesCache.getProfileInfo();
+        expect(readProfilesFromDiskSpy).toHaveBeenCalledTimes(1);
+        expect(defaultCredMgrWithKeytarSpy).toHaveBeenCalledTimes(1);
+        expect(defaultCredMgrWithKeytarSpy).toHaveBeenCalledWith(ProfilesCache.requireKeyring);
+        existsSync.mockRestore();
+    });
+
     it("requireKeyring returns keyring module from Secrets SDK", () => {
         const keyring = ProfilesCache.requireKeyring();
         expect(keyring).toBeDefined();
