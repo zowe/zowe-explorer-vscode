@@ -210,13 +210,18 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
             if (SharedContext.isPds(target) || SharedContext.isDsMember(target)) {
-                if (SharedContext.isPds(node) && node.children.length > 0 || SharedContext.isDs(node)) {
+                if (SharedContext.isPds(node) || SharedContext.isDs(node)) {
                     Gui.errorMessage(vscode.l10n.t("Cannot drop a sequential dataset or a partitioned dataset onto another PDS."));
                     return;
                 }
             }
             if (SharedContext.isDsMember(node) && SharedContext.isDs(target)) {
                 Gui.errorMessage(vscode.l10n.t("Cannot drop a member onto a sequential dataset."));
+                return;
+            }
+            const parent = target?.getParent();
+            if(SharedContext.isPds(node) && parent && SharedContext.isPds(parent)) {
+                Gui.errorMessage(vscode.l10n.t("Cannot drop a PDS into another PDS."));
                 return;
             }
         }
