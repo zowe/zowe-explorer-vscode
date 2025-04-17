@@ -434,7 +434,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             const favProfileNode =
                 this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ?? (await this.createProfileNodeForFavs(fav.profileName));
 
-            if (favProfileNode == null || fav.contextValue == null) {
+            if (favProfileNode == null || fav.contextValue == null || favProfileNode.children.some((child) => child.label === fav.label)) {
                 continue;
             }
 
