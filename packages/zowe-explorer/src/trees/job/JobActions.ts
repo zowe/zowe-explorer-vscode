@@ -263,7 +263,7 @@ export class JobActions {
         if (uri.scheme == ZoweScheme.Jobs) {
             await JobFSProvider.instance.fetchSpoolAtUri(uri);
         }
-    };
+    }
     /**
      * Refresh a job node information and spool files in the job tree
      *

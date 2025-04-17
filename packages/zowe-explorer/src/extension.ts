@@ -1,4 +1,3 @@
-
 /**
  * This program and the accompanying materials are made available under the terms of the
  * Eclipse Public License v2.0 which accompanies this distribution, and is available at
@@ -39,7 +38,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
     await ProfilesUtils.handleV1MigrationStatus();
     await Profiles.createInstance(ZoweLogger.imperativeLogger);
-
 
     const providers = await SharedTreeProviders.initializeProviders(
         {

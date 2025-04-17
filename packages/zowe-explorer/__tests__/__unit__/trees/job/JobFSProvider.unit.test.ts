@@ -1,5 +1,3 @@
-
-
 /**
  * This program and the accompanying materials are made available under the terms of the
  * Eclipse Public License v2.0 which accompanies this distribution, and is available at
@@ -209,6 +207,41 @@ describe("createDirectory", () => {
     });
 });
 
+describe("JobFSProvider.supportSpoolPagination", () => {
+    const mockDoc = {
+        uri: vscode.Uri.parse("zowe://test"),
+    } as vscode.TextDocument;
+
+    const profInfo = { profile: "test" };
+
+    beforeEach(() => {
+        jest.restoreAllMocks();
+    });
+
+    it("returns true when supportSpoolPagination is true", () => {
+        jest.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValue(profInfo);
+
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
+            supportSpoolPagination: () => true,
+        } as any);
+
+        const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
+        expect(result).toBe(true);
+    });
+
+    it("returns false when supportSpoolPagination is false", () => {
+        jest.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValue(profInfo);
+
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
+            supportSpoolPagination: () => false,
+        } as any);
+
+        const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
+        expect(result).toBe(false);
+    });
+});
+
+
 describe("fetchSpoolAtUri", () => {
     const loadNamedProfileMock = jest.fn().mockReturnValue(testProfile);
     beforeEach(() => {
@@ -229,7 +262,7 @@ describe("fetchSpoolAtUri", () => {
             downloadSingleSpool: jest.fn((opts) => {
                 expect(opts.recordRange).toBe("10-50");
                 opts.stream.write(newData);
-            })
+            }),
         };
 
         const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
@@ -247,8 +280,8 @@ describe("fetchSpoolAtUri", () => {
 
     it("fetches spool contents when recordRange parameters is not supported", async () => {
         const lookupAsFileMock = jest
-        .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
-        .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array() });
+            .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
+            .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array() });
 
         const newData = "spool contents";
         const mockJesApi = {
@@ -256,7 +289,7 @@ describe("fetchSpoolAtUri", () => {
             downloadSingleSpool: jest.fn((opts) => {
                 expect(opts.recordRange).toBeUndefined();
                 opts.stream.write(newData);
-            })
+            }),
         };
 
         const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);

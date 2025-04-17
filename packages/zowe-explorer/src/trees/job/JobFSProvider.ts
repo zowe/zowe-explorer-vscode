@@ -239,7 +239,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                     jobFile: spoolEntry.spool,
                     stream: bufBuilder,
                     binary: spoolEntry.encoding?.kind === "binary",
-                    recordRange: jesApi.supportSpoolPagination?.()? recordRange : undefined,
+                    recordRange: jesApi.supportSpoolPagination?.() ? recordRange : undefined,
                     encoding: spoolEncoding,
                 };
 

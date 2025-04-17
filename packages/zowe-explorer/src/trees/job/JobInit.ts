@@ -162,9 +162,12 @@ export class JobInit {
         );
 
         const paginationEnabled = SettingsConfig.getDirectValue<boolean>("zowe.jobs.settings.pagination");
-        if(paginationEnabled) {
+        if (paginationEnabled) {
             context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.loadMoreRecords", (doc) => JobActions.loadMoreRecords(doc)));
-            vscode.languages.registerCodeLensProvider({ scheme: ZoweScheme.Jobs }, new PaginationCodeLens("zowe.jobs.loadMoreRecords", (doc) => JobFSProvider.instance.supportSpoolPagination(doc)));
+            vscode.languages.registerCodeLensProvider(
+                { scheme: ZoweScheme.Jobs },
+                new PaginationCodeLens("zowe.jobs.loadMoreRecords", (doc) => JobFSProvider.instance.supportSpoolPagination(doc))
+            );
         }
 
         SharedInit.initSubscribers(context, jobsProvider);
