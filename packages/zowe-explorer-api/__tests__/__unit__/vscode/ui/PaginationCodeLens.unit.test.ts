@@ -1,3 +1,4 @@
+
 /**
  * This program and the accompanying materials are made available under the terms of the
  * Eclipse Public License v2.0 which accompanies this distribution, and is available at
@@ -36,7 +37,7 @@ describe("PaginationCodeLens", () => {
             lineCount: 5,
         } as any;
 
-        const provider = new PaginationCodeLens("zowe.jobs.loadMoreRecords");
+        const provider = new PaginationCodeLens("zowe.jobs.loadMoreRecords", () => true);
         const result = provider.provideCodeLenses(mockDocument, {} as any);
 
         expect(result).toHaveLength(1);
@@ -46,5 +47,27 @@ describe("PaginationCodeLens", () => {
         expect(codeLens?.command?.title).toBe("$(chevron-down) Load more...");
         expect(codeLens?.command?.command).toBe("zowe.jobs.loadMoreRecords");
         expect(codeLens?.command?.arguments?.[0]).toBe(mockDocument);
+    });
+
+    it("should not provide CodeLens if shouldShowCodeLens returns false", () => {
+        const mockDocument = {
+            lineCount: 10,
+        } as any;
+
+        const provider = new PaginationCodeLens("zowe.jobs.loadMoreRecords", () => false);
+        const result = provider.provideCodeLenses(mockDocument, {} as any);
+
+        expect(result).toHaveLength(0);
+    });
+
+    it("should provide CodeLens if shouldShowCodeLens returns true", () => {
+        const mockDocument = {
+            lineCount: 7,
+        } as any;
+
+        const provider = new PaginationCodeLens("zowe.jobs.loadMoreRecords", () => true);
+        const result = provider.provideCodeLenses(mockDocument, {} as any);
+
+        expect(result).toHaveLength(1);
     });
 });

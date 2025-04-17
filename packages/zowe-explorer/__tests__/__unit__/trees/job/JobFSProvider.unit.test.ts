@@ -1,3 +1,5 @@
+
+
 /**
  * This program and the accompanying materials are made available under the terms of the
  * Eclipse Public License v2.0 which accompanies this distribution, and is available at
@@ -223,10 +225,38 @@ describe("fetchSpoolAtUri", () => {
 
         const newData = "spool contents";
         const mockJesApi = {
+            supportSpoolPagination: () => true,
             downloadSingleSpool: jest.fn((opts) => {
                 expect(opts.recordRange).toBe("10-50");
                 opts.stream.write(newData);
-            }),
+            })
+        };
+
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+
+        const uriWithQuery = vscode.Uri.parse(testUris.spool.toString() + "?startLine=10&endLine=50");
+
+        const entry = await JobFSProvider.instance.fetchSpoolAtUri(uriWithQuery);
+
+        expect(mockJesApi.downloadSingleSpool).toHaveBeenCalled();
+        expect(entry.data.toString()).toStrictEqual(newData.toString());
+
+        jesApiMock.mockRestore();
+        lookupAsFileMock.mockRestore();
+    });
+
+    it("fetches spool contents when recordRange parameters is not supported", async () => {
+        const lookupAsFileMock = jest
+        .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
+        .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array() });
+
+        const newData = "spool contents";
+        const mockJesApi = {
+            supportSpoolPagination: () => false,
+            downloadSingleSpool: jest.fn((opts) => {
+                expect(opts.recordRange).toBeUndefined();
+                opts.stream.write(newData);
+            })
         };
 
         const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);

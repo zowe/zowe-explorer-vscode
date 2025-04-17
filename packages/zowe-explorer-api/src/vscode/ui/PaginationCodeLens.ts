@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 
 export class PaginationCodeLens implements vscode.CodeLensProvider {
-    public constructor(private commandId: string, private shouldShowCodeLens?: Function) {}
+    public constructor(private commandId: string, private shouldShowCodeLens?:(document: vscode.TextDocument) => boolean) {}
     public provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CodeLens[]> {
         const lineCount = document.lineCount;
         const lastLine = lineCount - 1;

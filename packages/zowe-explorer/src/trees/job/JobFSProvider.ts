@@ -37,10 +37,10 @@ import { AuthUtils } from "../../utils/AuthUtils";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 export class JobFSProvider extends BaseProvider implements vscode.FileSystemProvider {
-    public async supportSpoolPagination(doc: vscode.TextDocument): Promise<boolean> {
+    public supportSpoolPagination(doc: vscode.TextDocument): boolean {
         const profInfo = this._getInfoFromUri(doc.uri);
         try {
-            const supportPagination = await ZoweExplorerApiRegister.getJesApi(profInfo.profile).supportSpoolPagination(doc);
+            const supportPagination = ZoweExplorerApiRegister.getJesApi(profInfo.profile).supportSpoolPagination?.();
             return supportPagination;
         } catch (err) {
             return false;

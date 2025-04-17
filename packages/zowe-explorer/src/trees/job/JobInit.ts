@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweJobTreeNode, IZoweTreeNode, ZoweScheme, imperative, Gui, PaginationCodeLens, FsAbstractUtils } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, IZoweTreeNode, ZoweScheme, imperative, Gui, PaginationCodeLens } from "@zowe/zowe-explorer-api";
 import { JobTree } from "./JobTree";
 import { JobActions } from "./JobActions";
 import { ZoweJobNode } from "./ZoweJobNode";
@@ -23,8 +23,6 @@ import { JobFSProvider } from "./JobFSProvider";
 import { PollProvider } from "./JobPollProvider";
 import { JobTableView } from "./JobTableView";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
-import { Profiles } from "../../configuration/Profiles";
-import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 
 export class JobInit {
     /**
