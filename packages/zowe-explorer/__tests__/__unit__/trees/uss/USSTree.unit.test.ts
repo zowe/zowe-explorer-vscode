@@ -536,11 +536,7 @@ describe("USSTree Unit Tests - Function addSession", () => {
             label: "testSessionNode",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             session: globalMocks.testSession,
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.testProfile,
         });
         globalMocks.testTree.mSessionNodes.push(testSessionNode);
         globalMocks.testTree.addSession("testSessionNode");
@@ -1539,11 +1535,7 @@ describe("USSTree Unit Tests - Function getChildren", () => {
             label: "sestest",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             session: globalMocks.testTree.mFavoriteSession,
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.testProfile,
         });
         favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         globalMocks.testTree.mFavorites.push(favProfileNode);
@@ -1785,15 +1777,12 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
     });
 
     it("sets binary encoding if selection was made", async () => {
+        const globalMocks = await createGlobalMocks();
         const setEncodingMock = jest.spyOn(UssFSProvider.instance, "setEncodingForFile").mockImplementation();
         const node = new ZoweUSSNode({
             label: "encodingTest",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.testProfile,
         });
         node.openUSS = jest.fn();
         const setEncodingNodeMock = jest.spyOn(node, "setEncoding").mockImplementation();
@@ -1806,16 +1795,13 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
     });
 
     it("sets text encoding if selection was made", async () => {
+        const globalMocks = await createGlobalMocks();
         const setEncodingMock = jest.spyOn(UssFSProvider.instance, "setEncodingForFile").mockImplementation();
         const getEncodingMock = jest.spyOn(UssFSProvider.instance, "getEncodingForFile").mockReturnValueOnce(null as any);
         const node = new ZoweUSSNode({
             label: "encodingTest",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.testProfile,
         });
         node.openUSS = jest.fn();
         jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "text" });
@@ -1826,16 +1812,13 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
     });
 
     it("does not set encoding if prompt was cancelled", async () => {
+        const globalMocks = await createGlobalMocks();
         const setEncodingSpy = jest.spyOn(UssFSProvider.instance, "setEncodingForFile").mockClear();
         const getEncodingMock = jest.spyOn(UssFSProvider.instance, "getEncodingForFile").mockReturnValueOnce(null as any);
         const node = new ZoweUSSNode({
             label: "encodingTest",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.testProfile,
         });
         node.openUSS = jest.fn();
         jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValueOnce(undefined);
