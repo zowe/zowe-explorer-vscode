@@ -218,7 +218,7 @@ describe("JobFSProvider.supportSpoolPagination", () => {
         jest.restoreAllMocks();
     });
 
-    it("returns true when supportSpoolPagination is true", () => {
+    it("should return true when supportSpoolPagination is true", () => {
         jest.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValue(profInfo);
 
         jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
@@ -229,7 +229,7 @@ describe("JobFSProvider.supportSpoolPagination", () => {
         expect(result).toBe(true);
     });
 
-    it("returns false when supportSpoolPagination is false", () => {
+    it("should return false when supportSpoolPagination is false", () => {
         jest.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValue(profInfo);
 
         jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
@@ -239,7 +239,7 @@ describe("JobFSProvider.supportSpoolPagination", () => {
         const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
         expect(result).toBe(false);
     });
-    it("returns false when supportSpoolPagination is undefined", () => {
+    it("should return false when supportSpoolPagination is undefined", () => {
         jest.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValue(profInfo);
 
         jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({} as any);
@@ -247,7 +247,7 @@ describe("JobFSProvider.supportSpoolPagination", () => {
         const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
         expect(result).toBe(undefined);
     });
-    it("returns false when getJesApi throws an error", () => {
+    it("should return false when getJesApi throws an error", () => {
         jest.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValue(profInfo);
 
         jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockImplementation(() => {
