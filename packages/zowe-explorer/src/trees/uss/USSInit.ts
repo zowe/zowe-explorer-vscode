@@ -90,7 +90,21 @@ export class USSInit {
             vscode.commands.registerCommand("zowe.uss.cdUp", async (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.cdUp(node))
         );
         context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.uss.back", async (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.navigateBack(node))
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand(
+                "zowe.uss.forward",
+                async (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.navigateForward(node)
+            )
+        );
+        context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.fullPath", async (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.filterPrompt(node))
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.uss.resetTempHistory", (node: IZoweUSSTreeNode): void =>
+                ussFileProvider.resetNavigationHistory(node)
+            )
         );
         context.subscriptions.push(
             vscode.commands.registerCommand(
