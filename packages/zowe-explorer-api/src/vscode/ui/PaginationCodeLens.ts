@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 
 export class PaginationCodeLens implements vscode.CodeLensProvider {
-    public constructor(private commandId: string) {}
+    public constructor(private commandId: string, private shouldShowCodeLens?: Function) {}
     public provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CodeLens[]> {
         const lineCount = document.lineCount;
         const lastLine = lineCount - 1;
@@ -23,7 +23,7 @@ export class PaginationCodeLens implements vscode.CodeLensProvider {
             command: this.commandId,
             arguments: [document],
         });
-
-        return [codelens];
+        return this.shouldShowCodeLens?.(document) === false ? [] : [codelens];
     }
+
 }

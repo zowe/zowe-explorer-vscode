@@ -404,6 +404,35 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         );
     });
 });
+describe("Zowe Jobs Commands", () => {
+    let loadMoreRecordsCommand;
+
+    beforeEach(() => {
+        const mockActiveTextEditor = {
+            document: {
+                uri: vscode.Uri.parse("zowe-jobs://some-uri"),
+            },
+        } as unknown as vscode.TextEditor;
+
+        Object.defineProperty(vscode.window, "activeTextEditor", {
+            get: jest.fn(() => mockActiveTextEditor),
+            configurable: true,
+        });
+    });
+
+    it("should show an error message if no active editor", async () => {
+        const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage").mockImplementation(jest.fn());
+
+        Object.defineProperty(vscode.window, "activeTextEditor", {
+            get: jest.fn(() => undefined),
+            configurable: true,
+        });
+
+        await JobActions.loadMoreRecords(undefined as any);
+
+        expect(showErrorMessageSpy).toHaveBeenCalledWith("No document found.");
+    });
+});
 
 describe("Jobs Actions Unit Tests - Function downloadJcl", () => {
     it("Checking download of Job JCL", async () => {

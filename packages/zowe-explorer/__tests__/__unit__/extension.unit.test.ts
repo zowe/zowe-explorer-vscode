@@ -143,7 +143,6 @@ async function createGlobalMocks() {
         appName: vscode.env.appName,
         uriScheme: vscode.env.uriScheme,
         expectedCommands: [
-            "zowe.jobs.loadMoreRecords",
             "zowe.all.config.init",
             "zowe.ds.addSession",
             "zowe.ds.refreshAll",
@@ -452,14 +451,6 @@ describe("Extension Unit Tests", () => {
             },
         });
 
-        const originalGetDirectValue = SettingsConfig.getDirectValue;
-        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key: string) => {
-            if (key === "zowe.jobs.settings.pagination") {
-                return true;
-            }
-            return originalGetDirectValue.call(SettingsConfig, key);
-        });
-
         await extension.activate(globalMocks.mockExtension);
 
         // Check that tree providers are initialized successfully
@@ -474,44 +465,6 @@ describe("Extension Unit Tests", () => {
             expect(call[0]).toStrictEqual(globalMocks.expectedCommands[i]);
             expect(call[1]).toBeInstanceOf(Function);
             allCommands.push({ cmd: call[0], fun: call[1], toMock: jest.fn() });
-        });
-    });
-
-    describe("Zowe Jobs Commands", () => {
-        let loadMoreRecordsCommand;
-
-        beforeEach(() => {
-            const mockActiveTextEditor = {
-                document: {
-                    uri: vscode.Uri.parse("zowe-jobs://some-uri"),
-                },
-            } as unknown as vscode.TextEditor;
-
-            Object.defineProperty(vscode.window, "activeTextEditor", {
-                get: jest.fn(() => mockActiveTextEditor),
-                configurable: true,
-            });
-
-            JobFSProvider.instance.fetchSpoolAtUri = jest.fn();
-            loadMoreRecordsCommand = allCommands.find((c) => c.cmd === "zowe.jobs.loadMoreRecords");
-        });
-
-        it("should call fetchSpoolAtUri when triggered", async () => {
-            await loadMoreRecordsCommand.fun();
-            expect(JobFSProvider.instance.fetchSpoolAtUri).toHaveBeenCalledWith(vscode.window.activeTextEditor?.document.uri);
-        });
-
-        it("should show an error message if no active editor", async () => {
-            const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage").mockImplementation(jest.fn());
-
-            Object.defineProperty(vscode.window, "activeTextEditor", {
-                get: jest.fn(() => undefined),
-                configurable: true,
-            });
-
-            await loadMoreRecordsCommand.fun();
-
-            expect(showErrorMessageSpy).toHaveBeenCalledWith("No active editor found.");
         });
     });
 

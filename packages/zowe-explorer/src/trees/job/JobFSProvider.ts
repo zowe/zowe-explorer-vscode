@@ -37,6 +37,15 @@ import { AuthUtils } from "../../utils/AuthUtils";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 export class JobFSProvider extends BaseProvider implements vscode.FileSystemProvider {
+    public async supportSpoolPagination(doc: vscode.TextDocument): Promise<boolean> {
+        const profInfo = this._getInfoFromUri(doc.uri);
+        try {
+            const supportPagination = await ZoweExplorerApiRegister.getJesApi(profInfo.profile).supportSpoolPagination(doc);
+            return supportPagination;
+        } catch (err) {
+            return false;
+        }
+    }
     private static _instance: JobFSProvider;
 
     private constructor() {
@@ -230,7 +239,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                     jobFile: spoolEntry.spool,
                     stream: bufBuilder,
                     binary: spoolEntry.encoding?.kind === "binary",
-                    recordRange: recordRange,
+                    recordRange: jesApi.supportSpoolPagination?.()? recordRange : undefined,
                     encoding: spoolEncoding,
                 };
 
