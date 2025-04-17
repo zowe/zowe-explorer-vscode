@@ -323,11 +323,7 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
             label: "sestest",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: favoriteSessionNode,
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.testProfile,
         });
         favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         testTree.mFavorites.push(favProfileNode);
@@ -347,11 +343,7 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
             label: "sestest",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: blockMocks.jobFavoritesNode,
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.testProfile,
         });
         favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         testTree.mFavorites.push(favProfileNode);
@@ -480,11 +472,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             label: "testProfile",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: blockMocks.jobFavoritesNode,
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: blockMocks.imperativeProfile,
         });
         favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         const node = new ZoweJobNode({
@@ -492,11 +480,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: favProfileNode,
             job: new MockJobDetail("testJob(JOB123)"),
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: blockMocks.imperativeProfile,
         });
         node.contextValue = Constants.JOBS_JOB_CONTEXT + Constants.FAV_SUFFIX;
         const targetIcon = IconGenerator.getIconByNode(node);
@@ -517,11 +501,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             label: "testProfile",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: blockMocks.jobFavoritesNode,
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: blockMocks.imperativeProfile,
         });
         favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         const node = new ZoweJobNode({
@@ -529,11 +509,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             contextOverride: Constants.JOBS_SESSION_CONTEXT + Constants.FAV_SUFFIX,
             parentNode: favProfileNode,
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: blockMocks.imperativeProfile,
         });
         const targetIcon = IconGenerator.getIconByNode(node);
         if (targetIcon) {
@@ -558,11 +534,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             label: "testProfile",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: blockMocks.jobFavoritesNode,
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: blockMocks.imperativeProfile,
         });
         favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         const node = new ZoweJobNode({
@@ -669,11 +641,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
             label: "badTestProfile",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: blockMocks.jobFavoritesNode,
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: blockMocks.imperativeProfile,
         });
         favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         testTree.mFavorites.push(favProfileNode);
@@ -1309,17 +1277,14 @@ describe("openWithEncoding", () => {
         jest.restoreAllMocks();
     });
     it("should open a Job Spool file with an encoding (binary, prompted)", async () => {
+        const globalMocks = await createGlobalMocks();
         const testTree = new JobTree();
 
         const spoolNode = new ZoweSpoolNode({
             label: "SPOOL",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             spool: createIJobFile(),
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.testProfile,
         });
 
         const encoding: ZosEncoding = { kind: "binary" };
@@ -1338,17 +1303,14 @@ describe("openWithEncoding", () => {
     });
 
     it("should open a Job Spool file with an encoding (binary, provided)", async () => {
+        const globalMocks = await createGlobalMocks();
         const testTree = new JobTree();
 
         const spoolNode = new ZoweSpoolNode({
             label: "SPOOL",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             spool: createIJobFile(),
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.testProfile,
         });
 
         const encoding: ZosEncoding = { kind: "binary" };
@@ -1366,17 +1328,14 @@ describe("openWithEncoding", () => {
     });
 
     it("should open a Job Spool file with an encoding (ascii, prompted)", async () => {
+        const globalMocks = await createGlobalMocks();
         const testTree = new JobTree();
 
         const spoolNode = new ZoweSpoolNode({
             label: "SPOOL",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             spool: createIJobFile(),
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.testProfile,
         });
 
         const encoding: ZosEncoding = { kind: "text" };
@@ -1395,17 +1354,14 @@ describe("openWithEncoding", () => {
     });
 
     it("should open a Job Spool file with an encoding (ascii, provided)", async () => {
+        const globalMocks = await createGlobalMocks();
         const testTree = new JobTree();
 
         const spoolNode = new ZoweSpoolNode({
             label: "SPOOL",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             spool: createIJobFile(),
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.testProfile,
         });
 
         const encoding: ZosEncoding = { kind: "text" };
@@ -1423,17 +1379,14 @@ describe("openWithEncoding", () => {
     });
 
     it("should open a Job Spool file with an encoding (other, prompted)", async () => {
+        const globalMocks = await createGlobalMocks();
         const testTree = new JobTree();
 
         const spoolNode = new ZoweSpoolNode({
             label: "SPOOL",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             spool: createIJobFile(),
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.testProfile,
         });
 
         const encoding: ZosEncoding = { kind: "other", codepage: "IBM-1147" };
@@ -1452,17 +1405,14 @@ describe("openWithEncoding", () => {
     });
 
     it("should open a Job Spool file with an encoding (other, provided)", async () => {
+        const globalMocks = await createGlobalMocks();
         const testTree = new JobTree();
 
         const spoolNode = new ZoweSpoolNode({
             label: "SPOOL",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             spool: createIJobFile(),
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.testProfile,
         });
 
         const encoding: ZosEncoding = { kind: "other", codepage: "IBM-1147" };
@@ -1480,17 +1430,14 @@ describe("openWithEncoding", () => {
     });
 
     it("should open a Job Spool file with an encoding (undefined, prompted)", async () => {
+        const globalMocks = await createGlobalMocks();
         const testTree = new JobTree();
 
         const spoolNode = new ZoweSpoolNode({
             label: "SPOOL",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             spool: createIJobFile(),
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.testProfile,
         });
 
         const promptMock = jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue(undefined);
@@ -1507,16 +1454,13 @@ describe("openWithEncoding", () => {
     });
 
     it("should catch if error is thrown", async () => {
+        const globalMocks = await createGlobalMocks();
         const testTree = new JobTree();
         const spoolNode = new ZoweSpoolNode({
             label: "SPOOL",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             spool: createIJobFile(),
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.testProfile,
         });
         const encoding: ZosEncoding = { kind: "other", codepage: "IBM-1147" };
         const promptMock = jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue(encoding);
