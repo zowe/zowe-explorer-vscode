@@ -872,16 +872,13 @@ describe("ZoweJobNode unit tests - Function setEncoding", () => {
         expect(testNode.dirty).toEqual(false);
     });
 
-    it("should error if the resource does not exist", () => {
+    it("should error if the resource does not exist", async () => {
+        const globalMocks = await createGlobalMocks();
         const testNode = new ZoweSpoolNode({
             label: "SPOOL",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             spool: createIJobFile(),
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.testProfile,
         });
         const updateEncodingSpy = jest.spyOn(testNode, "updateEncodingInMap");
         testNode.dirty = false;
@@ -903,18 +900,15 @@ describe("ZoweJobNode unit tests - Function setEncoding", () => {
         expect(testNode.dirty).toEqual(false);
     });
 
-    it("should delete a null encoding from the provider", () => {
+    it("should delete a null encoding from the provider", async () => {
+        const globalMocks = await createGlobalMocks();
         const testParentNode = createJobNode(createJobSessionNode(createISession(), createIProfile()), createIProfile());
         const testNode = new ZoweSpoolNode({
             label: "SPOOL",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             spool: createIJobFile(),
             parentNode: testParentNode,
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.testProfile,
         });
         const updateEncodingSpy = jest.spyOn(testNode, "updateEncodingInMap").mockImplementation();
         const nodePath = testNode.resourceUri.path;
@@ -938,18 +932,15 @@ describe("ZoweJobNode unit tests - Function setEncoding", () => {
         expect(testNode.dirty).toEqual(true);
     });
 
-    it("should update the encoding in the provider map", () => {
+    it("should update the encoding in the provider map", async () => {
+        const globalMocks = await createGlobalMocks();
         const testParentNode = createJobNode(createJobSessionNode(createISession(), createIProfile()), createIProfile());
         const testNode = new ZoweSpoolNode({
             label: "SPOOL",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             spool: createIJobFile(),
             parentNode: testParentNode,
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.testProfile,
         });
         const nodePath = testNode.resourceUri.path;
         const updateEncodingSpy = jest.spyOn(testNode, "updateEncodingInMap").mockImplementation();
