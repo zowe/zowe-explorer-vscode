@@ -4,6 +4,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
+### Bug fixes
+
+- BugFix: Fixed an issue where an invalid token in a base configuration profile will take precedence over a plaintext user/password in a service configuration profile. [#3575](https://github.com/zowe/zowe-explorer-vscode/pull/3575)
+- BugFix: Fixed an issue where profiles that were not utilizing tokens were improperly running `checkJwtForProfile()` function within the `ZoweTreeProvider`. [#3575](https://github.com/zowe/zowe-explorer-vscode/pull/3575)
+- Fixed an issue where copy-and-pasting an empty PDS within the same LPAR would result in an error. [#3541](https://github.com/zowe/zowe-explorer-vscode/issues/3541)
+
 ### New features and enhancements
 
 - Added case sensitive and regular expression search options to Data Set searches. [#3455](https://github.com/zowe/zowe-explorer-vscode/issues/3455)
