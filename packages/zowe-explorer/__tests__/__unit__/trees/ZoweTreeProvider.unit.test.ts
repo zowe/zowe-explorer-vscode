@@ -225,11 +225,7 @@ describe("Tree Provider unit tests, function getTreeItem", () => {
         const sampleElement = new ZoweUSSNode({
             label: "/u/myUser",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.testProfile,
         });
         expect(globalMocks.testUSSTree.getTreeItem(sampleElement)).toBeInstanceOf(vscode.TreeItem);
         expect(spy).toHaveBeenCalled();
