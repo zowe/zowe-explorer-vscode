@@ -261,11 +261,11 @@ export class DatasetActions {
     ): Promise<void> {
         node.pattern = theFilter.toUpperCase();
         const toolTipList: string[] = (node.tooltip as string).split("\n");
-        const patternIndex = toolTipList.findIndex((key) => key.startsWith("Pattern: "));
+        const patternIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Pattern: ")));
         if (patternIndex === -1) {
-            toolTipList.push(`Pattern: ${node.pattern}`);
+            toolTipList.push(`${vscode.l10n.t("Pattern: ")}${node.pattern}`);
         } else {
-            toolTipList[patternIndex] = `Pattern: ${node.pattern}`;
+            toolTipList[patternIndex] = `${vscode.l10n.t("Pattern: ")}${node.pattern}`;
         }
         node.tooltip = toolTipList.join("\n");
         node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
