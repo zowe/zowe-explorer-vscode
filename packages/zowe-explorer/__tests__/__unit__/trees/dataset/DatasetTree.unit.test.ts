@@ -3050,13 +3050,8 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
-        const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const datasetFavoritesNode = createDatasetFavoritesNode();
-        const mvsApi = createMvsApi(imperativeProfile);
-        const mockCheckCurrentProfile = jest.fn();
-        bindMvsApi(mvsApi);
 
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(datasetSessionNode);
@@ -3066,27 +3061,39 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
             imperativeProfile,
             datasetSessionNode,
             datasetFavoritesNode,
-            treeView,
-            mvsApi,
-            profileInstance,
-            mockCheckCurrentProfile,
             testTree,
+            log: imperative.Logger.getAppLogger(),
         };
     }
 
-    it("successfully initialize favorites", () => {
+    it("successfully initializes favorites", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const testTree = new DatasetTree();
-        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        const log = imperative.Logger.getAppLogger();
 
-        Object.defineProperty(testTree, "mHistory", {
-            value: {
-                readFavorites: () => ["[SAMPLE]: SAMPLE.{session}", "*SAMPLE", "SAMPLE*"],
-            },
+        jest.replaceProperty(blockMocks.testTree as any, "mHistory", {
+            readFavorites: () => ["[test]: SAMPLE.PO.DS{pds}", "[test]: SAMPLE.PS.DS{ds}", "INVALID*"],
         });
-        expect(() => testTree.initializeFavorites(log)).not.toThrow();
+        await blockMocks.testTree.initializeFavorites(blockMocks.log);
+
+        expect(blockMocks.testTree.mFavorites.length).toBe(1);
+        expect(blockMocks.testTree.mFavorites[0].children?.map((item) => item.label)).toEqual(["SAMPLE.PO.DS", "SAMPLE.PS.DS"]);
+    });
+
+    it("refreshes favorite nodes without duplicating items", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        jest.replaceProperty(blockMocks.testTree as any, "mHistory", {
+            readFavorites: () => ["[test]: SAMPLE.DS{ds}"],
+        });
+        await blockMocks.testTree.initializeFavorites(blockMocks.log);
+
+        expect(blockMocks.testTree.mFavorites.length).toBe(1);
+        expect(blockMocks.testTree.mFavorites[0].children?.map((item) => item.label)).toEqual(["SAMPLE.DS"]);
+
+        await blockMocks.testTree.refreshFavorites();
+        expect(blockMocks.testTree.mFavorites.length).toBe(1);
+        expect(blockMocks.testTree.mFavorites[0].children?.map((item) => item.label)).toEqual(["SAMPLE.DS"]);
     });
 });
 describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {

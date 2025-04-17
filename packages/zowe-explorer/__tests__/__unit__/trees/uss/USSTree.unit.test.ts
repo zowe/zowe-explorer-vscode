@@ -174,10 +174,7 @@ function createGlobalMocks() {
         value: globalMocks.mockTextDocuments,
         configurable: true,
     });
-    Object.defineProperty(Profiles, "getInstance", {
-        value: jest.fn().mockReturnValue(globalMocks.mockProfilesInstance),
-        configurable: true,
-    });
+    jest.spyOn(Profiles, "getInstance").mockReturnValue(globalMocks.mockProfilesInstance as unknown as any);
     Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({
@@ -249,31 +246,54 @@ function createGlobalMocks() {
 }
 
 describe("USSTree Unit Tests - Function initializeFavorites", () => {
-    it("Tests that initializeFavorites() is executed successfully", async () => {
-        const globalMocks = createGlobalMocks();
-        jest.spyOn(ZowePersistentFilters.prototype, "readFavorites").mockReturnValueOnce([
-            "[test]: /u/aDir{directory}",
-            "[test]: /u/myFile.txt{textFile}",
-        ]);
-        const testTree1 = await USSInit.createUSSTree(imperative.Logger.getAppLogger());
-        const favProfileNode = testTree1.mFavorites[0];
-        expect(testTree1.mSessionNodes).toBeDefined();
-        expect(testTree1.mFavorites.length).toBe(1);
-        expect(favProfileNode.children.length).toBe(2);
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const ussSessionNode = createUSSSessionNode(session, imperativeProfile);
+        const ussFavoritesNode = createFavoriteUSSNode(session, imperativeProfile);
 
-        const expectedUSSFavorites: ZoweUSSNode[] = [
-            new ZoweUSSNode({ label: "/u/aDir", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed, session: globalMocks.testSession }),
-            new ZoweUSSNode({ label: "/u/myFile.txt", collapsibleState: vscode.TreeItemCollapsibleState.None, session: globalMocks.testSession }),
-        ];
+        const testTree = new USSTree();
+        testTree.mSessionNodes.push(ussSessionNode);
 
-        expectedUSSFavorites.forEach((node) => (node.contextValue += Constants.FAV_SUFFIX));
-        expectedUSSFavorites.forEach((node) => {
-            if (node.contextValue !== Constants.USS_DIR_CONTEXT + Constants.FAV_SUFFIX) {
-                node.command = { command: "vscode.open", title: "Open", arguments: [node.resourceUri] };
-            }
+        return {
+            session,
+            imperativeProfile,
+            ussSessionNode,
+            ussFavoritesNode,
+            testTree,
+            log: imperative.Logger.getAppLogger(),
+        };
+    }
+
+    it("successfully initializes favorites", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        jest.replaceProperty(blockMocks.testTree as any, "mHistory", {
+            readFavorites: () => ["[test]: /u/aDir{directory}", "[test]: /u/myFile.txt{textFile}", "/invalid"],
         });
-        expect(favProfileNode.children[0].fullPath).toEqual("/u/aDir");
-        expect(favProfileNode.children[1].label).toEqual("myFile.txt");
+        await blockMocks.testTree.initializeFavorites(blockMocks.log);
+
+        expect(blockMocks.testTree.mFavorites.length).toBe(1);
+        expect(blockMocks.testTree.mFavorites[0].children?.[0].fullPath).toEqual("/u/aDir");
+        expect(blockMocks.testTree.mFavorites[0].children?.[1].label).toEqual("myFile.txt");
+    });
+
+    it("refreshes favorite nodes without duplicating items", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        jest.replaceProperty(blockMocks.testTree as any, "mHistory", {
+            readFavorites: () => ["[test]: /u/aDir{directory}"],
+        });
+        await blockMocks.testTree.initializeFavorites(blockMocks.log);
+
+        expect(blockMocks.testTree.mFavorites.length).toBe(1);
+        expect(blockMocks.testTree.mFavorites[0].children?.map((item) => item.fullPath)).toEqual(["/u/aDir"]);
+
+        await blockMocks.testTree.refreshFavorites();
+        expect(blockMocks.testTree.mFavorites.length).toBe(1);
+        expect(blockMocks.testTree.mFavorites[0].children?.map((item) => item.fullPath)).toEqual(["/u/aDir"]);
     });
 });
 
@@ -452,6 +472,24 @@ describe("USSTree Unit Tests - Function removeFavorite", () => {
         expect(removeFavProfileSpy).toHaveBeenCalledWith(profileNodeInFavs.label, false);
         expect(profileNodeInFavs.children).toEqual([]);
     });
+    it("Tests that removeFavorite() handles different paths with same basename", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const testNode2 = new ZoweUSSNode({
+            label: blockMocks.testDir.label.toString(),
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.testDir,
+            parentPath: blockMocks.testDir.fullPath,
+        });
+        expect(globalMocks.testTree.mFavorites[0].children.length).toEqual(1);
+
+        await globalMocks.testTree.addFavorite(testNode2);
+        expect(globalMocks.testTree.mFavorites[0].children.length).toEqual(2);
+
+        await globalMocks.testTree.removeFavorite(blockMocks.testDir);
+        expect(globalMocks.testTree.mFavorites[0].children.length).toEqual(1);
+    });
 });
 
 describe("USSTree Unit Tests - Function removeFavProfile", () => {
@@ -552,7 +590,7 @@ describe("USSTree Unit Tests - Function deleteSession", () => {
 
     it("Tests that deleteSession works properly", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(globalMocks.mockTreeProviders);
 
@@ -564,6 +602,40 @@ describe("USSTree Unit Tests - Function deleteSession", () => {
         expect(globalMocks.mockTreeProviders.ds.mSessionNodes.length).toEqual(1);
         expect(globalMocks.mockTreeProviders.uss.mSessionNodes.length).toEqual(1);
         expect(globalMocks.mockTreeProviders.job.mSessionNodes.length).toEqual(1);
+    });
+});
+
+describe("USSTree Unit Tests - Function cdUp", () => {
+    it("Tests that cdUp() handles when current filter set but not as a root path", async () => {
+        const globalMocks = createGlobalMocks();
+
+        await globalMocks.testTree.filterBy(globalMocks.testTree.mSessionNodes[1], "/u/myuser/usstest");
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/u/myuser/usstest");
+
+        await globalMocks.testTree.cdUp(globalMocks.testTree.mSessionNodes[1]);
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/u/myuser");
+    });
+
+    it("Tests that cdUp() handles when current filter set but into root path", async () => {
+        const globalMocks = createGlobalMocks();
+
+        await globalMocks.testTree.filterBy(globalMocks.testTree.mSessionNodes[1], "/u/myuser");
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/u/myuser");
+
+        await globalMocks.testTree.cdUp(globalMocks.testTree.mSessionNodes[1]);
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/u");
+    });
+
+    it("Tests that cdUp() handles when current filter set but as a root path", async () => {
+        const globalMocks = createGlobalMocks();
+
+        await globalMocks.testTree.filterBy(globalMocks.testTree.mSessionNodes[1], "/u");
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/u");
+
+        await globalMocks.testTree.cdUp(globalMocks.testTree.mSessionNodes[1]);
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/u");
+
+        expect(globalMocks.showInformationMessage).toHaveBeenCalledWith("You are already at the root directory.", undefined);
     });
 });
 
@@ -596,9 +668,9 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         return newMocks;
     }
 
-    it("Tests that filter() works properly when user enters path", async () => {
+    it("Tests that filterPrompt() works properly when user enters path", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         blockMocks.qpValue = "/U/HARRY";
         globalMocks.showInputBox.mockReturnValueOnce("/U/HARRY");
@@ -607,9 +679,9 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/U/HARRY");
     });
 
-    it("Tests that filter() makes the call to get the combined session information", async () => {
+    it("Tests that filterPrompt() makes the call to get the combined session information", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         blockMocks.qpValue = "/U/HLQ";
         globalMocks.showInputBox.mockReturnValueOnce("/U/HLQ");
         const syncSessionNodeSpy = jest.spyOn(AuthUtils, "syncSessionNode");
@@ -619,9 +691,9 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         expect(syncSessionNodeSpy).toHaveBeenCalledTimes(1);
     });
 
-    it("Tests that filter() works properly when user enters path with Unverified profile", async () => {
+    it("Tests that filterPrompt() works properly when user enters path with Unverified profile", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -644,18 +716,18 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/U/HARRY");
     });
 
-    it("Tests that filter() exits when user cancels out of input field", async () => {
+    it("Tests that filterPrompt() exits when user cancels out of input field", async () => {
         const globalMocks = createGlobalMocks();
-        await createBlockMocks(globalMocks);
+        createBlockMocks(globalMocks);
 
         globalMocks.showInputBox.mockReturnValueOnce(undefined);
 
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
     });
 
-    it("Tests that filter() works on a file", async () => {
+    it("Tests that filterPrompt() works on a file", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         blockMocks.qpValue = "/U/HLQ/STUFF";
         blockMocks.qpItem = new FilterDescriptor("/U/HLQ/STUFF");
@@ -665,18 +737,18 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/U/HLQ/STUFF");
     });
 
-    it("Tests that filter() exits when user cancels the input path box", async () => {
+    it("Tests that filterPrompt() exits when user cancels the input path box", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         blockMocks.qpItem = undefined;
 
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
     });
 
-    it("Tests that filter() works correctly for favorited search nodes with credentials", async () => {
+    it("Tests that filterPrompt() works correctly for favorited search nodes with credentials", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         const sessionWithCred = createISession();
         globalMocks.createSessCfgFromArgs.mockReturnValue(sessionWithCred);
@@ -693,9 +765,9 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         expect(blockMocks.checkJwtForProfile).toHaveBeenCalledWith("ussTestSess2");
     });
 
-    it("Tests that filter() works correctly for favorited search nodes without credentials", async () => {
+    it("Tests that filterPrompt() works correctly for favorited search nodes without credentials", async () => {
         const globalMocks = createGlobalMocks();
-        await createBlockMocks(globalMocks);
+        createBlockMocks(globalMocks);
 
         const sessionNoCred = createISessionWithoutCredentials();
         globalMocks.createSessCfgFromArgs.mockReturnValue(sessionNoCred);
@@ -721,6 +793,98 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         globalMocks.testTree.mSessionNodes.push(nonFavNode);
 
         await expect(globalMocks.testTree.filterPrompt(node)).resolves.not.toThrow();
+    });
+});
+
+describe("USSTree Unit Tests - Function filterBy", () => {
+    function createBlockMocks() {
+        const newMocks = {
+            checkJwtForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtForProfile").mockResolvedValueOnce(true),
+        };
+
+        return newMocks;
+    }
+
+    it("Tests that filterBy() makes the call to get the combined session information", async () => {
+        const globalMocks = createGlobalMocks();
+        const syncSessionNodeSpy = jest.spyOn(AuthUtils, "syncSessionNode").mockClear();
+
+        await globalMocks.testTree.filterBy(globalMocks.testTree.mSessionNodes[1], "/U/HLQ");
+
+        expect(syncSessionNodeSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("Tests that filterBy() works properly when user enters path with Unverified profile", async () => {
+        const globalMocks = createGlobalMocks();
+
+        await globalMocks.testTree.filterBy(globalMocks.testTree.mSessionNodes[1], "/U/HARRY");
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/U/HARRY");
+    });
+
+    it("Tests that filterBy() works on a file", async () => {
+        const globalMocks = createGlobalMocks();
+
+        await globalMocks.testTree.filterBy(globalMocks.testTree.mSessionNodes[1], "/U/HLQ/STUFF");
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/U/HLQ/STUFF");
+    });
+
+    it("Tests that filterBy() works when already filtered on a path", async () => {
+        const globalMocks = createGlobalMocks();
+
+        await globalMocks.testTree.filterBy(globalMocks.testTree.mSessionNodes[1], "/U/HLQ");
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/U/HLQ");
+
+        await globalMocks.testTree.filterBy(globalMocks.testTree.mSessionNodes[1], "/U/HLQ/STUFF");
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/U/HLQ/STUFF");
+    });
+
+    it("Tests that filterBy() works correctly for favorited search nodes with credentials", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks();
+
+        const sessionWithCred = createISession();
+        globalMocks.createSessCfgFromArgs.mockReturnValue(sessionWithCred);
+        const node = new ZoweUSSNode({
+            label: "/u/myFolder",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: Constants.USS_SESSION_CONTEXT + Constants.FAV_SUFFIX,
+            session: sessionWithCred,
+            profile: { name: "ussTestSess2" } as any,
+        });
+        node.fullPath = "/u/myFolder";
+        globalMocks.testTree.mFavorites.push(node);
+        await expect(globalMocks.testTree.filterBy(node, "/u/myFolder")).resolves.not.toThrow();
+        expect(blockMocks.checkJwtForProfile).toHaveBeenCalledWith("ussTestSess2");
+    });
+
+    it("Tests that filterBy() works correctly for favorited search nodes without credentials", async () => {
+        const globalMocks = createGlobalMocks();
+        await createBlockMocks();
+
+        const sessionNoCred = createISessionWithoutCredentials();
+        globalMocks.createSessCfgFromArgs.mockReturnValue(sessionNoCred);
+        const node = new ZoweUSSNode({
+            label: "/u/myFolder",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: Constants.USS_SESSION_CONTEXT + Constants.FAV_SUFFIX,
+            session: sessionNoCred,
+            profile: { name: "ussTestSess2" } as any,
+        });
+        const nonFavNode = new ZoweUSSNode({
+            label: "/u/myFolder",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: Constants.USS_SESSION_CONTEXT,
+            session: globalMocks.testSession,
+            profile: { name: "ussTestSess2" } as any,
+        });
+        node.fullPath = "/u/myFolder";
+        node.getSession().ISession.user = "";
+        node.getSession().ISession.password = "";
+        node.getSession().ISession.base64EncodedAuth = "";
+        globalMocks.testTree.mFavorites.push(node);
+        globalMocks.testTree.mSessionNodes.push(nonFavNode);
+
+        await expect(globalMocks.testTree.filterBy(node, "/u/myFolder")).resolves.not.toThrow();
     });
 });
 
@@ -881,7 +1045,7 @@ describe("USSTree Unit Tests - Function saveSearch", () => {
 
     it("Testing that saveSearch() works properly for a folder", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         await globalMocks.testTree.addFavorite(blockMocks.folder);
         expect(globalMocks.testTree.mFavorites.length).toEqual(1);
@@ -889,7 +1053,7 @@ describe("USSTree Unit Tests - Function saveSearch", () => {
 
     it("Testing that saveSearch() works properly for a file", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         await globalMocks.testTree.addFavorite(blockMocks.file);
         expect(globalMocks.testTree.mFavorites.length).toEqual(1);
@@ -897,7 +1061,7 @@ describe("USSTree Unit Tests - Function saveSearch", () => {
 
     it("Testing that saveSearch() works properly for a session", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
         const ussNodeToSave = blockMocks.file;
         const expectedNode = ussNodeToSave;
 
@@ -912,7 +1076,7 @@ describe("USSTree Unit Tests - Function saveSearch", () => {
 
     it("Testing that saveSearch() works properly on the same session, different path", async () => {
         const globalMocks = createGlobalMocks();
-        await createBlockMocks(globalMocks);
+        createBlockMocks(globalMocks);
         const testNode = globalMocks.testTree.mSessionNodes[1];
         testNode.fullPath = "/a1234";
 
@@ -1118,7 +1282,7 @@ describe("USSTree Unit Tests - Function addFavorite", () => {
 
     it("Tests that addFavorite() works for directories", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         await globalMocks.testTree.addFavorite(blockMocks.parentDir);
         const favProfileNode = globalMocks.testTree.mFavorites[0];
@@ -1128,7 +1292,7 @@ describe("USSTree Unit Tests - Function addFavorite", () => {
 
     it("Tests that addFavorite() works for files", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         await globalMocks.testTree.addFavorite(blockMocks.childFile);
         const favProfileNode = globalMocks.testTree.mFavorites[0];
@@ -1138,7 +1302,7 @@ describe("USSTree Unit Tests - Function addFavorite", () => {
 
     it("Tests that addFavorite() doesn't add duplicates", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
+        const blockMocks = createBlockMocks(globalMocks);
 
         await globalMocks.testTree.addFavorite(blockMocks.parentDir);
         await globalMocks.testTree.addFavorite(blockMocks.parentDir);
