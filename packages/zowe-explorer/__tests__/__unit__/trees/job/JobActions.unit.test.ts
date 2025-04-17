@@ -167,11 +167,7 @@ describe("Jobs Actions Unit Tests - Function setPrefix", () => {
             label: "job",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             session: blockMocks.session,
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: blockMocks.imperativeProfile,
         });
 
         const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("*");
@@ -1507,14 +1503,11 @@ describe("sortJobs function", () => {
 
 describe("copyName function", () => {
     it("copies the job with format JobName(JobId)", async () => {
+        const globalMocks = await createGlobalMocks();
         const node = new ZoweJobNode({
             label: "JOBNAME(ID123456) - ACTIVE",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.imperativeProfile,
         });
         node.job = {
             jobname: "JOBNAME",
@@ -1528,14 +1521,11 @@ describe("copyName function", () => {
     });
 
     it("copies a node's label for spools and nodes with missing job objects", async () => {
+        const globalMocks = await createGlobalMocks();
         const node = new ZoweSpoolNode({
             label: "JES2:JESMSGLG(2)",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
-            profile: {
-                type: "sampleType",
-                message: "",
-                failNotFound: false,
-            },
+            profile: globalMocks.imperativeProfile,
         });
         const writeTextSpy = jest.spyOn(vscode.env.clipboard, "writeText");
         await JobActions.copyName(node);
