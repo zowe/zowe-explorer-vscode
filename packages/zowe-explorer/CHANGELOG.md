@@ -41,6 +41,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where data sets were not requested with attributes if the profile type's API did not implement the `dataSetsMatchingPattern` function. [#3578](https://github.com/zowe/zowe-explorer-vscode/pull/3578)
 - Fixed an issue where remote changes to a data set member are not detected by Zowe Explorer if the member's resource path ends in an extension. [#3555](https://github.com/zowe/zowe-explorer-vscode/issues/3555)
 - Fixed an issue where a newly-created data set member might be opened without an extension. [#3555](https://github.com/zowe/zowe-explorer-vscode/issues/3555)
+- Fixed an issue where favorites for extender profile types were duplicated in the tree views. [#3548](https://github.com/zowe/zowe-explorer-vscode/issues/3548)
+- Fixed an issue where multiple directories with the same name could not be favorited in the USS tree. [#3590](https://github.com/zowe/zowe-explorer-vscode/pull/3590)
 
 ## `3.1.2`
 
