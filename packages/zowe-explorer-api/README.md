@@ -3,11 +3,11 @@
 [![version](https://img.shields.io/npm/v/@zowe/zowe-explorer-api)](https://img.shields.io/npm/v/@zowe/zowe-explorer-api)
 [![downloads](https://img.shields.io/npm/dt/@zowe/zowe-explorer-api)](https://img.shields.io/npm/dt/@zowe/zowe-explorer-api)
 
-Extensibility API for Zowe Explorer is a collection of APIs that can be used to extend the [Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode) VS Code extension with alternative z/OS interaction protocols and new capabilities. These capabilities include but are not limited to tree view management, Zowe profiles and security assistance, VS Code UI and logging utilities.
+Extensibility API for Zowe Explorer is a collection of APIs that can be used to extend the [Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode) VS Code extension with alternative z/OS interaction protocols and new capabilities. These capabilities include but are not limited to tree view management, Zowe profiles and security assistance, VS Code UI and logging utilities geared towards use in and with Zowe Explorer.
 
 The following kinds of extensions can be certified as compliant for Zowe Explorer. Check out the [v3 Conformance Program](https://openmainframeproject.org/our-projects/zowe-conformance-program/) for the specific criteria.
 
-Extension offerings need to comply with at least one of the following, but is not limited to a single category. All submissions must meet the required criteria of the General category as well as all required criteria of at least one of the specified types listed.
+Extension offerings need to comply with the General extension category along with at least one, but not limited to, of the other following categories.
 
 1. General extension. A generic VS Code extension that utilizes Zowe Explorer resources in any way.
 1. Profiles access: An extension that accesses the Zowe Explorer Zowe CLI profiles caches for read or write operations.
