@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
-import { Gui, IZoweJobTreeNode, Sorting, Types, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, Sorting, Types, ZoweExplorerApiType, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweJobNode } from "./ZoweJobNode";
 import { JobTree } from "./JobTree";
 import { JobUtils } from "./JobUtils";
@@ -253,6 +253,17 @@ export class JobActions {
         statusMsg.dispose();
     }
 
+    public static async loadMoreRecords(doc: vscode.TextDocument): Promise<void> {
+        if (!doc) {
+            Gui.errorMessage(vscode.l10n.t("No document found"));
+            return;
+        }
+
+        const uri = doc.uri;
+        if (uri.scheme == ZoweScheme.Jobs) {
+            await JobFSProvider.instance.fetchSpoolAtUri(uri);
+        }
+    }
     /**
      * Refresh a job node information and spool files in the job tree
      *

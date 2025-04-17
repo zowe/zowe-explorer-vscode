@@ -34,8 +34,18 @@ import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { SharedContext } from "../shared/SharedContext";
 import { AuthUtils } from "../../utils/AuthUtils";
+import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 export class JobFSProvider extends BaseProvider implements vscode.FileSystemProvider {
+    public supportSpoolPagination(doc: vscode.TextDocument): boolean {
+        const profInfo = this._getInfoFromUri(doc.uri);
+        try {
+            const supportPagination = ZoweExplorerApiRegister.getJesApi(profInfo.profile).supportSpoolPagination?.();
+            return supportPagination;
+        } catch (err) {
+            return false;
+        }
+    }
     private static _instance: JobFSProvider;
 
     private constructor() {
@@ -213,6 +223,15 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const jesApi = ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile);
         await AuthHandler.waitForUnlock(spoolEntry.metadata.profile);
+        const query = new URLSearchParams(uri.query);
+        let recordRange = "";
+        if (query.has("startLine")) {
+            const startLine = parseInt(query.get("startLine")!);
+            const endLine = query.has("endLine")
+                ? parseInt(query.get("endLine")!)
+                : SettingsConfig.getDirectValue<number>("zowe.jobs.recordsToFetch") ?? 0;
+            recordRange = `${startLine}-${endLine}`;
+        }
         try {
             const spoolEncoding = spoolEntry.encoding?.kind === "other" ? spoolEntry.encoding.codepage : profileEncoding;
             if (jesApi.downloadSingleSpool) {
@@ -220,6 +239,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                     jobFile: spoolEntry.spool,
                     stream: bufBuilder,
                     binary: spoolEntry.encoding?.kind === "binary",
+                    recordRange: jesApi.supportSpoolPagination?.() ? recordRange : undefined,
                     encoding: spoolEncoding,
                 };
 
