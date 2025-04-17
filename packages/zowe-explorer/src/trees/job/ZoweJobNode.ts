@@ -104,8 +104,8 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             };
 
             const toolTipList: string[] = [];
-            toolTipList.push(`Profile: ${opts.label}`);
-            toolTipList.push(`Profile Type: ${opts.profile.type}`);
+            toolTipList.push(`${vscode.l10n.t("Profile: ")}${opts.label}`);
+            toolTipList.push(`${vscode.l10n.t("Profile Type: ")}${opts.profile.type}`);
             this.tooltip = toolTipList.join("\n");
 
             if (this.getParent()?.label !== vscode.l10n.t("Favorites") && !SharedContext.isFavorite(this)) {
