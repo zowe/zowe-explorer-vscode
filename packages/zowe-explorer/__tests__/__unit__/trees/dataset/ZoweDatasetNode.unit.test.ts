@@ -33,6 +33,8 @@ import { IconGenerator } from "../../../../src/icons/IconGenerator";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
+import { MockedProperty } from "../../../__mocks__/mockUtils";
+import { AuthUtils } from "../../../../src/utils/AuthUtils";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -962,6 +964,7 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
 
             jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
                 applyPatternsToChildren: jest.fn(),
+                resetFilterForChildren: jest.fn(),
             } as any);
             jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: jest.fn().mockReturnValueOnce(profileOne),
@@ -1011,6 +1014,7 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
 
             jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
                 applyPatternsToChildren: jest.fn(),
+                resetFilterForChildren: jest.fn(),
             } as any);
             jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: jest.fn().mockReturnValueOnce(profileOne),
@@ -1061,6 +1065,7 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
 
             jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
                 applyPatternsToChildren: jest.fn(),
+                resetFilterForChildren: jest.fn(),
             } as any);
             jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: jest.fn().mockReturnValueOnce(profileOne),
@@ -1107,6 +1112,7 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             jest.spyOn((sessionNode as any).paginator, "canGoNext").mockReturnValueOnce(true);
             jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
                 applyPatternsToChildren: jest.fn(),
+                resetFilterForChildren: jest.fn(),
             } as any);
             jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: jest.fn().mockReturnValueOnce(profileOne),
@@ -1142,6 +1148,34 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             expect(children.at(-1)?.label).toBe("Next page");
             children.slice(1, -1).forEach((child) => expect(child).toBeInstanceOf(ZoweDatasetNode));
         });
+    });
+
+    it("calls error handling when list response is unsuccessful", async () => {
+        const errorHandlingMock = new MockedProperty(AuthUtils, "errorHandling");
+        const mockProfilesInstance = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+        } as any);
+
+        const sessionNode = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+        });
+        sessionNode.pattern = "PDS.*";
+        jest.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
+            {
+                success: false,
+                commandResponse: null,
+                apiResponse: "Error: test error",
+            },
+        ]);
+
+        expect(await sessionNode.getChildren()).toStrictEqual([]);
+        expect(errorHandlingMock.mock).toHaveBeenCalled();
+        mockProfilesInstance.mockRestore();
+        errorHandlingMock[Symbol.dispose]();
     });
 });
 

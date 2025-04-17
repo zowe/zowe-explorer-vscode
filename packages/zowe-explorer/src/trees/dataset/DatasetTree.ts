@@ -1236,7 +1236,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     }
 
     public applyPatternsToChildren(children: IZoweDatasetTreeNode[], patterns: DatasetMatch[]): void {
-        for (const child of children.filter((c) => c.label !== vscode.l10n.t("No data sets found"))) {
+        for (const child of children.filter((c) => !(c instanceof NavigationTreeItem) && c.label !== vscode.l10n.t("No data sets found"))) {
             for (const item of patterns.filter((p) => p.member && this.patternAppliesToChild(child, p))) {
                 // Only apply to PDS that match the given patterns
                 if (SharedContext.isPds(child)) {
@@ -1263,7 +1263,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         ZoweLogger.trace("DatasetTree.datasetFilterPrompt called.");
         let pattern: string;
         await this.checkCurrentProfile(node);
-        const sessionNode = node;
 
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             if (SharedContext.isSessionNotFav(node)) {
@@ -1313,27 +1312,22 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 }
             }
             // looking for members in pattern
+            node.patternMatches = this.extractPatterns(pattern);
+            const dsPattern = this.buildFinalPattern(node.patternMatches);
+            if (dsPattern.length != 0) {
+                node.tooltip = node.pattern = dsPattern.toUpperCase();
+            } else {
+                node.tooltip = node.pattern = pattern.toUpperCase();
+            }
             node.dirty = true;
-            sessionNode.pattern = pattern;
-
-            let response: IZoweDatasetTreeNode[] = [];
-            try {
-                await Gui.withProgress({ location: { viewId: "zowe.ds.explorer" } }, async () => {
-                    response = await this.getChildren(sessionNode);
-                });
-            } catch (err) {
-                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
-            }
-            if (response.length === 0) {
-                return;
-            }
             this.addSearchHistory(pattern);
         }
-        if (!SharedContext.isFavorite(sessionNode)) {
-            sessionNode.resourceUri = sessionNode.resourceUri.with({ query: `pattern=${pattern}` });
+        if (!SharedContext.isFavorite(node)) {
+            node.resourceUri = node.resourceUri.with({ query: `pattern=${pattern}` });
         }
-        await TreeViewUtils.expandNode(sessionNode, this);
-        this.refresh();
+        if (node.collapsibleState !== vscode.TreeItemCollapsibleState.Expanded) {
+            await TreeViewUtils.expandNode(node, this);
+        }
     }
 
     public checkFilterPattern(dsName: string, itemName: string): boolean {

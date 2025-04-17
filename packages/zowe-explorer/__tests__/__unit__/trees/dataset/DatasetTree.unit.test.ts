@@ -1715,8 +1715,10 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         jest.spyOn(testTree, "checkFilterPattern").mockReturnValue(true);
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
-
-        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD(STUF*),HLQ.PROD1*");
+        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD, HLQ.PROD1*");
+        // member patterns are stored on the session node itself and not in the pattern,
+        // as the member pattern needs to be passed to a different API (allMembers) and not the list data set (dataSet/dataSetsMatchingPattern) API
+        expect(testTree.mSessionNodes[1].patternMatches).toEqual([{ dsn: "HLQ.PROD", member: "STUF*" }, { dsn: "HLQ.PROD1*" }]);
     });
     it("Checking adding of new filter with data set member", async () => {
         const globalMocks = createGlobalMocks();
@@ -1853,32 +1855,6 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         expect(errorSpy).not.toHaveBeenCalled();
         errorSpy.mockClear();
-    });
-    it("Checking function for return if element.getChildren calls error handling for success: false", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks(globalMocks);
-
-        const errorHandlingMock = new MockedProperty(AuthUtils, "errorHandling");
-
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new FilterDescriptor("\uFF0B " + "Create a new filter"));
-        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const testTree = new DatasetTree();
-        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        Object.defineProperty(testTree.mSessionNodes[1], "getDatasets", {
-            value: jest.fn().mockResolvedValueOnce([
-                {
-                    success: false,
-                    commandResponse: null,
-                    apiResponse: "Error: test error",
-                },
-            ]),
-            configurable: true,
-        });
-
-        expect(await testTree.datasetFilterPrompt(testTree.mSessionNodes[1])).not.toBeDefined();
-        expect(errorHandlingMock.mock).toHaveBeenCalled();
-        errorHandlingMock[Symbol.dispose]();
     });
     it("Checking function for return if element.getChildren returns undefined", async () => {
         const globalMocks = createGlobalMocks();

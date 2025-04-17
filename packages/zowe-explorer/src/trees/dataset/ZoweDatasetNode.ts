@@ -483,6 +483,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
             if (SharedContext.isSession(this)) {
                 const dsTree = SharedTreeProviders.ds as DatasetTree;
+                // Reset and remove previous search patterns in case pattern has changed
+                dsTree.resetFilterForChildren(this.children);
                 // set new search patterns for each child of getChildren
                 dsTree.applyPatternsToChildren(this.children, this.patternMatches);
             }
@@ -733,7 +735,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         const lastItem = items.length > 0 ? items.at(-1) : undefined;
 
-        const nextPageCursor = lastItem && lastDatasetName !== lastItem.dsname ? lastItem.dsname : undefined;
+        const nextPageCursor = limit && items.length === limit && lastItem && lastDatasetName !== lastItem.dsname ? lastItem.dsname : undefined;
 
         return {
             items: successfulResponses,
@@ -840,7 +842,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         const lastItem = items.length > 0 ? items.at(-1) : undefined;
 
         // Use member name for cursor
-        const nextPageCursor = lastItem && lastMemberName !== lastItem.member ? lastItem.member : undefined;
+        const nextPageCursor = limit && items.length === limit && lastItem && lastMemberName !== lastItem.member ? lastItem.member : undefined;
 
         return {
             items: successfulResponses,
@@ -890,18 +892,17 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (isSession) {
             const fullPattern = SharedContext.isFavoriteSearch(this) ? (this.label as string) : this.pattern;
             const dsTree = SharedTreeProviders.ds as DatasetTree;
-            this.patternMatches = dsTree.extractPatterns(fullPattern);
-            const dsPattern = dsTree.buildFinalPattern(this.patternMatches).toUpperCase();
-            if (dsPattern.length != 0) {
-                if (dsPattern !== this.pattern) {
-                    // Reset and remove previous search patterns if pattern has changed
-                    dsTree.resetFilterForChildren(this.children);
-                    // Force paginator and data to be re-initialized
-                    this.paginator = this.paginatorData = undefined;
-                }
-                patternChanged = this.prevPattern !== dsPattern || this.pattern !== dsPattern;
-                this.pattern = this.prevPattern = dsPattern;
+            let finalPattern = fullPattern;
+            if (fullPattern.length != 0 && SharedContext.isFavoriteSearch(this)) {
+                this.patternMatches = dsTree.extractPatterns(fullPattern);
+                finalPattern = dsTree.buildFinalPattern(this.patternMatches).toUpperCase();
             }
+            if (finalPattern !== this.pattern) {
+                // Force paginator and data to be re-initialized
+                this.paginator = this.paginatorData = undefined;
+            }
+            patternChanged = this.prevPattern !== finalPattern || this.pattern !== finalPattern;
+            this.pattern = this.prevPattern = finalPattern;
         }
 
         try {
