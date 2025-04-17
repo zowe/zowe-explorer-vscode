@@ -1319,11 +1319,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 sessionNode.pattern = pattern.toUpperCase();
             }
             const toolTipList: string[] = (node.tooltip as string).split("\n");
-            const patternIndex = toolTipList.findIndex((key) => key.startsWith("Pattern: "));
+            const patternIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Pattern: ")));
             if (patternIndex === -1) {
-                toolTipList.push(`Pattern: ${sessionNode.pattern}`);
+                toolTipList.push(`${vscode.l10n.t("Pattern: ")}${sessionNode.pattern}`);
             } else {
-                toolTipList[patternIndex] = `Pattern: ${sessionNode.pattern}`;
+                toolTipList[patternIndex] = `${vscode.l10n.t("Pattern: ")}${sessionNode.pattern}`;
             }
             node.tooltip = toolTipList.join("\n");
 
