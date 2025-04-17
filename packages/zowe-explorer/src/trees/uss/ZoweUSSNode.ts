@@ -115,8 +115,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             if (isSession) {
                 UssFSProvider.instance.createDirectory(this.resourceUri);
                 const toolTipList: string[] = [];
-                toolTipList.push(`Profile: ${opts.label}`);
-                toolTipList.push(`Profile Type: ${opts.profile.type}`);
+                toolTipList.push(`${vscode.l10n.t("Profile: ")}${opts.label}`);
+                toolTipList.push(`${vscode.l10n.t("Profile Type: ")}${opts.profile.type}`);
                 this.tooltip = toolTipList.join("\n");
             } else if (this.contextValue === Constants.INFORMATION_CONTEXT) {
                 this.command = { command: "zowe.placeholderCommand", title: "Placeholder" };
