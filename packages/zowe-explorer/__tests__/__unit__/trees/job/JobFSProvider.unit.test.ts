@@ -247,6 +247,16 @@ describe("JobFSProvider.supportSpoolPagination", () => {
         const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
         expect(result).toBe(undefined);
     });
+    it("returns false when getJesApi throws an error", () => {
+        jest.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValue(profInfo);
+
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockImplementation(() => {
+            throw new Error("Failed to get JES API");
+        });
+
+        const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
+        expect(result).toBe(false);
+    });
 });
 
 

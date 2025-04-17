@@ -255,7 +255,7 @@ export class JobActions {
 
     public static async loadMoreRecords(doc: vscode.TextDocument): Promise<void> {
         if (!doc) {
-            vscode.window.showErrorMessage("No document found.");
+            Gui.errorMessage(vscode.l10n.t("No document found"));
             return;
         }
 

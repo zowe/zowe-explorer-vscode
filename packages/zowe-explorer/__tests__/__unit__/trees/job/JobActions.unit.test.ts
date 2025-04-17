@@ -421,7 +421,7 @@ describe("Zowe Jobs Commands", () => {
     });
 
     it("should show an error message if no active editor", async () => {
-        const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage").mockImplementation(jest.fn());
+        const showErrorMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(jest.fn());
 
         Object.defineProperty(vscode.window, "activeTextEditor", {
             get: jest.fn(() => undefined),
@@ -430,7 +430,7 @@ describe("Zowe Jobs Commands", () => {
 
         await JobActions.loadMoreRecords(undefined as any);
 
-        expect(showErrorMessageSpy).toHaveBeenCalledWith("No document found.");
+        expect(showErrorMessageSpy).toHaveBeenCalledWith("No document found");
     });
 });
 
