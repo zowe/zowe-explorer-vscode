@@ -833,13 +833,13 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                     node.dirty = true;
                     const toolTipList = (node.tooltip as string).split("\n");
                     switch (true) {
-                        case searchCriteria.includes("Owner: "): {
-                            const jobIdIndex = toolTipList.findIndex((key) => key.startsWith("JobId: "));
+                        case searchCriteria.includes(vscode.l10n.t("Owner: ")): {
+                            const jobIdIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("JobId: ")));
                             if (jobIdIndex !== -1) {
                                 toolTipList.splice(jobIdIndex, 1);
                             }
 
-                            const searchCriteriaIndex = toolTipList.findIndex((key) => key.startsWith("Owner: "));
+                            const searchCriteriaIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Owner: ")));
                             if (searchCriteriaIndex === -1) {
                                 toolTipList.push(searchCriteria);
                             } else {
@@ -847,13 +847,13 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                             }
                             break;
                         }
-                        case searchCriteria.includes("JobId: "): {
-                            const searchFilterIndex = toolTipList.findIndex((key) => key.startsWith("Owner: "));
+                        case searchCriteria.includes(vscode.l10n.t("JobId: ")): {
+                            const searchFilterIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Owner: ")));
                             if (searchFilterIndex !== -1) {
                                 toolTipList.splice(searchFilterIndex, 1);
                             }
 
-                            const jobIdIndex = toolTipList.findIndex((key) => key.startsWith("JobId: "));
+                            const jobIdIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("JobId: ")));
                             if (jobIdIndex === -1) {
                                 toolTipList.push(searchCriteria);
                             } else {
