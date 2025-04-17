@@ -189,69 +189,69 @@ export class AuthUtils {
             }
             const toolTipList = sessionNode.tooltip === "" ? [] : (sessionNode.tooltip as string).split("\n");
 
-            const authMethodIndex = toolTipList.findIndex((key) => key.startsWith("Auth Method: "));
+            const authMethodIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Auth Method: ")));
             if (authMethodIndex === -1) {
                 switch (true) {
                     case Boolean(usingTokenAuth): {
-                        toolTipList.push(`Auth Method: Token-based Authentication`);
+                        toolTipList.push(`${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Token-based Authentication")}`);
                         break;
                     }
                     case Boolean(usingBasicAuth): {
-                        toolTipList.push(`Auth Method: Basic Authentication`);
-                        toolTipList.push(`User: ${profile.profile.user as string}`);
+                        toolTipList.push(`${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Basic Authentication")}`);
+                        toolTipList.push(`${vscode.l10n.t("User: ")}${profile.profile.user as string}`);
                         break;
                     }
                     case Boolean(usingCertAuth): {
-                        toolTipList.push(`Auth Method: Certificate Authentication`);
+                        toolTipList.push(`${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Certificate Authentication")}`);
                         break;
                     }
                     default: {
-                        toolTipList.push(`Auth Method: Unknown`);
+                        toolTipList.push(`${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Unknown")}`);
                         break;
                     }
                 }
             } else {
                 switch (true) {
                     case Boolean(usingTokenAuth): {
-                        toolTipList[authMethodIndex] = `Auth Method: Token-based Authentication`;
+                        toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Token-based Authentication")}`;
                         break;
                     }
                     case Boolean(usingBasicAuth): {
-                        toolTipList[authMethodIndex] = `Auth Method: Basic Authentication`;
-                        const userIDIndex = toolTipList.findIndex((key) => key.startsWith("User: "));
+                        toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Basic Authentication")}`;
+                        const userIDIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("User: ")));
                         if (userIDIndex !== -1) {
-                            toolTipList[userIDIndex] = `User: ${profile.profile.user as string}`;
+                            toolTipList[userIDIndex] = `${vscode.l10n.t("User: ")}${profile.profile.user as string}`;
                         } else {
-                            toolTipList.splice(authMethodIndex + 1, 0, `User: ${profile.profile.user as string}`);
+                            toolTipList.splice(authMethodIndex + 1, 0, `${vscode.l10n.t("User: ")}${profile.profile.user as string}`);
                         }
                         break;
                     }
                     case Boolean(usingCertAuth): {
-                        toolTipList[authMethodIndex] = `Auth Method: Certificate Authentication`;
+                        toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Certificate Authentication")}`;
                         break;
                     }
                     default: {
-                        toolTipList[authMethodIndex] = `Auth Method: Unknown`;
-                        const patternIndex = toolTipList.findIndex((key) => key.startsWith("Pattern: "));
+                        toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Unknown")}`;
+                        const patternIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Pattern: ")));
                         if (patternIndex !== -1) {
                             toolTipList.splice(patternIndex, 1);
                         }
-                        const pathIndex = toolTipList.findIndex((key) => key.startsWith("Path: "));
+                        const pathIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Path: ")));
                         if (pathIndex !== -1) {
                             toolTipList.splice(pathIndex, 1);
                         }
-                        const searchCriteriaIndex = toolTipList.findIndex((key) => key.startsWith("Owner: "));
+                        const searchCriteriaIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Owner: ")));
                         if (searchCriteriaIndex !== -1) {
                             toolTipList.splice(searchCriteriaIndex, 1);
                         }
-                        const jobIdIndex = toolTipList.findIndex((key) => key.startsWith("JobId: "));
+                        const jobIdIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("JobId: ")));
                         if (jobIdIndex !== -1) {
                             toolTipList.splice(jobIdIndex, 1);
                         }
                     }
                 }
                 if (!usingBasicAuth) {
-                    const userIDIndex = toolTipList.findIndex((key) => key.startsWith("User: "));
+                    const userIDIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("User: ")));
                     if (userIDIndex !== -1) {
                         toolTipList.splice(userIDIndex, 1);
                     }
@@ -261,20 +261,20 @@ export class AuthUtils {
             if (usingTokenAuth || usingBasicAuth || usingCertAuth) {
                 switch (true) {
                     case Boolean(sessionNode.fullPath): {
-                        const pathIndex = toolTipList.findIndex((key) => key.startsWith("Path: "));
+                        const pathIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Path: ")));
                         if (pathIndex === -1) {
-                            toolTipList.push(`Path: ${sessionNode.fullPath}`);
+                            toolTipList.push(`${vscode.l10n.t("Path: ")}${sessionNode.fullPath}`);
                         } else {
-                            toolTipList[pathIndex] = `Path: ${sessionNode.fullPath}`;
+                            toolTipList[pathIndex] = `${vscode.l10n.t("Path: ")}${sessionNode.fullPath}`;
                         }
                         break;
                     }
-                    case `${sessionNode.description}`.includes("Owner: "): {
-                        const jobIdIndex = toolTipList.findIndex((key) => key.startsWith("JobId: "));
+                    case `${sessionNode.description}`.includes(vscode.l10n.t("Owner: ")): {
+                        const jobIdIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("JobId: ")));
                         if (jobIdIndex !== -1) {
                             toolTipList.splice(jobIdIndex, 1);
                         }
-                        const searchCriteriaIndex = toolTipList.findIndex((key) => key.startsWith("Owner: "));
+                        const searchCriteriaIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Owner: ")));
                         if (searchCriteriaIndex === -1) {
                             toolTipList.push(sessionNode.description as string);
                         } else {
@@ -282,12 +282,12 @@ export class AuthUtils {
                         }
                         break;
                     }
-                    case `${sessionNode.description}`.includes("JobId: "): {
-                        const searchFilterIndex = toolTipList.findIndex((key) => key.startsWith("Owner: "));
+                    case `${sessionNode.description}`.includes(vscode.l10n.t("JobId: ")): {
+                        const searchFilterIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Owner: ")));
                         if (searchFilterIndex !== -1) {
                             toolTipList.splice(searchFilterIndex, 1);
                         }
-                        const jobIdIndex = toolTipList.findIndex((key) => key.startsWith("JobId: "));
+                        const jobIdIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("JobId: ")));
                         if (jobIdIndex === -1) {
                             toolTipList.push(sessionNode.description as string);
                         } else {
