@@ -154,7 +154,7 @@ export class Profiles extends ProfilesCache {
         }
 
         if (node !== undefined) {
-            const toolTipList = (node.tooltip as string).split("\n");
+            const toolTipList = (node.tooltip as string)?.split("\n") ?? [];
 
             const autoStoreValue = (await this.getProfileInfo()).getTeamConfig().properties.autoStore;
             const autoStoreIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Auto Store: ")));
@@ -167,9 +167,11 @@ export class Profiles extends ProfilesCache {
             const layers = await this.uniqueExistingLayers();
             const configFileIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Config File: ")));
             if (configFileIndex === -1) {
-                toolTipList.push(`${vscode.l10n.t("Config File: ")}${layers[0].global ? "Global" : "Project"}`);
+                toolTipList.push(`${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")}`);
             } else {
-                toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${layers[0].global ? "Global" : "Project"}`;
+                toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${
+                    layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
+                }`;
             }
 
             const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
