@@ -1264,70 +1264,78 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         let pattern: string;
         await this.checkCurrentProfile(node);
 
-        if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
-            if (SharedContext.isSessionNotFav(node)) {
-                ZoweLogger.debug(vscode.l10n.t("Prompting the user for a data set pattern"));
-                if (this.mHistory.getSearchHistory().length > 0) {
-                    const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
-                    const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
-                    const quickpick = Gui.createQuickPick();
-                    quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
-                    quickpick.placeholder = vscode.l10n.t("Select a filter");
-                    quickpick.ignoreFocusOut = true;
-                    quickpick.show();
-                    const choice = await Gui.resolveQuickPick(quickpick);
-                    quickpick.hide();
-                    if (!choice) {
-                        Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-                        return;
-                    }
-                    if (choice instanceof FilterDescriptor) {
-                        if (quickpick.value) {
-                            pattern = quickpick.value;
-                        }
-                    } else {
-                        pattern = choice.label;
-                    }
-                }
-                const options: vscode.InputBoxOptions = {
-                    prompt: vscode.l10n.t("Search data sets: use a comma to separate multiple patterns"),
-                    value: pattern,
-                };
-                // get user input
-                pattern = await Gui.showInputBox(options);
-                if (!pattern) {
-                    Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
+        if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
+            ZoweLogger.warn(`[DatasetTree.datasetFilterPrompt] Cancelled because profile ${node.getProfileName()} is not validated`);
+            return;
+        }
+
+        if (SharedContext.isSessionNotFav(node)) {
+            ZoweLogger.debug(vscode.l10n.t("Prompting the user for a data set pattern"));
+            if (this.mHistory.getSearchHistory().length > 0) {
+                const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
+                const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
+                const quickpick = Gui.createQuickPick();
+                quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
+                quickpick.placeholder = vscode.l10n.t("Select a filter");
+                quickpick.ignoreFocusOut = true;
+                quickpick.show();
+                const choice = await Gui.resolveQuickPick(quickpick);
+                quickpick.hide();
+                if (!choice) {
+                    Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
                     return;
                 }
-            } else {
-                // executing search from saved search in favorites
-                pattern = node.getLabel() as string;
-                const sessionName = node.getProfileName();
-                await this.addSession({ sessionName });
-                const nonFavNode = this.mSessionNodes.find((tempNode) => tempNode.label.toString() === sessionName);
-                if (!nonFavNode.getSession().ISession.user || !nonFavNode.getSession().ISession.password) {
-                    nonFavNode.getSession().ISession.user = node.getSession().ISession.user;
-                    nonFavNode.getSession().ISession.password = node.getSession().ISession.password;
-                    nonFavNode.getSession().ISession.base64EncodedAuth = node.getSession().ISession.base64EncodedAuth;
+                if (choice instanceof FilterDescriptor) {
+                    if (quickpick.value) {
+                        pattern = quickpick.value;
+                    }
+                } else {
+                    pattern = choice.label;
                 }
             }
-            // looking for members in pattern
-            node.patternMatches = this.extractPatterns(pattern);
-            const dsPattern = this.buildFinalPattern(node.patternMatches);
-            if (dsPattern.length != 0) {
-                node.tooltip = node.pattern = dsPattern.toUpperCase();
-            } else {
-                node.tooltip = node.pattern = pattern.toUpperCase();
+            const options: vscode.InputBoxOptions = {
+                prompt: vscode.l10n.t("Search data sets: use a comma to separate multiple patterns"),
+                value: pattern,
+            };
+            // get user input
+            pattern = await Gui.showInputBox(options);
+            if (!pattern) {
+                Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
+                return;
             }
-            node.dirty = true;
-            this.addSearchHistory(pattern);
+        } else {
+            // executing search from saved search in favorites
+            pattern = node.getLabel() as string;
+            const sessionName = node.getProfileName();
+            await this.addSession({ sessionName });
+            const nonFavNode = this.mSessionNodes.find((tempNode) => tempNode.label.toString() === sessionName);
+            if (!nonFavNode.getSession().ISession.user || !nonFavNode.getSession().ISession.password) {
+                nonFavNode.getSession().ISession.user = node.getSession().ISession.user;
+                nonFavNode.getSession().ISession.password = node.getSession().ISession.password;
+                nonFavNode.getSession().ISession.base64EncodedAuth = node.getSession().ISession.base64EncodedAuth;
+            }
+        }
+        // looking for members in pattern
+        node.patternMatches = this.extractPatterns(pattern);
+        const dsPattern = this.buildFinalPattern(node.patternMatches);
+        if (dsPattern.length != 0) {
+            node.tooltip = node.pattern = dsPattern.toUpperCase();
+        } else {
+            node.tooltip = node.pattern = pattern.toUpperCase();
         }
         if (!SharedContext.isFavorite(node)) {
             node.resourceUri = node.resourceUri.with({ query: `pattern=${pattern}` });
         }
+        node.dirty = true;
+
         if (node.collapsibleState !== vscode.TreeItemCollapsibleState.Expanded) {
+            // The node is refreshed when its expanded & marked dirty, no need to call nodeDataChanged
             await TreeViewUtils.expandNode(node, this);
+        } else {
+            // Refresh node in tree view to represent new data set pattern(s)
+            this.nodeDataChanged(node);
         }
+        this.addSearchHistory(pattern);
     }
 
     public checkFilterPattern(dsName: string, itemName: string): boolean {

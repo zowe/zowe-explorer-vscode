@@ -1873,6 +1873,74 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(await testTree.datasetFilterPrompt(testTree.mSessionNodes[1])).not.toBeDefined();
     });
 
+    it("should return early if profile is invalid", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+
+        const testTree = new DatasetTree();
+        const mockNode = blockMocks.datasetSessionNode;
+        mockNode.getProfileName = jest.fn().mockReturnValue("sestest");
+
+        const profilesInstance = Profiles.getInstance();
+        const checkCurrentProfileMock = jest.spyOn(profilesInstance, "checkCurrentProfile").mockResolvedValueOnce({
+            name: "sestest",
+            status: "inactive",
+        });
+        const mockValidProfile = jest.replaceProperty(profilesInstance, "validProfile", Validation.ValidationType.INVALID);
+
+        const loggerWarnSpy = jest.spyOn(ZoweLogger, "warn");
+        const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockClear();
+
+        await testTree.datasetFilterPrompt(mockNode);
+
+        expect(loggerWarnSpy).toHaveBeenCalledWith(
+            `[DatasetTree.datasetFilterPrompt] Cancelled because profile ${mockNode.getProfileName()} is not validated`
+        );
+        // Ensure subsequent steps like prompting are skipped
+        expect(showInputBoxSpy).not.toHaveBeenCalled();
+
+        loggerWarnSpy.mockRestore();
+        checkCurrentProfileMock.mockRestore();
+        showInputBoxSpy.mockRestore();
+        mockValidProfile.restore();
+    });
+
+    it("should call nodeDataChanged when node is already expanded", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+
+        const testTree = new DatasetTree();
+        const mockNode = blockMocks.datasetSessionNode;
+
+        const profilesInstance = Profiles.getInstance();
+        const mockValidProfile = jest.replaceProperty(profilesInstance, "validProfile", Validation.ValidationType.VALID);
+        const checkCurrentProfileMock = jest.spyOn(profilesInstance, "checkCurrentProfile").mockResolvedValue({ name: "sestest", status: "active" });
+
+        // Mock user input
+        const testPattern = "TEST.PATTERN.*";
+        const showInputBoxMock = jest.spyOn(Gui, "showInputBox").mockResolvedValue(testPattern);
+
+        mockNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+
+        const nodeDataChangedSpy = jest.spyOn(testTree, "nodeDataChanged");
+        const expandNodeSpy = jest.spyOn(TreeViewUtils, "expandNode");
+
+        await testTree.datasetFilterPrompt(mockNode);
+
+        expect(showInputBoxMock).toHaveBeenCalled();
+        expect(mockNode.pattern).toBe(testPattern.toUpperCase());
+        // Verify that node is repainted to show new data set nodes
+        expect(nodeDataChangedSpy).toHaveBeenCalledWith(mockNode);
+        // Ensure that node is not expanded as its already open
+        expect(expandNodeSpy).not.toHaveBeenCalled();
+
+        checkCurrentProfileMock.mockRestore();
+        showInputBoxMock.mockRestore();
+        mockValidProfile.restore();
+    });
+
     it("updates stats with modified date and user ID if provided in API", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
