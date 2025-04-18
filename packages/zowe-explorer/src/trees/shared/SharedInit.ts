@@ -137,6 +137,12 @@ export class SharedInit {
             })
         );
 
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.executeNavCallback", async (callback: () => void | PromiseLike<void>) => {
+                await callback();
+            })
+        );
+
         // Register functions & event listeners
         context.subscriptions.push(
             vscode.workspace.onDidChangeConfiguration(async (e) => {

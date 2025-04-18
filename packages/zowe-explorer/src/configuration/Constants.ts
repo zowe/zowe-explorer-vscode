@@ -16,11 +16,12 @@ import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import type { Profiles } from "./Profiles";
 
 export class Constants {
-    public static readonly COMMAND_COUNT = 111;
+    public static readonly COMMAND_COUNT = 112;
     public static readonly MAX_SEARCH_HISTORY = 5;
     public static readonly MAX_FILE_HISTORY = 10;
     public static readonly MAX_DISPLAYED_DELETE_NAMES = 10;
     public static readonly MS_PER_SEC = 1000;
+    public static readonly DEFAULT_ITEMS_PER_PAGE = 100;
     public static readonly STATUS_BAR_TIMEOUT_MS = 5000;
     public static readonly CONTEXT_PREFIX = "_";
     public static readonly FAV_SUFFIX = Constants.CONTEXT_PREFIX + "fav";

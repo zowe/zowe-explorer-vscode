@@ -26,7 +26,7 @@ export class SettingsConfig {
      */
     public static getDirectValue<T>(key: string, defaultValue?: T): T {
         const [first, ...rest] = key.split(".");
-        return vscode.workspace.getConfiguration(first).get(rest.join("."), defaultValue);
+        return vscode.workspace.getConfiguration(first)?.get(rest.join("."), defaultValue);
     }
 
     /**
