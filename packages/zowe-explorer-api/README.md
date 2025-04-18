@@ -3,7 +3,7 @@
 [![version](https://img.shields.io/npm/v/@zowe/zowe-explorer-api)](https://img.shields.io/npm/v/@zowe/zowe-explorer-api)
 [![downloads](https://img.shields.io/npm/dt/@zowe/zowe-explorer-api)](https://img.shields.io/npm/dt/@zowe/zowe-explorer-api)
 
-Extensibility API for Zowe Explorer is a collection of APIs that can be used to extend the [Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode) VS Code extension with alternative z/OS interaction protocols and new capabilities. These capabilities include but are not limited to tree view management, Zowe profiles and security assistance, VS Code UI and logging utilities geared towards use in and with Zowe Explorer.
+Extensibility API for Zowe Explorer is a collection of APIs that can be used to extend the [Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode) VS Code extension with alternative z/OS interaction protocols and new capabilities. These capabilities are built for use in (and alongside) Zowe Explorer, and include: tree view management, Zowe profiles and security assistance, UI functions and logging utilities.
 
 The following kinds of extensions can be certified as compliant for Zowe Explorer. Check out the [v3 Conformance Program](https://openmainframeproject.org/our-projects/zowe-conformance-program/) for the specific criteria.
 
