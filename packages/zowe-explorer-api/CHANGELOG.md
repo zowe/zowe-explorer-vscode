@@ -15,6 +15,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - The `certFile` and `certKeyFile` are now supported fields for zosmf session/profile. [#2373](https://github.com/zowe/zowe-explorer-vscode/issues/2373)
 - Deprecated the `flipState` method on the `IZoweTree` interface in favor of the `onCollapsibleStateChange` method. Implement the `onCollapsibleStateChange` method to receive an accurate collapsible state for the given node. [#3515](https://github.com/zowe/zowe-explorer-vscode/issues/3515)
 - Generalized and updated the README. [#3367](https://github.com/zowe/zowe-explorer-vscode/issues/3367)
+- Added ability to pass the `OverrideWithEnv` property to the `imperative.ProfileInfo` class when the setting "Override with Environment Variables" is enabled. When enabled, environment variables such as `ZOWE_OPT_USER` and `ZOWE_OPT_PASSWORD` take priority over properties specified in the team configuration. [#3591](https://github.com/zowe/zowe-explorer-vscode/pull/3591)
 
 ### Bug fixes
 

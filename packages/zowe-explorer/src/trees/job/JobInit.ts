@@ -34,7 +34,7 @@ export class JobInit {
     public static async createJobsTree(log: imperative.Logger): Promise<JobTree> {
         ZoweLogger.trace("JobInit.createJobsTree called.");
         const tree = new JobTree();
-        await tree.initializeJobsTree(log);
+        await tree.initializeFavorites(log);
         await tree.addSession();
         return tree;
     }
