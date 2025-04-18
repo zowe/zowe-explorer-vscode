@@ -16,7 +16,7 @@ Extension offerings need to comply with the General extension category along wit
 
 Examples of extenders of the Zowe Explorer VS Code extension include the [IBM z/OS FTP for Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode/tree/main/packages/zowe-explorer-ftp-extension) and [IBM CICS for Zowe Explorer](https://github.com/zowe/cics-for-zowe-client/tree/main/packages/vsce) VS Code extension, as well as several commercial extensions.
 
-More information about extending Zowe Explorer via the Extensibility API for Zowe Explorer check out our wiki page [Extending Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode/wiki/Extending-Zowe-Explorer).
+For more information about extending Zowe Explorer via the Extensibility API for Zowe Explorer, check out the [Extending Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode/wiki/Extending-Zowe-Explorer) wiki page.
 
 ## Providing feedback or help contributing
 
