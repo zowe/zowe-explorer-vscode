@@ -1230,5 +1230,7 @@
   "JobId: ": "JobId: ",
   "Auto Store: ": "Auto Store: ",
   "Config File: ": "Config File: ",
+  "Global": "Global",
+  "Project": "Project",
   "Secure Credentials Enabled: ": "Secure Credentials Enabled: "
 }
