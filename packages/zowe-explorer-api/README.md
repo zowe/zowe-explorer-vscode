@@ -9,7 +9,7 @@ The following kinds of extensions can be certified as compliant for Zowe Explore
 
 Extension offerings need to comply with the General extension category along with at least one of the other following categories.
 
-1. General extension: A generic VS Code extension that utilizes Zowe Explorer resources in any way.
+1. General requirements: VS Code extensions that utilizes Zowe Explorer resources in any way must meet all general requirements.
 1. Leverage team configuration: An extension that accesses Zowe Explorer's profile cache to utilize or manage profiles.
 1. Data Provider: An extension that provides an alternative profile type for a different z/OS communication protocol for one or more Zowe Explorer views.
 1. Menus: An extension that contributes menus to Zowe Explorer tree views and/or accesses contextual information from the trees.
