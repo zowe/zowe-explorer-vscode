@@ -7,9 +7,9 @@ Extensibility API for Zowe Explorer is a collection of APIs that can be used to 
 
 The following kinds of extensions can be certified as compliant for Zowe Explorer. Check out the [v3 Conformance Program](https://openmainframeproject.org/our-projects/zowe-conformance-program/) for the specific criteria.
 
-Extension offerings need to comply with the General extension category along with at least one, but not limited to, of the other following categories.
+Extension offerings need to comply with the General extension category along with at least one of the other following categories.
 
-1. General extension. A generic VS Code extension that utilizes Zowe Explorer resources in any way.
+1. General extension: A generic VS Code extension that utilizes Zowe Explorer resources in any way.
 1. Leverage team configuration: An extension that accesses Zowe Explorer's profile cache to utilize or manage profiles.
 1. Data Provider: An extension that provides an alternative profile type for a different z/OS communication protocol for one or more Zowe Explorer views.
 1. Menus: An extension that contributes menus to Zowe Explorer tree views and/or accesses contextual information from the trees.
