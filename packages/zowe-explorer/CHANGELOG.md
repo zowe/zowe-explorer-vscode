@@ -24,7 +24,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added a button to filter the USS tree by the parent path of the current filter. [#1783](https://github.com/zowe/zowe-explorer-vscode/issues/1783).
 - Added an new VS Code command palette option `Zowe Explorer: Update Profile Configuration Schema`, allowing users to manually trigger an update to global and project level configuration schema files with registered Zowe Explorer extender types. [#1642](https://github.com/zowe/zowe-explorer-vscode/issues/1642)
 - Added script that will fetch latest localizations at every build now. [#3573](https://github.com/zowe/zowe-explorer-vscode/pull/3573)
-- Added pagination support for data sets and PDS members. Now, when the **Zowe -> Ds: Paginate** setting is enabled, the **Data Sets** tree view provides navigation controls and separates the list of items into pages. Users can configure the maximum amount of data sets to list per page by changing the **Zowe -> Ds -> Paginate: Data Sets Per Page** setting. [#3585](https://github.com/zowe/zowe-explorer-vscode/pull/3585)
+- Added a new "Override with Environment Variables" setting. When selected, Zowe Explorer prioritizes values from environment variables for properties when loading the user's team configuration. [#3591](https://github.com/zowe/zowe-explorer-vscode/pull/3591)
+- Added pagination support for data sets and PDS members. Now, the **Data Sets** tree view provides navigation controls and separates the list of items into pages. Users can configure the maximum amount of data sets to list per page by changing the **Zowe -> Ds -> Paginate: Data Sets Per Page** setting. [#3585](https://github.com/zowe/zowe-explorer-vscode/pull/3585)
 
 ### Bug fixes
 

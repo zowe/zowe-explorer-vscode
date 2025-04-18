@@ -1983,6 +1983,12 @@
           "default": 5000,
           "description": "%zowe.pollInterval.info%",
           "scope": "window"
+        },
+        "zowe.settings.overrideWithEnvironmentVariables": {
+          "type": "boolean",
+          "default": false,
+          "description": "%zowe.settings.overrideWithEnvironmentVariables%",
+          "scope": "window"
         }
       }
     },
