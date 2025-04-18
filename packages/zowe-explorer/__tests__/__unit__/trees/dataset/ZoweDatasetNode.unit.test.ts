@@ -10,7 +10,18 @@
  */
 
 import * as vscode from "vscode";
-import { BaseProvider, DsEntry, Gui, imperative, NavigationTreeItem, Paginator, PdsEntry, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
+import {
+    BaseProvider,
+    DsEntry,
+    Gui,
+    imperative,
+    NavigationTreeItem,
+    Paginator,
+    PdsEntry,
+    Sorting,
+    Validation,
+    ZoweScheme,
+} from "@zowe/zowe-explorer-api";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import {
     createSessCfgFromArgs,
@@ -452,6 +463,105 @@ describe("ZoweDatasetNode Unit Tests", () => {
         expect(pdsChildren[0].label).toEqual("IEFBR14");
         expect(pds.getProfile().profile?.encoding).toBeUndefined();
         expect(pdsChildren[0].getProfile().profile?.encoding).toBe("IBM-939");
+    });
+
+    /*************************************************************************************************************
+     * Checks pagination navigation item descriptions are set correctly
+     *************************************************************************************************************/
+    it("pagination nav items should have correct descriptions", async () => {
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+        } as any);
+        const sessionNode = createDatasetSessionNode(session, profileOne);
+        const pdsNode = new ZoweDatasetNode({
+            label: "TEST.PDS.PAGINATED",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+        pdsNode.sort = {
+            method: Sorting.DatasetSortOpts.Name,
+            direction: Sorting.SortDirection.Ascending,
+        };
+        pdsNode.dirty = true;
+
+        const totalItems = 10;
+        const itemsPerPage = 5;
+        const pageCount = Math.ceil(totalItems / itemsPerPage);
+        const paginatorFetchFn = jest
+            .fn()
+            .mockResolvedValueOnce({
+                items: Array.from({ length: itemsPerPage }, (_, i) => ({ member: `MEMBER${i + 1}` })),
+                totalItems,
+                nextPageCursor: "MEMBER5",
+            })
+            .mockResolvedValueOnce({
+                items: Array.from({ length: itemsPerPage }, (_, i) => ({ member: `MEMBER${i + 6}` })),
+                totalItems,
+            });
+        const mockPaginator = new Paginator<Partial<zosfiles.IZosmfListResponse>>(itemsPerPage, paginatorFetchFn);
+        await mockPaginator.initialize();
+
+        (pdsNode as any).paginator = mockPaginator as any; // Assign mock paginator
+        (pdsNode as any).paginatorData = { totalItems }; // Ensure totalItems is set
+
+        const getDatasetsSpy = jest.spyOn(pdsNode as any, "getDatasets").mockResolvedValue([
+            {
+                success: true,
+                apiResponse: {
+                    // Simulate items for page 2
+                    items: [{ member: "MEMBER6" }, { member: "MEMBER7" }, { member: "MEMBER8" }, { member: "MEMBER9" }, { member: "MEMBER10" }],
+                },
+            },
+        ]);
+
+        let children = await pdsNode.getChildren(true); // Request pagination
+
+        expect(children.length).toBe(itemsPerPage + 2); // 5 members + 2 navigation items
+
+        let prevPageItem = children[0] as unknown as NavigationTreeItem;
+        let nextPageItem = children[children.length - 1] as unknown as NavigationTreeItem;
+
+        expect(prevPageItem).toBeInstanceOf(NavigationTreeItem);
+        expect(nextPageItem).toBeInstanceOf(NavigationTreeItem);
+        expect(prevPageItem.label).toBe("Previous page");
+        expect(nextPageItem.label).toBe("Next page");
+
+        // Check descriptions for current page
+        // Current page index is 0 (page 1), total pages 2
+        expect(mockPaginator.canGoPrevious()).toBe(false);
+        expect(mockPaginator.canGoNext()).toBe(true);
+        expect(prevPageItem.disabled).toBe(true);
+        expect(prevPageItem.description).toBeUndefined();
+
+        expect(nextPageItem.disabled).toBe(false);
+        expect(nextPageItem.description).toBe(`2/${pageCount}`);
+
+        // --- Test case for being on page 2 ---
+        await mockPaginator.fetchNextPage();
+        children = await pdsNode.getChildren(true);
+
+        expect(children.length).toBe(itemsPerPage + 2); // 5 members + 2 navigation items
+
+        prevPageItem = children[0] as unknown as NavigationTreeItem;
+        nextPageItem = children[children.length - 1] as unknown as NavigationTreeItem;
+
+        expect(prevPageItem).toBeInstanceOf(NavigationTreeItem);
+        expect(nextPageItem).toBeInstanceOf(NavigationTreeItem);
+
+        // Check descriptions for Page 2
+        expect(mockPaginator.canGoPrevious()).toBe(true);
+        expect(mockPaginator.canGoNext()).toBe(false);
+        expect(prevPageItem.disabled).toBe(false);
+        expect(prevPageItem.description).toBe(`1/${pageCount}`);
+
+        expect(nextPageItem.disabled).toBe(true);
+        expect(nextPageItem.description).toBeUndefined();
+
+        getDatasetsSpy.mockRestore();
+        profilesMock.mockRestore();
     });
 });
 

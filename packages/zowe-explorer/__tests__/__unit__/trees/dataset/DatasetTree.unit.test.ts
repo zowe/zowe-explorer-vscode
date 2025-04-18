@@ -28,7 +28,7 @@ import {
     createMockNode,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree, createDatasetFavoritesNode } from "../../../__mocks__/mockCreators/datasets";
-import { ProfilesCache, imperative, Gui, Validation } from "@zowe/zowe-explorer-api";
+import { ProfilesCache, imperative, Gui, Validation, NavigationTreeItem } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../../../src/configuration/Constants";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { Profiles } from "../../../../src/configuration/Profiles";
@@ -552,6 +552,82 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         await testTree.getChildren(favProfileNode);
 
         expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
+    });
+
+    it("should skip NavigationTreeItem and add FILTER_SEARCH context to PDS member when memberPattern set", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+
+        const parentNode = new ZoweDatasetNode({
+            label: "A.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            profile: blockMocks.imperativeProfile,
+            session: blockMocks.session,
+        });
+        parentNode.memberPattern = "memb*";
+        parentNode.contextValue = Constants.DS_PDS_CONTEXT;
+
+        const navItem = new NavigationTreeItem("Next Page", "arrow-right", false, "zowe.dummyCommand", jest.fn());
+
+        const pdsMemberNode = new ZoweDatasetNode({
+            label: "MEMBER1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.DS_MEMBER_CONTEXT,
+            parentNode: parentNode,
+            profile: blockMocks.imperativeProfile,
+        });
+
+        const regularDsNode = new ZoweDatasetNode({
+            label: "REGULAR.DS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: parentNode,
+            profile: blockMocks.imperativeProfile,
+        });
+        regularDsNode.contextValue = Constants.DS_DS_CONTEXT;
+
+        const childrenFromParent: any[] = [navItem, pdsMemberNode, regularDsNode];
+
+        jest.spyOn(parentNode, "getChildren").mockResolvedValue(childrenFromParent);
+        const withProfileSpy = jest.spyOn(SharedContext, "withProfile");
+
+        const resultChildren = await testTree.getChildren(parentNode);
+        expect(resultChildren).toHaveLength(3);
+
+        const resultNavItem = resultChildren[0] as unknown as NavigationTreeItem;
+        expect(resultNavItem).toBeInstanceOf(NavigationTreeItem);
+        expect(resultNavItem.label).toBe("Next Page");
+        expect(resultNavItem.contextValue).not.toContain(Constants.FILTER_SEARCH);
+
+        // PDS member node should include FILTER_SEARCH on contextValue
+        // (provides context on node to indicate that member was filtered by member pattern on PDS)
+        const resultPdsMemberNode = resultChildren[1] as ZoweDatasetNode;
+        expect(resultPdsMemberNode.label).toBe("MEMBER1");
+        const expectedMemberContext = `${Constants.DS_MEMBER_CONTEXT}${Constants.FILTER_SEARCH}`;
+        expect(resultPdsMemberNode.contextValue).toBe(expectedMemberContext);
+
+        // Regular DS node contextValue should remain the same
+        const resultRegularDsNode = resultChildren[2] as ZoweDatasetNode;
+        expect(resultRegularDsNode.label).toBe("REGULAR.DS");
+        expect(resultRegularDsNode.contextValue).toBe(Constants.DS_DS_CONTEXT);
+
+        expect(withProfileSpy).toHaveBeenCalledTimes(2);
+        expect(withProfileSpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                label: "MEMBER1",
+                contextValue: `${Constants.DS_MEMBER_CONTEXT}${Constants.FILTER_SEARCH}`,
+            })
+        );
+        expect(withProfileSpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                label: "REGULAR.DS",
+                contextValue: Constants.DS_DS_CONTEXT,
+            })
+        );
+
+        withProfileSpy.mockRestore();
+        jest.restoreAllMocks();
     });
 });
 describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
