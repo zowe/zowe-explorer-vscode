@@ -174,7 +174,7 @@
     "Toggle Text": ""
   },
   "uss.filterBy": {
-    "Filter By": ""
+    "Search by Directory": ""
   },
   "uss.cd": {
     "Go Up One Level": ""
@@ -509,6 +509,9 @@
   "zowe.history.deprecationMsg": {
     "Changes made here will not be reflected in Zowe Explorer, use right-click Edit History option to access information from local storage.": ""
   },
+  "zowe.settings.overrideWithEnvironmentVariables": {
+    "Indicates if environment variables should override values stored in Zowe configuration profiles on disk.": ""
+  },
   "Enter command here...": "",
   "Page Size:": "",
   "Page": "",
@@ -648,7 +651,6 @@
   "Continue": "",
   "Prompting the user to choose a member from the filtered list": "",
   "You are already at the root directory.": "",
-  "Select a filter first.": "",
   "Prompting the user for a USS path": "",
   "Select a filter": "",
   "No selection made. Operation cancelled.": "",

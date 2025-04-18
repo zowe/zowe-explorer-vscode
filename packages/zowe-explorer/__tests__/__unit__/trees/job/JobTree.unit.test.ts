@@ -450,6 +450,57 @@ describe("ZosJobsProvider unit tests - Function addSingleSession", () => {
     });
 });
 
+describe("ZosJobsProvider unit tests - Function initializeFavorites", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const jobSessionNode = createJobSessionNode(session, imperativeProfile);
+        const jobFavoritesNode = createJobFavoritesNode();
+
+        const testTree = new JobTree();
+        testTree.mSessionNodes.push(jobSessionNode);
+
+        return {
+            session,
+            imperativeProfile,
+            jobSessionNode,
+            jobFavoritesNode,
+            testTree,
+            log: imperative.Logger.getAppLogger(),
+        };
+    }
+
+    it("successfully initialize favorites", async () => {
+        await createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        jest.replaceProperty(blockMocks.testTree as any, "mHistory", {
+            readFavorites: () => ["[test]: SAMPLE1{job}", "[test]: SAMPLE2(JOBID){job}", "INVALID"],
+        });
+        await blockMocks.testTree.initializeFavorites(blockMocks.log);
+
+        expect(blockMocks.testTree.mFavorites.length).toBe(1);
+        expect(blockMocks.testTree.mFavorites[0].children?.map((item) => item.label)).toEqual(["SAMPLE1", "SAMPLE2(JOBID)"]);
+    });
+
+    it("refreshes favorite nodes without duplicating items", async () => {
+        await createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        jest.replaceProperty(blockMocks.testTree as any, "mHistory", {
+            readFavorites: () => ["[test]: SAMPLE{job}"],
+        });
+        await blockMocks.testTree.initializeFavorites(blockMocks.log);
+
+        expect(blockMocks.testTree.mFavorites.length).toBe(1);
+        expect(blockMocks.testTree.mFavorites[0].children?.map((item) => item.label)).toEqual(["SAMPLE"]);
+
+        await blockMocks.testTree.refreshFavorites();
+        expect(blockMocks.testTree.mFavorites.length).toBe(1);
+        expect(blockMocks.testTree.mFavorites[0].children?.map((item) => item.label)).toEqual(["SAMPLE"]);
+    });
+});
+
 describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile", () => {
     function createBlockMocks() {
         const newMocks = {
