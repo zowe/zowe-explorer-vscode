@@ -66,18 +66,21 @@ describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
             label: "root",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             session: globalMocks.session,
+            profile: globalMocks.profileOne,
         });
         const childNode1 = new ZoweUSSNode({
             label: "child1",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: rootNode,
             session: globalMocks.session,
+            profile: globalMocks.profileOne,
         });
         const childNode2 = new ZoweUSSNode({
             label: "child2",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: childNode1,
             session: globalMocks.session,
+            profile: globalMocks.profileOne,
         });
 
         childNode1.children.push(childNode2);
@@ -90,17 +93,32 @@ describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
 
 describe("Positive testing", () => {
     it("should pass for ZoweDatasetTreeNode with ZoweDatasetNode node type", () => {
-        const dsNode = new ZoweDatasetNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const dsNode = new ZoweDatasetNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweDatasetTreeNode(dsNode);
         expect(value).toBeTruthy();
     });
     it("should pass for ZoweUSSTreeNode with ZoweUSSNode node type", () => {
-        const ussNode = new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const ussNode = new ZoweUSSNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweUSSTreeNode(ussNode);
         expect(value).toBeTruthy();
     });
     it("should pass for ZoweJobTreeNode with ZoweJobNode node type", () => {
-        const jobNode = new ZoweJobNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const jobNode = new ZoweJobNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweJobTreeNode(jobNode);
         expect(value).toBeTruthy();
     });
@@ -108,12 +126,22 @@ describe("Positive testing", () => {
 
 describe("Negative testing for ZoweDatasetTreeNode", () => {
     it("should fail with ZoweUSSNode node type", () => {
-        const ussNode = new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const ussNode = new ZoweUSSNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweDatasetTreeNode(ussNode);
         expect(value).toBeFalsy();
     });
     it("should fail with ZoweJobNode node type", () => {
-        const jobNode = new ZoweJobNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const jobNode = new ZoweJobNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweDatasetTreeNode(jobNode);
         expect(value).toBeFalsy();
     });
@@ -126,7 +154,12 @@ describe("Negative testing for ZoweUSSTreeNode", () => {
         expect(value).toBeFalsy();
     });
     it("should fail with ZoweJobNode node type", () => {
-        const jobNode = new ZoweJobNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const jobNode = new ZoweJobNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweUSSTreeNode(jobNode);
         expect(value).toBeFalsy();
     });
@@ -139,7 +172,12 @@ describe("Negative testing for ZoweJobTreeNode", () => {
         expect(value).toBeFalsy();
     });
     it("should fail with ZoweUSSNode node type", () => {
-        const ussNode = new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const ussNode = new ZoweUSSNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweJobTreeNode(ussNode);
         expect(value).toBeFalsy();
     });
@@ -500,6 +538,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             spool: createIJobFile(),
             parentNode: jobNode,
+            profile: blockMocks.profile,
         });
         JobFSProvider.instance.encodingMap[spoolNode.resourceUri?.path] = { kind: "text" };
         blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);

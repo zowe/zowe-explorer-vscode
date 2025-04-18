@@ -1215,5 +1215,22 @@
       "Host name"
     ]
   },
-  "Zowe MVS Command": "Zowe MVS Command"
+  "Zowe MVS Command": "Zowe MVS Command",
+  "Profile: ": "Profile: ",
+  "Profile Type: ": "Profile Type",
+  "Auth Method: ": "Auth Method: ",
+  "Token-based Authentication": "Token-based Authentication",
+  "Basic Authentication": "Basic Authentication",
+  "Certificate Authentication": "Certificate Authentication",
+  "User: ": "User: ",
+  "Unknown": "Unknown",
+  "Pattern: ": "Pattern: ",
+  "Path: ": "Path: ",
+  "Owner: ": "Owner: ",
+  "JobId: ": "JobId: ",
+  "Auto Store: ": "Auto Store: ",
+  "Config File: ": "Config File: ",
+  "Global": "Global",
+  "Project": "Project",
+  "Secure Credentials Enabled: ": "Secure Credentials Enabled: "
 }

@@ -829,8 +829,40 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 if (searchCriteria != null) {
                     node.filtered = true;
                     node.label = node.getProfileName();
-                    node.tooltip = node.description = searchCriteria;
+                    node.description = searchCriteria;
                     node.dirty = true;
+                    const toolTipList = (node.tooltip as string).split("\n");
+                    switch (true) {
+                        case searchCriteria.includes(vscode.l10n.t("Owner: ")): {
+                            const jobIdIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("JobId: ")));
+                            if (jobIdIndex !== -1) {
+                                toolTipList.splice(jobIdIndex, 1);
+                            }
+
+                            const searchCriteriaIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Owner: ")));
+                            if (searchCriteriaIndex === -1) {
+                                toolTipList.push(searchCriteria);
+                            } else {
+                                toolTipList[searchCriteriaIndex] = searchCriteria;
+                            }
+                            break;
+                        }
+                        case searchCriteria.includes(vscode.l10n.t("JobId: ")): {
+                            const searchFilterIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Owner: ")));
+                            if (searchFilterIndex !== -1) {
+                                toolTipList.splice(searchFilterIndex, 1);
+                            }
+
+                            const jobIdIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("JobId: ")));
+                            if (jobIdIndex === -1) {
+                                toolTipList.push(searchCriteria);
+                            } else {
+                                toolTipList[jobIdIndex] = searchCriteria;
+                            }
+                            break;
+                        }
+                    }
+                    node.tooltip = toolTipList.join("\n");
                     this.addSearchHistory(searchCriteria);
                     await TreeViewUtils.expandNode(node, this);
                 }
@@ -845,6 +877,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 }
                 node.dirty = true;
             }
+            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), node);
             this.refresh();
         }
     }

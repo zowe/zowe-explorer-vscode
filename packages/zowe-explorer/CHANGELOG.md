@@ -25,6 +25,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added an new VS Code command palette option `Zowe Explorer: Update Profile Configuration Schema`, allowing users to manually trigger an update to global and project level configuration schema files with registered Zowe Explorer extender types. [#1642](https://github.com/zowe/zowe-explorer-vscode/issues/1642)
 - Added script that will fetch latest localizations at every build now. [#3573](https://github.com/zowe/zowe-explorer-vscode/pull/3573)
 - Added a new "Override with Environment Variables" setting. When selected, Zowe Explorer prioritizes values from environment variables for properties when loading the user's team configuration. [#3591](https://github.com/zowe/zowe-explorer-vscode/pull/3591)
+- Implemented rich hover for Zowe Explorer profiles to show connection information. [#3580](https://github.com/zowe/zowe-explorer-vscode/pull/3580)
 
 ### Bug fixes
 

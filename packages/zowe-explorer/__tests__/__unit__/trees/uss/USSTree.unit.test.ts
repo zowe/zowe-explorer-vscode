@@ -251,7 +251,6 @@ describe("USSTree Unit Tests - Function initializeFavorites", () => {
         const imperativeProfile = createIProfile();
         const ussSessionNode = createUSSSessionNode(session, imperativeProfile);
         const ussFavoritesNode = createFavoriteUSSNode(session, imperativeProfile);
-
         const testTree = new USSTree();
         testTree.mSessionNodes.push(ussSessionNode);
 
@@ -555,11 +554,11 @@ describe("USSTree Unit Tests - Function removeFavProfile", () => {
 describe("USSTree Unit Tests - Function addSession", () => {
     it("Tests if addSession works properly", async () => {
         const globalMocks = createGlobalMocks();
-
         const testSessionNode = new ZoweUSSNode({
             label: "testSessionNode",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
         });
         globalMocks.testTree.mSessionNodes.push(testSessionNode);
         globalMocks.testTree.addSession("testSessionNode");
@@ -577,6 +576,11 @@ describe("USSTree Unit Tests - Function deleteSession", () => {
                 label: "testSessionNode",
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 session: globalMocks.testSession,
+                profile: {
+                    type: "sampleType",
+                    message: "",
+                    failNotFound: false,
+                },
             }),
             startLength: 0,
         };
@@ -593,7 +597,6 @@ describe("USSTree Unit Tests - Function deleteSession", () => {
         const blockMocks = createBlockMocks(globalMocks);
 
         jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(globalMocks.mockTreeProviders);
-
         blockMocks.testTree2.mSessionNodes = globalMocks.mockTreeProviders.ds.mSessionNodes;
         expect(globalMocks.mockTreeProviders.ds.mSessionNodes.length).toEqual(2);
         expect(globalMocks.mockTreeProviders.uss.mSessionNodes.length).toEqual(2);
@@ -1554,6 +1557,7 @@ describe("USSTree Unit Tests - Function getChildren", () => {
             label: "sestest",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             session: globalMocks.testTree.mFavoriteSession,
+            profile: globalMocks.testProfile,
         });
         favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         globalMocks.testTree.mFavorites.push(favProfileNode);
@@ -1795,8 +1799,13 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
     });
 
     it("sets binary encoding if selection was made", async () => {
+        const globalMocks = await createGlobalMocks();
         const setEncodingMock = jest.spyOn(UssFSProvider.instance, "setEncodingForFile").mockImplementation();
-        const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const node = new ZoweUSSNode({
+            label: "encodingTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.testProfile,
+        });
         node.openUSS = jest.fn();
         const setEncodingNodeMock = jest.spyOn(node, "setEncoding").mockImplementation();
         jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "binary" });
@@ -1808,9 +1817,14 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
     });
 
     it("sets text encoding if selection was made", async () => {
+        const globalMocks = await createGlobalMocks();
         const setEncodingMock = jest.spyOn(UssFSProvider.instance, "setEncodingForFile").mockImplementation();
         const getEncodingMock = jest.spyOn(UssFSProvider.instance, "getEncodingForFile").mockReturnValueOnce(null as any);
-        const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const node = new ZoweUSSNode({
+            label: "encodingTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.testProfile,
+        });
         node.openUSS = jest.fn();
         jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "text" });
         await USSTree.prototype.openWithEncoding(node);
@@ -1820,9 +1834,14 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
     });
 
     it("does not set encoding if prompt was cancelled", async () => {
+        const globalMocks = await createGlobalMocks();
         const setEncodingSpy = jest.spyOn(UssFSProvider.instance, "setEncodingForFile").mockClear();
         const getEncodingMock = jest.spyOn(UssFSProvider.instance, "getEncodingForFile").mockReturnValueOnce(null as any);
-        const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const node = new ZoweUSSNode({
+            label: "encodingTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.testProfile,
+        });
         node.openUSS = jest.fn();
         jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValueOnce(undefined);
         await USSTree.prototype.openWithEncoding(node);

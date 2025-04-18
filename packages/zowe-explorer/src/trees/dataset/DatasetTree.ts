@@ -1314,10 +1314,18 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             const dsSets = this.extractPatterns(pattern);
             const dsPattern = this.buildFinalPattern(dsSets);
             if (dsPattern.length != 0) {
-                sessionNode.tooltip = sessionNode.pattern = dsPattern.toUpperCase();
+                sessionNode.pattern = dsPattern.toUpperCase();
             } else {
-                sessionNode.tooltip = sessionNode.pattern = pattern.toUpperCase();
+                sessionNode.pattern = pattern.toUpperCase();
             }
+            const toolTipList: string[] = (node.tooltip as string).split("\n");
+            const patternIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Pattern: ")));
+            if (patternIndex === -1) {
+                toolTipList.push(`${vscode.l10n.t("Pattern: ")}${sessionNode.pattern}`);
+            } else {
+                toolTipList[patternIndex] = `${vscode.l10n.t("Pattern: ")}${sessionNode.pattern}`;
+            }
+            node.tooltip = toolTipList.join("\n");
 
             let response: IZoweDatasetTreeNode[] = [];
             try {
