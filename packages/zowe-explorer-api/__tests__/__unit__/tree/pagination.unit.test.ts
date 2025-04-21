@@ -32,7 +32,7 @@ const createMockFetchFunction = (totalItems: number, options?: MockFetchOptions)
     const returnLessItemsOnCursor = options?.returnLessItemsOnCursor;
     const failOnCursorProvided = !!options && Object.prototype.hasOwnProperty.call(options, "failOnCursor");
 
-    return jest.fn(async (cursor: string | undefined, limit: number): Promise<IFetchResult<MockDataItem, string>> => {
+    return jest.fn((cursor: string | undefined, limit: number): IFetchResult<MockDataItem, string> => {
         if (failOnCursorProvided && cursor === failOnCursor) {
             throw new Error(`Simulated fetch error for cursor: ${cursor}`);
         }
