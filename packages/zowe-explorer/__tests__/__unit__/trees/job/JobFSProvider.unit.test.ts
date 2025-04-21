@@ -276,9 +276,17 @@ describe("fetchSpoolAtUri", () => {
             .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array() });
 
         const newData = "spool contents";
+
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.jobs.settings.pagination") {
+                return true;
+            }
+            return false;
+        });
         const mockJesApi = {
             supportSpoolPagination: () => true,
             downloadSingleSpool: jest.fn((opts) => {
+                expect(SettingsConfig.getDirectValue("zowe.jobs.settings.pagination")).toBe(true);
                 expect(opts.recordRange).toBe("10-50");
                 opts.stream.write(newData);
             }),
@@ -303,9 +311,17 @@ describe("fetchSpoolAtUri", () => {
             .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array() });
 
         const newData = "spool contents";
+
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.jobs.settings.pagination") {
+                return false;
+            }
+            return true;
+        });
         const mockJesApi = {
             supportSpoolPagination: () => false,
             downloadSingleSpool: jest.fn((opts) => {
+                expect(SettingsConfig.getDirectValue("zowe.jobs.settings.pagination")).toBe(false);
                 expect(opts.recordRange).toBeUndefined();
                 opts.stream.write(newData);
             }),
@@ -324,21 +340,24 @@ describe("fetchSpoolAtUri", () => {
         lookupAsFileMock.mockRestore();
     });
 
-    it("fetches default ", async () => {
+    it("fetches default when recordRange parameters is not provided", async () => {
         const defaultFetchSetting = 100;
 
         const lookupAsFileMock = jest
             .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
-            .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array() });
+            .mockReturnValueOnce({ ...testEntries.spool, dsata: new Uint8Array() });
 
         jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
             if (key === "zowe.jobs.recordsToFetch") {
                 return defaultFetchSetting;
             }
-            return undefined;
+            if (key === "zowe.jobs.settings.pagination") {
+                return true;
+            }
         });
 
         const downloadMock = jest.fn((opts) => {
+            expect(SettingsConfig.getDirectValue("zowe.jobs.settings.pagination")).toBe(true);
             expect(opts.recordRange).toBe(`0-${defaultFetchSetting}`);
             opts.stream.write("test data");
         });
