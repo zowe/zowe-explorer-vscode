@@ -60,6 +60,7 @@ async function createGlobalMocks() {
         mockDisableValidationContext: jest.fn(),
         mockEnableValidationContext: jest.fn(),
         getConfiguration: jest.fn(),
+        isUsingTokenAuth: jest.fn(),
         refresh: jest.fn(),
         testProfile: profile,
         testSession: createISession(),
@@ -108,6 +109,7 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode, "ConfigurationTarget", { value: globalMocks.enums, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
+    Object.defineProperty(AuthUtils, "isUsingTokenAuth", { value: globalMocks.isUsingTokenAuth, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn().mockReturnValue({
@@ -332,7 +334,6 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
             testIJob: createIJobObject(),
             testJobsProvider: await JobInit.createJobsTree(imperative.Logger.getAppLogger()),
             jobNode: null,
-            checkJwtForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtForProfile").mockResolvedValueOnce(true),
         };
 
         newMocks.jobNode = new ZoweJobNode({
@@ -348,7 +349,7 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
         return newMocks;
     }
 
-    it("Tests that checkCurrentProfile is executed successfully with active status ", async () => {
+    it("Tests that checkCurrentProfile is executed successfully with active status", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -356,6 +357,15 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
         expect(globalMocks.mockCheckCurrentProfile).toHaveBeenCalled();
     });
 
+    it("Tests that checkCurrentProfile is executed successfully with active status", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(true);
+        const checkJwtSpy = jest.spyOn(ZoweTreeProvider as any, "checkJwtForProfile");
+
+        await blockMocks.testJobsProvider.checkCurrentProfile(blockMocks.jobNode);
+        expect(checkJwtSpy).toHaveBeenCalled();
+    });
     it("Tests that checkCurrentProfile is executed successfully with unverified status", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
@@ -379,7 +389,7 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
     it("Tests that checkCurrentProfile is executed successfully with inactive status", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValueOnce({
+        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
             ds: { setStatusForSession: jest.fn(), mSessionNodes: [createDatasetSessionNode(createISession(), createIProfile())] } as any,
             uss: { setStatusForSession: jest.fn(), mSessionNodes: [createUSSSessionNode(createISession(), createIProfile())] } as any,
             job: { setStatusForSession: jest.fn(), mSessionNodes: [createJobSessionNode(createISession(), createIProfile())] } as any,

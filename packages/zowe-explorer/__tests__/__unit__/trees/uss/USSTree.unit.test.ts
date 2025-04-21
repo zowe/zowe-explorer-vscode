@@ -37,7 +37,7 @@ import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { ZowePersistentFilters } from "../../../../src/tools/ZowePersistentFilters";
 import { USSInit } from "../../../../src/trees/uss/USSInit";
-import { Constants } from "../../../../src/configuration/Constants";
+import { Constants, JwtCheckResult } from "../../../../src/configuration/Constants";
 import { IconGenerator } from "../../../../src/icons/IconGenerator";
 import { IconUtils } from "../../../../src/icons/IconUtils";
 import { FilterDescriptor } from "../../../../src/management/FilterManagement";
@@ -104,6 +104,7 @@ function createGlobalMocks() {
             createDirectory: jest.fn(),
             rename: jest.fn(),
         },
+        isUsingTokenAuth: jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(false),
     };
 
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
@@ -157,6 +158,7 @@ function createGlobalMocks() {
         },
         configurable: true,
     });
+    Object.defineProperty(Constants, "PROFILES_CACHE", { value: globalMocks.mockProfilesInstance!, configurable: true });
     Object.defineProperty(zosfiles, "Utilities", { value: globalMocks.Utilities, configurable: true });
     Object.defineProperty(zosfiles.Utilities, "isFileTagBinOrAscii", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", {
@@ -648,7 +650,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
             qpValue: "",
             qpItem: new FilterDescriptor("\uFF0B " + "Create a new filter"),
             resolveQuickPickHelper: jest.spyOn(Gui, "resolveQuickPick"),
-            checkJwtForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtForProfile").mockResolvedValueOnce(true),
+            checkJwtForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtForProfile").mockResolvedValue(JwtCheckResult.TokenUnusedOrUnsupported),
         };
         newMocks.resolveQuickPickHelper.mockImplementation(() => Promise.resolve(newMocks.qpItem));
         globalMocks.createQuickPick.mockReturnValue({
@@ -765,7 +767,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         node.fullPath = "/u/myFolder";
         globalMocks.testTree.mFavorites.push(node);
         await expect(globalMocks.testTree.filterPrompt(node)).resolves.not.toThrow();
-        expect(blockMocks.checkJwtForProfile).toHaveBeenCalledWith("ussTestSess2");
+        expect(blockMocks.checkJwtForProfile).not.toHaveBeenCalled();
     });
 
     it("Tests that filterPrompt() works correctly for favorited search nodes without credentials", async () => {
@@ -844,7 +846,7 @@ describe("USSTree Unit Tests - Function filterBy", () => {
     it("Tests that filterBy() works correctly for favorited search nodes with credentials", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks();
-
+        globalMocks.isUsingTokenAuth.mockResolvedValueOnce(true);
         const sessionWithCred = createISession();
         globalMocks.createSessCfgFromArgs.mockReturnValue(sessionWithCred);
         const node = new ZoweUSSNode({
@@ -1388,7 +1390,7 @@ describe("USSTree Unit Tests - Function addSingleSession", () => {
 
     it("Tests that addSingleSession adds type info to the session", async () => {
         const ussTree = new USSTree();
-        const profile1 = await createIProfile();
+        const profile1 = createIProfile();
 
         profile1.name = "test1Profile";
 

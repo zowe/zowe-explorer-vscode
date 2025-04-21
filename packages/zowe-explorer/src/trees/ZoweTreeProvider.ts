@@ -270,8 +270,12 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         ZoweLogger.trace("ZoweTreeProvider.checkCurrentProfile called.");
         const profile = node.getProfile();
         const profileName = profile.name ?? node.getProfileName();
-        const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile, node);
-        const jwtCheckResult = await ZoweTreeProvider.checkJwtForProfile(profileName);
+
+        const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
+        const jwtCheckResult = (await AuthUtils.isUsingTokenAuth(profileName))
+            ? await ZoweTreeProvider.checkJwtForProfile(profileName)
+            : JwtCheckResult.TokenUnusedOrUnsupported;
+
         if (jwtCheckResult === JwtCheckResult.TokenExpired) {
             // Mark profile as inactive if user dismissed "token expired/login" prompt or login failed
             profileStatus.status = "inactive";
@@ -361,7 +365,6 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
             // The API doesn't support tokens, so no expiration check needed
             return JwtCheckResult.TokenUnusedOrUnsupported;
         }
-
         // Skip token validation for falsy token types or LTPA2 tokens
         if (tokenType == null || tokenType === "LtpaToken2") {
             return JwtCheckResult.TokenUnusedOrUnsupported;

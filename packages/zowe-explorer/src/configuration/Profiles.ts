@@ -1094,20 +1094,25 @@ export class Profiles extends ProfilesCache {
      * @param profileName the name of the profile
      * @returns {string[]} an array with the secure properties
      */
-    public async getSecurePropsForProfile(profileName: string): Promise<string[]> {
+    public async getPropsForProfile(profileName: string, onlySecure = true): Promise<string[]> {
         if (!profileName) {
             return [];
         }
         const usingSecureCreds = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
         const profInfo = await this.getProfileInfo();
-        if (usingSecureCreds && profInfo.getTeamConfig().exists) {
-            return profInfo.getTeamConfig().api.secure.securePropsForProfile(profileName);
+
+        const secureProps = profInfo.getTeamConfig().api.secure.securePropsForProfile(profileName);
+
+        if (usingSecureCreds && profInfo.getTeamConfig().exists && onlySecure) {
+            return secureProps;
         }
+
         const profAttrs = await this.getProfileFromConfig(profileName);
         const mergedArgs = profInfo.mergeArgsForProfile(profAttrs);
         return mergedArgs.knownArgs
-            .filter((arg) => arg.secure || arg.argName === "tokenType" || arg.argName === "tokenValue")
-            .map((arg) => arg.argName);
+            .filter((arg) => (onlySecure ? arg.secure : arg.argValue) || arg.argName === "tokenType" || arg.argName === "tokenValue")
+            .map((arg) => arg.argName)
+            .concat(secureProps);
     }
 
     private async getConfigLocationPrompt(action: string): Promise<string> {

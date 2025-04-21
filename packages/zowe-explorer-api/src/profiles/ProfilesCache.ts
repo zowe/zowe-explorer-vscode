@@ -480,7 +480,7 @@ export class ProfilesCache {
         return parentProfile;
     }
 
-    private shouldRemoveTokenFromProfile(profile: imperative.IProfileLoaded, baseProfile: imperative.IProfileLoaded): boolean {
+    public shouldRemoveTokenFromProfile(profile: imperative.IProfileLoaded, baseProfile: imperative.IProfileLoaded): boolean {
         return ((baseProfile?.profile?.host || baseProfile?.profile?.port) &&
             profile?.profile?.host &&
             profile?.profile?.port &&
