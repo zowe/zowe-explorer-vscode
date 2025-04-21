@@ -620,6 +620,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
             label: "profile",
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
             session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
         });
         newMocks.ussNodes.push(
             new ZoweUSSNode({
@@ -768,6 +769,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentPath: "/",
             contextOverride: Constants.USS_DIR_CONTEXT,
+            profile: globalMocks.testProfile,
         });
         node.getChildren = jest.fn().mockResolvedValueOnce([blockMocks.ussNodes[0]]);
         await USSActions.refreshChildNodesDirectory(node);
