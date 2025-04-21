@@ -97,7 +97,7 @@ export class Profiles extends ProfilesCache {
         void Gui.errorMessage(inactiveMsg);
     }
 
-    public async checkCurrentProfile(theProfile: imperative.IProfileLoaded): Promise<Validation.IValidationProfile> {
+    public async checkCurrentProfile(theProfile: imperative.IProfileLoaded, node?: Types.IZoweNodeType): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
         let profileStatus: Validation.IValidationProfile = { name: theProfile.name, status: "unverified" };
         const usingBasicAuth = theProfile.profile.user && theProfile.profile.password;
@@ -151,6 +151,38 @@ export class Profiles extends ProfilesCache {
         } else if (!usingTokenAuth && !usingBasicAuth && usingCertAuth) {
             profileStatus.status = "active";
             this.profilesForValidation.push(profileStatus);
+        }
+
+        if (node !== undefined) {
+            const toolTipList = (node.tooltip as string)?.split("\n") ?? [];
+
+            const autoStoreValue = (await this.getProfileInfo()).getTeamConfig().properties.autoStore;
+            const autoStoreIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Auto Store: ")));
+            if (autoStoreIndex === -1) {
+                toolTipList.push(`${vscode.l10n.t("Auto Store: ")}${autoStoreValue.toString()}`);
+            } else {
+                toolTipList[autoStoreIndex] = `${vscode.l10n.t("Auto Store: ")}${autoStoreValue.toString()}`;
+            }
+
+            const layers = await this.uniqueExistingLayers();
+            const configFileIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Config File: ")));
+            if (configFileIndex === -1) {
+                toolTipList.push(`${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")}`);
+            } else {
+                toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${
+                    layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
+                }`;
+            }
+
+            const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+            const secureCredentialsIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Secure Credentials Enabled: ")));
+            if (secureCredentialsIndex === -1) {
+                toolTipList.push(`${vscode.l10n.t("Secure Credentials Enabled: ")}${isSecureCredsEnabled.toString()}`);
+            } else {
+                toolTipList[secureCredentialsIndex] = `${vscode.l10n.t("Secure Credentials Enabled: ")}${isSecureCredsEnabled.toString()}`;
+            }
+
+            node.tooltip = toolTipList.join("\n");
         }
 
         // Profile should have enough information to allow validation
@@ -477,8 +509,7 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public async editZoweConfigFile(): Promise<void> {
-        ZoweLogger.trace("Profiles.editZoweConfigFile called.");
+    private async uniqueExistingLayers(): Promise<imperative.IConfigLayer[]> {
         const configLayers = await this.getConfigLayers();
         const uniquePaths = new Set();
         const existingLayers = configLayers.filter((layer) => {
@@ -489,6 +520,12 @@ export class Profiles extends ProfilesCache {
             }
             return false;
         });
+        return existingLayers;
+    }
+
+    public async editZoweConfigFile(): Promise<void> {
+        ZoweLogger.trace("Profiles.editZoweConfigFile called.");
+        const existingLayers = await this.uniqueExistingLayers();
         if (existingLayers.length === 1) {
             await this.openConfigFile(existingLayers[0].path);
             Gui.showMessage(this.manualEditMsg);
@@ -871,6 +908,7 @@ export class Profiles extends ProfilesCache {
             Gui.errorMessage(vscode.l10n.t("Cannot switch to token-based authentication for profile {0}.", serviceProfile.name));
             return;
         }
+        await this.checkCurrentProfile(serviceProfile, node);
         switch (true) {
             case AuthUtils.isProfileUsingBasicAuth(serviceProfile): {
                 let loginOk = false;

@@ -81,7 +81,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         } else {
             this.contextValue = isBinary ? Constants.DS_DS_BINARY_CONTEXT : Constants.DS_DS_CONTEXT;
         }
-        this.tooltip = this.label as string;
+        if (opts.contextOverride?.includes(Constants.DS_SESSION_CONTEXT)) {
+            const toolTipList: string[] = [];
+            toolTipList.push(`${vscode.l10n.t("Profile: ")}${opts.label}`);
+            toolTipList.push(`${vscode.l10n.t("Profile Type: ")}${opts.profile.type}`);
+            this.tooltip = toolTipList.join("\n");
+        } else {
+            this.tooltip = this.label as string;
+        }
         const icon = IconGenerator.getIconByNode(this);
         if (icon) {
             this.iconPath = icon.path;
@@ -617,7 +624,15 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     // reset and remove previous search patterns if pattern has changed
                     dsTree.resetFilterForChildren(this.children);
                 }
-                this.tooltip = this.pattern = dsPattern.toUpperCase();
+                this.pattern = dsPattern.toUpperCase();
+                const toolTipList: string[] = (this.tooltip as string).split("\n");
+                const patternIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Pattern: ")));
+                if (patternIndex === -1) {
+                    toolTipList.push(`${vscode.l10n.t("Pattern: ")}${this.pattern}`);
+                } else {
+                    toolTipList[patternIndex] = `${vscode.l10n.t("Pattern: ")}${this.pattern}`;
+                }
+                this.tooltip = toolTipList.join("\n");
             }
         }
 

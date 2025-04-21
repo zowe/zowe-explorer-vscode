@@ -32,6 +32,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Implemented copy/paste functionality of data sets within and across LPARs. [#3012](https://github.com/zowe/zowe-explorer-vscode/issues/3012)
 - Implemented drag and drop functionality of data sets within and across LPARs. [#3413](https://github.com/zowe/zowe-explorer-vscode/pull/3413)
 - Added a new "Override with Environment Variables" setting. When selected, Zowe Explorer prioritizes values from environment variables for properties when loading the user's team configuration. [#3591](https://github.com/zowe/zowe-explorer-vscode/pull/3591)
+- Implemented rich hover for Zowe Explorer profiles to show connection information. [#3580](https://github.com/zowe/zowe-explorer-vscode/pull/3580)
 
 ### Bug fixes
 

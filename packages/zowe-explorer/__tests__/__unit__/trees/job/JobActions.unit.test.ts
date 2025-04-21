@@ -163,7 +163,12 @@ afterEach(() => {
 describe("Jobs Actions Unit Tests - Function setPrefix", () => {
     it("Checking that the prefix is set correctly on the job", async () => {
         const blockMocks = createGlobalMocks();
-        const node = new ZoweJobNode({ label: "job", collapsibleState: vscode.TreeItemCollapsibleState.None, session: blockMocks.session });
+        const node = new ZoweJobNode({
+            label: "job",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+        });
 
         const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("*");
         await JobActions.setPrefix(node, blockMocks.testJobsTree);
@@ -1527,7 +1532,12 @@ describe("sortJobs function", () => {
 
 describe("copyName function", () => {
     it("copies the job with format JobName(JobId)", async () => {
-        const node = new ZoweJobNode({ label: "JOBNAME(ID123456) - ACTIVE", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
+        const globalMocks = await createGlobalMocks();
+        const node = new ZoweJobNode({
+            label: "JOBNAME(ID123456) - ACTIVE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            profile: globalMocks.imperativeProfile,
+        });
         node.job = {
             jobname: "JOBNAME",
             jobid: "ID123456",
@@ -1540,7 +1550,12 @@ describe("copyName function", () => {
     });
 
     it("copies a node's label for spools and nodes with missing job objects", async () => {
-        const node = new ZoweSpoolNode({ label: "JES2:JESMSGLG(2)", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = await createGlobalMocks();
+        const node = new ZoweSpoolNode({
+            label: "JES2:JESMSGLG(2)",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.imperativeProfile,
+        });
         const writeTextSpy = jest.spyOn(vscode.env.clipboard, "writeText");
         await JobActions.copyName(node);
         expect(writeTextSpy).toHaveBeenCalledWith("JES2:JESMSGLG(2)");
