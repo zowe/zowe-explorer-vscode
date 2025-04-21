@@ -890,7 +890,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
             }),
         } as any);
         jest.spyOn(Profiles.getInstance(), "getLoadedProfConfig").mockResolvedValue(globalMocks.testProfile);
-        jest.spyOn(Profiles.getInstance(), "getSecurePropsForProfile").mockResolvedValue([]);
+        jest.spyOn(Profiles.getInstance(), "getPropsForProfile").mockResolvedValue([]);
         Object.defineProperty(Constants, "PROFILES_CACHE", { value: Profiles.getInstance(), configurable: true });
     };
 
@@ -947,7 +947,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         const globalMocks = await createGlobalMocks();
         setupProfilesCheck(globalMocks);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockRejectedValueOnce(new Error("test error"));
-        jest.spyOn(Profiles.getInstance(), "getSecurePropsForProfile").mockImplementationOnce(Profiles.getInstance().getProfileInfo as any);
+        jest.spyOn(Profiles.getInstance(), "getPropsForProfile").mockImplementationOnce(Profiles.getInstance().getProfileInfo as any);
         jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("");
         const errorSpy = jest.spyOn(ZoweLogger, "error");
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
@@ -1988,14 +1988,42 @@ describe("Profiles Unit Tests - function validationArraySetup", () => {
     });
 });
 
-describe("Profiles Unit Tests - function getSecurePropsForProfile", () => {
+describe("Profiles Unit Tests - function getPropsForProfile", () => {
     afterEach(() => {
         jest.clearAllMocks();
         jest.resetAllMocks();
     });
     it("should retrieve the secure properties of a profile", async () => {
         const globalMocks = createGlobalMocks();
-        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValueOnce({
+            mergeArgsForProfile: () => ({
+                knownArgs: [
+                    {
+                        argName: "tokenValue",
+                        secure: true,
+                    } as any,
+                    {
+                        argName: "password",
+                        secure: true,
+                    } as any,
+                    {
+                        argName: "user",
+                        secure: false,
+                    },
+                ],
+                missingArgs: [],
+            }),
+            getAllProfiles: () => [],
+            getTeamConfig: () => ({
+                api: { secure: { securePropsForProfile: jest.fn() } },
+            }),
+        } as any);
+        await expect(Profiles.getInstance().getPropsForProfile(globalMocks.testProfile.name ?? "")).resolves.toEqual(["tokenValue", "password"]);
+    });
+
+    it("should return empty array if profileName is undefined", async () => {
+        createGlobalMocks();
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValueOnce({
             mergeArgsForProfile: () => ({
                 knownArgs: [
                     {
@@ -2006,8 +2034,53 @@ describe("Profiles Unit Tests - function getSecurePropsForProfile", () => {
                 missingArgs: [],
             }),
             getAllProfiles: () => [],
+            getTeamConfig: () => ({
+                api: { secure: { securePropsForProfile: jest.fn() } },
+            }),
         } as any);
-        await expect(Profiles.getInstance().getSecurePropsForProfile(globalMocks.testProfile.name ?? "")).resolves.toEqual(["tokenValue"]);
+        await expect(Profiles.getInstance().getPropsForProfile("")).resolves.toEqual([]);
+    });
+
+    it("should return all props if invoked with invoked with onlySecure as false", async () => {
+        createGlobalMocks();
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValueOnce({
+            mergeArgsForProfile: () => ({
+                knownArgs: [
+                    {
+                        argName: "tokenValue",
+                        secure: false,
+                    } as any,
+                ],
+                missingArgs: [],
+            }),
+            getAllProfiles: () => [],
+            getTeamConfig: () => ({
+                api: { secure: { securePropsForProfile: jest.fn() } },
+            }),
+        } as any);
+        await expect(Profiles.getInstance().getPropsForProfile("dummyProfile", false)).resolves.toEqual(["tokenValue"]);
+    });
+
+    it("should return only secure props if onlySecure and usingSecureCreds are true", async () => {
+        createGlobalMocks();
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValueOnce({
+            mergeArgsForProfile: () => ({
+                knownArgs: [
+                    {
+                        argName: "tokenValue",
+                        secure: true,
+                    } as any,
+                ],
+                missingArgs: [],
+            }),
+            getAllProfiles: () => [],
+            getTeamConfig: () => ({
+                api: { secure: { securePropsForProfile: jest.fn().mockReturnValue(["tokenValue"]) } },
+                exists: true,
+            }),
+        } as any);
+        await expect(Profiles.getInstance().getPropsForProfile("dummyProfile", true)).resolves.toEqual(["tokenValue"]);
     });
 });
 

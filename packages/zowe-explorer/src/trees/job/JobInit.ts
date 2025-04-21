@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweJobTreeNode, IZoweTreeNode, ZoweScheme, imperative, Gui } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, IZoweTreeNode, ZoweScheme, imperative, Gui, PaginationCodeLens } from "@zowe/zowe-explorer-api";
 import { JobTree } from "./JobTree";
 import { JobActions } from "./JobActions";
 import { ZoweJobNode } from "./ZoweJobNode";
@@ -22,6 +22,7 @@ import { SharedUtils } from "../shared/SharedUtils";
 import { JobFSProvider } from "./JobFSProvider";
 import { PollProvider } from "./JobPollProvider";
 import { JobTableView } from "./JobTableView";
+import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 export class JobInit {
     /**
@@ -159,6 +160,16 @@ export class JobInit {
                 JobFSProvider.instance.cacheOpenedUri(doc.uri);
             })
         );
+
+        const paginationEnabled = SettingsConfig.getDirectValue<boolean>("zowe.jobs.settings.pagination");
+        if (paginationEnabled) {
+            context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.loadMoreRecords", (doc) => JobActions.loadMoreRecords(doc)));
+            vscode.languages.registerCodeLensProvider(
+                { scheme: ZoweScheme.Jobs },
+                new PaginationCodeLens("zowe.jobs.loadMoreRecords", (doc) => JobFSProvider.instance.supportSpoolPagination(doc))
+            );
+        }
+
         SharedInit.initSubscribers(context, jobsProvider);
         return jobsProvider;
     }

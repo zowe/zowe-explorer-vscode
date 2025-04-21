@@ -394,6 +394,7 @@ export namespace MainframeInteraction {
      * @export
      */
     export interface IJes extends ICommon {
+        supportSpoolPagination?(): boolean;
         /**
          * Returns a list of jobs for any parameters.
          *

@@ -453,6 +453,9 @@ export namespace ZoweExplorerZosmf {
             const jobResult = await zosjobs.CancelJobs.cancelJobForJob(session, job, "2.0");
             return jobResult.status === "0";
         }
+        public supportSpoolPagination(): boolean {
+            return true;
+        }
     }
 
     /**

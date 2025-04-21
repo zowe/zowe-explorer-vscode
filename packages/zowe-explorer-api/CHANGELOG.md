@@ -6,6 +6,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added functionality and code lens for pagination in job spool files. [#1787](https://github.com/zowe/zowe-explorer-vscode/issues/1787)
 - Updated the `Gui.showQuickPick` function to support selecting more than one `quickPickItem`. [#3526](https://github.com/zowe/zowe-explorer-vscode/pull/3526)
 - Updated Zowe SDKs to `8.16.0` to include the latest enhancements from Imperative and the z/OS Files SDK. [#3526](https://github.com/zowe/zowe-explorer-vscode/pull/3526)
 - Added optional `addSearchedKeywordHistory`, `getSearchedKeywordHistory`, `removeSearchedKeywordHistory`, and `resetSearchedKeywordHistory` functions to the `IZoweTree` interface to provide the ability to search for previously searched keywords. [#3526](https://github.com/zowe/zowe-explorer-vscode/pull/3526)
@@ -20,6 +21,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- BugFix: Fixed an issue within the `shouldRemoveTokenFromProfile()` function where a the token type check was occurring on a service profile rather than the base profile. [#3575](https://github.com/zowe/zowe-explorer-vscode/pull/3575)
 - Updated dependencies for technical currency purposes. [#3576](https://github.com/zowe/zowe-explorer-vscode/pull/3576)
 - Fixed issue where webviews may register their `onDidReceiveMessage` event multiple times in the `resolveForView` function. [#3584](https://github.com/zowe/zowe-explorer-vscode/pull/3584)
 
