@@ -30,6 +30,8 @@ import { ZoweDatasetNode } from "../../src/trees/dataset/ZoweDatasetNode";
 import { USSTree } from "../../src/trees/uss/USSTree";
 import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 import { JobTree } from "../../src/trees/job/JobTree";
+import { JobFSProvider } from "../../src/trees/job/JobFSProvider";
+import { PaginationCodeLens } from "../../../zowe-explorer-api/src";
 
 jest.mock("../../src/utils/LoggerUtils");
 jest.mock("../../src/tools/ZoweLogger");
