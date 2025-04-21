@@ -820,11 +820,13 @@ describe("ZoweDatasetNode Unit Tests - Function node.setEncoding()", () => {
         expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, undefined);
     });
 
-    it("fails to set encoding for session node", () => {
+    it("fails to set encoding for session node", async () => {
+        const globalMocks = await createGlobalMocks();
         const node = new ZoweDatasetNode({
             label: "sessionTest",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             contextOverride: Constants.DS_SESSION_CONTEXT,
+            profile: globalMocks.imperativeProfile,
         });
         expect(node.setEncoding.bind(node)).toThrow("Cannot set encoding for node with context session");
     });

@@ -259,7 +259,15 @@ export class DatasetActions {
         datasetProvider: Types.IZoweDatasetTreeType,
         theFilter: any
     ): Promise<void> {
-        node.tooltip = node.pattern = theFilter.toUpperCase();
+        node.pattern = theFilter.toUpperCase();
+        const toolTipList: string[] = (node.tooltip as string).split("\n");
+        const patternIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Pattern: ")));
+        if (patternIndex === -1) {
+            toolTipList.push(`${vscode.l10n.t("Pattern: ")}${node.pattern}`);
+        } else {
+            toolTipList[patternIndex] = `${vscode.l10n.t("Pattern: ")}${node.pattern}`;
+        }
+        node.tooltip = toolTipList.join("\n");
         node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
         const icon = IconGenerator.getIconByNode(node);
         if (icon) {
@@ -402,7 +410,7 @@ export class DatasetActions {
         }
 
         const theFilter = datasetProvider.createFilterString(newDSName, currSession);
-        currSession.tooltip = currSession.pattern = theFilter.toUpperCase();
+        currSession.pattern = theFilter.toUpperCase();
         datasetProvider.refresh();
         currSession.dirty = true;
         datasetProvider.refreshElement(currSession);
