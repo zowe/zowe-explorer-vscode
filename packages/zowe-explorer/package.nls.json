@@ -71,7 +71,7 @@
   "cancelJobs": "Cancel Job",
   "getJobJcl": "Get JCL",
   "configuration.title": "Zowe Explorer",
-  "zowe.ds.paginate.datasetsPerPage": "Maximum data sets to list per page",
+  "zowe.ds.paginate.datasetsPerPage": "Maximum number of data sets and PDS members to list per page",
   "zowe.ds.default.binary": "Default values of Binary data set creation",
   "zowe.ds.default.c": "Default values of C data set creation",
   "zowe.ds.default.classic": "Default values of Classic data set creation",
