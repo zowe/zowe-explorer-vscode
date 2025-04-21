@@ -1998,7 +1998,7 @@
         "zowe.settings.overrideWithEnvironmentVariables": {
           "type": "boolean",
           "default": false,
-          "description": "%zowe.settings.overrideWithEnvironmentVariables%"
+          "description": "%zowe.settings.overrideWithEnvironmentVariables%",
           "scope": "window"
         }
       }
