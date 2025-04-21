@@ -1994,6 +1994,12 @@
           "default": 100,
           "description": "%zowe.jobs.recordsToFetch%",
           "scope": "window"
+        },
+        "zowe.settings.overrideWithEnvironmentVariables": {
+          "type": "boolean",
+          "default": false,
+          "description": "%zowe.settings.overrideWithEnvironmentVariables%"
+          "scope": "window"
         }
       }
     },
