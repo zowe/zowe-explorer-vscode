@@ -231,8 +231,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                 ? parseInt(query.get("endLine")!)
                 : SettingsConfig.getDirectValue<number>("zowe.jobs.recordsToFetch") ?? 0;
             recordRange = `${startLine}-${endLine}`;
-        }
-        else {
+        } else {
             const defFetchSetting = SettingsConfig.getDirectValue<number>("zowe.jobs.recordsToFetch") ?? 0;
             if (defFetchSetting > 0) {
                 recordRange = `0-${defFetchSetting}`;
@@ -245,7 +244,10 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                     jobFile: spoolEntry.spool,
                     stream: bufBuilder,
                     binary: spoolEntry.encoding?.kind === "binary",
-                    recordRange: jesApi.supportSpoolPagination?.() && SettingsConfig.getDirectValue<boolean>("zowe.jobs.settings.pagination") ? recordRange : undefined,
+                    recordRange:
+                        jesApi.supportSpoolPagination?.() && SettingsConfig.getDirectValue<boolean>("zowe.jobs.settings.pagination")
+                            ? recordRange
+                            : undefined,
                     encoding: spoolEncoding,
                 };
 
