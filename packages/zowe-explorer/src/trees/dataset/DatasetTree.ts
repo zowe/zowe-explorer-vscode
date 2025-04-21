@@ -1326,9 +1326,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         const toolTipList: string[] = (node.tooltip as string).split("\n");
         const patternIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Pattern: ")));
         if (patternIndex === -1) {
-            toolTipList.push(`${vscode.l10n.t("Pattern: ")}${node.pattern}`);
+            toolTipList.push(`${vscode.l10n.t("Pattern: ")}${pattern}`);
         } else {
-            toolTipList[patternIndex] = `${vscode.l10n.t("Pattern: ")}${node.pattern}`;
+            toolTipList[patternIndex] = `${vscode.l10n.t("Pattern: ")}${pattern}`;
         }
         node.tooltip = toolTipList.join("\n");
         if (!SharedContext.isFavorite(node)) {
