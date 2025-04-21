@@ -270,10 +270,12 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         ZoweLogger.trace("ZoweTreeProvider.checkCurrentProfile called.");
         const profile = node.getProfile();
         const profileName = profile.name ?? node.getProfileName();
+
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
         const jwtCheckResult = (await AuthUtils.isUsingTokenAuth(profileName))
             ? await ZoweTreeProvider.checkJwtForProfile(profileName)
             : JwtCheckResult.TokenUnusedOrUnsupported;
+
         if (jwtCheckResult === JwtCheckResult.TokenExpired) {
             // Mark profile as inactive if user dismissed "token expired/login" prompt or login failed
             profileStatus.status = "inactive";

@@ -224,7 +224,11 @@ describe("Tree Provider unit tests, function getTreeItem", () => {
     it("Tests that getTreeItem returns an object of type vscode.TreeItem", async () => {
         const globalMocks = await createGlobalMocks();
         const spy = jest.spyOn(ZoweLogger, "trace");
-        const sampleElement = new ZoweUSSNode({ label: "/u/myUser", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const sampleElement = new ZoweUSSNode({
+            label: "/u/myUser",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.testProfile,
+        });
         expect(globalMocks.testUSSTree.getTreeItem(sampleElement)).toBeInstanceOf(vscode.TreeItem);
         expect(spy).toHaveBeenCalled();
         spy.mockClear();
