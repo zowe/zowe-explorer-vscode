@@ -19,6 +19,7 @@ import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import * as vscode from "vscode";
+import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 
 const testProfile = createIProfile();
 
@@ -318,6 +319,42 @@ describe("fetchSpoolAtUri", () => {
 
         expect(mockJesApi.downloadSingleSpool).toHaveBeenCalled();
         expect(entry.data.toString()).toStrictEqual(newData.toString());
+
+        jesApiMock.mockRestore();
+        lookupAsFileMock.mockRestore();
+    });
+
+    it("fetches default ", async () => {
+        const defaultFetchSetting = 100;
+
+        const lookupAsFileMock = jest
+            .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
+            .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array() });
+
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.jobs.recordsToFetch") {
+                return defaultFetchSetting;
+            }
+            return undefined;
+        });
+
+        const downloadMock = jest.fn((opts) => {
+            expect(opts.recordRange).toBe(`0-${defaultFetchSetting}`);
+            opts.stream.write("test data");
+        });
+        const mockJesApi = {
+            downloadSingleSpool: downloadMock,
+            supportSpoolPagination: () => true,
+        };
+
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+
+        const uriWithQuery = vscode.Uri.parse(testUris.spool.toString());
+
+        const entry = await JobFSProvider.instance.fetchSpoolAtUri(uriWithQuery);
+        expect(downloadMock).toHaveBeenCalled();
+        expect(mockJesApi.downloadSingleSpool).toHaveBeenCalled();
+        expect(entry.data.toString()).toBe("test data");
 
         jesApiMock.mockRestore();
         lookupAsFileMock.mockRestore();

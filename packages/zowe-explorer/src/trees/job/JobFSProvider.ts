@@ -232,6 +232,12 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                 : SettingsConfig.getDirectValue<number>("zowe.jobs.recordsToFetch") ?? 0;
             recordRange = `${startLine}-${endLine}`;
         }
+        else {
+            const defFetchSetting = SettingsConfig.getDirectValue<number>("zowe.jobs.recordsToFetch") ?? 0;
+            if (defFetchSetting > 0) {
+                recordRange = `0-${defFetchSetting}`;
+            }
+        }
         try {
             const spoolEncoding = spoolEntry.encoding?.kind === "other" ? spoolEntry.encoding.codepage : profileEncoding;
             if (jesApi.downloadSingleSpool) {
