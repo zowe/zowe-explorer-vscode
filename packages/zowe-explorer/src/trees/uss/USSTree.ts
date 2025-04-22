@@ -688,7 +688,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         ZoweLogger.trace("USSTree.cdUp called.");
 
         // Check if the path is a root path already
-        if (path.posix.dirname(node.fullPath) === "/") {
+        if (node.fullPath === "/") {
             Gui.showMessage(vscode.l10n.t("You are already at the root directory."));
             return;
         }
@@ -705,8 +705,8 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      * @returns {Promise<void>}
      */
     private async updateTreeView(node: IZoweUSSTreeNode, filterPath: string, addHistory: boolean): Promise<void> {
-        AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), node);
-        const sanitizedPath = filterPath.replace(/\/+/g, "/").replace(/(\/*)$/, "");
+        await AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), node);
+        const sanitizedPath = filterPath.replace(/\/{2,}/g, "/").replace(/(.+?)\/*$/, "$1");
         node.fullPath = sanitizedPath;
         const icon = IconGenerator.getIconByNode(node);
         if (icon) {
