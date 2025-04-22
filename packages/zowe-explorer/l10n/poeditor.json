@@ -215,6 +215,9 @@
   "configuration.title": {
     "Zowe Explorer": ""
   },
+  "zowe.ds.paginate.datasetsPerPage": {
+    "Maximum number of data sets and PDS members to list per page": ""
+  },
   "zowe.ds.default.binary": {
     "Default values of Binary data set creation": ""
   },
@@ -407,7 +410,7 @@
   "zowe.pollInterval.info": {
     "Default interval (in milliseconds) when polling spool files.": ""
   },
-  "zowe.ZESetting.pagination": {
+  "zowe.jobs.settings.pagination": {
     "Toggle to enable job spool pagination.": ""
   },
   "zowe.jobs.recordsToFetch": {
@@ -622,6 +625,18 @@
   "Select Certificate Key": "",
   "Required parameter 'host' must not be blank.": "",
   "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.": "",
+  "Auth Method: ": "",
+  "Token-based Authentication": "",
+  "Basic Authentication": "",
+  "User: ": "",
+  "Certificate Authentication": "",
+  "Unknown": "",
+  "Pattern: ": "",
+  "Path: ": "",
+  "Owner: ": "",
+  "JobId: ": "",
+  "Profile: ": "",
+  "Profile Type: ": "",
   "Use the search button to list USS files": "",
   "Invalid node": "",
   "Delete action was cancelled.": "",
@@ -635,15 +650,6 @@
   "Uploading USS files...": "",
   "Error uploading files": "",
   "Retrieving response from USS list API": "",
-  "The 'move' function is not implemented for this USS API.": "",
-  "Failed to move {0}": "",
-  "Profile does not exist for this file.": "",
-  "Saving USS file...": "",
-  "Failed to rename {0}": "",
-  "Failed to delete {0}": "",
-  "No error details given": "",
-  "Error fetching destination {0} for paste action: {1}": "",
-  "Failed to copy {0} to {1}": "",
   "Downloaded: {0}": "",
   "Encoding: {0}": "",
   "Binary": "",
@@ -670,6 +676,15 @@
   "initializeUSSFavorites.error.buttonRemove": "",
   "File does not exist. It may have been deleted.": "",
   "Pulling from Mainframe...": "",
+  "The 'move' function is not implemented for this USS API.": "",
+  "Failed to move {0}": "",
+  "Profile does not exist for this file.": "",
+  "Saving USS file...": "",
+  "Failed to rename {0}": "",
+  "Failed to delete {0}": "",
+  "No error details given": "",
+  "Error fetching destination {0} for paste action: {1}": "",
+  "Failed to copy {0} to {1}": "",
   "{0} location": "",
   "Choose a location to create the {0}": "",
   "Name of file or directory": "",
@@ -779,6 +794,7 @@
   "The following jobs were deleted: {0}{1}": "",
   "Download single spool operation not implemented by extender. Please contact the extension developer(s).": "",
   "No spool files found for {0}": "",
+  "No document found": "",
   "Modify Command": "",
   "Command response: {0}": "",
   "jobActions.modifyCommand.apiNonExisting": "",
@@ -796,6 +812,8 @@
   "The response from Zowe CLI was not successful": "",
   "{0} members failed to load due to invalid name errors for {1}": "",
   "No data sets found": "",
+  "Previous page": "",
+  "Next page": "",
   "Retrieving response from MVS list API": "",
   "Cannot download, item invalid.": "",
   "Date Created": "",
@@ -962,6 +980,11 @@
   "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.": "",
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "",
   "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.": "",
+  "Auto Store: ": "",
+  "Config File: ": "",
+  "Global": "",
+  "Project": "",
+  "Secure Credentials Enabled: ": "",
   "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree": "",
   "Choose \"Create new...\" to define or select a profile to add to the JOBS tree": "",
   "Choose \"Create new...\" to define or select a profile to add to the USS tree": "",

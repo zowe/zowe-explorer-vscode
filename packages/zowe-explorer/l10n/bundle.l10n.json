@@ -174,6 +174,18 @@
       "Profile name"
     ]
   },
+  "Auth Method: ": "Auth Method: ",
+  "Token-based Authentication": "Token-based Authentication",
+  "Basic Authentication": "Basic Authentication",
+  "User: ": "User: ",
+  "Certificate Authentication": "Certificate Authentication",
+  "Unknown": "Unknown",
+  "Pattern: ": "Pattern: ",
+  "Path: ": "Path: ",
+  "Owner: ": "Owner: ",
+  "JobId: ": "JobId: ",
+  "Profile: ": "Profile: ",
+  "Profile Type: ": "Profile Type: ",
   "Use the search button to list USS files": "Use the search button to list USS files",
   "Invalid node": "Invalid node",
   "Delete action was cancelled.": "Delete action was cancelled.",
@@ -202,42 +214,6 @@
   "Uploading USS files...": "Uploading USS files...",
   "Error uploading files": "Error uploading files",
   "Retrieving response from USS list API": "Retrieving response from USS list API",
-  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
-  "Failed to move {0}/File path": {
-    "message": "Failed to move {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Profile does not exist for this file.": "Profile does not exist for this file.",
-  "Saving USS file...": "Saving USS file...",
-  "Failed to rename {0}/File path": {
-    "message": "Failed to rename {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Failed to delete {0}/File name": {
-    "message": "Failed to delete {0}",
-    "comment": [
-      "File name"
-    ]
-  },
-  "No error details given": "No error details given",
-  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
-    "message": "Error fetching destination {0} for paste action: {1}",
-    "comment": [
-      "USS path",
-      "Error message"
-    ]
-  },
-  "Failed to copy {0} to {1}/Source pathDestination path": {
-    "message": "Failed to copy {0} to {1}",
-    "comment": [
-      "Source path",
-      "Destination path"
-    ]
-  },
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
     "comment": [
@@ -300,6 +276,42 @@
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "Pulling from Mainframe...": "Pulling from Mainframe...",
+  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
+  "Failed to move {0}/File path": {
+    "message": "Failed to move {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Profile does not exist for this file.": "Profile does not exist for this file.",
+  "Saving USS file...": "Saving USS file...",
+  "Failed to rename {0}/File path": {
+    "message": "Failed to rename {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Failed to delete {0}/File name": {
+    "message": "Failed to delete {0}",
+    "comment": [
+      "File name"
+    ]
+  },
+  "No error details given": "No error details given",
+  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
+    "message": "Error fetching destination {0} for paste action: {1}",
+    "comment": [
+      "USS path",
+      "Error message"
+    ]
+  },
+  "Failed to copy {0} to {1}/Source pathDestination path": {
+    "message": "Failed to copy {0} to {1}",
+    "comment": [
+      "Source path",
+      "Destination path"
+    ]
+  },
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -533,6 +545,7 @@
       "Document file name"
     ]
   },
+  "No document found": "No document found",
   "Modify Command": "Modify Command",
   "Command response: {0}/Command response": {
     "message": "Command response: {0}",
@@ -575,6 +588,8 @@
   "The response from Zowe CLI was not successful": "The response from Zowe CLI was not successful",
   "{0} members failed to load due to invalid name errors for {1}": "{0} members failed to load due to invalid name errors for {1}",
   "No data sets found": "No data sets found",
+  "Previous page": "Previous page",
+  "Next page": "Next page",
   "Retrieving response from MVS list API": "Retrieving response from MVS list API",
   "Cannot download, item invalid.": "Cannot download, item invalid.",
   "Date Created": "Date Created",
@@ -1007,6 +1022,11 @@
       "Profile name"
     ]
   },
+  "Auto Store: ": "Auto Store: ",
+  "Config File: ": "Config File: ",
+  "Global": "Global",
+  "Project": "Project",
+  "Secure Credentials Enabled: ": "Secure Credentials Enabled: ",
   "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree",
   "Choose \"Create new...\" to define or select a profile to add to the JOBS tree": "Choose \"Create new...\" to define or select a profile to add to the JOBS tree",
   "Choose \"Create new...\" to define or select a profile to add to the USS tree": "Choose \"Create new...\" to define or select a profile to add to the USS tree",
@@ -1215,22 +1235,5 @@
       "Host name"
     ]
   },
-  "Zowe MVS Command": "Zowe MVS Command",
-  "Profile: ": "Profile: ",
-  "Profile Type: ": "Profile Type",
-  "Auth Method: ": "Auth Method: ",
-  "Token-based Authentication": "Token-based Authentication",
-  "Basic Authentication": "Basic Authentication",
-  "Certificate Authentication": "Certificate Authentication",
-  "User: ": "User: ",
-  "Unknown": "Unknown",
-  "Pattern: ": "Pattern: ",
-  "Path: ": "Path: ",
-  "Owner: ": "Owner: ",
-  "JobId: ": "JobId: ",
-  "Auto Store: ": "Auto Store: ",
-  "Config File: ": "Config File: ",
-  "Global": "Global",
-  "Project": "Project",
-  "Secure Credentials Enabled: ": "Secure Credentials Enabled: "
+  "Zowe MVS Command": "Zowe MVS Command"
 }

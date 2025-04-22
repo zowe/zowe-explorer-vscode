@@ -12,7 +12,17 @@
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as path from "path";
-import { Gui, imperative, IZoweDatasetTreeNode, Validation, Types, FsAbstractUtils, ZoweScheme, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import {
+    Gui,
+    imperative,
+    IZoweDatasetTreeNode,
+    NavigationTreeItem,
+    Validation,
+    Types,
+    FsAbstractUtils,
+    ZoweScheme,
+    ZoweExplorerApiType,
+} from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetUtils } from "./DatasetUtils";
 import { DatasetFSProvider } from "./DatasetFSProvider";
@@ -160,7 +170,7 @@ export class DatasetActions {
         }
         DatasetActions.newDSProperties?.forEach((property) => {
             Object.keys(propertiesFromDsType).forEach((typeProperty) => {
-                if (typeProperty === property.key) {
+                if (typeProperty === property.key && propertiesFromDsType[typeProperty] != null) {
                     if (property.value !== propertiesFromDsType[typeProperty].toString()) {
                         isMatch = false;
                         return;
@@ -190,13 +200,13 @@ export class DatasetActions {
         if (!propertiesFromDsType) {
             propertiesFromDsType = DatasetActions.getDefaultDsTypeProperties(type);
         }
+        const propertyKeys = Object.keys(propertiesFromDsType);
         DatasetActions.newDSProperties?.forEach((property) => {
-            Object.keys(propertiesFromDsType).forEach((typeProperty) => {
-                if (typeProperty === property.key) {
-                    property.value = propertiesFromDsType[typeProperty].toString();
-                    property.placeHolder = propertiesFromDsType[typeProperty];
-                }
-            });
+            const typeProperty = propertyKeys.find((prop) => prop === property.key);
+            if (typeProperty != null && propertiesFromDsType[typeProperty] != null) {
+                property.value = propertiesFromDsType[typeProperty].toString();
+                property.placeHolder = propertiesFromDsType[typeProperty];
+            }
         });
         return propertiesFromDsType;
     }
@@ -512,6 +522,9 @@ export class DatasetActions {
         let includedSelection = false;
         if (node) {
             for (const item of selectedNodes) {
+                if (item instanceof NavigationTreeItem) {
+                    continue;
+                }
                 if (
                     node.getLabel().toString() === item.getLabel().toString() &&
                     node.getParent().getLabel().toString() === item.getParent().getLabel().toString()

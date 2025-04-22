@@ -228,6 +228,7 @@ async function createGlobalMocks() {
             "zowe.diff.useLocalContent",
             "zowe.diff.useRemoteContent",
             "zowe.certificateWizard",
+            "zowe.executeNavCallback",
             "zowe.openRecentMember",
             "zowe.searchInAllLoadedItems",
             "zowe.disableValidation",

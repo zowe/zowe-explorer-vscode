@@ -18,6 +18,7 @@ import type { USSTree } from "../trees/uss/USSTree";
 import type { MvsCommandHandler } from "../commands/MvsCommandHandler";
 import type { TsoCommandHandler } from "../commands/TsoCommandHandler";
 import type { UnixCommandHandler } from "../commands/UnixCommandHandler";
+import type { IListOptions } from "@zowe/zos-files-for-zowe-sdk";
 
 export namespace Definitions {
     export type LocalFileInfo = {
@@ -78,6 +79,9 @@ export namespace Definitions {
         encoding?: ZosEncoding;
         etag?: string;
     }
+
+    export type DatasetListOpts = Omit<IListOptions, "volume" | "recall"> & { profile?: imperative.IProfileLoaded };
+
     export interface IZoweUssTreeOpts extends IZoweTreeOpts {
         parentPath?: string;
         encoding?: ZosEncoding;

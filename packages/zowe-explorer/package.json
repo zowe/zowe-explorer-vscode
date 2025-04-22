@@ -1658,6 +1658,12 @@
       "type": "object",
       "title": "%configuration.title%",
       "properties": {
+        "zowe.ds.paginate.datasetsPerPage": {
+          "default": 100,
+          "type": "integer",
+          "description": "%zowe.ds.paginate.datasetsPerPage%",
+          "scope": "window"
+        },
         "zowe.ds.default.binary": {
           "default": {
             "dsorg": "PO",

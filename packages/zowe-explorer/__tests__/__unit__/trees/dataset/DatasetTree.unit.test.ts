@@ -28,7 +28,7 @@ import {
     createMockNode,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree, createDatasetFavoritesNode } from "../../../__mocks__/mockCreators/datasets";
-import { ProfilesCache, imperative, Gui, Validation } from "@zowe/zowe-explorer-api";
+import { ProfilesCache, imperative, Gui, Validation, NavigationTreeItem } from "@zowe/zowe-explorer-api";
 import { Constants, JwtCheckResult } from "../../../../src/configuration/Constants";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { Profiles } from "../../../../src/configuration/Profiles";
@@ -410,7 +410,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
 
         const testError = new imperative.ImperativeError({ msg: "test" });
         const spyOnDataSetsMatchingPattern = jest.spyOn(zosfiles.List, "dataSetsMatchingPattern");
-        spyOnDataSetsMatchingPattern.mockResolvedValueOnce({
+        spyOnDataSetsMatchingPattern.mockResolvedValue({
             success: true,
             commandResponse: null,
             apiResponse: [
@@ -467,7 +467,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
 
         const spyOnDataSetsMatchingPattern = jest.spyOn(zosfiles.List, "dataSetsMatchingPattern");
         const spyOnDataSet = jest.spyOn(zosfiles.List, "dataSet");
-        spyOnDataSet.mockResolvedValueOnce({
+        spyOnDataSet.mockResolvedValue({
             success: true,
             commandResponse: null,
             apiResponse: {
@@ -554,6 +554,82 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         await testTree.getChildren(favProfileNode);
 
         expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
+    });
+
+    it("should skip NavigationTreeItem and add FILTER_SEARCH context to PDS member when memberPattern set", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+
+        const parentNode = new ZoweDatasetNode({
+            label: "A.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            profile: blockMocks.imperativeProfile,
+            session: blockMocks.session,
+        });
+        parentNode.memberPattern = "memb*";
+        parentNode.contextValue = Constants.DS_PDS_CONTEXT;
+
+        const navItem = new NavigationTreeItem("Next Page", "arrow-right", false, "zowe.dummyCommand", jest.fn());
+
+        const pdsMemberNode = new ZoweDatasetNode({
+            label: "MEMBER1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.DS_MEMBER_CONTEXT,
+            parentNode: parentNode,
+            profile: blockMocks.imperativeProfile,
+        });
+
+        const regularDsNode = new ZoweDatasetNode({
+            label: "REGULAR.DS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: parentNode,
+            profile: blockMocks.imperativeProfile,
+        });
+        regularDsNode.contextValue = Constants.DS_DS_CONTEXT;
+
+        const childrenFromParent: any[] = [navItem, pdsMemberNode, regularDsNode];
+
+        jest.spyOn(parentNode, "getChildren").mockResolvedValue(childrenFromParent);
+        const withProfileSpy = jest.spyOn(SharedContext, "withProfile");
+
+        const resultChildren = await testTree.getChildren(parentNode);
+        expect(resultChildren).toHaveLength(3);
+
+        const resultNavItem = resultChildren[0] as unknown as NavigationTreeItem;
+        expect(resultNavItem).toBeInstanceOf(NavigationTreeItem);
+        expect(resultNavItem.label).toBe("Next Page");
+        expect(resultNavItem.contextValue).not.toContain(Constants.FILTER_SEARCH);
+
+        // PDS member node should include FILTER_SEARCH on contextValue
+        // (provides context on node to indicate that member was filtered by member pattern on PDS)
+        const resultPdsMemberNode = resultChildren[1] as ZoweDatasetNode;
+        expect(resultPdsMemberNode.label).toBe("MEMBER1");
+        const expectedMemberContext = `${Constants.DS_MEMBER_CONTEXT}${Constants.FILTER_SEARCH}`;
+        expect(resultPdsMemberNode.contextValue).toBe(expectedMemberContext);
+
+        // Regular DS node contextValue should remain the same
+        const resultRegularDsNode = resultChildren[2] as ZoweDatasetNode;
+        expect(resultRegularDsNode.label).toBe("REGULAR.DS");
+        expect(resultRegularDsNode.contextValue).toBe(Constants.DS_DS_CONTEXT);
+
+        expect(withProfileSpy).toHaveBeenCalledTimes(2);
+        expect(withProfileSpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                label: "MEMBER1",
+                contextValue: `${Constants.DS_MEMBER_CONTEXT}${Constants.FILTER_SEARCH}`,
+            })
+        );
+        expect(withProfileSpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                label: "REGULAR.DS",
+                contextValue: Constants.DS_DS_CONTEXT,
+            })
+        );
+
+        withProfileSpy.mockRestore();
+        jest.restoreAllMocks();
     });
 });
 describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
@@ -1719,8 +1795,10 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         jest.spyOn(testTree, "checkFilterPattern").mockReturnValue(true);
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
-
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD, HLQ.PROD1*");
+        // member patterns are stored on the session node itself and not in the pattern,
+        // as the member pattern needs to be passed to a different API (allMembers) and not the list data set (dataSet/dataSetsMatchingPattern) API
+        expect(testTree.mSessionNodes[1].patternMatches).toEqual([{ dsn: "HLQ.PROD", member: "STUF*" }, { dsn: "HLQ.PROD1*" }]);
     });
     it("Checking adding of new filter with data set member", async () => {
         const globalMocks = createGlobalMocks();
@@ -1858,32 +1936,6 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(errorSpy).not.toHaveBeenCalled();
         errorSpy.mockClear();
     });
-    it("Checking function for return if element.getChildren calls error handling for success: false", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks(globalMocks);
-
-        const errorHandlingMock = new MockedProperty(AuthUtils, "errorHandling");
-
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new FilterDescriptor("\uFF0B " + "Create a new filter"));
-        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const testTree = new DatasetTree();
-        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        Object.defineProperty(testTree.mSessionNodes[1], "getDatasets", {
-            value: jest.fn().mockResolvedValueOnce([
-                {
-                    success: false,
-                    commandResponse: null,
-                    apiResponse: "Error: test error",
-                },
-            ]),
-            configurable: true,
-        });
-
-        expect(await testTree.datasetFilterPrompt(testTree.mSessionNodes[1])).not.toBeDefined();
-        expect(errorHandlingMock.mock).toHaveBeenCalled();
-        errorHandlingMock[Symbol.dispose]();
-    });
     it("Checking function for return if element.getChildren returns undefined", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
@@ -1899,6 +1951,74 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         });
 
         expect(await testTree.datasetFilterPrompt(testTree.mSessionNodes[1])).not.toBeDefined();
+    });
+
+    it("should return early if profile is invalid", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+
+        const testTree = new DatasetTree();
+        const mockNode = blockMocks.datasetSessionNode;
+        mockNode.getProfileName = jest.fn().mockReturnValue("sestest");
+
+        const profilesInstance = Profiles.getInstance();
+        const checkCurrentProfileMock = jest.spyOn(profilesInstance, "checkCurrentProfile").mockResolvedValueOnce({
+            name: "sestest",
+            status: "inactive",
+        });
+        const mockValidProfile = jest.replaceProperty(profilesInstance, "validProfile", Validation.ValidationType.INVALID);
+
+        const loggerWarnSpy = jest.spyOn(ZoweLogger, "warn");
+        const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockClear();
+
+        await testTree.datasetFilterPrompt(mockNode);
+
+        expect(loggerWarnSpy).toHaveBeenCalledWith(
+            `[DatasetTree.datasetFilterPrompt] Cancelled because profile ${mockNode.getProfileName()} is not validated`
+        );
+        // Ensure subsequent steps like prompting are skipped
+        expect(showInputBoxSpy).not.toHaveBeenCalled();
+
+        loggerWarnSpy.mockRestore();
+        checkCurrentProfileMock.mockRestore();
+        showInputBoxSpy.mockRestore();
+        mockValidProfile.restore();
+    });
+
+    it("should call nodeDataChanged when node is already expanded", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+
+        const testTree = new DatasetTree();
+        const mockNode = blockMocks.datasetSessionNode;
+
+        const profilesInstance = Profiles.getInstance();
+        const mockValidProfile = jest.replaceProperty(profilesInstance, "validProfile", Validation.ValidationType.VALID);
+        const checkCurrentProfileMock = jest.spyOn(profilesInstance, "checkCurrentProfile").mockResolvedValue({ name: "sestest", status: "active" });
+
+        // Mock user input
+        const testPattern = "TEST.PATTERN.*";
+        const showInputBoxMock = jest.spyOn(Gui, "showInputBox").mockResolvedValue(testPattern);
+
+        mockNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+
+        const nodeDataChangedSpy = jest.spyOn(testTree, "nodeDataChanged");
+        const expandNodeSpy = jest.spyOn(TreeViewUtils, "expandNode");
+
+        await testTree.datasetFilterPrompt(mockNode);
+
+        expect(showInputBoxMock).toHaveBeenCalled();
+        expect(mockNode.pattern).toBe(testPattern.toUpperCase());
+        // Verify that node is repainted to show new data set nodes
+        expect(nodeDataChangedSpy).toHaveBeenCalledWith(mockNode);
+        // Ensure that node is not expanded as its already open
+        expect(expandNodeSpy).not.toHaveBeenCalled();
+
+        checkCurrentProfileMock.mockRestore();
+        showInputBoxMock.mockRestore();
+        mockValidProfile.restore();
     });
 
     it("updates stats with modified date and user ID if provided in API", async () => {
@@ -2938,8 +3058,8 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         jest.spyOn(SharedContext, "isFavorite").mockReturnValue(true);
         await testTree.rename(parent);
         expect(renameDataSetSpy).toHaveBeenLastCalledWith(parent);
-        expect(parent.resourceUri?.path).toBe("/HLQ.TEST.NEWNAME.NODE");
-        expect(child.resourceUri?.path).toBe("/HLQ.TEST.NEWNAME.NODE/mem1");
+        expect(parent.resourceUri?.path).toBe("/sestest/HLQ.TEST.NEWNAME.NODE");
+        expect(child.resourceUri?.path).toBe("/sestest/HLQ.TEST.NEWNAME.NODE/mem1");
         expect(refreshElementSpy).toHaveBeenCalled();
     });
 

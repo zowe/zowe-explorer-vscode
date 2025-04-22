@@ -260,7 +260,6 @@ describe("JobFSProvider.supportSpoolPagination", () => {
     });
 });
 
-
 describe("fetchSpoolAtUri", () => {
     const loadNamedProfileMock = jest.fn().mockReturnValue(testProfile);
     beforeEach(() => {

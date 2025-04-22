@@ -26,6 +26,7 @@ import {
     DatasetMatch,
     ZoweExplorerApiType,
     ZoweScheme,
+    NavigationTreeItem,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetFSProvider } from "./DatasetFSProvider";
@@ -324,15 +325,19 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (element.contextValue && element.contextValue === Constants.FAV_PROFILE_CONTEXT) {
                 return this.loadProfilesForFavorites(this.log, element);
             }
-            const response = await element.getChildren();
+            const response = await element.getChildren(true);
 
             const finalResponse: IZoweDatasetTreeNode[] = [];
             for (const item of response) {
+                if (item instanceof NavigationTreeItem) {
+                    finalResponse.push(item);
+                    continue;
+                }
                 if (item.pattern && item.memberPattern) {
                     finalResponse.push(item);
                 }
                 if (!item.memberPattern && !item.pattern) {
-                    if (item.contextValue.includes(Constants.DS_MEMBER_CONTEXT) && element.memberPattern) {
+                    if (item.contextValue?.includes(Constants.DS_MEMBER_CONTEXT) && element.memberPattern) {
                         item.contextValue += Constants.FILTER_SEARCH;
                     }
                     finalResponse.push(item);
@@ -1192,7 +1197,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     }
 
     public resetFilterForChildren(children: IZoweDatasetTreeNode[]): void {
-        for (const child of children) {
+        for (const child of children.filter((c) => !(c instanceof NavigationTreeItem))) {
             let resetIcon: IconUtils.IIconItem;
             if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
                 resetIcon = IconGenerator.getIconById(IconUtils.IconId.folder);
@@ -1231,7 +1236,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     }
 
     public applyPatternsToChildren(children: IZoweDatasetTreeNode[], patterns: DatasetMatch[]): void {
-        for (const child of children.filter((c) => c.label !== vscode.l10n.t("No data sets found"))) {
+        for (const child of children.filter((c) => !(c instanceof NavigationTreeItem) && c.label !== vscode.l10n.t("No data sets found"))) {
             for (const item of patterns.filter((p) => p.member && this.patternAppliesToChild(child, p))) {
                 // Only apply to PDS that match the given patterns
                 if (SharedContext.isPds(child)) {
@@ -1258,97 +1263,87 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         ZoweLogger.trace("DatasetTree.datasetFilterPrompt called.");
         let pattern: string;
         await this.checkCurrentProfile(node);
-        const sessionNode = node;
 
-        if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
-            if (SharedContext.isSessionNotFav(node)) {
-                ZoweLogger.debug(vscode.l10n.t("Prompting the user for a data set pattern"));
-                if (this.mHistory.getSearchHistory().length > 0) {
-                    const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
-                    const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
-                    const quickpick = Gui.createQuickPick();
-                    quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
-                    quickpick.placeholder = vscode.l10n.t("Select a filter");
-                    quickpick.ignoreFocusOut = true;
-                    quickpick.show();
-                    const choice = await Gui.resolveQuickPick(quickpick);
-                    quickpick.hide();
-                    if (!choice) {
-                        Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-                        return;
-                    }
-                    if (choice instanceof FilterDescriptor) {
-                        if (quickpick.value) {
-                            pattern = quickpick.value;
-                        }
-                    } else {
-                        pattern = choice.label;
-                    }
-                }
-                const options: vscode.InputBoxOptions = {
-                    prompt: vscode.l10n.t("Search data sets: use a comma to separate multiple patterns"),
-                    value: pattern,
-                };
-                // get user input
-                pattern = await Gui.showInputBox(options);
-                if (!pattern) {
-                    Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
+        if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
+            ZoweLogger.warn(`[DatasetTree.datasetFilterPrompt] Cancelled because profile ${node.getProfileName()} is not validated`);
+            return;
+        }
+
+        if (SharedContext.isSessionNotFav(node)) {
+            ZoweLogger.debug(vscode.l10n.t("Prompting the user for a data set pattern"));
+            if (this.mHistory.getSearchHistory().length > 0) {
+                const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
+                const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
+                const quickpick = Gui.createQuickPick();
+                quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
+                quickpick.placeholder = vscode.l10n.t("Select a filter");
+                quickpick.ignoreFocusOut = true;
+                quickpick.show();
+                const choice = await Gui.resolveQuickPick(quickpick);
+                quickpick.hide();
+                if (!choice) {
+                    Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
                     return;
                 }
-            } else {
-                // executing search from saved search in favorites
-                pattern = node.getLabel() as string;
-                const sessionName = node.getProfileName();
-                await this.addSession({ sessionName });
-                const nonFavNode = this.mSessionNodes.find((tempNode) => tempNode.label.toString() === sessionName);
-                if (!nonFavNode.getSession().ISession.user || !nonFavNode.getSession().ISession.password) {
-                    nonFavNode.getSession().ISession.user = node.getSession().ISession.user;
-                    nonFavNode.getSession().ISession.password = node.getSession().ISession.password;
-                    nonFavNode.getSession().ISession.base64EncodedAuth = node.getSession().ISession.base64EncodedAuth;
+                if (choice instanceof FilterDescriptor) {
+                    if (quickpick.value) {
+                        pattern = quickpick.value;
+                    }
+                } else {
+                    pattern = choice.label;
                 }
             }
-            // looking for members in pattern
-            node.dirty = true;
-            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getMvsApi(profile), sessionNode);
-
-            const dsSets = this.extractPatterns(pattern);
-            const dsPattern = this.buildFinalPattern(dsSets);
-            if (dsPattern.length != 0) {
-                sessionNode.pattern = dsPattern.toUpperCase();
-            } else {
-                sessionNode.pattern = pattern.toUpperCase();
-            }
-            const toolTipList: string[] = (node.tooltip as string).split("\n");
-            const patternIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Pattern: ")));
-            if (patternIndex === -1) {
-                toolTipList.push(`${vscode.l10n.t("Pattern: ")}${sessionNode.pattern}`);
-            } else {
-                toolTipList[patternIndex] = `${vscode.l10n.t("Pattern: ")}${sessionNode.pattern}`;
-            }
-            node.tooltip = toolTipList.join("\n");
-
-            let response: IZoweDatasetTreeNode[] = [];
-            try {
-                await Gui.withProgress({ location: { viewId: "zowe.ds.explorer" } }, async () => {
-                    response = await this.getChildren(sessionNode);
-                });
-            } catch (err) {
-                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
-            }
-            if (response.length === 0) {
+            const options: vscode.InputBoxOptions = {
+                prompt: vscode.l10n.t("Search data sets: use a comma to separate multiple patterns"),
+                value: pattern,
+            };
+            // get user input
+            pattern = await Gui.showInputBox(options);
+            if (!pattern) {
+                Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
                 return;
             }
-            // reset and remove previous search patterns for each child of getChildren
-            this.resetFilterForChildren(response);
-            // set new search patterns for each child of getChildren
-            this.applyPatternsToChildren(response, dsSets);
-            this.addSearchHistory(pattern);
+        } else {
+            // executing search from saved search in favorites
+            pattern = node.getLabel() as string;
+            const sessionName = node.getProfileName();
+            await this.addSession({ sessionName });
+            const nonFavNode = this.mSessionNodes.find((tempNode) => tempNode.label.toString() === sessionName);
+            if (!nonFavNode.getSession().ISession.user || !nonFavNode.getSession().ISession.password) {
+                nonFavNode.getSession().ISession.user = node.getSession().ISession.user;
+                nonFavNode.getSession().ISession.password = node.getSession().ISession.password;
+                nonFavNode.getSession().ISession.base64EncodedAuth = node.getSession().ISession.base64EncodedAuth;
+            }
         }
-        if (!SharedContext.isFavorite(sessionNode)) {
-            sessionNode.resourceUri = sessionNode.resourceUri.with({ query: `pattern=${pattern}` });
+        // looking for members in pattern
+        node.patternMatches = this.extractPatterns(pattern);
+        const dsPattern = this.buildFinalPattern(node.patternMatches);
+        if (dsPattern.length != 0) {
+            node.pattern = dsPattern.toUpperCase();
+        } else {
+            node.pattern = pattern.toUpperCase();
         }
-        await TreeViewUtils.expandNode(sessionNode, this);
-        this.refresh();
+        const toolTipList: string[] = (node.tooltip as string).split("\n");
+        const patternIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Pattern: ")));
+        if (patternIndex === -1) {
+            toolTipList.push(`${vscode.l10n.t("Pattern: ")}${pattern}`);
+        } else {
+            toolTipList[patternIndex] = `${vscode.l10n.t("Pattern: ")}${pattern}`;
+        }
+        node.tooltip = toolTipList.join("\n");
+        if (!SharedContext.isFavorite(node)) {
+            node.resourceUri = node.resourceUri.with({ query: `pattern=${pattern}` });
+        }
+        node.dirty = true;
+
+        if (node.collapsibleState !== vscode.TreeItemCollapsibleState.Expanded) {
+            // The node is refreshed when its expanded & marked dirty, no need to call nodeDataChanged
+            await TreeViewUtils.expandNode(node, this);
+        } else {
+            // Refresh node in tree view to represent new data set pattern(s)
+            this.nodeDataChanged(node);
+        }
+        this.addSearchHistory(pattern);
     }
 
     public checkFilterPattern(dsName: string, itemName: string): boolean {
