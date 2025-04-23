@@ -634,11 +634,11 @@ describe("USSTree Unit Tests - Function cdUp", () => {
     it("Tests that cdUp() handles when current filter set but as a root path", async () => {
         const globalMocks = createGlobalMocks();
 
-        await globalMocks.testTree.filterBy(globalMocks.testTree.mSessionNodes[1], "/u");
-        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/u");
+        await globalMocks.testTree.filterBy(globalMocks.testTree.mSessionNodes[1], "/");
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/");
 
         await globalMocks.testTree.cdUp(globalMocks.testTree.mSessionNodes[1]);
-        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/u");
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/");
 
         expect(globalMocks.showInformationMessage).toHaveBeenCalledWith("You are already at the root directory.", undefined);
     });
