@@ -687,6 +687,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         try {
             if (this.dirty || totalItems == null || lastDatasetName == null) {
+                // Rebuild cache to handle future page changes
                 const basicResponses: IZosFilesResponse[] = [];
                 await this.listDatasets(basicResponses, { attributes: false });
 
@@ -703,8 +704,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 };
                 totalItems = this.paginatorData.totalItems;
                 lastDatasetName = this.paginatorData.lastItemName;
-            } else {
-                // Using cached data from the refresh to handle the page change
             }
             await this.listDatasets(responses, { attributes: true, start, maxLength: start ? limit + 1 : limit });
         } catch (err) {
@@ -760,7 +759,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     .map((p) => p.trim())
             ),
         ];
-        if (options.maxLength) {
+        if (this.itemsPerPage > 0) {
             // Sort patterns alphabetically for proper page traversal with patterns in descending alphabetical order
             dsPatterns.sort((a, b) => a.localeCompare(b));
         }
