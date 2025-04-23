@@ -760,6 +760,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     .map((p) => p.trim())
             ),
         ];
+        if (options.maxLength) {
+            // Sort patterns alphabetically for proper page traversal with patterns in descending alphabetical order
+            dsPatterns.sort((a, b) => a.localeCompare(b));
+        }
         const profile = options?.profile ?? Profiles.getInstance().loadNamedProfile(this.getProfile().name);
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
         if (!mvsApi.getSession(profile)) {
@@ -922,7 +926,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 this.paginator = this.paginatorData = undefined;
             }
 
-            if (!this.paginator || this.paginator.getMaxItemsPerPage() !== this.itemsPerPage) {
+            if ((!this.paginator || this.paginator.getMaxItemsPerPage() !== this.itemsPerPage) && this.itemsPerPage > 0) {
                 // Force paginator and data to be re-initialized if fetch function or page size changes, or if pattern changes
                 this.paginator = new Paginator(this.itemsPerPage, fetchFunction);
             }

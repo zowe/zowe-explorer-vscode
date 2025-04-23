@@ -325,7 +325,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (element.contextValue && element.contextValue === Constants.FAV_PROFILE_CONTEXT) {
                 return this.loadProfilesForFavorites(this.log, element);
             }
-            const response = await element.getChildren(true);
+            const response = await element.getChildren(
+                SettingsConfig.getDirectValue<number>("zowe.ds.paginate.datasetsPerPage", Constants.DEFAULT_ITEMS_PER_PAGE) > 0
+            );
 
             const finalResponse: IZoweDatasetTreeNode[] = [];
             for (const item of response) {
