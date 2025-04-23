@@ -119,5 +119,6 @@ jobs:
         if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '20.x'
         uses: bitonality/PRtifact@v0.1.0
         with:
+          handlebars-template: './.github/resources/artifact-template.hbs'
           comment-mode: 'CreateOrUpdate'
           issue-id: $PR_NUMBER
