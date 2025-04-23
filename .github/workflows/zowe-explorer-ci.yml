@@ -98,9 +98,6 @@ jobs:
           name: zowe-explorer-vsix
           path: dist/*.vsix
 
-      - name: Enable Debug Logging (temp)
-        run: echo "::set-env name=ACTIONS_STEP_DEBUG::true"
-
       - name: Report artifact
         if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '20.x'
         uses: bitonality/PRtifact@v0.1.0
