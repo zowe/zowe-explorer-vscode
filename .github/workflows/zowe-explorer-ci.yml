@@ -102,17 +102,25 @@ jobs:
           name: zowe-explorer-vsix
           path: dist/*.vsix
 
-      - name: Debug Context
+      - name: Extract Issue/PR Number
         if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '20.x'
         run: |
-          echo "$GITHUB_REF: $GITHUB_REF"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "ISSUE_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+            echo "Extracted Pull Request number: ${{ github.event.pull_request.number }}"
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            # Extract issue/PR number from the branch reference in case of push
+            REF=$(echo $GITHUB_REF | grep -oP '(?<=refs/heads/).*')
+            echo "Branch reference is: $REF"
+            echo "ISSUE_NUMBER=$REF" >> $GITHUB_ENV
+          else
+            echo "ISSUE_NUMBER=unknown" >> $GITHUB_ENV
+          fi
 
-      - name: Get Pull Request Number from GITHUB_REF
+      - name: Save PR number
         if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '20.x'
-        run: |
-          PR_NUMBER=$(echo $GITHUB_REF | grep -oP '(?<=refs/pull/)[^/]+')
-          echo "PR_NUMBER=$PR_NUMBER" >> "$GITHUB_ENV"
-          echo "Pull Request Number is: $PR_NUMBER"
+        env:
+          PR_NUMBER: ${{ github.event.number }}
 
       - name: Report Artifact
         if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '20.x'
@@ -120,4 +128,4 @@ jobs:
         with:
           handlebars-template: './.github/resources/artifact-template.hbs'
           comment-mode: 'CreateOrUpdate'
-          issue-id: $PR_NUMBER
+          issue-id: ${{ env.ISSUE_NUMBER }}
