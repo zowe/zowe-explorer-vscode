@@ -326,7 +326,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 return this.loadProfilesForFavorites(this.log, element);
             }
             const response = await element.getChildren(
-                SettingsConfig.getDirectValue<number>("zowe.ds.paginate.datasetsPerPage", Constants.DEFAULT_ITEMS_PER_PAGE) > 0
+                SettingsConfig.getDirectValue<number>(Constants.SETTINGS_DATASETS_PER_PAGE, Constants.DEFAULT_ITEMS_PER_PAGE) > 0
             );
 
             const finalResponse: IZoweDatasetTreeNode[] = [];
@@ -971,6 +971,12 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 for (const child of favProfile.children) {
                     this.updateSortForNode(child, sortOpts, false);
                 }
+            }
+        }
+
+        if (e.affectsConfiguration(Constants.SETTINGS_DATASETS_PER_PAGE)) {
+            for (const sessionNode of this.mSessionNodes) {
+                this.refreshElement(sessionNode);
             }
         }
     }

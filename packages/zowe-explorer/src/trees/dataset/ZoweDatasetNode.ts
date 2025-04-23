@@ -918,7 +918,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         try {
             // Lazy initialization or re-initialization of paginator if needed
             const fetchFunction = isSession ? this.listDatasetsInRange.bind(this) : this.listMembersInRange.bind(this);
-            this.itemsPerPage = SettingsConfig.getDirectValue<number>("zowe.ds.paginate.datasetsPerPage") ?? Constants.DEFAULT_ITEMS_PER_PAGE;
+            this.itemsPerPage = SettingsConfig.getDirectValue<number>(Constants.SETTINGS_DATASETS_PER_PAGE) ?? Constants.DEFAULT_ITEMS_PER_PAGE;
 
             if (isSession && patternChanged) {
                 // Check if pattern changed for session
