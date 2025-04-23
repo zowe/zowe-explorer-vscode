@@ -1,0 +1,20 @@
+{{#if artifacts}}
+  {{#each artifacts}}
+    {{#if (eq name "zowe-explorer-vsix")}}
+      |[{{badge name "472d30" "github"}}]({{../workflowRunUrl}})|[{{badge "Download" "723d46"}}]({{../workflowRunUrl}}/artifacts/{{id}})|[{{badge "Logs" "723d46"}}]({{../workflowRunUrl}})|
+      |:---:|:---:|:---:|
+
+      <details><summary>Build Details</summary>
+
+      |Name|Information|
+      |---|---|
+      |PR Commit|{{../context.payload.pull_request.head.sha}}|
+      |Merge Commit|{{../context.sha}}|
+      |Size|{{pretty-size size_in_bytes}}|
+      |Last Updated|{{pretty-date updated_at}}|
+      |Expires At|{{pretty-date expires_at}}|
+
+      </details>
+    {{/if}}
+  {{/each}}
+{{/if}}
