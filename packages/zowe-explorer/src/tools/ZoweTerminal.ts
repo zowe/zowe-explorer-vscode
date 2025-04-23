@@ -238,11 +238,14 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     }
 
     private navigateHistory(offset: number): void {
-        this.historyIndex = Math.max(0, Math.min(this.mHistory.length, this.historyIndex + offset));
-        this.command = this.mHistory[this.historyIndex] ?? "";
-        this.charArrayCmd = Array.from(this.command);
-        this.cursorPosition = this.charArrayCmd.length;
-        this.refreshCmd();
+        const newIndex = this.historyIndex + offset;
+        if (newIndex >= 0 && newIndex < this.mHistory.length) {
+            this.historyIndex = newIndex;
+            this.command = this.mHistory[this.historyIndex];
+            this.charArrayCmd = Array.from(this.command);
+            this.cursorPosition = this.command.length;
+            this.refreshCmd();
+        }
     }
 
     private moveCursorTo(position: number): void {
@@ -252,14 +255,23 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
 
     private deleteCharacter(offset: number): void {
         const deleteIndex = this.cursorPosition + offset;
+
         if (deleteIndex >= 0 && deleteIndex < this.charArrayCmd.length) {
             this.charArrayCmd.splice(deleteIndex, 1);
             this.command = this.charArrayCmd.join("");
+
             if (offset === -1) {
                 this.cursorPosition--;
             }
+
             this.refreshCmd();
         }
+    }
+
+    private sanitizeInput(input: string): string {
+        return Array.from(input)
+            .map((char) => (this.isPrintable(char) ? char : ZoweTerminal.invalidChar))
+            .join("");
     }
 
     private async handleEnter() {
@@ -314,11 +326,5 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         if (codePoint >= 0xe000 && codePoint <= 0xfffd) return true;
         if (codePoint >= 0x10000 && codePoint <= 0x10ffff) return true;
         return false;
-    }
-
-    private sanitizeInput(input: string): string {
-        return Array.from(input)
-            .map((char) => (this.isPrintable(char) ? char : ZoweTerminal.invalidChar))
-            .join("");
     }
 }
