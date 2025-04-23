@@ -97,3 +97,9 @@ jobs:
         with:
           name: zowe-explorer-vsix
           path: dist/*.vsix
+
+      - name: Report artifact
+        if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '20.x' && github.event_name == 'pull_request'
+        uses: bitonality/PRtifact@v0.1.0
+        with:
+          comment-mode: 'CreateOrUpdate'
