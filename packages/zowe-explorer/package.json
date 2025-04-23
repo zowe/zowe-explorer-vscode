@@ -1989,16 +1989,16 @@
           "description": "%zowe.pollInterval.info%",
           "scope": "window"
         },
-        "zowe.jobs.settings.pagination": {
+        "zowe.jobs.paginate.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "%zowe.jobs.settings.pagination%",
+          "description": "%zowe.jobs.paginate.enabled%",
           "scope": "window"
         },
-        "zowe.jobs.recordsToFetch": {
+        "zowe.jobs.paginate.recordsToFetch": {
           "type": "integer",
           "default": 100,
-          "description": "%zowe.jobs.recordsToFetch%",
+          "description": "%zowe.jobs.paginate.recordsToFetch%",
           "scope": "window"
         },
         "zowe.settings.overrideWithEnvironmentVariables": {

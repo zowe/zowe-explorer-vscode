@@ -229,10 +229,10 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             const startLine = parseInt(query.get("startLine")!);
             const endLine = query.has("endLine")
                 ? parseInt(query.get("endLine")!)
-                : SettingsConfig.getDirectValue<number>("zowe.jobs.recordsToFetch") ?? 0;
+                : startLine + (SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 0);
             recordRange = `${startLine}-${endLine}`;
         } else {
-            const defFetchSetting = SettingsConfig.getDirectValue<number>("zowe.jobs.recordsToFetch") ?? 0;
+            const defFetchSetting = SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 0;
             if (defFetchSetting > 0) {
                 recordRange = `0-${defFetchSetting}`;
             }
@@ -245,7 +245,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                     stream: bufBuilder,
                     binary: spoolEntry.encoding?.kind === "binary",
                     recordRange:
-                        jesApi.supportSpoolPagination?.() && SettingsConfig.getDirectValue<boolean>("zowe.jobs.settings.pagination")
+                        jesApi.supportSpoolPagination?.() && SettingsConfig.getDirectValue<boolean>("zowe.jobs.paginate.enabled")
                             ? recordRange
                             : undefined,
                     encoding: spoolEncoding,
@@ -262,11 +262,16 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
-        spoolEntry.data = bufBuilder.read() ?? new Uint8Array();
+        if(query.has("startLine") && !query.has("endLine")) {
+            spoolEntry.data = Buffer.concat([spoolEntry.data, bufBuilder.read() ?? new Uint8Array()]);
+        }
+        else {
+            spoolEntry.data = bufBuilder.read() ?? new Uint8Array();
+        }
         spoolEntry.mtime = Date.now();
         spoolEntry.size = spoolEntry.data.byteLength;
         if (editor) {
-            await this._updateResourceInEditor(uri);
+            await this._updateResourceInEditor(uri.with({query: ""}));
         }
 
         return spoolEntry;

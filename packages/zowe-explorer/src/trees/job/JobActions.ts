@@ -253,17 +253,103 @@ export class JobActions {
         statusMsg.dispose();
     }
 
-    public static async loadMoreRecords(doc: vscode.TextDocument): Promise<void> {
-        if (!doc) {
-            Gui.errorMessage(vscode.l10n.t("No document found"));
+    // public static async getStartAndEndLine(doc: vscode.TextDocument): Promise<void> {
+    //     let uri = doc.uri;
+    //     const query = new URLSearchParams(uri.query);
+
+    //     let startLine = parseInt(query.get("startLine")!) || 0;
+    //     const recordsToFetch = SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 100;
+    //     let endLine = parseInt(query.get("endLine")!) || startLine + recordsToFetch;
+    // }
+
+    public static paginationState = new Map<string, { startLine: number; endLine: number }>();
+
+
+    // public static async loadMoreRecords(doc: vscode.TextDocument): Promise<void> {
+    //     if (!doc) {
+    //         Gui.errorMessage(vscode.l10n.t("No document found"));
+    //         return;
+    //     }
+
+    //     let uri = doc.uri;
+    //     const query = new URLSearchParams(uri.query);
+
+    //     // let startLine = parseInt(query.get("startLine")!) || 0;
+    //     // const recordsToFetch = SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 100;
+    //     // let endLine = parseInt(query.get("endLine")!) || startLine + recordsToFetch;
+    //     // console.log(`Fetching more records 1st: startLine=${startLine}, endLine=${endLine}, recordsToFetch=${recordsToFetch}`);
+
+
+    //     uri = uri.with({ query: query.toString() });
+    //     console.log("uri: " + uri);
+    //     if (uri.scheme == ZoweScheme.Jobs) {
+    //         await JobFSProvider.instance.fetchSpoolAtUri(uri);
+    //     }
+    //     let startLine = this.getStartAndEndLine.endLine;
+    //     let endLine = startLine + recordsToFetch;
+
+    //     query.set("startLine", startLine.toString());
+    //     query.set("endLine", endLine.toString());
+
+    //     console.log(`Fetching more records 2nd: startLine=${startLine}, endLine=${endLine}, recordsToFetch=${recordsToFetch}`);
+    // }
+    private static isLoadingRecords = false;
+    public static async loadMoreRecords(uri): Promise<void> {
+        if(JobActions.isLoadingRecords) {
             return;
         }
-
-        const uri = doc.uri;
-        if (uri.scheme == ZoweScheme.Jobs) {
-            await JobFSProvider.instance.fetchSpoolAtUri(uri);
+        JobActions.isLoadingRecords = true;
+        let finalUri = uri;
+        if (!finalUri) {
+            const activeTextEditor = vscode.window.activeTextEditor?.document;
+            if(!activeTextEditor) {
+                Gui.errorMessage(vscode.l10n.t("No document found"));
+                return;
+            }
+            finalUri = activeTextEditor.uri.with({query: `startLine=${activeTextEditor.lineCount - 1}`});
         }
+
+        if (finalUri.scheme === ZoweScheme.Jobs) {
+            await JobFSProvider.instance.fetchSpoolAtUri(finalUri, vscode.window.activeTextEditor);
+        }
+        JobActions.isLoadingRecords = false;
     }
+
+    // public static async loadMoreRecords(uri): Promise<void> {
+    //     if (!uri) {
+    //         Gui.errorMessage(vscode.l10n.t("No document found"));
+    //         return;
+    //     }
+
+    //     // const uri = doc.uri;
+    //     // const query = new URLSearchParams(uriKey.query);
+    //     // const recordsToFetch = SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 100;
+
+    //     // let state = JobActions.paginationState.get(uriKey.toString());
+    //     // if (!state) {
+    //     //     state = { startLine: 0, endLine: recordsToFetch - 1 };
+    //     // }
+
+    //     // console.log(`Fetching: startLine=${state.startLine}, endLine=${state.endLine}`);
+    //     // query.set("startLine", state.startLine.toString());
+    //     // query.set("endLine", state.endLine.toString());
+    //     // let uri = uriKey.with({ query: query.toString() });
+    //     // console.log("uri" + uri);
+
+    //     // try {
+    //         // const activeEditor = vscode.window.visibleTextEditors.find((v) => v.document.uri.toString() === doc.uri.toString());
+    //         if (uri.scheme === ZoweScheme.Jobs) {
+    //             await JobFSProvider.instance.fetchSpoolAtUri(uri);
+    //         }
+    //         // const nextStart = state.endLine;
+    //         // const nextEnd = nextStart + recordsToFetch;
+    //         // JobActions.paginationState.set(uri.toString(), { startLine: nextStart, endLine: nextEnd });
+    //         // console.log(`Fetching: nextStart=${nextStart}, nextEnd=${nextEnd}`);
+    //     // } catch (error) {
+    //     //     return;
+    //     // }
+    // }
+
     /**
      * Refresh a job node information and spool files in the job tree
      *
