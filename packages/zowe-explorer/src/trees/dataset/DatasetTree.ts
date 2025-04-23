@@ -977,6 +977,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         if (e.affectsConfiguration(Constants.SETTINGS_DATASETS_PER_PAGE)) {
             for (const sessionNode of this.mSessionNodes) {
                 this.refreshElement(sessionNode);
+
+                for (const child of sessionNode.children?.filter((c) => c.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) ?? []) {
+                    this.refreshElement(child);
+                }
             }
         }
     }
