@@ -679,34 +679,68 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return fileEntry?.etag;
     }
 
+    // Store all datasets in pattern order for pagination
+    private _allPatternDatasets: IZosmfListResponse[] | undefined;
+
     private async listDatasetsInRange(start?: string, limit?: number): Promise<IFetchResult<IZosFilesResponse, string>> {
         let totalItems = this.paginatorData?.totalItems;
         let lastDatasetName = this.paginatorData?.lastItemName;
-        let allDatasets: IZosmfListResponse[] = [];
-        const responses: IZosFilesResponse[] = [];
 
         try {
-            if (this.dirty || totalItems == null || lastDatasetName == null) {
+            if (this.dirty || !this._allPatternDatasets) {
                 const basicResponses: IZosFilesResponse[] = [];
                 await this.listDatasets(basicResponses, { attributes: false });
 
-                allDatasets = basicResponses
-                    .filter((r) => r.success)
-                    .reduce((arr: IZosmfListResponse[], r) => {
-                        const responseItems: IZosmfListResponse[] = Array.isArray(r.apiResponse) ? r.apiResponse : r.apiResponse?.items;
-                        return responseItems ? [...arr, ...responseItems] : arr;
-                    }, []);
+                // Group and order datasets by pattern order
+                const dsPatterns = this.pattern
+                    .toUpperCase()
+                    .split(",")
+                    .map((p) => p.trim())
+                    .filter((p) => p.length > 0);
 
+                const allDatasets: IZosmfListResponse[] = [];
+                for (let i = 0; i < dsPatterns.length; ++i) {
+                    const resp = basicResponses[i];
+                    if (resp && resp.success) {
+                        const responseItems: IZosmfListResponse[] = Array.isArray(resp.apiResponse) ? resp.apiResponse : resp.apiResponse?.items;
+                        if (responseItems) {
+                            allDatasets.push(...responseItems);
+                        }
+                    }
+                }
+
+                this._allPatternDatasets = allDatasets;
                 this.paginatorData = {
                     totalItems: allDatasets.length,
                     lastItemName: allDatasets.at(-1)?.dsname,
                 };
                 totalItems = this.paginatorData.totalItems;
                 lastDatasetName = this.paginatorData.lastItemName;
-            } else {
-                // Using cached data from the refresh to handle the page change
             }
-            await this.listDatasets(responses, { attributes: true, start, maxLength: start ? limit + 1 : limit });
+
+            // Paginate over the combined, ordered list
+            const allDatasets = this._allPatternDatasets || [];
+            let startIndex = 0;
+            if (start) {
+                startIndex = allDatasets.findIndex((item) => item.dsname === start) + 1;
+            }
+            const pageItems = allDatasets.slice(startIndex, startIndex + (limit ?? allDatasets.length));
+            const lastItem = pageItems.length > 0 ? pageItems.at(-1) : undefined;
+            const nextPageCursor =
+                limit && pageItems.length === limit && lastItem && lastDatasetName !== lastItem.dsname ? lastItem.dsname : undefined;
+
+            // Wrap in a fake IZosFilesResponse for compatibility
+            const fakeResponse: IZosFilesResponse = {
+                success: true,
+                apiResponse: { items: pageItems, returnedRows: pageItems.length },
+                commandResponse: "",
+            };
+
+            return {
+                items: [fakeResponse],
+                nextPageCursor,
+                totalItems,
+            };
         } catch (err) {
             const updated = await AuthUtils.errorHandling(err, {
                 apiType: ZoweExplorerApiType.Mvs,
@@ -716,60 +750,26 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
             return;
         }
-
-        const successfulResponses = responses
-            .filter((response) => response.success)
-            .map((resp) => {
-                if (start == null || (resp.apiResponse?.items ?? resp.apiResponse)?.find((it: IZosmfListResponse) => it.dsname === start) == null) {
-                    return resp;
-                }
-
-                // Assuming apiResponse is IZosmfListResponse[] or { items: IZosmfListResponse[] } (dataSetsMatchingPattern, dataSet)
-                const items = Array.isArray(resp.apiResponse) ? resp.apiResponse : resp.apiResponse?.items;
-                const filteredItems = items?.filter((it) => it.dsname !== start);
-
-                return {
-                    ...resp,
-                    // Reconstruct apiResponse based on its original structure
-                    apiResponse: Array.isArray(resp.apiResponse) ? filteredItems : { ...(resp.apiResponse ?? {}), items: filteredItems },
-                };
-            });
-
-        const items: IZosmfListResponse[] = successfulResponses.reduce((prev: IZosmfListResponse[], resp): IZosmfListResponse[] => {
-            const responseItems: IZosmfListResponse[] = Array.isArray(resp.apiResponse) ? resp.apiResponse : resp.apiResponse?.items;
-            return responseItems ? [...prev, ...responseItems] : prev;
-        }, []);
-
-        const lastItem = items.length > 0 ? items.at(-1) : undefined;
-
-        const nextPageCursor = limit && items.length === limit && lastItem && lastDatasetName !== lastItem.dsname ? lastItem.dsname : undefined;
-
-        return {
-            items: successfulResponses,
-            nextPageCursor,
-            totalItems,
-        };
     }
 
     public async listDatasets(responses: IZosFilesResponse[], options?: Definitions.DatasetListOpts): Promise<void> {
-        const dsPatterns = [
-            ...new Set(
-                this.pattern
-                    .toUpperCase()
-                    .split(",")
-                    .map((p) => p.trim())
-            ),
-        ];
+        // Always fetch each pattern separately and in the order provided
+        const dsPatterns = this.pattern
+            .toUpperCase()
+            .split(",")
+            .map((p) => p.trim())
+            .filter((p) => p.length > 0);
+
         const profile = options?.profile ?? Profiles.getInstance().loadNamedProfile(this.getProfile().name);
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
         if (!mvsApi.getSession(profile)) {
             ZoweLogger.warn("[ZoweDatasetNode.listDatasets] Session undefined for profile " + profile.name);
             return;
         }
-        if (mvsApi.dataSetsMatchingPattern) {
-            responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns, options));
-        } else {
-            for (const dsp of dsPatterns) {
+        for (const dsp of dsPatterns) {
+            if (mvsApi.dataSetsMatchingPattern) {
+                responses.push(await mvsApi.dataSetsMatchingPattern([dsp], options));
+            } else {
                 responses.push(await mvsApi.dataSet(dsp, options));
             }
         }
