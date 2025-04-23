@@ -102,9 +102,12 @@ jobs:
           name: zowe-explorer-vsix
           path: dist/*.vsix
 
+      - name: What is this issue id?
+        run: echo ${{ github.event.number }}
+
       - name: Report artifact
         if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '20.x'
         uses: bitonality/PRtifact@v0.1.0
         with:
           comment-mode: 'CreateOrUpdate'
-          issue-id: 3610 # temp for debugging
+          issue-id: ${{ github.event.number }}
