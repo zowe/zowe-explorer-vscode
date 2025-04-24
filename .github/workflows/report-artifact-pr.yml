@@ -1,0 +1,51 @@
+name: Report VSIX Artifact in PR
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  pull_request:
+    paths:
+      - packages/zowe-explorer/**
+      - packages/zowe-explorer-api/**
+      - .github/workflows/report-artifact-pr.yml
+
+jobs:
+  ze-build-artifact:
+    runs-on: ubuntu-22.04
+
+    timeout-minutes: 60
+        
+    if: (!contains(github.event.head_commit.message, '[ci skip]')
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - run: npm install -g pnpm@8
+
+      - run: pnpm config set network-timeout 60000 && pnpm install
+
+      - run: pnpm build
+        id: build
+
+      - name: Package VSIX
+        run: pnpm package
+        working-directory: packages/zowe-explorer
+
+      - name: Archive VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zowe-explorer-vsix
+          path: dist/*.vsix
+
+      - name: Report VSIX artifact
+        uses: bitonality/PRtifact@v0.1.0
+        with:
+          comment-mode: 'CreateOrUpdate'
