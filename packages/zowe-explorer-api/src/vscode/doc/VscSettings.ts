@@ -20,7 +20,12 @@ export class VscSettings {
      */
     public static getDirectValue<T>(key: string, defaultValue?: T): T {
         const [first, ...rest] = key.split(".");
-        return vscode.workspace.getConfiguration(first).get(rest.join("."), defaultValue);
+        const configuration = vscode.workspace.getConfiguration(first);
+        if (configuration) {
+            return configuration.get(rest.join("."), defaultValue);
+        } else {
+            return defaultValue;
+        }
     }
 
     public static getVsCodeProxySettings(): imperative.ProxyVariables {

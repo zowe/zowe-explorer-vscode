@@ -106,6 +106,7 @@ function createGlobalMocks() {
         },
         isUsingTokenAuth: jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(false),
     };
+    globalMocks.createSessCfgFromArgs.mockReturnValue(globalMocks.testSession);
 
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
     jest.spyOn(vscode.workspace.fs, "rename").mockImplementation(globalMocks.FileSystemProvider.rename);

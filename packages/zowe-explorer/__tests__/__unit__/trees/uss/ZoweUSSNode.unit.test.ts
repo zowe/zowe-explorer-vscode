@@ -83,6 +83,7 @@ function createGlobalMocks() {
         },
         loggerError: jest.spyOn(ZoweLogger, "error").mockImplementation(),
     };
+    globalMocks.createSessCfgFromArgs.mockReturnValue(globalMocks.session);
 
     globalMocks["textDocumentsMock"] = new MockedProperty(vscode.workspace, "textDocuments", undefined, globalMocks.textDocumentsArray);
     globalMocks["readTextMock"] = new MockedProperty(vscode.env.clipboard, "readText", undefined, globalMocks.readText);

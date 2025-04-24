@@ -172,5 +172,6 @@
   "filteredDataSetsSearchFor": "Search Filtered Data Sets",
   "copyExternalLink": "Copy External Link",
   "zowe.history.deprecationMsg": "Changes made here will not be reflected in Zowe Explorer, use right-click Edit History option to access information from local storage.",
-  "zowe.settings.overrideWithEnvironmentVariables": "Indicates if environment variables should override values stored in Zowe configuration profiles on disk."
+  "zowe.settings.overrideWithEnvironmentVariables": "Indicates if environment variables should override values stored in Zowe configuration profiles on disk.",
+  "zowe.settings.socketConnectTimeout": "The amount of time to wait for a connection to be initiated with the server, in milliseconds."
 }
