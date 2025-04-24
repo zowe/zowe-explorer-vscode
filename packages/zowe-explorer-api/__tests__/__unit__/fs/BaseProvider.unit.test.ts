@@ -665,6 +665,26 @@ describe("_reopenEditorForRelocatedUri", () => {
         expect(executeCmdMock).toHaveBeenCalled();
         tabGroupsMock[Symbol.dispose]();
     });
+    
+    it("gracefully handles tabs with no input URI", async () => {
+        const tab = {
+            input: null,
+            viewColumn: vscode.ViewColumn.One,
+        };
+        const tabGroupsMock = new MockedProperty(vscode.window.tabGroups, "all", undefined, [
+            {
+                isActive: true,
+                tabs: [tab],
+            },
+        ]);
+        const oldUri = globalMocks.testFileUri;
+        const newUri = globalMocks.testFileUri.with({
+            path: "/file2.txt",
+        });
+        const prov = new (BaseProvider as any)();
+        await expect(prov._reopenEditorForRelocatedUri(oldUri, newUri)).resolves.not.toThrow();
+        tabGroupsMock[Symbol.dispose]();
+    });
 });
 
 describe("onCloseEvent", () => {

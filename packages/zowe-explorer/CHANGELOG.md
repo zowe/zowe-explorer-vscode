@@ -53,6 +53,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where an invalid token in a base configuration profile will take precedence over a plaintext user/password in a service configuration profile. [#3575](https://github.com/zowe/zowe-explorer-vscode/pull/3575)
 - Fixed an issue where profiles that were not utilizing tokens were improperly running `checkJwtForProfile()` function within the `ZoweTreeProvider`. [#3575](https://github.com/zowe/zowe-explorer-vscode/pull/3575)
 - Fixed an issue where searching for the root directory (`/`) under a profile caused the profile to show a placeholder rather than a list of the files and folders at that path. [#3603](https://github.com/zowe/zowe-explorer-vscode/pull/3603)
+- Fixed an issue where dragging and dropping a USS file caused an unhandled error while finalizing the drop operation. [#3613](https://github.com/zowe/zowe-explorer-vscode/issues/3613)
 
 ## `3.1.2`
 
