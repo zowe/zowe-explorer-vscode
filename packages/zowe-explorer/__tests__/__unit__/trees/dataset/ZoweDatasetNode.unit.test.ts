@@ -1358,6 +1358,7 @@ describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
         const profile = createIProfile();
         const sessionNode = createDatasetSessionNode(createISession(), profile);
         sessionNode.pattern = "A.B.*";
+        sessionNode.tooltip = "Pattern: A.B.*";
         await expect((sessionNode as any).getDatasets(profile)).resolves.not.toThrow();
         expect(dataSet).toHaveBeenCalledWith("A.B.*", { attributes: true, profile });
         dsTreeMock.mockRestore();
