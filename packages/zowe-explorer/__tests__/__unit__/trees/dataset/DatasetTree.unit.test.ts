@@ -2189,6 +2189,36 @@ describe("Dataset Tree Unit Tests - Function onDidConfiguration", () => {
 
         expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenCalledTimes(2);
     });
+
+    it("Refreshes session nodes when pagination page size setting has changed", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.workspace.getConfiguration).mockReturnValue(blockMocks.workspaceConfiguration);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes = [blockMocks.datasetSessionNode];
+        const pdsNode = new ZoweDatasetNode({
+            label: "TEST.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            profile: globalMocks.testProfileLoaded,
+        });
+        testTree.mSessionNodes[0].children = [pdsNode];
+        const refreshElement = jest.spyOn(testTree, "refreshElement").mockImplementation();
+        const event = {
+            affectsConfiguration: jest.fn().mockImplementation((key) => key === Constants.SETTINGS_DATASETS_PER_PAGE),
+        };
+        event.affectsConfiguration.mockReturnValue(true);
+        mocked(vscode.workspace.getConfiguration).mockClear();
+
+        await testTree.onDidChangeConfiguration(event);
+
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenCalledTimes(2);
+        // verify that session node was refreshed after the page size was changed
+        expect(refreshElement).toHaveBeenCalledTimes(2);
+        expect(refreshElement).toHaveBeenCalledWith(blockMocks.datasetSessionNode);
+        expect(refreshElement).toHaveBeenCalledWith(pdsNode);
+    });
 });
 
 describe("Dataset Tree Unit Tests - Function findFavoritedNode", () => {
