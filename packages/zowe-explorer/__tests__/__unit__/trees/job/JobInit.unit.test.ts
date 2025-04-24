@@ -152,7 +152,7 @@ describe("Test src/jobs/extension", () => {
             },
             {
                 name: "zowe.jobs.loadMoreRecords",
-                mock: [{ spy: jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri"), arg: [{ scheme: ZoweScheme.Jobs }, undefined ] }],
+                mock: [{ spy: jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri"), arg: [{ scheme: ZoweScheme.Jobs }, undefined] }],
                 parm: [{ scheme: ZoweScheme.Jobs }],
             },
         ];

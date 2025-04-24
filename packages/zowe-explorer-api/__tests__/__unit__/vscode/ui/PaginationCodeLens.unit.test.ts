@@ -39,10 +39,10 @@ describe("PaginationCodeLens", () => {
                 with: function (change: { query: string }) {
                     return {
                         ...this,
-                        query: change.query
+                        query: change.query,
                     };
-                }
-            }
+                },
+            },
         } as any;
 
         const provider = new PaginationCodeLens("zowe.jobs.loadMoreRecords", () => true);
@@ -58,7 +58,6 @@ describe("PaginationCodeLens", () => {
             query: "startLine=4",
             with: expect.any(Function),
         });
-
     });
 
     it("should not provide CodeLens if shouldShowCodeLens returns false", () => {
@@ -69,10 +68,10 @@ describe("PaginationCodeLens", () => {
                 with: function (change: { query: string }) {
                     return {
                         ...this,
-                        query: change.query
+                        query: change.query,
                     };
-                }
-            }
+                },
+            },
         } as any;
 
         const provider = new PaginationCodeLens("zowe.jobs.loadMoreRecords", () => false);
@@ -89,10 +88,10 @@ describe("PaginationCodeLens", () => {
                 with: function (change: { query: string }) {
                     return {
                         ...this,
-                        query: change.query
+                        query: change.query,
                     };
-                }
-            }
+                },
+            },
         } as any;
 
         const provider = new PaginationCodeLens("zowe.jobs.loadMoreRecords", () => true);

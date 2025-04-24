@@ -255,18 +255,18 @@ export class JobActions {
 
     private static isLoadingRecords = false;
     public static async loadMoreRecords(uri): Promise<void> {
-        if(JobActions.isLoadingRecords) {
+        if (JobActions.isLoadingRecords) {
             return;
         }
         JobActions.isLoadingRecords = true;
         let finalUri = uri;
         if (!finalUri) {
             const activeTextEditor = vscode.window.activeTextEditor?.document;
-            if(!activeTextEditor) {
+            if (!activeTextEditor) {
                 Gui.errorMessage(vscode.l10n.t("No document found"));
                 return;
             }
-            finalUri = activeTextEditor.uri.with({query: `startLine=${activeTextEditor.lineCount - 1}`});
+            finalUri = activeTextEditor.uri.with({ query: `startLine=${activeTextEditor.lineCount - 1}` });
         }
 
         if (finalUri.scheme === ZoweScheme.Jobs) {

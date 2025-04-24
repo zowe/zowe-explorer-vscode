@@ -21,7 +21,7 @@ export class PaginationCodeLens implements vscode.CodeLensProvider {
         const codelens = new vscode.CodeLens(lastLineRange, {
             title: vscode.l10n.t("$(chevron-down) Load more..."),
             command: this.commandId,
-            arguments: [document.uri.with({query : `startLine=${lastLine}`})],
+            arguments: [document.uri.with({ query: `startLine=${lastLine}` })],
         });
         return this.shouldShowCodeLens?.(document) === false ? [] : [codelens];
     }

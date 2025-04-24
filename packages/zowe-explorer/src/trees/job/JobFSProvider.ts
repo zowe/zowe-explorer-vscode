@@ -262,16 +262,15 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
-        if(query.has("startLine") && !query.has("endLine")) {
+        if (query.has("startLine") && !query.has("endLine")) {
             spoolEntry.data = Buffer.concat([spoolEntry.data, bufBuilder.read() ?? new Uint8Array()]);
-        }
-        else {
+        } else {
             spoolEntry.data = bufBuilder.read() ?? new Uint8Array();
         }
         spoolEntry.mtime = Date.now();
         spoolEntry.size = spoolEntry.data.byteLength;
         if (editor) {
-            await this._updateResourceInEditor(uri.with({query: ""}));
+            await this._updateResourceInEditor(uri.with({ query: "" }));
         }
 
         return spoolEntry;
