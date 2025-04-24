@@ -26,6 +26,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - BugFix: Fixed an issue within the `shouldRemoveTokenFromProfile()` function where a the token type check was occurring on a service profile rather than the base profile. [#3575](https://github.com/zowe/zowe-explorer-vscode/pull/3575)
 - Updated dependencies for technical currency purposes. [#3576](https://github.com/zowe/zowe-explorer-vscode/pull/3576)
 - Fixed issue where webviews may register their `onDidReceiveMessage` event multiple times in the `resolveForView` function. [#3584](https://github.com/zowe/zowe-explorer-vscode/pull/3584)
+- Fixed an issue where the `BaseProvider._reopenEditorForRelocatedUri` function threw an exception when an open tab did not have a URI on its `input` property. [#3613](https://github.com/zowe/zowe-explorer-vscode/issues/3613)
 
 ## `3.1.2`
 
