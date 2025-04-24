@@ -629,8 +629,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             }
             // Get session for sessionNode
             syncSessionNode((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue), node);
-            // Sanitization: Replace multiple forward slashes with just one forward slash
-            const sanitizedPath = remotepath.replace(/\/+/g, "/").replace(/(\/*)$/, "");
+            // Sanitization: Replace multiple forward slashes with one forward slash & remove trailing forward slashes
+            const sanitizedPath = remotepath.replace(/\/{2,}/g, "/").replace(/(.+?)\/*$/, "$1");
             sessionNode.tooltip = sessionNode.fullPath = sanitizedPath;
             const icon = getIconByNode(sessionNode);
             if (icon) {

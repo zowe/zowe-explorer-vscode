@@ -525,7 +525,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         return newMocks;
     }
 
-    it("Tests that filter() works properly when user enters path", async () => {
+    it("works properly when user enters path", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -536,7 +536,18 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/U/HARRY");
     });
 
-    it("Tests that filter() makes the call to get the combined session information", async () => {
+    it("works properly when user enters the root path (/)", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.qpValue = "/";
+        globalMocks.showInputBox.mockReturnValueOnce("/");
+
+        await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/");
+    });
+
+    it("makes the call to get the combined session information", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         blockMocks.qpValue = "/U/HLQ";
@@ -548,7 +559,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         expect(syncSessionNodeSpy).toBeCalledTimes(1);
     });
 
-    it("Tests that filter() works properly when user enters path with Unverified profile", async () => {
+    it("works properly when user enters path with Unverified profile", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -572,7 +583,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/U/HARRY");
     });
 
-    it("Tests that filter() exits when user cancels out of input field", async () => {
+    it("exits when user cancels out of input field", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -583,7 +594,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         expect(globalMocks.showInformationMessage.mock.calls[0][0]).toBe("You must enter a path.");
     });
 
-    it("Tests that filter() works on a file", async () => {
+    it("works on a file path", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -595,7 +606,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/U/HLQ/STUFF");
     });
 
-    it("Tests that filter() exits when user cancels the input path box", async () => {
+    it("exits when user cancels the input path box", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -606,7 +617,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         expect(globalMocks.showInformationMessage.mock.calls[0][0]).toBe("No selection made. Operation cancelled.");
     });
 
-    it("Tests that filter() works when new path is specified (Theia)", async () => {
+    it("works when new path is specified (Theia)", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -619,7 +630,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/u/myFiles");
     });
 
-    it("Tests that filter() exits when user cancels the input path box (Theia)", async () => {
+    it("exits when user cancels the input path box (Theia)", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -632,7 +643,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         expect(globalMocks.showInformationMessage.mock.calls[0][0]).toBe("You must enter a path.");
     });
 
-    it("Tests that filter() works with a file (Theia)", async () => {
+    it("works with a file (Theia)", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -645,7 +656,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/u/thisFile");
     });
 
-    it("Tests that filter() exits when no selection made (Theia)", async () => {
+    it("exits when no selection made (Theia)", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -657,7 +668,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         expect(globalMocks.showInformationMessage.mock.calls[0][0]).toBe("No selection made. Operation cancelled.");
     });
 
-    it("Tests that filter() works correctly for favorited search nodes with credentials", async () => {
+    it("works correctly for favorited search nodes with credentials", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -680,7 +691,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         });
     });
 
-    it("Tests that filter() works correctly for favorited search nodes without credentials", async () => {
+    it("works correctly for favorited search nodes without credentials", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
