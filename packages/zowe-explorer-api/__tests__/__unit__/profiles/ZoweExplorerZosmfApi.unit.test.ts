@@ -21,6 +21,7 @@ import { ZoweExplorerZosmf } from "../../../src/profiles/ZoweExplorerZosmfApi";
 import { FileManagement } from "../../../src/utils/FileManagement";
 import { MainframeInteraction } from "../../../src/extend";
 import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
+import { VscSettings } from "../../../src/vscode/doc/VscSettings";
 
 type ParametersWithProfileArgs<F> = F extends (...args: infer P) => any ? [...Parameters<F>, profileProperties?: object] : never;
 
@@ -224,10 +225,18 @@ describe("ZosmfUssApi", () => {
     });
 
     describe("misc", () => {
-        fakeSession.ISession.user = fakeProfile.user;
-        fakeSession.ISession.password = fakeProfile.password;
-        fakeSession.ISession.basePath = fakeProfile.basePath;
-        jest.spyOn(ProfilesCache, "getProfileSessionWithVscProxy").mockReturnValue(fakeSession as any);
+        const getProfileSessionWithVscProxySpy = jest.spyOn(ProfilesCache, "getProfileSessionWithVscProxy").mockImplementation((session) => {
+            session.ISession.user = fakeProfile.user;
+            session.ISession.password = fakeProfile.password;
+            session.ISession.basePath = fakeProfile.basePath;
+            return session;
+        });
+        let getDirectValueSpy: jest.SpyInstance;
+
+        afterAll(() => {
+            getProfileSessionWithVscProxySpy.mockRestore();
+            getDirectValueSpy.mockRestore();
+        });
 
         it("uploads a file from buffer", async () => {
             const uploadFileSpy = jest.spyOn(zosfiles.Upload, "bufferToUssFile").mockImplementation();
@@ -255,6 +264,23 @@ describe("ZosmfUssApi", () => {
             delete sessCfg["host"];
             delete sessCfg["responseTimeout"];
             expect(session.ISession).toMatchObject(sessCfg);
+        });
+
+        it("getSessionFromCommandArgument should build session from arguments and modify the session socket connection timeout", () => {
+            const zosmfApi = new ZoweExplorerZosmf.UssApi(loadedProfile);
+            getDirectValueSpy = jest.spyOn(VscSettings, "getDirectValue").mockReturnValueOnce(30000);
+            const session = zosmfApi.getSessionFromCommandArgument(fakeProfile as unknown as imperative.ICommandArguments);
+            expect(session).toBeDefined();
+            const sessCfg: imperative.ISession = {
+                ...fakeProfile,
+                hostname: fakeProfile.host,
+                type: imperative.SessConstants.AUTH_TYPE_BASIC,
+                socketConnectTimeout: 30000,
+            };
+            delete sessCfg["host"];
+            delete sessCfg["responseTimeout"];
+            expect(session.ISession).toMatchObject(sessCfg);
+            expect(getDirectValueSpy).toHaveBeenCalledTimes(1);
         });
 
         it("getSession should build session from profile with user and password", () => {

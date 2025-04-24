@@ -102,6 +102,7 @@ function createGlobalMocks(): { [key: string]: any } {
             createDirectory: jest.fn(),
         },
     };
+    newMocks.mockCreateSessCfgFromArgs.mockReturnValue(newMocks.testSession);
 
     jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
     jest.spyOn(JobFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
