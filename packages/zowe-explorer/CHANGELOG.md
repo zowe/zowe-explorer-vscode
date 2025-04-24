@@ -33,6 +33,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+-BugFix: Fixed an issue with job spool pagination where the load more button did not work for spools files greater than the default record length. [#3600](https://github.com/zowe/zowe-explorer-vscode/issues/3600)
 - Fixed an issue where edit history does not show the correct information. [#3432](https://github.com/zowe/zowe-explorer-vscode/issues/3432)
 - Fixed an issue where the 'Delete' key binding for the USS tree returns a 'contextValue' error. [#2796](https://github.com/zowe/zowe-explorer-vscode/issues/2796)
 - Fixed an issue where cancelling Unix, MVS or TSO command still submits the command. [#3422](https://github.com/zowe/zowe-explorer-vscode/issues/3422)
