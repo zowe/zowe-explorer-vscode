@@ -152,8 +152,8 @@ describe("Test src/jobs/extension", () => {
             },
             {
                 name: "zowe.jobs.loadMoreRecords",
-                mock: [{ spy: jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri"), arg: [{ scheme: ZoweScheme.Jobs }] }],
-                parm: [{ uri: { scheme: ZoweScheme.Jobs } }],
+                mock: [{ spy: jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri"), arg: [{ scheme: ZoweScheme.Jobs }, undefined ] }],
+                parm: [{ scheme: ZoweScheme.Jobs }],
             },
         ];
 
@@ -189,6 +189,7 @@ describe("Test src/jobs/extension", () => {
 
             spyCreateJobsTree.mockResolvedValue(jobsProvider as any);
             await JobInit.initJobsProvider(test.context);
+            await JobActions.loadMoreRecords({ scheme: ZoweScheme.Jobs });
         });
         beforeEach(() => {
             spyCreateJobsTree.mockResolvedValue(jobsProvider as any);
