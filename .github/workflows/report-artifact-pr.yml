@@ -6,6 +6,8 @@ permissions:
 
 on:
   pull_request:
+    branches:
+      - main
     paths:
       - packages/zowe-explorer/**
       - packages/zowe-explorer-api/**
