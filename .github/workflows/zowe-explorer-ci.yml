@@ -1,13 +1,7 @@
 name: Zowe Explorer CI
 
-permissions:
-  contents: write
-  pull-requests: write
-
 on:
   push:
-    branches: # temp to figure this out
-      - main
     paths:
       - packages/zowe-explorer/**
       - packages/zowe-explorer-api/**
@@ -32,13 +26,11 @@ jobs:
       # Continue to run tests on the other systems if one fails
       fail-fast: false
       matrix:
-        # node-version: [18.x, 20.x, 22.x]
-        node-version: [20.x] # temp for debugging
+        node-version: [18.x, 20.x, 22.x]
         # order operating systems from best to worst
-        #os: [windows-latest, ubuntu-22.04, macos-latest]
-        os: [ubuntu-22.04] # temp for debugging
+        os: [windows-latest, ubuntu-22.04, macos-latest]
         
-    #if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
+    if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
 
     steps:
       - name: Check out code
@@ -105,10 +97,6 @@ jobs:
         with:
           name: zowe-explorer-vsix
           path: dist/*.vsix
-
-      - name: Report Artifact
-        if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '20.x'
-        uses: bitonality/PRtifact@v0.1.0
         with:
           handlebars-template: './.github/resources/artifact-template.hbs'
           comment-mode: 'CreateOrUpdate'
