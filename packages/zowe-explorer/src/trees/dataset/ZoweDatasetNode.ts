@@ -687,6 +687,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         try {
             if (this.dirty || totalItems == null || lastDatasetName == null) {
+                // Rebuild cache to handle future page changes
                 const basicResponses: IZosFilesResponse[] = [];
                 await this.listDatasets(basicResponses, { attributes: false });
 
@@ -703,8 +704,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 };
                 totalItems = this.paginatorData.totalItems;
                 lastDatasetName = this.paginatorData.lastItemName;
-            } else {
-                // Using cached data from the refresh to handle the page change
             }
             await this.listDatasets(responses, { attributes: true, start, maxLength: start ? limit + 1 : limit });
         } catch (err) {
@@ -760,6 +759,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     .map((p) => p.trim())
             ),
         ];
+        if (this.itemsPerPage > 0) {
+            // Sort patterns alphabetically for proper page traversal with patterns in descending alphabetical order
+            dsPatterns.sort((a, b) => a.localeCompare(b));
+        }
         const profile = options?.profile ?? Profiles.getInstance().loadNamedProfile(this.getProfile().name);
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
         if (!mvsApi.getSession(profile)) {
@@ -915,14 +918,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         try {
             // Lazy initialization or re-initialization of paginator if needed
             const fetchFunction = isSession ? this.listDatasetsInRange.bind(this) : this.listMembersInRange.bind(this);
-            this.itemsPerPage = SettingsConfig.getDirectValue<number>("zowe.ds.paginate.datasetsPerPage") ?? Constants.DEFAULT_ITEMS_PER_PAGE;
+            this.itemsPerPage = SettingsConfig.getDirectValue<number>(Constants.SETTINGS_DATASETS_PER_PAGE) ?? Constants.DEFAULT_ITEMS_PER_PAGE;
 
             if (isSession && patternChanged) {
                 // Check if pattern changed for session
                 this.paginator = this.paginatorData = undefined;
             }
 
-            if (!this.paginator || this.paginator.getMaxItemsPerPage() !== this.itemsPerPage) {
+            if ((!this.paginator || this.paginator.getMaxItemsPerPage() !== this.itemsPerPage) && this.itemsPerPage > 0) {
                 // Force paginator and data to be re-initialized if fetch function or page size changes, or if pattern changes
                 this.paginator = new Paginator(this.itemsPerPage, fetchFunction);
             }

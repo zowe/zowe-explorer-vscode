@@ -387,7 +387,7 @@
     "Messages about catastraphic error events.": ""
   },
   "zowe.cliLoggerSetting.presented": {
-    "User has been asked to sync Zowe Explorer log setting with Zowe CL's environment variable.": ""
+    "User has been asked to sync Zowe Explorer log setting with Zowe CLI's environment variable.": ""
   },
   "zowe.commands.mvs.history": {
     "Toggle if MVS Commands persist locally": ""
