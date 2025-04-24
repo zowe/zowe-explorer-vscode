@@ -34,7 +34,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 -BugFix: Fixed an issue with job spool pagination where the load more button did not work for spools files greater than the default record length. [#3600](https://github.com/zowe/zowe-explorer-vscode/issues/3600)
-
+- Replaced an import of ILocalStorageAccess from "@zowe/zowe-explorer-api/src/extend/ILocalStorageAccess" to "@zowe/zowe-explorer-api" [#3606](https://github.com/zowe/zowe-explorer-vscode/issues/3606)
 - Fixed an issue where edit history does not show the correct information. [#3432](https://github.com/zowe/zowe-explorer-vscode/issues/3432)
 - Fixed an issue where the 'Delete' key binding for the USS tree returns a 'contextValue' error. [#2796](https://github.com/zowe/zowe-explorer-vscode/issues/2796)
 - Fixed an issue where cancelling Unix, MVS or TSO command still submits the command. [#3422](https://github.com/zowe/zowe-explorer-vscode/issues/3422)
@@ -53,6 +53,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where multiple directories with the same name could not be favorited in the USS tree. [#3590](https://github.com/zowe/zowe-explorer-vscode/pull/3590)
 - Fixed an issue where an invalid token in a base configuration profile will take precedence over a plaintext user/password in a service configuration profile. [#3575](https://github.com/zowe/zowe-explorer-vscode/pull/3575)
 - Fixed an issue where profiles that were not utilizing tokens were improperly running `checkJwtForProfile()` function within the `ZoweTreeProvider`. [#3575](https://github.com/zowe/zowe-explorer-vscode/pull/3575)
+- Fixed an issue where searching for the root directory (`/`) under a profile caused the profile to show a placeholder rather than a list of the files and folders at that path. [#3603](https://github.com/zowe/zowe-explorer-vscode/pull/3603)
 
 ## `3.1.2`
 
