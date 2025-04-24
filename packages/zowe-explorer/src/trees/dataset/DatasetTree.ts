@@ -1315,6 +1315,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 nonFavNode.getSession().ISession.base64EncodedAuth = node.getSession().ISession.base64EncodedAuth;
             }
         }
+        AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getMvsApi(profile), node);
         // looking for members in pattern
         node.patternMatches = this.extractPatterns(pattern);
         const dsPattern = this.buildFinalPattern(node.patternMatches);
