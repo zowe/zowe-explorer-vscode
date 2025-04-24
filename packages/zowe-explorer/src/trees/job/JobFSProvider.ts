@@ -228,13 +228,13 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         if (query.has("startLine")) {
             const startLine = parseInt(query.get("startLine")!);
             const endLine = query.has("endLine")
-                ? parseInt(query.get("endLine")!)
-                : startLine + (SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 0);
+                ? (parseInt(query.get("endLine")!))
+                : (startLine + (SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 0)) - 1;
             recordRange = `${startLine}-${endLine}`;
         } else {
             const defFetchSetting = SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 0;
             if (defFetchSetting > 0) {
-                recordRange = `0-${defFetchSetting}`;
+                recordRange = `0-${defFetchSetting - 1}`;
             }
         }
         try {

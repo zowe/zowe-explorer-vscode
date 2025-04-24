@@ -323,14 +323,14 @@ describe("fetchSpoolAtUri", () => {
             supportSpoolPagination: () => true,
             downloadSingleSpool: jest.fn((opts) => {
                 expect(SettingsConfig.getDirectValue("zowe.jobs.paginate.enabled")).toBe(true);
-                expect(opts.recordRange).toBe("10-30");
+                expect(opts.recordRange).toBe("19-38");
                 opts.stream.write(newData);
             }),
         };
 
         const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
 
-        const uriWithQuery = vscode.Uri.parse(testUris.spool.toString() + "?startLine=10");
+        const uriWithQuery = vscode.Uri.parse(testUris.spool.toString() + "?startLine=19");
 
         const entry = await JobFSProvider.instance.fetchSpoolAtUri(uriWithQuery);
 
@@ -394,7 +394,7 @@ describe("fetchSpoolAtUri", () => {
 
         const downloadMock = jest.fn((opts) => {
             expect(SettingsConfig.getDirectValue("zowe.jobs.paginate.enabled")).toBe(true);
-            expect(opts.recordRange).toBe(`0-${defaultFetchSetting}`);
+            expect(opts.recordRange).toBe(`0-${defaultFetchSetting - 1}`);
             opts.stream.write("test data");
         });
         const mockJesApi = {
