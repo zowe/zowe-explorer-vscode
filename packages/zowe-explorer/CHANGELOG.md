@@ -30,6 +30,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added a new "Override with Environment Variables" setting. When selected, Zowe Explorer prioritizes values from environment variables for properties when loading the user's team configuration. [#3591](https://github.com/zowe/zowe-explorer-vscode/pull/3591)
 - Implemented rich hover for Zowe Explorer profiles to show connection information. [#3580](https://github.com/zowe/zowe-explorer-vscode/pull/3580)
 - Added pagination support for data sets and PDS members. Now, the **Data Sets** tree view provides navigation controls and separates the list of items into pages. Users can configure the maximum amount of data sets to list per page by changing the **Zowe -> Ds -> Paginate: Data Sets Per Page** setting. [#3585](https://github.com/zowe/zowe-explorer-vscode/pull/3585)
+- THIS IS A TEMP CHANGE
 
 ### Bug fixes
 
