@@ -184,8 +184,11 @@ describe("Test src/jobs/extension", () => {
                 if (key === "zowe.jobs.paginate.enabled") {
                     return true;
                 }
-                return originalGetDirectValue(key);
+                if (key === "zowe.jobs.paginate.recordsToFetch") {
+                    return 20;
+                }
             });
+
 
             spyCreateJobsTree.mockResolvedValue(jobsProvider as any);
             await JobInit.initJobsProvider(test.context);
