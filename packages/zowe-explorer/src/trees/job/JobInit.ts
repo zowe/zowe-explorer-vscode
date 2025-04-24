@@ -162,7 +162,8 @@ export class JobInit {
         );
 
         const paginationEnabled = SettingsConfig.getDirectValue<boolean>("zowe.jobs.paginate.enabled");
-        if (paginationEnabled) {
+        const recordsToFetch = SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch");
+        if (paginationEnabled && recordsToFetch >= 1) {
             context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.loadMoreRecords", (uri) => JobActions.loadMoreRecords(uri)));
             vscode.languages.registerCodeLensProvider(
                 { scheme: ZoweScheme.Jobs },
