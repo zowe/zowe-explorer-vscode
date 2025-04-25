@@ -179,7 +179,6 @@ describe("Test src/jobs/extension", () => {
                 configurable: true,
             });
 
-            const originalGetDirectValue = SettingsConfig.getDirectValue;
             jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key: string) => {
                 if (key === "zowe.jobs.paginate.enabled") {
                     return true;
