@@ -454,14 +454,6 @@ describe("Extension Unit Tests", () => {
             },
         });
 
-        const originalGetDirectValue = SettingsConfig.getDirectValue;
-        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key: string) => {
-            if (key === "zowe.jobs.settings.pagination") {
-                return true;
-            }
-            return originalGetDirectValue.call(SettingsConfig, key);
-        });
-
         await extension.activate(globalMocks.mockExtension);
 
         // Check that tree providers are initialized successfully

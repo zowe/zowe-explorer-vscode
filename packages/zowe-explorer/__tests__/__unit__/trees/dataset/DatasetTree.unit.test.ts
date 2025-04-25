@@ -4081,7 +4081,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             [blockMocks.datasetPdsNode.resourceUri.path]: blockMocks.datasetPdsNode,
         });
         await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer, undefined);
-        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a sequential dataset or a partitioned dataset onto another PDS.");
+        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a sequential dataset or a partitioned dataset onto another partitioned dataset.");
         draggedNodeMock[Symbol.dispose]();
     });
 
@@ -4102,7 +4102,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             [blockMocks.memberNode.resourceUri.path]: blockMocks.memberNode,
         });
         await testTree.handleDrop(blockMocks.datasetSeqNode, dataTransfer, undefined);
-        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a member onto a sequential dataset.");
+        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a partitioned dataset or member onto a sequential dataset.");
         draggedNodeMock[Symbol.dispose]();
     });
 
