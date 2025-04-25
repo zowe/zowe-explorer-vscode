@@ -1327,7 +1327,14 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 nonFavNode.getSession().ISession.base64EncodedAuth = node.getSession().ISession.base64EncodedAuth;
             }
         }
-        AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getMvsApi(profile), node);
+        let profile: imperative.IProfileLoaded;
+        try {
+            profile = Constants.PROFILES_CACHE.loadNamedProfile(node.getProfileName());
+        } catch (e) {
+            ZoweLogger.warn(e);
+            return;
+        }
+        await AuthUtils.updateNodeToolTip(node, profile);
         // looking for members in pattern
         node.patternMatches = this.extractPatterns(pattern);
         const dsPattern = this.buildFinalPattern(node.patternMatches);
