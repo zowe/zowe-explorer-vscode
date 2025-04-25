@@ -473,7 +473,7 @@ export class ProfilesUtils {
                 }
                 node.tooltip = toolTipList.join("\n");
                 if (node) {
-                    void node.getChildren().then(() => SharedTreeProviders.getProviderForNode(node).refreshElement(node));
+                    SharedTreeProviders.getProviderForNode(node).refreshElement(node);
                 }
             }
             ZoweLogger.info(successMsg);
