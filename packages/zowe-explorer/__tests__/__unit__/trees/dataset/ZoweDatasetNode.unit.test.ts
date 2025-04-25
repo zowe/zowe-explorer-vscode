@@ -1365,6 +1365,48 @@ describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
         mvsApiMock.mockRestore();
     });
 
+    it("sorts dataset patterns when pagination is enabled to ensure proper cursor navigation", async () => {
+        const pageOne = Array.from({ length: 100 }).map((_, i) => (i < 10 ? `A.${i}` : `B.${i}`));
+        const pageTwo = Array.from({ length: 13 }).map((_, i) => (i < 10 ? `B.${i + 100}` : `SYS1.${i - 10}`));
+        const allItems = pageOne.concat(pageTwo);
+
+        const dataSetsMatchingPattern = jest
+            .fn()
+            .mockResolvedValueOnce({
+                success: true,
+                apiResponse: allItems,
+            })
+            .mockResolvedValueOnce({
+                success: true,
+                apiResponse: pageOne.map((dsname) => ({ dsname, dsorg: "PO" })),
+            });
+
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+            getSession: jest.fn().mockReturnValue(createISession()),
+            dataSetsMatchingPattern,
+        } as any);
+        const profile = createIProfile();
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue(createInstanceOfProfile(profile));
+        const sessionNode = createDatasetSessionNode(createISession(), profile);
+        sessionNode.dirty = false;
+        const dsTree = createDatasetTree(sessionNode, jest.fn());
+        const dsTreeMock = jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(dsTree);
+        sessionNode.pattern = "B.*,SYS1.*,A.*";
+        await expect((sessionNode as any).getDatasets(profile, true)).resolves.not.toThrow();
+        // expect full list to be fetched in alphabetical order
+        expect(dataSetsMatchingPattern).toHaveBeenCalledWith(["A.*", "B.*", "SYS1.*"], {
+            attributes: false,
+        });
+        // expect second call to fetch first X items
+        expect(dataSetsMatchingPattern).toHaveBeenCalledWith(["A.*", "B.*", "SYS1.*"], {
+            attributes: true,
+            maxLength: 100,
+        });
+        dsTreeMock.mockRestore();
+        mvsApiMock.mockRestore();
+        profilesMock.mockRestore();
+    });
+
     it("calls listMembers() - pagination off, node is a PDS", async () => {
         const profile = createIProfile();
         const sessionNode = new ZoweDatasetNode({

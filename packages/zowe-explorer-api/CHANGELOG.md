@@ -6,9 +6,12 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added the handling of cause error details in the ErrorCorrelator. [#3611](https://github.com/zowe/zowe-explorer-vscode/pull/3611)
+- Added hostname validation to prevent encountering a VSCode Proxy bug that occurs when attempting to connect to a z/OSMF server with the protocol specified as part of the hostname. [#3364](https://github.com/zowe/zowe-explorer-vscode/issues/3364)
+- Added a `zowe.settings.socketConnectTimeout` setting to provide users with the ability to specify a connection timeout for REST requests. [#3379](https://github.com/zowe/zowe-explorer-vscode/issues/3379)
 - Added functionality and code lens for pagination in job spool files. [#1787](https://github.com/zowe/zowe-explorer-vscode/issues/1787)
 - Updated the `Gui.showQuickPick` function to support selecting more than one `quickPickItem`. [#3526](https://github.com/zowe/zowe-explorer-vscode/pull/3526)
-- Updated Zowe SDKs to `8.16.0` to include the latest enhancements from Imperative and the z/OS Files SDK. [#3526](https://github.com/zowe/zowe-explorer-vscode/pull/3526)
+- Updated Zowe SDKs to `8.19.0` to include the latest enhancements from Imperative and the z/OS Files SDK. [#3526](https://github.com/zowe/zowe-explorer-vscode/pull/3526)
 - Added optional `addSearchedKeywordHistory`, `getSearchedKeywordHistory`, `removeSearchedKeywordHistory`, and `resetSearchedKeywordHistory` functions to the `IZoweTree` interface to provide the ability to search for previously searched keywords. [#3526](https://github.com/zowe/zowe-explorer-vscode/pull/3526)
 - Added new `copyDataSetCrossLpar` API to provide ability to copy/paste data sets across LPARs. [#3012](https://github.com/zowe/zowe-explorer-vscode/issues/3012)
 - Added new `directConnectLogin` and `directConnectLogout` to the ZoweVsCodeExtension class. [#3346](https://github.com/zowe/zowe-explorer-vscode/issues/3346)
@@ -24,6 +27,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - BugFix: Fixed an issue within the `shouldRemoveTokenFromProfile()` function where a the token type check was occurring on a service profile rather than the base profile. [#3575](https://github.com/zowe/zowe-explorer-vscode/pull/3575)
 - Updated dependencies for technical currency purposes. [#3576](https://github.com/zowe/zowe-explorer-vscode/pull/3576)
 - Fixed issue where webviews may register their `onDidReceiveMessage` event multiple times in the `resolveForView` function. [#3584](https://github.com/zowe/zowe-explorer-vscode/pull/3584)
+- Fixed an issue where the `BaseProvider._reopenEditorForRelocatedUri` function threw an exception when an open tab did not have a URI on its `input` property. [#3613](https://github.com/zowe/zowe-explorer-vscode/issues/3613)
 
 ## `3.1.2`
 

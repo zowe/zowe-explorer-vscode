@@ -325,7 +325,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (element.contextValue && element.contextValue === Constants.FAV_PROFILE_CONTEXT) {
                 return this.loadProfilesForFavorites(this.log, element);
             }
-            const response = await element.getChildren(true);
+            const response = await element.getChildren(
+                SettingsConfig.getDirectValue<number>(Constants.SETTINGS_DATASETS_PER_PAGE, Constants.DEFAULT_ITEMS_PER_PAGE) > 0
+            );
 
             const finalResponse: IZoweDatasetTreeNode[] = [];
             for (const item of response) {
@@ -968,6 +970,16 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 // each entry is a profile, we need to update sort order for its children
                 for (const child of favProfile.children) {
                     this.updateSortForNode(child, sortOpts, false);
+                }
+            }
+        }
+
+        if (e.affectsConfiguration(Constants.SETTINGS_DATASETS_PER_PAGE)) {
+            for (const sessionNode of this.mSessionNodes) {
+                this.refreshElement(sessionNode);
+
+                for (const child of sessionNode.children?.filter((c) => c.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) ?? []) {
+                    this.refreshElement(child);
                 }
             }
         }
