@@ -102,6 +102,7 @@ function createGlobalMocks(): { [key: string]: any } {
             createDirectory: jest.fn(),
         },
     };
+    newMocks.mockCreateSessCfgFromArgs.mockReturnValue(newMocks.testSession);
 
     jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
     jest.spyOn(JobFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
@@ -890,7 +891,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
             }),
         } as any);
         jest.spyOn(Profiles.getInstance(), "getLoadedProfConfig").mockResolvedValue(globalMocks.testProfile);
-        jest.spyOn(Profiles.getInstance(), "getSecurePropsForProfile").mockResolvedValue([]);
+        jest.spyOn(Profiles.getInstance(), "getPropsForProfile").mockResolvedValue([]);
         Object.defineProperty(Constants, "PROFILES_CACHE", { value: Profiles.getInstance(), configurable: true });
     };
 
@@ -947,7 +948,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         const globalMocks = await createGlobalMocks();
         setupProfilesCheck(globalMocks);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockRejectedValueOnce(new Error("test error"));
-        jest.spyOn(Profiles.getInstance(), "getSecurePropsForProfile").mockImplementationOnce(Profiles.getInstance().getProfileInfo as any);
+        jest.spyOn(Profiles.getInstance(), "getPropsForProfile").mockImplementationOnce(Profiles.getInstance().getProfileInfo as any);
         jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("");
         const errorSpy = jest.spyOn(ZoweLogger, "error");
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
@@ -976,6 +977,129 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         };
         jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
         await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
+    });
+
+    it("To check updated autoStore value", async () => {
+        const globalMocks = createGlobalMocks();
+        environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks);
+        const testNode = new (ZoweTreeNode as any)(
+            "test",
+            vscode.TreeItemCollapsibleState.None,
+            undefined,
+            globalMocks.testSession,
+            globalMocks.testProfile
+        );
+        jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: () => ({
+                properties: {
+                    autoStore: false,
+                },
+                set: jest.fn(),
+                delete: jest.fn(),
+                save: jest.fn(),
+            }),
+            getAllProfiles: jest.fn(),
+            mergeArgsForProfile: jest.fn(),
+        } as any);
+        const promptCredentialsSpy = jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValueOnce(["sestest", "12345"]);
+        testNode.tooltip = "Auto Store: true\n";
+        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile, testNode)).resolves.toEqual({
+            name: "sestest",
+            status: "active",
+        });
+        expect(promptCredentialsSpy).toHaveBeenCalledTimes(1);
+        expect(testNode.tooltip).toContain("Auto Store: false");
+    });
+
+    it("To check updated Config File Location", async () => {
+        const globalMocks = createGlobalMocks();
+        environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks);
+        const testNode = new (ZoweTreeNode as any)(
+            "test",
+            vscode.TreeItemCollapsibleState.None,
+            undefined,
+            globalMocks.testSession,
+            globalMocks.testProfile
+        );
+
+        jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: () => ({
+                properties: {
+                    autoStore: false,
+                },
+                set: jest.fn(),
+                delete: jest.fn(),
+                save: jest.fn(),
+            }),
+            layers: [
+                {
+                    path: "file://projectPath/zowe.config.user.json",
+                    exists: true,
+                    properties: undefined,
+                    global: false,
+                    user: true,
+                },
+                {
+                    path: "file://globalPath/.zowe/zowe.config.json",
+                    exists: true,
+                    properties: undefined,
+                    global: true,
+                    user: false,
+                },
+            ],
+            getAllProfiles: jest.fn(),
+            mergeArgsForProfile: jest.fn(),
+        } as any);
+
+        jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
+        const promptCredentialsSpy = jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValueOnce(["sestest", "12345"]);
+        testNode.tooltip = "Auto Store: true\nConfig File: Global";
+        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile, testNode)).resolves.toEqual({
+            name: "sestest",
+            status: "active",
+        });
+        expect(promptCredentialsSpy).toHaveBeenCalledTimes(1);
+        expect(testNode.tooltip).toContain("Config File: Global");
+    });
+
+    it("To check updated Secure Credentials value", async () => {
+        const globalMocks = createGlobalMocks();
+        environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks);
+        const testNode = new (ZoweTreeNode as any)(
+            "test",
+            vscode.TreeItemCollapsibleState.None,
+            undefined,
+            globalMocks.testSession,
+            globalMocks.testProfile
+        );
+        jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: () => ({
+                properties: {
+                    autoStore: false,
+                },
+                set: jest.fn(),
+                delete: jest.fn(),
+                save: jest.fn(),
+            }),
+            getAllProfiles: jest.fn(),
+            mergeArgsForProfile: jest.fn(),
+        } as any);
+        const promptCredentialsSpy = jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValueOnce(["sestest", "12345"]);
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
+        testNode.tooltip = "Auto Store: true\nSecure Credentials Enabled: false";
+        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile, testNode)).resolves.toEqual({
+            name: "sestest",
+            status: "active",
+        });
+        expect(promptCredentialsSpy).toHaveBeenCalledTimes(1);
+        expect(testNode.tooltip).toContain("Auto Store: false");
+        expect(testNode.tooltip).toContain("Secure Credentials Enabled: true");
     });
 });
 
@@ -1177,7 +1301,9 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         jest.spyOn(AuthUtils, "isProfileUsingBasicAuth").mockReturnValueOnce(true);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             getTeamConfig: () => ({
-                properties: jest.fn(),
+                properties: {
+                    autoStore: true,
+                },
                 set: jest.fn(),
                 delete: jest.fn(),
                 save: jest.fn(),
@@ -1219,6 +1345,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             tokenValue: undefined,
             secure: ["user", "password"],
         };
+        testNode.tootTip = "";
         modifiedTestNode.profile.profile = {
             type: "zosmf",
             host: "test",
@@ -1251,7 +1378,9 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         jest.spyOn(AuthUtils, "isProfileUsingBasicAuth").mockReturnValueOnce(true);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             getTeamConfig: () => ({
-                properties: jest.fn(),
+                properties: {
+                    autoStore: true,
+                },
                 set: jest.fn(),
                 delete: jest.fn(),
                 save: jest.fn(),
@@ -1277,6 +1406,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             tokenValue: undefined,
             secure: ["user", "password"],
         };
+        testNode.tootTip = "";
         modifiedTestNode.profile.profile = {
             type: "zosmf",
             host: "test",
@@ -1289,6 +1419,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             tokenValue: undefined,
             secure: ["user", "password"],
         };
+        testNode.tooltip = "";
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValue({ label: "Yes" } as vscode.QuickPickItem);
         jest.spyOn(Gui, "errorMessage").mockImplementation();
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
@@ -1310,7 +1441,9 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         jest.spyOn(AuthUtils, "isProfileUsingBasicAuth").mockReturnValueOnce(true);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             getTeamConfig: () => ({
-                properties: jest.fn(),
+                properties: {
+                    autoStore: true,
+                },
                 set: jest.fn(),
                 delete: jest.fn(),
                 save: jest.fn(),
@@ -1352,6 +1485,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             tokenValue: undefined,
             secure: ["user", "password"],
         };
+        testNode.toolTip = "";
         modifiedTestNode.profile.profile = {
             type: "zosmf",
             host: "test",
@@ -1383,7 +1517,9 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         jest.spyOn(AuthUtils, "isProfileUsingBasicAuth").mockReturnValueOnce(true);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             getTeamConfig: () => ({
-                properties: jest.fn(),
+                properties: {
+                    autoStore: true,
+                },
                 set: jest.fn(),
                 delete: jest.fn(),
                 save: jest.fn(),
@@ -1409,6 +1545,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             tokenValue: undefined,
             secure: ["user", "password"],
         };
+        testNode.tooltip = "";
         modifiedTestNode.profile.profile = {
             type: "zosmf",
             host: "test",
@@ -1437,10 +1574,12 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
     });
 
     it("To switch from Token-based to Basic authentication when cred values are passed involving base profile", async () => {
-        jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
+        jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(true);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             getTeamConfig: () => ({
-                properties: jest.fn(),
+                properties: {
+                    autoStore: true,
+                },
                 set: jest.fn(),
                 delete: jest.fn(),
                 save: jest.fn(),
@@ -1487,6 +1626,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             tokenValue: "12345",
             secure: ["tokenType"],
         };
+        testNode.tooltip = "";
         modifiedTestNode.profile.profile = {
             type: "zosmf",
             host: "test",
@@ -1506,7 +1646,6 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValue(["testUser", "6789"]);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
         expect(Gui.showMessage).toHaveBeenCalled();
-        expect(Gui.showMessage).toHaveBeenCalled();
         expect(testNode.profile.profile.tokenType).toBe(modifiedTestNode.profile.profile.tokenType);
         expect(testNode.profile.profile.tokenValue).toBe(modifiedTestNode.profile.profile.tokenValue);
         expect(testNode.profile.profile.secure.length).toBe(modifiedTestNode.profile.profile.secure.length);
@@ -1516,10 +1655,12 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
     });
 
     it("To switch from Token-based to Basic authentication when cred values are passed involving regular profile", async () => {
-        jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
+        jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(true);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             getTeamConfig: () => ({
-                properties: jest.fn(),
+                properties: {
+                    autoStore: true,
+                },
                 set: jest.fn(),
                 delete: jest.fn(),
                 save: jest.fn(),
@@ -1561,6 +1702,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             tokenValue: "12345",
             secure: ["tokenType"],
         };
+        testNode.toolTip = "";
         modifiedTestNode.profile.profile = {
             type: "zosmf",
             host: "test",
@@ -1580,7 +1722,6 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValue(["testUser", "6789"]);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
         expect(Gui.showMessage).toHaveBeenCalled();
-        expect(Gui.showMessage).toHaveBeenCalled();
         expect(testNode.profile.profile.tokenType).toBe(modifiedTestNode.profile.profile.tokenType);
         expect(testNode.profile.profile.tokenValue).toBe(modifiedTestNode.profile.profile.tokenValue);
         expect(testNode.profile.profile.secure.length).toBe(modifiedTestNode.profile.profile.secure.length);
@@ -1593,7 +1734,9 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             getTeamConfig: () => ({
-                properties: jest.fn(),
+                properties: {
+                    autoStore: true,
+                },
                 set: jest.fn(),
                 delete: jest.fn(),
                 save: jest.fn(),
@@ -1619,6 +1762,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             tokenValue: "12345",
             secure: ["tokenType"],
         };
+        testNode.tooltip = "";
         modifiedTestNode.profile.profile = {
             type: "zosmf",
             host: "test",
@@ -1661,6 +1805,24 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
     });
 
     it("To not perform switching the authentication when authentication method is unknown", async () => {
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: () => ({
+                properties: {
+                    autoStore: true,
+                },
+                set: jest.fn(),
+                delete: jest.fn(),
+                save: jest.fn(),
+            }),
+            getAllProfiles: () => [
+                {
+                    profName: "sestest",
+                    profLoc: {
+                        osLoc: ["test"],
+                    },
+                },
+            ],
+        } as any);
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValue({ label: "Yes" } as vscode.QuickPickItem);
         jest.spyOn(Gui, "errorMessage").mockImplementation();
         jest.spyOn(AuthUtils, "isProfileUsingBasicAuth").mockReturnValueOnce(false);
@@ -1668,6 +1830,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
             getTokenTypeName: () => "apimlAuthenticationToken",
         } as never);
+        testNode.tooltip = "";
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
         expect(Gui.errorMessage).toHaveBeenCalled();
     });
@@ -1685,6 +1848,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             tokenValue: "12345",
             secure: ["tokenType"],
         };
+        testNode.tootTip = "";
         modifiedTestNode.profile.profile = {
             type: "zosmf",
             host: "test",
@@ -1825,14 +1989,42 @@ describe("Profiles Unit Tests - function validationArraySetup", () => {
     });
 });
 
-describe("Profiles Unit Tests - function getSecurePropsForProfile", () => {
+describe("Profiles Unit Tests - function getPropsForProfile", () => {
     afterEach(() => {
         jest.clearAllMocks();
         jest.resetAllMocks();
     });
     it("should retrieve the secure properties of a profile", async () => {
         const globalMocks = createGlobalMocks();
-        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValueOnce({
+            mergeArgsForProfile: () => ({
+                knownArgs: [
+                    {
+                        argName: "tokenValue",
+                        secure: true,
+                    } as any,
+                    {
+                        argName: "password",
+                        secure: true,
+                    } as any,
+                    {
+                        argName: "user",
+                        secure: false,
+                    },
+                ],
+                missingArgs: [],
+            }),
+            getAllProfiles: () => [],
+            getTeamConfig: () => ({
+                api: { secure: { securePropsForProfile: jest.fn() } },
+            }),
+        } as any);
+        await expect(Profiles.getInstance().getPropsForProfile(globalMocks.testProfile.name ?? "")).resolves.toEqual(["tokenValue", "password"]);
+    });
+
+    it("should return empty array if profileName is undefined", async () => {
+        createGlobalMocks();
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValueOnce({
             mergeArgsForProfile: () => ({
                 knownArgs: [
                     {
@@ -1843,8 +2035,53 @@ describe("Profiles Unit Tests - function getSecurePropsForProfile", () => {
                 missingArgs: [],
             }),
             getAllProfiles: () => [],
+            getTeamConfig: () => ({
+                api: { secure: { securePropsForProfile: jest.fn() } },
+            }),
         } as any);
-        await expect(Profiles.getInstance().getSecurePropsForProfile(globalMocks.testProfile.name ?? "")).resolves.toEqual(["tokenValue"]);
+        await expect(Profiles.getInstance().getPropsForProfile("")).resolves.toEqual([]);
+    });
+
+    it("should return all props if invoked with invoked with onlySecure as false", async () => {
+        createGlobalMocks();
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValueOnce({
+            mergeArgsForProfile: () => ({
+                knownArgs: [
+                    {
+                        argName: "tokenValue",
+                        secure: false,
+                    } as any,
+                ],
+                missingArgs: [],
+            }),
+            getAllProfiles: () => [],
+            getTeamConfig: () => ({
+                api: { secure: { securePropsForProfile: jest.fn() } },
+            }),
+        } as any);
+        await expect(Profiles.getInstance().getPropsForProfile("dummyProfile", false)).resolves.toEqual(["tokenValue"]);
+    });
+
+    it("should return only secure props if onlySecure and usingSecureCreds are true", async () => {
+        createGlobalMocks();
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValueOnce({
+            mergeArgsForProfile: () => ({
+                knownArgs: [
+                    {
+                        argName: "tokenValue",
+                        secure: true,
+                    } as any,
+                ],
+                missingArgs: [],
+            }),
+            getAllProfiles: () => [],
+            getTeamConfig: () => ({
+                api: { secure: { securePropsForProfile: jest.fn().mockReturnValue(["tokenValue"]) } },
+                exists: true,
+            }),
+        } as any);
+        await expect(Profiles.getInstance().getPropsForProfile("dummyProfile", true)).resolves.toEqual(["tokenValue"]);
     });
 });
 

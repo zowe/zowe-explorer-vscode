@@ -143,7 +143,12 @@
       {
         "command": "zowe.manualPoll",
         "key": "f5",
-        "when": "editorIsOpen && resourceScheme == zosspool"
+        "when": "editorIsOpen && resourceScheme == zowe-jobs"
+      },
+      {
+        "command": "zowe.jobs.loadMoreRecords",
+        "key": "ctrl+l",
+        "when": "editorTextFocus && resourceScheme == zowe-jobs"
       }
     ],
     "commands": [
@@ -457,6 +462,12 @@
         }
       },
       {
+        "command": "zowe.uss.cdUp",
+        "title": "%uss.cd%",
+        "category": "Zowe Explorer",
+        "icon": "$(arrow-up)"
+      },
+      {
         "command": "zowe.uss.refresh",
         "title": "%uss.refreshAll%",
         "category": "Zowe Explorer",
@@ -506,6 +517,11 @@
       {
         "command": "zowe.uss.copyRelativePath",
         "title": "%uss.copyRelativePath%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.uss.filterBy",
+        "title": "%uss.filterBy%",
         "category": "Zowe Explorer"
       },
       {
@@ -760,6 +776,11 @@
           "group": "inline"
         },
         {
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*isFilterSearch/ && !listMultiSelection",
+          "command": "zowe.uss.cdUp",
+          "group": "inline"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
           "command": "zowe.addFavorite",
           "group": "inline"
@@ -785,6 +806,11 @@
           "group": "inline"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/ && !listMultiSelection",
+          "command": "zowe.uss.filterBy",
+          "group": "000_zowe_ussMainframeInteraction@1"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(textFile.*|binaryFile.*)/",
           "command": "zowe.openWithEncoding",
           "group": "000_zowe_ussMainframeInteraction@3"
@@ -793,6 +819,11 @@
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
           "command": "zowe.uss.fullPath",
           "group": "000_zowe_ussMainframeInteraction@0"
+        },
+        {
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*isFilterSearch/ && !listMultiSelection",
+          "command": "zowe.uss.cdUp",
+          "group": "000_zowe_ussMainframeInteraction@1"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
@@ -1453,6 +1484,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.uss.cdUp",
+          "when": "never"
+        },
+        {
           "command": "zowe.uss.copyPath",
           "when": "never"
         },
@@ -1623,6 +1658,12 @@
       "type": "object",
       "title": "%configuration.title%",
       "properties": {
+        "zowe.ds.paginate.datasetsPerPage": {
+          "default": 100,
+          "type": "integer",
+          "description": "%zowe.ds.paginate.datasetsPerPage%",
+          "scope": "window"
+        },
         "zowe.ds.default.binary": {
           "default": {
             "dsorg": "PO",
@@ -1947,6 +1988,30 @@
           "default": 5000,
           "description": "%zowe.pollInterval.info%",
           "scope": "window"
+        },
+        "zowe.jobs.settings.pagination": {
+          "type": "boolean",
+          "default": true,
+          "description": "%zowe.jobs.settings.pagination%",
+          "scope": "window"
+        },
+        "zowe.jobs.recordsToFetch": {
+          "type": "integer",
+          "default": 100,
+          "description": "%zowe.jobs.recordsToFetch%",
+          "scope": "window"
+        },
+        "zowe.settings.overrideWithEnvironmentVariables": {
+          "type": "boolean",
+          "default": false,
+          "description": "%zowe.settings.overrideWithEnvironmentVariables%",
+          "scope": "window"
+        },
+        "zowe.settings.socketConnectTimeout": {
+          "type": "number",
+          "default": 60000,
+          "description": "%zowe.settings.socketConnectTimeout%",
+          "scope": "window"
         }
       }
     },
@@ -2025,11 +2090,11 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "@zowe/core-for-zowe-sdk": "^8.18.0",
+    "@zowe/core-for-zowe-sdk": "^8.19.0",
     "@zowe/secrets-for-zowe-sdk": "^8.18.3",
-    "@zowe/zos-files-for-zowe-sdk": "^8.18.0",
-    "@zowe/zos-jobs-for-zowe-sdk": "^8.18.0",
-    "@zowe/zosmf-for-zowe-sdk": "^8.18.0",
+    "@zowe/zos-files-for-zowe-sdk": "^8.19.0",
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.19.0",
+    "@zowe/zosmf-for-zowe-sdk": "^8.19.0",
     "@zowe/zowe-explorer-api": "3.2.0-SNAPSHOT",
     "dayjs": "^1.11.10",
     "isbinaryfile": "4.0.4",

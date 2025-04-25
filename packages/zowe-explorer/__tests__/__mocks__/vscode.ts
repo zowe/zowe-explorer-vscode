@@ -839,6 +839,9 @@ export namespace languages {
     export function setTextDocumentLanguage(document: TextDocument, languageId: string): Thenable<TextDocument> {
         return {} as Thenable<TextDocument>;
     }
+    export function registerCodeLensProvider(selector: any, provider: any): Disposable {
+        return new Disposable();
+    }
 }
 
 export namespace commands {
@@ -1344,7 +1347,7 @@ export enum FileSystemProviderErrorCode {
  * This class has factory methods for common error-cases, like `FileNotFound` when
  * a file or folder doesn't exist, use them like so: `throw vscode.FileSystemError.FileNotFound(someUri);`
  */
-export const { FileSystemError, Selection, Position, ThemeIcon } = require("jest-mock-vscode").createVSCodeMock(jest);
+export const { FileSystemError, Selection, Position, ThemeIcon, CodeLensProvider } = require("jest-mock-vscode").createVSCodeMock(jest);
 
 /**
  * Namespace for dealing with the current workspace. A workspace is the representation
