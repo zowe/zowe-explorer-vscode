@@ -52,7 +52,7 @@ describe("Test src/shared/extension", () => {
         };
         const profileMocks = { deleteProfile: jest.fn(), disableValidation: jest.fn(), enableValidation: jest.fn(), refresh: jest.fn() };
         const cmdProviders = { mvs: { issueMvsCommand: jest.fn() }, tso: { issueTsoCommand: jest.fn() }, uss: { issueUnixCommand: jest.fn() } };
-        const onProfileUpdated = jest.fn();
+        const onProfileUpdated = jest.fn().mockReturnValue(new vscode.Disposable(jest.fn()));
         const treeProvider = {
             addFavorite: jest.fn(),
             deleteSession: jest.fn(),
@@ -66,7 +66,8 @@ describe("Test src/shared/extension", () => {
             ssoLogin: jest.fn(),
             ssoLogout: jest.fn(),
         };
-        jest.replaceProperty(ZoweVsCodeExtension, "onProfileUpdated", onProfileUpdated);
+
+        const mockOnProfileUpdated = new MockedProperty(ZoweVsCodeExtension, "onProfileUpdated", undefined, onProfileUpdated);
 
         const commands: IJestIt[] = [
             {
@@ -319,6 +320,7 @@ describe("Test src/shared/extension", () => {
             SharedInit.registerCommonCommands(test.context, test.value.providers);
         });
         afterAll(() => {
+            mockOnProfileUpdated[Symbol.dispose]();
             jest.restoreAllMocks();
         });
 
