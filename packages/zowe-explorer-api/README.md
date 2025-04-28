@@ -3,49 +3,20 @@
 [![version](https://img.shields.io/npm/v/@zowe/zowe-explorer-api)](https://img.shields.io/npm/v/@zowe/zowe-explorer-api)
 [![downloads](https://img.shields.io/npm/dt/@zowe/zowe-explorer-api)](https://img.shields.io/npm/dt/@zowe/zowe-explorer-api)
 
-Extensibility API for Zowe Explorer is a collection of APIs that can be used to extend the [Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode) VS Code extension with alternative z/OS interaction protocols and new capabilities.
+Extensibility API for Zowe Explorer is a collection of APIs that can be used to extend the [Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode) VS Code extension with alternative z/OS interaction protocols and new capabilities. These capabilities are built for use in (and alongside) Zowe Explorer, and include: tree view management, Zowe profiles and security assistance, UI functions and logging utilities.
 
-The API is used by extenders of the Zowe Explorer VS Code extension, including the [IBM z/OS FTP for Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode/tree/main/packages/zowe-explorer-ftp-extension) and [IBM CICS for Zowe Explorer](https://github.com/zowe/cics-for-zowe-client/tree/main/packages/vsce) VS Code extensions, as well as several commercial extensions.
+The following kinds of extensions can be certified as compliant for Zowe Explorer. Check out the [v3 Conformance Program](https://openmainframeproject.org/our-projects/zowe-conformance-program/) for the specific criteria.
 
-The API is organized into modules that are exposed through the top-level `index.ts` file for convenient access.
+Extension offerings need to comply with the General requirements category along with at least one of the other following categories.
 
-- `/profiles`: Provides access to common Zowe CLI profile management APIs, as well as abstractions for providing alternative z/OS interactions that use protocols other than z/OSMF, based on alternative Zowe CLI profile types.
-- `/tree`: Provides abstractions for accessing and extending the Zowe Explorer VS Code tree views.
-- `/logger`: Logs messages in a standard format, which is used by Zowe Explorer and will be consistent across Zowe components.
+1. General requirements: VS Code extensions that utilize Zowe Explorer resources in any way must meet all general requirements.
+1. Leverage team configuration: An extension that accesses Zowe Explorer's profile cache to utilize or manage profiles.
+1. Data Provider: An extension that provides an alternative profile type for a different z/OS communication protocol for one or more Zowe Explorer views.
+1. Menus: An extension that contributes menus to Zowe Explorer tree views and/or accesses contextual information from the trees.
 
-## Profiles API
+Examples of extenders of the Zowe Explorer VS Code extension include the [IBM z/OS FTP for Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode/tree/main/packages/zowe-explorer-ftp-extension) and [IBM CICS for Zowe Explorer](https://github.com/zowe/cics-for-zowe-client/tree/main/packages/vsce) VS Code extension, as well as several commercial extensions.
 
-The `/profiles` module has no dependency to VS Code and could be used in Zowe CLI extensions as well as VS Code extensions. If you want to use it without pulling in dependencies to VS Code that are needed by the `/tree` module, you can import it like this:
-
-```ts
-import { ZoweExplorerApi } from "@zowe/zowe-explorer-api/lib/profiles";
-```
-
-The main API provided by the `/profiles` module is called `ZoweExplorerApi`. It defines a namespace for interfaces for implementing access to z/OS MVS, USS, and JES. You can see that the Zowe Explorer FTP Extension provides such an alternative implementation for USS using the FTP protocol in [packages/zowe-explorer-ftp-extension/src/ZoweExplorerFtpMvsApi.ts](https://github.com/zowe/zowe-explorer-vscode/tree/main/packages/zowe-explorer-ftp-extension/src/ZoweExplorerFtpMvsApi.ts). The `/profiles` module itself contains Zowe Explorer's default implementation using z/OSMF in [packages/zowe-explorer-api/src/profiles/ZoweExplorerZosmfApi.ts](https://github.com/zowe/zowe-explorer-vscode/tree/main/packages/zowe-explorer-api/src/profiles/ZoweExplorerZosmfApi.ts)
-
-Zowe Explorer itself exports a `IApiRegisterClient` object that can be used for an alternative implementation to be registered with Zowe Explorer. You can find an example for doing this in [packages/zowe-explorer-ftp-extension/src/extension.ts](https://github.com/zowe/zowe-explorer-vscode/tree/main/packages/zowe-explorer-ftp-extension/src/extension.ts). To be able to do this, your VS Code extension must define a dependency to Zowe Explorer to ensure that VS Code extension activation is performed in the correct order. Therefore, your VS Code extension's `package.json` must contain
-
-```json
-"extensionDependencies": [
-  "Zowe.vscode-extension-for-zowe"
-]
-```
-
-## Tree API
-
-Importing from the `/tree` module requires that your NPM package has a dependency to VS Code as it performs
-
-```ts
-import * as vscode from "vscode";
-```
-
-imports.
-
-See this [documentation on Extending Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode/wiki/Extending-Zowe-Explorer) to learn more about the Tree APIs available.
-
-## Logger API
-
-See this [special extension document](https://github.com/zowe/zowe-explorer-vscode/wiki/Error-Handling-for-Extenders#logging-of-error-message) for more information about using the Logger API.
+For more information about extending Zowe Explorer via the Extensibility API for Zowe Explorer, check out the [Extending Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode/wiki/Extending-Zowe-Explorer) wiki page.
 
 ## Providing feedback or help contributing
 

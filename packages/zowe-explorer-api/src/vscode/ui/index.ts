@@ -14,4 +14,5 @@ export * from "./utils/TableMediator";
 export * from "./TableView";
 export * from "./TableViewProvider";
 export * from "./WebView";
+export * from "./PaginationCodeLens";
 export * as HTMLTemplate from "./utils/HTMLTemplate";

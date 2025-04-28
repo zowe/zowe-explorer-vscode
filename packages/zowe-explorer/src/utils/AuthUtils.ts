@@ -159,11 +159,11 @@ export class AuthUtils {
      * @param getSessionForProfile is a function to build a valid specific session based on provided profile
      * @param sessionNode is a tree node, containing session information
      */
-    public static syncSessionNode(
+    public static async syncSessionNode(
         getCommonApi: (profile: imperative.IProfileLoaded) => MainframeInteraction.ICommon,
         sessionNode: IZoweTreeNode,
         nodeToRefresh?: IZoweTreeNode
-    ): void {
+    ): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.syncSessionNode called.");
 
         const profileType = sessionNode.getProfile()?.type;
@@ -179,6 +179,125 @@ export class AuthUtils {
         sessionNode.setProfileToChoice(profile);
         try {
             const commonApi = getCommonApi(profile);
+            const usingBasicAuth = profile.profile.user && profile.profile.password;
+            const usingCertAuth = profile.profile.certFile && profile.profile.certKeyFile;
+            let usingTokenAuth: boolean;
+            try {
+                usingTokenAuth = await AuthUtils.isUsingTokenAuth(profile.name);
+            } catch (err) {
+                ZoweLogger.error(err);
+            }
+            const toolTipList = sessionNode.tooltip === "" ? [] : (sessionNode.tooltip as string).split("\n");
+
+            const authMethodIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Auth Method: ")));
+            if (authMethodIndex === -1) {
+                switch (true) {
+                    case Boolean(usingTokenAuth): {
+                        toolTipList.push(`${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Token-based Authentication")}`);
+                        break;
+                    }
+                    case Boolean(usingBasicAuth): {
+                        toolTipList.push(`${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Basic Authentication")}`);
+                        toolTipList.push(`${vscode.l10n.t("User: ")}${profile.profile.user as string}`);
+                        break;
+                    }
+                    case Boolean(usingCertAuth): {
+                        toolTipList.push(`${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Certificate Authentication")}`);
+                        break;
+                    }
+                    default: {
+                        toolTipList.push(`${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Unknown")}`);
+                        break;
+                    }
+                }
+            } else {
+                switch (true) {
+                    case Boolean(usingTokenAuth): {
+                        toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Token-based Authentication")}`;
+                        break;
+                    }
+                    case Boolean(usingBasicAuth): {
+                        toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Basic Authentication")}`;
+                        const userIDIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("User: ")));
+                        if (userIDIndex !== -1) {
+                            toolTipList[userIDIndex] = `${vscode.l10n.t("User: ")}${profile.profile.user as string}`;
+                        } else {
+                            toolTipList.splice(authMethodIndex + 1, 0, `${vscode.l10n.t("User: ")}${profile.profile.user as string}`);
+                        }
+                        break;
+                    }
+                    case Boolean(usingCertAuth): {
+                        toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Certificate Authentication")}`;
+                        break;
+                    }
+                    default: {
+                        toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Unknown")}`;
+                        const patternIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Pattern: ")));
+                        if (patternIndex !== -1) {
+                            toolTipList.splice(patternIndex, 1);
+                        }
+                        const pathIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Path: ")));
+                        if (pathIndex !== -1) {
+                            toolTipList.splice(pathIndex, 1);
+                        }
+                        const searchCriteriaIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Owner: ")));
+                        if (searchCriteriaIndex !== -1) {
+                            toolTipList.splice(searchCriteriaIndex, 1);
+                        }
+                        const jobIdIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("JobId: ")));
+                        if (jobIdIndex !== -1) {
+                            toolTipList.splice(jobIdIndex, 1);
+                        }
+                    }
+                }
+                if (!usingBasicAuth) {
+                    const userIDIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("User: ")));
+                    if (userIDIndex !== -1) {
+                        toolTipList.splice(userIDIndex, 1);
+                    }
+                }
+            }
+
+            if (usingTokenAuth || usingBasicAuth || usingCertAuth) {
+                switch (true) {
+                    case Boolean(sessionNode.fullPath): {
+                        const pathIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Path: ")));
+                        if (pathIndex === -1) {
+                            toolTipList.push(`${vscode.l10n.t("Path: ")}${sessionNode.fullPath}`);
+                        } else {
+                            toolTipList[pathIndex] = `${vscode.l10n.t("Path: ")}${sessionNode.fullPath}`;
+                        }
+                        break;
+                    }
+                    case `${sessionNode.description}`.includes(vscode.l10n.t("Owner: ")): {
+                        const jobIdIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("JobId: ")));
+                        if (jobIdIndex !== -1) {
+                            toolTipList.splice(jobIdIndex, 1);
+                        }
+                        const searchCriteriaIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Owner: ")));
+                        if (searchCriteriaIndex === -1) {
+                            toolTipList.push(sessionNode.description as string);
+                        } else {
+                            toolTipList[searchCriteriaIndex] = sessionNode.description as string;
+                        }
+                        break;
+                    }
+                    case `${sessionNode.description}`.includes(vscode.l10n.t("JobId: ")): {
+                        const searchFilterIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Owner: ")));
+                        if (searchFilterIndex !== -1) {
+                            toolTipList.splice(searchFilterIndex, 1);
+                        }
+                        const jobIdIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("JobId: ")));
+                        if (jobIdIndex === -1) {
+                            toolTipList.push(sessionNode.description as string);
+                        } else {
+                            toolTipList[jobIdIndex] = sessionNode.description as string;
+                        }
+                        break;
+                    }
+                }
+            }
+            sessionNode.tooltip = toolTipList.join("\n");
             sessionNode.setSessionToChoice(commonApi.getSession());
         } catch (err) {
             if (err instanceof Error) {
@@ -210,9 +329,14 @@ export class AuthUtils {
      * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not
      */
     public static async isUsingTokenAuth(profileName: string): Promise<boolean> {
-        const secureProps = await Constants.PROFILES_CACHE.getSecurePropsForProfile(profileName);
         const baseProfile = Constants.PROFILES_CACHE.getDefaultProfile("base");
-        const baseSecureProps = await Constants.PROFILES_CACHE.getSecurePropsForProfile(baseProfile?.name);
-        return AuthHandler.isUsingTokenAuth(secureProps, baseSecureProps);
+        const shouldRemoveToken = Constants.PROFILES_CACHE.shouldRemoveTokenFromProfile(
+            Constants.PROFILES_CACHE.loadNamedProfile(profileName),
+            baseProfile
+        );
+        if (shouldRemoveToken) return false;
+        const props = await Constants.PROFILES_CACHE.getPropsForProfile(profileName, false);
+        const baseProps = await Constants.PROFILES_CACHE.getPropsForProfile(baseProfile?.name, false);
+        return AuthHandler.isUsingTokenAuth(props, baseProps);
     }
 }

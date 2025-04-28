@@ -9,7 +9,7 @@
  *
  */
 
-import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
+import { IZosmfListResponse, IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import * as vscode from "vscode";
 import * as dayjs from "dayjs";
 import {
@@ -27,6 +27,9 @@ import {
     PdsEntry,
     FsDatasetsUtils,
     ZoweExplorerApiType,
+    Paginator,
+    IFetchResult,
+    NavigationTreeItem,
 } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -41,6 +44,7 @@ import type { Definitions } from "../../configuration/Definitions";
 import type { DatasetTree } from "./DatasetTree";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetUtils } from "./DatasetUtils";
+import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 /**
  * A type of TreeItem used to represent sessions and data sets
@@ -52,6 +56,7 @@ import { DatasetUtils } from "./DatasetUtils";
 export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNode {
     public command: vscode.Command;
     public pattern = "";
+    public prevPattern = "";
     public memberPattern = "";
     public patternMatches = [];
     public dirty = true;
@@ -62,6 +67,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public sort?: Sorting.NodeSort;
     public filter?: Sorting.DatasetFilter;
     public resourceUri?: vscode.Uri;
+
+    private paginator?: Paginator<IZosFilesResponse>;
+    private paginatorData?: {
+        totalItems?: number;
+        lastItemName?: string;
+    };
+    private itemsPerPage?: number;
 
     /**
      * Creates an instance of ZoweDatasetNode
@@ -81,7 +93,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         } else {
             this.contextValue = isBinary ? Constants.DS_DS_BINARY_CONTEXT : Constants.DS_DS_CONTEXT;
         }
-        this.tooltip = this.label as string;
+        if (opts.contextOverride?.includes(Constants.DS_SESSION_CONTEXT)) {
+            const toolTipList: string[] = [];
+            toolTipList.push(`${vscode.l10n.t("Profile: ")}${opts.label}`);
+            toolTipList.push(`${vscode.l10n.t("Profile Type: ")}${opts.profile.type}`);
+            this.tooltip = toolTipList.join("\n");
+        } else {
+            this.tooltip = this.label as string;
+        }
         const icon = IconGenerator.getIconByNode(this);
         if (icon) {
             this.iconPath = icon.path;
@@ -106,12 +125,17 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         if (this.label !== vscode.l10n.t("Favorites") && this.contextValue !== Constants.DS_MIGRATED_FILE_CONTEXT) {
             const sessionLabel = opts.profile?.name ?? SharedUtils.getSessionLabel(this);
-            if (this.contextValue === Constants.DS_DS_CONTEXT || this.contextValue === Constants.DS_PDS_CONTEXT) {
+            if (
+                this.contextValue === Constants.DS_DS_CONTEXT ||
+                this.contextValue === Constants.DS_FAV_CONTEXT ||
+                this.contextValue === Constants.DS_PDS_CONTEXT ||
+                this.contextValue === Constants.PDS_FAV_CONTEXT
+            ) {
                 this.resourceUri = vscode.Uri.from({
                     scheme: ZoweScheme.DS,
                     path: `/${sessionLabel}/${this.label as string}`,
                 });
-                if (this.contextValue === Constants.DS_DS_CONTEXT) {
+                if (this.contextValue === Constants.DS_DS_CONTEXT || this.contextValue === Constants.DS_FAV_CONTEXT) {
                     const extension = DatasetUtils.getExtension(this.label as string);
                     this.resourceUri = this.resourceUri.with({ path: `${this.resourceUri.path}${extension ?? ""}` });
                     this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
@@ -128,7 +152,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     scheme: ZoweScheme.DS,
                     path: `/${sessionLabel}/`,
                 });
-                if (this.getParent() == null || this.getParent().label === vscode.l10n.t("Favorites")) {
+                if (this.getParent() == null || this.getParent()?.label === vscode.l10n.t("Favorites")) {
+                    // session nodes
                     DatasetFSProvider.instance.createDirectory(this.resourceUri);
                 } else if (this.contextValue === Constants.INFORMATION_CONTEXT) {
                     this.command = { command: "zowe.placeholderCommand", title: "Placeholder" };
@@ -140,6 +165,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
         }
     }
+
     public updateStats(item: any): void {
         if ("c4date" in item && "m4date" in item) {
             const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
@@ -256,7 +282,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      *
      * @returns {Promise<ZoweDatasetNode[]>}
      */
-    public async getChildren(): Promise<ZoweDatasetNode[]> {
+    public async getChildren(paginate?: boolean): Promise<ZoweDatasetNode[]> {
         ZoweLogger.trace(`ZoweDatasetNode.getChildren called for ${this.label as string}.`);
         if (!this.pattern && SharedContext.isSessionNotFav(this)) {
             const placeholder = new ZoweDatasetNode({
@@ -271,7 +297,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             return [];
         }
 
-        if (!this.dirty || this.label === "Favorites") {
+        if ((!this.dirty && !paginate) || this.label === "Favorites") {
             return this.children;
         }
 
@@ -282,7 +308,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-        const responses = await this.getDatasets(cachedProfile);
+        const responses = await this.getDatasets(cachedProfile, paginate);
         if (responses == null) {
             return [];
         }
@@ -306,7 +332,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             for (const element of this.children) {
                 existingItems[element.label.toString()] = element;
             }
-            for (const item of response.apiResponse.items ?? response.apiResponse) {
+            for (const item of (response.apiResponse.items ?? response.apiResponse) as IZosmfListResponse[]) {
                 let dsNode = existingItems[item.dsname ?? item.member];
                 if (dsNode != null) {
                     elementChildren[dsNode.label.toString()] = dsNode;
@@ -337,7 +363,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         profile: cachedProfile,
                     });
                     elementChildren[dsNode.label.toString()] = dsNode;
-                } else if (item.error instanceof imperative.ImperativeError) {
+                } else if ((item as any).error instanceof imperative.ImperativeError) {
                     // Creates a ZoweDatasetNode for a dataset with imperative errors
                     dsNode = new ZoweDatasetNode({
                         label: item.dsname,
@@ -347,7 +373,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         profile: cachedProfile,
                     });
                     dsNode.command = { command: "zowe.placeholderCommand", title: "" };
-                    dsNode.errorDetails = item.error; // Save imperative error to avoid extra z/OS requests
+                    dsNode.errorDetails = (item as any).error; // Save imperative error to avoid extra z/OS requests
                     elementChildren[dsNode.label.toString()] = dsNode;
                 } else if (item.dsorg === "VS") {
                     // Creates a ZoweDatasetNode for a VSAM file
@@ -382,7 +408,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     elementChildren[dsNode.label.toString()] = dsNode;
                 } else if (item.member) {
                     // Creates a ZoweDatasetNode for a PDS member
-                    const cachedEncoding = this.getEncodingInMap(`${item.dsname as string}(${item.member as string})`);
+                    const cachedEncoding = this.getEncodingInMap(`${item.dsname}(${item.member})`);
                     dsNode = new ZoweDatasetNode({
                         label: item.member,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -464,9 +490,64 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
             if (SharedContext.isSession(this)) {
                 const dsTree = SharedTreeProviders.ds as DatasetTree;
+                // Reset and remove previous search patterns in case pattern has changed
+                dsTree.resetFilterForChildren(this.children);
                 // set new search patterns for each child of getChildren
-                dsTree.applyPatternsToChildren(this.children, this.patternMatches, this);
+                dsTree.applyPatternsToChildren(this.children, this.patternMatches);
             }
+        }
+
+        const canNavigate = this.paginator && (this.paginator.canGoPrevious() || this.paginator.canGoNext());
+
+        if (
+            paginate &&
+            canNavigate &&
+            (SharedContext.isSession(this) || SharedContext.isPds(this)) &&
+            this.paginatorData.totalItems > this.paginator.getMaxItemsPerPage()
+        ) {
+            const prevPage = new NavigationTreeItem(
+                vscode.l10n.t("Previous page"),
+                "arrow-small-left",
+                !this.paginator.canGoPrevious(),
+                "zowe.executeNavCallback",
+                () =>
+                    Gui.withProgress(
+                        {
+                            location: { viewId: "zowe.ds.explorer" },
+                        },
+                        async () => {
+                            await this.paginator.fetchPreviousPage();
+                            SharedTreeProviders.ds.nodeDataChanged?.(this);
+                        }
+                    )
+            );
+            const pageNum = this.paginator.getCurrentPageIndex() + 1;
+            if (!prevPage.disabled) {
+                prevPage.description = `${pageNum - 1}/${this.paginator.getPageCount()}`;
+            }
+
+            const nextPage = new NavigationTreeItem(
+                vscode.l10n.t("Next page"),
+                "arrow-small-right",
+                !this.paginator.canGoNext(),
+                "zowe.executeNavCallback",
+                () =>
+                    Gui.withProgress(
+                        {
+                            location: { viewId: "zowe.ds.explorer" },
+                        },
+                        async () => {
+                            await this.paginator.fetchNextPage();
+                            SharedTreeProviders.ds.nodeDataChanged?.(this);
+                        }
+                    )
+            );
+            if (!nextPage.disabled) {
+                nextPage.description = `${pageNum + 1}/${this.paginator.getPageCount()}`;
+            }
+
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            return [prevPage as any, ...this.children, nextPage as any];
         }
 
         return this.children;
@@ -598,59 +679,292 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return fileEntry?.etag;
     }
 
-    private async getDatasets(profile: imperative.IProfileLoaded): Promise<zosfiles.IZosFilesResponse[] | undefined> {
-        ZoweLogger.trace("ZoweDatasetNode.getDatasets called.");
+    private async listDatasetsInRange(start?: string, limit?: number): Promise<IFetchResult<IZosFilesResponse, string>> {
+        let totalItems = this.paginatorData?.totalItems;
+        let lastDatasetName = this.paginatorData?.lastItemName;
+        let allDatasets: IZosmfListResponse[] = [];
+        const responses: IZosFilesResponse[] = [];
 
-        const responses: zosfiles.IZosFilesResponse[] = [];
-        const options: zosfiles.IListOptions = {
+        try {
+            if (this.dirty || totalItems == null || lastDatasetName == null) {
+                // Rebuild cache to handle future page changes
+                const basicResponses: IZosFilesResponse[] = [];
+                await this.listDatasets(basicResponses, { attributes: false });
+
+                allDatasets = basicResponses
+                    .filter((r) => r.success)
+                    .reduce((arr: IZosmfListResponse[], r) => {
+                        const responseItems: IZosmfListResponse[] = Array.isArray(r.apiResponse) ? r.apiResponse : r.apiResponse?.items;
+                        return responseItems ? [...arr, ...responseItems] : arr;
+                    }, []);
+
+                this.paginatorData = {
+                    totalItems: allDatasets.length,
+                    lastItemName: allDatasets.at(-1)?.dsname,
+                };
+                totalItems = this.paginatorData.totalItems;
+                lastDatasetName = this.paginatorData.lastItemName;
+            }
+            await this.listDatasets(responses, { attributes: true, start, maxLength: start ? limit + 1 : limit });
+        } catch (err) {
+            const updated = await AuthUtils.errorHandling(err, {
+                apiType: ZoweExplorerApiType.Mvs,
+                profile: this.getProfile(),
+                scenario: vscode.l10n.t("Retrieving response from MVS list API"),
+            });
+            AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
+            return;
+        }
+
+        const successfulResponses = responses
+            .filter((response) => response.success)
+            .map((resp) => {
+                if (start == null || (resp.apiResponse?.items ?? resp.apiResponse)?.find((it: IZosmfListResponse) => it.dsname === start) == null) {
+                    return resp;
+                }
+
+                // Assuming apiResponse is IZosmfListResponse[] or { items: IZosmfListResponse[] } (dataSetsMatchingPattern, dataSet)
+                const items = Array.isArray(resp.apiResponse) ? resp.apiResponse : resp.apiResponse?.items;
+                const filteredItems = items?.filter((it) => it.dsname !== start);
+
+                return {
+                    ...resp,
+                    // Reconstruct apiResponse based on its original structure
+                    apiResponse: Array.isArray(resp.apiResponse) ? filteredItems : { ...(resp.apiResponse ?? {}), items: filteredItems },
+                };
+            });
+
+        const items: IZosmfListResponse[] = successfulResponses.reduce((prev: IZosmfListResponse[], resp): IZosmfListResponse[] => {
+            const responseItems: IZosmfListResponse[] = Array.isArray(resp.apiResponse) ? resp.apiResponse : resp.apiResponse?.items;
+            return responseItems ? [...prev, ...responseItems] : prev;
+        }, []);
+
+        const lastItem = items.length > 0 ? items.at(-1) : undefined;
+
+        const nextPageCursor = limit && items.length === limit && lastItem && lastDatasetName !== lastItem.dsname ? lastItem.dsname : undefined;
+
+        return {
+            items: successfulResponses,
+            nextPageCursor,
+            totalItems,
+        };
+    }
+
+    public async listDatasets(responses: IZosFilesResponse[], options?: Definitions.DatasetListOpts): Promise<void> {
+        const dsPatterns = [
+            ...new Set(
+                this.pattern
+                    .toUpperCase()
+                    .split(",")
+                    .map((p) => p.trim())
+            ),
+        ];
+        if (this.itemsPerPage > 0) {
+            // Sort patterns alphabetically for proper page traversal with patterns in descending alphabetical order
+            dsPatterns.sort((a, b) => a.localeCompare(b));
+        }
+        const profile = options?.profile ?? Profiles.getInstance().loadNamedProfile(this.getProfile().name);
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
+        if (!mvsApi.getSession(profile)) {
+            ZoweLogger.warn("[ZoweDatasetNode.listDatasets] Session undefined for profile " + profile.name);
+            return;
+        }
+        if (mvsApi.dataSetsMatchingPattern) {
+            responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns, options));
+        } else {
+            for (const dsp of dsPatterns) {
+                responses.push(await mvsApi.dataSet(dsp, options));
+            }
+        }
+    }
+
+    private async listMembersInRange(start?: string, limit?: number): Promise<IFetchResult<IZosFilesResponse, string>> {
+        let totalItems = this.paginatorData?.totalItems;
+        let lastMemberName = this.paginatorData?.lastItemName;
+        let allMembers: IZosmfListResponse[] = [];
+        const responses: IZosFilesResponse[] = [];
+
+        try {
+            if (this.dirty || totalItems == null || lastMemberName == null) {
+                const basicResponses: IZosFilesResponse[] = [];
+                await this.listMembers(basicResponses, { attributes: false });
+
+                totalItems = 0;
+                allMembers = basicResponses
+                    .filter((r) => r.success)
+                    .reduce((arr: IZosmfListResponse[], r) => {
+                        const items: IZosmfListResponse[] = r.apiResponse?.items;
+                        totalItems += items.length;
+                        return items ? [...arr, ...items] : arr;
+                    }, []);
+
+                this.paginatorData = {
+                    totalItems,
+                    lastItemName: allMembers.at(-1)?.member,
+                };
+                lastMemberName = this.paginatorData.lastItemName;
+            } else {
+                // Using cached data from the refresh to handle the page change
+            }
+
+            await this.listMembers(responses, { attributes: true, start, maxLength: start ? limit + 1 : limit });
+        } catch (err) {
+            const updated = await AuthUtils.errorHandling(err, {
+                apiType: ZoweExplorerApiType.Mvs,
+                profile: this.getProfile(),
+                scenario: vscode.l10n.t("Retrieving response from MVS list API"),
+            });
+            AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
+            return;
+        }
+
+        const successfulResponses = responses
+            .filter((response) => response.success)
+            .map((resp) => {
+                const items = resp.apiResponse?.items;
+                if (start == null || items == null || items.find((it: IZosmfListResponse) => it.member === start) == null) {
+                    return resp;
+                }
+
+                // Remove the cursor item from the list as its already known/present in the page
+                const filteredItems = items.filter((it) => it.member !== start);
+
+                return {
+                    ...resp,
+                    apiResponse: Array.isArray(resp.apiResponse)
+                        ? filteredItems
+                        : {
+                              ...(resp.apiResponse ?? {}),
+                              items: filteredItems,
+                              // Update returnedRows to reflect the list without the cursor item
+                              // (difference between array length of `items` and `filteredItems`)
+                              returnedRows: resp.apiResponse.returnedRows - (items.length - filteredItems.length),
+                          },
+                };
+            });
+
+        const items: IZosmfListResponse[] = successfulResponses.reduce((prev: IZosmfListResponse[], resp): IZosmfListResponse[] => {
+            const responseItems: IZosmfListResponse[] = Array.isArray(resp.apiResponse) ? resp.apiResponse : resp.apiResponse?.items;
+            return responseItems ? [...prev, ...responseItems] : prev;
+        }, []);
+
+        // The last item in the page is the cursor for the next page
+        const lastItem = items.length > 0 ? items.at(-1) : undefined;
+
+        // Use member name for cursor
+        const nextPageCursor = limit && items.length === limit && lastItem && lastMemberName !== lastItem.member ? lastItem.member : undefined;
+
+        return {
+            items: successfulResponses,
+            nextPageCursor,
+            totalItems,
+        };
+    }
+
+    public async listMembers(responses: IZosFilesResponse[], options?: Definitions.DatasetListOpts): Promise<void> {
+        const profile = options?.profile ?? Profiles.getInstance().loadNamedProfile(this.getProfile().name);
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
+        if (!mvsApi.getSession(profile)) {
+            ZoweLogger.warn("[ZoweDatasetNode.listMembers] Session undefined for profile " + profile.name);
+            return;
+        }
+
+        const baseOptions = {
             attributes: true,
             responseTimeout: profile.profile.responseTimeout,
+            ...options,
         };
+
+        if (this.memberPattern) {
+            // Fetching members for this PDS w/ matching member pattern(s)
+            this.memberPattern = this.memberPattern.toUpperCase();
+            for (const memPattern of this.memberPattern.split(",")) {
+                baseOptions.pattern = memPattern.trim();
+                responses.push(await mvsApi.allMembers(this.label as string, baseOptions));
+            }
+        } else {
+            // Fetching members for this PDS
+            responses.push(await mvsApi.allMembers(this.label as string, baseOptions));
+        }
+    }
+
+    private async getDatasets(profile: imperative.IProfileLoaded, paginate?: boolean): Promise<IZosFilesResponse[] | undefined> {
+        ZoweLogger.trace("ZoweDatasetNode.getDatasets called.");
+
+        const responses: IZosFilesResponse[] = [];
         const isSession = SharedContext.isSession(this) || SharedContext.isFavoriteSearch(this);
+
+        if (!isSession && !SharedContext.isPds(this)) {
+            return;
+        }
+
+        let patternChanged = false;
         if (isSession) {
             const fullPattern = SharedContext.isFavoriteSearch(this) ? (this.label as string) : this.pattern;
             const dsTree = SharedTreeProviders.ds as DatasetTree;
-            this.patternMatches = dsTree.extractPatterns(fullPattern);
-            const dsPattern = dsTree.buildFinalPattern(this.patternMatches);
-            if (dsPattern.length != 0) {
-                if (dsPattern !== this.pattern) {
-                    // reset and remove previous search patterns if pattern has changed
-                    dsTree.resetFilterForChildren(this.children);
-                }
-                this.tooltip = this.pattern = dsPattern.toUpperCase();
+            let finalPattern = fullPattern;
+            if (fullPattern.length != 0 && SharedContext.isFavoriteSearch(this)) {
+                this.patternMatches = dsTree.extractPatterns(fullPattern);
+                finalPattern = dsTree.buildFinalPattern(this.patternMatches).toUpperCase();
             }
+            if (finalPattern !== this.pattern) {
+                // Force paginator and data to be re-initialized
+                this.paginator = this.paginatorData = undefined;
+            }
+            patternChanged = this.prevPattern !== finalPattern || this.pattern !== finalPattern;
+            this.pattern = this.prevPattern = finalPattern;
         }
 
         try {
-            if (isSession) {
-                const dsPatterns = [
-                    ...new Set(
-                        this.pattern
-                            .toUpperCase()
-                            .split(",")
-                            .map((p) => p.trim())
-                    ),
-                ];
-                const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
-                if (!mvsApi.getSession(profile)) {
-                    ZoweLogger.warn(`[ZoweDatasetNode.getDatasets] Session undefined for profile ${profile.name}`);
-                    return undefined;
-                }
-                if (mvsApi.dataSetsMatchingPattern) {
-                    responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
-                } else {
-                    for (const dsp of dsPatterns) {
-                        responses.push(await mvsApi.dataSet(dsp));
+            // Lazy initialization or re-initialization of paginator if needed
+            const fetchFunction = isSession ? this.listDatasetsInRange.bind(this) : this.listMembersInRange.bind(this);
+            this.itemsPerPage = SettingsConfig.getDirectValue<number>(Constants.SETTINGS_DATASETS_PER_PAGE) ?? Constants.DEFAULT_ITEMS_PER_PAGE;
+
+            if (isSession && patternChanged) {
+                // Check if pattern changed for session
+                this.paginator = this.paginatorData = undefined;
+            }
+
+            if ((!this.paginator || this.paginator.getMaxItemsPerPage() !== this.itemsPerPage) && this.itemsPerPage > 0) {
+                // Force paginator and data to be re-initialized if fetch function or page size changes, or if pattern changes
+                this.paginator = new Paginator(this.itemsPerPage, fetchFunction);
+            }
+
+            // If node is dirty and pagination is enabled, refetch the current page's data
+            // to reflect potential changes without changing the page itself.
+
+            // If the page fetch fails, reset the paginator data to take the user back to the first page.
+            if (this.dirty && paginate) {
+                try {
+                    await this.paginator.refetchCurrentPage();
+                } catch (error) {
+                    if (error instanceof Error) {
+                        ZoweLogger.error(`[ZoweDatasetNode.getDatasets]: Error refetching current page: ${error.message}`);
                     }
+                    if (
+                        (error instanceof imperative.ImperativeError &&
+                            Number(error.mDetails.errorCode) === imperative.RestConstants.HTTP_STATUS_401) ||
+                        error.message.includes("All configured authentication methods failed")
+                    ) {
+                        throw error;
+                    }
+                    this.paginatorData = undefined;
                 }
-            } else if (this.memberPattern) {
-                this.memberPattern = this.memberPattern.toUpperCase();
-                for (const memPattern of this.memberPattern.split(",")) {
-                    options.pattern = memPattern;
-                    responses.push(await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(this.label as string, options));
+            }
+
+            if (paginate && this.paginator) {
+                // Ensure paginator is initialized if it hasn't been (first load or invalidated cache)
+                if (!this.paginator.isInitialized() || this.paginatorData == null) {
+                    await this.paginator.initialize();
                 }
+                responses.push(...this.paginator.getCurrentPageItems());
             } else {
-                responses.push(await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(this.label as string, options));
+                // Fetch all data sets or members when paginate is false
+                if (isSession) {
+                    await this.listDatasets(responses, { attributes: true, profile });
+                } else {
+                    await this.listMembers(responses, { attributes: true, profile });
+                }
             }
         } catch (error) {
             const updated = await AuthUtils.errorHandling(error, {

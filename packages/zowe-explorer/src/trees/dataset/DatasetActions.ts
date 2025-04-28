@@ -12,7 +12,17 @@
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as path from "path";
-import { Gui, imperative, IZoweDatasetTreeNode, Validation, Types, FsAbstractUtils, ZoweScheme, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import {
+    Gui,
+    imperative,
+    IZoweDatasetTreeNode,
+    NavigationTreeItem,
+    Validation,
+    Types,
+    FsAbstractUtils,
+    ZoweScheme,
+    ZoweExplorerApiType,
+} from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetUtils } from "./DatasetUtils";
 import { DatasetFSProvider } from "./DatasetFSProvider";
@@ -160,7 +170,7 @@ export class DatasetActions {
         }
         DatasetActions.newDSProperties?.forEach((property) => {
             Object.keys(propertiesFromDsType).forEach((typeProperty) => {
-                if (typeProperty === property.key) {
+                if (typeProperty === property.key && propertiesFromDsType[typeProperty] != null) {
                     if (property.value !== propertiesFromDsType[typeProperty].toString()) {
                         isMatch = false;
                         return;
@@ -190,13 +200,13 @@ export class DatasetActions {
         if (!propertiesFromDsType) {
             propertiesFromDsType = DatasetActions.getDefaultDsTypeProperties(type);
         }
+        const propertyKeys = Object.keys(propertiesFromDsType);
         DatasetActions.newDSProperties?.forEach((property) => {
-            Object.keys(propertiesFromDsType).forEach((typeProperty) => {
-                if (typeProperty === property.key) {
-                    property.value = propertiesFromDsType[typeProperty].toString();
-                    property.placeHolder = propertiesFromDsType[typeProperty];
-                }
-            });
+            const typeProperty = propertyKeys.find((prop) => prop === property.key);
+            if (typeProperty != null && propertiesFromDsType[typeProperty] != null) {
+                property.value = propertiesFromDsType[typeProperty].toString();
+                property.placeHolder = propertiesFromDsType[typeProperty];
+            }
         });
         return propertiesFromDsType;
     }
@@ -259,7 +269,15 @@ export class DatasetActions {
         datasetProvider: Types.IZoweDatasetTreeType,
         theFilter: any
     ): Promise<void> {
-        node.tooltip = node.pattern = theFilter.toUpperCase();
+        node.pattern = theFilter.toUpperCase();
+        const toolTipList: string[] = (node.tooltip as string).split("\n");
+        const patternIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Pattern: ")));
+        if (patternIndex === -1) {
+            toolTipList.push(`${vscode.l10n.t("Pattern: ")}${node.pattern}`);
+        } else {
+            toolTipList[patternIndex] = `${vscode.l10n.t("Pattern: ")}${node.pattern}`;
+        }
+        node.tooltip = toolTipList.join("\n");
         node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
         const icon = IconGenerator.getIconByNode(node);
         if (icon) {
@@ -402,7 +420,7 @@ export class DatasetActions {
         }
 
         const theFilter = datasetProvider.createFilterString(newDSName, currSession);
-        currSession.tooltip = currSession.pattern = theFilter.toUpperCase();
+        currSession.pattern = theFilter.toUpperCase();
         datasetProvider.refresh();
         currSession.dirty = true;
         datasetProvider.refreshElement(currSession);
@@ -504,6 +522,9 @@ export class DatasetActions {
         let includedSelection = false;
         if (node) {
             for (const item of selectedNodes) {
+                if (item instanceof NavigationTreeItem) {
+                    continue;
+                }
                 if (
                     node.getLabel().toString() === item.getLabel().toString() &&
                     node.getParent().getLabel().toString() === item.getParent().getLabel().toString()
@@ -685,10 +706,6 @@ export class DatasetActions {
             const label = parent.label as string;
             const profile = parent.getProfile();
             let replace: Definitions.ShouldReplace;
-            const memberUri = vscode.Uri.from({
-                scheme: ZoweScheme.DS,
-                path: path.posix.join(parent.resourceUri.path, name),
-            });
             try {
                 replace = await DatasetActions.determineReplacement(profile, `${label}(${name})`, "mem");
                 if (replace !== "cancel") {
@@ -710,15 +727,18 @@ export class DatasetActions {
                 const newNode = new ZoweDatasetNode({
                     label: name,
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    contextOverride: Constants.DS_MEMBER_CONTEXT,
                     parentNode: parent,
                     profile: parent.getProfile(),
                 });
                 parent.children.push(newNode);
-                await vscode.workspace.fs.writeFile(memberUri, new Uint8Array());
+                await vscode.workspace.fs.writeFile(newNode.resourceUri, new Uint8Array());
             }
 
             parent.dirty = true;
             datasetProvider.refreshElement(parent);
+
+            const memberUri = parent.children.find((ds) => ds.label === name)?.resourceUri;
 
             // Refresh corresponding tree parent to reflect addition
             const otherTreeParent = datasetProvider.findEquivalentNode(parent, SharedContext.isFavorite(parent));
@@ -726,7 +746,9 @@ export class DatasetActions {
                 datasetProvider.refreshElement(otherTreeParent);
             }
 
-            await vscode.commands.executeCommand("vscode.open", memberUri);
+            if (memberUri != null) {
+                await vscode.commands.executeCommand("vscode.open", memberUri);
+            }
             datasetProvider.refresh();
         }
     }
@@ -1664,7 +1686,8 @@ export class DatasetActions {
                 group = { ...rest, dataSetName, members: [] };
                 result.push(group);
             }
-            if(memberName && memberName !== 'No data sets found') {
+
+            if (memberName && memberName !== vscode.l10n.t("No data sets found")) {
                 group.members.push(memberName);
             }
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return

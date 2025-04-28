@@ -143,7 +143,12 @@
       {
         "command": "zowe.manualPoll",
         "key": "f5",
-        "when": "editorIsOpen && resourceScheme == zosspool"
+        "when": "editorIsOpen && resourceScheme == zowe-jobs"
+      },
+      {
+        "command": "zowe.jobs.loadMoreRecords",
+        "key": "ctrl+l",
+        "when": "editorTextFocus && resourceScheme == zowe-jobs"
       }
     ],
     "commands": [
@@ -161,6 +166,11 @@
       {
         "command": "zowe.profileManagement",
         "title": "%zowe.profileManagement%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.updateSchema",
+        "title": "%zowe.updateSchema%",
         "category": "Zowe Explorer"
       },
       {
@@ -452,6 +462,12 @@
         }
       },
       {
+        "command": "zowe.uss.cdUp",
+        "title": "%uss.cd%",
+        "category": "Zowe Explorer",
+        "icon": "$(arrow-up)"
+      },
+      {
         "command": "zowe.uss.refresh",
         "title": "%uss.refreshAll%",
         "category": "Zowe Explorer",
@@ -501,6 +517,11 @@
       {
         "command": "zowe.uss.copyRelativePath",
         "title": "%uss.copyRelativePath%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.uss.filterBy",
+        "title": "%uss.filterBy%",
         "category": "Zowe Explorer"
       },
       {
@@ -755,6 +776,11 @@
           "group": "inline"
         },
         {
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*isFilterSearch/ && !listMultiSelection",
+          "command": "zowe.uss.cdUp",
+          "group": "inline"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
           "command": "zowe.addFavorite",
           "group": "inline"
@@ -780,6 +806,11 @@
           "group": "inline"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/ && !listMultiSelection",
+          "command": "zowe.uss.filterBy",
+          "group": "000_zowe_ussMainframeInteraction@1"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(textFile.*|binaryFile.*)/",
           "command": "zowe.openWithEncoding",
           "group": "000_zowe_ussMainframeInteraction@3"
@@ -788,6 +819,11 @@
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
           "command": "zowe.uss.fullPath",
           "group": "000_zowe_ussMainframeInteraction@0"
+        },
+        {
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*isFilterSearch/ && !listMultiSelection",
+          "command": "zowe.uss.cdUp",
+          "group": "000_zowe_ussMainframeInteraction@1"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
@@ -1448,6 +1484,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.uss.cdUp",
+          "when": "never"
+        },
+        {
           "command": "zowe.uss.copyPath",
           "when": "never"
         },
@@ -1618,6 +1658,12 @@
       "type": "object",
       "title": "%configuration.title%",
       "properties": {
+        "zowe.ds.paginate.datasetsPerPage": {
+          "default": 100,
+          "type": "integer",
+          "description": "%zowe.ds.paginate.datasetsPerPage%",
+          "scope": "window"
+        },
         "zowe.ds.default.binary": {
           "default": {
             "dsorg": "PO",
@@ -1942,6 +1988,30 @@
           "default": 5000,
           "description": "%zowe.pollInterval.info%",
           "scope": "window"
+        },
+        "zowe.jobs.settings.pagination": {
+          "type": "boolean",
+          "default": true,
+          "description": "%zowe.jobs.settings.pagination%",
+          "scope": "window"
+        },
+        "zowe.jobs.recordsToFetch": {
+          "type": "integer",
+          "default": 100,
+          "description": "%zowe.jobs.recordsToFetch%",
+          "scope": "window"
+        },
+        "zowe.settings.overrideWithEnvironmentVariables": {
+          "type": "boolean",
+          "default": false,
+          "description": "%zowe.settings.overrideWithEnvironmentVariables%",
+          "scope": "window"
+        },
+        "zowe.settings.socketConnectTimeout": {
+          "type": "number",
+          "default": 60000,
+          "description": "%zowe.settings.socketConnectTimeout%",
+          "scope": "window"
         }
       }
     },
@@ -1961,7 +2031,7 @@
     "test:integration": "cd __tests__/__integration__/bdd && wdio run ./wdio.conf.ts",
     "test:silent": "pnpm test:unit --reporters \"jest-silent-reporter\"",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
-    "vscode:prepublish": "pnpm clean:bundle && pnpm generateLocalization && webpack --mode production --devtool hidden-source-map",
+    "vscode:prepublish": "pnpm clean:bundle && pnpm generateLocalization && pnpm fetchLocalizations && webpack --mode production --devtool hidden-source-map",
     "package": "vsce package --no-dependencies && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
     "license": "node ../../scripts/updateLicenses.js",
     "watch": "concurrently \"pnpm watch:zowe-explorer\" \"pnpm watch:webviews\"",
@@ -1981,6 +2051,7 @@
     "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/",
     "pretty": "prettier --write .",
     "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src && node ./scripts/generatePoeditorJson.js",
+    "fetchLocalizations": "node ./scripts/downloadLocalizations.js",
     "copy-secrets": "node ./scripts/getSecretsPrebuilds.js",
     "build:nlsPseudo": "pnpm dlx @vscode/l10n-dev generate-pseudo -o ./l10n/ ./l10n/bundle.l10n.json ./package.nls.json",
     "build:nls": "pnpm run build:nlsPseudo"
@@ -1989,41 +2060,43 @@
     "vscode": "^1.79.0"
   },
   "devDependencies": {
-    "@cucumber/cucumber": "9.5.1",
+    "@cucumber/cucumber": "^10.0.0",
     "@napi-rs/cli": "^2.16.1",
     "@types/fs-extra": "^7.0.0",
     "@types/promise-queue": "^2.2.0",
     "@types/sinon": "^17.0.3",
-    "@wdio/cli": "^8.40.5",
-    "@wdio/cucumber-framework": "^8.40.5",
-    "@wdio/junit-reporter": "^8.40.3",
-    "@wdio/local-runner": "^8.40.5",
-    "@wdio/mocha-framework": "^8.40.3",
-    "@wdio/spec-reporter": "^8.40.3",
-    "@wdio/types": "^8.40.3",
+    "@wdio/cli": "^8.41.0",
+    "@wdio/cucumber-framework": "^9.0.0",
+    "@wdio/junit-reporter": "^8.41.0",
+    "@wdio/local-runner": "^8.41.0",
+    "@wdio/mocha-framework": "^8.41.0",
+    "@wdio/spec-reporter": "^8.41.0",
+    "@wdio/types": "^8.41.0",
+    "adm-zip": "^0.5.16",
     "chalk": "^2.4.1",
     "eslint-plugin-zowe-explorer": "3.2.0-SNAPSHOT",
     "expect-webdriverio": "^4.15.4",
+    "fs-extra": "8.0.1",
     "glob": "^7.1.6",
     "jest-silent-reporter": "^0.5.0",
     "log4js": "^6.4.6",
     "markdownlint-cli": "^0.33.0",
     "sinon": "^19.0.2",
+    "tmp": "^0.2.3",
     "ts-node": "^10.9.2",
     "wdio-vscode-service": "^6.1.1",
     "wdio-wait-for": "^3.0.11",
-    "webdriverio": "^8.40.5"
+    "webdriverio": "^8.41.0"
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "@zowe/core-for-zowe-sdk": "^8.16.0",
-    "@zowe/secrets-for-zowe-sdk": "^8.10.4",
-    "@zowe/zos-files-for-zowe-sdk": "^8.16.0",
-    "@zowe/zos-jobs-for-zowe-sdk": "^8.16.0",
-    "@zowe/zosmf-for-zowe-sdk": "^8.16.0",
+    "@zowe/core-for-zowe-sdk": "^8.19.0",
+    "@zowe/secrets-for-zowe-sdk": "^8.18.3",
+    "@zowe/zos-files-for-zowe-sdk": "^8.19.0",
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.19.0",
+    "@zowe/zosmf-for-zowe-sdk": "^8.19.0",
     "@zowe/zowe-explorer-api": "3.2.0-SNAPSHOT",
     "dayjs": "^1.11.10",
-    "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "promise-queue": "2.2.5"
   },

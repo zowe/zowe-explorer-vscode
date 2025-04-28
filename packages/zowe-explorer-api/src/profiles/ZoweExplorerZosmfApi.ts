@@ -21,6 +21,7 @@ import { MainframeInteraction } from "../extend/MainframeInteraction";
 import { FileManagement } from "../utils";
 import { Types } from "../Types";
 import { ProfilesCache } from "../profiles/ProfilesCache";
+import { VscSettings } from "../vscode/doc/VscSettings";
 
 /**
  * Implementations of Zowe Explorer API for z/OSMF profiles
@@ -45,6 +46,10 @@ export namespace ZoweExplorerZosmf {
             const sessCfg = zosmf.ZosmfSession.createSessCfgFromArgs(cmdArgs);
             imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
             const sessionToUse = new imperative.Session(sessCfg);
+            sessionToUse.ISession.socketConnectTimeout = VscSettings.getDirectValue(
+                "zowe.settings.socketConnectTimeout",
+                sessionToUse.ISession.socketConnectTimeout
+            );
             return ProfilesCache.getProfileSessionWithVscProxy(sessionToUse);
         }
 
@@ -452,6 +457,9 @@ export namespace ZoweExplorerZosmf {
             // use 1.0 so that all JES subsystems are supported out-of-the-box
             const jobResult = await zosjobs.CancelJobs.cancelJobForJob(session, job, "2.0");
             return jobResult.status === "0";
+        }
+        public supportSpoolPagination(): boolean {
+            return true;
         }
     }
 

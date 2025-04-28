@@ -207,7 +207,9 @@ export class ProfilesUtils {
         ZoweLogger.info(vscode.l10n.t("No custom credential managers found, using the default instead."));
         ProfilesUtils.updateCredentialManagerSetting(Constants.ZOWE_CLI_SCM);
         const defaultCredentialManager = imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring);
+        const overrideWithEnv: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_OVERRIDE_WITH_ENV_VAR);
         const profileInfo = new imperative.ProfileInfo("zowe", {
+            overrideWithEnv: overrideWithEnv,
             credMgrOverride: defaultCredentialManager,
         });
 
@@ -311,6 +313,7 @@ export class ProfilesUtils {
     public static async setupProfileInfo(): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
 
+        const overrideWithEnv: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_OVERRIDE_WITH_ENV_VAR);
         const hasSecureCredentialManagerEnabled: boolean = ProfilesUtils.checkDefaultCredentialManager();
         if (hasSecureCredentialManagerEnabled) {
             const shouldCheckForCustomCredentialManagers = SettingsConfig.getDirectValue<boolean>(
@@ -330,12 +333,14 @@ export class ProfilesUtils {
             }
             if (credentialManagerMap && isVSCodeCredentialPluginInstalled) {
                 return new imperative.ProfileInfo("zowe", {
+                    overrideWithEnv: overrideWithEnv,
                     credMgrOverride: await ProfilesUtils.setupCustomCredentialManager(credentialManagerMap),
                 });
             }
         }
 
         return new imperative.ProfileInfo("zowe", {
+            overrideWithEnv: overrideWithEnv,
             credMgrOverride: hasSecureCredentialManagerEnabled ? await ProfilesUtils.setupDefaultCredentialManager() : undefined,
         });
     }
@@ -633,6 +638,47 @@ export class ProfilesUtils {
             return node.getProfile();
         }
         throw new Error(vscode.l10n.t("Tree item is not a Zowe Explorer item."));
+    }
+
+    /**
+     * Adds new types and updates the Zowe schema.
+     * @param {imperative.ProfileInfo} profileInfo an imperative ProfileInfo object that has been prepared with a `readProfilesFromDisk`
+     * @param {imperative.ICommandProfileTypeConfiguration[]} profileTypeConfigurations Profile type configurations to add to the schema
+     * @param {boolean} updateProjectSchema (optional) false by default. pass true to update project level schema along with global level
+     */
+    public static updateSchema(
+        profileInfo: imperative.ProfileInfo,
+        profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[],
+        updateProjectSchema: boolean = false
+    ): void {
+        if (profileTypeConfigurations) {
+            try {
+                for (const typeConfig of profileTypeConfigurations) {
+                    const addResult = profileInfo.addProfileTypeToSchema(
+                        typeConfig.type,
+                        {
+                            schema: typeConfig.schema,
+                            sourceApp: "Zowe Explorer (for VS Code)",
+                        },
+                        updateProjectSchema
+                    );
+                    if (addResult.info.length > 0) {
+                        ZoweLogger.warn(addResult.info);
+                    }
+                }
+            } catch (err) {
+                // Only show an error if we failed to update the on-disk schema.
+                if (err.code === "EACCES" || err.code === "EPERM") {
+                    Gui.errorMessage(
+                        vscode.l10n.t({
+                            message: "Failed to update Zowe schema: insufficient permissions or read-only file. {0}",
+                            args: [err.message ?? ""],
+                            comment: ["Error message"],
+                        })
+                    );
+                }
+            }
+        }
     }
 
     private static async convertV1Profs(): Promise<void> {

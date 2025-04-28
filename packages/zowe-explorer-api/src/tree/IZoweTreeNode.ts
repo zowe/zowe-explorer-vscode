@@ -86,7 +86,7 @@ export interface IZoweTreeNode extends vscode.TreeItem {
     /**
      * Retrieves the nodes children nodes
      */
-    getChildren(): Promise<IZoweTreeNode[]>;
+    getChildren(paginate?: boolean): Promise<IZoweTreeNode[]>;
 
     /**
      * Retrieves the profile name in use with this node
@@ -191,7 +191,7 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      *
      * @returns {Promise<IZoweDatasetTreeNode[]>}
      */
-    getChildren(): Promise<IZoweDatasetTreeNode[]>;
+    getChildren(paginate?: boolean): Promise<IZoweDatasetTreeNode[]>;
 
     /**
      * Retrieves the etag value for the file

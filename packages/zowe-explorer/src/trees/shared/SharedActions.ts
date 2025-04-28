@@ -10,7 +10,9 @@
  */
 
 import * as vscode from "vscode";
-import { Gui, IZoweTree, IZoweTreeNode, IZoweUSSTreeNode, Types } from "@zowe/zowe-explorer-api";
+import * as imperative from "@zowe/imperative";
+import * as path from "path";
+import { FileManagement, Gui, IZoweTree, IZoweTreeNode, IZoweUSSTreeNode, Types, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../configuration/Profiles";
 import { Constants } from "../../configuration/Constants";
 import { SharedUtils } from "./SharedUtils";
@@ -23,6 +25,7 @@ import { AuthUtils } from "../../utils/AuthUtils";
 import { SharedTreeProviders } from "./SharedTreeProviders";
 import { ZoweExplorerExtender } from "../../extending/ZoweExplorerExtender";
 import type { ZoweTreeProvider } from "../ZoweTreeProvider";
+import { ProfilesUtils } from "../../utils/ProfilesUtils";
 
 export class SharedActions {
     private static refreshInProgress = false;
@@ -306,5 +309,74 @@ export class SharedActions {
         }
 
         SharedActions.refreshInProgress = false;
+    }
+
+    /**
+     * Zowe Explorer VS Code command `zowe.updateSchema` prompting user which if multiple levels in use,
+     * to update profile configuration schemas
+     */
+    public static async updateSchemaCommand(): Promise<void> {
+        let profileInfo: imperative.ProfileInfo;
+        const zoweDir = FileManagement.getZoweDir();
+        const workspaceDir = ZoweVsCodeExtension.workspaceRoot?.uri;
+        const projectDir = workspaceDir ? FileManagement.getFullPath(workspaceDir.fsPath) : undefined;
+        try {
+            profileInfo = await ProfilesUtils.setupProfileInfo();
+            await profileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir });
+        } catch (error) {
+            ZoweLogger.warn(error);
+            ZoweExplorerExtender.showZoweConfigError(error.message);
+        }
+        let updateProjectSchema = false;
+
+        // if project config prompt for options
+        const configLayers = await Profiles.getInstance().getConfigLayers();
+        const uniquePaths = new Set();
+        const existingLayers = configLayers?.filter((layer) => {
+            const normalized = path.normalize(layer.path);
+            if (!uniquePaths.has(normalized)) {
+                uniquePaths.add(normalized);
+                return true;
+            }
+            return false;
+        });
+        const layersInUse: imperative.IConfigLayer[] = [];
+        existingLayers?.forEach((layer) => {
+            if (layer.global) {
+                layersInUse.push(layer);
+            }
+            if (layer.path.includes(projectDir)) {
+                layersInUse.push(layer);
+            }
+        });
+        if (layersInUse.length > 1) {
+            const qpOptions: vscode.QuickPickOptions = {
+                title: vscode.l10n.t("Update Zowe configuration schema"),
+                placeHolder: vscode.l10n.t("Choose the schema location(s) to update."),
+                ignoreFocusOut: true,
+                canPickMany: false,
+            };
+
+            const global = new FilterItem({ text: vscode.l10n.t("Update Global schema only"), show: true });
+            const both = new FilterItem({ text: vscode.l10n.t("Update Global and Project level schemas"), show: true });
+            const qpItems: vscode.QuickPickItem[] = [];
+            qpItems.push(global);
+            qpItems.push(both);
+            const response = await Gui.showQuickPick(qpItems, qpOptions);
+            if (!response) {
+                Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
+                return;
+            }
+            if (response.label === both.label) {
+                updateProjectSchema = true;
+            }
+        } else {
+            if (!layersInUse[0]?.global) {
+                updateProjectSchema = true;
+            }
+        }
+
+        const profileTypeConfigurations = Constants.PROFILES_CACHE.getConfigArray();
+        ProfilesUtils.updateSchema(profileInfo, profileTypeConfigurations, updateProjectSchema);
     }
 }

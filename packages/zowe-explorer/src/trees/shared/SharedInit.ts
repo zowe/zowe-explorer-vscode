@@ -104,6 +104,12 @@ export class SharedInit {
         );
 
         context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.updateSchema", async () => {
+                await SharedActions.updateSchemaCommand();
+            })
+        );
+
+        context.subscriptions.push(
             vscode.commands.registerCommand("zowe.diff.useLocalContent", async (localUri) => {
                 if (localUri.scheme === ZoweScheme.USS) {
                     await UssFSProvider.instance.diffOverwrite(localUri);
@@ -128,6 +134,12 @@ export class SharedInit {
                 const ret = await certWizard.userSubmission.promise;
                 certWizard.panel.dispose();
                 return ret;
+            })
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.executeNavCallback", async (callback: () => void | PromiseLike<void>) => {
+                await callback();
             })
         );
 

@@ -30,6 +30,8 @@ import { ZoweDatasetNode } from "../../src/trees/dataset/ZoweDatasetNode";
 import { USSTree } from "../../src/trees/uss/USSTree";
 import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 import { JobTree } from "../../src/trees/job/JobTree";
+import { JobFSProvider } from "../../src/trees/job/JobFSProvider";
+import { PaginationCodeLens } from "../../../zowe-explorer-api/src";
 
 jest.mock("../../src/utils/LoggerUtils");
 jest.mock("../../src/tools/ZoweLogger");
@@ -177,7 +179,9 @@ async function createGlobalMocks() {
             "zowe.uss.refreshUSS",
             "zowe.uss.refreshUSSInTree",
             "zowe.uss.refreshDirectory",
+            "zowe.uss.cdUp",
             "zowe.uss.fullPath",
+            "zowe.uss.filterBy",
             "zowe.uss.createFile",
             "zowe.uss.createFolder",
             "zowe.uss.deleteNode",
@@ -220,9 +224,11 @@ async function createGlobalMocks() {
             "zowe.editHistory",
             "zowe.promptCredentials",
             "zowe.profileManagement",
+            "zowe.updateSchema",
             "zowe.diff.useLocalContent",
             "zowe.diff.useRemoteContent",
             "zowe.certificateWizard",
+            "zowe.executeNavCallback",
             "zowe.openRecentMember",
             "zowe.searchInAllLoadedItems",
             "zowe.disableValidation",
