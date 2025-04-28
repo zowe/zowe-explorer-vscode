@@ -28,7 +28,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Updated dependencies for technical currency purposes. [#3576](https://github.com/zowe/zowe-explorer-vscode/pull/3576)
 - Fixed issue where webviews may register their `onDidReceiveMessage` event multiple times in the `resolveForView` function. [#3584](https://github.com/zowe/zowe-explorer-vscode/pull/3584)
 - Fixed an issue where the `BaseProvider._reopenEditorForRelocatedUri` function threw an exception when an open tab did not have a URI on its `input` property. [#3613](https://github.com/zowe/zowe-explorer-vscode/issues/3613)
-- Fixed an issue where subscribers to the `ZoweVsCodeExtension.onProfileUpdated` event did not always get notified when Zowe Explorer or an extender fired the event. [#3623](https://github.com/zowe/zowe-explorer-vscode/pull/3623)
+- Fixed an issue where subscribers to the `ZoweVsCodeExtension.onProfileUpdated` event did not always get notified when Zowe Explorer or an extender fired the event. [#3622](https://github.com/zowe/zowe-explorer-vscode/issues/3622)
 
 ## `3.1.2`
 
