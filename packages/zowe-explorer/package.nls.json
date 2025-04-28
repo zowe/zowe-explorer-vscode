@@ -137,7 +137,7 @@
   "zowe.automaticProfileValidation": "Allow automatic validation of profiles.",
   "zowe.pollInterval.info": "Default interval (in milliseconds) when polling spool files.",
   "zowe.jobs.paginate.enabled": "Toggle to enable job spool pagination.",
-  "zowe.jobs.paginate.recordsToFetch": " Default number of records to fetch when polling spool files.",
+  "zowe.jobs.paginate.recordsToFetch": " Default number of records to fetch when polling spool files. 0 disables pagination.",
   "zowe.security.checkForCustomCredentialManagers": "Check for any installed VS Code extensions for handling credentials when activating Zowe Explorer",
   "zowe.security.secureCredentialsEnabled": "Allow credentials to be stored securely. If disabled and autoStore is set to true, z/OS credentials are stored as clear text in zowe.config.json.",
   "zowe.openRecentMember": "Open Recent Member",
