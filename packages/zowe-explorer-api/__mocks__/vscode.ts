@@ -549,14 +549,6 @@ export namespace commands {
         return undefined;
     }
 }
-export class Disposable {
-    /**
-     * Creates a new Disposable calling the provided function
-     * on dispose.
-     * @param callOnDispose Function that disposes something.
-     */
-    constructor() {}
-}
 
 export function RelativePattern(_base: string, _pattern: string): {} {
     return {};
@@ -893,33 +885,7 @@ export enum TreeItemCollapsibleState {
     Expanded = 2,
 }
 
-/**
- * An event emitter can be used to create and manage an [event](#Event) for others
- * to subscribe to. One emitter always owns one event.
- *
- * Use this class if you want to provide event from within your extension, for instance
- * inside a [TextDocumentContentProvider](#TextDocumentContentProvider) or when providing
- * API to other extensions.
- */
-export class EventEmitter<T> {
-    /**
-     * The event listeners can subscribe to.
-     */
-    event: Event<T>;
-
-    /**
-     * Notify all subscribers of the [event](EventEmitter#event). Failure
-     * of one or more listener will not fail this function call.
-     *
-     * @param data The event object.
-     */
-    fire(_data?: T): void {}
-
-    /**
-     * Dispose this object and free resources.
-     */
-    //dispose(): void;
-}
+export const { Disposable, EventEmitter } = require("jest-mock-vscode").createVSCodeMock(jest);
 
 export enum FilePermission {
     /**

@@ -27,6 +27,21 @@ describe("ZoweVsCodeExtension", () => {
         jest.clearAllMocks();
     });
 
+    describe("onProfileUpdatedEmitter", () => {
+        it("returns a valid event instance after successful import", () => {
+            expect(ZoweVsCodeExtension.onProfileUpdatedEmitter).toBeInstanceOf(vscode.EventEmitter);
+        });
+    });
+
+    describe("onProfileUpdated", () => {
+        it("returns a valid event instance", () => {
+            // event is valid and can be subscribed to
+            expect(ZoweVsCodeExtension.onProfileUpdated).not.toBeUndefined();
+            // event returns a disposable to remove the listener from the list of event subscribers
+            expect(ZoweVsCodeExtension.onProfileUpdated(jest.fn())["dispose"]).toBeInstanceOf(Function);
+        });
+    });
+
     it("customLoggingPath should return value if defined in VS Code settings", () => {
         const mockGetConfig = jest.fn().mockReturnValueOnce(__dirname);
         const vscodeMock = {
