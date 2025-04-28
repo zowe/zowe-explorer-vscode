@@ -22,6 +22,11 @@ import type { BaseProfileAuthOptions } from "./doc/BaseProfileAuth";
 import { FileManagement } from "../utils";
 import { VscSettings } from "./doc/VscSettings";
 
+const globalEmitterKey = "__zowe_profile_updated_emitter__";
+if (!(globalThis as any)[globalEmitterKey]) {
+    (globalThis as any)[globalEmitterKey] = new vscode.EventEmitter<imperative.IProfileLoaded>();
+}
+
 /**
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
  */
@@ -30,8 +35,13 @@ export class ZoweVsCodeExtension {
         return vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file");
     }
 
-    public static onProfileUpdatedEmitter: vscode.EventEmitter<imperative.IProfileLoaded> = new vscode.EventEmitter();
-    public static readonly onProfileUpdated = ZoweVsCodeExtension.onProfileUpdatedEmitter.event;
+    public static get onProfileUpdatedEmitter(): vscode.EventEmitter<imperative.IProfileLoaded> {
+        return (globalThis as any)[globalEmitterKey] as vscode.EventEmitter<imperative.IProfileLoaded>;
+    }
+
+    public static get onProfileUpdated(): vscode.Event<imperative.IProfileLoaded> {
+        return ZoweVsCodeExtension.onProfileUpdatedEmitter.event;
+    }
 
     /**
      * @internal
