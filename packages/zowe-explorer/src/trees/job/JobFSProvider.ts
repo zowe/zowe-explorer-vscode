@@ -259,7 +259,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                             : undefined,
                     encoding: spoolEncoding,
                 };
-                console.log("recordRange", recordRange);
+
                 await jesApi.downloadSingleSpool(spoolDownloadObject);
             } else {
                 const jobEntry = this._lookupParentDirectory(uri) as JobEntry;
