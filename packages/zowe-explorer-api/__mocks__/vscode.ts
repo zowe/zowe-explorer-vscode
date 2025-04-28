@@ -549,6 +549,17 @@ export namespace commands {
         return undefined;
     }
 }
+export class Disposable {
+    /**
+     * Creates a new Disposable calling the provided function
+     * on dispose.
+     * @param callOnDispose Function that disposes something.
+     */
+    constructor(private callOnDispose: Function) {}
+    public dispose(): void {
+        this.callOnDispose();
+    }
+}
 
 export function RelativePattern(_base: string, _pattern: string): {} {
     return {};
@@ -885,7 +896,52 @@ export enum TreeItemCollapsibleState {
     Expanded = 2,
 }
 
-export const { Disposable, EventEmitter } = require("jest-mock-vscode").createVSCodeMock(jest);
+/**
+ * An event emitter can be used to create and manage an [event](#Event) for others
+ * to subscribe to. One emitter always owns one event.
+ *
+ * Use this class if you want to provide event from within your extension, for instance
+ * inside a [TextDocumentContentProvider](#TextDocumentContentProvider) or when providing
+ * API to other extensions.
+ */
+export class EventEmitter<T> {
+    private subscribers: Function[] = [];
+    /**
+     * The event listeners can subscribe to.
+     */
+    event: Event<T>;
+
+    /**
+     * Notify all subscribers of the [event](EventEmitter#event). Failure
+     * of one or more listener will not fail this function call.
+     *
+     * @param data The event object.
+     */
+    fire(data?: T): void {
+        for (const sub of this.subscribers) {
+            try {
+                sub(data);
+            } catch (err) {}
+        }
+    }
+
+    /**
+     * Dispose this object and free resources.
+     */
+    //dispose(): void;
+
+    public constructor() {
+        this.event = jest.fn().mockImplementation((listener) => {
+            this.subscribers.push(listener);
+            return new Disposable(() => {
+                const idx = this.subscribers.findIndex((v) => v === listener);
+                if (idx != -1) {
+                    this.subscribers.splice(idx, 1);
+                }
+            });
+        });
+    }
+}
 
 export enum FilePermission {
     /**
