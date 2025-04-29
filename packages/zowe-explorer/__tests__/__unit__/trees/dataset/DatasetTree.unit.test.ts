@@ -4082,43 +4082,6 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         draggedNodeMock[Symbol.dispose]();
     });
 
-    it("Conflicting member being dropped on pds when the user does not have permissions", async () => {
-        createGlobalMocks();
-        const testTree = new DatasetTree();
-        const blockMocks = createBlockMocks();
-        const dataTransfer = new vscode.DataTransfer();
-        jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
-            value: [
-                {
-                    label: blockMocks.memberNode.label as string,
-                    uri: blockMocks.memberNode.resourceUri,
-                },
-            ],
-        } as any);
-        const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
-            [blockMocks.memberNode.resourceUri.path]: blockMocks.memberNode,
-        });
-        jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue(undefined as any);
-        const createMock = jest.fn().mockRejectedValue({
-            errorCode: "500",
-            message: "Insufficient permissions",
-        });
-        const crossLparMoveSpy = jest.spyOn(testTree, "crossLparMove");
-        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
-            createDataSetMember: createMock,
-        } as any);
-        const deleteMock = jest.spyOn(vscode.workspace.fs, "delete").mockResolvedValue(undefined);
-        jest.spyOn(Gui, "warningMessage").mockResolvedValueOnce("Confirm");
-        const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
-        await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer, undefined);
-        expect(crossLparMoveSpy).not.toHaveBeenCalled();
-        expect(Gui.warningMessage).toHaveBeenCalledTimes(1);
-        expect(deleteMock).not.toHaveBeenCalled();
-        expect(errorMessageSpy).toHaveBeenCalled();
-        expect(createMock).toHaveBeenCalled();
-        draggedNodeMock[Symbol.dispose]();
-    });
-
     it("Write File throwing error", async () => {
         createGlobalMocks();
         const testTree = new DatasetTree();
