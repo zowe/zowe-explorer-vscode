@@ -871,11 +871,13 @@ export class Disposable {
      * on dispose.
      * @param callOnDispose Function that disposes something.
      */
-    constructor() {}
+    constructor(private callOnDispose?: Function) {}
     /**
      * Dispose this object.
      */
-    public dispose(): any {}
+    public dispose(): any {
+        this.callOnDispose?.();
+    }
 }
 
 export function RelativePattern(base: string, pattern: string) {
@@ -1081,6 +1083,7 @@ export enum TreeItemCollapsibleState {
  * API to other extensions.
  */
 export class EventEmitter<T> {
+    private subscribers: Function[] = [];
     /**
      * The event listeners can subscribe to.
      */
@@ -1092,12 +1095,30 @@ export class EventEmitter<T> {
      *
      * @param data The event object.
      */
-    fire(data?: T): void {}
+    fire(data?: T): void {
+        for (const sub of this.subscribers) {
+            try {
+                sub(data);
+            } catch (err) {}
+        }
+    }
 
     /**
      * Dispose this object and free resources.
      */
     //dispose(): void;
+
+    public constructor() {
+        this.event = jest.fn().mockImplementation((listener) => {
+            this.subscribers.push(listener);
+            return new Disposable(() => {
+                const idx = this.subscribers.findIndex((v) => v === listener);
+                if (idx != -1) {
+                    this.subscribers.splice(idx, 1);
+                }
+            });
+        });
+    }
 }
 
 export enum FilePermission {

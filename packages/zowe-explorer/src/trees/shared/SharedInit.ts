@@ -161,7 +161,7 @@ export class SharedInit {
         );
 
         context.subscriptions.push(
-            ZoweVsCodeExtension.onProfileUpdated(async (profile) => {
+            ZoweExplorerApiRegister.getInstance().onProfileUpdated(async (profile) => {
                 for (const provider of Object.values(providers)) {
                     try {
                         const node = (await provider.getChildren()).find((n) => n.label === profile?.name);

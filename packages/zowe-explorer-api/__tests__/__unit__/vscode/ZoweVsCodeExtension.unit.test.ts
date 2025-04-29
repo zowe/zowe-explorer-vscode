@@ -678,9 +678,14 @@ describe("ZoweVsCodeExtension", () => {
         const promptCredsOptions: PromptCredentialsOptions.ComplexOptions = {
             sessionName: "test",
         };
+        const onProfileUpdatedEmitter = new vscode.EventEmitter<imperative.IProfileLoaded>();
 
         it("should update user and password as secure fields", async () => {
             const mockUpdateProperty = jest.fn();
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
+                onProfileUpdated: onProfileUpdatedEmitter.event,
+                onProfileUpdatedEmitter,
+            } as any);
             jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
                 getLoadedProfConfig: jest.fn().mockReturnValue({
                     profile: {},
@@ -707,6 +712,10 @@ describe("ZoweVsCodeExtension", () => {
 
         it("should update user and password as secure fields with rePrompt", async () => {
             const mockUpdateProperty = jest.fn();
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
+                onProfileUpdated: onProfileUpdatedEmitter.event,
+                onProfileUpdatedEmitter,
+            } as any);
             jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
                 getLoadedProfConfig: jest.fn().mockReturnValue({
                     profile: { user: "badUser", password: "badPassword" },
@@ -736,6 +745,10 @@ describe("ZoweVsCodeExtension", () => {
 
         it("should update user and password as plain text if prompt accepted", async () => {
             const mockUpdateProperty = jest.fn();
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
+                onProfileUpdated: onProfileUpdatedEmitter.event,
+                onProfileUpdatedEmitter,
+            } as any);
             jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
                 getLoadedProfConfig: jest.fn().mockReturnValue({
                     profile: {},
@@ -763,6 +776,10 @@ describe("ZoweVsCodeExtension", () => {
 
         it("should not update user and password as plain text if prompt cancelled", async () => {
             const mockUpdateProperty = jest.fn();
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
+                onProfileUpdated: onProfileUpdatedEmitter.event,
+                onProfileUpdatedEmitter,
+            } as any);
             jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
                 getLoadedProfConfig: jest.fn().mockReturnValue({
                     profile: {},
