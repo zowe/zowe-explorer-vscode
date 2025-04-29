@@ -1400,3 +1400,41 @@ describe("Shared utils unit tests - function debounceAsync", () => {
         expect(mockEventHandler).toHaveBeenCalledTimes(1);
     });
 });
+
+describe("SharedUtils.handleProfileChange", () => {
+    it("iterates over tree providers and updates profile on profile nodes", async () => {
+        const profile = createIProfile();
+        const newProfile = { ...profile, profile: { ...profile, user: "newuser", password: "newpass" } };
+        const dsSession = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+            profile,
+        });
+        const ussSession = new ZoweUSSNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.USS_SESSION_CONTEXT,
+            profile,
+        });
+        const jobSession = new ZoweJobNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.JOBS_SESSION_CONTEXT,
+            profile,
+        });
+        const providers = {
+            ds: { getChildren: () => [dsSession] } as any,
+            uss: { getChildren: () => [ussSession] } as any,
+            job: { getChildren: () => [jobSession] } as any,
+        };
+        await SharedUtils.handleProfileChange(providers, newProfile);
+        // verify that nodes were updated with new data
+        expect(dsSession.getProfile().profile?.user).toBe(newProfile.profile.user);
+        expect(dsSession.getProfile().profile?.password).toBe(newProfile.profile.password);
+        expect(ussSession.getProfile().profile?.user).toBe(newProfile.profile.user);
+        expect(ussSession.getProfile().profile?.password).toBe(newProfile.profile.password);
+        expect(jobSession.getProfile().profile?.user).toBe(newProfile.profile.user);
+        expect(jobSession.getProfile().profile?.password).toBe(newProfile.profile.password);
+    });
+});
