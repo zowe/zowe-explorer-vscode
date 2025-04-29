@@ -65,9 +65,8 @@ describe("Test src/shared/extension", () => {
             ssoLogin: jest.fn(),
             ssoLogout: jest.fn(),
         };
-        const onProfileUpdated = jest
-            .spyOn(ZoweExplorerApiRegister.getInstance(), "onProfileUpdated")
-            .mockReturnValue(new vscode.Disposable(jest.fn()));
+        const onProfileUpdated = jest.fn().mockReturnValue(new vscode.Disposable(jest.fn()));
+        const mockOnProfileUpdated = new MockedProperty(ZoweExplorerApiRegister.getInstance(), "onProfileUpdated", undefined, onProfileUpdated);
 
         const commands: IJestIt[] = [
             {
@@ -320,6 +319,7 @@ describe("Test src/shared/extension", () => {
             SharedInit.registerCommonCommands(test.context, test.value.providers);
         });
         afterAll(() => {
+            mockOnProfileUpdated[Symbol.dispose]();
             jest.restoreAllMocks();
         });
 

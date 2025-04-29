@@ -1087,7 +1087,15 @@ export class EventEmitter<T> {
     /**
      * The event listeners can subscribe to.
      */
-    event: Event<T>;
+    event: Event<T> = jest.fn().mockImplementation((listener) => {
+        this.subscribers.push(listener);
+        return new Disposable(() => {
+            const idx = this.subscribers.findIndex((v) => v === listener);
+            if (idx != -1) {
+                this.subscribers.splice(idx, 1);
+            }
+        });
+    });
 
     /**
      * Notify all subscribers of the [event](EventEmitter#event). Failure
@@ -1107,18 +1115,6 @@ export class EventEmitter<T> {
      * Dispose this object and free resources.
      */
     //dispose(): void;
-
-    public constructor() {
-        this.event = jest.fn().mockImplementation((listener) => {
-            this.subscribers.push(listener);
-            return new Disposable(() => {
-                const idx = this.subscribers.findIndex((v) => v === listener);
-                if (idx != -1) {
-                    this.subscribers.splice(idx, 1);
-                }
-            });
-        });
-    }
 }
 
 export enum FilePermission {
