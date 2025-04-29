@@ -161,19 +161,7 @@ export class SharedInit {
         );
 
         context.subscriptions.push(
-            ZoweExplorerApiRegister.getInstance().onProfileUpdated(async (profile) => {
-                for (const provider of Object.values(providers)) {
-                    try {
-                        const node = (await provider.getChildren()).find((n) => n.label === profile?.name);
-                        node?.setProfileToChoice?.(profile);
-                    } catch (err) {
-                        if (err instanceof Error) {
-                            ZoweLogger.error(err.message);
-                        }
-                        return;
-                    }
-                }
-            })
+            ZoweExplorerApiRegister.getInstance().onProfileUpdated((profile) => SharedUtils.handleProfileChange(providers, profile))
         );
 
         if (providers.ds || providers.uss) {
