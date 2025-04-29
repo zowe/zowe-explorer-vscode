@@ -3987,7 +3987,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         expect(statusBarMsgSpy).not.toHaveBeenCalled();
     });
 
-    it("handle moving of seq and pds to different profiles dropping on seq", async () => {
+    it("handle moving of pds to different profiles dropping on seq - should throw error", async () => {
         createGlobalMocks();
         const testTree = new DatasetTree();
         const statusBarMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
@@ -4007,60 +4007,14 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
             [blockMocks.datasetPdsNode.resourceUri.path]: blockMocks.datasetPdsNode,
         });
+        const crossLparMoveMock = jest.spyOn(DatasetTree.prototype as any, "crossLparMove").mockResolvedValue(undefined);
         jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
             createDataSet: jest.fn(),
             createDataSetMember: jest.fn(),
         } as any);
-
-        jest.spyOn(DatasetFSProvider.instance as any, "createDirectory").mockResolvedValueOnce(undefined);
-        const deleteMock = jest.spyOn(vscode.workspace.fs, "delete").mockResolvedValue(undefined);
-        jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
-        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockResolvedValue(undefined);
         await testTree.handleDrop(blockMocks.datasetSeqNode, dataTransfer, undefined);
-        expect(deleteMock).toHaveBeenCalledWith(blockMocks.datasetPdsNode.resourceUri, { recursive: true });
-        expect(statusBarMsgSpy).toHaveBeenCalledWith("$(sync~spin) Moving MVS files...");
-        draggedNodeMock[Symbol.dispose]();
-    });
-
-    it("handle moving of pds to different profiles where the user does not have permission", async () => {
-        createGlobalMocks();
-        const testTree = new DatasetTree();
-        const statusBarMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
-        const blockMocks = createBlockMocks();
-        const datasetSession = blockMocks.datasetSessionNode;
-
-        datasetSession.children = [blockMocks.datasetPdsNode, blockMocks.datasetSeqNode];
-        const dataTransfer = new vscode.DataTransfer();
-        jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
-            value: [
-                {
-                    label: blockMocks.datasetPdsNode.label as string,
-                    uri: blockMocks.datasetPdsNode.resourceUri,
-                },
-            ],
-        } as any);
-        const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
-            [blockMocks.datasetPdsNode.resourceUri.path]: blockMocks.datasetPdsNode,
-        });
-        const createMock = jest.fn().mockRejectedValue({
-            errorCode: "500",
-            message: "Insufficient permissions",
-        });
-        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
-            createDataSet: createMock,
-            createDataSetMember: createMock,
-        } as any);
-
-        jest.spyOn(DatasetFSProvider.instance as any, "createDirectory").mockResolvedValueOnce(undefined);
-        jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
-        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockResolvedValue(undefined);
-        const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
-        const deleteMock = jest.spyOn(vscode.workspace.fs, "delete").mockResolvedValue(undefined);
-        await testTree.handleDrop(blockMocks.datasetSeqNode, dataTransfer, undefined);
-        expect(createMock).toHaveBeenCalled();
-        expect(errorMessageSpy).toHaveBeenCalled();
-        expect(deleteMock).not.toHaveBeenCalled();
-        expect(statusBarMsgSpy).toHaveBeenCalledWith("$(sync~spin) Moving MVS files...");
+        expect(crossLparMoveMock).not.toHaveBeenCalled();
+        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a partitioned dataset or member onto a sequential dataset.");
         draggedNodeMock[Symbol.dispose]();
     });
 
@@ -4149,6 +4103,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             errorCode: "500",
             message: "Insufficient permissions",
         });
+        const crossLparMoveSpy = jest.spyOn(testTree, "crossLparMove");
         jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
             createDataSetMember: createMock,
         } as any);
@@ -4156,6 +4111,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         jest.spyOn(Gui, "warningMessage").mockResolvedValueOnce("Confirm");
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
         await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer, undefined);
+        expect(crossLparMoveSpy).not.toHaveBeenCalled();
         expect(Gui.warningMessage).toHaveBeenCalledTimes(1);
         expect(deleteMock).not.toHaveBeenCalled();
         expect(errorMessageSpy).toHaveBeenCalled();
