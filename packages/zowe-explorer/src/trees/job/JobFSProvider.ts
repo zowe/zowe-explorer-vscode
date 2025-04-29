@@ -206,8 +206,6 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         );
     }
 
-    private allLines: string[] = [];
-    private currentLine: number = 0;
     /**
      * Fetches a file from the remote system at the given URI.
      * @param uri The URI pointing to a valid file to fetch from the remote system
@@ -232,15 +230,11 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         if (query.has("startLine")) {
             const startLine = parseInt(query.get("startLine")!);
             const endLine = query.has("endLine") ? parseInt(query.get("endLine")!) : startLine + (recordsToFetch - 1);
-            console.log(endLine);
             recordRange = `${startLine}-${endLine}`;
-            console.log(recordRange);
         } else {
             const defFetchSetting = SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 0;
             if (defFetchSetting > 1) {
                 recordRange = `0-${defFetchSetting - 1}`;
-            } else if (defFetchSetting === 1) {
-                recordRange = `0-${defFetchSetting}`;
             }
         }
 
@@ -252,9 +246,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                     stream: bufBuilder,
                     binary: spoolEntry.encoding?.kind === "binary",
                     recordRange:
-                        recordsToFetch === 1
-                            ? undefined
-                            : jesApi.supportSpoolPagination?.() && SettingsConfig.getDirectValue<boolean>("zowe.jobs.paginate.enabled")
+                        jesApi.supportSpoolPagination?.() && SettingsConfig.getDirectValue<boolean>("zowe.jobs.paginate.enabled")
                             ? recordRange
                             : undefined,
                     encoding: spoolEncoding,
@@ -272,19 +264,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
 
-        if (recordsToFetch === 1) {
-            if (this.allLines.length === 0) {
-                const content = bufBuilder.read()?.toString("utf-8") ?? "";
-                this.allLines = content.split(/\r?\n/).filter((line) => line.trim() !== "");
-                this.currentLine = 0;
-            }
-            if (this.currentLine < this.allLines.length) {
-                const line = this.allLines[this.currentLine];
-
-                spoolEntry.data = Buffer.concat([spoolEntry.data, Buffer.from(line + "\n", "utf-8")]);
-                this.currentLine += 1;
-            }
-        } else if (query.has("startLine") && !query.has("endLine")) {
+        if (query.has("startLine") && !query.has("endLine")) {
             spoolEntry.data = Buffer.concat([spoolEntry.data, bufBuilder.read() ?? new Uint8Array()]);
         } else {
             spoolEntry.data = bufBuilder.read() ?? new Uint8Array();

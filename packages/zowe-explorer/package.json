@@ -1999,7 +1999,8 @@
           "type": "integer",
           "default": 100,
           "description": "%zowe.jobs.paginate.recordsToFetch%",
-          "scope": "window"
+          "scope": "window",
+          "minimum": 2
         },
         "zowe.settings.overrideWithEnvironmentVariables": {
           "type": "boolean",
