@@ -325,6 +325,7 @@ describe("Test src/shared/extension", () => {
 
         processSubscriptions(commands, test);
         it("registers an onProfileUpdated event", () => {
+            expect(mockOnProfileUpdated.mock).toHaveBeenCalledTimes(1);
             expect(onProfileUpdated).toHaveBeenCalledTimes(1);
         });
     });
