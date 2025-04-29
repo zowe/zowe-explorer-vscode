@@ -1437,4 +1437,29 @@ describe("SharedUtils.handleProfileChange", () => {
         expect(jobSession.getProfile().profile?.user).toBe(newProfile.profile.user);
         expect(jobSession.getProfile().profile?.password).toBe(newProfile.profile.password);
     });
+    it("logs an error if setProfileToChoice fails", async () => {
+        const profile = createIProfile();
+        const newProfile = { ...profile, profile: { ...profile, user: "newuser", password: "newpass" } };
+        const dsSession = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+            profile,
+        });
+        jest.spyOn(dsSession, "setProfileToChoice").mockImplementation(() => {
+            throw new Error("error while updating profile on node");
+        });
+        const providers = {
+            ds: { getChildren: () => [dsSession] } as any,
+            uss: { getChildren: () => [] } as any,
+            job: { getChildren: () => [] } as any,
+        };
+        const errorSpy = jest.spyOn(ZoweLogger, "error");
+        await SharedUtils.handleProfileChange(providers, newProfile);
+        // verify that nodes still have the old data as the `setProfileToChoice` function failed
+        expect(dsSession.getProfile().profile?.user).toBe(profile.profile?.user);
+        expect(dsSession.getProfile().profile?.password).toBe(profile.profile?.password);
+        expect(errorSpy).toHaveBeenCalledTimes(1);
+        expect(errorSpy).toHaveBeenCalledWith("error while updating profile on node");
+    });
 });
