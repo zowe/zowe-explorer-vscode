@@ -486,17 +486,9 @@ export namespace window {
         return undefined;
     }
 
-    export function createWebviewPanel(
-        viewType: string,
-        title: string,
-        showOptions: ViewColumn | { preserveFocus: boolean; viewColumn: ViewColumn },
-        options?: WebviewPanelOptions & WebviewOptions
-    ): WebviewPanel {
-        return undefined as any;
-    }
-
     const { window: mockWindow } = require("jest-mock-vscode").createVSCodeMock(jest);
     export const showQuickPick = mockWindow.showQuickPick;
+    export const createWebviewPanel = mockWindow.createWebviewPanel;
 
     /**
      * Options to configure the behavior of the message.
@@ -549,14 +541,7 @@ export namespace commands {
         return undefined;
     }
 }
-export class Disposable {
-    /**
-     * Creates a new Disposable calling the provided function
-     * on dispose.
-     * @param callOnDispose Function that disposes something.
-     */
-    constructor() {}
-}
+export const { Disposable } = require("jest-mock-vscode").createVSCodeMock(jest);
 
 export function RelativePattern(_base: string, _pattern: string): {} {
     return {};

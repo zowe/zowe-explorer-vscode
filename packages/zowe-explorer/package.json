@@ -1658,10 +1658,10 @@
       "type": "object",
       "title": "%configuration.title%",
       "properties": {
-        "zowe.ds.paginate.datasetsPerPage": {
+        "zowe.ds.paginate.dataSetsPerPage": {
           "default": 100,
           "type": "integer",
-          "description": "%zowe.ds.paginate.datasetsPerPage%",
+          "description": "%zowe.ds.paginate.dataSetsPerPage%",
           "scope": "window"
         },
         "zowe.ds.default.binary": {
