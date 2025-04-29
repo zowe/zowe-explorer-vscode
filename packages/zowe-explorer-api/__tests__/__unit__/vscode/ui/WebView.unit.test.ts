@@ -44,13 +44,18 @@ describe("WebView unit tests", () => {
         const createWebviewPanelSpy = jest.spyOn(vscode.window, "createWebviewPanel");
         const renderSpy = jest.spyOn(Mustache, "render");
 
+        const disposeMock = jest.fn();
+        const disposable = new vscode.Disposable(disposeMock);
+
         const testView = new WebView("Test Webview Title", "example-folder", { extensionPath: "test/path" } as vscode.ExtensionContext, {
             onDidReceiveMessage: async (_message: any) => {},
         });
+        (testView as any).disposables = [disposable];
         expect(createWebviewPanelSpy).toHaveBeenCalled();
         expect(renderSpy).toHaveBeenCalled();
         (testView as any).dispose();
         expect(testView.panel).toBeUndefined();
+        expect(disposeMock).toHaveBeenCalledTimes(1);
     });
 
     it("returns HTML content from WebView", () => {
