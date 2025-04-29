@@ -215,7 +215,7 @@
   "configuration.title": {
     "Zowe Explorer": ""
   },
-  "zowe.ds.paginate.datasetsPerPage": {
+  "zowe.ds.paginate.dataSetsPerPage": {
     "Maximum number of data sets and PDS members to list per page. 0 disables pagination.": ""
   },
   "zowe.ds.default.binary": {
