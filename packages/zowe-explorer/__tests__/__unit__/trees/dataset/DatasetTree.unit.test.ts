@@ -3975,6 +3975,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
 
     beforeEach(() => {
         jest.resetAllMocks();
+        jest.clearAllMocks();
     });
 
     it("returns early if there are no items in the dataTransfer object", async () => {
@@ -4079,6 +4080,48 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         jest.spyOn(Gui, "warningMessage").mockResolvedValueOnce(null as any);
         await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer, undefined);
         expect(Gui.warningMessage).toHaveBeenCalledTimes(1);
+        draggedNodeMock[Symbol.dispose]();
+    });
+
+    it("shows an error when a PDS is dropped onto another PDS's parent", async () => {
+        createGlobalMocks();
+        const testTree = new DatasetTree();
+        const blockMocks = createBlockMocks();
+        blockMocks.draggedNode.contextValue = Constants.DS_PDS_CONTEXT;
+        blockMocks.datasetPdsNode.contextValue = "context";
+
+        jest.spyOn(SharedContext, "isPds").mockImplementation((node) => {
+            if (node === blockMocks.draggedNode) return true;
+            if (node === blockMocks.datasetPdsNode) return false;
+            if (node === blockMocks.datasetSessionNode) return true;
+            return false;
+        });
+        jest.spyOn(SharedContext, "isDs").mockReturnValue(false);
+        jest.spyOn(SharedContext, "isDsMember").mockReturnValue(false);
+
+        jest.spyOn(blockMocks.datasetPdsNode, "getParent").mockReturnValue(blockMocks.datasetSessionNode);
+        jest.spyOn(blockMocks.draggedNode, "getParent").mockReturnValue(blockMocks.datasetSessionNode);
+
+        const dataTransfer = new vscode.DataTransfer();
+        jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
+            value: [
+                {
+                    label: blockMocks.draggedNode.label,
+                    uri: blockMocks.draggedNode.resourceUri,
+                },
+            ],
+        } as any);
+
+        const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
+            [blockMocks.draggedNode.resourceUri.path]: blockMocks.draggedNode,
+        });
+
+        const errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce(undefined as any);
+
+        await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer, undefined);
+
+        expect(errorMessageSpy).toHaveBeenCalledWith(vscode.l10n.t("Cannot drop a partitioned dataset onto another partitioned dataset."));
+
         draggedNodeMock[Symbol.dispose]();
     });
 

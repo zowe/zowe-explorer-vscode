@@ -675,8 +675,8 @@ describe("Table.Instance", () => {
                     { a: 3, b: 2, c: 1, d: true, e: 6 },
                 ])
                 .addColumns([{ field: "a" }, { field: "b" }, { field: "c" }, { field: "d" }, { field: "e" }]);
+            const disposeMock = jest.spyOn((WebView as any).prototype, "dispose").mockImplementationOnce(jest.fn());
             const instance = builder.build();
-            const disposeMock = jest.spyOn((WebView as any).prototype, "dispose");
             instance.dispose();
             expect(disposeMock).toHaveBeenCalled();
         });

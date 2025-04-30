@@ -102,7 +102,7 @@ export class AuthUtils {
             const imperativeError: imperative.ImperativeError = errorDetails as imperative.ImperativeError;
             const httpErrorCode = Number(imperativeError.mDetails.errorCode);
             // open config file for missing hostname error
-            if (imperativeError.toString().includes("hostname")) {
+            if (imperativeError.toString().includes("hostname") && !imperativeError.toString().includes("protocol")) {
                 await AuthUtils.openConfigForMissingHostname(profile);
                 return false;
             } else if (
