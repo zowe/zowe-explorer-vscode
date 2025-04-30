@@ -59,7 +59,7 @@ const testEntries = {
 
 describe("watch", () => {
     it("returns an empty Disposable object", () => {
-        expect(JobFSProvider.instance.watch(testUris.job, { recursive: false, excludes: [] })).toStrictEqual(new Disposable(() => {}));
+        expect(JobFSProvider.instance.watch(testUris.job, { recursive: false, excludes: [] })).toBeInstanceOf(Disposable);
     });
 });
 describe("stat", () => {

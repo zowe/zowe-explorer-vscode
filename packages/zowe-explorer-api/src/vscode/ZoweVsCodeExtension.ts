@@ -30,8 +30,12 @@ export class ZoweVsCodeExtension {
         return vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file");
     }
 
-    public static onProfileUpdatedEmitter: vscode.EventEmitter<imperative.IProfileLoaded> = new vscode.EventEmitter();
-    public static readonly onProfileUpdated = ZoweVsCodeExtension.onProfileUpdatedEmitter.event;
+    public static get onProfileUpdatedEmitter(): vscode.EventEmitter<imperative.IProfileLoaded> {
+        return this.getZoweExplorerApi().onProfileUpdatedEmitter;
+    }
+    public static get onProfileUpdated(): vscode.Event<imperative.IProfileLoaded> {
+        return ZoweVsCodeExtension.onProfileUpdatedEmitter.event;
+    }
 
     /**
      * @internal

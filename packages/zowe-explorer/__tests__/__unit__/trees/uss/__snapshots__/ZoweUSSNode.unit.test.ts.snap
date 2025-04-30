@@ -46,7 +46,10 @@ ZoweUSSNode {
       "id": "uss.sestest",
       "label": "sestest",
       "mParent": undefined,
-      "onUpdateEmitter": EventEmitter {},
+      "onUpdateEmitter": EventEmitter {
+        "event": [MockFunction],
+        "subscribers": [],
+      },
       "parentPath": undefined,
       "profile": {
         "failNotFound": false,
@@ -78,7 +81,10 @@ ZoweUSSNode {
       "tooltip": "Profile: sestest
 Profile Type: zosmf",
     },
-    "onUpdateEmitter": EventEmitter {},
+    "onUpdateEmitter": EventEmitter {
+      "event": [MockFunction],
+      "subscribers": [],
+    },
     "parentPath": "/",
     "profile": {
       "failNotFound": false,
@@ -100,7 +106,10 @@ Profile Type: zosmf",
     "session": undefined,
     "tooltip": "/testDir",
   },
-  "onUpdateEmitter": EventEmitter {},
+  "onUpdateEmitter": EventEmitter {
+    "event": [MockFunction],
+    "subscribers": [],
+  },
   "parentPath": "/testDir",
   "profile": {
     "failNotFound": false,
