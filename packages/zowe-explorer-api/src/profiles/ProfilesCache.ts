@@ -193,9 +193,9 @@ export class ProfilesCache {
     public async refresh(apiRegister?: IRegisterClient): Promise<void> {
         const allProfiles: imperative.IProfileLoaded[] = [];
         const mProfileInfo = await this.getProfileInfo();
-        const allTypes = this.getAllProfileTypes(apiRegister?.registeredApiTypes() ?? []);
-        allTypes.push("ssh");
-        allTypes.push("base");
+        const allTypes = new Set(this.getAllProfileTypes(apiRegister?.registeredApiTypes() ?? []));
+        allTypes.add("ssh");
+        allTypes.add("base");
         for (const type of allTypes) {
             const tmpAllProfiles: imperative.IProfileLoaded[] = [];
             // Step 1: Get all profiles for each registered type
@@ -220,7 +220,7 @@ export class ProfilesCache {
             }
         }
         this.allProfiles = allProfiles;
-        this.allTypes = allTypes;
+        this.allTypes = [...allTypes];
         for (const oldType of [...this.profilesByType.keys()].filter((type) => !allProfiles.some((prof) => prof.type === type))) {
             this.profilesByType.delete(oldType);
             this.defaultProfileByType.delete(oldType);

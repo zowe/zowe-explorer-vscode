@@ -929,7 +929,15 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
             contextOverride: Constants.INFORMATION_CONTEXT,
         });
 
-        expect(await blockMocks.rootNode.getChildren()).toEqual([expectedNode]);
+        const children = await blockMocks.rootNode.getChildren();
+        // just the information node (search to list USS files)
+        expect(children.length).toBe(1);
+        const infoNode = children[0];
+        expect(infoNode.label).toBe(expectedNode.label);
+        expect(infoNode.collapsibleState).toBe(expectedNode.collapsibleState);
+        expect(infoNode.getParent()).toBe(expectedNode.getParent());
+        expect(infoNode.contextValue).toBe(expectedNode.contextValue);
+        expect(infoNode.command).toStrictEqual(expectedNode.command);
     });
 });
 
