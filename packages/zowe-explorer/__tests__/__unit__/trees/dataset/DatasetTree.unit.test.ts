@@ -3977,6 +3977,9 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         jest.resetAllMocks();
         jest.clearAllMocks();
     });
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
 
     it("returns early if there are no items in the dataTransfer object", async () => {
         createGlobalMocks();
@@ -4096,8 +4099,6 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             if (node === blockMocks.datasetSessionNode) return true;
             return false;
         });
-        jest.spyOn(SharedContext, "isDs").mockReturnValue(false);
-        jest.spyOn(SharedContext, "isDsMember").mockReturnValue(false);
 
         jest.spyOn(blockMocks.datasetPdsNode, "getParent").mockReturnValue(blockMocks.datasetSessionNode);
         jest.spyOn(blockMocks.draggedNode, "getParent").mockReturnValue(blockMocks.datasetSessionNode);
