@@ -111,6 +111,12 @@ export interface IRegisterClient {
     onProfilesUpdate?: vscode.Event<Validation.EventType>;
 
     /**
+     * Fires whenever the given profile is updated.
+     */
+    onProfileUpdated?: vscode.Event<imperative.IProfileLoaded>;
+    onProfileUpdatedEmitter?: vscode.EventEmitter<imperative.IProfileLoaded>;
+
+    /**
      * Define events that fire whenever credentials are updated on the client.
      */
     onVaultUpdate?: vscode.Event<Validation.EventType>;
