@@ -225,6 +225,11 @@ describe("JobFSProvider.supportSpoolPagination", () => {
         jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
             supportSpoolPagination: () => true,
         } as any);
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.jobs.paginate.enabled") {
+                return true;
+            }
+        });
 
         const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
         expect(result).toBe(true);
@@ -236,6 +241,11 @@ describe("JobFSProvider.supportSpoolPagination", () => {
         jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
             supportSpoolPagination: () => false,
         } as any);
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.jobs.paginate.enabled") {
+                return false;
+            }
+        });
 
         const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
         expect(result).toBe(false);

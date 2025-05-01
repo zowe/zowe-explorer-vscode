@@ -40,8 +40,9 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
     public supportSpoolPagination(doc: vscode.TextDocument): boolean {
         const profInfo = this._getInfoFromUri(doc.uri);
         try {
+            const paginationEnabled = SettingsConfig.getDirectValue<boolean>("zowe.jobs.paginate.enabled");
             const supportPagination = ZoweExplorerApiRegister.getJesApi(profInfo.profile).supportSpoolPagination?.();
-            return supportPagination;
+            return paginationEnabled && supportPagination;
         } catch (err) {
             return false;
         }
