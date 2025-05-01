@@ -380,7 +380,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 contextOverride: Constants.JOBS_JOB_CONTEXT + Constants.FAV_SUFFIX,
                 parentNode,
-                profile: parentNode.getProfile(),
+                profile: Profiles.getInstance().loadNamedProfile(parentNode.getProfileName()),
                 job: new JobDetail(label),
             });
             if (!JobFSProvider.instance.exists(favJob.resourceUri)) {
@@ -393,7 +393,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 contextOverride: Constants.JOBS_SESSION_CONTEXT + Constants.FAV_SUFFIX,
                 parentNode,
-                profile: parentNode.getProfile(),
+                profile: Profiles.getInstance().loadNamedProfile(parentNode.getProfileName()),
             });
         }
         const icon = IconGenerator.getIconByNode(favJob);
@@ -423,7 +423,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             })
         );
         // Load profile for parent profile node in this.mFavorites array
-        if (!parentNode.getProfile() || !parentNode.getSession()) {
+        if (!Profiles.getInstance().loadNamedProfile(parentNode.getProfileName()) || !parentNode.getSession()) {
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
                 await Profiles.getInstance().checkCurrentProfile(profile);
@@ -463,7 +463,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 return;
             }
         }
-        profile = parentNode.getProfile();
+        profile = Profiles.getInstance().loadNamedProfile(parentNode.getProfileName());
         session = parentNode.getSession();
         // Pass loaded profile/session to the parent node's favorites children.
         const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
@@ -510,7 +510,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 contextOverride: Constants.JOBS_SESSION_CONTEXT + Constants.FAV_SUFFIX,
                 parentNode: profileNodeInFavorites,
                 session: node.getSession(),
-                profile: node.getProfile(),
+                profile: Profiles.getInstance().loadNamedProfile(node.getProfileName()),
                 job: node.job,
             });
             favJob.command = { command: "zowe.jobs.search", title: "", arguments: [favJob] };
@@ -523,7 +523,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 contextOverride: node.contextValue + Constants.FAV_SUFFIX,
                 parentNode: profileNodeInFavorites,
                 session: node.getSession(),
-                profile: node.getProfile(),
+                profile: Profiles.getInstance().loadNamedProfile(node.getProfileName()),
                 job: node.job,
             });
             this.relabelFavoritedJob(favJob);
@@ -946,7 +946,8 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
 
     private async setJobStatus(node: IZoweJobTreeNode): Promise<Definitions.IJobStatusOption> {
         ZoweLogger.trace("JobTree.setJobStatus called.");
-        const jobStatusSelection = ZoweExplorerApiRegister.getJesApi(node.getProfile()).getJobsByParameters
+        const jobStatusSelection = ZoweExplorerApiRegister.getJesApi(Profiles.getInstance().loadNamedProfile(node.getProfileName()))
+            .getJobsByParameters
             ? Constants.JOB_STATUS
             : Constants.JOB_STATUS_UNSUPPORTED;
         let choice = await Gui.showQuickPick(jobStatusSelection);
@@ -1242,7 +1243,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 await vscode.commands.executeCommand("vscode.open", node.resourceUri);
             }
         } catch (err) {
-            await AuthUtils.errorHandling(err, { profile: node.getProfile() });
+            await AuthUtils.errorHandling(err, { profile: Profiles.getInstance().loadNamedProfile(node.getProfileName()) });
         }
     }
 }

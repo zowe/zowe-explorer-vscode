@@ -166,7 +166,7 @@ export class AuthUtils {
     ): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.syncSessionNode called.");
 
-        const profileType = sessionNode.getProfile()?.type;
+        const profileType = Constants.PROFILES_CACHE.loadNamedProfile(sessionNode.getProfileName())?.type;
         const profileName = sessionNode.getProfileName();
 
         let profile: imperative.IProfileLoaded;

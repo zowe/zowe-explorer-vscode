@@ -614,7 +614,7 @@ export class ProfilesUtils {
      */
     public static setProfile(node: IZoweTreeNode, profile: imperative.IProfile): void {
         ZoweLogger.trace("ProfilesUtils.setProfile called.");
-        node.getProfile().profile = profile;
+        Constants.PROFILES_CACHE.loadNamedProfile(node.getProfileName()).profile = profile;
     }
 
     /**
@@ -635,7 +635,7 @@ export class ProfilesUtils {
     public static getProfile(node: vscode.TreeItem | ZoweTreeNode): imperative.IProfileLoaded {
         ZoweLogger.trace("ProfilesUtils.getProfile called.");
         if (node instanceof ZoweTreeNode) {
-            return node.getProfile();
+            return Constants.PROFILES_CACHE.loadNamedProfile(node.getProfileName());
         }
         throw new Error(vscode.l10n.t("Tree item is not a Zowe Explorer item."));
     }

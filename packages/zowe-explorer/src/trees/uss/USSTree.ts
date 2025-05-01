@@ -199,7 +199,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 scheme: ZoweScheme.USS,
                 path: path.posix.join("/", target.getProfile().name, target.fullPath, item.label as string),
             });
-            const prof = node.getProfile();
+            const prof = Profiles.getInstance().loadNamedProfile(node.getProfileName());
             const hasMoveApi = ZoweExplorerApiRegister.getUssApi(prof).move != null;
 
             if (target.getProfile() !== prof || !hasMoveApi) {
@@ -229,7 +229,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      */
     public async rename(originalNode: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("USSTree.rename called.");
-        await Profiles.getInstance().checkCurrentProfile(originalNode.getProfile());
+        await Profiles.getInstance().checkCurrentProfile(Profiles.getInstance().loadNamedProfile(originalNode.getProfileName()));
         if (await TreeViewUtils.errorForUnsavedResource(originalNode)) {
             return;
         }
@@ -298,7 +298,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 if (err instanceof Error) {
                     await AuthUtils.errorHandling(err, {
                         apiType: ZoweExplorerApiType.Uss,
-                        profile: originalNode.getProfile(),
+                        profile: Profiles.getInstance().loadNamedProfile(originalNode.getProfileName()),
                         scenario: vscode.l10n.t("Unable to rename node:"),
                     });
                 }
@@ -518,7 +518,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 parentNode: profileNodeInFavorites,
                 session: node.getSession(),
-                profile: node.getProfile(),
+                profile: Profiles.getInstance().loadNamedProfile(node.getProfileName()),
             });
             temp.fullPath = node.fullPath;
             await this.saveSearch(temp);
@@ -530,7 +530,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 collapsibleState: node.collapsibleState,
                 parentNode: profileNodeInFavorites,
                 session: node.getSession(),
-                profile: node.getProfile(),
+                profile: Profiles.getInstance().loadNamedProfile(node.getProfileName()),
                 parentPath: node.getParent().fullPath,
             });
             temp.resourceUri = node.resourceUri;
@@ -908,7 +908,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      */
     public async initializeFavChildNodeForProfile(label: string, context: string, parentNode: IZoweUSSTreeNode): Promise<ZoweUSSNode> {
         ZoweLogger.trace("USSTree.initializeFavChildNodeForProfile called.");
-        const profile = parentNode.getProfile();
+        const profile = Profiles.getInstance().loadNamedProfile(parentNode.getProfileName());
         let node: ZoweUSSNode;
         switch (context) {
             case Constants.USS_DIR_CONTEXT:
@@ -987,7 +987,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             })
         );
         // Load profile for parent profile node in this.mFavorites array
-        if (!parentNode.getProfile() || !parentNode.getSession()) {
+        if (!Profiles.getInstance().loadNamedProfile(parentNode.getProfileName()) || !parentNode.getSession()) {
             // If no profile/session yet, then add session and profile to parent profile node in this.mFavorites array:
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
@@ -1027,7 +1027,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 return;
             }
         }
-        profile = parentNode.getProfile();
+        profile = Profiles.getInstance().loadNamedProfile(parentNode.getProfileName());
         session = parentNode.getSession();
         // Pass loaded profile/session to the parent node's favorites children.
         const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
@@ -1151,7 +1151,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
 
     public async openWithEncoding(node: IZoweUSSTreeNode, encoding?: ZosEncoding): Promise<void> {
         if (encoding == null) {
-            const ussApi = ZoweExplorerApiRegister.getUssApi(node.getProfile());
+            const ussApi = ZoweExplorerApiRegister.getUssApi(Profiles.getInstance().loadNamedProfile(node.getProfileName()));
             let taggedEncoding: string;
             if (ussApi.getTag != null) {
                 taggedEncoding = await ussApi.getTag(node.fullPath);

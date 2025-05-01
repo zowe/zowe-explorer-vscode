@@ -23,6 +23,7 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { SharedContext } from "../shared/SharedContext";
 import { SpoolUtils } from "../../utils/SpoolUtils";
+import { Profiles } from "../../configuration/Profiles";
 
 export class JobActions {
     private static async deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: Types.IZoweJobTreeType): Promise<void> {
@@ -448,7 +449,7 @@ export class JobActions {
             const sesNode = jobNode.getSessionNode();
             const sesLabel = sesNode.label as string;
             if (!(sesLabel in jesApis)) {
-                jesApis[sesLabel] = ZoweExplorerApiRegister.getJesApi(sesNode.getProfile());
+                jesApis[sesLabel] = ZoweExplorerApiRegister.getJesApi(Profiles.getInstance().loadNamedProfile(sesNode.getProfileName()));
             }
 
             if (!jesApis[sesLabel].cancelJob) {

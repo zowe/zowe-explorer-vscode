@@ -220,7 +220,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
 
     public async editSession(node: IZoweTreeNode): Promise<void> {
         ZoweLogger.trace("ZoweTreeProvider.editSession called.");
-        const profile = node.getProfile();
+        const profile = Profiles.getInstance().loadNamedProfile(node.getProfileName());
         await Profiles.getInstance().editSession(profile);
     }
 
@@ -268,7 +268,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
 
     public async checkCurrentProfile(node: IZoweTreeNode): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("ZoweTreeProvider.checkCurrentProfile called.");
-        const profile = node.getProfile();
+        const profile = Profiles.getInstance().loadNamedProfile(node.getProfileName());
         const profileName = profile.name ?? node.getProfileName();
 
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);

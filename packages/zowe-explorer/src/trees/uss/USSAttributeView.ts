@@ -15,6 +15,7 @@ import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister
 import { SharedContext } from "../shared/SharedContext";
 import * as vscode from "vscode";
 import * as fs from "fs";
+import { Profiles } from "../../configuration/Profiles";
 
 export class USSAttributeView extends WebView {
     private treeProvider: Types.IZoweUSSTreeType;
@@ -30,7 +31,7 @@ export class USSAttributeView extends WebView {
         this.treeProvider = treeProvider;
         this.ussNode = node;
         this.canUpdate = node.onUpdate != null;
-        this.ussApi = ZoweExplorerApiRegister.getUssApi(this.ussNode.getProfile());
+        this.ussApi = ZoweExplorerApiRegister.getUssApi(Profiles.getInstance().loadNamedProfile(this.ussNode.getProfileName()));
     }
 
     private async attachTag(node: IZoweUSSTreeNode): Promise<void> {

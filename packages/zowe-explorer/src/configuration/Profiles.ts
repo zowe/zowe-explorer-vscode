@@ -248,7 +248,7 @@ export class Profiles extends ProfilesCache {
 
     public disableValidationContext(node: Types.IZoweNodeType): Types.IZoweNodeType {
         ZoweLogger.trace("Profiles.disableValidationContext called.");
-        const theProfile: imperative.IProfileLoaded = node.getProfile();
+        const theProfile: imperative.IProfileLoaded = this.loadNamedProfile(node.getProfileName());
         this.validationArraySetup(theProfile, false);
         if (node.contextValue.includes(Constants.VALIDATE_SUFFIX)) {
             node.contextValue = node.contextValue.replace(Constants.VALIDATE_SUFFIX, Constants.NO_VALIDATE_SUFFIX);
@@ -273,7 +273,7 @@ export class Profiles extends ProfilesCache {
 
     public enableValidationContext(node: Types.IZoweNodeType): Types.IZoweNodeType {
         ZoweLogger.trace("Profiles.enableValidationContext called.");
-        const theProfile: imperative.IProfileLoaded = node.getProfile();
+        const theProfile: imperative.IProfileLoaded = this.loadNamedProfile(node.getProfileName());
         this.validationArraySetup(theProfile, true);
         if (node.contextValue.includes(Constants.NO_VALIDATE_SUFFIX)) {
             node.contextValue = node.contextValue.replace(Constants.NO_VALIDATE_SUFFIX, Constants.VALIDATE_SUFFIX);
@@ -643,7 +643,7 @@ export class Profiles extends ProfilesCache {
         if (!node) {
             deletedProfile = await this.getDeleteProfile();
         } else {
-            deletedProfile = node.getProfile();
+            deletedProfile = this.loadNamedProfile(node.getProfileName());
         }
         if (!deletedProfile) {
             return;
@@ -766,7 +766,7 @@ export class Profiles extends ProfilesCache {
         let loginTokenType: string;
         let serviceProfile: imperative.IProfileLoaded;
         if (node) {
-            serviceProfile = node.getProfile();
+            serviceProfile = this.loadNamedProfile(node.getProfileName());
         } else {
             serviceProfile = this.loadNamedProfile(label.trim());
         }
@@ -899,7 +899,7 @@ export class Profiles extends ProfilesCache {
         }
 
         let loginTokenType: string;
-        const serviceProfile = node.getProfile() ?? this.loadNamedProfile(node.label.toString().trim());
+        const serviceProfile = this.loadNamedProfile(node.getProfileName()) ?? this.loadNamedProfile(node.label.toString().trim());
         const zeInstance = ZoweExplorerApiRegister.getInstance();
         try {
             loginTokenType = await zeInstance.getCommonApi(serviceProfile).getTokenTypeName();
@@ -935,8 +935,8 @@ export class Profiles extends ProfilesCache {
                         password: undefined,
                     };
                     node.setProfileToChoice({
-                        ...node.getProfile(),
-                        profile: { ...node.getProfile().profile, ...updBaseProfile },
+                        ...this.loadNamedProfile(node.getProfileName()),
+                        profile: { ...this.loadNamedProfile(node.getProfileName()).profile, ...updBaseProfile },
                     });
                     ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
                 } else {
@@ -946,7 +946,7 @@ export class Profiles extends ProfilesCache {
                 break;
             }
             case await AuthUtils.isUsingTokenAuth(serviceProfile.name): {
-                const profile: string | imperative.IProfileLoaded = node.getProfile();
+                const profile: string | imperative.IProfileLoaded = this.loadNamedProfile(node.getProfileName());
                 const creds = await Profiles.getInstance().promptCredentials(profile, true);
 
                 if (creds !== undefined) {
@@ -975,12 +975,12 @@ export class Profiles extends ProfilesCache {
             return;
         }
         const dsNode = SharedTreeProviders.ds.mSessionNodes.find(
-            (sessionNode: IZoweDatasetTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
+            (sessionNode: IZoweDatasetTreeNode) => sessionNode.getProfileName() === node.getProfileName()
         ) as IZoweDatasetTreeNode;
         if (!dsNode) {
             return;
         }
-        dsNode.tooltip &&= node.getProfile()?.name;
+        dsNode.tooltip &&= node.getProfileName();
         dsNode.description &&= "";
         dsNode.pattern &&= "";
         SharedTreeProviders.ds.flipState(dsNode, false);
@@ -992,12 +992,12 @@ export class Profiles extends ProfilesCache {
             return;
         }
         const ussNode = SharedTreeProviders.uss.mSessionNodes.find(
-            (sessionNode: IZoweUSSTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
+            (sessionNode: IZoweUSSTreeNode) => sessionNode.getProfileName() === node.getProfileName()
         );
         if (!ussNode) {
             return;
         }
-        ussNode.tooltip &&= node.getProfile()?.name;
+        ussNode.tooltip &&= node.getProfileName();
         ussNode.description &&= "";
         ussNode.fullPath &&= "";
         SharedTreeProviders.uss.flipState(ussNode, false);
@@ -1009,12 +1009,12 @@ export class Profiles extends ProfilesCache {
             return;
         }
         const jobNode: IZoweJobTreeNode = SharedTreeProviders.job.mSessionNodes.find(
-            (sessionNode: IZoweJobTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
+            (sessionNode: IZoweJobTreeNode) => sessionNode.getProfileName() === node.getProfileName()
         );
         if (!jobNode) {
             return;
         }
-        jobNode.tooltip &&= node.getProfile()?.name;
+        jobNode.tooltip &&= node.getProfileName();
         jobNode.description &&= "";
         jobNode.owner &&= "";
         jobNode.prefix &&= "";
@@ -1033,7 +1033,7 @@ export class Profiles extends ProfilesCache {
 
     public async ssoLogout(node: Types.IZoweNodeType): Promise<void> {
         ZoweLogger.trace("Profiles.ssoLogout called.");
-        const serviceProfile = node.getProfile();
+        const serviceProfile = this.loadNamedProfile(node.getProfileName());
         // This check will handle service profiles that have username and password
         if (AuthUtils.isProfileUsingBasicAuth(serviceProfile)) {
             Gui.showMessage(vscode.l10n.t(`This profile is using basic authentication and does not support token authentication.`));
