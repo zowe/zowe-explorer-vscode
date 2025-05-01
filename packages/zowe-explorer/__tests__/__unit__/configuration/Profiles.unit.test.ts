@@ -101,6 +101,10 @@ function createGlobalMocks(): { [key: string]: any } {
         FileSystemProvider: {
             createDirectory: jest.fn(),
         },
+        mockZoweExplorerApi: jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+            onProfileUpdatedEmitter: new vscode.EventEmitter<imperative.IProfileLoaded>(),
+            onProfileUpdatedEmitterEvent: jest.fn().mockReturnValue(new vscode.Disposable(jest.fn())),
+        } as any),
     };
     newMocks.mockCreateSessCfgFromArgs.mockReturnValue(newMocks.testSession);
 
