@@ -441,6 +441,14 @@ describe("ProfilesCache", () => {
             expect((profCache as any).allProfiles.length).toBe(0);
             expect((profCache as any).allTypes).toEqual(["ssh", "base"]);
         });
+
+        it("should not create duplicate profile types by running profCache.refresh()", async () => {
+            const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+            jest.spyOn(profCache, "getProfileInfo").mockResolvedValueOnce(createProfInfoMock([]));
+            jest.spyOn(profCache as any, "getAllProfileTypes").mockReturnValue(["ssh", "base"]);
+            await profCache.refresh();
+            expect((profCache as any).allTypes).toEqual(["ssh", "base"]);
+        });
     });
 
     describe("validateAndParseUrl", () => {

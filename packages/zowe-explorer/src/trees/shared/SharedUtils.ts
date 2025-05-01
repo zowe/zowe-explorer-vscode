@@ -13,7 +13,17 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
-import { Gui, IZoweTreeNode, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, Types, ZosEncoding, Sorting } from "@zowe/zowe-explorer-api";
+import {
+    Gui,
+    IZoweTreeNode,
+    IZoweDatasetTreeNode,
+    IZoweUSSTreeNode,
+    IZoweJobTreeNode,
+    Types,
+    ZosEncoding,
+    Sorting,
+    imperative,
+} from "@zowe/zowe-explorer-api";
 import { UssFSProvider } from "../uss/UssFSProvider";
 import { USSUtils } from "../uss/USSUtils";
 import { Constants } from "../../configuration/Constants";
@@ -473,5 +483,19 @@ export class SharedUtils {
             }
         }
         return true;
+    }
+
+    public static async handleProfileChange(treeProviders: Definitions.IZoweProviders, profile: imperative.IProfileLoaded): Promise<void> {
+        for (const provider of Object.values(treeProviders)) {
+            try {
+                const node = (await provider.getChildren()).find((n) => n.label === profile?.name);
+                node?.setProfileToChoice?.(profile);
+            } catch (err) {
+                if (err instanceof Error) {
+                    ZoweLogger.error(err.message);
+                }
+                return;
+            }
+        }
     }
 }
