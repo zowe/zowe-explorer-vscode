@@ -713,7 +713,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 scenario: vscode.l10n.t("Retrieving response from MVS list API"),
             });
             AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
-            return;
+            return {
+                items: [],
+            };
         }
 
         const successfulResponses = responses
@@ -815,7 +817,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 scenario: vscode.l10n.t("Retrieving response from MVS list API"),
             });
             AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
-            return;
+            return {
+                items: [],
+            };
         }
 
         const successfulResponses = responses
