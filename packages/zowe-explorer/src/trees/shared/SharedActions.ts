@@ -275,7 +275,7 @@ export class SharedActions {
                 sessNode.dirty = true;
                 SharedActions.returnIconState(sessNode, treeProvider);
                 if (!isFavoritesFolder) {
-                    AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getCommonApi(profile), sessNode);
+                    await AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getCommonApi(profile), sessNode);
                 }
                 treeProvider.refreshElement(sessNode);
             } else {
@@ -302,7 +302,7 @@ export class SharedActions {
         }
         SharedActions.refreshInProgress = true;
 
-        await SharedActions.refreshProfiles();
+        // await SharedActions.refreshProfiles();
 
         for (const provider of Object.values(SharedTreeProviders.providers)) {
             await SharedActions.refreshProvider(provider);
