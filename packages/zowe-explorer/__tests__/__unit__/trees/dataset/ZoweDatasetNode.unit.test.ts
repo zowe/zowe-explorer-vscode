@@ -1508,6 +1508,21 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
         expect(listDatasetsMock.mock.calls[1][1]).toStrictEqual({ attributes: true, start: undefined, maxLength: 2 });
     });
 
+    it("returns an empty list of items to paginator when an error is encountered", async () => {
+        const sessionNode = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+            profile: createIProfile(),
+            session: createISession(),
+        });
+        jest.spyOn(sessionNode, "listDatasets").mockImplementationOnce(async () => {
+            throw new Error("Simulated error");
+        });
+        const result = await (sessionNode as any).listDatasetsInRange(undefined, 2);
+        expect(result).toStrictEqual({ items: [] });
+    });
+
     it("uses cached data to fetch next page", async () => {
         const sessionNode = new ZoweDatasetNode({
             label: "sestest",
@@ -1592,6 +1607,19 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
         expect(listMembersMock).toHaveBeenCalledTimes(2);
         expect(listMembersMock.mock.calls[0][1]).toStrictEqual({ attributes: false });
         expect(listMembersMock.mock.calls[1][1]).toStrictEqual({ attributes: true, start: undefined, maxLength: 2 });
+    });
+
+    it("returns an empty list of items to paginator when an error is encountered", async () => {
+        const pdsNode = new ZoweDatasetNode({
+            label: "PDS.ERROR",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+        jest.spyOn(pdsNode, "listMembers").mockImplementationOnce(async () => {
+            throw new Error("Simulated error");
+        });
+        const result = await (pdsNode as any).listMembersInRange(undefined, 2);
+        expect(result).toStrictEqual({ items: [] });
     });
 
     it("uses cached data to fetch next page - start param defined", async () => {
