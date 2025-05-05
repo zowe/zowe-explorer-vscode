@@ -34,6 +34,15 @@ describe("PaginationCodeLens", () => {
     it("should provide a CodeLens on the last line of the document with correct command info", () => {
         const mockDocument = {
             lineCount: 5,
+            uri: {
+                query: "startLine=4",
+                with: function (change: { query: string }) {
+                    return {
+                        ...this,
+                        query: change.query,
+                    };
+                },
+            },
         } as any;
 
         const provider = new PaginationCodeLens("zowe.jobs.loadMoreRecords", () => true);
@@ -45,12 +54,24 @@ describe("PaginationCodeLens", () => {
         expect(codeLens?.range?.end.line).toBe(4);
         expect(codeLens?.command?.title).toBe("$(chevron-down) Load more...");
         expect(codeLens?.command?.command).toBe("zowe.jobs.loadMoreRecords");
-        expect(codeLens?.command?.arguments?.[0]).toBe(mockDocument);
+        expect(codeLens?.command?.arguments?.[0]).toEqual({
+            query: "startLine=4",
+            with: expect.any(Function),
+        });
     });
 
     it("should not provide CodeLens if shouldShowCodeLens returns false", () => {
         const mockDocument = {
             lineCount: 10,
+            uri: {
+                query: "startLine=1",
+                with: function (change: { query: string }) {
+                    return {
+                        ...this,
+                        query: change.query,
+                    };
+                },
+            },
         } as any;
 
         const provider = new PaginationCodeLens("zowe.jobs.loadMoreRecords", () => false);
@@ -62,6 +83,15 @@ describe("PaginationCodeLens", () => {
     it("should provide CodeLens if shouldShowCodeLens returns true", () => {
         const mockDocument = {
             lineCount: 7,
+            uri: {
+                query: "startLine=1",
+                with: function (change: { query: string }) {
+                    return {
+                        ...this,
+                        query: change.query,
+                    };
+                },
+            },
         } as any;
 
         const provider = new PaginationCodeLens("zowe.jobs.loadMoreRecords", () => true);
