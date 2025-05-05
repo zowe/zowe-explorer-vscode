@@ -4018,7 +4018,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         } as any);
         await testTree.handleDrop(blockMocks.datasetSeqNode, dataTransfer, undefined);
         expect(crossLparMoveMock).not.toHaveBeenCalled();
-        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a partitioned dataset or member onto a sequential dataset.");
+        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a partitioned dataset or member into a sequential dataset.");
         draggedNodeMock[Symbol.dispose]();
     });
 
@@ -4039,7 +4039,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             [blockMocks.datasetPdsNode.resourceUri.path]: blockMocks.datasetPdsNode,
         });
         await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer, undefined);
-        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a sequential dataset or a partitioned dataset onto another partitioned dataset.");
+        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.");
         draggedNodeMock[Symbol.dispose]();
     });
 
@@ -4060,7 +4060,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             [blockMocks.memberNode.resourceUri.path]: blockMocks.memberNode,
         });
         await testTree.handleDrop(blockMocks.datasetSeqNode, dataTransfer, undefined);
-        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a partitioned dataset or member onto a sequential dataset.");
+        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a partitioned dataset or member into a sequential dataset.");
         draggedNodeMock[Symbol.dispose]();
     });
 
@@ -4121,7 +4121,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
 
         await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer, undefined);
 
-        expect(errorMessageSpy).toHaveBeenCalledWith(vscode.l10n.t("Cannot drop a partitioned dataset onto another partitioned dataset."));
+        expect(errorMessageSpy).toHaveBeenCalledWith(vscode.l10n.t("Cannot drop a partitioned dataset into another partitioned dataset."));
 
         draggedNodeMock[Symbol.dispose]();
     });

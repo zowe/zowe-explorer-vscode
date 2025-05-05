@@ -35,7 +35,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
-- Fixed an issue where dragging and dropping datasets across LPARs resulted in silent failure. [#3542](https://github.com/zowe/zowe-explorer-vscode/issues/3542)
+- Fixed an issue where dragging and dropping data sets across LPARs resulted in silent failure. [#3542](https://github.com/zowe/zowe-explorer-vscode/issues/3542)
 - Replaced an import of ILocalStorageAccess from "@zowe/zowe-explorer-api/src/extend/ILocalStorageAccess" to "@zowe/zowe-explorer-api" [#3606](https://github.com/zowe/zowe-explorer-vscode/issues/3606)
 - Fixed an issue where edit history does not show the correct information. [#3432](https://github.com/zowe/zowe-explorer-vscode/issues/3432)
 - Fixed an issue where the 'Delete' key binding for the USS tree returns a 'contextValue' error. [#2796](https://github.com/zowe/zowe-explorer-vscode/issues/2796)

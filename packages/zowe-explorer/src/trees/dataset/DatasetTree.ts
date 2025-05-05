@@ -213,13 +213,13 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
             if (SharedContext.isPds(target) || SharedContext.isDsMember(target)) {
                 if (SharedContext.isPds(node) || SharedContext.isDs(node)) {
-                    Gui.errorMessage(vscode.l10n.t("Cannot drop a sequential dataset or a partitioned dataset onto another partitioned dataset."));
+                    Gui.errorMessage(vscode.l10n.t("Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset."));
                     return;
                 }
             }
 
             if ((SharedContext.isDsMember(node) || SharedContext.isPds(node)) && SharedContext.isDs(target)) {
-                Gui.errorMessage(vscode.l10n.t("Cannot drop a partitioned dataset or member onto a sequential dataset."));
+                Gui.errorMessage(vscode.l10n.t("Cannot drop a partitioned dataset or member into a sequential dataset."));
                 return;
             }
             const parent = target?.getParent();
@@ -228,8 +228,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 (SharedContext.isDs(node) && parent && SharedContext.isPds(parent))
             ) {
                 const message = SharedContext.isPds(node)
-                    ? "Cannot drop a partitioned dataset onto another partitioned dataset."
-                    : "Cannot drop a sequential dataset onto another partitioned dataset.";
+                    ? "Cannot drop a partitioned dataset into another partitioned dataset."
+                    : "Cannot drop a sequential dataset into a partitioned dataset.";
                 Gui.errorMessage(vscode.l10n.t(message));
                 return;
             }
