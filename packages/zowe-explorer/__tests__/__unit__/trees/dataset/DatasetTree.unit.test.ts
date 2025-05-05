@@ -4086,6 +4086,44 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         draggedNodeMock[Symbol.dispose]();
     });
 
+    it("does not throw an error when an empty PDS is dropped into another LPAR", async () => {
+        createGlobalMocks();
+        const testTree = new DatasetTree();
+        const blockMocks = createBlockMocks();
+        blockMocks.draggedNode.contextValue = Constants.DS_PDS_CONTEXT;
+
+        jest.spyOn(SharedContext, "isPds").mockImplementation((node) => {
+            if (node === blockMocks.draggedNode) return true;
+            if (node === blockMocks.datasetPdsNode) return false;
+            return false;
+        });
+        const noDataChild = {
+            label: vscode.l10n.t("No data sets found"),
+        } as any;
+        jest.spyOn(blockMocks.draggedNode, "getChildren").mockResolvedValue([noDataChild]);
+        const dataTransfer = new vscode.DataTransfer();
+        jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
+            value: [
+                {
+                    label: blockMocks.draggedNode.label,
+                    uri: blockMocks.draggedNode.resourceUri,
+                },
+            ],
+        } as any);
+
+        const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
+            [blockMocks.draggedNode.resourceUri.path]: blockMocks.draggedNode,
+        });
+
+        const errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce(undefined as any);
+
+        await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer, undefined);
+
+        expect(errorMessageSpy).not.toHaveBeenCalled();
+
+        draggedNodeMock[Symbol.dispose]();
+    });
+
     it("shows an error when a PDS is dropped onto another PDS's parent", async () => {
         createGlobalMocks();
         const testTree = new DatasetTree();
