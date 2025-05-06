@@ -4100,47 +4100,6 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         draggedNodeMock[Symbol.dispose]();
     });
 
-    it("does not throw an error when an empty PDS is dropped into another LPAR", async () => {
-        createGlobalMocks();
-        const testTree = new DatasetTree();
-        const blockMocks = createBlockMocks();
-
-        jest.spyOn(SharedContext, "isPds").mockImplementation((node) => {
-            if (node === blockMocks.draggedPdsNode) return true;
-            if (node === blockMocks.datasetPdsNode) return false;
-            return false;
-        });
-        const dataTransfer = new vscode.DataTransfer();
-        jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
-            value: [
-                {
-                    label: blockMocks.draggedPdsNode.label,
-                    uri: blockMocks.draggedPdsNode.resourceUri,
-                },
-            ],
-        } as any);
-        // jest.spyOn(blockMocks.draggedPdsNode, "getChildren").mockResolvedValue([
-        //     new ZoweDatasetNode({
-        //         label: vscode.l10n.t("No data sets found"),
-        //         collapsibleState: vscode.TreeItemCollapsibleState.None,
-        //         parentNode: blockMocks.datasetSessionNode,
-        //         profile: blockMocks.imperativeProfile,
-        //     }),
-        // ]);
-
-        // const deleteMock = jest.spyOn(vscode.workspace.fs, "delete").mockResolvedValue(undefined);
-
-        const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
-            [blockMocks.draggedPdsNode.resourceUri.path]: blockMocks.draggedPdsNode,
-        });
-
-        const errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce(undefined as any);
-        await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer, undefined);
-        expect(errorMessageSpy).not.toHaveBeenCalled();
-        // expect(deleteMock).toHaveBeenCalled();
-        draggedNodeMock[Symbol.dispose]();
-    });
-
     it("shows an error when a PDS is dropped onto another PDS's parent", async () => {
         createGlobalMocks();
         const testTree = new DatasetTree();
