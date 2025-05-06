@@ -36,7 +36,7 @@ Use various services to communicate with system resources and extract system dat
 - IBM® Remote System Explorer API (RSE)
    - See [RSE documentation](https://www.ibm.com/docs/en/explorer-for-zos/3.4.0?topic=documentation-rse-api) for more information.
 - z/OSMF
-   - See [z/OSFM documentation](https://www.ibm.com/docs/en/zos/3.1.0?topic=guide-using-zosmf-rest-services) for more information.
+   - See [z/OSMF documentation](https://www.ibm.com/docs/en/zos/3.1.0?topic=guide-using-zosmf-rest-services) for more information.
 
 ## Getting started
 
