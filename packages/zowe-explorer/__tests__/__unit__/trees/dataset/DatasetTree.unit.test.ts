@@ -3931,7 +3931,20 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             session: session,
         });
         datasetNode.dirty = false;
-
+        const draggedPdsNode = new ZoweDatasetNode({
+            label: "draggedPdsNode",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: datasetSessionNode.getProfile(),
+            parentNode: datasetSessionNode,
+        });
+        draggedPdsNode.dirty = false;
+        draggedPdsNode.contextValue = Constants.DS_PDS_CONTEXT;
+        const emptyPDSNode = new ZoweDatasetNode({
+            label: "No data sets found",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            profile: datasetSessionNode.getProfile(),
+        });
+        draggedPdsNode.children = [emptyPDSNode];
         const datasetPdsNode = new ZoweDatasetNode({
             label: "pdsnode",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -3970,6 +3983,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             datasetSeqNode,
             memberNode,
             draggedNode,
+            draggedPdsNode,
         };
     }
 
@@ -4090,37 +4104,40 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         createGlobalMocks();
         const testTree = new DatasetTree();
         const blockMocks = createBlockMocks();
-        blockMocks.draggedNode.contextValue = Constants.DS_PDS_CONTEXT;
 
         jest.spyOn(SharedContext, "isPds").mockImplementation((node) => {
-            if (node === blockMocks.draggedNode) return true;
+            if (node === blockMocks.draggedPdsNode) return true;
             if (node === blockMocks.datasetPdsNode) return false;
             return false;
         });
-        const noDataChild = {
-            label: vscode.l10n.t("No data sets found"),
-        } as any;
-        jest.spyOn(blockMocks.draggedNode, "getChildren").mockResolvedValue([noDataChild]);
         const dataTransfer = new vscode.DataTransfer();
         jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
             value: [
                 {
-                    label: blockMocks.draggedNode.label,
-                    uri: blockMocks.draggedNode.resourceUri,
+                    label: blockMocks.draggedPdsNode.label,
+                    uri: blockMocks.draggedPdsNode.resourceUri,
                 },
             ],
         } as any);
+        // jest.spyOn(blockMocks.draggedPdsNode, "getChildren").mockResolvedValue([
+        //     new ZoweDatasetNode({
+        //         label: vscode.l10n.t("No data sets found"),
+        //         collapsibleState: vscode.TreeItemCollapsibleState.None,
+        //         parentNode: blockMocks.datasetSessionNode,
+        //         profile: blockMocks.imperativeProfile,
+        //     }),
+        // ]);
+
+        // const deleteMock = jest.spyOn(vscode.workspace.fs, "delete").mockResolvedValue(undefined);
 
         const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
-            [blockMocks.draggedNode.resourceUri.path]: blockMocks.draggedNode,
+            [blockMocks.draggedPdsNode.resourceUri.path]: blockMocks.draggedPdsNode,
         });
 
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce(undefined as any);
-
         await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer, undefined);
-
         expect(errorMessageSpy).not.toHaveBeenCalled();
-
+        // expect(deleteMock).toHaveBeenCalled();
         draggedNodeMock[Symbol.dispose]();
     });
 
