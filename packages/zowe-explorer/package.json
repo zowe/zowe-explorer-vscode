@@ -1989,17 +1989,18 @@
           "description": "%zowe.pollInterval.info%",
           "scope": "window"
         },
-        "zowe.jobs.settings.pagination": {
+        "zowe.jobs.paginate.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "%zowe.jobs.settings.pagination%",
+          "description": "%zowe.jobs.paginate.enabled%",
           "scope": "window"
         },
-        "zowe.jobs.recordsToFetch": {
+        "zowe.jobs.paginate.recordsToFetch": {
           "type": "integer",
           "default": 100,
-          "description": "%zowe.jobs.recordsToFetch%",
-          "scope": "window"
+          "description": "%zowe.jobs.paginate.recordsToFetch%",
+          "scope": "window",
+          "minimum": 2
         },
         "zowe.settings.overrideWithEnvironmentVariables": {
           "type": "boolean",
@@ -2011,6 +2012,12 @@
           "type": "number",
           "default": 60000,
           "description": "%zowe.settings.socketConnectTimeout%",
+          "scope": "window"
+        },
+        "zowe.settings.requestTimeout": {
+          "type": "number",
+          "default": 0,
+          "description": "%zowe.settings.requestTimeout%",
           "scope": "window"
         }
       }
@@ -2090,11 +2097,11 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "@zowe/core-for-zowe-sdk": "^8.19.0",
+    "@zowe/core-for-zowe-sdk": "^8.20.0",
     "@zowe/secrets-for-zowe-sdk": "^8.18.3",
-    "@zowe/zos-files-for-zowe-sdk": "^8.19.0",
-    "@zowe/zos-jobs-for-zowe-sdk": "^8.19.0",
-    "@zowe/zosmf-for-zowe-sdk": "^8.19.0",
+    "@zowe/zos-files-for-zowe-sdk": "^8.20.0",
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.20.0",
+    "@zowe/zosmf-for-zowe-sdk": "^8.20.0",
     "@zowe/zowe-explorer-api": "3.2.0-SNAPSHOT",
     "dayjs": "^1.11.10",
     "isbinaryfile": "4.0.4",

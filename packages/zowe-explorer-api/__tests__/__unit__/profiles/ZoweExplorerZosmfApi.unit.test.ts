@@ -280,7 +280,24 @@ describe("ZosmfUssApi", () => {
             delete sessCfg["host"];
             delete sessCfg["responseTimeout"];
             expect(session.ISession).toMatchObject(sessCfg);
-            expect(getDirectValueSpy).toHaveBeenCalledTimes(1);
+            expect(getDirectValueSpy).toHaveBeenCalledTimes(2);
+        });
+
+        it("getSessionFromCommandArgument should build session from arguments and modify the session request connection timeout", () => {
+            const zosmfApi = new ZoweExplorerZosmf.UssApi(loadedProfile);
+            getDirectValueSpy = jest.spyOn(VscSettings, "getDirectValue").mockReturnValueOnce(undefined).mockReturnValueOnce(30000);
+            const session = zosmfApi.getSessionFromCommandArgument(fakeProfile as unknown as imperative.ICommandArguments);
+            expect(session).toBeDefined();
+            const sessCfg: imperative.ISession = {
+                ...fakeProfile,
+                hostname: fakeProfile.host,
+                type: imperative.SessConstants.AUTH_TYPE_BASIC,
+                requestCompletionTimeout: 30000,
+            };
+            delete sessCfg["host"];
+            delete sessCfg["responseTimeout"];
+            expect(session.ISession).toMatchObject(sessCfg);
+            expect(getDirectValueSpy).toHaveBeenCalledTimes(2);
         });
 
         it("getSession should build session from profile with user and password", () => {
