@@ -210,21 +210,38 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         let target = targetNode;
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
+
             if (SharedContext.isPds(target) || SharedContext.isDsMember(target)) {
                 if (SharedContext.isPds(node) || SharedContext.isDs(node)) {
-                    Gui.errorMessage(vscode.l10n.t("Cannot drop a sequential dataset or a partitioned dataset onto another PDS."));
+                    Gui.errorMessage(vscode.l10n.t("Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset."));
                     return;
                 }
             }
-            if (SharedContext.isDsMember(node) && SharedContext.isDs(target)) {
-                Gui.errorMessage(vscode.l10n.t("Cannot drop a member onto a sequential dataset."));
+
+            if ((SharedContext.isDsMember(node) || SharedContext.isPds(node)) && SharedContext.isDs(target)) {
+                Gui.errorMessage(vscode.l10n.t("Cannot drop a partitioned dataset or member into a sequential dataset."));
+                return;
+            }
+            const parent = target?.getParent();
+            if (
+                (SharedContext.isPds(node) && parent && SharedContext.isPds(parent)) ||
+                (SharedContext.isDs(node) && parent && SharedContext.isPds(parent))
+            ) {
+                const message = SharedContext.isPds(node)
+                    ? "Cannot drop a partitioned dataset into another partitioned dataset."
+                    : "Cannot drop a sequential dataset into a partitioned dataset.";
+                Gui.errorMessage(vscode.l10n.t(message));
                 return;
             }
         }
 
-        //get the closest parent folder if the target is not a pds
-        if (!SharedContext.isPds(target)) {
-            target = target.getParent() as IZoweDatasetTreeNode;
+        const isProfileNode = (node: IZoweDatasetTreeNode): boolean => {
+            const segments = node.resourceUri.path.split("/").filter(Boolean);
+            return segments.length === 1;
+        };
+
+        if (!target || (!SharedContext.isPds(target) && !isProfileNode(target))) {
+            target = target?.getParent() as IZoweDatasetTreeNode;
         }
 
         const overwrite = await SharedUtils.handleDragAndDropOverwrite(target, this.draggedNodes);
