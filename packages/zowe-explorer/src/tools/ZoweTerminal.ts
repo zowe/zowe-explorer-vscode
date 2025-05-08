@@ -204,25 +204,15 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
             }
         } else {
             this.isCommandRunning = true;
-            if (isForgetCommand) {
-                this.writeLine(this.chalk.italic.yellow("Output forgotten!"));
-                this.isCommandRunning = false;
-                this.processCmd(cmd).then((_output: string) => {
-                    const currentCmd = this.command;
-                    this.command = "";
-                    this.charArrayCmd = [];
-                    this.writeLine(this.chalk.italic.yellow("\r\nOperation completed: ") + cmd + "\r\n");
-                    this.handleInput(currentCmd);
-                });
-            } else if (isAsyncCommand) {
-                this.writeLine(this.chalk.italic.yellow("Operation deferred!"));
+            if (isForgetCommand || isAsyncCommand) {
+                this.writeLine(this.chalk.italic.yellow(`Output ${isAsyncCommand ? "deferred!" : "forgotten!"}`));
                 this.isCommandRunning = false;
                 this.processCmd(cmd).then((output: string) => {
                     const currentCmd = this.command;
                     this.command = "";
                     this.charArrayCmd = [];
-                    this.write(this.chalk.italic.yellow("\r\nAsync output: ") + cmd + "\r\n");
-                    this.writeLine(output.trim().split("\n").join("\r\n"));
+                    (isForgetCommand ? this.writeLine : this.write).call(this, this.chalk.italic.yellow("\r\nOperation completed: ") + cmd + "\r\n");
+                    if (isAsyncCommand) this.writeLine.call(this, output.trim().split("\n").join("\r\n"));
                     this.handleInput(currentCmd);
                 });
             } else {
