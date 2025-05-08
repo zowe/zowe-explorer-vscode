@@ -211,9 +211,12 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                     const currentCmd = this.command;
                     this.command = "";
                     this.charArrayCmd = [];
+                    // ---------------------------------------
+                    // Note: `.call(this, ` is intentional since without it, it's possible for VSCode to not remember what `this` is
                     (isForgetCommand ? this.writeLine : this.write).call(this, this.chalk.italic.yellow("\r\nOperation completed: ") + cmd + "\r\n");
                     if (isAsyncCommand) this.writeLine.call(this, output.trim().split("\n").join("\r\n"));
-                    this.handleInput(currentCmd);
+                    this.handleInput.call(this, currentCmd);
+                    // ---------------------------------------
                 });
             } else {
                 const output = await Promise.race([
