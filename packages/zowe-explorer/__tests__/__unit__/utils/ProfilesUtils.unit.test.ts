@@ -13,7 +13,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as util from "util";
 import * as vscode from "vscode";
-import { AuthHandler, Gui, imperative, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { AuthHandler, ErrorCorrelator, Gui, imperative, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import {
     createAltTypeIProfile,
     createInstanceOfProfile,
@@ -151,6 +151,18 @@ describe("ProfilesUtils unit tests", () => {
             });
             await AuthUtils.errorHandling(errorDetails, { scenario });
             expect(openConfigForMissingHostnameMock).toHaveBeenCalled();
+        });
+
+        it("should handle bad hostname error", async () => {
+            const errorDetails = new imperative.ImperativeError({
+                msg: "protocol should not be included in hostname",
+            });
+            const scenario = "Task failed successfully";
+            const openConfigForMissingHostnameMock = jest.spyOn(AuthUtils, "openConfigForMissingHostname");
+            const errorCorrelatorGetInstanceMock = jest.spyOn(ErrorCorrelator, "getInstance");
+            await AuthUtils.errorHandling(errorDetails, { scenario });
+            expect(openConfigForMissingHostnameMock).not.toHaveBeenCalled();
+            expect(errorCorrelatorGetInstanceMock).toHaveBeenCalled();
         });
 
         it("should handle error for invalid credentials and prompt for authentication - credentials entered", async () => {

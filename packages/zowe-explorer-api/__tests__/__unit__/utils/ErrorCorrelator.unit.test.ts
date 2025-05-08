@@ -10,6 +10,7 @@
  */
 
 import { ErrorCorrelator, Gui, CorrelatedError, ZoweExplorerApiType } from "../../../src/";
+import { ImperativeError } from "@zowe/imperative";
 import { commands } from "vscode";
 
 describe("addCorrelation", () => {
@@ -129,6 +130,9 @@ describe("displayError", () => {
 });
 
 describe("displayCorrelatedError", () => {
+    beforeEach(() => {
+        jest.resetAllMocks();
+    });
     it("returns 'Retry' for the userResponse whenever the user selects 'Retry'", async () => {
         const error = new CorrelatedError({
             correlation: { summary: "Summary of network error" },
@@ -144,5 +148,34 @@ describe("displayCorrelatedError", () => {
         expect(correlateErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.Mvs, "This is the full error message", { profileType: "zosmf" });
         expect(errorMessageMock).toHaveBeenCalledWith("Some additional context: Summary of network error", { items: ["Retry", "More info"] });
         expect(handledErrorInfo.userResponse).toBe("Retry");
+    });
+    it("displays an error with additional error details 1", async () => {
+        const initialError = new ImperativeError({ msg: "Imperative Error.", causeErrors: new Error("Initial error.") });
+        const error = new CorrelatedError({
+            correlation: undefined,
+            initialError: initialError,
+        });
+        const correlateErrorMock = jest.spyOn(ErrorCorrelator.getInstance(), "correlateError").mockReturnValueOnce(error);
+        const errorMessageMock = jest.spyOn(Gui, "errorMessage");
+        await ErrorCorrelator.getInstance().displayError(ZoweExplorerApiType.All, initialError, {
+            profileType: "zosmf",
+        });
+        expect(correlateErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.All, initialError, { profileType: "zosmf" });
+        expect(errorMessageMock).toHaveBeenCalledWith("Imperative Error. Initial error.", { items: ["Show log", "Troubleshoot"] });
+    });
+
+    it("displays an error with additional error details 2", async () => {
+        const initialError = new ImperativeError({ msg: "Imperative Error.", causeErrors: new Error("Initial error.") });
+        const error = new CorrelatedError({
+            correlation: { summary: "Network Error." },
+            initialError: initialError,
+        });
+        const correlateErrorMock = jest.spyOn(ErrorCorrelator.getInstance(), "correlateError").mockReturnValueOnce(error);
+        const errorMessageMock = jest.spyOn(Gui, "errorMessage");
+        await ErrorCorrelator.getInstance().displayError(ZoweExplorerApiType.All, initialError, {
+            profileType: "zosmf",
+        });
+        expect(correlateErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.All, initialError, { profileType: "zosmf" });
+        expect(errorMessageMock).toHaveBeenCalledWith("Network Error. Initial error.", { items: ["More info"] });
     });
 });

@@ -6,6 +6,11 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added the handling of cause error details in the ErrorCorrelator. [#3611](https://github.com/zowe/zowe-explorer-vscode/pull/3611)
+- Added hostname validation to prevent encountering a VSCode Proxy bug that occurs when attempting to connect to a z/OSMF server with the protocol specified as part of the hostname. [#3364](https://github.com/zowe/zowe-explorer-vscode/issues/3364)
+- Added a `zowe.settings.socketConnectTimeout` setting to provide users with the ability to specify a connection timeout for REST requests. [#3379](https://github.com/zowe/zowe-explorer-vscode/issues/3379)
+- Added a `zowe.settings.requestTimeout` setting to provide users with the ability to specify a timeout for REST requests. [#3631](https://github.com/zowe/zowe-explorer-vscode/pull/3631)
+
 ### Bug fixes
 
 ## `3.2.0`
@@ -16,7 +21,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Added functionality and code lens for pagination in job spool files. [#1787](https://github.com/zowe/zowe-explorer-vscode/issues/1787)
 - Updated the `Gui.showQuickPick` function to support selecting more than one `quickPickItem`. [#3526](https://github.com/zowe/zowe-explorer-vscode/pull/3526)
-- Updated Zowe SDKs to `8.16.0` to include the latest enhancements from Imperative and the z/OS Files SDK. [#3526](https://github.com/zowe/zowe-explorer-vscode/pull/3526)
+- Updated Zowe SDKs to `8.19.0` to include the latest enhancements from Imperative and the z/OS Files SDK. [#3526](https://github.com/zowe/zowe-explorer-vscode/pull/3526)
 - Added optional `addSearchedKeywordHistory`, `getSearchedKeywordHistory`, `removeSearchedKeywordHistory`, and `resetSearchedKeywordHistory` functions to the `IZoweTree` interface to provide the ability to search for previously searched keywords. [#3526](https://github.com/zowe/zowe-explorer-vscode/pull/3526)
 - Added new `copyDataSetCrossLpar` API to provide ability to copy/paste data sets across LPARs. [#3012](https://github.com/zowe/zowe-explorer-vscode/issues/3012)
 - Added new `directConnectLogin` and `directConnectLogout` to the ZoweVsCodeExtension class. [#3346](https://github.com/zowe/zowe-explorer-vscode/issues/3346)

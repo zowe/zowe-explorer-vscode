@@ -106,6 +106,7 @@ function createGlobalMocks(): { [key: string]: any } {
             onProfileUpdatedEmitterEvent: jest.fn().mockReturnValue(new vscode.Disposable(jest.fn())),
         } as any),
     };
+    newMocks.mockCreateSessCfgFromArgs.mockReturnValue(newMocks.testSession);
 
     jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
     jest.spyOn(JobFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
