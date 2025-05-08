@@ -158,7 +158,7 @@ importers:
         specifier: ^8.18.0
         version: 8.18.0(@zowe/core-for-zowe-sdk@8.18.0)(@zowe/imperative@8.18.0)
       '@zowe/zowe-explorer-api':
-        specifier: 3.2.0-SNAPSHOT
+        specifier: 3.2.0
         version: link:../zowe-explorer-api
       dayjs:
         specifier: ^1.11.10
@@ -213,7 +213,7 @@ importers:
         specifier: ^2.4.1
         version: 2.4.2
       eslint-plugin-zowe-explorer:
-        specifier: 3.2.0-SNAPSHOT
+        specifier: 3.2.0
         version: link:../eslint-plugin-zowe-explorer
       expect-webdriverio:
         specifier: ^4.15.4
@@ -319,7 +319,7 @@ importers:
         specifier: ^8.18.0
         version: 8.18.0(@zowe/core-for-zowe-sdk@8.18.0)(@zowe/imperative@8.18.0)
       '@zowe/zowe-explorer-api':
-        specifier: 3.2.0-SNAPSHOT
+        specifier: 3.2.0
         version: link:../zowe-explorer-api
       tmp:
         specifier: 0.2.3
@@ -3081,23 +3081,6 @@ packages:
       - bare-buffer
       - supports-color
     dev: true
-
-  /@wdio/globals@8.43.0:
-    resolution: {integrity: sha512-RCkldSApdoCAMsQhU7Qy9uXlFoPy8OFWOxbiE8O2WcRpTpSwAwWksN9tOLmevCTn1Ovj+onnxkiZQ0spnAUDbw==}
-    engines: {node: ^16.13 || >=18}
-    requiresBuild: true
-    optionalDependencies:
-      expect-webdriverio: 4.15.4
-      webdriverio: 8.43.0
-    transitivePeerDependencies:
-      - bare-buffer
-      - bufferutil
-      - devtools
-      - encoding
-      - supports-color
-      - utf-8-validate
-    dev: true
-    optional: true
 
   /@wdio/globals@8.44.0:
     resolution: {integrity: sha512-qkzi2bUcc7jt6mhrlgWfx08O4vGIblENTO3jdBbb1S4g30mNYo3yWYoMkohGZjPSnF77eava7TbJZ/kKbk4Etw==}
@@ -6010,9 +5993,9 @@ packages:
       jest-matcher-utils: 29.7.0
       lodash.isequal: 4.5.0
     optionalDependencies:
-      '@wdio/globals': 8.43.0
+      '@wdio/globals': 8.44.0
       '@wdio/logger': 8.38.0
-      webdriverio: 8.43.0
+      webdriverio: 8.44.0
     transitivePeerDependencies:
       - bare-buffer
       - bufferutil
