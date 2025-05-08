@@ -2,6 +2,12 @@
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
+## TBD Release
+
+### New features and enhancements
+
+### Bug fixes
+
 ## `3.2.0`
 
 - BugFix: Resolved a bug where extenders adding `ssh` or `base` to `allTypes` on `ProfileCache` will result in duplicate nodes when adding a profile of that type in Zowe Explorer. [#3625](https://github.com/zowe/zowe-explorer-vscode/pull/3625)
