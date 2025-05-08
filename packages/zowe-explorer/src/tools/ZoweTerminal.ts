@@ -186,7 +186,9 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
 
     private async handleEnter() {
         this.write(ZoweTerminal.Keys.NEW_LINE);
-        const cmd = this.command;
+        const isAsyncCommand = this.command.startsWith(":async");
+        const isForgetCommand = this.command.startsWith(":forget");
+        const cmd = this.command.substring(isAsyncCommand ? 6 : isForgetCommand ? 7 : 0).trim();
         this.command = "";
         this.charArrayCmd = [];
         if (cmd.length === 0) {
@@ -202,22 +204,38 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
             }
         } else {
             this.isCommandRunning = true;
-
-            const output = await Promise.race([
-                this.processCmd(cmd),
-                new Promise<null>((resolve, _reject) => {
-                    this.controller.signal.addEventListener("abort", () => {
-                        this.isCommandRunning = false;
-                        resolve(null);
-                    });
-                    if (!this.isCommandRunning) resolve(null);
-                }),
-            ]);
-            this.isCommandRunning = false;
-            if (output === null) {
-                this.writeLine(this.chalk.italic.red("Operation cancelled!"));
+            if (isForgetCommand || isAsyncCommand) {
+                this.writeLine(this.chalk.italic.yellow(`Output ${isAsyncCommand ? "deferred!" : "forgotten!"}`));
+                this.isCommandRunning = false;
+                this.processCmd(cmd).then((output: string) => {
+                    const currentCmd = this.command;
+                    this.command = "";
+                    this.charArrayCmd = [];
+                    // ---------------------------------------
+                    // Note: `.call(this, ` is intentional since without it, it's possible for VSCode to not remember what `this` is
+                    (isForgetCommand ? this.writeLine : this.write).call(this, this.chalk.italic.yellow("\r\nOperation completed: ") + cmd + "\r\n");
+                    if (isAsyncCommand) this.writeLine.call(this, output.trim().split("\n").join("\r\n"));
+                    this.handleInput.call(this, currentCmd);
+                    // ---------------------------------------
+                });
             } else {
-                this.writeLine(output.trim().split("\n").join("\r\n"));
+                const output = await Promise.race([
+                    this.processCmd(cmd),
+                    new Promise<null>((resolve, _reject) => {
+                        this.controller.signal.addEventListener("abort", () => {
+                            this.controller = new AbortController();
+                            resolve(null);
+                        });
+                        if (!this.isCommandRunning) resolve(null);
+                    }),
+                ]);
+                this.isCommandRunning = false;
+                if (output === null) {
+                    this.writeLine(this.chalk.italic.red("Operation cancelled!"));
+                    this.pressedCtrlC = false;
+                } else {
+                    this.writeLine(output.trim().split("\n").join("\r\n"));
+                }
             }
         }
         this.mHistory.push(cmd);
@@ -227,7 +245,6 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
 
     // Handle input from the terminal
     public async handleInput(data: string): Promise<void> {
-        // console.log("data", data, Buffer.from(data));
         if (this.isCommandRunning) {
             if ([ZoweTerminal.Keys.CTRL_C, ZoweTerminal.Keys.CTRL_D].includes(data)) this.controller.abort();
             if (data === ZoweTerminal.Keys.CTRL_D) this.close();

@@ -4,6 +4,13 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## TBD Release
 
+ <!-- >>>>>> -->
+ <!-- TODO: Move these to their respective locations once the PR below is merged -->
+   <!-- https://github.com/zowe/zowe-explorer-vscode/pull/3641 -->
+
+- Added support for asynchronous operations. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
+<!-- >>>>>> -->
+
 - BugFix: Resolved a bug where extenders adding `ssh` or `base` to `allTypes` on `ProfileCache` will result in duplicate nodes when adding a profile of that type in Zowe Explorer. [#3625](https://github.com/zowe/zowe-explorer-vscode/pull/3625)
 
 ### New features and enhancements
