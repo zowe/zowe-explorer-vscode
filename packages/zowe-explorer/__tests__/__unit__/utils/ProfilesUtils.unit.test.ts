@@ -33,6 +33,7 @@ import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { Definitions } from "../../../src/configuration/Definitions";
 import { createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets";
+import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
 
 jest.mock("../../../src/tools/ZoweLogger");
 jest.mock("fs");
@@ -399,6 +400,14 @@ describe("ProfilesUtils unit tests", () => {
             Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
             const unlockProfileSpy = jest.spyOn(AuthHandler, "unlockProfile");
             const mockNode = createDatasetSessionNode(createISession(), profile);
+            const mockTreeProvider = {
+                mSessionNodes: [mockNode],
+                flipState: jest.fn(),
+                refreshElement: jest.fn(),
+            } as any;
+            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(mockTreeProvider);
+            jest.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(mockTreeProvider);
+            jest.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
             await ProfilesUtils.promptCredentials(mockNode);
             expect(promptCredentialsProfilesMock).toHaveBeenCalledTimes(1);
             expect(promptCredentialsProfilesMock).toHaveBeenCalledWith(profile, true);
@@ -502,6 +511,7 @@ describe("ProfilesUtils unit tests", () => {
             await ProfilesUtils.promptCredentials({
                 getProfile: () => testConfig,
                 setProfileToChoice: jest.fn(),
+                getChildren: jest.fn().mockResolvedValue([]),
             } as any);
             expect(updCredsMock).toHaveBeenCalled();
             expect(Gui.showMessage).toHaveBeenCalledWith("Credentials for testConfig were successfully updated");

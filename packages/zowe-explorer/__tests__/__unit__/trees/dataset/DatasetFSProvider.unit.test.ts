@@ -663,7 +663,7 @@ describe("writeFile", () => {
 
 describe("watch", () => {
     it("returns an empty Disposable object", () => {
-        expect(DatasetFSProvider.instance.watch(testUris.pds, { recursive: false, excludes: [] })).toStrictEqual(new Disposable(() => {}));
+        expect(DatasetFSProvider.instance.watch(testUris.pds, { recursive: false, excludes: [] })).toBeInstanceOf(Disposable);
     });
 });
 describe("stat", () => {

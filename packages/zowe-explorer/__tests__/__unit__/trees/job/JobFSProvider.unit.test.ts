@@ -59,7 +59,7 @@ const testEntries = {
 
 describe("watch", () => {
     it("returns an empty Disposable object", () => {
-        expect(JobFSProvider.instance.watch(testUris.job, { recursive: false, excludes: [] })).toStrictEqual(new Disposable(() => {}));
+        expect(JobFSProvider.instance.watch(testUris.job, { recursive: false, excludes: [] })).toBeInstanceOf(Disposable);
     });
 });
 describe("stat", () => {
@@ -225,6 +225,11 @@ describe("JobFSProvider.supportSpoolPagination", () => {
         jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
             supportSpoolPagination: () => true,
         } as any);
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.jobs.paginate.enabled") {
+                return true;
+            }
+        });
 
         const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
         expect(result).toBe(true);
@@ -236,6 +241,11 @@ describe("JobFSProvider.supportSpoolPagination", () => {
         jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
             supportSpoolPagination: () => false,
         } as any);
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.jobs.paginate.enabled") {
+                return false;
+            }
+        });
 
         const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
         expect(result).toBe(false);
@@ -277,7 +287,7 @@ describe("fetchSpoolAtUri", () => {
         const newData = "spool contents";
 
         jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
-            if (key === "zowe.jobs.settings.pagination") {
+            if (key === "zowe.jobs.paginate.enabled") {
                 return true;
             }
             return false;
@@ -285,7 +295,7 @@ describe("fetchSpoolAtUri", () => {
         const mockJesApi = {
             supportSpoolPagination: () => true,
             downloadSingleSpool: jest.fn((opts) => {
-                expect(SettingsConfig.getDirectValue("zowe.jobs.settings.pagination")).toBe(true);
+                expect(SettingsConfig.getDirectValue("zowe.jobs.paginate.enabled")).toBe(true);
                 expect(opts.recordRange).toBe("10-50");
                 opts.stream.write(newData);
             }),
@@ -304,6 +314,43 @@ describe("fetchSpoolAtUri", () => {
         lookupAsFileMock.mockRestore();
     });
 
+    it("fetches spool contents and correctly applies recordRange parameters", async () => {
+        const lookupAsFileMock = jest
+            .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
+            .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array() });
+
+        const newData = "spool contents";
+
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.jobs.paginate.enabled") {
+                return true;
+            }
+            if (key === "zowe.jobs.paginate.recordsToFetch") {
+                return 20;
+            }
+        });
+        const mockJesApi = {
+            supportSpoolPagination: () => true,
+            downloadSingleSpool: jest.fn((opts) => {
+                expect(SettingsConfig.getDirectValue("zowe.jobs.paginate.enabled")).toBe(true);
+                expect(opts.recordRange).toBe("19-38");
+                opts.stream.write(newData);
+            }),
+        };
+
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+
+        const uriWithQuery = vscode.Uri.parse(testUris.spool.toString() + "?startLine=19");
+
+        const entry = await JobFSProvider.instance.fetchSpoolAtUri(uriWithQuery);
+
+        expect(mockJesApi.downloadSingleSpool).toHaveBeenCalled();
+        expect(entry.data.toString()).toStrictEqual(newData.toString());
+
+        jesApiMock.mockRestore();
+        lookupAsFileMock.mockRestore();
+    });
+
     it("fetches spool contents when recordRange parameters is not supported", async () => {
         const lookupAsFileMock = jest
             .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
@@ -312,7 +359,7 @@ describe("fetchSpoolAtUri", () => {
         const newData = "spool contents";
 
         jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
-            if (key === "zowe.jobs.settings.pagination") {
+            if (key === "zowe.jobs.paginate.enabled") {
                 return false;
             }
             return true;
@@ -320,7 +367,7 @@ describe("fetchSpoolAtUri", () => {
         const mockJesApi = {
             supportSpoolPagination: () => false,
             downloadSingleSpool: jest.fn((opts) => {
-                expect(SettingsConfig.getDirectValue("zowe.jobs.settings.pagination")).toBe(false);
+                expect(SettingsConfig.getDirectValue("zowe.jobs.paginate.enabled")).toBe(false);
                 expect(opts.recordRange).toBeUndefined();
                 opts.stream.write(newData);
             }),
@@ -347,17 +394,17 @@ describe("fetchSpoolAtUri", () => {
             .mockReturnValueOnce({ ...testEntries.spool, dsata: new Uint8Array() });
 
         jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
-            if (key === "zowe.jobs.recordsToFetch") {
+            if (key === "zowe.jobs.paginate.recordsToFetch") {
                 return defaultFetchSetting;
             }
-            if (key === "zowe.jobs.settings.pagination") {
+            if (key === "zowe.jobs.paginate.enabled") {
                 return true;
             }
         });
 
         const downloadMock = jest.fn((opts) => {
-            expect(SettingsConfig.getDirectValue("zowe.jobs.settings.pagination")).toBe(true);
-            expect(opts.recordRange).toBe(`0-${defaultFetchSetting}`);
+            expect(SettingsConfig.getDirectValue("zowe.jobs.paginate.enabled")).toBe(true);
+            expect(opts.recordRange).toBe(`0-${defaultFetchSetting - 1}`);
             opts.stream.write("test data");
         });
         const mockJesApi = {

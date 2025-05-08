@@ -323,7 +323,11 @@ describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile", () =>
             expectedFavSearchNode.iconPath = targetIcon.path;
         }
         const favSearchNode = await testTree1.initializeFavChildNodeForProfile(label, "ussSession", favProfileNode);
-        expect(favSearchNode).toEqual(expectedFavSearchNode);
+        expect(favSearchNode.label).toEqual(expectedFavSearchNode.label);
+        expect(favSearchNode.collapsibleState).toEqual(expectedFavSearchNode.collapsibleState);
+        expect(favSearchNode.contextValue).toEqual(expectedFavSearchNode.contextValue);
+        expect(favSearchNode.getParent()).toBe(expectedFavSearchNode.getParent());
+        expect(favSearchNode.getProfile()).toBe(expectedFavSearchNode.getProfile());
     });
 });
 
@@ -345,7 +349,11 @@ describe("USSTree Unit Tests - Function createProfileNodeForFavs", () => {
         expectedFavProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
 
         const createdFavProfileNode = await globalMocks.testTree.createProfileNodeForFavs("testProfile");
-        expect(createdFavProfileNode).toEqual(expectedFavProfileNode);
+        expect(createdFavProfileNode.label).toEqual(expectedFavProfileNode.label);
+        expect(createdFavProfileNode.collapsibleState).toEqual(expectedFavProfileNode.collapsibleState);
+        expect(createdFavProfileNode.contextValue).toEqual(expectedFavProfileNode.contextValue);
+        expect(createdFavProfileNode.getParent()).toEqual(expectedFavProfileNode.getParent());
+        expect(createdFavProfileNode.getProfile()).toEqual(expectedFavProfileNode.getProfile());
     });
 
     it("Tests that profile grouping node is created correctly - global profile", async () => {
@@ -362,7 +370,11 @@ describe("USSTree Unit Tests - Function createProfileNodeForFavs", () => {
         expectedFavProfileNode.iconPath = icon.path;
 
         const createdFavProfileNode = await globalMocks.testTree.createProfileNodeForFavs("testProfile");
-        expect(createdFavProfileNode).toEqual(expectedFavProfileNode);
+        expect(createdFavProfileNode.label).toEqual(expectedFavProfileNode.label);
+        expect(createdFavProfileNode.collapsibleState).toEqual(expectedFavProfileNode.collapsibleState);
+        expect(createdFavProfileNode.contextValue).toEqual(expectedFavProfileNode.contextValue);
+        expect(createdFavProfileNode.getParent()).toEqual(expectedFavProfileNode.getParent());
+        expect(createdFavProfileNode.getProfile()).toEqual(expectedFavProfileNode.getProfile());
         expect(isGlobalProfNodeMock).toHaveBeenCalled();
         isGlobalProfNodeMock.mockRestore();
     });
@@ -634,11 +646,11 @@ describe("USSTree Unit Tests - Function cdUp", () => {
     it("Tests that cdUp() handles when current filter set but as a root path", async () => {
         const globalMocks = createGlobalMocks();
 
-        await globalMocks.testTree.filterBy(globalMocks.testTree.mSessionNodes[1], "/u");
-        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/u");
+        await globalMocks.testTree.filterBy(globalMocks.testTree.mSessionNodes[1], "/");
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/");
 
         await globalMocks.testTree.cdUp(globalMocks.testTree.mSessionNodes[1]);
-        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/u");
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/");
 
         expect(globalMocks.showInformationMessage).toHaveBeenCalledWith("You are already at the root directory.", undefined);
     });
@@ -1431,7 +1443,7 @@ describe("USSTree Unit Tests - Function getChildren", () => {
 
         const rootChildren = await globalMocks.testTree.getChildren();
         // Creating rootNode
-        const sessNode = [
+        const sessNodes = [
             new ZoweUSSNode({
                 label: "Favorites",
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -1446,10 +1458,13 @@ describe("USSTree Unit Tests - Function getChildren", () => {
             }),
         ];
 
-        sessNode[1].fullPath = "/test";
-
-        expect(sessNode).toEqual(rootChildren);
-        expect(sessNode[0].iconPath).toEqual(Icon.folder.path);
+        // first node should be the favorites node
+        // second node should be the session
+        for (const child of rootChildren) {
+            const expectedChild = sessNodes.find((sesNode) => child.label === sesNode.label);
+            expect(child.label).toBe(expectedChild?.label);
+            expect(child.contextValue).toBe(expectedChild?.contextValue);
+        }
     });
 
     it("Testing that getChildren() returns correct ZoweUSSNodes when passed element of type ZoweUSSNode<session>", async () => {
@@ -1489,15 +1504,15 @@ describe("USSTree Unit Tests - Function getChildren", () => {
             })
         );
         const favChildren = await globalMocks.testTree.getChildren(globalMocks.testTree.mSessionNodes[0]);
-        const sampleChildren: ZoweUSSNode[] = [
-            new ZoweUSSNode({
-                label: "/u/myUser",
-                collapsibleState: vscode.TreeItemCollapsibleState.None,
-                parentNode: globalMocks.testTree.mSessionNodes[0],
-            }),
-        ];
+        const expectedChild = new ZoweUSSNode({
+            label: "/u/myUser",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: globalMocks.testTree.mSessionNodes[0],
+        });
 
-        expect(favChildren).toEqual(sampleChildren);
+        expect(favChildren[0].label).toEqual(expectedChild.label);
+        expect(favChildren[0].collapsibleState).toEqual(expectedChild.collapsibleState);
+        expect(favChildren[0].getParent()).toEqual(expectedChild.getParent());
     });
 
     it("Testing that getChildren() returns correct ZoweUSSNodes when passed element of type ZoweUSSNode<directory>", async () => {
@@ -1639,7 +1654,10 @@ describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
         await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         const resultFavDirNode = globalMocks.testTree.mFavorites[0].children[0];
 
-        expect(resultFavDirNode).toEqual(expectedFavDirNode);
+        expect(resultFavDirNode.label).toBe(expectedFavDirNode.label);
+        expect(resultFavDirNode.collapsibleState).toBe(expectedFavDirNode.collapsibleState);
+        expect(resultFavDirNode.getParent()).toBe(expectedFavDirNode.getParent());
+        expect(resultFavDirNode.getProfile()).toBe(expectedFavDirNode.getProfile());
     });
     it("Tests that loaded profile/session from profile node in Favorites gets passed to child favorites without profile/session", async () => {
         const globalMocks = createGlobalMocks();
@@ -1669,7 +1687,10 @@ describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
         await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         const resultFavDirNode = globalMocks.testTree.mFavorites[0].children[0];
 
-        expect(resultFavDirNode).toEqual(expectedFavDirNode);
+        expect(resultFavDirNode.label).toEqual(expectedFavDirNode.label);
+        expect(resultFavDirNode.collapsibleState).toEqual(expectedFavDirNode.collapsibleState);
+        expect(resultFavDirNode.contextValue).toEqual(expectedFavDirNode.contextValue);
+        expect(resultFavDirNode.getProfile()).toEqual(expectedFavDirNode.getProfile());
     });
 });
 

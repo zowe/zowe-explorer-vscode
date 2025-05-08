@@ -1358,10 +1358,53 @@ describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
         const profile = createIProfile();
         const sessionNode = createDatasetSessionNode(createISession(), profile);
         sessionNode.pattern = "A.B.*";
+        sessionNode.tooltip = "Pattern: A.B.*";
         await expect((sessionNode as any).getDatasets(profile)).resolves.not.toThrow();
         expect(dataSet).toHaveBeenCalledWith("A.B.*", { attributes: true, profile });
         dsTreeMock.mockRestore();
         mvsApiMock.mockRestore();
+    });
+
+    it("sorts dataset patterns when pagination is enabled to ensure proper cursor navigation", async () => {
+        const pageOne = Array.from({ length: 100 }).map((_, i) => (i < 10 ? `A.${i}` : `B.${i}`));
+        const pageTwo = Array.from({ length: 13 }).map((_, i) => (i < 10 ? `B.${i + 100}` : `SYS1.${i - 10}`));
+        const allItems = pageOne.concat(pageTwo);
+
+        const dataSetsMatchingPattern = jest
+            .fn()
+            .mockResolvedValueOnce({
+                success: true,
+                apiResponse: allItems,
+            })
+            .mockResolvedValueOnce({
+                success: true,
+                apiResponse: pageOne.map((dsname) => ({ dsname, dsorg: "PO" })),
+            });
+
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+            getSession: jest.fn().mockReturnValue(createISession()),
+            dataSetsMatchingPattern,
+        } as any);
+        const profile = createIProfile();
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue(createInstanceOfProfile(profile));
+        const sessionNode = createDatasetSessionNode(createISession(), profile);
+        sessionNode.dirty = false;
+        const dsTree = createDatasetTree(sessionNode, jest.fn());
+        const dsTreeMock = jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(dsTree);
+        sessionNode.pattern = "B.*,SYS1.*,A.*";
+        await expect((sessionNode as any).getDatasets(profile, true)).resolves.not.toThrow();
+        // expect full list to be fetched in alphabetical order
+        expect(dataSetsMatchingPattern).toHaveBeenCalledWith(["A.*", "B.*", "SYS1.*"], {
+            attributes: false,
+        });
+        // expect second call to fetch first X items
+        expect(dataSetsMatchingPattern).toHaveBeenCalledWith(["A.*", "B.*", "SYS1.*"], {
+            attributes: true,
+            maxLength: 100,
+        });
+        dsTreeMock.mockRestore();
+        mvsApiMock.mockRestore();
+        profilesMock.mockRestore();
     });
 
     it("calls listMembers() - pagination off, node is a PDS", async () => {
@@ -1466,6 +1509,21 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
         expect(listDatasetsMock.mock.calls[1][1]).toStrictEqual({ attributes: true, start: undefined, maxLength: 2 });
     });
 
+    it("returns an empty list of items to paginator when an error is encountered", async () => {
+        const sessionNode = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+            profile: createIProfile(),
+            session: createISession(),
+        });
+        jest.spyOn(sessionNode, "listDatasets").mockImplementationOnce(async () => {
+            throw new Error("Simulated error");
+        });
+        const result = await (sessionNode as any).listDatasetsInRange(undefined, 2);
+        expect(result).toStrictEqual({ items: [] });
+    });
+
     it("uses cached data to fetch next page", async () => {
         const sessionNode = new ZoweDatasetNode({
             label: "sestest",
@@ -1550,6 +1608,19 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
         expect(listMembersMock).toHaveBeenCalledTimes(2);
         expect(listMembersMock.mock.calls[0][1]).toStrictEqual({ attributes: false });
         expect(listMembersMock.mock.calls[1][1]).toStrictEqual({ attributes: true, start: undefined, maxLength: 2 });
+    });
+
+    it("returns an empty list of items to paginator when an error is encountered", async () => {
+        const pdsNode = new ZoweDatasetNode({
+            label: "PDS.ERROR",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+        jest.spyOn(pdsNode, "listMembers").mockImplementationOnce(async () => {
+            throw new Error("Simulated error");
+        });
+        const result = await (pdsNode as any).listMembersInRange(undefined, 2);
+        expect(result).toStrictEqual({ items: [] });
     });
 
     it("uses cached data to fetch next page - start param defined", async () => {

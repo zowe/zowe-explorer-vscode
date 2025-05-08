@@ -1658,10 +1658,10 @@
       "type": "object",
       "title": "%configuration.title%",
       "properties": {
-        "zowe.ds.paginate.datasetsPerPage": {
+        "zowe.ds.paginate.dataSetsPerPage": {
           "default": 100,
           "type": "integer",
-          "description": "%zowe.ds.paginate.datasetsPerPage%",
+          "description": "%zowe.ds.paginate.dataSetsPerPage%",
           "scope": "window"
         },
         "zowe.ds.default.binary": {
@@ -1989,17 +1989,18 @@
           "description": "%zowe.pollInterval.info%",
           "scope": "window"
         },
-        "zowe.jobs.settings.pagination": {
+        "zowe.jobs.paginate.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "%zowe.jobs.settings.pagination%",
+          "description": "%zowe.jobs.paginate.enabled%",
           "scope": "window"
         },
-        "zowe.jobs.recordsToFetch": {
+        "zowe.jobs.paginate.recordsToFetch": {
           "type": "integer",
           "default": 100,
-          "description": "%zowe.jobs.recordsToFetch%",
-          "scope": "window"
+          "description": "%zowe.jobs.paginate.recordsToFetch%",
+          "scope": "window",
+          "minimum": 2
         },
         "zowe.settings.overrideWithEnvironmentVariables": {
           "type": "boolean",
