@@ -31,12 +31,14 @@ Zowe Explorer for VS Code is a Zowe&trade; component that focuses on modernizing
 
 Use various services to communicate with system resources and extract system data on the mainframe:
 
-- FTP
-   - See [FTP documentation](https://www.ibm.com/docs/en/zos/3.1.0?topic=applications-transferring-files-using-ftp) for more information.
-- IBM® Remote System Explorer API (RSE)
-   - See [RSE documentation](https://www.ibm.com/docs/en/explorer-for-zos/3.4.0?topic=documentation-rse-api) for more information.
 - z/OSMF
    - See [z/OSMF documentation](https://www.ibm.com/docs/en/zos/3.1.0?topic=guide-using-zosmf-rest-services) for more information.
+- FTP
+   - This connection is available with the [Zowe Explorer FTP Extension](https://docs.zowe.org/stable/user-guide/ze-ftp-using-ze-ftp-ext).
+   - See [FTP documentation](https://www.ibm.com/docs/en/zos/3.1.0?topic=applications-transferring-files-using-ftp) for more information.
+
+
+There are multiple extensions that offer additional protocols and functionality. See the Explorer for Visual Studio Code Zowe V3 section in the [Zowe V2 and V3 Conformant Landscape](https://omp.landscape2.io/embed/embed.html?base-path=&classify=category&key=zowe-conformant&headers=true&category-header=false&category-in-subcategory=false&title-uppercase=false&title-alignment=left&title-font-family=sans-serif&title-font-size=13&style=shadowed&bg-color=%230033a1&fg-color=%23ffffff&item-modal=false&item-name=true&size=md&items-alignment=left&item-name-font-size=11) for a complete list of conformant extensions.
 
 ## Getting started
 
@@ -50,13 +52,14 @@ Configure Zowe Explorer for VS Code by changing the extension settings. For more
 
 Team configuration stores connection information to access the mainframe. Check that you have your team configuration in place.
 
-If you are missing your team configuration, work with your administrator to set it up.
+If you are missing your team configuration files, `zowe.config.json` and `zowe.schema.json`, work with your administrator to set them up.
 
 - Your team configuration is in place when:
-   - A **Search** icon displays in the header of the **DATA SETS**, **UNIX SYSTEM SERVICES**, or **JOBS** tree view.
-   - Selecting the **+** icon, presents options in the **Quick Pick** to create a new profile, or use an existing profile, if available.
+   - Selecting the **+** icon, presents options in the **Quick Pick** to edit your configuration file or, if available, use an existing profile.
 
-- You do not have team configuration when a **Search** icon does not display in the headers of the **DATA SETS**, **UNIX SYSTEM SERVICES**, or **JOBS** tree views. Select the **+** icon to create team configuration. 
+- You do not have team configuration when:
+   - A pop-up message displays advising that client configurations were not found.
+   - A **Search** icon does not display in the headers of the **DATA SETS**, **UNIX SYSTEM SERVICES**, or **JOBS** tree views. Select the **+** icon to create team configuration. 
 
 ### Creating a team configuration file
 
@@ -66,7 +69,7 @@ Team configuration should be created by an administrator or team lead who unders
 
 Refer to Zowe Docs for documentation on understanding and implementing team configuration:
 
-- [Using team configuration](https://docs.zowe.org/stable/user-guide/cli-using-using-team-profiles)
+- [Team configuration](https://docs.zowe.org/stable/user-guide/cli-using-using-team-profiles) overview
 - [Creating Zowe Explorer profiles](https://docs.zowe.org/stable/user-guide/ze-profiles)
 
 **Note**: Team configuration can apply across three core components of the Zowe project, Zowe Explorer for VS Code, Zowe Explorer for IntelliJ IDEA, and Zowe CLI.
@@ -87,6 +90,10 @@ To update securely stored user names and passwords in Zowe Explorer:
 2. Select **Update Credentials** from the **Quick Pick**.
 
    You are prompted for the new credentials and these are saved to the secure credentials vault.
+
+## Other authentication methods
+
+Zowe Explorer for VS Code supports multiple authentication methods including basic authentication, multi-factor authentication, tokens, and certificates. See [Zowe Docs](https://docs.zowe.org/stable/user-guide/ze-authentication-methods) for more information about these other authentication methods.
 
 ## Usage tips
 
