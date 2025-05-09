@@ -40,8 +40,9 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
     public supportSpoolPagination(doc: vscode.TextDocument): boolean {
         const profInfo = this._getInfoFromUri(doc.uri);
         try {
+            const paginationEnabled = SettingsConfig.getDirectValue<boolean>("zowe.jobs.paginate.enabled");
             const supportPagination = ZoweExplorerApiRegister.getJesApi(profInfo.profile).supportSpoolPagination?.();
-            return supportPagination;
+            return paginationEnabled && supportPagination;
         } catch (err) {
             return false;
         }
@@ -225,18 +226,19 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         await AuthHandler.waitForUnlock(spoolEntry.metadata.profile);
         const query = new URLSearchParams(uri.query);
         let recordRange = "";
+        const recordsToFetch = SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 0;
+
         if (query.has("startLine")) {
             const startLine = parseInt(query.get("startLine")!);
-            const endLine = query.has("endLine")
-                ? parseInt(query.get("endLine")!)
-                : SettingsConfig.getDirectValue<number>("zowe.jobs.recordsToFetch") ?? 0;
+            const endLine = query.has("endLine") ? parseInt(query.get("endLine")!) : startLine + (recordsToFetch - 1);
             recordRange = `${startLine}-${endLine}`;
         } else {
-            const defFetchSetting = SettingsConfig.getDirectValue<number>("zowe.jobs.recordsToFetch") ?? 0;
-            if (defFetchSetting > 0) {
-                recordRange = `0-${defFetchSetting}`;
+            const defFetchSetting = SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 0;
+            if (defFetchSetting > 1) {
+                recordRange = `0-${defFetchSetting - 1}`;
             }
         }
+
         try {
             const spoolEncoding = spoolEntry.encoding?.kind === "other" ? spoolEntry.encoding.codepage : profileEncoding;
             if (jesApi.downloadSingleSpool) {
@@ -245,7 +247,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                     stream: bufBuilder,
                     binary: spoolEntry.encoding?.kind === "binary",
                     recordRange:
-                        jesApi.supportSpoolPagination?.() && SettingsConfig.getDirectValue<boolean>("zowe.jobs.settings.pagination")
+                        jesApi.supportSpoolPagination?.() && SettingsConfig.getDirectValue<boolean>("zowe.jobs.paginate.enabled")
                             ? recordRange
                             : undefined,
                     encoding: spoolEncoding,
@@ -262,11 +264,17 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
-        spoolEntry.data = bufBuilder.read() ?? new Uint8Array();
+
+        if (query.has("startLine") && !query.has("endLine")) {
+            spoolEntry.data = Buffer.concat([spoolEntry.data, bufBuilder.read() ?? new Uint8Array()]);
+        } else {
+            spoolEntry.data = bufBuilder.read() ?? new Uint8Array();
+        }
+
         spoolEntry.mtime = Date.now();
         spoolEntry.size = spoolEntry.data.byteLength;
         if (editor) {
-            await this._updateResourceInEditor(uri);
+            await this._updateResourceInEditor(uri.with({ query: "" }));
         }
 
         return spoolEntry;

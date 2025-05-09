@@ -463,6 +463,19 @@ export class ProfilesUtils {
             if (typeof profile !== "string") {
                 await Constants.PROFILES_CACHE.updateCachedProfile(profile, node);
             }
+            if (node !== null) {
+                const toolTipList = (node.tooltip as string)?.split("\n") ?? [];
+                const userIDIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("User: ")));
+                if (userIDIndex !== -1) {
+                    toolTipList[userIDIndex] = `${vscode.l10n.t("User: ")}${creds[0]}`;
+                } else {
+                    toolTipList.push(`${vscode.l10n.t("User: ")}${creds[0]}`);
+                }
+                node.tooltip = toolTipList.join("\n");
+                if (node) {
+                    SharedTreeProviders.getProviderForNode(node).refreshElement(node);
+                }
+            }
             ZoweLogger.info(successMsg);
             Gui.showMessage(successMsg);
         }

@@ -253,17 +253,28 @@ export class JobActions {
         statusMsg.dispose();
     }
 
-    public static async loadMoreRecords(doc: vscode.TextDocument): Promise<void> {
-        if (!doc) {
-            Gui.errorMessage(vscode.l10n.t("No document found"));
+    private static isLoadingRecords = false;
+    public static async loadMoreRecords(uri): Promise<void> {
+        if (JobActions.isLoadingRecords) {
             return;
         }
-
-        const uri = doc.uri;
-        if (uri.scheme == ZoweScheme.Jobs) {
-            await JobFSProvider.instance.fetchSpoolAtUri(uri);
+        JobActions.isLoadingRecords = true;
+        let finalUri = uri;
+        if (!finalUri) {
+            const activeTextEditor = vscode.window.activeTextEditor?.document;
+            if (!activeTextEditor) {
+                Gui.errorMessage(vscode.l10n.t("No document found"));
+                return;
+            }
+            finalUri = activeTextEditor.uri.with({ query: `startLine=${activeTextEditor.lineCount - 1}` });
         }
+
+        if (finalUri.scheme === ZoweScheme.Jobs) {
+            await JobFSProvider.instance.fetchSpoolAtUri(finalUri, vscode.window.activeTextEditor);
+        }
+        JobActions.isLoadingRecords = false;
     }
+
     /**
      * Refresh a job node information and spool files in the job tree
      *

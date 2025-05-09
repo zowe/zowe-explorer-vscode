@@ -410,10 +410,10 @@
   "zowe.pollInterval.info": {
     "Default interval (in milliseconds) when polling spool files.": ""
   },
-  "zowe.jobs.settings.pagination": {
+  "zowe.jobs.paginate.enabled": {
     "Toggle to enable job spool pagination.": ""
   },
-  "zowe.jobs.recordsToFetch": {
+  "zowe.jobs.paginate.recordsToFetch": {
     " Default number of records to fetch when polling spool files.": ""
   },
   "zowe.security.checkForCustomCredentialManagers": {
@@ -523,6 +523,9 @@
   },
   "zowe.settings.socketConnectTimeout": {
     "The amount of time to wait for a connection to be initiated with the server, in milliseconds.": ""
+  },
+  "zowe.settings.requestTimeout": {
+    "The amount of time to wait for a REST request to complete, in milliseconds.": ""
   },
   "Enter command here...": "",
   "Page Size:": "",
@@ -653,6 +656,15 @@
   "Uploading USS files...": "",
   "Error uploading files": "",
   "Retrieving response from USS list API": "",
+  "The 'move' function is not implemented for this USS API.": "",
+  "Failed to move {0}": "",
+  "Profile does not exist for this file.": "",
+  "Saving USS file...": "",
+  "Failed to rename {0}": "",
+  "Failed to delete {0}": "",
+  "No error details given": "",
+  "Error fetching destination {0} for paste action: {1}": "",
+  "Failed to copy {0} to {1}": "",
   "Downloaded: {0}": "",
   "Encoding: {0}": "",
   "Binary": "",
@@ -679,15 +691,6 @@
   "initializeUSSFavorites.error.buttonRemove": "",
   "File does not exist. It may have been deleted.": "",
   "Pulling from Mainframe...": "",
-  "The 'move' function is not implemented for this USS API.": "",
-  "Failed to move {0}": "",
-  "Profile does not exist for this file.": "",
-  "Saving USS file...": "",
-  "Failed to rename {0}": "",
-  "Failed to delete {0}": "",
-  "No error details given": "",
-  "Error fetching destination {0} for paste action: {1}": "",
-  "Failed to copy {0} to {1}": "",
   "{0} location": "",
   "Choose a location to create the {0}": "",
   "Name of file or directory": "",

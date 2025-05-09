@@ -152,8 +152,8 @@ describe("Test src/jobs/extension", () => {
             },
             {
                 name: "zowe.jobs.loadMoreRecords",
-                mock: [{ spy: jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri"), arg: [{ scheme: ZoweScheme.Jobs }] }],
-                parm: [{ uri: { scheme: ZoweScheme.Jobs } }],
+                mock: [{ spy: jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri"), arg: [{ scheme: ZoweScheme.Jobs }, undefined] }],
+                parm: [{ scheme: ZoweScheme.Jobs }],
             },
         ];
 
@@ -179,16 +179,19 @@ describe("Test src/jobs/extension", () => {
                 configurable: true,
             });
 
-            const originalGetDirectValue = SettingsConfig.getDirectValue;
             jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key: string) => {
-                if (key === "zowe.jobs.settings.pagination") {
+                if (key === "zowe.jobs.paginate.enabled") {
                     return true;
                 }
-                return originalGetDirectValue(key);
+                if (key === "zowe.jobs.paginate.recordsToFetch") {
+                    return 20;
+                }
             });
+
 
             spyCreateJobsTree.mockResolvedValue(jobsProvider as any);
             await JobInit.initJobsProvider(test.context);
+            await JobActions.loadMoreRecords({ scheme: ZoweScheme.Jobs });
         });
         beforeEach(() => {
             spyCreateJobsTree.mockResolvedValue(jobsProvider as any);

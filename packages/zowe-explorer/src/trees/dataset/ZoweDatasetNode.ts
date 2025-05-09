@@ -713,7 +713,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 scenario: vscode.l10n.t("Retrieving response from MVS list API"),
             });
             AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
-            return;
+            return {
+                items: [],
+            };
         }
 
         const successfulResponses = responses
@@ -815,7 +817,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 scenario: vscode.l10n.t("Retrieving response from MVS list API"),
             });
             AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
-            return;
+            return {
+                items: [],
+            };
         }
 
         const successfulResponses = responses
@@ -913,6 +917,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
             patternChanged = this.prevPattern !== finalPattern || this.pattern !== finalPattern;
             this.pattern = this.prevPattern = finalPattern;
+            const toolTipList: string[] = (this.tooltip as string)?.split("\n") ?? [];
+            const patternIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Pattern: ")));
+            if (patternIndex === -1) {
+                toolTipList.push(`${vscode.l10n.t("Pattern: ")}${this.pattern}`);
+            } else {
+                toolTipList[patternIndex] = `${vscode.l10n.t("Pattern: ")}${this.pattern}`;
+            }
+            this.tooltip = toolTipList.join("\n");
         }
 
         try {
