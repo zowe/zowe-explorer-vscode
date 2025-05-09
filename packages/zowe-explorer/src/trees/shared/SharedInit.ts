@@ -47,6 +47,7 @@ import { SharedUtils } from "./SharedUtils";
 import { SharedContext } from "./SharedContext";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { CertificateWizard } from "../../utils/CertificateWizard";
+import { ConfigEditor } from "../../utils/ConfigEditor";
 import { ZosConsoleViewProvider } from "../../zosconsole/ZosConsolePanel";
 import { ZoweUriHandler } from "../../utils/UriHandler";
 import { TroubleshootError } from "../../utils/TroubleshootError";
@@ -133,6 +134,15 @@ export class SharedInit {
                 const certWizard = new CertificateWizard(context, opts);
                 const ret = await certWizard.userSubmission.promise;
                 certWizard.panel.dispose();
+                return ret;
+            })
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.configEditor", async (opts) => {
+                const configEditor = new ConfigEditor(context);
+                const ret = await configEditor.userSubmission.promise;
+                configEditor.panel.dispose();
                 return ret;
             })
         );
