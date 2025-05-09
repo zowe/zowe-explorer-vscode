@@ -15,8 +15,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## `3.2.0`
 
-- BugFix: Resolved a bug where extenders adding `ssh` or `base` to `allTypes` on `ProfileCache` will result in duplicate nodes when adding a profile of that type in Zowe Explorer. [#3625](https://github.com/zowe/zowe-explorer-vscode/pull/3625)
-
 ### New features and enhancements
 
 - Added functionality and code lens for pagination in job spool files. [#1787](https://github.com/zowe/zowe-explorer-vscode/issues/1787)
@@ -39,6 +37,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Fixed issue where webviews may register their `onDidReceiveMessage` event multiple times in the `resolveForView` function. [#3584](https://github.com/zowe/zowe-explorer-vscode/pull/3584)
 - Fixed an issue where the `BaseProvider._reopenEditorForRelocatedUri` function threw an exception when an open tab did not have a URI on its `input` property. [#3613](https://github.com/zowe/zowe-explorer-vscode/issues/3613)
 - Fixed an issue where the `onProfileUpdated` event emitter was not guaranteed to be the same across Zowe Explorer and extenders, causing some event listeners to not fire when an extender fires the event emitter. Now, the event is exposed through the API register, so that all operations on this event from the `ZoweVsCodeExtension` class are properly routed to the correct emitter. [#3622](https://github.com/zowe/zowe-explorer-vscode/issues/3622)
+- BugFix: Resolved a bug where extenders adding `ssh` or `base` to `allTypes` on `ProfileCache` will result in duplicate nodes when adding a profile of that type in Zowe Explorer. [#3625](https://github.com/zowe/zowe-explorer-vscode/pull/3625)
 
 ## `3.1.2`
 
