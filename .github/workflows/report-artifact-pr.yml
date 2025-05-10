@@ -1,23 +1,24 @@
 name: Report VSIX Artifact in PR
 
-permissions:
-  contents: write
-  pull-requests: write
-
 on:
   pull_request:
     paths:
       - packages/zowe-explorer/**
       - packages/zowe-explorer-api/**
       - .github/workflows/report-artifact-pr.yml
+      - .github/resources/artifact-template.hbs
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
-  ze-build-artifact:
+  build-ze-artifact:
     runs-on: ubuntu-22.04
 
     timeout-minutes: 60
-        
-    if: (!contains(github.event.head_commit.message, '[ci skip]')
+
+    if: (!contains(github.event.head_commit.message, '[ci skip]'))
 
     steps:
       - name: Check out code
@@ -49,3 +50,4 @@ jobs:
         uses: bitonality/PRtifact@v0.1.0
         with:
           comment-mode: 'CreateOrUpdate'
+          handlebars-template: '.github/resources/artifact-template.hbs'
