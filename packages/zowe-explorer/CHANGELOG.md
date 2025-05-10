@@ -6,10 +6,13 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added hostname validation to prevent encountering a VSCode Proxy bug that occurs when attempting to connect to a z/OSMF server with the protocol specified as part of the hostname. [#3364](https://github.com/zowe/zowe-explorer-vscode/issues/3364)
+- Added a `zowe.settings.socketConnectTimeout` setting to provide users with the ability to specify a connection timeout for REST requests. [#3379](https://github.com/zowe/zowe-explorer-vscode/issues/3379)
+- Added a `zowe.settings.requestTimeout` setting to provide users with the ability to specify a request timeout for REST requests. [#3631](https://github.com/zowe/zowe-explorer-vscode/pull/3631)
 - Added pagination functionality for job spool files and created a key binding option (`ctrl + l`) to load more job spool records. [#1787](https://github.com/zowe/zowe-explorer-vscode/issues/1787)
 - Added case sensitive and regular expression search options to Data Set searches. [#3455](https://github.com/zowe/zowe-explorer-vscode/issues/3455)
 - Added filtered and partitioned data set search history. [#3455](https://github.com/zowe/zowe-explorer-vscode/issues/3455)
-- Updated Zowe SDKs to `8.16.0` to include the latest enhancements from Imperative and the z/OS Files SDK. [#3526](https://github.com/zowe/zowe-explorer-vscode/pull/3526)
+- Updated Zowe SDKs to `8.20.0` to include the latest enhancements from Imperative and the z/OS Files SDK. [#3526](https://github.com/zowe/zowe-explorer-vscode/pull/3526)
 - Added Time Started, Time Ended, and Time Submitted job properties to the Jobs table view. [#3055](https://github.com/zowe/zowe-explorer-vscode/issues/3055)
 - Implemented copy/paste functionality of data sets within and across LPARs. [#3012](https://github.com/zowe/zowe-explorer-vscode/issues/3012)
 - Implemented drag and drop functionality of data sets within and across LPARs. [#3413](https://github.com/zowe/zowe-explorer-vscode/pull/3413)
@@ -33,6 +36,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where dragging and dropping data sets across LPARs resulted in silent failure. [#3542](https://github.com/zowe/zowe-explorer-vscode/issues/3542)
 - Replaced an import of ILocalStorageAccess from "@zowe/zowe-explorer-api/src/extend/ILocalStorageAccess" to "@zowe/zowe-explorer-api" [#3606](https://github.com/zowe/zowe-explorer-vscode/issues/3606)
 - Fixed an issue where edit history does not show the correct information. [#3432](https://github.com/zowe/zowe-explorer-vscode/issues/3432)
 - Fixed an issue where the 'Delete' key binding for the USS tree returns a 'contextValue' error. [#2796](https://github.com/zowe/zowe-explorer-vscode/issues/2796)
@@ -53,6 +57,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where an invalid token in a base configuration profile will take precedence over a plaintext user/password in a service configuration profile. [#3575](https://github.com/zowe/zowe-explorer-vscode/pull/3575)
 - Fixed an issue where profiles that were not utilizing tokens were improperly running `checkJwtForProfile()` function within the `ZoweTreeProvider`. [#3575](https://github.com/zowe/zowe-explorer-vscode/pull/3575)
 - Fixed an issue where searching for the root directory (`/`) under a profile caused the profile to show a placeholder rather than a list of the files and folders at that path. [#3603](https://github.com/zowe/zowe-explorer-vscode/pull/3603)
+- Fixed an issue where dragging and dropping a USS file caused an unhandled error while finalizing the drop operation. [#3613](https://github.com/zowe/zowe-explorer-vscode/issues/3613)
+- Fixed an issue where the `onProfileUpdated` event emitter was not guaranteed to be the same across Zowe Explorer and extenders, causing some event listeners to not fire when an extender fires the event emitter. [#3622](https://github.com/zowe/zowe-explorer-vscode/issues/3622)
 
 ## `3.1.2`
 
