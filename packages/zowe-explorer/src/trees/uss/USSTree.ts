@@ -61,6 +61,9 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
 
     private draggedNodes: Record<string, IZoweUSSTreeNode> = {};
 
+    private navigateHistories: Record<string, string[]> = {};
+    private navigateHistoryIndices: Record<string, number> = {};
+
     public constructor() {
         super(
             USSTree.persistenceSchema,
@@ -698,14 +701,138 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     }
 
     /**
-     * Helper function to update the TreeView based on the provided path.
+     * Helper function to get the navigation history for a specific profile.
+     * Initializes the history if it doesn't exist.
+     *
+     * @param {IZoweUSSTreeNode} node - The session node
+     * @returns {string[]}
+     */
+    private getNavigationHistory(node: IZoweUSSTreeNode): string[] {
+        const key = node.getProfileName();
+        if (!this.navigateHistories[key]) {
+            this.navigateHistories[key] = [];
+        }
+        return this.navigateHistories[key];
+    }
+
+    /**
+     * Helper function to get the navigation history index for a specific profile.
+     * Initializes the index if it doesn't exist.
+     *
+     * @param {IZoweUSSTreeNode} node - The session node
+     * @returns {number}
+     */
+    private getNavigationHistoryIndex(node: IZoweUSSTreeNode): number {
+        const key = node.getProfileName();
+        if (this.navigateHistoryIndices[key] === undefined) {
+            this.navigateHistoryIndices[key] = -1;
+        }
+        return this.navigateHistoryIndices[key];
+    }
+
+    /**
+     * Helper function to set the navigation history index for a specific profile.
+     *
+     * @param {IZoweUSSTreeNode} node - The session node
+     * @param {number} index - The new index
+     */
+    private setNavigationHistoryIndex(node: IZoweUSSTreeNode, index: number): void {
+        const key = node.getProfileName();
+        this.navigateHistoryIndices[key] = index;
+    }
+
+    /**
+     * Helper function to add a path to the navigation history for a specific profile.
+     *
+     * @param {IZoweUSSTreeNode} node - The session node
+     * @param {string} navigationPath - The path to add to the navigation history
+     */
+    private addToNavigationHistory(node: IZoweUSSTreeNode, navigationPath: string): void {
+        const history = this.getNavigationHistory(node);
+        const key = node.getProfileName();
+
+        // Truncate forward history if not at the end
+        const currentIndex = this.getNavigationHistoryIndex(node);
+        if (currentIndex < history.length - 1) {
+            this.navigateHistories[key] = history.slice(0, currentIndex + 1);
+        }
+
+        history.push(navigationPath);
+
+        // Remove the oldest history entry if the history exceeds the maximum size
+        if (history.length > Constants.MAX_USS_TEMPORARY_HISTORY) {
+            history.shift();
+        }
+
+        // Point the history position marker to the most recently added path
+        this.setNavigationHistoryIndex(node, history.length - 1);
+    }
+
+    /**
+     * Resets the navigation history for a specific profile.
+     *
+     * @param {IZoweUSSTreeNode} node - The session node
+     */
+    public resetNavigationHistory(node: IZoweUSSTreeNode): void {
+        const key = node.getProfileName();
+        this.navigateHistories[key] = [];
+        this.navigateHistoryIndices[key] = -1;
+        node.contextValue = node.contextValue.replace(`_${Constants.USS_TEMP_NAVIGATION_HISTORY}`, "");
+        node.dirty = true;
+        this.refreshElement(node);
+    }
+
+    /**
+     * Navigates back to the previous path in the history for a specific profile.
+     *
+     * @param {IZoweUSSTreeNode} node - The session node
+     * @returns {Promise<void>}
+     */
+    public async navigateBack(node: IZoweUSSTreeNode): Promise<void> {
+        const history = this.getNavigationHistory(node);
+        const currentIndex = this.getNavigationHistoryIndex(node);
+
+        if (currentIndex > 0) {
+            this.setNavigationHistoryIndex(node, currentIndex - 1);
+            const previousPath = history[this.getNavigationHistoryIndex(node)];
+            if (previousPath) {
+                await this.filterBy(node, previousPath, false);
+            }
+        } else {
+            Gui.showMessage(vscode.l10n.t("No previous path in history."));
+        }
+    }
+
+    /**
+     * Navigates forward to the next path in the history for a specific profile.
+     *
+     * @param {IZoweUSSTreeNode} node - The session node
+     * @returns {Promise<void>}
+     */
+    public async navigateForward(node: IZoweUSSTreeNode): Promise<void> {
+        const history = this.getNavigationHistory(node);
+        const currentIndex = this.getNavigationHistoryIndex(node);
+
+        if (currentIndex < history.length - 1) {
+            this.setNavigationHistoryIndex(node, currentIndex + 1);
+            const nextPath = history[this.getNavigationHistoryIndex(node)];
+            if (nextPath) {
+                await this.filterBy(node, nextPath, false);
+            }
+        } else {
+            Gui.showMessage(vscode.l10n.t("No next path in history."));
+        }
+    }
+
+    /**
+     * Helper function to update the [TreeView]{@link vscode.TreeView} based on the provided path.
      *
      * @param {IZoweUSSTreeNode} node - The node to update
      * @param {string} filterPath - The path to filter by
      * @returns {Promise<void>}
      */
-    private async updateTreeView(node: IZoweUSSTreeNode, filterPath: string, addHistory: boolean): Promise<void> {
-        await AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), node);
+    private async updateTreeView(node: IZoweUSSTreeNode, filterPath: string, addHistory: boolean, addNavHistory: boolean = true): Promise<void> {
+        AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), node);
         const sanitizedPath = filterPath.replace(/\/{2,}/g, "/").replace(/(.+?)\/*$/, "$1");
         node.fullPath = sanitizedPath;
         const icon = IconGenerator.getIconByNode(node);
@@ -718,8 +845,17 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         if (!SharedContext.isFilterFolder(node)) {
             node.contextValue += `_${Constants.FILTER_SEARCH}`;
         }
+        if (this.getNavigationHistoryIndex(node) > 0 && !SharedContext.ussHasNavigationHistory(node)) {
+            node.contextValue += `_${Constants.USS_TEMP_NAVIGATION_HISTORY}`;
+        }
         node.dirty = true;
+
+        if (addNavHistory) {
+            // Add to temporary navigation history
+            this.addToNavigationHistory(node, sanitizedPath);
+        }
         if (addHistory) {
+            // Add to persistent history
             this.addSearchHistory(sanitizedPath);
         }
         await TreeViewUtils.expandNode(node, this);
@@ -797,13 +933,13 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      * @param {string} newPath - The new path to filter by
      * @returns {Promise<void>}
      */
-    public async filterBy(node: IZoweUSSTreeNode, newPath: string): Promise<void> {
+    public async filterBy(node: IZoweUSSTreeNode, newPath: string, addNavHistory: boolean = true): Promise<void> {
         ZoweLogger.trace("USSTree.filterBy called.");
         await this.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             const sessionNode = this.mSessionNodes.find((tempNode) => tempNode.getProfileName() === node.getProfileName());
             if (sessionNode) {
-                await this.updateTreeView(sessionNode, newPath, false);
+                await this.updateTreeView(sessionNode, newPath, false, addNavHistory);
             }
         }
     }
