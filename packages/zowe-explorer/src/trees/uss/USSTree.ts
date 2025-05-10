@@ -538,6 +538,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             });
             temp.resourceUri = node.resourceUri;
             temp.contextValue = SharedContext.asFavorite(temp);
+            temp.description = path.dirname(label);
             if (SharedContext.isFavoriteTextOrBinary(temp)) {
                 temp.command = node.command;
             }
@@ -546,7 +547,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         if (icon) {
             temp.iconPath = icon.path;
         }
-        if (!profileNodeInFavorites.children.find((tempNode) => tempNode.label.toString().trim() === temp.label.toString().trim())) {
+        if (!profileNodeInFavorites.children.find((tempNode) => tempNode.fullPath.trim() === temp.fullPath.trim())) {
             profileNodeInFavorites.children.push(temp);
             SharedUtils.sortTreeItems(profileNodeInFavorites.children, Constants.USS_SESSION_CONTEXT + Constants.FAV_SUFFIX);
             SharedUtils.sortTreeItems(this.mFavorites, Constants.FAV_PROFILE_CONTEXT);
@@ -580,7 +581,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
         if (profileNodeInFavorites) {
             profileNodeInFavorites.children = profileNodeInFavorites.children?.filter(
-                (temp) => !(temp.label === node.label && temp.contextValue.startsWith(node.contextValue))
+                (temp) => !(temp.fullPath === node.fullPath && temp.contextValue.startsWith(node.contextValue))
             );
             // Remove profile node from Favorites if it contains no more favorites.
             if (profileNodeInFavorites.children?.length < 1) {
@@ -690,7 +691,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         ZoweLogger.trace("USSTree.cdUp called.");
 
         // Check if the path is a root path already
-        if (path.posix.dirname(node.fullPath) === "/") {
+        if (node.fullPath === "/") {
             Gui.showMessage(vscode.l10n.t("You are already at the root directory."));
             return;
         }
@@ -832,7 +833,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      */
     private async updateTreeView(node: IZoweUSSTreeNode, filterPath: string, addHistory: boolean, addNavHistory: boolean = true): Promise<void> {
         AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), node);
-        const sanitizedPath = filterPath.replace(/\/+/g, "/").replace(/(\/*)$/, "");
+        const sanitizedPath = filterPath.replace(/\/{2,}/g, "/").replace(/(.+?)\/*$/, "$1");
         node.fullPath = sanitizedPath;
         const icon = IconGenerator.getIconByNode(node);
         if (icon) {
@@ -1023,15 +1024,13 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             const favProfileNode =
                 this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ?? (await this.createProfileNodeForFavs(fav.profileName));
 
-            if (favProfileNode == null || fav.contextValue == null) {
+            if (favProfileNode == null || fav.contextValue == null || favProfileNode.children.some((child) => child.fullPath === fav.label)) {
                 continue;
             }
 
-            // Initialize and attach favorited item nodes under their respective profile node in Favorrites
+            // Initialize and attach favorited item nodes under their respective profile node in Favorites
             const favChildNode = await this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
-            if (favChildNode != null) {
-                favProfileNode.children.push(favChildNode);
-            }
+            favProfileNode.children.push(favChildNode);
         }
     }
 
@@ -1055,6 +1054,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     parentNode,
                     profile,
                 });
+                node.description = path.dirname(label);
                 if (!UssFSProvider.instance.exists(node.resourceUri)) {
                     await vscode.workspace.fs.createDirectory(node.resourceUri);
                 }
@@ -1078,6 +1078,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     parentNode,
                     profile,
                 });
+                node.description = path.dirname(label);
                 if (!UssFSProvider.instance.exists(node.resourceUri)) {
                     const parentUri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, "..") });
                     if (!UssFSProvider.instance.exists(parentUri)) {

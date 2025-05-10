@@ -674,13 +674,40 @@ describe("ZoweVsCodeExtension", () => {
             await expect(fetchBaseProfileSpy.mock.results[0].value).resolves.toBeUndefined();
         });
     });
+    describe("onProfileUpdated", () => {
+        it("returns event defined on API register", () => {
+            const eventEmitter = new vscode.EventEmitter<imperative.IProfileLoaded>();
+            const apiMock = jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+                onProfileUpdatedEmitter: eventEmitter,
+                onProfileUpdated: eventEmitter.event,
+            } as any);
+            expect(ZoweVsCodeExtension.onProfileUpdated).toBe(ZoweVsCodeExtension.getZoweExplorerApi().onProfileUpdatedEmitter?.event);
+            apiMock.mockRestore();
+        });
+    });
+    describe("onProfileUpdatedEmitter", () => {
+        it("returns instance of an EventEmitter", () => {
+            const eventEmitter = new vscode.EventEmitter<imperative.IProfileLoaded>();
+            const apiMock = jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+                onProfileUpdatedEmitter: eventEmitter,
+                onProfileUpdated: eventEmitter.event,
+            } as any);
+            expect(ZoweVsCodeExtension.onProfileUpdatedEmitter).toBeInstanceOf(vscode.EventEmitter);
+            apiMock.mockRestore();
+        });
+    });
     describe("updateCredentials", () => {
         const promptCredsOptions: PromptCredentialsOptions.ComplexOptions = {
             sessionName: "test",
         };
+        const onProfileUpdatedEmitter = new vscode.EventEmitter<imperative.IProfileLoaded>();
 
         it("should update user and password as secure fields", async () => {
             const mockUpdateProperty = jest.fn();
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
+                onProfileUpdated: onProfileUpdatedEmitter.event,
+                onProfileUpdatedEmitter,
+            } as any);
             jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
                 getLoadedProfConfig: jest.fn().mockReturnValue({
                     profile: {},
@@ -707,6 +734,10 @@ describe("ZoweVsCodeExtension", () => {
 
         it("should update user and password as secure fields with rePrompt", async () => {
             const mockUpdateProperty = jest.fn();
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
+                onProfileUpdated: onProfileUpdatedEmitter.event,
+                onProfileUpdatedEmitter,
+            } as any);
             jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
                 getLoadedProfConfig: jest.fn().mockReturnValue({
                     profile: { user: "badUser", password: "badPassword" },
@@ -736,6 +767,10 @@ describe("ZoweVsCodeExtension", () => {
 
         it("should update user and password as plain text if prompt accepted", async () => {
             const mockUpdateProperty = jest.fn();
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
+                onProfileUpdated: onProfileUpdatedEmitter.event,
+                onProfileUpdatedEmitter,
+            } as any);
             jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
                 getLoadedProfConfig: jest.fn().mockReturnValue({
                     profile: {},
@@ -763,6 +798,10 @@ describe("ZoweVsCodeExtension", () => {
 
         it("should not update user and password as plain text if prompt cancelled", async () => {
             const mockUpdateProperty = jest.fn();
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
+                onProfileUpdated: onProfileUpdatedEmitter.event,
+                onProfileUpdatedEmitter,
+            } as any);
             jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
                 getLoadedProfConfig: jest.fn().mockReturnValue({
                     profile: {},

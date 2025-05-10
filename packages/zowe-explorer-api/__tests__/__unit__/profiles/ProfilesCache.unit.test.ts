@@ -164,6 +164,68 @@ describe("ProfilesCache", () => {
         existsSync.mockRestore();
     });
 
+    it("getProfileInfo should replace user and password with environment variables", async () => {
+        process.env.ZOWE_OPT_USER = "fake";
+        process.env.ZOWE_OPT_PASSWORD = "fake";
+
+        const profileMock = {
+            name: "fake",
+            profile: {
+                user: "$ZOWE_OPT_USER",
+                password: "$ZOWE_OPT_PASSWORD",
+            },
+            type: "zosmf",
+            failNotFound: true,
+            message: "fake",
+        };
+        const existsSync = jest.spyOn(fs, "existsSync").mockImplementation();
+        jest.spyOn(FileManagement, "getZoweDir").mockReturnValue(fakeZoweDir);
+        const profilesCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger, __dirname);
+        profilesCache.allProfiles = [profileMock];
+        await profilesCache.getProfileInfo();
+        expect(readProfilesFromDiskSpy).toHaveBeenCalledTimes(1);
+        expect(defaultCredMgrWithKeytarSpy).toHaveBeenCalledTimes(1);
+        expect(defaultCredMgrWithKeytarSpy).toHaveBeenCalledWith(ProfilesCache.requireKeyring);
+        expect(profileMock.profile.user).toBe("fake");
+        expect(profileMock.profile.password).toBe("fake");
+        existsSync.mockRestore();
+    });
+
+    it("getProfileInfo should skip setting user and pw if env var are invalid", async () => {
+        const profileMock = [
+            {
+                name: "fake",
+                profile: {
+                    user: "$fake-user",
+                    password: "$ZOWE_PASSWORD",
+                },
+                type: "zosmf",
+                failNotFound: true,
+                message: "fake",
+            },
+            {
+                name: "fakeprofile",
+                profile: {
+                    user: "$ZOWE_USER",
+                    password: "$fake-pw",
+                },
+                type: "zosmf",
+                failNotFound: true,
+                message: "fake",
+            },
+        ];
+        process.env.ZOWE_USER = "fakeuser";
+        const existsSync = jest.spyOn(fs, "existsSync").mockImplementation();
+        jest.spyOn(FileManagement, "getZoweDir").mockReturnValue(fakeZoweDir);
+        const profilesCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger, __dirname);
+        profilesCache.allProfiles = profileMock;
+        await profilesCache.getProfileInfo();
+        expect(readProfilesFromDiskSpy).toHaveBeenCalledTimes(1);
+        expect(defaultCredMgrWithKeytarSpy).toHaveBeenCalledTimes(1);
+        expect(defaultCredMgrWithKeytarSpy).toHaveBeenCalledWith(ProfilesCache.requireKeyring);
+        existsSync.mockRestore();
+    });
+
     it("requireKeyring returns keyring module from Secrets SDK", () => {
         const keyring = ProfilesCache.requireKeyring();
         expect(keyring).toBeDefined();
@@ -377,6 +439,14 @@ describe("ProfilesCache", () => {
             expect((profCache as any).profilesByType.size).toBe(0);
             expect((profCache as any).defaultProfileByType.size).toBe(0);
             expect((profCache as any).allProfiles.length).toBe(0);
+            expect((profCache as any).allTypes).toEqual(["ssh", "base"]);
+        });
+
+        it("should not create duplicate profile types by running profCache.refresh()", async () => {
+            const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+            jest.spyOn(profCache, "getProfileInfo").mockResolvedValueOnce(createProfInfoMock([]));
+            jest.spyOn(profCache as any, "getAllProfileTypes").mockReturnValue(["ssh", "base"]);
+            await profCache.refresh();
             expect((profCache as any).allTypes).toEqual(["ssh", "base"]);
         });
     });

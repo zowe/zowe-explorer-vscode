@@ -309,8 +309,12 @@ export class ErrorCorrelator {
      */
     public async displayCorrelatedError(error: CorrelatedError, opts?: DisplayCorrelatedErrorOpts): Promise<string | undefined> {
         const errorCodeStr = error.properties.errorCode ? ` (Error Code ${error.properties.errorCode})` : "";
+        const additionalDetails =
+            error.initial instanceof ImperativeError && error.initial.causeErrors instanceof Error ? error.initial.causeErrors.message : undefined;
         const userSelection = await Gui.errorMessage(
-            `${opts?.additionalContext ? opts.additionalContext + ": " : ""}${error.message}${errorCodeStr}`.trim(),
+            `${opts?.additionalContext ? opts.additionalContext + ": " : ""}${error.message}${errorCodeStr}${
+                additionalDetails ? " " + additionalDetails : ""
+            }`.trim(),
             {
                 items: [opts?.allowRetry ? "Retry" : undefined, ...(error.correlationFound ? ["More info"] : ["Show log", "Troubleshoot"])].filter(
                     Boolean

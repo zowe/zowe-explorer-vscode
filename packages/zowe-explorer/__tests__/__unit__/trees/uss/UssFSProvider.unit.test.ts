@@ -1497,7 +1497,7 @@ describe("createDirectory", () => {
 
 describe("watch", () => {
     it("returns a new, empty Disposable object", () => {
-        expect(UssFSProvider.instance.watch(testUris.file)).toStrictEqual(new Disposable(() => {}));
+        expect(UssFSProvider.instance.watch(testUris.file)).toBeInstanceOf(Disposable);
     });
 });
 

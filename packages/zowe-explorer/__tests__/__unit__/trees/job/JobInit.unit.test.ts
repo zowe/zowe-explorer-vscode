@@ -21,6 +21,9 @@ import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { JobInit } from "../../../../src/trees/job/JobInit";
 import { SharedInit } from "../../../../src/trees/shared/SharedInit";
 import { JobTableView } from "../../../../src/trees/job/JobTableView";
+import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
+import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
+import { ZoweScheme } from "@zowe/zowe-explorer-api";
 
 describe("Test src/jobs/extension", () => {
     describe("initJobsProvider", () => {
@@ -147,6 +150,11 @@ describe("Test src/jobs/extension", () => {
                 name: "zowe.jobs.tableView",
                 mock: [{ spy: jest.spyOn(JobTableView, "handleCommand"), arg: [test.context, test.value, undefined] }],
             },
+            {
+                name: "zowe.jobs.loadMoreRecords",
+                mock: [{ spy: jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri"), arg: [{ scheme: ZoweScheme.Jobs }, undefined] }],
+                parm: [{ scheme: ZoweScheme.Jobs }],
+            },
         ];
 
         beforeAll(async () => {
@@ -171,8 +179,19 @@ describe("Test src/jobs/extension", () => {
                 configurable: true,
             });
 
+            jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key: string) => {
+                if (key === "zowe.jobs.paginate.enabled") {
+                    return true;
+                }
+                if (key === "zowe.jobs.paginate.recordsToFetch") {
+                    return 20;
+                }
+            });
+
+
             spyCreateJobsTree.mockResolvedValue(jobsProvider as any);
             await JobInit.initJobsProvider(test.context);
+            await JobActions.loadMoreRecords({ scheme: ZoweScheme.Jobs });
         });
         beforeEach(() => {
             spyCreateJobsTree.mockResolvedValue(jobsProvider as any);

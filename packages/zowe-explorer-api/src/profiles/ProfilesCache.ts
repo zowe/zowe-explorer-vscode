@@ -33,6 +33,7 @@ export class ProfilesCache {
     protected allExternalTypes = new Set<string>();
     protected profilesByType = new Map<string, imperative.IProfileLoaded[]>();
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
+    protected overrideWithEnv = false;
 
     public constructor(protected log: imperative.Logger, protected cwd?: string) {
         this.cwd = cwd != null ? FileManagement.getFullPath(cwd) : undefined;
@@ -80,9 +81,11 @@ export class ProfilesCache {
     public async getProfileInfo(_envTheia = false): Promise<imperative.ProfileInfo> {
         const mProfileInfo = new imperative.ProfileInfo("zowe", {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            overrideWithEnv: this.overrideWithEnv,
             credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
         });
         await mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: this.cwd ?? undefined });
+        this.checkForEnvVarAndUpdate();
         return mProfileInfo;
     }
 
@@ -190,9 +193,9 @@ export class ProfilesCache {
     public async refresh(apiRegister?: IRegisterClient): Promise<void> {
         const allProfiles: imperative.IProfileLoaded[] = [];
         const mProfileInfo = await this.getProfileInfo();
-        const allTypes = this.getAllProfileTypes(apiRegister?.registeredApiTypes() ?? []);
-        allTypes.push("ssh");
-        allTypes.push("base");
+        const allTypes = new Set(this.getAllProfileTypes(apiRegister?.registeredApiTypes() ?? []));
+        allTypes.add("ssh");
+        allTypes.add("base");
         for (const type of allTypes) {
             const tmpAllProfiles: imperative.IProfileLoaded[] = [];
             // Step 1: Get all profiles for each registered type
@@ -217,13 +220,14 @@ export class ProfilesCache {
             }
         }
         this.allProfiles = allProfiles;
-        this.allTypes = allTypes;
+        this.allTypes = [...allTypes];
         for (const oldType of [...this.profilesByType.keys()].filter((type) => !allProfiles.some((prof) => prof.type === type))) {
             this.profilesByType.delete(oldType);
             this.defaultProfileByType.delete(oldType);
         }
         // check for proper merging of apiml tokens
         this.checkMergingConfigAllProfiles();
+        this.checkForEnvVarAndUpdate();
         this.profilesForValidation = [];
     }
 
@@ -476,7 +480,7 @@ export class ProfilesCache {
         return parentProfile;
     }
 
-    private shouldRemoveTokenFromProfile(profile: imperative.IProfileLoaded, baseProfile: imperative.IProfileLoaded): boolean {
+    public shouldRemoveTokenFromProfile(profile: imperative.IProfileLoaded, baseProfile: imperative.IProfileLoaded): boolean {
         return ((baseProfile?.profile?.host || baseProfile?.profile?.port) &&
             profile?.profile?.host &&
             profile?.profile?.port &&
@@ -505,5 +509,24 @@ export class ProfilesCache {
         const mergedArgs = mProfileInfo.mergeArgsForProfile(prof);
         await mProfileInfo.updateKnownProperty({ mergedArgs, property: "tokenValue", value: undefined, setSecure });
         await mProfileInfo.updateKnownProperty({ mergedArgs, property: "tokenType", value: undefined });
+    }
+
+    public checkForEnvVarAndUpdate(): void {
+        for (const profile of this.allProfiles) {
+            if (profile.profile.user?.startsWith("$")) {
+                const userEnvVar = profile.profile.user.match(/^\$(\w+)$/)?.[1];
+                if (!userEnvVar || !process.env[userEnvVar]) {
+                    continue;
+                }
+                profile.profile.user = process.env[userEnvVar];
+            }
+            if (profile.profile.password?.startsWith("$")) {
+                const passwordEnvVar = profile.profile.password.match(/^\$(\w+)$/)?.[1];
+                if (!passwordEnvVar || !process.env[passwordEnvVar]) {
+                    continue;
+                }
+                profile.profile.password = process.env[passwordEnvVar];
+            }
+        }
     }
 }

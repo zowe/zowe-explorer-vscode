@@ -30,6 +30,8 @@ import { ZoweDatasetNode } from "../../src/trees/dataset/ZoweDatasetNode";
 import { USSTree } from "../../src/trees/uss/USSTree";
 import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 import { JobTree } from "../../src/trees/job/JobTree";
+import { MockedProperty } from "../__mocks__/mockUtils";
+import { ZoweExplorerApiRegister } from "../../src/extending/ZoweExplorerApiRegister";
 
 jest.mock("../../src/utils/LoggerUtils");
 jest.mock("../../src/tools/ZoweLogger");
@@ -137,6 +139,12 @@ async function createGlobalMocks() {
             fetchAllProfilesByType: jest.fn().mockResolvedValue([]),
             getProfileInfo: () => createInstanceOfProfileInfo(),
         },
+        mockOnProfileUpdated: new MockedProperty(
+            ZoweExplorerApiRegister,
+            "onProfileUpdated",
+            undefined,
+            jest.fn().mockReturnValue(new vscode.Disposable(jest.fn()))
+        ),
         mockExtension: null,
         appName: vscode.env.appName,
         uriScheme: vscode.env.uriScheme,
@@ -217,6 +225,7 @@ async function createGlobalMocks() {
             "zowe.jobs.filterJobs",
             "zowe.jobs.copyName",
             "zowe.jobs.tableView",
+            "zowe.jobs.loadMoreRecords",
             "zowe.updateSecureCredentials",
             "zowe.manualPoll",
             "zowe.editHistory",
@@ -226,6 +235,7 @@ async function createGlobalMocks() {
             "zowe.diff.useLocalContent",
             "zowe.diff.useRemoteContent",
             "zowe.certificateWizard",
+            "zowe.executeNavCallback",
             "zowe.openRecentMember",
             "zowe.searchInAllLoadedItems",
             "zowe.disableValidation",
@@ -255,7 +265,7 @@ async function createGlobalMocks() {
         ],
     };
 
-    jest.replaceProperty(ZoweVsCodeExtension, "onProfileUpdated", jest.fn());
+    jest.spyOn(ZoweVsCodeExtension as any, "onProfileUpdated", "get").mockReturnValue(jest.fn().mockReturnValue(new vscode.Disposable(jest.fn())));
     Object.defineProperty(fs, "mkdirSync", { value: globalMocks.mockMkdirSync, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", {
         value: globalMocks.mockCreateTreeView,
@@ -466,6 +476,10 @@ describe("Extension Unit Tests", () => {
             expect(call[1]).toBeInstanceOf(Function);
             allCommands.push({ cmd: call[0], fun: call[1], toMock: jest.fn() });
         });
+    });
+
+    afterAll(() => {
+        globalMocks.mockOnProfileUpdated[Symbol.dispose]();
     });
 
     it("Testing that activate correctly executes", () => {

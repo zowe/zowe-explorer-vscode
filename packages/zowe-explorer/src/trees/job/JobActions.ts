@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
-import { Gui, IZoweJobTreeNode, Sorting, Types, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, Sorting, Types, ZoweExplorerApiType, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweJobNode } from "./ZoweJobNode";
 import { JobTree } from "./JobTree";
 import { JobUtils } from "./JobUtils";
@@ -251,6 +251,28 @@ export class JobActions {
         );
         await JobFSProvider.instance.fetchSpoolAtUri(doc.uri);
         statusMsg.dispose();
+    }
+
+    private static isLoadingRecords = false;
+    public static async loadMoreRecords(uri): Promise<void> {
+        if (JobActions.isLoadingRecords) {
+            return;
+        }
+        JobActions.isLoadingRecords = true;
+        let finalUri = uri;
+        if (!finalUri) {
+            const activeTextEditor = vscode.window.activeTextEditor?.document;
+            if (!activeTextEditor) {
+                Gui.errorMessage(vscode.l10n.t("No document found"));
+                return;
+            }
+            finalUri = activeTextEditor.uri.with({ query: `startLine=${activeTextEditor.lineCount - 1}` });
+        }
+
+        if (finalUri.scheme === ZoweScheme.Jobs) {
+            await JobFSProvider.instance.fetchSpoolAtUri(finalUri, vscode.window.activeTextEditor);
+        }
+        JobActions.isLoadingRecords = false;
     }
 
     /**

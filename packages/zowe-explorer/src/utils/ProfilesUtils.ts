@@ -207,7 +207,9 @@ export class ProfilesUtils {
         ZoweLogger.info(vscode.l10n.t("No custom credential managers found, using the default instead."));
         ProfilesUtils.updateCredentialManagerSetting(Constants.ZOWE_CLI_SCM);
         const defaultCredentialManager = imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring);
+        const overrideWithEnv: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_OVERRIDE_WITH_ENV_VAR);
         const profileInfo = new imperative.ProfileInfo("zowe", {
+            overrideWithEnv: overrideWithEnv,
             credMgrOverride: defaultCredentialManager,
         });
 
@@ -311,6 +313,7 @@ export class ProfilesUtils {
     public static async setupProfileInfo(): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
 
+        const overrideWithEnv: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_OVERRIDE_WITH_ENV_VAR);
         const hasSecureCredentialManagerEnabled: boolean = ProfilesUtils.checkDefaultCredentialManager();
         if (hasSecureCredentialManagerEnabled) {
             const shouldCheckForCustomCredentialManagers = SettingsConfig.getDirectValue<boolean>(
@@ -330,12 +333,14 @@ export class ProfilesUtils {
             }
             if (credentialManagerMap && isVSCodeCredentialPluginInstalled) {
                 return new imperative.ProfileInfo("zowe", {
+                    overrideWithEnv: overrideWithEnv,
                     credMgrOverride: await ProfilesUtils.setupCustomCredentialManager(credentialManagerMap),
                 });
             }
         }
 
         return new imperative.ProfileInfo("zowe", {
+            overrideWithEnv: overrideWithEnv,
             credMgrOverride: hasSecureCredentialManagerEnabled ? await ProfilesUtils.setupDefaultCredentialManager() : undefined,
         });
     }
@@ -457,6 +462,19 @@ export class ProfilesUtils {
             AuthHandler.unlockProfile(profile, true);
             if (typeof profile !== "string") {
                 await Constants.PROFILES_CACHE.updateCachedProfile(profile, node);
+            }
+            if (node !== null) {
+                const toolTipList = (node.tooltip as string)?.split("\n") ?? [];
+                const userIDIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("User: ")));
+                if (userIDIndex !== -1) {
+                    toolTipList[userIDIndex] = `${vscode.l10n.t("User: ")}${creds[0]}`;
+                } else {
+                    toolTipList.push(`${vscode.l10n.t("User: ")}${creds[0]}`);
+                }
+                node.tooltip = toolTipList.join("\n");
+                if (node) {
+                    SharedTreeProviders.getProviderForNode(node).refreshElement(node);
+                }
             }
             ZoweLogger.info(successMsg);
             Gui.showMessage(successMsg);

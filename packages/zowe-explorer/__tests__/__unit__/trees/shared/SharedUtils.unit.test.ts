@@ -66,18 +66,21 @@ describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
             label: "root",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             session: globalMocks.session,
+            profile: globalMocks.profileOne,
         });
         const childNode1 = new ZoweUSSNode({
             label: "child1",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: rootNode,
             session: globalMocks.session,
+            profile: globalMocks.profileOne,
         });
         const childNode2 = new ZoweUSSNode({
             label: "child2",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: childNode1,
             session: globalMocks.session,
+            profile: globalMocks.profileOne,
         });
 
         childNode1.children.push(childNode2);
@@ -90,17 +93,32 @@ describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
 
 describe("Positive testing", () => {
     it("should pass for ZoweDatasetTreeNode with ZoweDatasetNode node type", () => {
-        const dsNode = new ZoweDatasetNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const dsNode = new ZoweDatasetNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweDatasetTreeNode(dsNode);
         expect(value).toBeTruthy();
     });
     it("should pass for ZoweUSSTreeNode with ZoweUSSNode node type", () => {
-        const ussNode = new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const ussNode = new ZoweUSSNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweUSSTreeNode(ussNode);
         expect(value).toBeTruthy();
     });
     it("should pass for ZoweJobTreeNode with ZoweJobNode node type", () => {
-        const jobNode = new ZoweJobNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const jobNode = new ZoweJobNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweJobTreeNode(jobNode);
         expect(value).toBeTruthy();
     });
@@ -108,12 +126,22 @@ describe("Positive testing", () => {
 
 describe("Negative testing for ZoweDatasetTreeNode", () => {
     it("should fail with ZoweUSSNode node type", () => {
-        const ussNode = new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const ussNode = new ZoweUSSNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweDatasetTreeNode(ussNode);
         expect(value).toBeFalsy();
     });
     it("should fail with ZoweJobNode node type", () => {
-        const jobNode = new ZoweJobNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const jobNode = new ZoweJobNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweDatasetTreeNode(jobNode);
         expect(value).toBeFalsy();
     });
@@ -126,7 +154,12 @@ describe("Negative testing for ZoweUSSTreeNode", () => {
         expect(value).toBeFalsy();
     });
     it("should fail with ZoweJobNode node type", () => {
-        const jobNode = new ZoweJobNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const jobNode = new ZoweJobNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweUSSTreeNode(jobNode);
         expect(value).toBeFalsy();
     });
@@ -139,7 +172,12 @@ describe("Negative testing for ZoweJobTreeNode", () => {
         expect(value).toBeFalsy();
     });
     it("should fail with ZoweUSSNode node type", () => {
-        const ussNode = new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const ussNode = new ZoweUSSNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweJobTreeNode(ussNode);
         expect(value).toBeFalsy();
     });
@@ -500,6 +538,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             spool: createIJobFile(),
             parentNode: jobNode,
+            profile: blockMocks.profile,
         });
         JobFSProvider.instance.encodingMap[spoolNode.resourceUri?.path] = { kind: "text" };
         blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
@@ -1359,5 +1398,68 @@ describe("Shared utils unit tests - function debounceAsync", () => {
         void debouncedFn();
         jest.runAllTimers();
         expect(mockEventHandler).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("SharedUtils.handleProfileChange", () => {
+    it("iterates over tree providers and updates profile on profile nodes", async () => {
+        const profile = createIProfile();
+        const newProfile = { ...profile, profile: { ...profile, user: "newuser", password: "newpass" } };
+        const dsSession = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+            profile,
+        });
+        const ussSession = new ZoweUSSNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.USS_SESSION_CONTEXT,
+            profile,
+        });
+        const jobSession = new ZoweJobNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.JOBS_SESSION_CONTEXT,
+            profile,
+        });
+        const providers = {
+            ds: { getChildren: () => [dsSession] } as any,
+            uss: { getChildren: () => [ussSession] } as any,
+            job: { getChildren: () => [jobSession] } as any,
+        };
+        await SharedUtils.handleProfileChange(providers, newProfile);
+        // verify that nodes were updated with new data
+        expect(dsSession.getProfile().profile?.user).toBe(newProfile.profile.user);
+        expect(dsSession.getProfile().profile?.password).toBe(newProfile.profile.password);
+        expect(ussSession.getProfile().profile?.user).toBe(newProfile.profile.user);
+        expect(ussSession.getProfile().profile?.password).toBe(newProfile.profile.password);
+        expect(jobSession.getProfile().profile?.user).toBe(newProfile.profile.user);
+        expect(jobSession.getProfile().profile?.password).toBe(newProfile.profile.password);
+    });
+    it("logs an error if setProfileToChoice fails", async () => {
+        const profile = createIProfile();
+        const newProfile = { ...profile, profile: { ...profile, user: "newuser", password: "newpass" } };
+        const dsSession = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+            profile,
+        });
+        jest.spyOn(dsSession, "setProfileToChoice").mockImplementation(() => {
+            throw new Error("error while updating profile on node");
+        });
+        const providers = {
+            ds: { getChildren: () => [dsSession] } as any,
+            uss: { getChildren: () => [] } as any,
+            job: { getChildren: () => [] } as any,
+        };
+        const errorSpy = jest.spyOn(ZoweLogger, "error");
+        await SharedUtils.handleProfileChange(providers, newProfile);
+        // verify that nodes still have the old data as the `setProfileToChoice` function failed
+        expect(dsSession.getProfile().profile?.user).toBe(profile.profile?.user);
+        expect(dsSession.getProfile().profile?.password).toBe(profile.profile?.password);
+        expect(errorSpy).toHaveBeenCalledTimes(1);
+        expect(errorSpy).toHaveBeenCalledWith("error while updating profile on node");
     });
 });

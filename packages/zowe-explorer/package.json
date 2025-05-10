@@ -143,7 +143,12 @@
       {
         "command": "zowe.manualPoll",
         "key": "f5",
-        "when": "editorIsOpen && resourceScheme == zosspool"
+        "when": "editorIsOpen && resourceScheme == zowe-jobs"
+      },
+      {
+        "command": "zowe.jobs.loadMoreRecords",
+        "key": "ctrl+l",
+        "when": "editorTextFocus && resourceScheme == zowe-jobs"
       }
     ],
     "commands": [
@@ -1697,6 +1702,12 @@
       "type": "object",
       "title": "%configuration.title%",
       "properties": {
+        "zowe.ds.paginate.dataSetsPerPage": {
+          "default": 100,
+          "type": "integer",
+          "description": "%zowe.ds.paginate.dataSetsPerPage%",
+          "scope": "window"
+        },
         "zowe.ds.default.binary": {
           "default": {
             "dsorg": "PO",
@@ -2021,6 +2032,37 @@
           "default": 5000,
           "description": "%zowe.pollInterval.info%",
           "scope": "window"
+        },
+        "zowe.jobs.paginate.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "%zowe.jobs.paginate.enabled%",
+          "scope": "window"
+        },
+        "zowe.jobs.paginate.recordsToFetch": {
+          "type": "integer",
+          "default": 100,
+          "description": "%zowe.jobs.paginate.recordsToFetch%",
+          "scope": "window",
+          "minimum": 2
+        },
+        "zowe.settings.overrideWithEnvironmentVariables": {
+          "type": "boolean",
+          "default": false,
+          "description": "%zowe.settings.overrideWithEnvironmentVariables%",
+          "scope": "window"
+        },
+        "zowe.settings.socketConnectTimeout": {
+          "type": "number",
+          "default": 60000,
+          "description": "%zowe.settings.socketConnectTimeout%",
+          "scope": "window"
+        },
+        "zowe.settings.requestTimeout": {
+          "type": "number",
+          "default": 0,
+          "description": "%zowe.settings.requestTimeout%",
+          "scope": "window"
         }
       }
     },
@@ -2099,11 +2141,11 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "@zowe/core-for-zowe-sdk": "^8.18.0",
+    "@zowe/core-for-zowe-sdk": "^8.20.0",
     "@zowe/secrets-for-zowe-sdk": "^8.18.3",
-    "@zowe/zos-files-for-zowe-sdk": "^8.18.0",
-    "@zowe/zos-jobs-for-zowe-sdk": "^8.18.0",
-    "@zowe/zosmf-for-zowe-sdk": "^8.18.0",
+    "@zowe/zos-files-for-zowe-sdk": "^8.20.0",
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.20.0",
+    "@zowe/zosmf-for-zowe-sdk": "^8.20.0",
     "@zowe/zowe-explorer-api": "3.2.0-SNAPSHOT",
     "dayjs": "^1.11.10",
     "isbinaryfile": "4.0.4",

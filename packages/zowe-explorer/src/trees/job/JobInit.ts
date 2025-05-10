@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweJobTreeNode, IZoweTreeNode, ZoweScheme, imperative, Gui } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, IZoweTreeNode, ZoweScheme, imperative, Gui, PaginationCodeLens } from "@zowe/zowe-explorer-api";
 import { JobTree } from "./JobTree";
 import { JobActions } from "./JobActions";
 import { ZoweJobNode } from "./ZoweJobNode";
@@ -34,7 +34,7 @@ export class JobInit {
     public static async createJobsTree(log: imperative.Logger): Promise<JobTree> {
         ZoweLogger.trace("JobInit.createJobsTree called.");
         const tree = new JobTree();
-        await tree.initializeJobsTree(log);
+        await tree.initializeFavorites(log);
         await tree.addSession();
         return tree;
     }
@@ -159,6 +159,13 @@ export class JobInit {
                 JobFSProvider.instance.cacheOpenedUri(doc.uri);
             })
         );
+
+        context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.loadMoreRecords", (uri) => JobActions.loadMoreRecords(uri)));
+        vscode.languages.registerCodeLensProvider(
+            { scheme: ZoweScheme.Jobs },
+            new PaginationCodeLens("zowe.jobs.loadMoreRecords", (doc) => JobFSProvider.instance.supportSpoolPagination(doc))
+        );
+
         SharedInit.initSubscribers(context, jobsProvider);
         return jobsProvider;
     }
