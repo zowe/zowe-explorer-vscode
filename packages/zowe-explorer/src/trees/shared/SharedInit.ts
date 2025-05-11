@@ -50,6 +50,7 @@ import { CertificateWizard } from "../../utils/CertificateWizard";
 import { ZosConsoleViewProvider } from "../../zosconsole/ZosConsolePanel";
 import { ZoweUriHandler } from "../../utils/UriHandler";
 import { TroubleshootError } from "../../utils/TroubleshootError";
+import { ReleaseNotes } from "../../utils/ReleaseNotes";
 
 export class SharedInit {
     public static registerCommonCommands(context: vscode.ExtensionContext, providers: Definitions.IZoweProviders): void {
@@ -90,6 +91,20 @@ export class SharedInit {
                 return new SharedHistoryView(context, providers, commandProviders);
             })
         );
+
+        const { version } = this.detectExtensionVersionChange(context);
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.showReleaseNotes", () => {
+                return new ReleaseNotes(context, version);
+            })
+        );
+
+        const blah = true;
+        // Show release notes if the extension version has changed or if the user has not disabled it for the current version
+        // if (changed) {
+        if (blah) {
+            new ReleaseNotes(context, version);
+        }
 
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.promptCredentials", async (node: IZoweTreeNode) => {
@@ -473,5 +488,25 @@ export class SharedInit {
         await SettingsConfig.standardizeSettings();
         ZoweLogger.info(vscode.l10n.t(`Zowe Explorer has activated successfully.`));
         Constants.ACTIVATED = true;
+    }
+
+    private static detectExtensionVersionChange(context: vscode.ExtensionContext): { changed: boolean; version: string } {
+        // TODO: Store/get version key: value in/from ZoweLocalStorage
+        const extensionVersion: string = context.extension.packageJSON.version;
+        const versionRegex = /(\d+\.\d+)/;
+        const majorMinorVersion = extensionVersion.match(versionRegex);
+        const currentVersion: string = majorMinorVersion ? majorMinorVersion[0] : extensionVersion;
+
+        const previousVersion = context.globalState.get<string>("lastShownVersion", "");
+        const dontShowVersion = context.globalState.get<string>("dontShowReleaseNotes", "");
+
+        if (previousVersion !== currentVersion && dontShowVersion !== currentVersion) {
+            context.globalState.update("lastShownVersion", currentVersion);
+            return { changed: true, version: currentVersion };
+        } else if (dontShowVersion === currentVersion) {
+            return { changed: false, version: currentVersion };
+        }
+
+        return { changed: false, version: previousVersion };
     }
 }

@@ -708,6 +708,11 @@
         "command": "zowe.openRecentMember",
         "title": "%zowe.openRecentMember%",
         "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.showReleaseNotes",
+        "title": "%zowe.showReleaseNotes%",
+        "category": "Zowe Explorer"
       }
     ],
     "menus": {
@@ -1651,6 +1656,10 @@
           "command": "zowe.openRecentMember",
           "when": "true",
           "group": "navigation"
+        },
+        {
+          "command": "zowe.showReleaseNotes",
+          "when": "true"
         }
       ]
     },
