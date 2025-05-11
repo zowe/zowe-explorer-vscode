@@ -769,20 +769,6 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     }
 
     /**
-     * Resets the navigation history for a specific profile.
-     *
-     * @param {IZoweUSSTreeNode} node - The session node
-     */
-    public resetNavigationHistory(node: IZoweUSSTreeNode): void {
-        const key = node.getProfileName();
-        this.navigateHistories[key] = [];
-        this.navigateHistoryIndices[key] = -1;
-        node.contextValue = node.contextValue.replace(`_${Constants.USS_TEMP_NAVIGATION_HISTORY}`, "");
-        node.dirty = true;
-        this.refreshElement(node);
-    }
-
-    /**
      * Navigates back to the previous path in the history for a specific profile.
      *
      * @param {IZoweUSSTreeNode} node - The session node
@@ -832,7 +818,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      * @returns {Promise<void>}
      */
     private async updateTreeView(node: IZoweUSSTreeNode, filterPath: string, addHistory: boolean, addNavHistory: boolean = true): Promise<void> {
-        AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), node);
+        await AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), node);
         const sanitizedPath = filterPath.replace(/\/{2,}/g, "/").replace(/(.+?)\/*$/, "$1");
         node.fullPath = sanitizedPath;
         const icon = IconGenerator.getIconByNode(node);

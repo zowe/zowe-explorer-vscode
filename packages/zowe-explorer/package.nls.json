@@ -61,7 +61,6 @@
   "uss.cd": "Go Up One Level",
   "uss.back": "Back",
   "uss.forward": "Forward",
-  "uss.resetTempHistory": "Reset Navigation History",
   "jobs.search": "Search Jobs",
   "deleteJob": "Delete Job",
   "runModifyCommand": "Issue Modify Command",

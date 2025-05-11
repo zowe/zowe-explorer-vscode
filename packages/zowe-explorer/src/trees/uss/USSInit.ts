@@ -102,11 +102,6 @@ export class USSInit {
             vscode.commands.registerCommand("zowe.uss.fullPath", async (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.filterPrompt(node))
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.resetTempHistory", (node: IZoweUSSTreeNode): void =>
-                ussFileProvider.resetNavigationHistory(node)
-            )
-        );
-        context.subscriptions.push(
             vscode.commands.registerCommand(
                 "zowe.uss.filterBy",
                 async (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.filterBy(node, node.fullPath)
