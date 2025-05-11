@@ -18,7 +18,7 @@ export class ReleaseNotes extends WebView {
     private version: string;
 
     public constructor(context: ExtensionContext, version: string) {
-        super(l10n.t("Release Notes"), "release-notes", context, {
+        super(l10n.t(`ZE Release Notes - ${version}`), "release-notes", context, {
             onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
         });
         this.version = version;
@@ -34,11 +34,18 @@ export class ReleaseNotes extends WebView {
                 await this.sendReleaseNotes();
                 break;
             case "disable":
-                // TODO: Implement the logic to disable the release notes popup until the next update
-                await this.panel.dispose();
+                // Disable release notes permanently
+                await this.context.globalState.update("dontShowReleaseNotes", "never");
+                break;
+            case "disableForThisVersion":
+                // Disable release notes for this version only
+                await this.context.globalState.update("dontShowReleaseNotes", this.version);
+                break;
+            case "enable":
+                // Re-enable release notes
+                await this.context.globalState.update("dontShowReleaseNotes", undefined);
                 break;
             default:
-                ZoweLogger.debug(`[ReleaseNotes] Unknown command: ${message.command as string}`);
                 break;
         }
     }
@@ -48,6 +55,8 @@ export class ReleaseNotes extends WebView {
 
         return this.panel.webview.postMessage({
             releaseNotes: changelog,
+            version: this.version,
+            showAfterUpdate: "always",
         });
     }
 
@@ -68,7 +77,7 @@ export class ReleaseNotes extends WebView {
 
         const matches = [...changelog.matchAll(regex)];
         if (matches.length === 0) {
-            return `No changelog entries found for version ${this.version}.`;
+            return l10n.t(`No changelog entries found for version ${this.version}.`);
         }
 
         return matches.map((m) => m[0].trim()).join("\n\n");
