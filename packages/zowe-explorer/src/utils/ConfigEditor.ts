@@ -13,6 +13,7 @@ import { DeferredPromise, Gui, WebView, ZoweVsCodeExtension } from "@zowe/zowe-e
 import * as vscode from "vscode";
 import { ProfileInfo } from "@zowe/imperative";
 import * as path from "path";
+import * as fs from "fs";
 
 const userDismissed = vscode.l10n.t("User dismissed the Config Editor.");
 
@@ -37,17 +38,35 @@ export class ConfigEditor extends WebView {
         const layers = profInfo.getTeamConfig().layers;
         console.log(layers);
 
-        const allConfigs: { configPath: string; properties: any }[] = [];
+        const allConfigs: { configPath: string; properties: any; schema?: any }[] = [];
 
         for (const layer of layers) {
             if (layer.exists) {
                 const configPath = path.resolve(layer.path);
                 try {
-                    if (layer.properties) {
-                        allConfigs.push({ configPath, properties: layer.properties });
+                    if (layer.properties && layer.properties.$schema) {
+                        const schemaPath = path.join(path.dirname(configPath), layer.properties.$schema);
+                        const schemaContent = fs.readFileSync(schemaPath, { encoding: "utf8" });
+                        const schema = JSON.parse(schemaContent);
+                        allConfigs.push({
+                            configPath,
+                            properties: layer.properties,
+                            schema,
+                        });
+                    } else {
+                        allConfigs.push({
+                            configPath,
+                            properties: layer.properties,
+                            schema: undefined,
+                        });
                     }
                 } catch (err) {
                     console.error(`Error reading or parsing file ${configPath}:`, err);
+                    allConfigs.push({
+                        configPath,
+                        properties: layer.properties,
+                        schema: undefined,
+                    });
                 }
             }
         }
@@ -69,8 +88,21 @@ export class ConfigEditor extends WebView {
                     contents: "test-contents",
                 });
                 break;
+            case "SAVE_CHANGES":
+                this.handleSaveChanges(message.changes, message.deletions);
+                await this.panel.webview.postMessage({
+                    command: "CONFIGURATIONS",
+                    contents: await this.getLocalConfigs(),
+                });
+                break;
             default:
                 break;
         }
+    }
+
+    private handleSaveChanges(changes: { key: string; value: string; path: string[]; profile: string }[], deletions: string[]): void {
+        console.log("Received save changes command with the following data:");
+        console.log("Changes:", changes);
+        console.log("Deletions:", deletions);
     }
 }
