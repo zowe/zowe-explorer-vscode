@@ -9,7 +9,7 @@ export function App() {
   const [configurations, setConfigurations] = useState<{ configPath: string; properties: any }[]>([]);
   const [selectedTab, setSelectedTab] = useState<number | null>(null);
   const [flattenedConfig, setFlattenedConfig] = useState<{ [key: string]: { value: string; path: string[] } }>({});
-  const [defaults, setDefaults] = useState<{ [key: string]: { value: string; path: string[] } }>({});
+  const [flattenedDefaults, setFlattenedDefaults] = useState<{ [key: string]: { value: string; path: string[] } }>({});
   const [pendingChanges, setPendingChanges] = useState<{ [key: string]: { value: string; path: string[]; profile: string } }>({});
   const [pendingDefaults, setPendingDefaults] = useState<{ [key: string]: { value: string; path: string[] } }>({});
   const [deletions, setDeletions] = useState<string[]>([]);
@@ -29,7 +29,7 @@ export function App() {
         if (contents.length > 0) {
           const config = contents[0].properties;
           setFlattenedConfig(flattenKeys(config.profiles));
-          setDefaults(flattenKeys(config.defaults));
+          setFlattenedDefaults(flattenKeys(config.defaults));
         }
       }
     });
@@ -57,10 +57,11 @@ export function App() {
   };
 
   const handleDefaultsChange = (key: string, value: string) => {
+    const { path } = flattenedDefaults[key];
     setPendingDefaults((prev) => {
       const newState = {
         ...prev,
-        [key]: { value, path: [key] },
+        [key]: { value, path },
       };
       return newState;
     });
@@ -74,16 +75,7 @@ export function App() {
   };
 
   const handleDeleteProperty = (key: string) => {
-    const { path } = flattenedConfig[key] || {};
-    if (!path || selectedTab === null) return;
-
-    setConfigurations((prev) => {
-      const updated = [...prev];
-      const configCopy = JSON.parse(JSON.stringify(updated[selectedTab])); // deep copy
-      configCopy.properties.profiles = deleteNestedKey(configCopy.properties.profiles, path);
-      updated[selectedTab] = configCopy;
-      return updated;
-    });
+    if (!flattenedConfig[key] || selectedTab === null) return;
 
     setPendingChanges((prev) => {
       const newState = { ...prev };
@@ -92,15 +84,11 @@ export function App() {
     });
 
     setDeletions((prev) => [...prev, key]);
-
-    // Optionally rebuild flattenedConfig for the updated config
-    setFlattenedConfig((prev) => {
-      const config = configurations[selectedTab!].properties.profiles;
-      return flattenKeys(config);
-    });
   };
 
   const handleDeleteDefaultsProperty = (key: string) => {
+    if (!flattenedDefaults[key] || selectedTab === null) return;
+
     setPendingDefaults((prev) => {
       const newState = { ...prev };
       delete newState[key];
@@ -108,12 +96,6 @@ export function App() {
     });
 
     setDefaultsDeletions((prev) => [...prev, key]);
-
-    setDefaults((prev) => {
-      const newState = { ...prev };
-      delete newState[key];
-      return newState;
-    });
   };
 
   const handleSave = () => {
@@ -154,9 +136,9 @@ export function App() {
     if (index !== null) {
       const config = configurations[index].properties;
       setFlattenedConfig(flattenKeys(config.profiles));
-      setDefaults(flattenKeys(config.defaults));
+      setFlattenedDefaults(flattenKeys(config.defaults));
     }
-    // Reset pending changes and deletions when switching tabs
+
     setPendingChanges({});
     setDeletions([]);
     setPendingDefaults({});
@@ -167,6 +149,7 @@ export function App() {
     return Object.entries(obj).map(([key, value]) => {
       const currentPath = [...path, key];
       const fullKey = currentPath.join(".");
+      if (deletions.includes(fullKey)) return null;
       const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
       const isArray = Array.isArray(value);
       const pendingValue = pendingChanges[fullKey]?.value ?? value;
@@ -212,13 +195,23 @@ export function App() {
 
   const renderDefaults = (defaults: { [key: string]: any }) => {
     return Object.entries(defaults).map(([key, value]) => {
-      const pendingValue = pendingDefaults[key]?.value ?? value;
+      const currentPath = [key];
+      const fullKey = currentPath.join(".");
+      if (defaultsDeletions.includes(fullKey)) return null;
+      const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
       const isArray = Array.isArray(value);
-      const isObject = typeof value === "object" && value !== null && !isArray;
+      const pendingValue = pendingDefaults[fullKey]?.value ?? value;
 
-      if (isArray) {
+      if (isParent) {
         return (
-          <div key={key} className="config-item">
+          <div key={fullKey} className="config-item parent" style={{ marginLeft: `${currentPath.length * 20}px` }}>
+            <h3 className={`header-level-${currentPath.length}`}>{key}</h3>
+            {renderDefaults(value)}
+          </div>
+        );
+      } else if (isArray) {
+        return (
+          <div key={fullKey} className="config-item" style={{ marginLeft: `${currentPath.length * 20}px` }}>
             <span className="config-label">{key}:</span>
             <ul>
               {value.map((item: any, index: number) => (
@@ -227,25 +220,18 @@ export function App() {
             </ul>
           </div>
         );
-      } else if (isObject) {
-        return (
-          <div key={key} className="config-item parent">
-            <h3 className="header-level-0">{key}</h3>
-            {renderDefaults(value)}
-          </div>
-        );
       } else {
         return (
-          <div key={key} className="config-item">
+          <div key={fullKey} className="config-item" style={{ marginLeft: `${currentPath.length * 20}px` }}>
             <div className="config-item-container">
               <span className="config-label">{key}:</span>
               <input
                 className="config-input"
                 type="text"
                 value={pendingValue}
-                onChange={(e) => handleDefaultsChange(key, (e.target as HTMLInputElement).value)}
+                onChange={(e) => handleDefaultsChange(fullKey, (e.target as HTMLInputElement).value)}
               />
-              <button className="action-button" onClick={() => handleDeleteDefaultsProperty(key)}>
+              <button className="action-button" onClick={() => handleDeleteDefaultsProperty(fullKey)}>
                 Delete
               </button>
             </div>
@@ -281,6 +267,7 @@ export function App() {
       ))}
     </div>
   );
+
   function deleteNestedKey(obj: any, path: string[]): any {
     if (path.length === 1) {
       const newObj = { ...obj };
@@ -297,30 +284,35 @@ export function App() {
     };
   }
 
-  const flattenKeys = (obj: { [key: string]: any }, parentKey: string = "") => {
+  const flattenKeys = (obj: { [key: string]: any }, parentKey: string = ""): { [key: string]: { value: string; path: string[] } } => {
     let result: { [key: string]: { value: string; path: string[] } } = {};
 
-    Object.keys(obj).forEach((key) => {
+    for (const [key, value] of Object.entries(obj)) {
       const newKey = parentKey ? `${parentKey}.${key}` : key;
-      const value = obj[key];
+      const newPath = parentKey ? [...parentKey.split("."), key] : [key];
 
       if (isObject(value)) {
-        result = { ...result, ...flattenKeys(value, newKey) };
+        const nestedObject = flattenKeys(value, newKey);
+        result = { ...result, ...nestedObject };
       } else {
-        result[newKey] = { value: value, path: newKey.split(".") };
+        result[newKey] = { value: value, path: newPath };
       }
-    });
+    }
 
     return result;
   };
 
+  const saveButton = (
+    <button className="save-button" onClick={handleSave}>
+      Save Changes
+    </button>
+  );
+
   return (
-    <div>
+    <div className="vscode-panel">
       {tabs}
       {panels}
-      <button className="save-button" onClick={handleSave}>
-        Save
-      </button>
+      {saveButton}
     </div>
   );
 }
