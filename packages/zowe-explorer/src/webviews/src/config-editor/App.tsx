@@ -5,7 +5,7 @@ const vscodeApi = acquireVsCodeApi();
 
 export function App() {
   const [localizationState] = useState(null);
-  const [eventContents, setEventContents] = useState("");
+  const [, setEventContents] = useState("");
   const [configurations, setConfigurations] = useState<{ configPath: string; properties: any }[]>([]);
   const [selectedTab, setSelectedTab] = useState<number | null>(null);
   const [flattenedConfig, setFlattenedConfig] = useState<{ [key: string]: { value: string; path: string[] } }>({});
@@ -267,22 +267,6 @@ export function App() {
       ))}
     </div>
   );
-
-  function deleteNestedKey(obj: any, path: string[]): any {
-    if (path.length === 1) {
-      const newObj = { ...obj };
-      delete newObj[path[0]];
-      return newObj;
-    }
-
-    const [head, ...rest] = path;
-    if (!(head in obj)) return obj;
-
-    return {
-      ...obj,
-      [head]: deleteNestedKey(obj[head], rest),
-    };
-  }
 
   const flattenKeys = (obj: { [key: string]: any }, parentKey: string = ""): { [key: string]: { value: string; path: string[] } } => {
     let result: { [key: string]: { value: string; path: string[] } } = {};

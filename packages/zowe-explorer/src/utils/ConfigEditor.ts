@@ -9,7 +9,7 @@
  *
  */
 
-import { DeferredPromise, Gui, WebView, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { DeferredPromise, WebView, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { ProfileInfo } from "@zowe/imperative";
 import * as path from "path";
