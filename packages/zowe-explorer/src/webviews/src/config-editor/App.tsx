@@ -286,16 +286,13 @@ export function App() {
             {selectedTab === index && renderConfig(config.properties.profiles)}
           </div>
           <div className="config-section">
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
-              <h2 style={{ margin: 0 }}>Defaults</h2>
-              <button
-                className="action-button"
-                title="Add new default"
-                style={{ fontSize: "18px", padding: "2px 8px", cursor: "pointer" }}
-                onClick={() => setNewKeyModalOpen(true)}
-              >
-                +
-              </button>
+            <div className="defaults-header">
+              <h2>
+                Defaults
+                <button className="add-default-button" title="Add new default" onClick={() => setNewKeyModalOpen(true)}>
+                  +
+                </button>
+              </h2>
             </div>
 
             {selectedTab === index && renderDefaults(config.properties.defaults)}
@@ -333,8 +330,8 @@ export function App() {
     <div className="modal-backdrop">
       <div className="modal">
         <h3>Add New Default</h3>
-        <input placeholder="Key (e.g. my.setting)" value={newKey} onChange={(e) => setNewKey((e.target as HTMLTextAreaElement).value)} />
-        <input placeholder="Value" value={newValue} onChange={(e) => setNewValue((e.target as HTMLTextAreaElement).value)} />
+        <input placeholder="Type (e.g. ssh,tso,zosmf)" value={newKey} onChange={(e) => setNewKey((e.target as HTMLTextAreaElement).value)} />
+        <input placeholder="Profile (e.g. ssh1,my_lpar)" value={newValue} onChange={(e) => setNewValue((e.target as HTMLTextAreaElement).value)} />
         <div className="modal-actions">
           <button onClick={handleAddNewDefault}>Add</button>
           <button onClick={() => setNewKeyModalOpen(false)}>Cancel</button>
@@ -563,6 +560,28 @@ li {
   background-color: var(--vscode-button-hoverBackground);
 }
 
+.defaults-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.defaults-header h2 {
+  margin: 0;
+}
+
+.add-default-button {
+  font-size: 16px;
+  color: var(--vscode-input-foreground);
+  padding: 1px 4px;
+  cursor: pointer;
+  background-color: var(--vscode-button-background);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 4px;
+  line-height: 1;
+  margin-left: 8px;
+}
 
 .modal-backdrop {
   position: fixed;
