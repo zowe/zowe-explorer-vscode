@@ -155,7 +155,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         // Move the cursor to the start of the current line
         this.write(ZoweTerminal.Keys.HOME);
 
-        // Manually clear each line by overwriting it with spaces
+        // Manually clear each line by overwriting it with spaces - ensuring line has been cleared
         for (let i = 0; i < linesToClear; i++) {
             this.write(" ".repeat(terminalWidth)); // Overwrite the line with spaces
             this.write(ZoweTerminal.Keys.HOME);   // move the cursor back to the start of the line
