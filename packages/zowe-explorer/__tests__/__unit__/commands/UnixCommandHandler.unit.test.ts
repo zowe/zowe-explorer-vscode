@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as profileLoader from "../../../src/configuration/Profiles";
 import { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
-import { createInstanceOfProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
+import { createInstanceOfProfile, createIProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
 import { Gui, imperative, Validation } from "@zowe/zowe-explorer-api";
 import { FilterDescriptor, FilterItem } from "../../../src/management/FilterManagement";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
@@ -607,6 +607,23 @@ describe("UnixCommand Actions Unit Testing", () => {
             configurable: true,
         });
         expect(showInformationMessage.mock.calls.length).toBe(0);
+    });
+
+    it("uses the SSH profile name if one was selected", () => {
+        UnixCommandHandler.getInstance().sshProfile = {
+            name: "dev.ssh",
+            type: "ssh",
+            failNotFound: false,
+            message: "",
+            profile: { user: "testuser" },
+        };
+        expect(UnixCommandHandler.getInstance().formatCommandLine("ls -l")).toEqual("> testuser@dev.ssh:~ $ ls -l");
+    });
+
+    it("uses the node's profile name if an SSH profile was not selected", () => {
+        UnixCommandHandler.getInstance().sshProfile = undefined as any;
+        (UnixCommandHandler.getInstance() as any).nodeProfile = createIProfile();
+        expect(UnixCommandHandler.getInstance().formatCommandLine("ls -l")).toEqual("> testuser@sestest:~ $ ls -l");
     });
 
     it("getCommand API is not implemented", async () => {
