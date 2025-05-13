@@ -73,16 +73,6 @@ export function App() {
     }
   };
 
-  const handleAddProperty = (parentKey: string) => {
-    const newKey = `${parentKey}.newProperty`;
-    const { path } = flattenedConfig[parentKey];
-    const profileKey = path[0];
-    setPendingChanges((prev) => ({
-      ...prev,
-      [newKey]: { value: "", path: [...path, "newProperty"], profile: profileKey },
-    }));
-  };
-
   const handleDeleteProperty = (key: string) => {
     setPendingChanges((prev) => {
       const newState = { ...prev };
@@ -153,62 +143,95 @@ export function App() {
     }
   };
 
-  const renderConfig = (config: { [key: string]: any }, level: number = 0) => {
-    return Object.keys(config).map((key) => {
-      const { value, path } = config[key];
-      const isParent = isObject(value);
-      const pendingValue = pendingChanges[key]?.value !== undefined ? pendingChanges[key].value : value;
-      const displayName = path[path.length - 1]; // Display only the last segment of the path
+  const renderConfig = (obj: any, path: string[] = []) => {
+    return Object.entries(obj).map(([key, value]) => {
+      const currentPath = [...path, key];
+      const fullKey = currentPath.join(".");
+      const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
+      const isArray = Array.isArray(value);
+      const pendingValue = pendingChanges[fullKey]?.value ?? value;
 
-      return (
-        <div key={key} className={`config-item ${isParent ? "parent" : ""}`} style={{ marginLeft: `${level * 20}px` }}>
-          <div className="config-item-container">
-            <span className="config-label">{displayName}:</span>
-            {isParent ? (
-              <button className="action-button" onClick={() => handleAddProperty(key)}>
-                Add Property
-              </button>
-            ) : (
-              <>
-                <input
-                  className="config-input"
-                  type="text"
-                  value={pendingValue}
-                  onChange={(e) => handleChange(key, (e.target as HTMLInputElement).value)}
-                />
-                <button className="action-button" onClick={() => handleDeleteProperty(key)}>
-                  Delete
-                </button>
-              </>
-            )}
+      if (isParent) {
+        return (
+          <div key={fullKey} className="config-item parent" style={{ marginLeft: `${path.length * 20}px` }}>
+            <h3 className={`header-level-${path.length}`}>{key}</h3>
+            {renderConfig(value, currentPath)}
           </div>
-          {isParent && renderConfig(flattenKeys(value, key), level + 1)} {/* Recursively render nested properties */}
-        </div>
-      );
+        );
+      } else if (isArray) {
+        return (
+          <div key={fullKey} className="config-item" style={{ marginLeft: `${path.length * 20}px` }}>
+            <span className="config-label">{key}:</span>
+            <ul>
+              {value.map((item: any, index: number) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        );
+      } else {
+        return (
+          <div key={fullKey} className="config-item" style={{ marginLeft: `${path.length * 20}px` }}>
+            <div className="config-item-container">
+              <span className="config-label">{key}:</span>
+              <input
+                className="config-input"
+                type="text"
+                value={pendingValue}
+                onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
+              />
+              <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
+                Delete
+              </button>
+            </div>
+          </div>
+        );
+      }
     });
   };
 
   const renderDefaults = (defaults: { [key: string]: any }) => {
-    return Object.keys(defaults).map((key) => {
-      const { value } = defaults[key];
-      const pendingValue = pendingDefaults[key]?.value !== undefined ? pendingDefaults[key].value : value;
+    return Object.entries(defaults).map(([key, value]) => {
+      const pendingValue = pendingDefaults[key]?.value ?? value;
+      const isArray = Array.isArray(value);
+      const isObject = typeof value === "object" && value !== null && !isArray;
 
-      return (
-        <div key={key} className="config-item">
-          <div className="config-item-container">
+      if (isArray) {
+        return (
+          <div key={key} className="config-item">
             <span className="config-label">{key}:</span>
-            <input
-              className="config-input"
-              type="text"
-              value={pendingValue}
-              onChange={(e) => handleDefaultsChange(key, (e.target as HTMLInputElement).value)}
-            />
-            <button className="action-button" onClick={() => handleDeleteDefaultsProperty(key)}>
-              Delete
-            </button>
+            <ul>
+              {value.map((item: any, index: number) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
           </div>
-        </div>
-      );
+        );
+      } else if (isObject) {
+        return (
+          <div key={key} className="config-item parent">
+            <h3 className="header-level-0">{key}</h3>
+            {renderDefaults(value)}
+          </div>
+        );
+      } else {
+        return (
+          <div key={key} className="config-item">
+            <div className="config-item-container">
+              <span className="config-label">{key}:</span>
+              <input
+                className="config-input"
+                type="text"
+                value={pendingValue}
+                onChange={(e) => handleDefaultsChange(key, (e.target as HTMLInputElement).value)}
+              />
+              <button className="action-button" onClick={() => handleDeleteDefaultsProperty(key)}>
+                Delete
+              </button>
+            </div>
+          </div>
+        );
+      }
     });
   };
 
@@ -227,12 +250,12 @@ export function App() {
       {configurations.map((config, index) => (
         <div key={index} className={`panel ${selectedTab === index ? "active" : ""}`}>
           <div className="config-section">
-            <h3>Profiles</h3>
-            {selectedTab === index && renderConfig(flattenedConfig)}
+            <h2>Profiles</h2>
+            {selectedTab === index && renderConfig(config.properties.profiles)}
           </div>
           <div className="config-section">
-            <h3>Defaults</h3>
-            {selectedTab === index && renderDefaults(defaults)}
+            <h2>Defaults</h2>
+            {selectedTab === index && renderDefaults(config.properties.defaults)}
           </div>
         </div>
       ))}
@@ -269,111 +292,197 @@ export function App() {
 
 const styles = `
   body {
-    font-size: 14px; /* Increase font size */
-    padding: 10px;
-    background-color: var(--vscode-editor-background);
-    color: var(--vscode-editor-foreground);
-  }
-  .tabs {
-    display: flex;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--vscode-editorWidget-border);
-    background-color: var(--vscode-editorWidget-background);
-    padding: 5px;
-  }
-  .tab {
-    flex: 1;
-    padding: 10px 20px;
-    cursor: pointer;
-    border: 1px solid transparent;
-    border-bottom: none;
-    background-color: var(--vscode-editorWidget-background);
-    transition: background-color 0.2s;
-  }
-  .tab:hover {
-    background-color: var(--vscode-editorWidget-hoverBackground);
-  }
-  .tab.active {
-    border-top: 2px solid var(--vscode-tab-activeForeground);
-    background-color: var(--vscode-tab-activeBackground);
-  }
-  .panels {
-    padding: 10px;
-  }
-  .panel {
-    display: none;
-    padding: 10px;
-  }
-  .panel.active {
-    display: block;
-  }
-  .config-item {
-    margin-bottom: 10px;
-  }
-  .config-item-container {
-    display: flex;
-    align-items: center;
-  }
-  .config-label {
-    flex: 0 0 150px; /* Set a fixed width for the label */
-    text-align: right;
-    margin-right: 10px;
-  }
-  .config-input {
-    background-color: var(--vscode-input-background);
-    color: var(--vscode-input-foreground);
-    border: 1px solid var(--vscode-input-border);
-    padding: 10px;
-    font-size: 14px;
-    width: 200px; /* Reduced width of the input box */
-    flex: 0 1 auto;
-  }
-  .action-button {
-    background-color: var(--vscode-button-background);
-    color: var(--vscode-button-foreground);
-    border: none;
-    padding: 10px 15px; /* Match padding with input box */
-    cursor: pointer;
-    font-size: 14px;
-    margin-left: 10px;
-  }
-  .action-button:hover {
-    background-color: var(--vscode-button-hoverBackground);
-  }
-  .save-button {
-    background-color: var(--vscode-button-background);
-    color: var(--vscode-button-foreground);
-    border: none;
-    padding: 10px 20px;
-    cursor: pointer;
-    font-size: 14px;
-    margin-top: 20px;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .save-button:hover {
-    background-color: var(--vscode-button-hoverBackground);
-  }
-  .profile-header {
-    font-weight: bold;
-  }
-  .header-level-0 {
-    font-size: 18px;
-  }
-  .header-level-1 {
-    font-size: 16px;
-  }
-  .header-level-2 {
-    font-size: 14px;
-  }
-  .header-level-3 {
-    font-size: 12px;
-  }
-  .parent {
-    margin-top: 10px;
-    margin-bottom: 10px;
-  }
+  font-size: 14px;
+  padding: 10px;
+  background-color: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+  margin: 0;
+  font-family: var(--vscode-font-family, monospace);
+}
+
+.tabs {
+  display: flex;
+  width: 100%;
+  border-bottom: 1px solid var(--vscode-editorWidget-border);
+  background-color: var(--vscode-editorWidget-background);
+}
+
+.tab {
+  flex: 1; /* Equal width for all tabs */
+  padding: 8px 12px;
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-bottom-color: var(--vscode-editorWidget-background);
+  border-right: 1px solid var(--vscode-editorWidget-border); /* Visual separator */
+  transition: background-color 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Remove right border from the last tab */
+.tab:last-child {
+  border-right: none;
+}
+
+
+
+.tab:hover {
+  background-color: var(--vscode-editorWidget-hoverBackground);
+}
+
+.tab.active {
+  border-bottom-color: var(--vscode-tab-activeBackground);
+  background-color: var(--vscode-editorWidget-background);
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+.panels {
+  border: 1px solid var(--vscode-editorWidget-border);
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  background-color: var(--vscode-editorWidget-background);
+  padding: 10px;
+  margin-top: -1px;
+  font-family: monospace;
+}
+
+.panel {
+  display: none;
+  padding: 10px;
+}
+
+.panel.active {
+  display: block;
+}
+
+.config-section {
+  margin-bottom: 20px;
+}
+
+.config-section h2 {
+  margin-top: 0;
+  font-size: 16px;
+  font-weight: bold;
+  font-family: monospace;
+  border-bottom: 1px solid var(--vscode-editorWidget-border);
+  padding-bottom: 4px;
+}
+
+.config-item {
+  display: block;
+  margin-bottom: 6px;
+  font-family: monospace;
+  padding-left: 10px;
+}
+
+.config-item.parent {
+  margin-top: 10px;
+  padding-left: 0;
+}
+
+.header-level-0,
+.header-level-1,
+.header-level-2,
+.header-level-3 {
+  font-weight: bold;
+  font-size: 14px;
+  margin: 6px 0 2px;
+}
+
+.header-level-0 {
+  padding-left: 0px;
+}
+.header-level-1 {
+  padding-left: 20px;
+}
+.header-level-2 {
+  padding-left: 40px;
+}
+.header-level-3 {
+  padding-left: 60px;
+}
+
+.config-item-container {
+  display: flex;
+  align-items: center;
+  padding: 2px 0;
+}
+
+.config-label {
+  margin-right: 10px;
+  min-width: 100px;
+  text-align: right;
+  font-weight: normal;
+  font-family: monospace;
+  color: var(--vscode-editor-foreground);
+}
+
+.config-input {
+  background-color: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border);
+  padding: 4px 8px;
+  font-size: 13px;
+  font-family: monospace;
+  flex-grow: 1;
+  min-width: 100px;
+}
+
+.config-input:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+}
+
+ul {
+  margin: 4px 0 4px 20px;
+  padding: 0;
+  list-style-type: square;
+  font-family: monospace;
+}
+
+li {
+  padding-left: 5px;
+  margin-bottom: 2px;
+}
+
+.action-button {
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: monospace;
+  margin-left: 8px;
+  border-radius: 3px;
+}
+
+.action-button:hover {
+  background-color: var(--vscode-button-hoverBackground);
+}
+
+.action-button:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+}
+
+.save-button {
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: monospace;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
+.save-button:hover {
+  background-color: var(--vscode-button-hoverBackground);
+}
+
 `;
 
 document.head.insertAdjacentHTML("beforeend", `<style>${styles}</style>`);
