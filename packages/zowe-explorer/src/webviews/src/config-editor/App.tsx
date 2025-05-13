@@ -104,7 +104,7 @@ export function App() {
   };
 
   const handleDeleteDefaultsProperty = (key: string) => {
-    if (!flattenedDefaults[key] || selectedTab === null) return;
+    if ((!flattenedDefaults[key] && !pendingDefaults[key]) || selectedTab === null) return;
 
     setPendingDefaults((prev) => {
       const newState = { ...prev };
