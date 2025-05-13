@@ -74,6 +74,17 @@ export function App() {
   };
 
   const handleDeleteProperty = (key: string) => {
+    const { path } = flattenedConfig[key] || {};
+    if (!path || selectedTab === null) return;
+
+    setConfigurations((prev) => {
+      const updated = [...prev];
+      const configCopy = JSON.parse(JSON.stringify(updated[selectedTab])); // deep copy
+      configCopy.properties.profiles = deleteNestedKey(configCopy.properties.profiles, path);
+      updated[selectedTab] = configCopy;
+      return updated;
+    });
+
     setPendingChanges((prev) => {
       const newState = { ...prev };
       delete newState[key];
@@ -82,10 +93,10 @@ export function App() {
 
     setDeletions((prev) => [...prev, key]);
 
+    // Optionally rebuild flattenedConfig for the updated config
     setFlattenedConfig((prev) => {
-      const newState = { ...prev };
-      delete newState[key];
-      return newState;
+      const config = configurations[selectedTab!].properties.profiles;
+      return flattenKeys(config);
     });
   };
 
@@ -261,6 +272,21 @@ export function App() {
       ))}
     </div>
   );
+  function deleteNestedKey(obj: any, path: string[]): any {
+    if (path.length === 1) {
+      const newObj = { ...obj };
+      delete newObj[path[0]];
+      return newObj;
+    }
+
+    const [head, ...rest] = path;
+    if (!(head in obj)) return obj;
+
+    return {
+      ...obj,
+      [head]: deleteNestedKey(obj[head], rest),
+    };
+  }
 
   const flattenKeys = (obj: { [key: string]: any }, parentKey: string = "") => {
     let result: { [key: string]: { value: string; path: string[] } } = {};
