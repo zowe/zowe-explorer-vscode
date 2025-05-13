@@ -156,14 +156,14 @@ export function App() {
 
       if (isParent) {
         return (
-          <div key={fullKey} className="config-item parent" style={{ marginLeft: `${path.length * 20}px` }}>
-            <h3 className={`header-level-${path.length}`}>{key}</h3>
+          <div key={fullKey} className="config-item parent" style={{ marginLeft: `${path.length * 10}px` }}>
+            <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>{key}</h3>
             {renderConfig(value, currentPath)}
           </div>
         );
       } else if (isArray) {
         return (
-          <div key={fullKey} className="config-item" style={{ marginLeft: `${path.length * 20}px` }}>
+          <div key={fullKey} className="config-item" style={{ marginLeft: `${path.length * 10}px` }}>
             <span className="config-label">{key}:</span>
             <ul>
               {value.map((item: any, index: number) => (
@@ -174,7 +174,7 @@ export function App() {
         );
       } else {
         return (
-          <div key={fullKey} className="config-item" style={{ marginLeft: `${path.length * 20}px` }}>
+          <div key={fullKey} className="config-item" style={{ marginLeft: `${path.length * 10}px` }}>
             <div className="config-item-container">
               <span className="config-label">{key}:</span>
               <input
@@ -204,14 +204,14 @@ export function App() {
 
       if (isParent) {
         return (
-          <div key={fullKey} className="config-item parent" style={{ marginLeft: `${currentPath.length * 20}px` }}>
+          <div key={fullKey} className="config-item parent" style={{ marginLeft: `${currentPath.length * 10}px` }}>
             <h3 className={`header-level-${currentPath.length}`}>{key}</h3>
             {renderDefaults(value)}
           </div>
         );
       } else if (isArray) {
         return (
-          <div key={fullKey} className="config-item" style={{ marginLeft: `${currentPath.length * 20}px` }}>
+          <div key={fullKey} className="config-item" style={{ marginLeft: `${currentPath.length * 10}px` }}>
             <span className="config-label">{key}:</span>
             <ul>
               {value.map((item: any, index: number) => (
@@ -222,7 +222,7 @@ export function App() {
         );
       } else {
         return (
-          <div key={fullKey} className="config-item" style={{ marginLeft: `${currentPath.length * 20}px` }}>
+          <div key={fullKey} className="config-item" style={{ marginLeft: `${currentPath.length * 10}px` }}>
             <div className="config-item-container">
               <span className="config-label">{key}:</span>
               <input
