@@ -131,12 +131,16 @@ export function App() {
 
     const defaultsDeleteKeys = defaultsDeletions;
 
+    // Include the path to the configuration file
+    const configPath = selectedTab !== null ? configurations[selectedTab].configPath : "";
+
     vscodeApi.postMessage({
       command: "SAVE_CHANGES",
       changes,
       deletions: deleteKeys,
       defaultsChanges,
-      defaultsDeletions: defaultsDeleteKeys,
+      defaultsDeleteKeys: defaultsDeleteKeys,
+      configPath,
     });
 
     setPendingChanges({});
@@ -152,6 +156,11 @@ export function App() {
       setFlattenedConfig(flattenKeys(config.profiles));
       setDefaults(flattenKeys(config.defaults));
     }
+    // Reset pending changes and deletions when switching tabs
+    setPendingChanges({});
+    setDeletions([]);
+    setPendingDefaults({});
+    setDefaultsDeletions([]);
   };
 
   const renderConfig = (obj: any, path: string[] = []) => {
@@ -351,8 +360,6 @@ const styles = `
 .tab:last-child {
   border-right: none;
 }
-
-
 
 .tab:hover {
   background-color: var(--vscode-editorWidget-hoverBackground);

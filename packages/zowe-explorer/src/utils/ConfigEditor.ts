@@ -89,7 +89,7 @@ export class ConfigEditor extends WebView {
                 });
                 break;
             case "SAVE_CHANGES":
-                this.handleSaveChanges(message.changes, message.deletions);
+                this.handleSaveChanges(message);
                 await this.panel.webview.postMessage({
                     command: "CONFIGURATIONS",
                     contents: await this.getLocalConfigs(),
@@ -100,9 +100,8 @@ export class ConfigEditor extends WebView {
         }
     }
 
-    private handleSaveChanges(changes: { key: string; value: string; path: string[]; profile: string }[], deletions: string[]): void {
+    private handleSaveChanges(message: any): void {
         console.log("Received save changes command with the following data:");
-        console.log("Changes:", changes);
-        console.log("Deletions:", deletions);
+        console.log("mod:", message);
     }
 }
