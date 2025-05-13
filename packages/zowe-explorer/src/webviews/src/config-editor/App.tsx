@@ -359,9 +359,11 @@ const styles = `
 
 .tab.active {
   border-bottom-color: var(--vscode-tab-activeBackground);
-  background-color: var(--vscode-editorWidget-background);
+  background-color: var(--vscode-button-background);
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
+  color: var(--vscode-button-foreground);
+  font-weight: bold;
 }
 
 .panels {
