@@ -17,12 +17,10 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     public static readonly invalidChar = "�";
     public static readonly Keys = {
         EMPTY_LINE: `${this.mTermX} `,
-        CLEAR_ALL: "\x1b[2J\x1b[H", // clears entire screen AND resets cursor
-        NEW_LINE: "\r\n",
-        LEFT: "\x1b[D",
-        RIGHT: "\x1b[C",
-        HOME: "\x1b[H",
+        CLEAR_ALL: "\x1b[2J\x1b[3J\x1b[;H",
+        CLEAR_LINE: `\x1b[2K\r`,
         END: "\x1b[F",
+        HOME: "\x1b[H",
         CMD_LEFT: "\x01", // MacOS HOME
         CTRL_C: "\x03",
         CTRL_D: "\x04",
@@ -38,33 +36,18 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         PAGE_UP: "\x1b[5~",
         PAGE_DOWN: "\x1b[6~",
         ENTER: "\r",
+        NEW_LINE: "\r\n",
         OPT_LEFT: "\x1bb",
         OPT_RIGHT: "\x1bf",
         UP: "\x1b[A",
         DOWN: "\x1b[B",
+        RIGHT: "\x1b[C",
+        LEFT: "\x1b[D",
         hasModKey: (key: string): boolean => {
-            return key.startsWith("\x1b[1;") || key.startsWith("\x1b[3;");
+            if (key.startsWith("\x1b[1;") || key.startsWith("\x1b[3;")) return true;
+            return false;
         },
     };
-
-    private screenBuffer: string[] = []; // Buffer that holds all output (one line per element)
-    private charArrayCmd: string[] = [];
-    private mMessage: string;
-    protected mTerminalName: string = "";
-    protected mHistory: string[];
-    private historyIndex: number;
-    private isCommandRunning = false;
-    private pressedCtrlC = false;
-    private chalk;
-    protected command: string;
-    protected formatCommandLine: (cmd: string) => string;
-    protected cursorPosition: number;
-
-    private writeEmitter = new vscode.EventEmitter<string>();
-    public onDidWrite: vscode.Event<string> = this.writeEmitter.event;
-
-    private closeEmitter = new vscode.EventEmitter<void>();
-    public onDidClose?: vscode.Event<void> = this.closeEmitter.event;
 
     public constructor(
         terminalName: string,
@@ -77,15 +60,70 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.mHistory = options?.history ?? [];
         this.historyIndex = this.mHistory.length;
         this.command = options?.startup ?? "";
-        this.cursorPosition = this.command.length;
+        this.charArrayCmd = [];
+        this.cursorPosition = this.charArrayCmd.length;
         this.formatCommandLine = options?.formatCommandLine ?? ((cmd: string) => `${ZoweTerminal.Keys.EMPTY_LINE}${cmd}`);
         this.chalk = imperative.TextUtils.chalk;
     }
 
-    public open(_initialDimensions?: vscode.TerminalDimensions | undefined): void {
-        if (this.screenBuffer.length === 0) {
-            this.writeLine(this.chalk.dim.italic(this.mMessage));
+    private charArrayCmd: string[];
+    private mMessage: string;
+    protected mTerminalName: string = "";
+    protected mHistory: string[];
+    private historyIndex: number;
+    private isCommandRunning = false;
+    private pressedCtrlC = false;
+    private chalk;
+
+    private writeEmitter = new vscode.EventEmitter<string>();
+    protected write(text: string) {
+        this.writeEmitter.fire(text);
+    }
+    protected writeLine(text: string) {
+        this.write(text);
+        this.write(ZoweTerminal.Keys.NEW_LINE);
+        this.writeCmd();
+    }
+    protected clearLine() {
+        this.write(ZoweTerminal.Keys.CLEAR_LINE);
+    }
+    protected writeCmd(cmd?: string) {
+        this.write(this.formatCommandLine ? this.formatCommandLine(cmd ?? this.command) : cmd ?? this.command);
+    }
+    protected refreshCmd() {
+        this.command = this.sanitizeInput(this.command);
+        this.pressedCtrlC = false;
+        if (!this.charArrayCmd.length || this.charArrayCmd.join("") !== this.command) {
+            this.charArrayCmd = Array.from(this.command);
         }
+        this.clearLine();
+        this.writeCmd();
+        if (this.charArrayCmd.length > this.cursorPosition) {
+            const getPos = (char: string) => {
+                if (char === ZoweTerminal.invalidChar) return 1;
+                const charBytes = Buffer.from(char).length;
+                return charBytes > 2 ? 2 : 1;
+            };
+            const offset = this.charArrayCmd.slice(this.cursorPosition).reduce((total, curr) => total + getPos(curr), 0);
+            [...Array(offset)].map(() => this.write(ZoweTerminal.Keys.LEFT));
+        }
+    }
+    protected clear() {
+        this.write(ZoweTerminal.Keys.CLEAR_ALL);
+        this.writeLine(this.chalk.dim.italic(this.mMessage));
+    }
+
+    protected command: string;
+    protected formatCommandLine: (cmd: string) => string;
+    protected cursorPosition: number;
+
+    public onDidWrite: vscode.Event<string> = this.writeEmitter.event;
+
+    private closeEmitter = new vscode.EventEmitter<void>();
+    public onDidClose?: vscode.Event<void> = this.closeEmitter.event;
+
+    public open(_initialDimensions?: vscode.TerminalDimensions | undefined): void {
+        this.writeLine(this.chalk.dim.italic(this.mMessage));
         if (this.command.length > 0) {
             this.handleInput(ZoweTerminal.Keys.ENTER);
         }
@@ -95,7 +133,136 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.closeEmitter.fire();
     }
 
+    private navigateHistory(offset: number): void {
+        this.historyIndex = Math.max(0, Math.min(this.mHistory.length, this.historyIndex + offset));
+        this.command = this.mHistory[this.historyIndex] ?? "";
+        this.charArrayCmd = Array.from(this.command);
+        this.cursorPosition = this.charArrayCmd.length;
+
+        // clear all lines of current command
+        this.clearWrappedLines();
+
+        // Refresh command to make way for next in history
+        this.refreshCmd();
+    }
+
+    private clearWrappedLines(): void {
+        const terminalWidth = this.getTerminalWidth();
+
+        // Calculate the number of lines the current command occupies
+        const linesToClear = Math.ceil(this.command.length / terminalWidth);
+
+        // Move the cursor to the start of the current line
+        this.write(ZoweTerminal.Keys.HOME);
+
+        // Manually clear each line by overwriting it with spaces
+        for (let i = 0; i < linesToClear; i++) {
+            this.write(" ".repeat(terminalWidth)); // Overwrite the line with spaces
+            this.write(ZoweTerminal.Keys.HOME);   // move the cursor back to the start of the line
+            if (i < linesToClear - 1) {
+                this.write("\x1b[B"); // Move to the next line
+            }
+        }
+
+        // Move the cursor back to the top of the cleared area
+        for (let i = 0; i < linesToClear - 1; i++) {
+            this.write("\x1b[A"); // Move the cursor up one line
+        }
+    }
+
+    private getTerminalWidth(): number {
+        const defaultWidth = 80;// assume a default terminal width if dimensions are not available
+        const dimensions = (vscode.window.activeTerminal as vscode.Terminal & { dimensions?: { columns: number } })?.dimensions;
+        const terminalWidth = dimensions?.columns || defaultWidth;
+        return terminalWidth;
+    }
+
+    private moveCursor(offset: number): void {
+        this.cursorPosition = Math.max(0, Math.min(this.charArrayCmd.length, this.cursorPosition + offset));
+        this.refreshCmd();
+    }
+
+    private moveCursorTo(position: number): void {
+        this.cursorPosition = position < 0 ? 0 : Math.min(this.charArrayCmd.length, position);
+        this.refreshCmd();
+    }
+
+    private isPrintable(char: string): boolean {
+        const codePoint = char.codePointAt(0);
+        if (codePoint === undefined) return false;
+        if (codePoint >= 0x20 && codePoint <= 0x7e) return true;
+        if (codePoint >= 0xa0 && codePoint <= 0xd7ff) return true; // control characters
+        if (codePoint >= 0xe000 && codePoint <= 0xfffd) return true;
+        if (codePoint >= 0x10000 && codePoint <= 0x10ffff) return true;
+        return false;
+    }
+
+    private sanitizeInput(input: string): string {
+        return Array.from(input)
+            .map((char) => (this.isPrintable(char) ? char : ZoweTerminal.invalidChar))
+            .join("");
+    }
+
+    private deleteCharacter(offset: number): void {
+        const deleteIndex = this.cursorPosition + offset;
+
+        if (deleteIndex >= 0 && deleteIndex < this.charArrayCmd.length) {
+            this.charArrayCmd.splice(deleteIndex, 1);
+            this.command = this.charArrayCmd.join("");
+
+            if (offset === -1) {
+                this.cursorPosition--;
+                this.write(ZoweTerminal.Keys.LEFT);
+            } else if (offset === 0) {
+                this.write(ZoweTerminal.Keys.DEL);
+            }
+            this.refreshCmd();
+        }
+    }
+
+    private async handleEnter() {
+        this.write(ZoweTerminal.Keys.NEW_LINE);
+        const cmd = this.command;
+        this.command = "";
+        this.charArrayCmd = [];
+        if (cmd.length === 0) {
+            this.writeCmd();
+            return;
+        }
+
+        if (cmd[0] === ":") {
+            if (cmd === ":clear") {
+                this.clear();
+            } else if (cmd === ":exit") {
+                this.close();
+            }
+        } else {
+            this.isCommandRunning = true;
+
+            const output = await Promise.race([
+                this.processCmd(cmd),
+                new Promise<null>((resolve, _reject) => {
+                    this.controller.signal.addEventListener("abort", () => {
+                        this.isCommandRunning = false;
+                        resolve(null);
+                    });
+                    if (!this.isCommandRunning) resolve(null);
+                }),
+            ]);
+            this.isCommandRunning = false;
+            if (output === null) {
+                this.writeLine(this.chalk.italic.red("Operation cancelled!"));
+            } else {
+                this.writeLine(output.trim().split("\n").join("\r\n"));
+            }
+        }
+        this.mHistory.push(cmd);
+        this.historyIndex = this.mHistory.length;
+        this.cursorPosition = 0;
+    }
+
     public async handleInput(data: string): Promise<void> {
+        // console.log("data", data, Buffer.from(data));
         if (this.isCommandRunning) {
             if ([ZoweTerminal.Keys.CTRL_C, ZoweTerminal.Keys.CTRL_D].includes(data)) this.controller.abort();
             if (data === ZoweTerminal.Keys.CTRL_D) this.close();
@@ -125,19 +292,13 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
             case ZoweTerminal.Keys.PAGE_DOWN:
                 this.navigateHistory(1);
                 break;
-            case ZoweTerminal.Keys.OPT_LEFT:
             case ZoweTerminal.Keys.LEFT:
-                if (this.cursorPosition > 0) {
-                    this.cursorPosition--;
-                    this.write(ZoweTerminal.Keys.LEFT);
-                }
+            case ZoweTerminal.Keys.OPT_LEFT:
+                this.moveCursor(-1);
                 break;
-            case ZoweTerminal.Keys.OPT_RIGHT:
             case ZoweTerminal.Keys.RIGHT:
-                if (this.cursorPosition < this.charArrayCmd.length) {
-                    this.cursorPosition++;
-                    this.write(ZoweTerminal.Keys.RIGHT);
-                }
+            case ZoweTerminal.Keys.OPT_RIGHT:
+                this.moveCursor(1);
                 break;
             case ZoweTerminal.Keys.HOME:
             case ZoweTerminal.Keys.CMD_LEFT:
@@ -162,169 +323,16 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                 break;
             case ZoweTerminal.Keys.TAB:
             case ZoweTerminal.Keys.INSERT:
-                // Do nothing for now.
+                // Do nothing
                 break;
             default: {
-                // Insert new data at the current cursor position.
-                this.command =
-                    this.charArrayCmd.slice(0, this.cursorPosition).join("") +
-                    data +
-                    this.charArrayCmd.slice(this.cursorPosition).join("");
+                const charArray = this.charArrayCmd;
+                this.command = charArray.slice(0, Math.max(0, this.cursorPosition)).join("") + data + charArray.slice(this.cursorPosition).join("");
                 this.charArrayCmd = Array.from(this.command);
-                this.cursorPosition += Array.from(data).length;
+                this.cursorPosition = Math.min(this.charArrayCmd.length, this.cursorPosition + Array.from(data).length);
+                this.write(data);
                 this.refreshCmd();
-                break;
             }
         }
-    }
-
-    // Append text to the output buffer only.
-    private appendToBuffer(text: string): void {
-        this.screenBuffer.push(text);
-    }
-
-    // Write text to the terminal output.
-    protected write(text: string) {
-        this.writeEmitter.fire(text);
-    }
-
-    // Write text to terminal and add it to the output buffer.
-    protected writeLine(text: string) {
-        this.appendToBuffer(text);
-        this.write(text + ZoweTerminal.Keys.NEW_LINE);
-        this.writeCmd();
-    }
-
-    // Perform a full screen refresh: clear the terminal, reprint history, and display the prompt.
-    private fullRefresh(): void {
-        this.write(ZoweTerminal.Keys.CLEAR_ALL);
-        for (const line of this.screenBuffer) {
-            this.write(line + ZoweTerminal.Keys.NEW_LINE);
-        }
-        this.write(this.formatCommandLine(this.command));
-    }
-
-    // Refresh the command prompt display and adjust the hardware cursor.
-    protected refreshCmd(): void {
-        this.command = this.sanitizeInput(this.command);
-        this.pressedCtrlC = false;
-        if (!this.charArrayCmd.length || this.charArrayCmd.join("") !== this.command) {
-            this.charArrayCmd = Array.from(this.command);
-        }
-        this.fullRefresh();
-
-        // determine the offset between the end (prompt length plus command length) and the desired position (prompt length plus cursorPosition)
-        // then shift the cursor left using an ANSI escape sequence
-        const promptPrefix = ZoweTerminal.Keys.EMPTY_LINE; // e.g., "> "
-        const promptLength = promptPrefix.length;
-        const cursor = promptLength + this.command.length;
-        const desiredCol = promptLength + this.cursorPosition;
-        const moveLeft = cursor - desiredCol;
-        if (moveLeft > 0) {
-            this.write(`\x1b[${moveLeft}D`);
-        }
-    }
-
-    // Write the prompt line without adding it to the buffer.
-    protected writeCmd() {
-        this.write(this.formatCommandLine(this.command));
-    }
-
-    // Clear the output buffer and reprint the welcome message.
-    protected clear() {
-        this.screenBuffer = [];
-        this.write(ZoweTerminal.Keys.CLEAR_ALL);
-        this.writeLine(this.chalk.dim.italic(this.mMessage));
-    }
-
-    private navigateHistory(offset: number): void {
-        const newIndex = this.historyIndex + offset;
-        if (newIndex >= 0 && newIndex < this.mHistory.length) {
-            this.historyIndex = newIndex;
-            this.command = this.mHistory[this.historyIndex];
-            this.charArrayCmd = Array.from(this.command);
-            this.cursorPosition = this.command.length;
-            this.refreshCmd();
-        }
-    }
-
-    private moveCursorTo(position: number): void {
-        this.cursorPosition = Math.max(0, Math.min(this.charArrayCmd.length, position));
-        this.refreshCmd();
-    }
-
-    private deleteCharacter(offset: number): void {
-        const deleteIndex = this.cursorPosition + offset;
-
-        if (deleteIndex >= 0 && deleteIndex < this.charArrayCmd.length) {
-            this.charArrayCmd.splice(deleteIndex, 1);
-            this.command = this.charArrayCmd.join("");
-
-            if (offset === -1) {
-                this.cursorPosition--;
-            }
-
-            this.refreshCmd();
-        }
-    }
-
-    private sanitizeInput(input: string): string {
-        return Array.from(input)
-            .map((char) => (this.isPrintable(char) ? char : ZoweTerminal.invalidChar))
-            .join("");
-    }
-
-    private async handleEnter() {
-        this.write(ZoweTerminal.Keys.NEW_LINE);
-        const cmd = this.command;
-        this.appendToBuffer(this.formatCommandLine(cmd));
-        this.command = "";
-        this.charArrayCmd = [];
-        if (cmd.length === 0) {
-            this.writeCmd();
-            return;
-        }
-
-        if (cmd[0] === ":") {
-            if (cmd === ":clear") {
-                this.clear();
-            } else if (cmd === ":exit") {
-                this.close();
-            }
-        } else {
-            this.isCommandRunning = true;
-            const output = await Promise.race([
-                this.processCmd(cmd),
-                new Promise<null>((resolve, _reject) => {
-                    this.controller.signal.addEventListener("abort", () => {
-                        this.isCommandRunning = false;
-                        resolve(null);
-                    });
-                    if (!this.isCommandRunning) resolve(null);
-                }),
-            ]);
-            this.isCommandRunning = false;
-            if (output === null) {
-                this.appendToBuffer(this.chalk.italic.red("Operation cancelled!"));
-            } else {
-                this.appendToBuffer(output.trim().split("\n").join("\r\n"));
-            }
-        }
-        this.mHistory.push(cmd);
-        this.historyIndex = this.mHistory.length;
-        this.cursorPosition = 0;
-        // Fixed an issue where history navigation and multi-line commands were adding permanent new lines
-        // by ensuring the command block is correctly cleared and re-rendered.
-        this.fullRefresh();
-    }
-
-    private isPrintable(char: string): boolean {
-        const codePoint = char.codePointAt(0);
-        if (codePoint === undefined) return false;
-        if (codePoint >= 0x20 && codePoint <= 0x7e) return true;
-        if (codePoint >= 0xa0 && codePoint <= 0xd7ff) return true;
-        if (codePoint >= 0xe000 && codePoint <= 0xfffd) return true;
-        if (codePoint >= 0x10000 && codePoint <= 0x10ffff) return true;
-        return false;
     }
 }
