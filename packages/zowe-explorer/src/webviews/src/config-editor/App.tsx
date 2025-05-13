@@ -14,6 +14,9 @@ export function App() {
   const [pendingDefaults, setPendingDefaults] = useState<{ [key: string]: { value: string; path: string[] } }>({});
   const [deletions, setDeletions] = useState<string[]>([]);
   const [defaultsDeletions, setDefaultsDeletions] = useState<string[]>([]);
+  const [newKeyModalOpen, setNewKeyModalOpen] = useState(false); // NEW: modal toggle
+  const [newKey, setNewKey] = useState(""); // NEW: new key input
+  const [newValue, setNewValue] = useState(""); // NEW: new value input
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
@@ -54,6 +57,20 @@ export function App() {
         return newDeletions;
       });
     }
+  };
+
+  const handleAddNewDefault = () => {
+    if (!newKey.trim()) return;
+
+    const fullKey = newKey.trim();
+    const path = fullKey.split(".");
+    setPendingDefaults((prev) => ({
+      ...prev,
+      [fullKey]: { value: newValue, path },
+    }));
+    setNewKey("");
+    setNewValue("");
+    setNewKeyModalOpen(false);
   };
 
   const handleDefaultsChange = (key: string, value: string) => {
@@ -194,7 +211,16 @@ export function App() {
   };
 
   const renderDefaults = (defaults: { [key: string]: any }) => {
-    return Object.entries(defaults).map(([key, value]) => {
+    const combinedDefaults = {
+      ...defaults,
+      ...Object.fromEntries(
+        Object.entries(pendingDefaults)
+          .filter(([key]) => !(key in defaults))
+          .map(([key, entry]) => [key, entry.value])
+      ),
+    };
+
+    return Object.entries(combinedDefaults).map(([key, value]) => {
       const currentPath = [key];
       const fullKey = currentPath.join(".");
       if (defaultsDeletions.includes(fullKey)) return null;
@@ -260,7 +286,17 @@ export function App() {
             {selectedTab === index && renderConfig(config.properties.profiles)}
           </div>
           <div className="config-section">
-            <h2>Defaults</h2>
+            <h2 style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              Defaults
+              <button
+                className="action-button"
+                title="Add new default"
+                style={{ fontSize: "18px", marginLeft: "10px" }}
+                onClick={() => setNewKeyModalOpen(true)}
+              >
+                +
+              </button>
+            </h2>
             {selectedTab === index && renderDefaults(config.properties.defaults)}
           </div>
         </div>
@@ -292,11 +328,26 @@ export function App() {
     </button>
   );
 
+  const modal = newKeyModalOpen && (
+    <div className="modal-backdrop">
+      <div className="modal">
+        <h3>Add New Default</h3>
+        <input placeholder="Key (e.g. my.setting)" value={newKey} onChange={(e) => setNewKey((e.target as HTMLTextAreaElement).value)} />
+        <input placeholder="Value" value={newValue} onChange={(e) => setNewValue((e.target as HTMLTextAreaElement).value)} />
+        <div className="modal-actions">
+          <button onClick={handleAddNewDefault}>Add</button>
+          <button onClick={() => setNewKeyModalOpen(false)}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="vscode-panel">
       {tabs}
       {panels}
       {saveButton}
+      {modal}
     </div>
   );
 }
@@ -464,6 +515,42 @@ ul {
 li {
   line-height: 1.5;
 }
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal {
+  background: var(--vscode-editorWidget-background);
+  border: 1px solid var(--vscode-editorWidget-border);
+  padding: 20px;
+  border-radius: 8px;
+  color: var(--vscode-editor-foreground);
+  width: 300px;
+}
+
+.modal input {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 6px;
+  font-size: 14px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 `;
 
 document.head.insertAdjacentHTML("beforeend", `<style>${styles}</style>`);
