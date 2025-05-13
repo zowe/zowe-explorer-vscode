@@ -17,6 +17,10 @@ export function App() {
   const [newKeyModalOpen, setNewKeyModalOpen] = useState(false); // NEW: modal toggle
   const [newKey, setNewKey] = useState(""); // NEW: new key input
   const [newValue, setNewValue] = useState(""); // NEW: new value input
+  const [newProfileKeyPath, setNewProfileKeyPath] = useState<string[] | null>(null); // path where modal opened
+  const [newProfileKey, setNewProfileKey] = useState("");
+  const [newProfileValue, setNewProfileValue] = useState("");
+  const [newProfileModalOpen, setNewProfileModalOpen] = useState(false);
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
@@ -57,6 +61,31 @@ export function App() {
         return newDeletions;
       });
     }
+  };
+
+  const handleAddNewProfileKey = () => {
+    if (!newProfileKey.trim() || !newProfileKeyPath) return;
+
+    const path = [...newProfileKeyPath, newProfileKey.trim()];
+    const fullKey = path.join(".");
+    const profileKey = path[0];
+
+    setPendingChanges((prev) => ({
+      ...prev,
+      [fullKey]: { value: newProfileValue, path, profile: profileKey },
+    }));
+
+    setNewProfileKey("");
+    setNewProfileValue("");
+    setNewProfileKeyPath(null);
+    setNewProfileModalOpen(false);
+  };
+
+  const openAddProfileModalAtPath = (path: string[]) => {
+    setNewProfileKeyPath(path);
+    setNewProfileKey("");
+    setNewProfileValue("");
+    setNewProfileModalOpen(true);
   };
 
   const handleAddNewDefault = () => {
@@ -148,6 +177,20 @@ export function App() {
     setDefaultsDeletions([]);
   };
 
+  const profileModal = newProfileModalOpen && (
+    <div className="modal-backdrop">
+      <div className="modal">
+        <h3>Add New Profile Property</h3>
+        <input placeholder="New Key" value={newProfileKey} onChange={(e) => setNewProfileKey((e.target as HTMLTextAreaElement).value)} />
+        <input placeholder="Value" value={newProfileValue} onChange={(e) => setNewProfileValue((e.target as HTMLTextAreaElement).value)} />
+        <div className="modal-actions">
+          <button onClick={handleAddNewProfileKey}>Add</button>
+          <button onClick={() => setNewProfileModalOpen(false)}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+
   const handleTabChange = (index: number) => {
     setSelectedTab(index);
     if (index !== null) {
@@ -174,7 +217,12 @@ export function App() {
       if (isParent) {
         return (
           <div key={fullKey} className="config-item parent" style={{ marginLeft: `${path.length * 10}px` }}>
-            <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>{key}</h3>
+            <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>
+              {key}
+              <button className="add-default-button" title={`Add key inside "${fullKey}"`} onClick={() => openAddProfileModalAtPath(currentPath)}>
+                +
+              </button>
+            </h3>
             {renderConfig(value, currentPath)}
           </div>
         );
@@ -346,6 +394,7 @@ export function App() {
       {panels}
       {saveButton}
       {modal}
+      {profileModal}
     </div>
   );
 }
