@@ -286,17 +286,18 @@ export function App() {
             {selectedTab === index && renderConfig(config.properties.profiles)}
           </div>
           <div className="config-section">
-            <h2 style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              Defaults
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+              <h2 style={{ margin: 0 }}>Defaults</h2>
               <button
                 className="action-button"
                 title="Add new default"
-                style={{ fontSize: "18px", marginLeft: "10px" }}
+                style={{ fontSize: "18px", padding: "2px 8px", cursor: "pointer" }}
                 onClick={() => setNewKeyModalOpen(true)}
               >
                 +
               </button>
-            </h2>
+            </div>
+
             {selectedTab === index && renderDefaults(config.properties.defaults)}
           </div>
         </div>
@@ -516,6 +517,53 @@ li {
   line-height: 1.5;
 }
 
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  background-color: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+  min-width: 300px;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal input {
+  padding: 8px;
+  background-color: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 4px;
+}
+
+
+.modal button {
+  padding: 8px 12px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  font-weight: 500;
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.modal button:hover {
+  background-color: var(--vscode-button-hoverBackground);
+}
+
+
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -527,22 +575,6 @@ li {
   justify-content: center;
   align-items: center;
   z-index: 999;
-}
-
-.modal {
-  background: var(--vscode-editorWidget-background);
-  border: 1px solid var(--vscode-editorWidget-border);
-  padding: 20px;
-  border-radius: 8px;
-  color: var(--vscode-editor-foreground);
-  width: 300px;
-}
-
-.modal input {
-  width: 100%;
-  margin-bottom: 10px;
-  padding: 6px;
-  font-size: 14px;
 }
 
 .modal-actions {
