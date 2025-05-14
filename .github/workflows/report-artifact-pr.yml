@@ -48,6 +48,7 @@ jobs:
 
       - name: Report VSIX artifact
         uses: bitonality/PRtifact@v0.1.0
+        continue-on-error: true
         with:
           comment-mode: 'CreateOrUpdate'
           handlebars-template: '.github/resources/artifact-template.hbs'
