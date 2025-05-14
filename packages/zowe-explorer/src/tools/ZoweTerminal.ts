@@ -75,6 +75,9 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     private pressedCtrlC = false;
     private chalk;
 
+    private mRows = -1;
+    private mCols = -1;
+
     private writeEmitter = new vscode.EventEmitter<string>();
     protected write(text: string) {
         this.writeEmitter.fire(text);
@@ -84,19 +87,29 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.write(ZoweTerminal.Keys.NEW_LINE);
         this.writeCmd();
     }
-    protected clearLine() {
-        this.write(ZoweTerminal.Keys.CLEAR_LINE);
+    protected clearLine(lines = 1) {
+        while (lines--) {
+            this.write(ZoweTerminal.Keys.CLEAR_LINE);
+            if (lines > 0) {
+                this.write(ZoweTerminal.Keys.UP);
+            }
+        }
+    }
+    private getLine(cmd: string): string {
+        return this.formatCommandLine ? this.formatCommandLine(cmd ?? this.command) : cmd ?? this.command
     }
     protected writeCmd(cmd?: string) {
-        this.write(this.formatCommandLine ? this.formatCommandLine(cmd ?? this.command) : cmd ?? this.command);
+        this.write(this.getLine(cmd));
     }
-    protected refreshCmd() {
+    protected refreshCmd(lineOffset = 0, goingLeft = 0) {
         this.command = this.sanitizeInput(this.command);
         this.pressedCtrlC = false;
         if (!this.charArrayCmd.length || this.charArrayCmd.join("") !== this.command) {
             this.charArrayCmd = Array.from(this.command);
         }
-        this.clearLine();
+        const theLine = this.getLine(this.command);
+        const preCmdOffset = theLine.length - this.charArrayCmd.length;
+        this.clearLine(Math.ceil((theLine.length + lineOffset) / this.mCols));
         this.writeCmd();
         if (this.charArrayCmd.length > this.cursorPosition) {
             const getPos = (char: string) => {
@@ -105,8 +118,41 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                 return charBytes > 2 ? 2 : 1;
             };
             const offset = this.charArrayCmd.slice(this.cursorPosition).reduce((total, curr) => total + getPos(curr), 0);
-            [...Array(offset)].map(() => this.write(ZoweTerminal.Keys.LEFT));
+            console.log(`Cursor position: ${this.cursorPosition}, offset: ${offset}`);
+            console.log(`cols ${this.mCols}, goingLeft: ${goingLeft}, cmdLength: ${this.charArrayCmd.length}`);
+            // if ((this.cursorPosition + goingLeft) % this.mCols === 0) {
+            //     goingLeft < 0 ? this.write(ZoweTerminal.Keys.UP) : this.write(ZoweTerminal.Keys.DOWN);
+            // }
+            // [...Array(offset % this.mCols)].map(() => this.write(ZoweTerminal.Keys.LEFT));
+            let movedLevels = false;
+            // (this.charArrayCmd.length + preCmdOffset) / this.mCols
+            // (this.cursorPosition + preCmdOffset) / this.mCols
+            [...Array(Math.floor((this.charArrayCmd.length - this.cursorPosition) / this.mCols))].map(() => this.write(ZoweTerminal.Keys.UP));
+            // if (goingLeft < 0) {
+            //     if ((this.cursorPosition + preCmdOffset) % this.mCols === 0) {
+            //         // if at the beginning of the line,
+            //         // move cursor to the end
+            //         // And go up
+            //         this.write(ZoweTerminal.Keys.UP);
+            //         [...Array(this.mCols)].map(() => this.write(ZoweTerminal.Keys.RIGHT));
+            //         movedLevels = true;
+            //     }
+            // } else if (goingLeft > 0) {
+            //     if ((this.cursorPosition + preCmdOffset) % this.mCols === this.mCols - 1) {
+            //         // if at the end of the line,
+            //         // move cursor to the beginning
+            //         // And go down
+            //         this.write(ZoweTerminal.Keys.DOWN);
+            //         [...Array(this.mCols)].map(() => this.write(ZoweTerminal.Keys.LEFT));
+            //         movedLevels = true;
+            //     }
+            // }
+            // move cursor to the LEFT by the offset
+            if (!movedLevels) {
+                [...Array(offset)].map(() => this.write(ZoweTerminal.Keys.LEFT));
+            }
         }
+        console.log("here")
     }
     protected clear() {
         this.write(ZoweTerminal.Keys.CLEAR_ALL);
@@ -122,7 +168,10 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     private closeEmitter = new vscode.EventEmitter<void>();
     public onDidClose?: vscode.Event<void> = this.closeEmitter.event;
 
-    public open(_initialDimensions?: vscode.TerminalDimensions | undefined): void {
+    public open(initialDimensions?: vscode.TerminalDimensions | undefined): void {
+        this.mCols = initialDimensions.columns;
+        this.mRows = initialDimensions.rows;
+
         this.writeLine(this.chalk.dim.italic(this.mMessage));
         if (this.command.length > 0) {
             this.handleInput(ZoweTerminal.Keys.ENTER);
@@ -143,7 +192,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
 
     private moveCursor(offset: number): void {
         this.cursorPosition = Math.max(0, Math.min(this.charArrayCmd.length, this.cursorPosition + offset));
-        this.refreshCmd();
+        this.refreshCmd(0, offset);
     }
 
     private moveCursorTo(position: number): void {
@@ -180,7 +229,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
             } else if (offset === 0) {
                 this.write(ZoweTerminal.Keys.DEL);
             }
-            this.refreshCmd();
+            this.refreshCmd(Math.abs(offset));
         }
     }
 
@@ -227,7 +276,6 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
 
     // Handle input from the terminal
     public async handleInput(data: string): Promise<void> {
-        // console.log("data", data, Buffer.from(data));
         if (this.isCommandRunning) {
             if ([ZoweTerminal.Keys.CTRL_C, ZoweTerminal.Keys.CTRL_D].includes(data)) this.controller.abort();
             if (data === ZoweTerminal.Keys.CTRL_D) this.close();
