@@ -244,6 +244,8 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     }
 
     public formatCommandLine(command: string, profile?: imperative.IProfileLoaded): string {
+        // Use the profile name from the SSH profile if one was used to issue the command - fallback to
+        // the node that the user interacted with in the USS tree
         const prof = this.sshProfile ?? this.nodeProfile ?? profile;
         const user: string = prof?.profile.user;
         if (prof) {
