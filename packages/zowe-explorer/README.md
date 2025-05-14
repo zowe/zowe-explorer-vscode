@@ -55,7 +55,7 @@ Team configuration stores connection information to access the mainframe. Check 
 If you are missing your team configuration files, `zowe.config.json` and `zowe.schema.json`, work with your administrator to set them up.
 
 - Your team configuration is in place when:
-   - Selecting the **+** icon, presents options in the **Quick Pick** to edit your configuration file or, if available, use an existing profile.
+   - Selecting the **+** icon in the headers of the **DATA SETS**, **UNIX SYSTEM SERVICES**, or **JOBS** tree views presents options in the **Quick Pick** to edit your configuration file or, if available, use an existing profile.
 
 - You do not have team configuration when:
    - A pop-up message displays advising that client configurations were not found.
@@ -63,7 +63,7 @@ If you are missing your team configuration files, `zowe.config.json` and `zowe.s
 
 ### Creating a team configuration file
 
-A team configuration file stores connection information to mainframe services in *profiles* that are easy to maintain and share with others in your organization.
+A team configuration file stores connection information to mainframe services in *profiles*, making team configuration easy to maintain and share with others in your organization.
 
 Team configuration should be created by an administrator or team lead who understands what connection information is needed and can efficiently manage it. When setting up team configuration, it is important to understand your team's requirements for use and the options available to ensure these are met.
 
