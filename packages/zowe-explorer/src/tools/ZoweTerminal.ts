@@ -75,6 +75,8 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     private pressedCtrlC = false;
     private chalk;
 
+    private mCols = -1;
+
     private writeEmitter = new vscode.EventEmitter<string>();
     protected write(text: string) {
         this.writeEmitter.fire(text);
@@ -84,19 +86,27 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.write(ZoweTerminal.Keys.NEW_LINE);
         this.writeCmd();
     }
-    protected clearLine() {
-        this.write(ZoweTerminal.Keys.CLEAR_LINE);
+    protected clearLine(lines = 1) {
+        while (lines--) {
+            this.write(ZoweTerminal.Keys.CLEAR_LINE);
+            if (lines > 0) {
+                this.write(ZoweTerminal.Keys.UP);
+            }
+        }
+    }
+    private getLine(cmd: string): string {
+        return this.formatCommandLine ? this.formatCommandLine(cmd ?? this.command) : cmd ?? this.command;
     }
     protected writeCmd(cmd?: string) {
-        this.write(this.formatCommandLine ? this.formatCommandLine(cmd ?? this.command) : cmd ?? this.command);
+        this.write(this.getLine(cmd));
     }
-    protected refreshCmd() {
+    protected refreshCmd(lineOffset = 0) {
         this.command = this.sanitizeInput(this.command);
         this.pressedCtrlC = false;
         if (!this.charArrayCmd.length || this.charArrayCmd.join("") !== this.command) {
             this.charArrayCmd = Array.from(this.command);
         }
-        this.clearLine();
+        this.clearLine(Math.ceil((this.getLine(this.command).length + lineOffset) / this.mCols));
         this.writeCmd();
         if (this.charArrayCmd.length > this.cursorPosition) {
             const getPos = (char: string) => {
@@ -122,7 +132,9 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     private closeEmitter = new vscode.EventEmitter<void>();
     public onDidClose?: vscode.Event<void> = this.closeEmitter.event;
 
-    public open(_initialDimensions?: vscode.TerminalDimensions | undefined): void {
+    public open(initialDimensions?: vscode.TerminalDimensions | undefined): void {
+        this.mCols = initialDimensions?.columns ?? 80;
+
         this.writeLine(this.chalk.dim.italic(this.mMessage));
         if (this.command.length > 0) {
             this.handleInput(ZoweTerminal.Keys.ENTER);
@@ -138,43 +150,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.command = this.mHistory[this.historyIndex] ?? "";
         this.charArrayCmd = Array.from(this.command);
         this.cursorPosition = this.charArrayCmd.length;
-
-        // clear all lines of current command
-        this.clearWrappedLines();
-
-        // Refresh command to make way for next in history
         this.refreshCmd();
-    }
-
-    private clearWrappedLines(): void {
-        const terminalWidth = this.getTerminalWidth();
-
-        // Calculate the number of lines the current command occupies
-        const linesToClear = Math.ceil(this.command.length / terminalWidth);
-
-        // Move the cursor to the start of the current line
-        this.write(ZoweTerminal.Keys.HOME);
-
-        // Manually clear each line by overwriting it with spaces - ensuring line has been cleared
-        for (let i = 0; i < linesToClear; i++) {
-            this.write(" ".repeat(terminalWidth)); // Overwrite the line with spaces
-            this.write(ZoweTerminal.Keys.HOME);   // move the cursor back to the start of the line
-            if (i < linesToClear - 1) {
-                this.write("\x1b[B"); // Move to the next line
-            }
-        }
-
-        // Move the cursor back to the top of the cleared area
-        for (let i = 0; i < linesToClear - 1; i++) {
-            this.write("\x1b[A"); // Move the cursor up one line
-        }
-    }
-
-    private getTerminalWidth(): number {
-        const defaultWidth = 80;// assume a default terminal width if dimensions are not available
-        const dimensions = (vscode.window.activeTerminal as vscode.Terminal & { dimensions?: { columns: number } })?.dimensions;
-        const terminalWidth = dimensions?.columns || defaultWidth;
-        return terminalWidth;
     }
 
     private moveCursor(offset: number): void {
@@ -191,9 +167,9 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         const codePoint = char.codePointAt(0);
         if (codePoint === undefined) return false;
         if (codePoint >= 0x20 && codePoint <= 0x7e) return true;
-        if (codePoint >= 0xa0 && codePoint <= 0xd7ff) return true; // control characters
-        if (codePoint >= 0xe000 && codePoint <= 0xfffd) return true;
-        if (codePoint >= 0x10000 && codePoint <= 0x10ffff) return true;
+        if (codePoint >= 0xa0 && codePoint <= 0xd7ff) return true; // Control characters
+        if (codePoint >= 0xe000 && codePoint <= 0xfffd) return true; // Private use area
+        if (codePoint >= 0x10000 && codePoint <= 0x10ffff) return true; // Supplemental planes
         return false;
     }
 
@@ -216,7 +192,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
             } else if (offset === 0) {
                 this.write(ZoweTerminal.Keys.DEL);
             }
-            this.refreshCmd();
+            this.refreshCmd(Math.abs(offset));
         }
     }
 
@@ -261,8 +237,8 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.cursorPosition = 0;
     }
 
+    // Handle input from the terminal
     public async handleInput(data: string): Promise<void> {
-        // console.log("data", data, Buffer.from(data));
         if (this.isCommandRunning) {
             if ([ZoweTerminal.Keys.CTRL_C, ZoweTerminal.Keys.CTRL_D].includes(data)) this.controller.abort();
             if (data === ZoweTerminal.Keys.CTRL_D) this.close();

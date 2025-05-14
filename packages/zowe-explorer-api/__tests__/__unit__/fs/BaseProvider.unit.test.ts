@@ -665,7 +665,7 @@ describe("_reopenEditorForRelocatedUri", () => {
         expect(executeCmdMock).toHaveBeenCalled();
         tabGroupsMock[Symbol.dispose]();
     });
-    
+
     it("gracefully handles tabs with no input URI", async () => {
         const tab = {
             input: null,
