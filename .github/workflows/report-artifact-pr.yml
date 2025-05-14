@@ -1,4 +1,4 @@
-name: Report VSIX Artifact in PR
+name: Report VSIX Artifact in PR 
 
 on:
   pull_request:
