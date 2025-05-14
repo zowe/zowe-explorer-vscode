@@ -16,7 +16,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - BugFix: Allowed multiple commands to be cancelled in succession. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
 
-
 ## `3.2.0`
 
 ### New features and enhancements
