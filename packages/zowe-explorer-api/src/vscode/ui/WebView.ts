@@ -111,8 +111,9 @@ export class WebView {
                 title: this.title,
             });
             this.webviewContent = builtHtml;
-            if (opts?.onDidReceiveMessage) {
-                this.panel.webview.onDidReceiveMessage(async (message) => opts.onDidReceiveMessage(message));
+            if (opts?.onDidReceiveMessage && !this.eventsRegistered) {
+                this.disposables.push(this.panel.webview.onDidReceiveMessage(async (message) => opts.onDidReceiveMessage(message)));
+                this.eventsRegistered = true;
             }
             this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
             this.panel.webview.html = this.webviewContent;
@@ -143,7 +144,7 @@ export class WebView {
         });
         this.webviewContent = builtHtml;
         if (this.webviewOpts?.onDidReceiveMessage && !this.eventsRegistered) {
-            webviewView.webview.onDidReceiveMessage(async (message) => this.webviewOpts.onDidReceiveMessage(message));
+            this.disposables.push(webviewView.webview.onDidReceiveMessage(async (message) => this.webviewOpts.onDidReceiveMessage(message)));
             this.eventsRegistered = true;
         }
         webviewView.onDidDispose(() => this.dispose(), null, this.disposables);

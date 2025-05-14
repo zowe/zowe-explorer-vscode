@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "3.2.0-SNAPSHOT",
+  "version": "3.3.0-SNAPSHOT",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
@@ -1658,10 +1658,10 @@
       "type": "object",
       "title": "%configuration.title%",
       "properties": {
-        "zowe.ds.paginate.datasetsPerPage": {
+        "zowe.ds.paginate.dataSetsPerPage": {
           "default": 100,
           "type": "integer",
-          "description": "%zowe.ds.paginate.datasetsPerPage%",
+          "description": "%zowe.ds.paginate.dataSetsPerPage%",
           "scope": "window"
         },
         "zowe.ds.default.binary": {
@@ -1989,17 +1989,18 @@
           "description": "%zowe.pollInterval.info%",
           "scope": "window"
         },
-        "zowe.jobs.settings.pagination": {
+        "zowe.jobs.paginate.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "%zowe.jobs.settings.pagination%",
+          "description": "%zowe.jobs.paginate.enabled%",
           "scope": "window"
         },
-        "zowe.jobs.recordsToFetch": {
+        "zowe.jobs.paginate.recordsToFetch": {
           "type": "integer",
           "default": 100,
-          "description": "%zowe.jobs.recordsToFetch%",
-          "scope": "window"
+          "description": "%zowe.jobs.paginate.recordsToFetch%",
+          "scope": "window",
+          "minimum": 2
         },
         "zowe.settings.overrideWithEnvironmentVariables": {
           "type": "boolean",
@@ -2011,6 +2012,12 @@
           "type": "number",
           "default": 60000,
           "description": "%zowe.settings.socketConnectTimeout%",
+          "scope": "window"
+        },
+        "zowe.settings.requestTimeout": {
+          "type": "number",
+          "default": 0,
+          "description": "%zowe.settings.requestTimeout%",
           "scope": "window"
         }
       }
@@ -2074,7 +2081,7 @@
     "@wdio/types": "^8.41.0",
     "adm-zip": "^0.5.16",
     "chalk": "^2.4.1",
-    "eslint-plugin-zowe-explorer": "3.2.0-SNAPSHOT",
+    "eslint-plugin-zowe-explorer": "3.3.0-SNAPSHOT",
     "expect-webdriverio": "^4.15.4",
     "fs-extra": "8.0.1",
     "glob": "^7.1.6",
@@ -2090,12 +2097,12 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "@zowe/core-for-zowe-sdk": "^8.19.0",
+    "@zowe/core-for-zowe-sdk": "^8.20.0",
     "@zowe/secrets-for-zowe-sdk": "^8.18.3",
-    "@zowe/zos-files-for-zowe-sdk": "^8.19.0",
-    "@zowe/zos-jobs-for-zowe-sdk": "^8.19.0",
-    "@zowe/zosmf-for-zowe-sdk": "^8.19.0",
-    "@zowe/zowe-explorer-api": "3.2.0-SNAPSHOT",
+    "@zowe/zos-files-for-zowe-sdk": "^8.20.0",
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.20.0",
+    "@zowe/zosmf-for-zowe-sdk": "^8.20.0",
+    "@zowe/zowe-explorer-api": "3.3.0-SNAPSHOT",
     "dayjs": "^1.11.10",
     "isbinaryfile": "4.0.4",
     "promise-queue": "2.2.5"

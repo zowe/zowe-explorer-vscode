@@ -980,7 +980,6 @@ export class Profiles extends ProfilesCache {
         if (!dsNode) {
             return;
         }
-        dsNode.tooltip &&= node.getProfile()?.name;
         dsNode.description &&= "";
         dsNode.pattern &&= "";
         SharedTreeProviders.ds.flipState(dsNode, false);
@@ -997,7 +996,6 @@ export class Profiles extends ProfilesCache {
         if (!ussNode) {
             return;
         }
-        ussNode.tooltip &&= node.getProfile()?.name;
         ussNode.description &&= "";
         ussNode.fullPath &&= "";
         SharedTreeProviders.uss.flipState(ussNode, false);
@@ -1014,7 +1012,6 @@ export class Profiles extends ProfilesCache {
         if (!jobNode) {
             return;
         }
-        jobNode.tooltip &&= node.getProfile()?.name;
         jobNode.description &&= "";
         jobNode.owner &&= "";
         jobNode.prefix &&= "";

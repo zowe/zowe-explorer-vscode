@@ -71,7 +71,7 @@
   "cancelJobs": "Cancel Job",
   "getJobJcl": "Get JCL",
   "configuration.title": "Zowe Explorer",
-  "zowe.ds.paginate.datasetsPerPage": "Maximum number of data sets and PDS members to list per page. 0 disables pagination.",
+  "zowe.ds.paginate.dataSetsPerPage": "Maximum number of data sets and PDS members to list per page. 0 disables pagination.",
   "zowe.ds.default.binary": "Default values of Binary data set creation",
   "zowe.ds.default.c": "Default values of C data set creation",
   "zowe.ds.default.classic": "Default values of Classic data set creation",
@@ -136,8 +136,8 @@
   "zowe.commands.useIntegratedTerminals": "Allow commands to be executed using integrated terminals",
   "zowe.automaticProfileValidation": "Allow automatic validation of profiles.",
   "zowe.pollInterval.info": "Default interval (in milliseconds) when polling spool files.",
-  "zowe.jobs.settings.pagination": "Toggle to enable job spool pagination.",
-  "zowe.jobs.recordsToFetch": " Default number of records to fetch when polling spool files.",
+  "zowe.jobs.paginate.enabled": "Toggle to enable job spool pagination.",
+  "zowe.jobs.paginate.recordsToFetch": " Default number of records to fetch when polling spool files.",
   "zowe.security.checkForCustomCredentialManagers": "Check for any installed VS Code extensions for handling credentials when activating Zowe Explorer",
   "zowe.security.secureCredentialsEnabled": "Allow credentials to be stored securely. If disabled and autoStore is set to true, z/OS credentials are stored as clear text in zowe.config.json.",
   "zowe.openRecentMember": "Open Recent Member",
@@ -173,5 +173,6 @@
   "copyExternalLink": "Copy External Link",
   "zowe.history.deprecationMsg": "Changes made here will not be reflected in Zowe Explorer, use right-click Edit History option to access information from local storage.",
   "zowe.settings.overrideWithEnvironmentVariables": "Indicates if environment variables should override values stored in Zowe configuration profiles on disk.",
-  "zowe.settings.socketConnectTimeout": "The amount of time to wait for a connection to be initiated with the server, in milliseconds."
+  "zowe.settings.socketConnectTimeout": "The amount of time to wait for a connection to be initiated with the server, in milliseconds.",
+  "zowe.settings.requestTimeout": "The amount of time to wait for a REST request to complete, in milliseconds."
 }
