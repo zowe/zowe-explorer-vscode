@@ -361,7 +361,7 @@ export function App() {
               <h2>
                 Defaults
                 <button className="add-default-button" title="Add new default" onClick={() => setNewKeyModalOpen(true)}>
-                  +
+                  <span className="codicon codicon-add"></span>
                 </button>
               </h2>
             </div>
