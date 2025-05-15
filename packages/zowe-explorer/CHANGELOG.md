@@ -4,11 +4,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
-### Bug fixes
-
-- Improved integrated terminal behavior to match standard terminal functionality. Now, users can smoothly navigate through command history, edit multi-line commands, and maintain proper cursor position during deletion and backspacing. [#3391](https://github.com/zowe/zowe-explorer-vscode/issues/3391)
-- Fixed an issue where copy-and-pasting an empty PDS within the same LPAR would result in an error. [#3541](https://github.com/zowe/zowe-explorer-vscode/issues/3541)
-
 ### New features and enhancements
 
 - Added hostname validation to prevent encountering a VSCode Proxy bug that occurs when attempting to connect to a z/OSMF server with the protocol specified as part of the hostname. [#3364](https://github.com/zowe/zowe-explorer-vscode/issues/3364)
@@ -17,6 +12,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Updated Zowe SDKs to `8.20.0` for technical currency. [#3631](https://github.com/zowe/zowe-explorer-vscode/pull/3631)
 
 ### Bug fixes
+
+- Improved integrated terminal behavior to match standard terminal functionality. Now, users can smoothly maintain proper cursor position when typing and backspacing. [#3391](https://github.com/zowe/zowe-explorer-vscode/issues/3391)
 
 ## `3.2.0`
 
@@ -59,7 +56,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where the attributes were not shown for VSAM data sets when using the Show Attributes feature. [#3545](https://github.com/zowe/zowe-explorer-vscode/issues/3545)
 - Fixed an issue where right-click menu for data set shows wrong options after deleting multiple PDS members. [#3516](https://github.com/zowe/zowe-explorer-vscode/issues/3516)
 - Fixed an issue where the source data set was removed even though the move operation was not successful. [#3518](https://github.com/zowe/zowe-explorer-vscode/pull/3518)
-- Fixed an issue where copy-and-pasting an empty PDS within the same LPAR would result in an error. [#3541](https://github.com/zowe/zowe-explorer-vscode/issues/3541)
 - Updated dependencies for technical currency purposes. [#3576](https://github.com/zowe/zowe-explorer-vscode/pull/3576)
 - Fixed an issue where data sets were not requested with attributes if the profile type's API did not implement the `dataSetsMatchingPattern` function. [#3578](https://github.com/zowe/zowe-explorer-vscode/pull/3578)
 - Fixed an issue where remote changes to a data set member are not detected by Zowe Explorer if the member's resource path ends in an extension. [#3555](https://github.com/zowe/zowe-explorer-vscode/issues/3555)
