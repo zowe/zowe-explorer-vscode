@@ -121,15 +121,16 @@ export function App() {
   };
 
   const handleDeleteProperty = (key: string) => {
-    if (!flattenedConfig[key] || selectedTab === null) return;
-
-    setPendingChanges((prev) => {
-      const newState = { ...prev };
-      delete newState[key];
-      return newState;
+    setPendingChanges((prevChanges) => {
+        const updatedChanges = { ...prevChanges };
+        delete updatedChanges[key];
+        return updatedChanges;
     });
 
-    setDeletions((prev) => [...prev, key]);
+    // Check if the key is in flattenedConfig but not in pendingChanges
+    if (flattenedConfig[key] && !pendingChanges[key]) {
+        setDeletions((prev) => [...prev, key]);
+    }
   };
 
   const handleDeleteDefaultsProperty = (key: string) => {
@@ -208,64 +209,64 @@ export function App() {
   const renderConfig = (obj: any, path: string[] = []) => {
     const fullPath = path.join(".");
     const combinedConfig = {
-        ...obj,
-        ...Object.fromEntries(
-            Object.entries(pendingChanges)
-                .filter(([key]) => key.startsWith(fullPath) && key.split(".").length === path.length + 1)
-                .map(([key, entry]) => [key.split(".").pop(), entry.value])
-        ),
+      ...obj,
+      ...Object.fromEntries(
+        Object.entries(pendingChanges)
+          .filter(([key]) => key.startsWith(fullPath) && key.split(".").length === path.length + 1)
+          .map(([key, entry]) => [key.split(".").pop(), entry.value])
+      ),
     };
 
     return Object.entries(combinedConfig).map(([key, value]) => {
-        const currentPath = [...path, key];
-        const fullKey = currentPath.join(".");
-        const displayKey = key.split(".").pop(); // Extract the last segment of the key
-        if (deletions.includes(fullKey)) return null;
-        const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
-        const isArray = Array.isArray(value);
-        const pendingValue = pendingChanges[fullKey]?.value ?? value;
+      const currentPath = [...path, key];
+      const fullKey = currentPath.join(".");
+      const displayKey = key.split(".").pop(); // Extract the last segment of the key
+      if (deletions.includes(fullKey)) return null;
+      const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
+      const isArray = Array.isArray(value);
+      const pendingValue = pendingChanges[fullKey]?.value ?? value;
 
-        if (isParent) {
-            return (
-                <div key={fullKey} className="config-item parent" style={{ marginLeft: `${path.length * 10}px` }}>
-                    <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>
-                        {displayKey} {/* Use displayKey instead of key */}
-                        <button className="add-default-button" title={`Add key inside "${fullKey}"`} onClick={() => openAddProfileModalAtPath(currentPath)}>
-                            +
-                        </button>
-                    </h3>
-                    {renderConfig(value, currentPath)}
-                </div>
-            );
-        } else if (isArray) {
-            return (
-                <div key={fullKey} className="config-item" style={{ marginLeft: `${path.length * 10}px` }}>
-                    <span className="config-label">{displayKey}:</span> {/* Use displayKey instead of key */}
-                    <ul>
-                        {value.map((item: any, index: number) => (
-                            <li key={index}>{item}</li>
-                        ))}
-                    </ul>
-                </div>
-            );
-        } else {
-            return (
-                <div key={fullKey} className="config-item" style={{ marginLeft: `${path.length * 10}px` }}>
-                    <div className="config-item-container">
-                        <span className="config-label">{displayKey}:</span> {/* Use displayKey instead of key */}
-                        <input
-                            className="config-input"
-                            type="text"
-                            value={pendingValue}
-                            onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
-                        />
-                        <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
-                            Delete
-                        </button>
-                    </div>
-                </div>
-            );
-        }
+      if (isParent) {
+        return (
+          <div key={fullKey} className="config-item parent" style={{ marginLeft: `${path.length * 10}px` }}>
+            <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>
+              {displayKey} {/* Use displayKey instead of key */}
+              <button className="add-default-button" title={`Add key inside "${fullKey}"`} onClick={() => openAddProfileModalAtPath(currentPath)}>
+                +
+              </button>
+            </h3>
+            {renderConfig(value, currentPath)}
+          </div>
+        );
+      } else if (isArray) {
+        return (
+          <div key={fullKey} className="config-item" style={{ marginLeft: `${path.length * 10}px` }}>
+            <span className="config-label">{displayKey}:</span> {/* Use displayKey instead of key */}
+            <ul>
+              {value.map((item: any, index: number) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        );
+      } else {
+        return (
+          <div key={fullKey} className="config-item" style={{ marginLeft: `${path.length * 10}px` }}>
+            <div className="config-item-container">
+              <span className="config-label">{displayKey}:</span> {/* Use displayKey instead of key */}
+              <input
+                className="config-input"
+                type="text"
+                value={pendingValue}
+                onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
+              />
+              <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
+                Delete
+              </button>
+            </div>
+          </div>
+        );
+      }
     });
   };
 
