@@ -47,21 +47,27 @@ export function App() {
   }, [localizationState]);
 
   const handleChange = (key: string, value: string) => {
-    const { path } = flattenedConfig[key];
+    const path = flattenedConfig[key]?.path ?? key.split(".");
     const profileKey = path[0];
-    setPendingChanges((prev) => {
-      const newState = {
-        ...prev,
-        [key]: { value, path, profile: profileKey },
-      };
-      return newState;
-    });
+    setPendingChanges((prev) => ({
+      ...prev,
+      [key]: { value, path, profile: profileKey },
+    }));
 
     if (deletions.includes(key)) {
-      setDeletions((prev) => {
-        const newDeletions = prev.filter((k) => k !== key);
-        return newDeletions;
-      });
+      setDeletions((prev) => prev.filter((k) => k !== key));
+    }
+  };
+
+  const handleDefaultsChange = (key: string, value: string) => {
+    const path = flattenedDefaults[key]?.path ?? key.split(".");
+    setPendingDefaults((prev) => ({
+      ...prev,
+      [key]: { value, path },
+    }));
+
+    if (defaultsDeletions.includes(key)) {
+      setDefaultsDeletions((prev) => prev.filter((k) => k !== key));
     }
   };
 
@@ -102,24 +108,6 @@ export function App() {
     setNewKey("");
     setNewValue("");
     setNewKeyModalOpen(false);
-  };
-
-  const handleDefaultsChange = (key: string, value: string) => {
-    const { path } = flattenedDefaults[key];
-    setPendingDefaults((prev) => {
-      const newState = {
-        ...prev,
-        [key]: { value, path },
-      };
-      return newState;
-    });
-
-    if (defaultsDeletions.includes(key)) {
-      setDefaultsDeletions((prev) => {
-        const newDeletions = prev.filter((k) => k !== key);
-        return newDeletions;
-      });
-    }
   };
 
   const handleDeleteProperty = (key: string) => {
