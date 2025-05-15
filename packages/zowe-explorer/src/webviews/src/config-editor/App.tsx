@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { isObject } from "lodash";
+import path from "path";
 
 const vscodeApi = acquireVsCodeApi();
 
@@ -10,7 +11,13 @@ export function App() {
   const [selectedTab, setSelectedTab] = useState<number | null>(null);
   const [flattenedConfig, setFlattenedConfig] = useState<{ [key: string]: { value: string; path: string[] } }>({});
   const [flattenedDefaults, setFlattenedDefaults] = useState<{ [key: string]: { value: string; path: string[] } }>({});
-  const [pendingChanges, setPendingChanges] = useState<{ [key: string]: { value: string; path: string[]; profile: string } }>({});
+  const [pendingChanges, setPendingChanges] = useState<{
+    [key: string]: {
+      value: string | Record<string, any>;
+      path: string[];
+      profile: string;
+    };
+  }>({});
   const [pendingDefaults, setPendingDefaults] = useState<{ [key: string]: { value: string; path: string[] } }>({});
   const [deletions, setDeletions] = useState<string[]>([]);
   const [defaultsDeletions, setDefaultsDeletions] = useState<string[]>([]);
@@ -22,6 +29,9 @@ export function App() {
   const [newProfileValue, setNewProfileValue] = useState("");
   const [newProfileModalOpen, setNewProfileModalOpen] = useState(false);
   const [originalDefaults, setOriginalDefaults] = useState<{ [key: string]: any }>({});
+  const [newLayerModalOpen, setNewLayerModalOpen] = useState(false);
+  const [newLayerName, setNewLayerName] = useState("");
+  const [newLayerPath, setNewLayerPath] = useState<string[] | null>(null);
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
@@ -75,7 +85,7 @@ export function App() {
     if (!newProfileKey.trim() || !newProfileKeyPath) return;
 
     const path = [...newProfileKeyPath, newProfileKey.trim()];
-    const fullKey = path.join(".");
+    const fullKey = path.join("."); // Using path.join correctly
     const profileKey = path[0];
 
     setPendingChanges((prev) => ({
@@ -225,6 +235,9 @@ export function App() {
               <button className="add-default-button" title={`Add key inside "${fullKey}"`} onClick={() => openAddProfileModalAtPath(currentPath)}>
                 +
               </button>
+              <button className="add-default-button" title={`Add layer inside "${fullKey}"`} onClick={() => openAddLayerModalAtPath(currentPath)}>
+                {"{"}
+              </button>
             </h3>
             {renderConfig(value, currentPath)}
           </div>
@@ -245,12 +258,19 @@ export function App() {
           <div key={fullKey} className="config-item" style={{ marginLeft: `${path.length * 10}px` }}>
             <div className="config-item-container">
               <span className="config-label">{displayKey}:</span> {/* Use displayKey instead of key */}
-              <input
-                className="config-input"
-                type="text"
-                value={pendingValue}
-                onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
-              />
+              {typeof pendingValue === "string" ||
+              typeof pendingValue === "boolean" ||
+              typeof pendingValue === "string" ||
+              typeof pendingValue === "number" ? (
+                <input
+                  className="config-input"
+                  type="text"
+                  value={pendingValue}
+                  onChange={(e) => handleChange(fullKey, (e.target as HTMLTextAreaElement).value)}
+                />
+              ) : (
+                <span>{"{...}"}</span> // or JSON.stringify(pendingValue)
+              )}
               <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
                 Delete
               </button>
@@ -391,13 +411,65 @@ export function App() {
     </div>
   );
 
+  const handleAddNewLayer = () => {
+    if (!newLayerName.trim() || !newLayerPath) return;
+
+    const path = [...newLayerPath, newLayerName.trim()];
+    const fullKey = path.join(".");
+    const profileKey = path[0];
+
+    setPendingChanges((prev) => ({
+      ...prev,
+      [fullKey]: { value: {}, path, profile: profileKey },
+    }));
+
+    setNewLayerName("");
+    setNewLayerPath(null);
+    setNewLayerModalOpen(false);
+  };
+
+  const openAddLayerModalAtPath = (path: string[]) => {
+    setNewLayerPath(path);
+    setNewLayerName("");
+    setNewLayerModalOpen(true);
+  };
+
+  const setNestedValue = (object: any, path: string, value: any) => {
+    const keys = path.split(".");
+    keys.reduce((acc, key, index) => {
+      if (index === keys.length - 1) {
+        acc[key] = value;
+        return acc;
+      }
+      if (!acc[key]) {
+        acc[key] = {};
+      }
+      return acc[key];
+    }, object);
+  };
+
+  const newLayerModal = newLayerModalOpen && (
+    <div className="modal-backdrop">
+      <div className="modal">
+        <h3>Add New Layer</h3>
+        <input placeholder="New Layer Name" value={newLayerName} onChange={(e) => setNewLayerName((e.target as HTMLInputElement).value)} />
+        <div className="modal-actions">
+          <button onClick={handleAddNewLayer}>Add</button>
+          <button onClick={() => setNewLayerModalOpen(false)}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="vscode-panel">
+    <div>
+      {/* Existing code */}
       {tabs}
       {panels}
       {saveButton}
       {modal}
       {profileModal}
+      {newLayerModal}
     </div>
   );
 }
@@ -652,7 +724,6 @@ li {
   justify-content: flex-end;
   gap: 8px;
 }
-
 `;
 
 document.head.insertAdjacentHTML("beforeend", `<style>${styles}</style>`);
