@@ -21,6 +21,7 @@ export function App() {
   const [newProfileKey, setNewProfileKey] = useState("");
   const [newProfileValue, setNewProfileValue] = useState("");
   const [newProfileModalOpen, setNewProfileModalOpen] = useState(false);
+  const [originalDefaults, setOriginalDefaults] = useState<{ [key: string]: any }>({});
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
@@ -37,6 +38,7 @@ export function App() {
           const config = contents[0].properties;
           setFlattenedConfig(flattenKeys(config.profiles));
           setFlattenedDefaults(flattenKeys(config.defaults));
+          setOriginalDefaults(flattenKeys(config.defaults)); // Store the original defaults
         }
       }
     });
@@ -122,14 +124,14 @@ export function App() {
 
   const handleDeleteProperty = (key: string) => {
     setPendingChanges((prevChanges) => {
-        const updatedChanges = { ...prevChanges };
-        delete updatedChanges[key];
-        return updatedChanges;
+      const updatedChanges = { ...prevChanges };
+      delete updatedChanges[key];
+      return updatedChanges;
     });
 
     // Check if the key is in flattenedConfig but not in pendingChanges
     if (flattenedConfig[key] && !pendingChanges[key]) {
-        setDeletions((prev) => [...prev, key]);
+      setDeletions((prev) => [...prev, key]);
     }
   };
 
@@ -142,7 +144,10 @@ export function App() {
       return newState;
     });
 
-    setDefaultsDeletions((prev) => [...prev, key]);
+    // Only add to deletions if the key was originally present
+    if (Object.prototype.hasOwnProperty.call(originalDefaults, key)) {
+      setDefaultsDeletions((prev) => [...prev, key]);
+    }
   };
 
   const handleSave = () => {
@@ -198,6 +203,7 @@ export function App() {
       const config = configurations[index].properties;
       setFlattenedConfig(flattenKeys(config.profiles));
       setFlattenedDefaults(flattenKeys(config.defaults));
+      setOriginalDefaults(flattenKeys(config.defaults)); // Store the original defaults
     }
 
     setPendingChanges({});
