@@ -82,14 +82,12 @@ export class ConfigEditor extends WebView {
                     contents: await this.getLocalConfigs(),
                 });
                 break;
-            case "TEST":
-                await this.panel.webview.postMessage({
-                    command: "TEST",
-                    contents: "test-contents",
-                });
-                break;
             case "SAVE_CHANGES":
-                this.handleSaveChanges(message);
+                this.dummyLog(message);
+                this.handleDefaultChanges(message.defaultsChanges, message.defaultsDeleteKeys);
+                this.handleProfileChanges(message.changes, message.deletions);
+
+                //Send the next profiles to webview after saving changes
                 await this.panel.webview.postMessage({
                     command: "CONFIGURATIONS",
                     contents: await this.getLocalConfigs(),
@@ -100,8 +98,17 @@ export class ConfigEditor extends WebView {
         }
     }
 
-    private handleSaveChanges(message: any): void {
+    private dummyLog(message: any): void {
         console.log("Received save changes command with the following data:");
         console.log("mod:", message);
+    }
+    private async handleDefaultChanges(changes: any, deletions: any): Promise<void> {
+        console.log("Default Changes:", changes);
+        console.log("Default Deletions:", deletions);
+    }
+
+    private async handleProfileChanges(changes: any, deletions: any): Promise<void> {
+        console.log("Profile Changes:", changes);
+        console.log("Profile Deletions:", deletions);
     }
 }

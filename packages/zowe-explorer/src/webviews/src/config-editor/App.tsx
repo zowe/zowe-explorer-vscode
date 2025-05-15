@@ -14,10 +14,10 @@ export function App() {
   const [pendingDefaults, setPendingDefaults] = useState<{ [key: string]: { value: string; path: string[] } }>({});
   const [deletions, setDeletions] = useState<string[]>([]);
   const [defaultsDeletions, setDefaultsDeletions] = useState<string[]>([]);
-  const [newKeyModalOpen, setNewKeyModalOpen] = useState(false); // NEW: modal toggle
-  const [newKey, setNewKey] = useState(""); // NEW: new key input
-  const [newValue, setNewValue] = useState(""); // NEW: new value input
-  const [newProfileKeyPath, setNewProfileKeyPath] = useState<string[] | null>(null); // path where modal opened
+  const [newKeyModalOpen, setNewKeyModalOpen] = useState(false);
+  const [newKey, setNewKey] = useState("");
+  const [newValue, setNewValue] = useState("");
+  const [newProfileKeyPath, setNewProfileKeyPath] = useState<string[] | null>(null);
   const [newProfileKey, setNewProfileKey] = useState("");
   const [newProfileValue, setNewProfileValue] = useState("");
   const [newProfileModalOpen, setNewProfileModalOpen] = useState(false);
@@ -27,7 +27,7 @@ export function App() {
     window.addEventListener("message", (event) => {
       if (event.data.command === "TEST") {
         const { contents } = event.data;
-        setEventContents(contents); // Update state with event contents
+        setEventContents(contents);
       }
       if (event.data.command === "CONFIGURATIONS") {
         const { contents } = event.data;
@@ -38,7 +38,7 @@ export function App() {
           const config = contents[0].properties;
           setFlattenedConfig(flattenKeys(config.profiles));
           setFlattenedDefaults(flattenKeys(config.defaults));
-          setOriginalDefaults(flattenKeys(config.defaults)); // Store the original defaults
+          setOriginalDefaults(flattenKeys(config.defaults));
         }
       }
     });
@@ -117,7 +117,6 @@ export function App() {
       return updatedChanges;
     });
 
-    // Check if the key is in flattenedConfig but not in pendingChanges
     if (flattenedConfig[key] && !pendingChanges[key]) {
       setDeletions((prev) => [...prev, key]);
     }
@@ -132,7 +131,6 @@ export function App() {
       return newState;
     });
 
-    // Only add to deletions if the key was originally present
     if (Object.prototype.hasOwnProperty.call(originalDefaults, key)) {
       setDefaultsDeletions((prev) => [...prev, key]);
     }
@@ -153,7 +151,6 @@ export function App() {
 
     const defaultsDeleteKeys = defaultsDeletions;
 
-    // Include the path to the configuration file
     const configPath = selectedTab !== null ? configurations[selectedTab].configPath : "";
 
     vscodeApi.postMessage({
@@ -191,7 +188,7 @@ export function App() {
       const config = configurations[index].properties;
       setFlattenedConfig(flattenKeys(config.profiles));
       setFlattenedDefaults(flattenKeys(config.defaults));
-      setOriginalDefaults(flattenKeys(config.defaults)); // Store the original defaults
+      setOriginalDefaults(flattenKeys(config.defaults));
     }
 
     setPendingChanges({});
@@ -214,7 +211,7 @@ export function App() {
     return Object.entries(combinedConfig).map(([key, value]) => {
       const currentPath = [...path, key];
       const fullKey = currentPath.join(".");
-      const displayKey = key.split(".").pop(); // Extract the last segment of the key
+      const displayKey = key.split(".").pop();
       if (deletions.includes(fullKey)) return null;
       const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
       const isArray = Array.isArray(value);
@@ -501,7 +498,6 @@ const styles = `
   display: inline-block;
   margin-right: 8px;
   color: var(--vscode-editor-foreground);
-  // ... existing code
 }
 
 .config-input {
