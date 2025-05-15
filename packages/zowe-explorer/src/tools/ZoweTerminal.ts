@@ -188,7 +188,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.write(ZoweTerminal.Keys.NEW_LINE);
         const isAsyncCommand = this.command.startsWith(":async");
         const isForgetCommand = this.command.startsWith(":forget");
-        const cmd = this.command.substring(isAsyncCommand ? 6 : isForgetCommand ? 7 : 0).trim();
+        const cmd = this.command.substring(isAsyncCommand || isForgetCommand ? 6 + Number(isForgetCommand) : 0).trim();
         this.command = "";
         this.charArrayCmd = [];
         if (cmd.length === 0) {
