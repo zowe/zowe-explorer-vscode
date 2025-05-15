@@ -233,10 +233,10 @@ export function App() {
             <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>
               {displayKey} {/* Use displayKey instead of key */}
               <button className="add-default-button" title={`Add key inside "${fullKey}"`} onClick={() => openAddProfileModalAtPath(currentPath)}>
-                +
+                <span className="codicon codicon-add"></span>
               </button>
               <button className="add-default-button" title={`Add layer inside "${fullKey}"`} onClick={() => openAddLayerModalAtPath(currentPath)}>
-                {"{"}
+                <span className="codicon codicon-bracket-dot"></span>
               </button>
             </h3>
             {renderConfig(value, currentPath)}
@@ -272,7 +272,7 @@ export function App() {
                 <span>{"{...}"}</span> // or JSON.stringify(pendingValue)
               )}
               <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
-                Delete
+                <span className="codicon codicon-trash"></span>
               </button>
             </div>
           </div>
@@ -329,7 +329,7 @@ export function App() {
                 onChange={(e) => handleDefaultsChange(fullKey, (e.target as HTMLInputElement).value)}
               />
               <button className="action-button" onClick={() => handleDeleteDefaultsProperty(fullKey)}>
-                Delete
+                <span className="codicon codicon-trash"></span>
               </button>
             </div>
           </div>
@@ -432,20 +432,6 @@ export function App() {
     setNewLayerPath(path);
     setNewLayerName("");
     setNewLayerModalOpen(true);
-  };
-
-  const setNestedValue = (object: any, path: string, value: any) => {
-    const keys = path.split(".");
-    keys.reduce((acc, key, index) => {
-      if (index === keys.length - 1) {
-        acc[key] = value;
-        return acc;
-      }
-      if (!acc[key]) {
-        acc[key] = {};
-      }
-      return acc[key];
-    }, object);
   };
 
   const newLayerModal = newLayerModalOpen && (
@@ -591,7 +577,7 @@ const styles = `
 }
 
 .action-button {
-  padding: 4px 8px;
+  padding: 4px 4px;
   font-size: 14px;
   background-color: var(--vscode-button-background);
   color: var(--vscode-button-secondaryForeground);
@@ -635,6 +621,10 @@ ul {
 
 li {
   line-height: 1.5;
+}
+
+.action-button span.codicon {
+  line-height: 1;
 }
 
 .modal-overlay {
