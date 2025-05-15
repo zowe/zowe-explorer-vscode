@@ -591,6 +591,23 @@ const styles = `
   background-color: var(--vscode-button-secondaryHoverBackground);
 }
 
+.add-default-button {
+  font-size: 16px;
+  color: var(--vscode-input-foreground);
+  padding: 1px 4px;
+  cursor: pointer;
+  background-color: var(--vscode-button-background);
+  border: none;
+  border-radius: 4px;
+  line-height: 1;
+  margin-left: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.add-default-button:hover {
+  background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
 .save-button {
   padding: 8px 16px;
   font-size: 14px;
@@ -621,10 +638,6 @@ ul {
 
 li {
   line-height: 1.5;
-}
-
-.action-button span.codicon {
-  line-height: 1;
 }
 
 .modal-overlay {
@@ -682,18 +695,6 @@ li {
 
 .defaults-header h2 {
   margin: 0;
-}
-
-.add-default-button {
-  font-size: 16px;
-  color: var(--vscode-input-foreground);
-  padding: 1px 4px;
-  cursor: pointer;
-  background-color: var(--vscode-button-background);
-  border: 1px solid var(--vscode-input-border);
-  border-radius: 4px;
-  line-height: 1;
-  margin-left: 8px;
 }
 
 .modal-backdrop {
