@@ -245,7 +245,11 @@ export function App() {
               <button className="add-default-button" title={`Add key inside "${fullKey}"`} onClick={() => openAddProfileModalAtPath(currentPath)}>
                 <span className="codicon codicon-add"></span>
               </button>
-              <button className="add-default-button" title={`Add layer inside "${fullKey}"`} onClick={() => openAddLayerModalAtPath(currentPath)}>
+              <button
+                className="add-default-button"
+                title={`Add child object inside "${fullKey}"`}
+                onClick={() => openAddLayerModalAtPath(currentPath)}
+              >
                 <span className="codicon codicon-bracket-dot"></span>
               </button>
             </h3>
@@ -368,7 +372,7 @@ export function App() {
               <button className="add-default-button" title={`Add key inside profiles`} onClick={() => openAddProfileModalAtPath([])}>
                 <span className="codicon codicon-add"></span>
               </button>
-              <button className="add-default-button" title={`Add layer inside profiles"`} onClick={() => openAddLayerModalAtPath([])}>
+              <button className="add-default-button" title={`Add child object inside "profiles""`} onClick={() => openAddLayerModalAtPath([])}>
                 <span className="codicon codicon-bracket-dot"></span>
               </button>
             </h2>

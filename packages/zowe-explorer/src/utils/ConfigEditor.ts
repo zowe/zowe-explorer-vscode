@@ -15,8 +15,6 @@ import { ProfileInfo } from "@zowe/imperative";
 import * as path from "path";
 import * as fs from "fs";
 
-const userDismissed = vscode.l10n.t("User dismissed the Config Editor.");
-
 export class ConfigEditor extends WebView {
     public userSubmission: DeferredPromise<{
         cert: string;
@@ -27,9 +25,7 @@ export class ConfigEditor extends WebView {
         super(vscode.l10n.t("Config Editor"), "config-editor", context, {
             onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
         });
-        this.panel.onDidDispose(() => {
-            this.userSubmission.reject(userDismissed);
-        });
+        this.panel.onDidDispose(() => {});
     }
 
     protected async getLocalConfigs() {
@@ -38,7 +34,7 @@ export class ConfigEditor extends WebView {
         const layers = profInfo.getTeamConfig().layers;
         console.log(layers);
 
-        const allConfigs: { configPath: string; properties: any; schema?: any }[] = [];
+        const allConfigs: { configPath: string; properties: any; schema?: any; global: boolean; user: boolean }[] = [];
 
         for (const layer of layers) {
             if (layer.exists) {
@@ -52,21 +48,20 @@ export class ConfigEditor extends WebView {
                             configPath,
                             properties: layer.properties,
                             schema,
+                            global: layer.global,
+                            user: layer.user,
                         });
                     } else {
                         allConfigs.push({
                             configPath,
                             properties: layer.properties,
                             schema: undefined,
+                            global: layer.global,
+                            user: layer.user,
                         });
                     }
-                } catch (err) {
-                    console.error(`Error reading or parsing file ${configPath}:`, err);
-                    allConfigs.push({
-                        configPath,
-                        properties: layer.properties,
-                        schema: undefined,
-                    });
+                } catch {
+                    vscode.window.showErrorMessage(`Error reading or parsing file ${configPath}:`);
                 }
             }
         }
@@ -84,8 +79,9 @@ export class ConfigEditor extends WebView {
                 break;
             case "SAVE_CHANGES":
                 this.dummyLog(message);
-                this.handleDefaultChanges(message.defaultsChanges, message.defaultsDeleteKeys);
-                this.handleProfileChanges(message.changes, message.deletions);
+                if (message.defaultsChanges || message.defaultsDeleteKeys)
+                    this.handleDefaultChanges(message.defaultsChanges, message.defaultsDeleteKeys, message.configPath);
+                if (message.changes || message.deletions) this.handleProfileChanges(message.changes, message.deletions);
 
                 //Send the next profiles to webview after saving changes
                 await this.panel.webview.postMessage({
@@ -110,9 +106,22 @@ export class ConfigEditor extends WebView {
         console.log("Received save changes command with the following data:");
         console.log("mod:", message);
     }
-    private async handleDefaultChanges(changes: any, deletions: any): Promise<void> {
+    private async handleDefaultChanges(changes: any, deletions: any, activeProfile: string): Promise<void> {
         console.log("Default Changes:", changes);
         console.log("Default Deletions:", deletions);
+
+        const profInfo = new ProfileInfo("zowe");
+        await profInfo.readProfilesFromDisk();
+        const teamConfig = profInfo.getTeamConfig();
+
+        if (activeProfile !== teamConfig.api.layers.get().path) {
+            // teamConfig.api.layers.activate(teamConfig.layers.find((prof) => prof.path === activeProfile));
+        }
+        for (const change of changes) {
+            teamConfig.api.profiles.defaultSet(change.key, change.value);
+        }
+
+        console.log("test");
     }
 
     private async handleProfileChanges(changes: any, deletions: any): Promise<void> {
