@@ -962,6 +962,8 @@ export class Profiles extends ProfilesCache {
                                 zeProfiles: this,
                                 preferBaseToken: true,
                             });
+                        } else {
+                            logoutOk = await ZoweVsCodeExtension.directConnectLogout(serviceProfile, zeInstance, node);
                         }
                         if (logoutOk) {
                             const successMsg = vscode.l10n.t(
