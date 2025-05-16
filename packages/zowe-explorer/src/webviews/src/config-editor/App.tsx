@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { isObject } from "lodash";
 import path from "path";
+import * as l10n from "@vscode/l10n";
+import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
 
 const vscodeApi = acquireVsCodeApi();
 
@@ -35,10 +37,6 @@ export function App() {
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
-      if (event.data.command === "TEST") {
-        const { contents } = event.data;
-        setEventContents(contents);
-      }
       if (event.data.command === "CONFIGURATIONS") {
         const { contents } = event.data;
         setConfigurations(contents);
@@ -107,16 +105,18 @@ export function App() {
   };
 
   const handleAddNewDefault = () => {
-    if (!newKey.trim()) return;
+    if (newKey.trim() && newValue.trim()) {
+      const path = newKey.split(".");
+      const fullKey = path.join(".");
+      const profileKey = path[0];
 
-    const fullKey = newKey.trim();
-    const path = fullKey.split(".");
-    setPendingDefaults((prev) => ({
-      ...prev,
-      [fullKey]: { value: newValue, path },
-    }));
-    setNewKey("");
-    setNewValue("");
+      setPendingChanges((prev) => ({
+        ...prev,
+        [fullKey]: { value: newValue, path, profile: profileKey },
+      }));
+
+      setDefaultsDeletions([]);
+    }
     setNewKeyModalOpen(false);
   };
 
@@ -178,15 +178,19 @@ export function App() {
     setDefaultsDeletions([]);
   };
 
+  const handleOpenRawJson = (configPath: string) => {
+    vscodeApi.postMessage({ command: "OPEN_CONFIG_FILE", filePath: configPath });
+  };
+
   const profileModal = newProfileModalOpen && (
     <div className="modal-backdrop">
       <div className="modal">
-        <h3>Add New Profile Property</h3>
-        <input placeholder="New Key" value={newProfileKey} onChange={(e) => setNewProfileKey((e.target as HTMLTextAreaElement).value)} />
-        <input placeholder="Value" value={newProfileValue} onChange={(e) => setNewProfileValue((e.target as HTMLTextAreaElement).value)} />
+        <h3>{l10n.t("Add New Profile Property")}</h3>
+        <input placeholder={l10n.t("New Key")} value={newProfileKey} onChange={(e) => setNewProfileKey((e.target as HTMLTextAreaElement).value)} />
+        <input placeholder={l10n.t("Value")} value={newProfileValue} onChange={(e) => setNewProfileValue((e.target as HTMLTextAreaElement).value)} />
         <div className="modal-actions">
-          <button onClick={handleAddNewProfileKey}>Add</button>
-          <button onClick={() => setNewProfileModalOpen(false)}>Cancel</button>
+          <button onClick={handleAddNewProfileKey}>{l10n.t("Add")}</button>
+          <button onClick={() => setNewProfileModalOpen(false)}>{l10n.t("Cancel")}</button>
         </div>
       </div>
     </div>
@@ -353,14 +357,14 @@ export function App() {
       {configurations.map((config, index) => (
         <div key={index} className={`panel ${selectedTab === index ? "active" : ""}`}>
           <div className="config-section">
-            <h2>Profiles</h2>
+            <h2>{l10n.t("Profiles")}</h2>
             {selectedTab === index && renderConfig(config.properties.profiles)}
           </div>
           <div className="config-section">
             <div className="defaults-header">
               <h2>
-                Defaults
-                <button className="add-default-button" title="Add new default" onClick={() => setNewKeyModalOpen(true)}>
+                {l10n.t("Defaults")}
+                <button className="add-default-button" title={l10n.t("Add new default")} onClick={() => setNewKeyModalOpen(true)}>
                   <span className="codicon codicon-add"></span>
                 </button>
               </h2>
@@ -391,21 +395,23 @@ export function App() {
     return result;
   };
 
-  const saveButton = (
-    <button className="save-button" onClick={handleSave}>
-      Save Changes
-    </button>
-  );
-
   const modal = newKeyModalOpen && (
     <div className="modal-backdrop">
       <div className="modal">
-        <h3>Add New Default</h3>
-        <input placeholder="Type (e.g. ssh,tso,zosmf)" value={newKey} onChange={(e) => setNewKey((e.target as HTMLTextAreaElement).value)} />
-        <input placeholder="Profile (e.g. ssh1,my_lpar)" value={newValue} onChange={(e) => setNewValue((e.target as HTMLTextAreaElement).value)} />
+        <h3>{l10n.t("Add New Default")}</h3>
+        <input
+          placeholder={l10n.t("Type (e.g. ssh,tso,zosmf)")}
+          value={newKey}
+          onChange={(e) => setNewKey((e.target as HTMLTextAreaElement).value)}
+        />
+        <input
+          placeholder={l10n.t("Profile (e.g. ssh1,my_lpar)")}
+          value={newValue}
+          onChange={(e) => setNewValue((e.target as HTMLTextAreaElement).value)}
+        />
         <div className="modal-actions">
-          <button onClick={handleAddNewDefault}>Add</button>
-          <button onClick={() => setNewKeyModalOpen(false)}>Cancel</button>
+          <button onClick={handleAddNewDefault}>{l10n.t("Add")}</button>
+          <button onClick={() => setNewKeyModalOpen(false)}>{l10n.t("Cancel")}</button>
         </div>
       </div>
     </div>
@@ -437,11 +443,11 @@ export function App() {
   const newLayerModal = newLayerModalOpen && (
     <div className="modal-backdrop">
       <div className="modal">
-        <h3>Add New Layer</h3>
-        <input placeholder="New Layer Name" value={newLayerName} onChange={(e) => setNewLayerName((e.target as HTMLInputElement).value)} />
+        <h3>{l10n.t("Add New Layer")}</h3>
+        <input placeholder={l10n.t("New Layer Name")} value={newLayerName} onChange={(e) => setNewLayerName((e.target as HTMLInputElement).value)} />
         <div className="modal-actions">
-          <button onClick={handleAddNewLayer}>Add</button>
-          <button onClick={() => setNewLayerModalOpen(false)}>Cancel</button>
+          <button onClick={handleAddNewLayer}>{l10n.t("Add")}</button>
+          <button onClick={() => setNewLayerModalOpen(false)}>{l10n.t("Cancel")}</button>
         </div>
       </div>
     </div>
@@ -449,10 +455,22 @@ export function App() {
 
   return (
     <div>
-      {/* Existing code */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1>{l10n.t("Configuration Editor")}</h1>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          {selectedTab !== null && (
+            <button className="header-button" onClick={() => handleOpenRawJson(configurations[selectedTab].configPath)}>
+              <span style={{ marginRight: "0.5em" }}>{l10n.t("☰")}</span>
+              {l10n.t("Open Raw")}
+            </button>
+          )}
+          <button className="header-button" onClick={handleSave}>
+            {l10n.t("Save Changes")}
+          </button>
+        </div>
+      </div>
       {tabs}
       {panels}
-      {saveButton}
       {modal}
       {profileModal}
       {newLayerModal}
@@ -607,7 +625,7 @@ const styles = `
   background-color: var(--vscode-button-secondaryHoverBackground);
 }
 
-.save-button {
+.header-button {
   padding: 8px 16px;
   font-size: 14px;
   background-color: var(--vscode-button-background);
@@ -618,10 +636,11 @@ const styles = `
   align-self: flex-start;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  margin-left: 8px
 }
 
-.save-button:hover {
-  background-color: var(--vscode-button-hoverBackground);
+.header-button:hover {
+  background-color: var(--vscode-button-secondaryHoverBackground);
 }
 
 h3 {

@@ -93,6 +93,10 @@ export class ConfigEditor extends WebView {
                     contents: await this.getLocalConfigs(),
                 });
                 break;
+            case "OPEN_CONFIG_FILE":
+                vscode.window.showTextDocument(vscode.Uri.file(message.filePath));
+                break;
+            case "GET_LOCALIZATION":
             default:
                 break;
         }
