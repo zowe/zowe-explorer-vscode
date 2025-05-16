@@ -947,19 +947,40 @@ export class Profiles extends ProfilesCache {
                 break;
             }
             case await AuthUtils.isUsingTokenAuth(serviceProfile.name): {
-                const profile: string | imperative.IProfileLoaded = node.getProfile();
-                const creds = await Profiles.getInstance().promptCredentials(profile, true);
+                try {
+                    const profile: string | imperative.IProfileLoaded = node.getProfile();
+                    const creds = await Profiles.getInstance().promptCredentials(profile, true);
 
-                if (creds !== undefined) {
-                    const successMsg = vscode.l10n.t(
-                        "Changing authentication to basic was successful for profile {0}.",
-                        typeof profile === "string" ? profile : profile.name
-                    );
-                    ZoweLogger.info(successMsg);
-                    Gui.showMessage(successMsg);
-                    await this.tokenAuthClearSecureArray(serviceProfile.name, loginTokenType);
-                    ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
-                } else {
+                    if (creds !== undefined) {
+                        let logoutOk: boolean = false;
+                        if (loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken")) {
+                            logoutOk = await ZoweVsCodeExtension.ssoLogout({
+                                serviceProfile,
+                                defaultTokenType: loginTokenType,
+                                profileNode: node,
+                                zeRegister: zeInstance,
+                                zeProfiles: this,
+                                preferBaseToken: true,
+                            });
+                        }
+                        if (logoutOk) {
+                            const successMsg = vscode.l10n.t(
+                                "Changing authentication to basic was successful for profile {0}.",
+                                typeof profile === "string" ? profile : profile.name
+                            );
+                            ZoweLogger.info(successMsg);
+                            Gui.showMessage(successMsg);
+                            await this.tokenAuthClearSecureArray(serviceProfile.name, loginTokenType);
+                            ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
+                        } else {
+                            Gui.errorMessage(vscode.l10n.t("Unable to switch to basic authentication for profile {0}.", serviceProfile.name));
+                            return;
+                        }
+                    } else {
+                        Gui.errorMessage(vscode.l10n.t("Unable to switch to basic authentication for profile {0}.", serviceProfile.name));
+                        return;
+                    }
+                } catch (err) {
                     Gui.errorMessage(vscode.l10n.t("Unable to switch to basic authentication for profile {0}.", serviceProfile.name));
                     return;
                 }
