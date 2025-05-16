@@ -11,6 +11,7 @@ struct EnvironmentStatus {
     git_status: Option<String>,
     workspace_path: PathBuf,
     dependencies_installed: bool,
+    env_vars: Vec<(String, String)>,
 }
 
 impl EnvironmentStatus {
@@ -23,6 +24,7 @@ impl EnvironmentStatus {
             git_status: None,
             workspace_path: std::env::current_dir().unwrap_or_default(),
             dependencies_installed: false,
+            env_vars: Vec::new(),
         }
     }
 
@@ -77,6 +79,32 @@ impl EnvironmentStatus {
         self.dependencies_installed = self.workspace_path.join("node_modules").exists();
         Ok(())
     }
+
+    fn check_env_vars(&mut self) {
+        // List of relevant environment variables to check
+        let relevant_vars = [
+            "ZEDC_PAT",
+            "NODE_ENV",
+            "PATH",
+            "HOME",
+            "VSCODE_EXTENSIONS",
+            "ZOWE_CLI_HOME",
+            "ZOWE_OPT_USER",
+            "ZOWE_OPT_PASS",
+        ];
+
+        for var in relevant_vars {
+            if let Ok(value) = std::env::var(var) {
+                // Mask sensitive values
+                let display_value = if var.contains("PASS") || var.contains("PAT") {
+                    "********".to_string()
+                } else {
+                    value
+                };
+                self.env_vars.push((var.to_string(), display_value));
+            }
+        }
+    }
 }
 
 pub async fn handle_cmd(verbose: bool) -> Result<()> {
@@ -89,13 +117,12 @@ pub async fn handle_cmd(verbose: bool) -> Result<()> {
     status.check_vscode()?;
     status.check_git_status()?;
     status.check_dependencies()?;
+    status.check_env_vars();
 
     // Print status information
     println!("Zowe Explorer Development Environment Status");
     println!("==========================================");
 
-    println!("\nCore Requirements:");
-    println!("-----------------");
     println!(
         "Node.js: {}",
         status.node_version.as_deref().unwrap_or("Not found")
@@ -134,11 +161,14 @@ pub async fn handle_cmd(verbose: bool) -> Result<()> {
     if verbose {
         println!("\nDetailed Information:");
         println!("-------------------");
-        // Add more detailed information here
-        // - List of installed extensions
-        // - Build configuration
-        // - Environment variables
-        // - System information
+
+        println!("\nEnvironment Variables:");
+        println!("--------------------");
+        for (key, value) in &status.env_vars {
+            println!("{} = {}", key, value);
+        }
+
+        // TODO: Add more detailed information here, like Zowe CLI plugins, VS Code extensions, system info, etc.
     }
 
     Ok(())
