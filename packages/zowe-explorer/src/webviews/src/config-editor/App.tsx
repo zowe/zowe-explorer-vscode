@@ -43,10 +43,18 @@ export function App() {
         }
         const { contents } = event.data;
         setConfigurations(contents);
-        setSelectedTab(contents.length > 0 ? 0 : null);
+
+        setSelectedTab((prevSelectedTab) => {
+          if (prevSelectedTab !== null && prevSelectedTab < contents.length) {
+            return prevSelectedTab; // Keep previous tab if still valid
+          }
+          return contents.length > 0 ? 0 : null;
+        });
 
         if (contents.length > 0) {
-          const config = contents[0].properties;
+          const indexToUse = (prev: number | null) => (prev !== null && prev < contents.length ? prev : 0);
+
+          const config = contents[indexToUse(selectedTab ?? 0)].properties;
           setFlattenedConfig(flattenKeys(config.profiles));
           setFlattenedDefaults(flattenKeys(config.defaults));
           setOriginalDefaults(flattenKeys(config.defaults));
