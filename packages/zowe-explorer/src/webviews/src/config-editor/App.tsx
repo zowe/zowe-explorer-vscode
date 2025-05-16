@@ -2,13 +2,12 @@ import { useEffect, useState } from "react";
 import { isObject } from "lodash";
 import path from "path";
 import * as l10n from "@vscode/l10n";
-import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
+import cloneDeep from "lodash/cloneDeep";
 
 const vscodeApi = acquireVsCodeApi();
 
 export function App() {
   const [localizationState] = useState(null);
-  const [, setEventContents] = useState("");
   const [configurations, setConfigurations] = useState<{ configPath: string; properties: any }[]>([]);
   const [selectedTab, setSelectedTab] = useState<number | null>(null);
   const [flattenedConfig, setFlattenedConfig] = useState<{ [key: string]: { value: string; path: string[] } }>({});
@@ -108,15 +107,17 @@ export function App() {
     if (newKey.trim() && newValue.trim()) {
       const path = newKey.split(".");
       const fullKey = path.join(".");
-      const profileKey = path[0];
 
-      setPendingChanges((prev) => ({
+      setPendingDefaults((prev) => ({
         ...prev,
-        [fullKey]: { value: newValue, path, profile: profileKey },
+        [fullKey]: { value: newValue, path },
       }));
 
-      setDefaultsDeletions([]);
+      setDefaultsDeletions((prev) => prev.filter((k) => k !== fullKey));
     }
+
+    setNewKey("");
+    setNewValue("");
     setNewKeyModalOpen(false);
   };
 
@@ -213,12 +214,17 @@ export function App() {
 
   const renderConfig = (obj: any, path: string[] = []) => {
     const fullPath = path.join(".");
+    const baseObj = cloneDeep(obj);
+
     const combinedConfig = {
-      ...obj,
+      ...baseObj,
       ...Object.fromEntries(
         Object.entries(pendingChanges)
-          .filter(([key]) => key.startsWith(fullPath) && key.split(".").length === path.length + 1)
-          .map(([key, entry]) => [key.split(".").pop(), entry.value])
+          .filter(([key]) => {
+            const keyParts = key.split(".");
+            return key.startsWith(fullPath) && keyParts.length === path.length + 1;
+          })
+          .map(([key, entry]) => [key.split(".").pop()!, entry.value])
       ),
     };
 
