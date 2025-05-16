@@ -94,7 +94,11 @@ export class ConfigEditor extends WebView {
                 });
                 break;
             case "OPEN_CONFIG_FILE":
-                vscode.window.showTextDocument(vscode.Uri.file(message.filePath));
+                try {
+                    vscode.window.showTextDocument(vscode.Uri.file(message.filePath));
+                } catch {
+                    vscode.window.showErrorMessage(`Error opening file: ${message.filePath}:`);
+                }
                 break;
             case "GET_LOCALIZATION":
             default:

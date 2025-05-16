@@ -357,7 +357,15 @@ export function App() {
       {configurations.map((config, index) => (
         <div key={index} className={`panel ${selectedTab === index ? "active" : ""}`}>
           <div className="config-section">
-            <h2>{l10n.t("Profiles")}</h2>
+            <h2>
+              {l10n.t("Profiles")}
+              <button className="add-default-button" title={`Add key inside profiles`} onClick={() => openAddProfileModalAtPath([])}>
+                <span className="codicon codicon-add"></span>
+              </button>
+              <button className="add-default-button" title={`Add layer inside profiles"`} onClick={() => openAddLayerModalAtPath([])}>
+                <span className="codicon codicon-bracket-dot"></span>
+              </button>
+            </h2>
             {selectedTab === index && renderConfig(config.properties.profiles)}
           </div>
           <div className="config-section">
