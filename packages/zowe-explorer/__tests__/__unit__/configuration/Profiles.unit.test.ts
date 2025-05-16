@@ -1649,6 +1649,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             getTokenTypeName: () => "apimlAuthenticationToken",
         } as never);
         jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValue(["testUser", "6789"]);
+        jest.spyOn(ZoweVsCodeExtension, "ssoLogout").mockResolvedValueOnce(true);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
         expect(Gui.showMessage).toHaveBeenCalled();
         expect(testNode.profile.profile.tokenType).toBe(modifiedTestNode.profile.profile.tokenType);
@@ -1725,6 +1726,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             getTokenTypeName: () => "jwtToken",
         } as never);
         jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValue(["testUser", "6789"]);
+        jest.spyOn(ZoweVsCodeExtension, "directConnectLogout").mockResolvedValueOnce(true);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
         expect(Gui.showMessage).toHaveBeenCalled();
         expect(testNode.profile.profile.tokenType).toBe(modifiedTestNode.profile.profile.tokenType);
