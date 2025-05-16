@@ -13,6 +13,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed Switch Authentication method misbehaviour when changing from Token authentication to Basic authentication [#3654](https://github.com/zowe/zowe-explorer-vscode/issues/3654)
+
 ## `3.2.0`
 
 ### New features and enhancements
