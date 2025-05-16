@@ -1280,6 +1280,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
 
     afterEach(() => {
         jest.resetAllMocks();
+        jest.clearAllMocks();
     });
 
     beforeEach(async () => {
@@ -1886,6 +1887,12 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
 describe("Profiles Unit Tests - function ssoLogout", () => {
     let testNode;
     let globalMocks;
+
+    afterEach(() => {
+        jest.resetAllMocks();
+        jest.clearAllMocks();
+    });
+
     beforeEach(() => {
         globalMocks = createGlobalMocks();
         testNode = new (ZoweTreeNode as any)(
