@@ -577,7 +577,6 @@ const styles = `
 }
 
 .action-button {
-  padding: 4px 4px;
   font-size: 14px;
   background-color: var(--vscode-button-background);
   color: var(--vscode-button-secondaryForeground);
@@ -714,6 +713,15 @@ li {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.codicon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-repeat: no-repeat;
+    background-size: contain;
+    margin-top: 3px;
 }
 `;
 
