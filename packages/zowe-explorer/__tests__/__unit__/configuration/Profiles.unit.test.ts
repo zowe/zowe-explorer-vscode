@@ -2470,6 +2470,7 @@ describe("Profiles Unit Tests - function tokenAuthClearSecureArray", () => {
         getProfileFromConfigMock.mockRestore();
     });
     it("calls Config APIs when profLoc.jsonLoc is valid, loginTokenType provided", async () => {
+        const globalMocks = await createGlobalMocks();
         const teamCfgMock = {
             delete: jest.fn(),
             save: jest.fn(),
@@ -2511,6 +2512,9 @@ describe("Profiles Unit Tests - function tokenAuthClearSecureArray", () => {
             mergeArgsForProfile: jest.fn().mockReturnValue(mergeArgsMock),
         } as any);
         const getProfileFromConfigMock = jest.spyOn(Profiles.getInstance(), "getProfileFromConfig").mockResolvedValue(profAttrsMock);
+        globalMocks.testProfile.type = "base";
+        globalMocks.testProfile.profile.type = "base";
+        jest.spyOn(Profiles.getInstance(), "getBaseProfile").mockReturnValue(globalMocks.testProfile);
 
         await Profiles.getInstance().tokenAuthClearSecureArray("example_profile", "apimlAuthenticationToken");
         expect(teamCfgMock.delete).toHaveBeenCalledWith(mergeArgsMock.knownArgs[0].argLoc.jsonLoc);
