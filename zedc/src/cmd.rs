@@ -55,6 +55,28 @@ pub enum RootCommands {
         alias = "v"
     )]
     Version,
+    #[command(
+        name = "status",
+        about = "Show the current state of the Zowe Explorer development environment",
+        visible_alias = "st"
+    )]
+    Status {
+        #[arg(
+            long,
+            help = "Show detailed information about the environment",
+            default_value = "false"
+        )]
+        verbose: bool,
+    },
+    #[command(
+        name = "completions",
+        about = "Generate shell completion scripts",
+        visible_alias = "comp"
+    )]
+    Completions {
+        #[arg(help = "The shell to generate completions for", value_enum)]
+        shell: clap_complete::Shell,
+    },
 }
 
 #[derive(Parser)]

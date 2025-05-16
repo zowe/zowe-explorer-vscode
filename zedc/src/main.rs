@@ -5,8 +5,10 @@ use cmd::{Args, RootCommands};
 
 mod cmd;
 mod code;
+mod completions;
 mod pm;
 mod setup;
+mod status;
 mod test;
 mod util;
 
@@ -36,6 +38,8 @@ async fn main() -> anyhow::Result<()> {
             println!("zedc {}", env!("CARGO_PKG_VERSION"));
         }
         RootCommands::PkgMgr { args } => pm::handle_cmd(args)?,
+        RootCommands::Status { verbose } => status::handle_cmd(verbose).await?,
+        RootCommands::Completions { shell } => completions::generate_completions(shell)?,
     }
 
     Ok(())
