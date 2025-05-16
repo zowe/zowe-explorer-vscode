@@ -474,7 +474,6 @@ export function App() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           {selectedTab !== null && (
             <button className="header-button" onClick={() => handleOpenRawJson(configurations[selectedTab].configPath)}>
-              <span style={{ marginRight: "0.5em" }}>{l10n.t("☰")}</span>
               {l10n.t("Open Raw")}
             </button>
           )}
@@ -611,7 +610,6 @@ const styles = `
 .action-button {
   font-size: 14px;
   background-color: var(--vscode-button-background);
-  color: var(--vscode-button-secondaryForeground);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -624,7 +622,7 @@ const styles = `
 
 .add-default-button {
   font-size: 16px;
-  color: var(--vscode-input-foreground);
+  color: var(--vscode-button-background);
   padding: 1px 4px;
   cursor: pointer;
   background-color: var(--vscode-button-background);
@@ -703,7 +701,6 @@ li {
   border-radius: 4px;
 }
 
-
 .modal button {
   padding: 8px 12px;
   border: none;
@@ -755,6 +752,7 @@ li {
     background-repeat: no-repeat;
     background-size: contain;
     margin-top: 3px;
+    color: var(--vscode-button-foreground);
 }
 `;
 
