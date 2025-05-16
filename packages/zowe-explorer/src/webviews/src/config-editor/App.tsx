@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { isObject } from "lodash";
 import path from "path";
 import * as l10n from "@vscode/l10n";
-import cloneDeep from "lodash/cloneDeep";
+import { cloneDeep } from "es-toolkit";
 
 const vscodeApi = acquireVsCodeApi();
 
@@ -420,7 +419,7 @@ export function App() {
       const newKey = parentKey ? `${parentKey}.${key}` : key;
       const newPath = parentKey ? [...parentKey.split("."), key] : [key];
 
-      if (isObject(value)) {
+      if (typeof value === "object") {
         const nestedObject = flattenKeys(value, newKey);
         result = { ...result, ...nestedObject };
       } else {
