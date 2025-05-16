@@ -29,6 +29,7 @@ export function App() {
   const [newProfileKey, setNewProfileKey] = useState("");
   const [newProfileValue, setNewProfileValue] = useState("");
   const [newProfileModalOpen, setNewProfileModalOpen] = useState(false);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [originalDefaults, setOriginalDefaults] = useState<{ [key: string]: any }>({});
   const [newLayerModalOpen, setNewLayerModalOpen] = useState(false);
   const [newLayerName, setNewLayerName] = useState("");
@@ -37,6 +38,9 @@ export function App() {
   useEffect(() => {
     window.addEventListener("message", (event) => {
       if (event.data.command === "CONFIGURATIONS") {
+        if (event.data.disableSaveOverlay) {
+          setSaveModalOpen(false);
+        }
         const { contents } = event.data;
         setConfigurations(contents);
         setSelectedTab(contents.length > 0 ? 0 : null);
@@ -194,6 +198,12 @@ export function App() {
           <button onClick={() => setNewProfileModalOpen(false)}>{l10n.t("Cancel")}</button>
         </div>
       </div>
+    </div>
+  );
+
+  const saveModal = saveModalOpen && (
+    <div className="modal-backdrop">
+      <div className="modal">Saving....</div>
     </div>
   );
 
@@ -476,12 +486,21 @@ export function App() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1>{l10n.t("Configuration Editor")}</h1>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <button className="header-button" onClick={() => vscodeApi.postMessage({ command: "GETPROFILES" })}>
+            {l10n.t("Refresh")}
+          </button>
           {selectedTab !== null && (
             <button className="header-button" onClick={() => handleOpenRawJson(configurations[selectedTab].configPath)}>
               {l10n.t("Open Raw")}
             </button>
           )}
-          <button className="header-button" onClick={handleSave}>
+          <button
+            className="header-button"
+            onClick={() => {
+              handleSave();
+              setSaveModalOpen(true);
+            }}
+          >
             {l10n.t("Save Changes")}
           </button>
         </div>
@@ -491,6 +510,7 @@ export function App() {
       {modal}
       {profileModal}
       {newLayerModal}
+      {saveModal}
     </div>
   );
 }

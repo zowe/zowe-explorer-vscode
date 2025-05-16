@@ -9,7 +9,7 @@
  *
  */
 
-import { DeferredPromise, WebView, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { DeferredPromise, FileManagement, WebView, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { ProfileInfo } from "@zowe/imperative";
 import * as path from "path";
@@ -24,15 +24,15 @@ export class ConfigEditor extends WebView {
     public constructor(context: vscode.ExtensionContext) {
         super(vscode.l10n.t("Config Editor"), "config-editor", context, {
             onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
+            retainContext: true,
         });
         this.panel.onDidDispose(() => {});
     }
 
-    protected async getLocalConfigs() {
+    protected async getLocalConfigs(): Promise<any[]> {
         const profInfo = new ProfileInfo("zowe");
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
         const layers = profInfo.getTeamConfig().layers;
-        console.log(layers);
 
         const allConfigs: { configPath: string; properties: any; schema?: any; global: boolean; user: boolean }[] = [];
 
@@ -70,6 +70,8 @@ export class ConfigEditor extends WebView {
     }
 
     protected async onDidReceiveMessage(message: any): Promise<void> {
+        //Send the next profiles to webview after saving changes
+        const profInfo = new ProfileInfo("zowe");
         switch (message.command.toLocaleUpperCase()) {
             case "GETPROFILES":
                 await this.panel.webview.postMessage({
@@ -78,14 +80,18 @@ export class ConfigEditor extends WebView {
                 });
                 break;
             case "SAVE_CHANGES":
-                this.dummyLog(message);
-                if (message.defaultsChanges || message.defaultsDeleteKeys)
-                    this.handleDefaultChanges(message.defaultsChanges, message.defaultsDeleteKeys, message.configPath);
-                if (message.changes || message.deletions) this.handleProfileChanges(message.changes, message.deletions);
+                if (message.defaultsChanges || message.defaultsDeleteKeys) {
+                    await this.handleDefaultChanges(message.defaultsChanges, message.defaultsDeleteKeys, message.configPath);
+                }
 
-                //Send the next profiles to webview after saving changes
+                if (message.changes || message.deletions) {
+                    await this.handleProfileChanges(message.changes, message.deletions, message.configPath);
+                }
+                await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+
                 await this.panel.webview.postMessage({
                     command: "CONFIGURATIONS",
+                    disableSaveOverlay: true,
                     contents: await this.getLocalConfigs(),
                 });
                 break;
@@ -93,7 +99,7 @@ export class ConfigEditor extends WebView {
                 try {
                     vscode.window.showTextDocument(vscode.Uri.file(message.filePath));
                 } catch {
-                    vscode.window.showErrorMessage(`Error opening file: ${message.filePath}:`);
+                    vscode.window.showErrorMessage(`Error opening file: ${message.filePath as string}:`);
                 }
                 break;
             case "GET_LOCALIZATION":
@@ -102,30 +108,48 @@ export class ConfigEditor extends WebView {
         }
     }
 
-    private dummyLog(message: any): void {
-        console.log("Received save changes command with the following data:");
-        console.log("mod:", message);
-    }
-    private async handleDefaultChanges(changes: any, deletions: any, activeProfile: string): Promise<void> {
-        console.log("Default Changes:", changes);
-        console.log("Default Deletions:", deletions);
-
+    private async handleDefaultChanges(changes: any, deletions: any, activeLayer: string): Promise<void> {
         const profInfo = new ProfileInfo("zowe");
-        await profInfo.readProfilesFromDisk();
-        const teamConfig = profInfo.getTeamConfig();
+        await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
-        if (activeProfile !== teamConfig.api.layers.get().path) {
-            // teamConfig.api.layers.activate(teamConfig.layers.find((prof) => prof.path === activeProfile));
+        // Activate proper layer
+        if (activeLayer !== profInfo.getTeamConfig().api.layers.get().path) {
+            const findProfile = profInfo.getTeamConfig().layers.find((prof) => prof.path === activeLayer);
+            profInfo.getTeamConfig().api.layers.activate(findProfile.user, findProfile.global);
         }
+
+        // Apply changes to default settings at active layer
         for (const change of changes) {
-            teamConfig.api.profiles.defaultSet(change.key, change.value);
+            profInfo.getTeamConfig().api.profiles.defaultSet(change.key, change.value);
         }
 
-        console.log("test");
+        // Apply deletions to default settings at active layer
+        for (const deletion in deletions) {
+            profInfo.getTeamConfig().delete(`defaults.${deletions[deletion] as string}`);
+        }
+
+        await profInfo.getTeamConfig().save();
     }
 
-    private async handleProfileChanges(changes: any, deletions: any): Promise<void> {
-        console.log("Profile Changes:", changes);
-        console.log("Profile Deletions:", deletions);
+    private async handleProfileChanges(changes: any, deletions: any, configPath: string): Promise<void> {
+        const profInfo = new ProfileInfo("zowe");
+        await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+
+        // Activate proper layer
+        if (configPath !== profInfo.getTeamConfig().api.layers.get().path) {
+            const findProfile = profInfo.getTeamConfig().layers.find((prof) => prof.path === configPath);
+            profInfo.getTeamConfig().api.layers.activate(findProfile.user, findProfile.global);
+        }
+
+        for (const change of changes) {
+            if (typeof change.value === "object" || typeof change.value === "string") {
+                try {
+                    profInfo.getTeamConfig().api.profiles.set(change.key, change.value);
+                } catch (err) {
+                    // console.log(err);
+                }
+            }
+        }
+        await profInfo.getTeamConfig().save();
     }
 }
