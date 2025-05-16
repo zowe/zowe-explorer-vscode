@@ -1649,9 +1649,10 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             getTokenTypeName: () => "apimlAuthenticationToken",
         } as never);
         jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValue(["testUser", "6789"]);
-        jest.spyOn(ZoweVsCodeExtension, "ssoLogout").mockResolvedValueOnce(true);
+        const ssoLogoutSpy = jest.spyOn(ZoweVsCodeExtension, "ssoLogout").mockResolvedValueOnce(true);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
         expect(Gui.showMessage).toHaveBeenCalled();
+        expect(ssoLogoutSpy).toHaveBeenCalledTimes(1);
         expect(testNode.profile.profile.tokenType).toBe(modifiedTestNode.profile.profile.tokenType);
         expect(testNode.profile.profile.tokenValue).toBe(modifiedTestNode.profile.profile.tokenValue);
         expect(testNode.profile.profile.secure.length).toBe(modifiedTestNode.profile.profile.secure.length);
@@ -1803,9 +1804,10 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             getTokenTypeName: () => "jwtToken",
         } as never);
         jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValue(["testUser", "6789"]);
-        jest.spyOn(ZoweVsCodeExtension, "directConnectLogout").mockResolvedValueOnce(true);
+        const directConnectLogoutSpy = jest.spyOn(ZoweVsCodeExtension, "directConnectLogout").mockResolvedValueOnce(true);
         await Profiles.getInstance().handleSwitchAuthentication(testNode);
         expect(Gui.showMessage).toHaveBeenCalled();
+        expect(directConnectLogoutSpy).toHaveBeenCalledTimes(1);
         expect(testNode.profile.profile.tokenType).toBe(modifiedTestNode.profile.profile.tokenType);
         expect(testNode.profile.profile.tokenValue).toBe(modifiedTestNode.profile.profile.tokenValue);
         expect(testNode.profile.profile.secure.length).toBe(modifiedTestNode.profile.profile.secure.length);
@@ -1860,6 +1862,8 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             secure: ["tokenType"],
         };
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValue({ label: "Yes" } as vscode.QuickPickItem);
+        jest.spyOn(AuthUtils, "isProfileUsingBasicAuth").mockReturnValueOnce(false);
+        jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
             getTokenTypeName: () => "apimlAuthenticationToken",
         } as never);
