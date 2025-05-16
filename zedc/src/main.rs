@@ -41,7 +41,10 @@ async fn main() -> Result<()> {
         RootCommands::Version => {
             println!("zedc {}", env!("CARGO_PKG_VERSION"));
         }
-        RootCommands::PkgMgr { args } => pm::handle_cmd(args)?,
+        RootCommands::PkgMgr { args } => match pm::handle_cmd(args) {
+            Ok(_output) => {}
+            Err(e) => eprintln!("Error from zedc pm: {}", e),
+        },
         RootCommands::Status { verbose } => status::handle_cmd(verbose).await?,
         RootCommands::Completions { shell } => generate_completions(shell)?,
     }

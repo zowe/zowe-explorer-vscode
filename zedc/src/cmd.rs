@@ -1,5 +1,7 @@
 //! Command module that defines the `zedc` command tree.
 
+use std::process::Command;
+
 use anyhow::Result;
 use clap::{command, CommandFactory, Parser, Subcommand};
 use clap_complete::{generate, Shell};
@@ -119,4 +121,11 @@ pub fn generate_completions(shell: Shell) -> Result<()> {
     let mut cmd = Args::command();
     generate(shell, &mut cmd, "zedc", &mut std::io::stdout());
     Ok(())
+}
+
+pub fn as_binary(name: &str) -> Command {
+    #[cfg(windows)]
+    return Command::new(format!("{}.cmd", name));
+    #[cfg(not(windows))]
+    return Command::new(name);
 }
