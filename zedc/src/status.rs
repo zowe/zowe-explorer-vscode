@@ -1,4 +1,5 @@
 use anyhow::Result;
+use owo_colors::OwoColorize;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -17,6 +18,7 @@ struct EnvironmentStatus {
     env_vars: Vec<(String, String)>,
     ze_dir: Option<PathBuf>,
     pkg_mgr: String,
+    zowe_env_report: Option<String>,
 }
 
 impl EnvironmentStatus {
@@ -34,6 +36,7 @@ impl EnvironmentStatus {
             dependencies_installed: false,
             env_vars: Vec::new(),
             pkg_mgr: pm::detect_pkg_mgr(ze_dir.as_path())?,
+            zowe_env_report: None,
         })
     }
 
@@ -138,7 +141,6 @@ impl EnvironmentStatus {
         let relevant_vars = [
             "ZEDC_PAT",
             "NODE_ENV",
-            "PATH",
             "HOME",
             "VSCODE_EXTENSIONS",
             "ZOWE_CLI_HOME",
@@ -158,6 +160,67 @@ impl EnvironmentStatus {
             }
         }
     }
+
+    fn check_zowe_env(&mut self) -> Result<()> {
+        match cmd::as_binary("zowe")
+            .args(["config", "report-env"])
+            .current_dir(&self.workspace_path)
+            .output()
+        {
+            Ok(output) => {
+                if output.status.success() {
+                    self.zowe_env_report =
+                        Some(String::from_utf8_lossy(&output.stdout).trim().to_string());
+                }
+            }
+            Err(e) => {
+                eprintln!("Failed to get Zowe CLI environment report: {}", e);
+            }
+        }
+        Ok(())
+    }
+}
+
+fn print_section_header(title: &str) {
+    println!("\n{}", title.bold().blue());
+    println!("{}", "─".repeat(title.len()).blue());
+}
+
+fn print_key_value(key: &str, value: &str) {
+    println!("{}: {}", key.bold(), value);
+}
+
+fn print_key_value_multiline(key: &str, value: &str) {
+    println!("{}:", key.bold());
+    for line in value.lines() {
+        println!("  {}", line);
+    }
+}
+
+fn format_git_status(status: &str) -> String {
+    status
+        .lines()
+        .map(|line| {
+            if line.len() >= 2 {
+                let (status, path) = line.split_at(2);
+                let symbol = match status.trim() {
+                    "M" => "●", // Modified
+                    "A" => "✚", // Added
+                    "D" => "✖", // Deleted
+                    "R" => "↻", // Renamed
+                    "C" => "⊕", // Copied
+                    "U" => "⚠", // Updated but unmerged
+                    "?" => "?", // Untracked
+                    "!" => "!", // Ignored
+                    _ => " ",   // Unknown
+                };
+                format!("  {} {}", symbol.bold(), path.trim())
+            } else {
+                format!("  {}", line)
+            }
+        })
+        .collect::<Vec<String>>()
+        .join("\n")
 }
 
 pub async fn handle_cmd(verbose: bool) -> Result<()> {
@@ -167,62 +230,74 @@ pub async fn handle_cmd(verbose: bool) -> Result<()> {
     status.check_node()?;
     status.check_pm()?;
     status.check_zowe_cli()?;
+    if verbose {
+        status.check_zowe_env()?;
+    }
     status.check_vscode()?;
     status.check_git_status()?;
     status.check_dependencies()?;
     status.check_env_vars();
 
     // Print status information
-    println!("Zowe Explorer Development Environment Status");
-    println!("==========================================");
+    println!(
+        "{}",
+        "Zowe Explorer Development Environment Status"
+            .bold()
+            .green()
+    );
+    println!("{}", "=".repeat(40).green());
 
-    println!(
-        "Node.js: {}",
-        status.node_version.as_deref().unwrap_or("Not found")
+    // Runtime Environment
+    print_section_header("Runtime Environment");
+    print_key_value(
+        "Node.js",
+        status.node_version.as_deref().unwrap_or("Not found"),
     );
-    println!(
-        "{}: {}",
-        status.pkg_mgr,
-        status.pm_version.as_deref().unwrap_or("Not found")
+    print_key_value(
+        &status.pkg_mgr,
+        status.pm_version.as_deref().unwrap_or("Not found"),
     );
-    println!(
-        "Zowe CLI:\n{}\n",
-        status.zowe_cli_version.as_deref().unwrap_or("Not found")
-    );
-    println!(
-        "VS Code:\n{}\n",
-        status.vscode_version.as_deref().unwrap_or("Not found")
+    print_key_value_multiline(
+        "Zowe CLI",
+        status.zowe_cli_version.as_deref().unwrap_or("Not found"),
     );
 
-    println!("\nWorkspace Status:");
-    println!("----------------");
-    println!("Path: {}", status.workspace_path.display());
-    println!(
-        "Dependencies: {}",
+    if verbose {
+        if let Some(env_report) = &status.zowe_env_report {
+            print_section_header("Zowe CLI Environment");
+            for line in env_report.lines() {
+                println!("  {}", line.dimmed());
+            }
+        }
+    }
+
+    print_key_value_multiline(
+        "VS Code",
+        status.vscode_version.as_deref().unwrap_or("Not found"),
+    );
+
+    // Workspace Status
+    print_section_header("Workspace Status");
+    print_key_value("Path", &status.workspace_path.display().to_string());
+    print_key_value(
+        "Dependencies",
         if status.dependencies_installed {
             "Installed"
         } else {
             "Not installed"
-        }
+        },
     );
 
     if let Some(git_status) = status.git_status {
-        println!("\nGit Status:");
-        println!("-----------");
-        println!(" {}", git_status);
+        print_section_header("Git Status");
+        println!("{}", format_git_status(&git_status));
     }
 
-    if verbose {
-        println!("\nDetailed Information:");
-        println!("-------------------");
-
-        println!("\nEnvironment Variables:");
-        println!("--------------------");
+    if verbose && !status.env_vars.is_empty() {
+        print_section_header("Environment Variables");
         for (key, value) in &status.env_vars {
-            println!("{} = {}", key, value);
+            print_key_value(key, value);
         }
-
-        // TODO: Add more detailed information here, like Zowe CLI plugins, VS Code extensions, system info, etc.
     }
 
     Ok(())
