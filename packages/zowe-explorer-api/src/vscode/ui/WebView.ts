@@ -28,6 +28,8 @@ export type WebViewOpts = {
     unsafeEval?: boolean;
     /** Which ViewColumn to open the webview. */
     viewColumn?: ViewColumn;
+    /** Optional icon path (string or Uri) for the webview tab. */
+    iconPath?: string | Uri | { light: string | Uri; dark: string | Uri };
 };
 
 export type UriPair = {
@@ -96,6 +98,20 @@ export class WebView {
                 localResourceRoots: [this.uris.disk.build, this.uris.disk.codicons],
                 retainContextWhenHidden: opts?.retainContext ?? false,
             });
+
+            // Set the iconPath if provided
+            if (opts?.iconPath) {
+                if (typeof opts.iconPath === "string") {
+                    this.panel.iconPath = Uri.file(opts.iconPath);
+                } else if ("light" in opts.iconPath && "dark" in opts.iconPath) {
+                    this.panel.iconPath = {
+                        light: typeof opts.iconPath.light === "string" ? Uri.file(opts.iconPath.light) : opts.iconPath.light,
+                        dark: typeof opts.iconPath.dark === "string" ? Uri.file(opts.iconPath.dark) : opts.iconPath.dark,
+                    };
+                } else {
+                    this.panel.iconPath = opts.iconPath;
+                }
+            }
 
             // Associate URI resources with webview
             this.uris.resource = {

@@ -73,6 +73,10 @@ export class ReleaseNotes extends WebView {
         super(l10n.t("{0} - {1}", Constants.RELEASE_NOTES_PANEL_TITLE, version), "release-notes", context, {
             onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
             viewColumn: ViewColumn.Active,
+            iconPath: {
+                light: context.asAbsolutePath("resources/zowe-icon-color.png"),
+                dark: context.asAbsolutePath("resources/zowe.svg"),
+            },
         });
         this.version = version;
     }
