@@ -43,7 +43,6 @@ export function App(): JSXInternal.Element {
       }
       if (dropdownOptions !== undefined) {
         setDropdownOptions(dropdownOptions);
-        console.log("Dropdown options received:", dropdownOptions);
       }
     });
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "ready" });
@@ -52,7 +51,6 @@ export function App(): JSXInternal.Element {
   const handleDropdownChange = (event: JSXInternal.TargetedEvent<HTMLSelectElement>) => {
     const selectedOption = event.currentTarget.value;
     setShowOption(selectedOption);
-    console.log("Selected option:", selectedOption);
 
     // Send the selected command (which is the localised value) back to the extension
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: selectedOption });
@@ -66,7 +64,7 @@ export function App(): JSXInternal.Element {
 
   return (
     <div>
-      <h1>{l10n.t(`What's New in Zowe Explorer ${version}`)}</h1>
+      <h1>{l10n.t("What's New in Zowe Explorer {0}", version ?? "")}</h1>
       <p>{l10n.t("Here you can find the latest updates and features.")}</p>
       <label>
         <span>{l10n.t("When would you like release notes to show?")}</span>

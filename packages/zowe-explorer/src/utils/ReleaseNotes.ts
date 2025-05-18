@@ -70,7 +70,7 @@ export class ReleaseNotes extends WebView {
     }
 
     public constructor(context: ExtensionContext, version: string) {
-        super(l10n.t(`${Constants.RELEASE_NOTES_PANEL_TITLE} - ${version}`), "release-notes", context, {
+        super(l10n.t("{0} - {1}", Constants.RELEASE_NOTES_PANEL_TITLE, version), "release-notes", context, {
             onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
             viewColumn: ViewColumn.Active,
         });
@@ -132,7 +132,7 @@ export class ReleaseNotes extends WebView {
 
         const matches = [...changelog.matchAll(regex)];
         if (matches.length === 0) {
-            return l10n.t(`No changelog entries found for version ${this.version}.`);
+            return l10n.t("No changelog entries found for version {0}.", this.version);
         }
 
         return matches.map((m) => m[0].trim()).join("\n\n");
