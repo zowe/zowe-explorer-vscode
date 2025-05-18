@@ -20,7 +20,7 @@ import { Definitions } from "../configuration/Definitions";
 
 export class ReleaseNotes extends WebView {
     private version: string;
-    private static instance: ReleaseNotes | undefined;
+    public static instance: ReleaseNotes | undefined;
 
     public static shouldShowReleaseNotes(context: ExtensionContext): { version: string; showReleaseNotes: boolean } {
         // Get extension version (major.minor)
