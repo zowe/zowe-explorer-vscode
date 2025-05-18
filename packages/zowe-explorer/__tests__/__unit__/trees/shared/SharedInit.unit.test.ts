@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import * as core from "@zowe/core-for-zowe-sdk";
 import * as profUtils from "../../../../src/utils/ProfilesUtils";
 import * as SharedHistoryView from "../../../../src/trees/shared/SharedHistoryView";
+import * as ReleaseNotes from "../../../../src/utils/ReleaseNotes";
 import { IJestIt, ITestContext, processSubscriptions } from "../../../__common__/testUtils";
 import { Constants } from "../../../../src/configuration/Constants";
 import { Profiles } from "../../../../src/configuration/Profiles";
@@ -35,6 +36,7 @@ import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
+jest.mock("../../../../src/utils/ReleaseNotes");
 
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
@@ -302,6 +304,11 @@ describe("Test src/shared/extension", () => {
         ];
 
         beforeAll(() => {
+            test.context.extension = {
+                packageJSON: {
+                    version: "2.3.4",
+                },
+            };
             const registerCommand = (cmd: string, fun: () => void) => {
                 return { [cmd]: fun };
             };

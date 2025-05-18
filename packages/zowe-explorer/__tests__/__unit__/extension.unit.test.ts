@@ -35,6 +35,7 @@ import { ZoweExplorerApiRegister } from "../../src/extending/ZoweExplorerApiRegi
 
 jest.mock("../../src/utils/LoggerUtils");
 jest.mock("../../src/tools/ZoweLogger");
+jest.mock("../../src/utils/ReleaseNotes");
 jest.mock("vscode");
 jest.mock("fs");
 jest.mock("fs-extra");
@@ -229,6 +230,7 @@ async function createGlobalMocks() {
             "zowe.updateSecureCredentials",
             "zowe.manualPoll",
             "zowe.editHistory",
+            "zowe.showReleaseNotes",
             "zowe.promptCredentials",
             "zowe.profileManagement",
             "zowe.updateSchema",
@@ -237,7 +239,6 @@ async function createGlobalMocks() {
             "zowe.certificateWizard",
             "zowe.executeNavCallback",
             "zowe.openRecentMember",
-            "zowe.showReleaseNotes",
             "zowe.searchInAllLoadedItems",
             "zowe.disableValidation",
             "zowe.enableValidation",
