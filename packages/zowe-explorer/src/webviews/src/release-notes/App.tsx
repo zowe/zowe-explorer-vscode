@@ -21,31 +21,29 @@ import * as l10n from "@vscode/l10n";
 export function App(): JSXInternal.Element {
   const [releaseNotes, setReleaseNotes] = useState<string | null>(null);
   const [version, setVersion] = useState<string | null>(null);
-  const [showOption, setShowOption] = useState<string>("always"); // Default to "Always show"
+  const [showOption, setShowOption] = useState<string>("Always show");
+  const [dropdownOptions, setDropdownOptions] = useState<Record<string, string>>({});
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
-      if (!isSecureOrigin(event.origin)) {
+      if (!isSecureOrigin(event.origin) || !event.data) {
         return;
       }
 
-      if (!event.data) {
-        return;
-      }
+      const { releaseNotes, version, showReleaseNotesSetting, dropdownOptions } = event.data;
 
-      const releaseNotes = event.data["releaseNotes"];
-      if (releaseNotes) {
+      if (releaseNotes !== undefined) {
         setReleaseNotes(releaseNotes);
       }
-
-      const version = event.data["version"];
-      if (version) {
+      if (version !== undefined) {
         setVersion(version);
       }
-
-      const showReleaseNotesSetting = event.data["showReleaseNotesSetting"];
-      if (showReleaseNotesSetting) {
+      if (showReleaseNotesSetting !== undefined) {
         setShowOption(showReleaseNotesSetting);
+      }
+      if (dropdownOptions !== undefined) {
+        setDropdownOptions(dropdownOptions);
+        console.log("Dropdown options received:", dropdownOptions);
       }
     });
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "ready" });
@@ -53,21 +51,11 @@ export function App(): JSXInternal.Element {
 
   const handleDropdownChange = (event: JSXInternal.TargetedEvent<HTMLSelectElement>) => {
     const selectedOption = event.currentTarget.value;
-    console.log("Selected option:", selectedOption);
     setShowOption(selectedOption);
+    console.log("Selected option:", selectedOption);
 
-    switch (selectedOption) {
-      case "Never Show":
-        PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: selectedOption });
-        break;
-      case "Disable for this version":
-        PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: selectedOption });
-        break;
-      case "Always Show":
-      default:
-        PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: selectedOption });
-        break;
-    }
+    // Send the selected command (which is the localised value) back to the extension
+    PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: selectedOption });
   };
 
   const renderMarkdown = (markdown: string) => {
@@ -84,9 +72,11 @@ export function App(): JSXInternal.Element {
         <span>{l10n.t("Show release notes:")}</span>
         <br />
         <VSCodeDropdown value={showOption} onChange={handleDropdownChange}>
-          <VSCodeOption value="Always Show">{l10n.t("Always show")}</VSCodeOption>
-          <VSCodeOption value="Disable for this version">{l10n.t("Disable for this version")}</VSCodeOption>
-          <VSCodeOption value="Never Show">{l10n.t("Never show")}</VSCodeOption>
+          {Object.values(dropdownOptions).map((label) => (
+            <VSCodeOption value={label} key={label}>
+              {label}
+            </VSCodeOption>
+          ))}
         </VSCodeDropdown>
       </label>
       {releaseNotes ? (

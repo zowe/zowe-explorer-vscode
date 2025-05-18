@@ -31,7 +31,7 @@ export class ReleaseNotes extends WebView {
 
         // Get user setting for release notes display (from VS Code settings)
         // This should be one of: "always", "never", "disableForThisVersion"
-        const showSetting = SettingsConfig.getDirectValue<string>(Constants.SETTINGS_SHOW_RELEASE_NOTES, "always");
+        const showSetting = SettingsConfig.getDirectValue<string>(Constants.SETTINGS_SHOW_RELEASE_NOTES, Constants.RELEASE_NOTES_OPTS.ALWAYS_SHOW);
 
         // Get last shown version from local storage (global state)
         const previousVersion = ZoweLocalStorage.getValue<string>(Definitions.LocalStorageKey.SHOW_RELEASE_NOTES_VERSION) ?? "";
@@ -41,9 +41,9 @@ export class ReleaseNotes extends WebView {
         // - "never": never show release notes
         // - "disableForThisVersion": only show if version changed
         let showReleaseNotes = true;
-        if (showSetting === "Never Show") {
+        if (showSetting === Constants.RELEASE_NOTES_OPTS.NEVER_SHOW) {
             showReleaseNotes = false;
-        } else if (showSetting === "Disable for this version") {
+        } else if (showSetting === Constants.RELEASE_NOTES_OPTS.DISABLE_FOR_THIS_VERSION) {
             showReleaseNotes = previousVersion !== currentVersion;
         } // else "always" or unknown, show
 
@@ -85,15 +85,15 @@ export class ReleaseNotes extends WebView {
             case "ready":
                 await this.sendReleaseNotes();
                 break;
-            case "Never Show":
+            case Constants.RELEASE_NOTES_OPTS.NEVER_SHOW:
                 // Disable release notes permanently
                 SettingsConfig.setDirectValue(Constants.SETTINGS_SHOW_RELEASE_NOTES, message.command);
                 break;
-            case "Disable for this version":
+            case Constants.RELEASE_NOTES_OPTS.DISABLE_FOR_THIS_VERSION:
                 // Disable release notes for this version only
                 SettingsConfig.setDirectValue(Constants.SETTINGS_SHOW_RELEASE_NOTES, message.command);
                 break;
-            case "Always Show":
+            case Constants.RELEASE_NOTES_OPTS.ALWAYS_SHOW:
                 // Re-enable release notes
                 SettingsConfig.setDirectValue(Constants.SETTINGS_SHOW_RELEASE_NOTES, message.command);
                 break;
@@ -110,6 +110,7 @@ export class ReleaseNotes extends WebView {
             releaseNotes: changelog,
             version: this.version,
             showReleaseNotesSetting: showReleaseNotesSetting,
+            dropdownOptions: Constants.RELEASE_NOTES_OPTS,
         });
     }
 

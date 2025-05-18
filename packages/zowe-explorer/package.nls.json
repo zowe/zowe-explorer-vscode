@@ -177,7 +177,7 @@
   "zowe.settings.socketConnectTimeout": "The amount of time to wait for a connection to be initiated with the server, in milliseconds.",
   "zowe.settings.requestTimeout": "The amount of time to wait for a REST request to complete, in milliseconds.",
   "zowe.settings.showReleaseNotes": "Whether to show the Zowe Explorer release notes when VS Code starts.",
-  "zowe.settings.alwaysShowReleaseNotes": "Always Show",
+  "zowe.settings.alwaysShowReleaseNotes": "Always show",
   "zowe.settings.disableForThisVersion": "Disable for this version",
-  "zowe.settings.neverShowReleaseNotes": "Never Show"
+  "zowe.settings.neverShowReleaseNotes": "Never show"
 }

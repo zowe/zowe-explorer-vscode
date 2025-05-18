@@ -276,6 +276,11 @@ export class Constants {
         JOBS: "jobs-panel-tab",
         CMDS: "cmds-panel-tab",
     };
+    public static RELEASE_NOTES_OPTS = {
+        ALWAYS_SHOW: vscode.l10n.t("Always show"),
+        DISABLE_FOR_THIS_VERSION: vscode.l10n.t("Disable for this version"),
+        NEVER_SHOW: vscode.l10n.t("Never show"),
+    };
 }
 
 /**

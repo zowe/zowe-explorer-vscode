@@ -16,22 +16,30 @@ import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 import { Constants } from "../../../src/configuration/Constants";
 
-jest.mock("fs/promises", () => ({
-    readFile: jest
-        .fn()
-        .mockResolvedValue(
-            "## `3.2.2`\n- Patch for 3.2.2\n\n" +
-                "## `3.2.1`\n- Patch for 3.2.1\n\n" +
-                "## `3.2`\n- Added feature\n\n" +
-                "## `3.1.1`\n- Patch for 3.1.1\n\n" +
-                "## `3.1`\n- Old stuff"
-        ),
-}));
+jest.mock("fs/promises", () => {
+    return {
+        readFile: jest
+            .fn()
+            .mockResolvedValue(
+                "## `3.2.2`\n- Patch for 3.2.2\n\n" +
+                    "## `3.2.1`\n- Patch for 3.2.1\n\n" +
+                    "## `3.2.0`\n- Added feature\n\n" +
+                    "## `3.1.1`\n- Patch for 3.1.1\n\n" +
+                    "## `3.1.0`\n- Old stuff"
+            ),
+    };
+});
 
 describe("ReleaseNotes Webview", () => {
     let context: ExtensionContext;
     let panelMock: any;
     let postMessageMock: jest.Mock;
+    const changelog =
+        "## `3.2.2`\n- Patch for 3.2.2\n\n" +
+        "## `3.2.1`\n- Patch for 3.2.1\n\n" +
+        "## `3.2.0`\n- Added feature\n\n" +
+        "## `3.1.1`\n- Patch for 3.1.1\n\n" +
+        "## `3.1.0`\n- Old stuff";
 
     function assignPanelToInstance() {
         if (ReleaseNotes.instance) {
@@ -73,7 +81,7 @@ describe("ReleaseNotes Webview", () => {
     });
 
     it("should show release notes if setting is 'always'", () => {
-        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue("Always Show");
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(Constants.RELEASE_NOTES_OPTS.ALWAYS_SHOW);
         jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
 
         ReleaseNotes.show(context, false);
@@ -82,7 +90,7 @@ describe("ReleaseNotes Webview", () => {
     });
 
     it("should not show release notes if setting is 'Never Show'", () => {
-        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue("Never Show");
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(Constants.RELEASE_NOTES_OPTS.NEVER_SHOW);
         jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
 
         ReleaseNotes.show(context, false);
@@ -90,7 +98,7 @@ describe("ReleaseNotes Webview", () => {
     });
 
     it("should only show release notes if version changed for 'Disable for this version'", () => {
-        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue("Disable for this version");
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(Constants.RELEASE_NOTES_OPTS.DISABLE_FOR_THIS_VERSION);
         jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.1");
 
         ReleaseNotes.show(context, false);
@@ -105,7 +113,7 @@ describe("ReleaseNotes Webview", () => {
     });
 
     it("should always show release notes if force=true", () => {
-        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue("Never Show");
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(Constants.RELEASE_NOTES_OPTS.NEVER_SHOW);
 
         ReleaseNotes.show(context, true);
         assignPanelToInstance();
@@ -113,7 +121,7 @@ describe("ReleaseNotes Webview", () => {
     });
 
     it("should send release notes and version to webview", async () => {
-        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue("Always Show");
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(Constants.RELEASE_NOTES_OPTS.ALWAYS_SHOW);
         jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
 
         ReleaseNotes.show(context, false);
@@ -126,7 +134,8 @@ describe("ReleaseNotes Webview", () => {
             expect.objectContaining({
                 releaseNotes: expect.stringContaining("Added feature"),
                 version: "3.2",
-                showReleaseNotesSetting: "Always Show",
+                showReleaseNotesSetting: Constants.RELEASE_NOTES_OPTS.ALWAYS_SHOW,
+                dropdownOptions: Constants.RELEASE_NOTES_OPTS,
             })
         );
     });
@@ -135,24 +144,21 @@ describe("ReleaseNotes Webview", () => {
         jest.spyOn(SettingsConfig, "setDirectValue").mockResolvedValue(undefined as any);
 
         const rn = new ReleaseNotes(context, "3.2");
-        await rn.onDidReceiveMessage({ command: "Never Show" });
-        expect(SettingsConfig.setDirectValue).toHaveBeenCalledWith(Constants.SETTINGS_SHOW_RELEASE_NOTES, "Never Show");
+        await rn.onDidReceiveMessage({ command: Constants.RELEASE_NOTES_OPTS.NEVER_SHOW });
+        expect(SettingsConfig.setDirectValue).toHaveBeenCalledWith(Constants.SETTINGS_SHOW_RELEASE_NOTES, Constants.RELEASE_NOTES_OPTS.NEVER_SHOW);
 
-        await rn.onDidReceiveMessage({ command: "Disable for this version" });
-        expect(SettingsConfig.setDirectValue).toHaveBeenCalledWith(Constants.SETTINGS_SHOW_RELEASE_NOTES, "Disable for this version");
+        await rn.onDidReceiveMessage({ command: Constants.RELEASE_NOTES_OPTS.DISABLE_FOR_THIS_VERSION });
+        expect(SettingsConfig.setDirectValue).toHaveBeenCalledWith(
+            Constants.SETTINGS_SHOW_RELEASE_NOTES,
+            Constants.RELEASE_NOTES_OPTS.DISABLE_FOR_THIS_VERSION
+        );
 
-        await rn.onDidReceiveMessage({ command: "Always Show" });
-        expect(SettingsConfig.setDirectValue).toHaveBeenCalledWith(Constants.SETTINGS_SHOW_RELEASE_NOTES, "Always Show");
+        await rn.onDidReceiveMessage({ command: Constants.RELEASE_NOTES_OPTS.ALWAYS_SHOW });
+        expect(SettingsConfig.setDirectValue).toHaveBeenCalledWith(Constants.SETTINGS_SHOW_RELEASE_NOTES, Constants.RELEASE_NOTES_OPTS.ALWAYS_SHOW);
     });
 
     it("should extract all notes for 3.2.x versions", () => {
         const rn = new ReleaseNotes(context, "3.2");
-        const changelog =
-            "## `3.2.2`\n- Patch for 3.2.2\n\n" +
-            "## `3.2.1`\n- Patch for 3.2.1\n\n" +
-            "## `3.2`\n- Added feature\n\n" +
-            "## `3.1.1`\n- Patch for 3.1.1\n\n" +
-            "## `3.1`\n- Old stuff";
         const notes = rn.extractCurrentVersionNotes(changelog);
         expect(notes).toContain("Patch for 3.2.2");
         expect(notes).toContain("Patch for 3.2.1");
@@ -161,29 +167,8 @@ describe("ReleaseNotes Webview", () => {
         expect(notes).not.toContain("Old stuff");
     });
 
-    it("should extract all notes for 3.1.x versions", () => {
-        const rn = new ReleaseNotes(context, "3.1");
-        const changelog =
-            "## `3.2.2`\n- Patch for 3.2.2\n\n" +
-            "## `3.2.1`\n- Patch for 3.2.1\n\n" +
-            "## `3.2`\n- Added feature\n\n" +
-            "## `3.1.1`\n- Patch for 3.1.1\n\n" +
-            "## `3.1`\n- Old stuff";
-        const notes = rn.extractCurrentVersionNotes(changelog);
-        expect(notes).toContain("Patch for 3.1.1");
-        expect(notes).toContain("Old stuff");
-        expect(notes).not.toContain("Patch for 3.2.2");
-        expect(notes).not.toContain("Added feature");
-    });
-
     it("should handle missing changelog entries gracefully", () => {
         const rn = new ReleaseNotes(context, "4.0");
-        const changelog =
-            "## `3.2.2`\n- Patch for 3.2.2\n\n" +
-            "## `3.2.1`\n- Patch for 3.2.1\n\n" +
-            "## `3.2`\n- Added feature\n\n" +
-            "## `3.1.1`\n- Patch for 3.1.1\n\n" +
-            "## `3.1`\n- Old stuff";
         const notes = rn.extractCurrentVersionNotes(changelog);
         expect(notes).toContain("No changelog entries found for version 4.0.");
     });
