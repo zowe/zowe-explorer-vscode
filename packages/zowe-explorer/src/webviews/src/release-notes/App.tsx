@@ -21,7 +21,7 @@ import * as l10n from "@vscode/l10n";
 export function App(): JSXInternal.Element {
   const [releaseNotes, setReleaseNotes] = useState<string | null>(null);
   const [version, setVersion] = useState<string | null>(null);
-  const [showOption, setShowOption] = useState<string>("Always show");
+  const [showOption, setShowOption] = useState<string>("");
   const [dropdownOptions, setDropdownOptions] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -69,7 +69,7 @@ export function App(): JSXInternal.Element {
       <h1>{l10n.t(`What's New in Zowe Explorer ${version}`)}</h1>
       <p>{l10n.t("Here you can find the latest updates and features.")}</p>
       <label>
-        <span>{l10n.t("Show release notes:")}</span>
+        <span>{l10n.t("When would you like release notes to show?")}</span>
         <br />
         <VSCodeDropdown value={showOption} onChange={handleDropdownChange}>
           {Object.values(dropdownOptions).map((label) => (
