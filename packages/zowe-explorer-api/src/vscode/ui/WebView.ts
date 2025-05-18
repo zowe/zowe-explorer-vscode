@@ -26,6 +26,8 @@ export type WebViewOpts = {
     isView?: boolean;
     /** Allow evaluation of functions within the webview script code. */
     unsafeEval?: boolean;
+    /** Which ViewColumn to open the webview. */
+    viewColumn?: ViewColumn;
 };
 
 export type UriPair = {
@@ -89,7 +91,7 @@ export class WebView {
         };
 
         if (!(opts?.isView ?? false)) {
-            this.panel = window.createWebviewPanel("ZEAPIWebview", this.title, ViewColumn.Beside, {
+            this.panel = window.createWebviewPanel("ZEAPIWebview", this.title, opts?.viewColumn ?? ViewColumn.Beside, {
                 enableScripts: true,
                 localResourceRoots: [this.uris.disk.build, this.uris.disk.codicons],
                 retainContextWhenHidden: opts?.retainContext ?? false,

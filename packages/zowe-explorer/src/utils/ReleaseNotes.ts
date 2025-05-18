@@ -10,7 +10,7 @@
  */
 
 import { WebView } from "@zowe/zowe-explorer-api";
-import { ExtensionContext, l10n } from "vscode";
+import { ExtensionContext, l10n, ViewColumn } from "vscode";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import * as fs from "fs/promises";
 import { SettingsConfig } from "../configuration/SettingsConfig";
@@ -72,6 +72,7 @@ export class ReleaseNotes extends WebView {
     public constructor(context: ExtensionContext, version: string) {
         super(l10n.t(`ZE Release Notes - ${version}`), "release-notes", context, {
             onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
+            viewColumn: ViewColumn.Active,
         });
         this.version = version;
     }
