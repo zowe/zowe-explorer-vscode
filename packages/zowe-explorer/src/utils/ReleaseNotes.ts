@@ -70,7 +70,7 @@ export class ReleaseNotes extends WebView {
     }
 
     public constructor(context: ExtensionContext, version: string) {
-        super(l10n.t(`ZE Release Notes - ${version}`), "release-notes", context, {
+        super(l10n.t(`${Constants.RELEASE_NOTES_PANEL_TITLE} - ${version}`), "release-notes", context, {
             onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
             viewColumn: ViewColumn.Active,
         });
