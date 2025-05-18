@@ -13,6 +13,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added a `zowe.settings.socketConnectTimeout` setting to provide users with the ability to specify a connection timeout for REST requests. [#3379](https://github.com/zowe/zowe-explorer-vscode/issues/3379)
 - Added a `zowe.settings.requestTimeout` setting to provide users with the ability to specify a timeout for REST requests. [#3631](https://github.com/zowe/zowe-explorer-vscode/pull/3631)
 - Updated Zowe SDKs to `8.20.0` for technical currency. [#3631](https://github.com/zowe/zowe-explorer-vscode/pull/3631)
+- Add new option `viewColumn` to `WebViewOpts` to allow extenders to specify the column in which the webview should be displayed. [#3657](https://github.com/zowe/zowe-explorer-vscode/issues/3657)
 
 ### Bug fixes
 
