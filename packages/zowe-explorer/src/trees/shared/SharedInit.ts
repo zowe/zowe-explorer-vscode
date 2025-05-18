@@ -331,9 +331,23 @@ export class SharedInit {
                     // This command does nothing, its here to let us disable individual items in the tree view
                 })
             );
+
             // initialize the Constants.filesToCompare array during initialization
             LocalFileManagement.resetCompareSelection();
         }
+
+        // Prevent VS Code from restoring selected the webview panels after restart
+        // This is a workaround for issue where the webview panels are restored properly when VS Code is closed & reopened
+        context.subscriptions.push(
+            vscode.window.registerWebviewPanelSerializer("ZEAPIWebview", {
+                deserializeWebviewPanel(panel) {
+                    if (panel.title.startsWith(Constants.RELEASE_NOTES_PANEL_TITLE) || panel.title.startsWith(Constants.SHARED_HISTORY_PANEL_TITLE)) {
+                        panel.dispose();
+                    }
+                    return Promise.resolve();
+                },
+            })
+        );
     }
 
     public static watchConfigProfile(context: vscode.ExtensionContext): void {
