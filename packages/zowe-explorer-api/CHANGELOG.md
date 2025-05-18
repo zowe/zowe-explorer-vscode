@@ -4,6 +4,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## TBD Release
 
+- Fixed error message shown when creating a config file that already exists. [#3647](https://github.com/zowe/zowe-explorer-vscode/issues/3647)
+
 ### New features and enhancements
 
 - Added the handling of cause error details in the ErrorCorrelator. [#3611](https://github.com/zowe/zowe-explorer-vscode/pull/3611)
