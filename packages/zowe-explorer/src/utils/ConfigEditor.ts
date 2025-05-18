@@ -9,7 +9,7 @@
  *
  */
 
-import { DeferredPromise, FileManagement, WebView, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { DeferredPromise, WebView, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { ProfileInfo } from "@zowe/imperative";
 import * as path from "path";
@@ -89,10 +89,15 @@ export class ConfigEditor extends WebView {
                 }
                 await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
+                console.debug("Updated config being sent:", JSON.stringify(await this.getLocalConfigs(), null, 2));
+
                 await this.panel.webview.postMessage({
                     command: "CONFIGURATIONS",
-                    disableSaveOverlay: true,
                     contents: await this.getLocalConfigs(),
+                });
+
+                await this.panel.webview.postMessage({
+                    command: "DISABLE_OVERLAY",
                 });
                 break;
             case "OPEN_CONFIG_FILE":
@@ -145,11 +150,23 @@ export class ConfigEditor extends WebView {
             if (typeof change.value === "object" || typeof change.value === "string") {
                 try {
                     // profInfo.getTeamConfig().api.profiles.set(change.key, change.value);
+                    // profInfo.getTeamConfig().
                 } catch (err) {
                     // console.log(err);
                 }
             }
         }
+        for (const deletion of deletions) {
+            try {
+                profInfo.getTeamConfig().delete(`profiles.${deletion as string}`);
+                // profInfo.getTeamConfig().api.layers.
+                // profInfo.getTeamConfig().api.profiles.set(change.key, change.value);
+                // profInfo.getTeamConfig().
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
         await profInfo.getTeamConfig().save();
     }
 }

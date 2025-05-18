@@ -37,15 +37,12 @@ export function App() {
   useEffect(() => {
     window.addEventListener("message", (event) => {
       if (event.data.command === "CONFIGURATIONS") {
-        if (event.data.disableSaveOverlay) {
-          setSaveModalOpen(false);
-        }
         const { contents } = event.data;
         setConfigurations(contents);
 
         setSelectedTab((prevSelectedTab) => {
           if (prevSelectedTab !== null && prevSelectedTab < contents.length) {
-            return prevSelectedTab; // Keep previous tab if still valid
+            return prevSelectedTab;
           }
           return contents.length > 0 ? 0 : null;
         });
@@ -58,11 +55,28 @@ export function App() {
           setFlattenedDefaults(flattenKeys(config.defaults));
           setOriginalDefaults(flattenKeys(config.defaults));
         }
+      } else if (event.data.command === "DISABLE_OVERLAY") {
+        setSaveModalOpen(false);
       }
     });
 
     vscodeApi.postMessage({ command: "GETPROFILES" });
   }, [localizationState]);
+
+  useEffect(() => {
+    if (selectedTab !== null && configurations[selectedTab]) {
+      const config = configurations[selectedTab].properties;
+      setFlattenedConfig(flattenKeys(config.profiles));
+      setFlattenedDefaults(flattenKeys(config.defaults));
+      setOriginalDefaults(flattenKeys(config.defaults));
+
+      // Clear pending edits after reloading
+      setPendingChanges({});
+      setDeletions([]);
+      setPendingDefaults({});
+      setDefaultsDeletions([]);
+    }
+  }, [selectedTab, configurations]);
 
   const handleChange = (key: string, value: string) => {
     const path = flattenedConfig[key]?.path ?? key.split(".");
@@ -188,6 +202,8 @@ export function App() {
     setDeletions([]);
     setPendingDefaults({});
     setDefaultsDeletions([]);
+
+    vscodeApi.postMessage({ command: "GETPROFILES" }); // Refresh configurations after save
   };
 
   const handleOpenRawJson = (configPath: string) => {
@@ -493,7 +509,12 @@ export function App() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1>{l10n.t("Configuration Editor")}</h1>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <button className="header-button" onClick={() => vscodeApi.postMessage({ command: "GETPROFILES" })}>
+          <button
+            className="header-button"
+            onClick={() => {
+              vscodeApi.postMessage({ command: "GETPROFILES" });
+            }}
+          >
             {l10n.t("Refresh")}
           </button>
           {selectedTab !== null && (
