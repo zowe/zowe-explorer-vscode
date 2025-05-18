@@ -13,7 +13,6 @@ import * as vscode from "vscode";
 import * as core from "@zowe/core-for-zowe-sdk";
 import * as profUtils from "../../../../src/utils/ProfilesUtils";
 import * as SharedHistoryView from "../../../../src/trees/shared/SharedHistoryView";
-import * as ReleaseNotes from "../../../../src/utils/ReleaseNotes";
 import { IJestIt, ITestContext, processSubscriptions } from "../../../__common__/testUtils";
 import { Constants } from "../../../../src/configuration/Constants";
 import { Profiles } from "../../../../src/configuration/Profiles";
@@ -323,6 +322,7 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(core, "getZoweDir", { value: () => test.value });
             Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand.fun });
             Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
+            Object.defineProperty(vscode.window, "registerWebviewPanelSerializer", { value: jest.fn() });
             SharedInit.registerCommonCommands(test.context, test.value.providers);
         });
         afterAll(() => {

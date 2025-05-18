@@ -170,6 +170,6 @@ describe("ReleaseNotes Webview", () => {
     it("should handle missing changelog entries gracefully", () => {
         const rn = new ReleaseNotes(context, "4.0");
         const notes = rn.extractCurrentVersionNotes(changelog);
-        expect(notes).toContain("No changelog entries found for version 4.0.");
+        expect(notes).toContain("No changelog entries found for this version.");
     });
 });

@@ -132,7 +132,7 @@ export class ReleaseNotes extends WebView {
 
         const matches = [...changelog.matchAll(regex)];
         if (matches.length === 0) {
-            return l10n.t("No changelog entries found for version {0}.", this.version);
+            return l10n.t("No changelog entries found for this version.");
         }
 
         return matches.map((m) => m[0].trim()).join("\n\n");
