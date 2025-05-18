@@ -2409,6 +2409,7 @@ dependencies = [
  "octocrab",
  "owo-colors",
  "reqwest",
+ "serde_json",
  "tar",
  "tokio",
  "tokio-util",

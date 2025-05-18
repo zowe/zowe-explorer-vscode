@@ -2,6 +2,7 @@
 
 use std::process::Command;
 
+use crate::test::Commands as TestCommands;
 use anyhow::Result;
 use clap::{command, CommandFactory, Parser, Subcommand};
 use clap_complete::{generate, Shell};
@@ -33,84 +34,44 @@ pub struct TestConfig {
 /// Root commands available in the Zowe Explorer development CLI
 #[derive(Subcommand)]
 pub enum RootCommands {
-    /// Forward commands to the applicable package manager
-    #[command(
-        name = "pkg-manager",
-        about = "Forward commands to the applicable package manager",
-        visible_alias = "pm"
-    )]
-    PkgMgr {
-        #[arg(last = true)]
-        args: Vec<String>,
-    },
-
-    /// Setup required dependencies to facilitate Zowe Explorer development
-    #[command(
-        name = "setup",
-        about = "Setup required dependencies to facilitate Zowe Explorer development",
-        visible_alias = "s"
-    )]
+    /// Set up the development environment
     Setup {
-        #[arg(
-            default_value = None,
-            help = "A Git ref to checkout when setting up the environment",
-            long,
-            short,
-            value_name = "REF"
-        )]
+        /// Git reference to use for setup
+        #[arg(short, long)]
         reference: Option<String>,
     },
-
-    /// Manually test Zowe Explorer or an extender
-    #[command(
-        name = "test",
-        about = "Manually test Zowe Explorer or an extender",
-        visible_alias = "t"
-    )]
+    /// Run tests
     Test {
         #[command(subcommand)]
-        subcommand: crate::test::Commands,
+        subcommand: TestCommands,
         #[command(flatten)]
         config: TestConfig,
     },
-
-    /// Prints the version info for the zedc tool
-    #[command(
-        name = "version",
-        about = "Prints the version info for the zedc tool",
-        alias = "v"
-    )]
+    /// Print version information
     Version,
-
-    /// Show the current state of the Zowe Explorer development environment
-    #[command(
-        name = "status",
-        about = "Show the current state of the Zowe Explorer development environment",
-        visible_alias = "st"
-    )]
+    /// Run package manager commands
+    PkgMgr {
+        /// Arguments to pass to the package manager
+        #[arg(trailing_var_arg = true)]
+        args: Vec<String>,
+    },
+    /// Show development environment status
     Status {
-        #[arg(
-            long,
-            help = "Show detailed information about the environment",
-            default_value = "false"
-        )]
+        /// Show verbose output
+        #[arg(short, long)]
         verbose: bool,
     },
-
-    /// Generate shell completion scripts
-    #[command(
-        name = "completions",
-        about = "Generate shell completion scripts",
-        visible_alias = "comp"
-    )]
+    /// Generate shell completions
     Completions {
-        #[arg(help = "The shell to generate completions for", value_enum)]
+        /// Shell to generate completions for
+        #[arg(value_enum)]
         shell: clap_complete::Shell,
     },
 }
 
 /// Command-line arguments for the zedc tool
 #[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 pub struct Args {
     #[command(subcommand)]
     pub command: RootCommands,
