@@ -89,8 +89,6 @@ export class ConfigEditor extends WebView {
                 }
                 await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
-                console.debug("Updated config being sent:", JSON.stringify(await this.getLocalConfigs(), null, 2));
-
                 await this.panel.webview.postMessage({
                     command: "CONFIGURATIONS",
                     contents: await this.getLocalConfigs(),
@@ -150,7 +148,7 @@ export class ConfigEditor extends WebView {
             if (typeof change.value === "object" || typeof change.value === "string") {
                 try {
                     // profInfo.getTeamConfig().api.profiles.set(change.key, change.value);
-                    // profInfo.getTeamConfig().
+                    profInfo.getTeamConfig().set(`profiles.${change.key as string}`, change.value, { parseString: true });
                 } catch (err) {
                     // console.log(err);
                 }
@@ -159,11 +157,8 @@ export class ConfigEditor extends WebView {
         for (const deletion of deletions) {
             try {
                 profInfo.getTeamConfig().delete(`profiles.${deletion as string}`);
-                // profInfo.getTeamConfig().api.layers.
-                // profInfo.getTeamConfig().api.profiles.set(change.key, change.value);
-                // profInfo.getTeamConfig().
             } catch (err) {
-                console.log(err);
+                // console.log(err);
             }
         }
 
