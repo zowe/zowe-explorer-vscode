@@ -15,6 +15,7 @@ import { ExtensionContext } from "vscode";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 import { Constants } from "../../../src/configuration/Constants";
+import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 
 jest.mock("fs/promises", () => {
     return {
@@ -171,5 +172,55 @@ describe("ReleaseNotes Webview", () => {
         const rn = new ReleaseNotes(context, "4.0");
         const notes = rn.extractCurrentVersionNotes(changelog);
         expect(notes).toContain("No changelog entries found for this version.");
+    });
+
+    it("should return extracted notes when changelog file is read successfully", async () => {
+        const rn = new ReleaseNotes(context, "3.2");
+        const extractSpy = jest.spyOn(rn, "extractCurrentVersionNotes").mockReturnValue("some notes");
+        const result = await rn.getChangelog();
+        expect(result).toBe("some notes");
+        expect(extractSpy).toHaveBeenCalled();
+    });
+
+    it("should return error message and logs error if changelog file cannot be read", async () => {
+        const rn = new ReleaseNotes(context, "3.2");
+        const errorMsg = "Error reading changelog file.";
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const fsMock = require("fs/promises");
+        fsMock.readFile.mockRejectedValueOnce(new Error("File not found"));
+        const loggerSpy = jest.spyOn(ZoweLogger, "error").mockImplementation(() => {});
+        const result = await rn.getChangelog();
+        expect(result).toBe(errorMsg);
+        expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining("Error reading changelog file"));
+    });
+
+    it("should do nothing if message does not have 'command'", async () => {
+        const rn = new ReleaseNotes(context, "3.2");
+        await expect(rn.onDidReceiveMessage({})).resolves.toBeUndefined();
+    });
+
+    it("should call sendReleaseNotes if command is 'ready'", async () => {
+        const rn = new ReleaseNotes(context, "3.2");
+        const sendSpy = jest.spyOn(rn, "sendReleaseNotes").mockResolvedValue(true);
+        await rn.onDidReceiveMessage({ command: "ready" });
+        expect(sendSpy).toHaveBeenCalled();
+    });
+
+    it("should do nothing for unknown command", async () => {
+        const rn = new ReleaseNotes(context, "3.2");
+        await expect(rn.onDidReceiveMessage({ command: "unknown_command" })).resolves.toBeUndefined();
+    });
+
+    it("should reveal panel if ReleaseNotes.instance already exists", () => {
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(Constants.RELEASE_NOTES_OPTS.ALWAYS_SHOW);
+        jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+
+        ReleaseNotes.instance = new ReleaseNotes(context, "3.2");
+        const revealSpy = jest.fn();
+        (ReleaseNotes.instance as any).panel = { reveal: revealSpy, onDidDispose: jest.fn() };
+
+        ReleaseNotes.show(context, false);
+
+        expect(revealSpy).toHaveBeenCalled();
     });
 });

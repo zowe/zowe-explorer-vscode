@@ -26,7 +26,11 @@ export function App(): JSXInternal.Element {
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
-      if (!isSecureOrigin(event.origin) || !event.data) {
+      if (!isSecureOrigin(event.origin)) {
+        return;
+      }
+
+      if (!event.data) {
         return;
       }
 

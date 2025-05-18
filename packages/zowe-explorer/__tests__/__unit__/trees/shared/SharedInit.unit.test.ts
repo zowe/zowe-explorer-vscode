@@ -32,6 +32,7 @@ import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvid
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
+import { ReleaseNotes } from "../../../../src/utils/ReleaseNotes";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
@@ -85,6 +86,10 @@ describe("Test src/shared/extension", () => {
             {
                 name: "zowe.editHistory",
                 mock: [{ spy: jest.spyOn(SharedHistoryView, "SharedHistoryView"), arg: [test.context, test.value.providers, cmdProviders] }],
+            },
+            {
+                name: "zowe.showReleaseNotes",
+                mock: [{ spy: jest.spyOn(ReleaseNotes, "show"), arg: [test.context, true] }],
             },
             {
                 name: "zowe.promptCredentials",
