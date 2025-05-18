@@ -43,9 +43,9 @@ export function App(): JSXInternal.Element {
         setVersion(version);
       }
 
-      const showAfterUpdateSetting = event.data["showAfterUpdate"];
-      if (showAfterUpdateSetting) {
-        setShowOption(showAfterUpdateSetting);
+      const showReleaseNotesSetting = event.data["showReleaseNotesSetting"];
+      if (showReleaseNotesSetting) {
+        setShowOption(showReleaseNotesSetting);
       }
     });
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "ready" });
@@ -53,18 +53,19 @@ export function App(): JSXInternal.Element {
 
   const handleDropdownChange = (event: JSXInternal.TargetedEvent<HTMLSelectElement>) => {
     const selectedOption = event.currentTarget.value;
+    console.log("Selected option:", selectedOption);
     setShowOption(selectedOption);
 
     switch (selectedOption) {
-      case "never":
-        PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "disable" });
+      case "Never Show":
+        PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: selectedOption });
         break;
-      case "thisVersion":
-        PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "disableForThisVersion" });
+      case "Disable for this version":
+        PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: selectedOption });
         break;
-      case "always":
+      case "Always Show":
       default:
-        PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "enable" });
+        PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: selectedOption });
         break;
     }
   };
@@ -83,9 +84,9 @@ export function App(): JSXInternal.Element {
         <span>{l10n.t("Show release notes:")}</span>
         <br />
         <VSCodeDropdown value={showOption} onChange={handleDropdownChange}>
-          <VSCodeOption value="always">{l10n.t("Always show")}</VSCodeOption>
-          <VSCodeOption value="thisVersion">{l10n.t("Don't show for this version")}</VSCodeOption>
-          <VSCodeOption value="never">{l10n.t("Never show")}</VSCodeOption>
+          <VSCodeOption value="Always Show">{l10n.t("Always show")}</VSCodeOption>
+          <VSCodeOption value="Disable for this version">{l10n.t("Disable for this version")}</VSCodeOption>
+          <VSCodeOption value="Never Show">{l10n.t("Never show")}</VSCodeOption>
         </VSCodeDropdown>
       </label>
       {releaseNotes ? (

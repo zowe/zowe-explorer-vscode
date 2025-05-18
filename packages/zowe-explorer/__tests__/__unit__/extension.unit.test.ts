@@ -237,6 +237,7 @@ async function createGlobalMocks() {
             "zowe.certificateWizard",
             "zowe.executeNavCallback",
             "zowe.openRecentMember",
+            "zowe.showReleaseNotes",
             "zowe.searchInAllLoadedItems",
             "zowe.disableValidation",
             "zowe.enableValidation",

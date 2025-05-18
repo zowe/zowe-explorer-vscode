@@ -2028,6 +2028,17 @@
           "default": 0,
           "description": "%zowe.settings.requestTimeout%",
           "scope": "window"
+        },
+        "zowe.settings.showReleaseNotes": {
+          "type": "string",
+          "default": "%zowe.settings.alwaysShowReleaseNotes%",
+          "enum": [
+            "%zowe.settings.alwaysShowReleaseNotes%",
+            "%zowe.settings.disableForThisVersion%",
+            "%zowe.settings.neverShowReleaseNotes%"
+          ],
+          "description": "%zowe.settings.showReleaseNotes%",
+          "scope": "window"
         }
       }
     },

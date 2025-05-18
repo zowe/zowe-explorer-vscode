@@ -13,9 +13,61 @@ import { WebView } from "@zowe/zowe-explorer-api";
 import { ExtensionContext, l10n } from "vscode";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import * as fs from "fs/promises";
+import { SettingsConfig } from "../configuration/SettingsConfig";
+import { Constants } from "../configuration/Constants";
+import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
+import { Definitions } from "../configuration/Definitions";
 
 export class ReleaseNotes extends WebView {
     private version: string;
+    private static instance: ReleaseNotes | undefined;
+
+    public static shouldShowReleaseNotes(context: ExtensionContext): { version: string; showReleaseNotes: boolean } {
+        // Get extension version (major.minor)
+        const extensionVersion: string = context.extension.packageJSON.version;
+        const versionRegex = /(\d+\.\d+)/;
+        const majorMinorVersion = extensionVersion.match(versionRegex);
+        const currentVersion: string = majorMinorVersion ? majorMinorVersion[0] : extensionVersion;
+
+        // Get user setting for release notes display (from VS Code settings)
+        // This should be one of: "always", "never", "disableForThisVersion"
+        const showSetting = SettingsConfig.getDirectValue<string>(Constants.SETTINGS_SHOW_RELEASE_NOTES, "always");
+
+        // Get last shown version from local storage (global state)
+        const previousVersion = ZoweLocalStorage.getValue<string>(Definitions.LocalStorageKey.SHOW_RELEASE_NOTES_VERSION) ?? "";
+
+        // Logic:
+        // - "always": always show release notes
+        // - "never": never show release notes
+        // - "disableForThisVersion": only show if version changed
+        let showReleaseNotes = true;
+        if (showSetting === "Never Show") {
+            showReleaseNotes = false;
+        } else if (showSetting === "Disable for this version") {
+            showReleaseNotes = previousVersion !== currentVersion;
+        } // else "always" or unknown, show
+
+        // Update lastShownVersion in local storage if version changed and showing notes
+        if (showReleaseNotes && previousVersion !== currentVersion) {
+            ZoweLocalStorage.setValue(Definitions.LocalStorageKey.SHOW_RELEASE_NOTES_VERSION, currentVersion);
+        }
+
+        return { version: currentVersion, showReleaseNotes };
+    }
+
+    public static show(context: ExtensionContext, force = false): void {
+        const { version, showReleaseNotes } = ReleaseNotes.shouldShowReleaseNotes(context);
+        if (force || showReleaseNotes) {
+            if (ReleaseNotes.instance) {
+                ReleaseNotes.instance.panel?.reveal();
+            } else {
+                ReleaseNotes.instance = new ReleaseNotes(context, version);
+                ReleaseNotes.instance.panel?.onDidDispose(() => {
+                    ReleaseNotes.instance = undefined;
+                });
+            }
+        }
+    }
 
     public constructor(context: ExtensionContext, version: string) {
         super(l10n.t(`ZE Release Notes - ${version}`), "release-notes", context, {
@@ -33,17 +85,17 @@ export class ReleaseNotes extends WebView {
             case "ready":
                 await this.sendReleaseNotes();
                 break;
-            case "disable":
+            case "Never Show":
                 // Disable release notes permanently
-                await this.context.globalState.update("dontShowReleaseNotes", "never");
+                SettingsConfig.setDirectValue(Constants.SETTINGS_SHOW_RELEASE_NOTES, message.command);
                 break;
-            case "disableForThisVersion":
+            case "Disable for this version":
                 // Disable release notes for this version only
-                await this.context.globalState.update("dontShowReleaseNotes", this.version);
+                SettingsConfig.setDirectValue(Constants.SETTINGS_SHOW_RELEASE_NOTES, message.command);
                 break;
-            case "enable":
+            case "Always Show":
                 // Re-enable release notes
-                await this.context.globalState.update("dontShowReleaseNotes", undefined);
+                SettingsConfig.setDirectValue(Constants.SETTINGS_SHOW_RELEASE_NOTES, message.command);
                 break;
             default:
                 break;
@@ -52,11 +104,12 @@ export class ReleaseNotes extends WebView {
 
     public async sendReleaseNotes(): Promise<boolean> {
         const changelog = await this.getChangelog();
+        const showReleaseNotesSetting = SettingsConfig.getDirectValue(Constants.SETTINGS_SHOW_RELEASE_NOTES);
 
         return this.panel.webview.postMessage({
             releaseNotes: changelog,
             version: this.version,
-            showAfterUpdate: "always",
+            showReleaseNotesSetting: showReleaseNotesSetting,
         });
     }
 

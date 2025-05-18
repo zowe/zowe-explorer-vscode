@@ -155,5 +155,6 @@ export namespace Definitions {
         SETTINGS_OLD_SETTINGS_MIGRATED = "zowe.settings.oldSettingsMigrated",
         V1_MIGRATION_STATUS = "zowe.v1MigrationStatus",
         DS_SEARCH_OPTIONS = "zowe.dsSearchOptions",
+        SHOW_RELEASE_NOTES_VERSION = "zowe.settings.showReleaseNotes",
     }
 }
