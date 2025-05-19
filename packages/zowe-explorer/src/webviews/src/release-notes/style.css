@@ -1,12 +1,12 @@
 .heroBanner {
-    padding: 3rem 0 2.5rem 0;
+    padding: 1.5rem 0 1rem 0;
     text-align: center;
     position: relative;
     overflow: hidden;
     background-color: var(--vscode-sideBar-background);
     color: var(--vscode-editor-foreground);
     background-image: linear-gradient(to bottom, rgb(1, 38, 93) 0%, rgba(57, 117, 208, 0.8) 100%), url("../resources/background-img.svg");
-    background-size: cover, 600px;
+    background-size: cover, 400px;
     background-repeat: no-repeat, repeat;
     background-position: center, right top;
     animation: waveX 10s linear infinite, waveY 10s linear infinite;
@@ -18,14 +18,6 @@
 
 .heroBanner:hover {
     animation-play-state: running;
-}
-
-.heroLogo {
-    display: block;
-    margin: 0 auto 12px auto;
-    width: 64px;
-    height: 64px;
-    animation: zoweInTheBox 1.5s;
 }
 
 .heroTitle {
@@ -42,24 +34,6 @@
     color: white;
     margin: 0 0 0 0;
     text-align: center;
-}
-
-@keyframes zoweInTheBox {
-    from {
-        opacity: 0;
-        transform: scale(0.1) rotate(30deg);
-        transform-origin: center bottom;
-    }
-    50% {
-        transform: rotate(-10deg);
-    }
-    70% {
-        transform: rotate(3deg);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
 }
 
 @keyframes waveX {
@@ -81,12 +55,8 @@
 
 @media (max-width: 768px) {
     .heroBanner {
-        padding: 1.5rem 0 1.5rem 0;
-        background-size: cover, 300px;
-    }
-    .heroLogo {
-        width: 48px;
-        height: 48px;
+        padding: 0.75rem 0 0.75rem 0;
+        background-size: cover, 400px;
     }
 }
 
@@ -105,7 +75,7 @@
     border: 1px solid var(--vscode-panel-border);
     border-top: none;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    padding: 0 32px 32px 32px;
+    padding: 0 16px 16px 16px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -113,7 +83,7 @@
 
 .releaseNotesDropdownLabel {
     width: 100%;
-    margin: 24px 0 18px 0;
+    margin: 12px 0 9px 0;
 }
 
 .releaseNotesDropdownLabelText {
@@ -136,7 +106,7 @@
     width: 100%;
     border: none;
     border-top: 1px solid var(--vscode-panel-border);
-    margin: 10px 0 18px 0;
+    margin: 5px 0 9px 0;
 }
 
 .releaseNotesContent {
@@ -156,7 +126,7 @@
     border-radius: 6px;
     padding: 14px 16px;
     color: var(--vscode-editor-foreground);
-    font-size: 14px;
+    font-size: var(--vscode-font-size);
     line-height: 1.7;
     border: 1px solid var(--vscode-panel-border);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
