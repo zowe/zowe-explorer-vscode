@@ -96,7 +96,7 @@ export function App(): JSXInternal.Element {
       <div className="releaseNotesCard">
         <div className="releaseNotesDropdownsLabelsRow">
           <div className="releaseNotesDropdownLabelText">{l10n.t("When would you like release notes to show?")}</div>
-          <div className="releaseNotesDropdownLabelText">{l10n.t("Show notes for version:")}</div>
+          <div className="releaseNotesDropdownLabelText">{l10n.t("Which version would you like to show?")}</div>
         </div>
         <div className="releaseNotesDropdownsRow">
           <div className="releaseNotesDropdownCol">
