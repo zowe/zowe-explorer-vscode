@@ -677,8 +677,7 @@ const styles = `
 
 .secure-item-container {
   display: grid;
-  grid-template-columns: 100px auto auto;
-  gap: 8px;
+  grid-template-columns: 100px 35px 35px;
   align-items: center;
   max-width: 200px;
 }
