@@ -95,15 +95,29 @@ export class ReleaseNotes extends WebView {
     }
 
     public async sendReleaseNotes(): Promise<boolean> {
+        const releaseNotes = await this.getReleaseNotes();
         const changelog = await this.getChangelog();
         const showReleaseNotesSetting = SettingsConfig.getDirectValue(Constants.SETTINGS_SHOW_RELEASE_NOTES);
 
         return this.panel.webview.postMessage({
-            releaseNotes: changelog,
+            releaseNotes: releaseNotes,
+            changelog: changelog,
             version: this.version,
             showReleaseNotesSetting: showReleaseNotesSetting,
             dropdownOptions: Constants.RELEASE_NOTES_OPTS,
         });
+    }
+
+    public async getReleaseNotes(): Promise<string> {
+        const changelogPath = this.context.asAbsolutePath(`resources/release-notes/${this.version}.md`);
+        try {
+            const changelog = await fs.readFile(changelogPath, { encoding: "utf8" });
+            return changelog;
+        } catch (error) {
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            ZoweLogger.error(`[ReleaseNotes] Error reading changelog file: ${error}`);
+            return l10n.t("Error reading changelog file.");
+        }
     }
 
     public async getChangelog(): Promise<string> {

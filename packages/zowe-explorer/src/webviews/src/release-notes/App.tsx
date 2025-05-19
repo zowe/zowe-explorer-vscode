@@ -20,7 +20,9 @@ import * as l10n from "@vscode/l10n";
 import "./style.css";
 
 export function App(): JSXInternal.Element {
+  const RESOURCES_BASE = "../resources/images";
   const [releaseNotes, setReleaseNotes] = useState<string | null>(null);
+  const [changelog, setChangelog] = useState<string | null>(null);
   const [version, setVersion] = useState<string | null>(null);
   const [showOption, setShowOption] = useState<string>("");
   const [dropdownOptions, setDropdownOptions] = useState<Record<string, string>>({});
@@ -35,10 +37,13 @@ export function App(): JSXInternal.Element {
         return;
       }
 
-      const { releaseNotes, version, showReleaseNotesSetting, dropdownOptions } = event.data;
+      const { releaseNotes, changelog, version, showReleaseNotesSetting, dropdownOptions } = event.data;
 
       if (releaseNotes !== undefined) {
         setReleaseNotes(releaseNotes);
+      }
+      if (changelog !== undefined) {
+        setChangelog(changelog);
       }
       if (version !== undefined) {
         setVersion(version);
@@ -61,9 +66,12 @@ export function App(): JSXInternal.Element {
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: selectedOption });
   };
 
+  const replaceResourcesBase = (markdown: string) => markdown.replace(/\{\{resourcesBase\}\}/g, RESOURCES_BASE);
+
   const renderMarkdown = (markdown: string) => {
+    const withResources = replaceResourcesBase(markdown);
     // @ts-expect-error marked may return a Promise, but I know it can't be here
-    const rawHtml: string = marked(markdown);
+    const rawHtml: string = marked(withResources);
     return DOMPurify.sanitize(rawHtml);
   };
 
@@ -94,6 +102,17 @@ export function App(): JSXInternal.Element {
             </div>
           ) : (
             <p className="releaseNotesLoading">{l10n.t("Loading release notes...")}</p>
+          )}
+        </div>
+        <hr className="releaseNotesDivider" />
+        <div className="releaseNotesContent">
+          {changelog ? (
+            <div>
+              <h2 className="releaseNotesTitle">{l10n.t("Changelog")}</h2>
+              <div className="releaseNotesMarkdown" dangerouslySetInnerHTML={{ __html: renderMarkdown(changelog) }} />
+            </div>
+          ) : (
+            <p className="releaseNotesLoading">{l10n.t("Loading changelog...")}</p>
           )}
         </div>
       </div>
