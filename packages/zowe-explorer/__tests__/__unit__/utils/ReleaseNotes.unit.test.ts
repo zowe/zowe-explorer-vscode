@@ -10,6 +10,7 @@
  */
 
 import * as vscode from "vscode";
+import * as fs from "fs/promises";
 import { ReleaseNotes } from "../../../src/utils/ReleaseNotes";
 import { ExtensionContext } from "vscode";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
@@ -30,6 +31,15 @@ jest.mock("fs/promises", () => {
             ),
     };
 });
+
+function mockReleaseNotesFile(version: string, content: string) {
+    (fs.readFile as jest.Mock).mockImplementationOnce((filePath: string) => {
+        if (filePath.includes(`release-notes-${version}.md`)) {
+            return Promise.resolve(content);
+        }
+        return Promise.reject(new Error("File not found"));
+    });
+}
 
 describe("ReleaseNotes Webview", () => {
     let context: ExtensionContext;
@@ -121,26 +131,6 @@ describe("ReleaseNotes Webview", () => {
         expect(ReleaseNotes.instance).toBeDefined();
     });
 
-    it("should send release notes and version to webview", async () => {
-        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(Constants.RELEASE_NOTES_OPTS.ALWAYS_SHOW);
-        jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
-
-        ReleaseNotes.show(context, false);
-        assignPanelToInstance();
-
-        const rn = new ReleaseNotes(context, "3.2");
-        (rn as any).panel = panelMock;
-        await rn.sendReleaseNotes();
-        expect(postMessageMock).toHaveBeenCalledWith(
-            expect.objectContaining({
-                releaseNotes: expect.stringContaining("Added feature"),
-                version: "3.2",
-                showReleaseNotesSetting: Constants.RELEASE_NOTES_OPTS.ALWAYS_SHOW,
-                dropdownOptions: Constants.RELEASE_NOTES_OPTS,
-            })
-        );
-    });
-
     it("should update setting on dropdown change via onDidReceiveMessage", async () => {
         jest.spyOn(SettingsConfig, "setDirectValue").mockResolvedValue(undefined as any);
 
@@ -222,5 +212,64 @@ describe("ReleaseNotes Webview", () => {
         ReleaseNotes.show(context, false);
 
         expect(revealSpy).toHaveBeenCalled();
+    });
+
+    it("should read and send the correct release notes file for the version", async () => {
+        const version = "3.2";
+        const releaseNotesContent = "# Release Notes for 3.2\n- Feature A\n- Feature B";
+        mockReleaseNotesFile(version, releaseNotesContent);
+
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(Constants.RELEASE_NOTES_OPTS.ALWAYS_SHOW);
+        jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+
+        ReleaseNotes.show(context, false);
+        assignPanelToInstance();
+
+        const rn = new ReleaseNotes(context, version);
+        (rn as any).panel = panelMock;
+        await rn.sendReleaseNotes();
+
+        expect(postMessageMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                releaseNotes: expect.stringContaining("Release Notes for 3.2"),
+                version: version,
+            })
+        );
+    });
+
+    it("should return error message if release notes file is missing", async () => {
+        const version = "4.0";
+        // Simulate file not found
+        (fs.readFile as jest.Mock).mockImplementationOnce(() => Promise.reject(new Error("File not found")));
+        const rn = new ReleaseNotes(context, version);
+        const loggerSpy = jest.spyOn(ZoweLogger, "error").mockImplementation(() => {});
+        const notes = await rn.getReleaseNotes();
+        expect(notes).toMatch(/Error reading release notes file/);
+        expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining("Error reading release notes file"));
+    });
+
+    it("should send correct release notes and changelog for a version", async () => {
+        const version = "3.2";
+        const releaseNotesContent = "# Release Notes for 3.2\n- Feature X";
+        mockReleaseNotesFile(version, releaseNotesContent);
+
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(Constants.RELEASE_NOTES_OPTS.ALWAYS_SHOW);
+        jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+
+        ReleaseNotes.show(context, false);
+        assignPanelToInstance();
+
+        const rn = new ReleaseNotes(context, version);
+        (rn as any).panel = panelMock;
+        await rn.sendReleaseNotes();
+
+        // Should include both release notes and changelog for 3.2.x
+        expect(postMessageMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                releaseNotes: expect.stringContaining("Feature X"),
+                changelog: expect.stringContaining("Patch for 3.2.2"),
+                version: version,
+            })
+        );
     });
 });
