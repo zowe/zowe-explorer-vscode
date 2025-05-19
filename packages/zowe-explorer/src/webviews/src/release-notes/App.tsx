@@ -26,6 +26,7 @@ export function App(): JSXInternal.Element {
   const [version, setVersion] = useState<string | null>(null);
   const [showOption, setShowOption] = useState<string>("");
   const [dropdownOptions, setDropdownOptions] = useState<Record<string, string>>({});
+  const [activeTab, setActiveTab] = useState<"releaseNotes" | "changelog">("releaseNotes");
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
@@ -94,26 +95,39 @@ export function App(): JSXInternal.Element {
             ))}
           </VSCodeDropdown>
         </label>
-        <hr className="releaseNotesDivider" />
-        <div className="releaseNotesContent">
-          {releaseNotes ? (
-            <div>
-              <h2 className="releaseNotesTitle">{l10n.t("Release Notes")}</h2>
-              <div className="releaseNotesMarkdown" dangerouslySetInnerHTML={{ __html: renderMarkdown(releaseNotes) }} />
-            </div>
-          ) : (
-            <p className="releaseNotesLoading">{l10n.t("Loading release notes...")}</p>
-          )}
+        <div className="releaseNotesTabs">
+          <button
+            className={`releaseNotesTab${activeTab === "releaseNotes" ? " active" : ""}`}
+            onClick={() => setActiveTab("releaseNotes")}
+            type="button"
+          >
+            {l10n.t("Release Notes")}
+          </button>
+          <button className={`releaseNotesTab${activeTab === "changelog" ? " active" : ""}`} onClick={() => setActiveTab("changelog")} type="button">
+            {l10n.t("Changelog")}
+          </button>
         </div>
-        <hr className="releaseNotesDivider" />
-        <div className="releaseNotesContent">
-          {changelog ? (
-            <div>
-              <h2 className="releaseNotesTitle">{l10n.t("Changelog")}</h2>
-              <div className="releaseNotesMarkdown" dangerouslySetInnerHTML={{ __html: renderMarkdown(changelog) }} />
+        <div className="releaseNotesTabPanel">
+          {activeTab === "releaseNotes" ? (
+            <div className="releaseNotesContent">
+              {releaseNotes ? (
+                <div>
+                  <div className="releaseNotesMarkdown" dangerouslySetInnerHTML={{ __html: renderMarkdown(releaseNotes) }} />
+                </div>
+              ) : (
+                <p className="releaseNotesLoading">{l10n.t("Loading release notes...")}</p>
+              )}
             </div>
           ) : (
-            <p className="releaseNotesLoading">{l10n.t("Loading changelog...")}</p>
+            <div className="releaseNotesContent">
+              {changelog ? (
+                <div>
+                  <div className="releaseNotesMarkdown" dangerouslySetInnerHTML={{ __html: renderMarkdown(changelog) }} />
+                </div>
+              ) : (
+                <p className="releaseNotesLoading">{l10n.t("Loading changelog...")}</p>
+              )}
+            </div>
           )}
         </div>
       </div>

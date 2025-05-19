@@ -114,13 +114,6 @@
     margin-top: 0;
 }
 
-.releaseNotesTitle {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--vscode-editor-foreground);
-    margin: 0 0 10px 0;
-}
-
 .releaseNotesMarkdown {
     background: var(--vscode-editor-background);
     border-radius: 6px;
@@ -132,7 +125,54 @@
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
+.releaseNotesMarkdown img {
+    border: 1.5px solid var(--vscode-panel-border);
+    border-radius: 6px;
+    padding: 2px;
+    background: var(--vscode-editor-background);
+    max-width: 100%;
+    display: block;
+    margin: 16px 0;
+}
+
 .releaseNotesLoading {
     color: var(--vscode-descriptionForeground);
     font-style: italic;
+}
+
+.releaseNotesTabs {
+    display: flex;
+    width: 100%;
+    border-bottom: 1px solid var(--vscode-panel-border);
+    margin-bottom: 12px;
+}
+
+.releaseNotesTab {
+    flex: 1;
+    padding: 10px 0;
+    text-align: center;
+    cursor: pointer;
+    background: none;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--vscode-editor-foreground);
+    border-bottom: 2px solid transparent;
+    transition: border-bottom 0.2s, color 0.2s;
+}
+
+.releaseNotesTab.active {
+    color: var(--vscode-editor-foreground);
+    border-bottom: 2px solid var(--vscode-editor-foreground);
+    background: var(--vscode-sideBar-background);
+}
+
+.releaseNotesTab:not(.active):hover {
+    color: var(--vscode-editor-foreground);
+    background: var(--vscode-sideBar-background);
+}
+
+.releaseNotesTabPanel {
+    width: 100%;
 }

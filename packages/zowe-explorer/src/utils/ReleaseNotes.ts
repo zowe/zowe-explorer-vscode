@@ -109,14 +109,14 @@ export class ReleaseNotes extends WebView {
     }
 
     public async getReleaseNotes(): Promise<string> {
-        const changelogPath = this.context.asAbsolutePath(`src/webviews/dist/resources/release-notes-${this.version}.md`);
+        const releaseNotesPath = this.context.asAbsolutePath(`src/webviews/dist/resources/release-notes-${this.version}.md`);
         try {
-            const changelog = await fs.readFile(changelogPath, { encoding: "utf8" });
+            const changelog = await fs.readFile(releaseNotesPath, { encoding: "utf8" });
             return changelog;
         } catch (error) {
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-            ZoweLogger.error(`[ReleaseNotes] Error reading changelog file: ${error}`);
-            return l10n.t("Error reading changelog file.");
+            ZoweLogger.error(`[ReleaseNotes] Error reading release notes file: ${error}`);
+            return l10n.t("Error reading release notes file.");
         }
     }
 
