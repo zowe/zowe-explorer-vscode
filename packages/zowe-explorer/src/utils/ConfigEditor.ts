@@ -148,7 +148,9 @@ export class ConfigEditor extends WebView {
             if (typeof change.value === "object" || typeof change.value === "string") {
                 try {
                     // profInfo.getTeamConfig().api.profiles.set(change.key, change.value);
-                    profInfo.getTeamConfig().set(`profiles.${change.key as string}`, change.value, { parseString: true });
+                    profInfo
+                        .getTeamConfig()
+                        .set(`profiles.${change.key as string}`, change.value, { parseString: true, secure: change.secure ?? false });
                 } catch (err) {
                     // console.log(err);
                 }

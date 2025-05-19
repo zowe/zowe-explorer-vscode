@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import path from "path";
 import * as l10n from "@vscode/l10n";
 import { cloneDeep } from "es-toolkit";
-
+import { isSecureOrigin } from "../utils";
 const vscodeApi = acquireVsCodeApi();
 
 export function App() {
@@ -36,6 +36,9 @@ export function App() {
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
+      if (!isSecureOrigin(event.origin)) {
+        return;
+      }
       if (event.data.command === "CONFIGURATIONS") {
         const { contents } = event.data;
         setConfigurations(contents);
