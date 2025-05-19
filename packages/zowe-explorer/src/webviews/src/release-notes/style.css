@@ -5,7 +5,7 @@
     overflow: hidden;
     background-color: var(--vscode-sideBar-background);
     color: var(--vscode-editor-foreground);
-    background-image: linear-gradient(to bottom, rgb(1, 38, 93) 0%, rgba(57, 117, 208, 0.8) 100%), url("../resources/background-img.svg");
+    background-image: linear-gradient(to bottom, rgb(1, 38, 93) 0%, rgba(57, 117, 208, 0.8) 100%), url("../resources/images/background-img.svg");
     background-size: cover, 400px;
     background-repeat: no-repeat, repeat;
     background-position: center, right top;

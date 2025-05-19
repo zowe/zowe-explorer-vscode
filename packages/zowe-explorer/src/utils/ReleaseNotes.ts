@@ -109,7 +109,7 @@ export class ReleaseNotes extends WebView {
     }
 
     public async getReleaseNotes(): Promise<string> {
-        const changelogPath = this.context.asAbsolutePath(`resources/release-notes/${this.version}.md`);
+        const changelogPath = this.context.asAbsolutePath(`src/webviews/dist/resources/release-notes-${this.version}.md`);
         try {
             const changelog = await fs.readFile(changelogPath, { encoding: "utf8" });
             return changelog;

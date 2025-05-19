@@ -20,7 +20,7 @@ import * as l10n from "@vscode/l10n";
 import "./style.css";
 
 export function App(): JSXInternal.Element {
-  const RESOURCES_BASE = "../resources/images";
+  const RESOURCES_BASE = "webviews/dist/resources/images";
   const [releaseNotes, setReleaseNotes] = useState<string | null>(null);
   const [changelog, setChangelog] = useState<string | null>(null);
   const [version, setVersion] = useState<string | null>(null);
@@ -66,12 +66,13 @@ export function App(): JSXInternal.Element {
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: selectedOption });
   };
 
-  const replaceResourcesBase = (markdown: string) => markdown.replace(/\{\{resourcesBase\}\}/g, RESOURCES_BASE);
+  const rewriteImageUrls = (markdown: string) => markdown.replace(/!\[([^\]]*)\]\(\.\/images\/([^)]+)\)/g, `![$1](${RESOURCES_BASE}/$2)`);
 
   const renderMarkdown = (markdown: string) => {
-    const withResources = replaceResourcesBase(markdown);
+    const withResources = rewriteImageUrls(markdown);
     // @ts-expect-error marked may return a Promise, but I know it can't be here
     const rawHtml: string = marked(withResources);
+    console.log("rawHtml", rawHtml);
     return DOMPurify.sanitize(rawHtml);
   };
 
