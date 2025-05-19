@@ -22,7 +22,6 @@ import { SharedUtils } from "../shared/SharedUtils";
 import { JobFSProvider } from "./JobFSProvider";
 import { PollProvider } from "./JobPollProvider";
 import { JobTableView } from "./JobTableView";
-import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 export class JobInit {
     /**
@@ -161,14 +160,11 @@ export class JobInit {
             })
         );
 
-        const paginationEnabled = SettingsConfig.getDirectValue<boolean>("zowe.jobs.settings.pagination");
-        if (paginationEnabled) {
-            context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.loadMoreRecords", (doc) => JobActions.loadMoreRecords(doc)));
-            vscode.languages.registerCodeLensProvider(
-                { scheme: ZoweScheme.Jobs },
-                new PaginationCodeLens("zowe.jobs.loadMoreRecords", (doc) => JobFSProvider.instance.supportSpoolPagination(doc))
-            );
-        }
+        context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.loadMoreRecords", (uri) => JobActions.loadMoreRecords(uri)));
+        vscode.languages.registerCodeLensProvider(
+            { scheme: ZoweScheme.Jobs },
+            new PaginationCodeLens("zowe.jobs.loadMoreRecords", (doc) => JobFSProvider.instance.supportSpoolPagination(doc))
+        );
 
         SharedInit.initSubscribers(context, jobsProvider);
         return jobsProvider;

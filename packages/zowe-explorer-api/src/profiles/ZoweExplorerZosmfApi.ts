@@ -50,6 +50,10 @@ export namespace ZoweExplorerZosmf {
                 "zowe.settings.socketConnectTimeout",
                 sessionToUse.ISession.socketConnectTimeout
             );
+            sessionToUse.ISession.requestCompletionTimeout = VscSettings.getDirectValue(
+                "zowe.settings.requestTimeout",
+                sessionToUse.ISession.requestCompletionTimeout
+            );
             return ProfilesCache.getProfileSessionWithVscProxy(sessionToUse);
         }
 

@@ -410,8 +410,6 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
     });
 });
 describe("Zowe Jobs Commands", () => {
-    let loadMoreRecordsCommand;
-
     beforeEach(() => {
         const mockActiveTextEditor = {
             document: {

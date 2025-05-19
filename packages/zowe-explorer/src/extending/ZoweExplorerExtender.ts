@@ -24,7 +24,7 @@ import {
     imperative,
     ZoweVsCodeExtension,
     ErrorCorrelator,
-    ILocalStorageAccess
+    ILocalStorageAccess,
 } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ProfilesUtils } from "../utils/ProfilesUtils";

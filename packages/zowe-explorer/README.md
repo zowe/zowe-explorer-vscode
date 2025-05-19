@@ -29,70 +29,56 @@ Zowe Explorer for VS Code is a Zowe&trade; component that focuses on modernizing
 
 ## Prerequisite tasks
 
-Zowe clients like Zowe Explorer for VS Code use z/OSMF Representational State Transfer (REST) APIs to work with system resources and extract system data. Ensure that the following z/OSMF REST services are configured and available.
+Use various services to communicate with system resources and extract system data on the mainframe:
 
-- TSO/E address space services
-- z/OS data set and file REST interface
-- z/OS jobs REST interface
+- z/OSMF
+  - See [z/OSMF documentation](https://www.ibm.com/docs/en/zos/3.1.0?topic=guide-using-zosmf-rest-services) for more information.
+- FTP
+  - This connection is available with the [Zowe Explorer FTP Extension](https://docs.zowe.org/stable/user-guide/ze-ftp-using-ze-ftp-ext).
+  - See [FTP documentation](https://www.ibm.com/docs/en/zos/3.1.0?topic=applications-transferring-files-using-ftp) for more information.
 
-For more information, see [z/OSMF REST services for Zowe clients](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#zosmf-rest-services-for-zowe-clients).
+There are multiple extensions that offer additional protocols and functionality. See the Explorer for Visual Studio Code Zowe V3 section in the [Zowe V2 and V3 Conformant Landscape](https://omp.landscape2.io/embed/embed.html?base-path=&classify=category&key=zowe-conformant&headers=true&category-header=false&category-in-subcategory=false&title-uppercase=false&title-alignment=left&title-font-family=sans-serif&title-font-size=13&style=shadowed&bg-color=%230033a1&fg-color=%23ffffff&item-modal=false&item-name=true&size=md&items-alignment=left&item-name-font-size=11) for a complete list of conformant extensions.
 
 ## Getting started
 
-Configure Zowe Explorer for VS Code, create a [team configuration file](#create-a-team-configuration-file) to connect to mainframe services, and manage secure credentials to get started using Zowe Explorer.
+Configure Zowe Explorer for VS Code and confirm you are able to access the mainframe with your _team configuration_.
 
 ### Configuring Zowe Explorer for VS Code
 
 Configure Zowe Explorer for VS Code by changing the extension settings. For more information, see [Configuring Zowe Explorer](https://docs.zowe.org/stable/user-guide/ze-install-configuring-ze).
 
-### Create a team configuration file
+### Confirming your team configuration
 
-A team configuration file stores connection information to mainframe services in _profiles_ that are easy to maintain and share with others in your organization.
+Team configuration stores connection information to access the mainframe. Check that you have your team configuration in place.
 
-**Note**: Team configuration files can be used across three core components of the Zowe project, Zowe Explorer for VS Code, Zowe Explorer for IntelliJ IDEA, and Zowe CLI.
+If you are missing your team configuration files, `zowe.config.json` and `zowe.schema.json`, work with your administrator to set them up.
 
-1. Navigate to the **Side Bar**.
-2. Hover over the **DATA SETS**, **USS**, or **JOBS** tree view header.
-3. Click the **+** icon.
-4. Select **Create a New Team Configuration File**.
-5. If no workspace is open, a global configuration file is created. If a workspace is open, chose either a global configuration file or a project-level configuration file.
-6. Edit the configuration file to include the host and other connection information for a mainframe service, and save.
+- Your team configuration is in place when:
 
-   Your team configuration file appears either in your `.zowe` folder if you chose the global configuration file option, or in your workspace directory if you chose the project-level configuration file option. The notification message that displays in VS Code after configuration file creation includes the path of the created file.
+  - Selecting the **+** icon in the headers of the **DATA SETS**, **UNIX SYSTEM SERVICES**, or **JOBS** tree views presents options in the **Quick Pick** to edit your configuration file or, if available, use an existing profile.
 
-   You can now use all the functionalities of the extension.
+- You do not have team configuration when:
+  - A pop-up message displays advising that client configurations were not found.
+  - A **Search** icon does not display in the headers of the **DATA SETS**, **UNIX SYSTEM SERVICES**, or **JOBS** tree views. Select the **+** icon to create team configuration.
+
+### Creating a team configuration file
+
+A team configuration file stores connection information to mainframe services in _profiles_, making team configuration easy to maintain and share with others in your organization.
+
+Team configuration should be created by an administrator or team lead who understands what connection information is needed and can efficiently manage it. When setting up team configuration, it is important to understand your team's requirements for use and the options available to ensure these are met.
+
+Refer to Zowe Docs for documentation on understanding and implementing team configuration:
+
+- [Team configuration](https://docs.zowe.org/stable/user-guide/cli-using-using-team-profiles) overview
+- [Creating Zowe Explorer profiles](https://docs.zowe.org/stable/user-guide/ze-profiles)
+
+**Note**: Team configuration can apply across three core components of the Zowe project, Zowe Explorer for VS Code, Zowe Explorer for IntelliJ IDEA, and Zowe CLI.
 
 ### Using profiles for the first time
 
-The first time team configuration profiles are used, you are prompted for a user name and password for the profile's connection.
+The first time a team configuration profile is used, you are prompted for a user name and password for the profile's connection.
 
 The term _password_ is used loosely to represent all supported authentication secrets, such as passphrases, passtickets, Multifactor Authentication (MFA) tokens, etc.
-
-### Profile validation
-
-Zowe Explorer for VS Code includes a back-end profile validation feature that helps to ensure that the specified connection to z/OS is successfully established and your profile is ready for use. If the API connection is valid, the profile is active and can be used.
-
-If the connection fails, Zowe Explorer displays an error message advising that the profile is inactive and to take troubleshooting steps.
-
-This feature is automatically enabled by default. You can disable the feature by right-clicking on your profile and selecting the **Manage Profile** option and then **Disable Validation for Profile** from the **Quick Pick**.
-
-Enable or disable the validation feature for all profiles in the VS Code settings:
-
-1. In VS Code, navigate to **Settings**.
-1. Navigate to Zowe Explorer settings.
-1. Check the **Automatic Profile Validation** checkbox to enable the automatic validation of profiles option. Uncheck to disable.
-1. Restart VS Code.
-
-### Editing team configuration file
-
-Edit your team configuration file to add, remove, or update a profile and its connection information.
-
-1. Navigate to the **Side Bar**.
-2. Hover over the **DATA SETS**, **USS**, or **JOBS** tree view header.
-3. Click the **+** icon.
-4. If team configuration is in place, the **Edit Team Configuration File** option displays in the **Quick Pick**.
-
-   If only a global- or project-level configuration is in place, the file opens to be edited. If both a global and project level configuration are in place, the user must select which file to edit.
 
 ### Updating securely stored credentials
 
@@ -107,53 +93,7 @@ To update securely stored user names and passwords in Zowe Explorer:
 
 ## Other authentication methods
 
-Zowe Explorer for VS Code supports multiple authentication methods including basic authentication, multi-factor authentication, tokens, and certificates.
-
-### Using Single Sign-On (SSO)
-
-As a Zowe user, you can use a base profile stored in a team configuration file to access multiple services through SSO.
-
-**Note**: For services not registered to your API ML instance, please consult the product or extender documentation for SSO support.
-
-In Zowe Explorer, a base profile enables you to authenticate your credentials with one method, the Zowe API Mediation Layer (API ML), to access multiple services. For more information, see [profile types](https://docs.zowe.org/stable/user-guide/cli-using-using-team-profiles#zowe-cli-profile-types).
-
-To log into the API ML authentication service with an existing base profile:
-
-1. Right-click on the profile you want to connect to using SSO.
-2. Select the **Manage Profile** option from the context menu.
-3. In the **Quick Pick**, select **Log in to Authentication Service**.
-4. In the following **Quick Pick** menu, select the appropriate option for authenticating to the API ML.
-5. Answer the proceeding prompts for information.
-
-   If the request is successful, the token is used for authentication until the logout action is taken or the token expires.
-
-For more information, see [Integrating with API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-using-integrating-apiml).
-
-If you are done working with Zowe Explorer and want to prevent further use of a token, you can request the server to invalidate your session token. Use the **Log out from Authentication Service** feature to invalidate the token:
-
-1. Open Zowe Explorer.
-2. Right-click your profile.
-3. Select the **Manage Profile** option.
-4. In the **Quick Pick**, select the **Log out from Authentication Service** option.
-
-   Your token has been successfully invalidated.
-
-### Multi-factor authentication (MFA) support
-
-Zowe Explorer supports the use of MFA through token authentication using either Zowe API Mediation Layer (API ML) or z/OSMF.
-
-**Note**: For services not registered to your API ML instance, please consult the product or extender documentation for MFA support.
-
-To use MFA authentication with Zowe Explorer, log into API ML:
-
-1. Right click on a profile.
-2. Select the **Manage Profile** option.
-3. Select **Log in to Authentication Service** from the **Quick Pick**.
-4. When prompted, select the credential method you want to use.
-
-   Zowe Explorer logs you in to the authentication service for your selected profile.
-
-For more information regarding MFA support in Zowe's documentation on [integrating with API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-using-integrating-apiml/).
+Zowe Explorer for VS Code supports multiple authentication methods including basic authentication, multi-factor authentication, tokens, and certificates. See [Zowe Docs](https://docs.zowe.org/stable/user-guide/ze-authentication-methods) for more information about these other authentication methods.
 
 ## Usage tips
 

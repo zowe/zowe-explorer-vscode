@@ -225,6 +225,7 @@ async function createGlobalMocks() {
             "zowe.jobs.filterJobs",
             "zowe.jobs.copyName",
             "zowe.jobs.tableView",
+            "zowe.jobs.loadMoreRecords",
             "zowe.updateSecureCredentials",
             "zowe.manualPoll",
             "zowe.editHistory",

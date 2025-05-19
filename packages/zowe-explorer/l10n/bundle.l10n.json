@@ -95,6 +95,7 @@
       "Profile name"
     ]
   },
+  "User: ": "User: ",
   "Zowe home directory is located at {0}/Zowe directory path": {
     "message": "Zowe home directory is located at {0}",
     "comment": [
@@ -177,7 +178,6 @@
   "Auth Method: ": "Auth Method: ",
   "Token-based Authentication": "Token-based Authentication",
   "Basic Authentication": "Basic Authentication",
-  "User: ": "User: ",
   "Certificate Authentication": "Certificate Authentication",
   "Unknown": "Unknown",
   "Pattern: ": "Pattern: ",
@@ -597,8 +597,8 @@
   "User ID": "User ID",
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
   "Failed to move {0}: {1}": "Failed to move {0}: {1}",
-  "Cannot drop a sequential dataset or a partitioned dataset onto another PDS.": "Cannot drop a sequential dataset or a partitioned dataset onto another PDS.",
-  "Cannot drop a member onto a sequential dataset.": "Cannot drop a member onto a sequential dataset.",
+  "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.": "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.",
+  "Cannot drop a partitioned dataset or member into a sequential dataset.": "Cannot drop a partitioned dataset or member into a sequential dataset.",
   "Moving MVS files...": "Moving MVS files...",
   "Initializing profiles with data set favorites.": "Initializing profiles with data set favorites.",
   "No data set favorites found.": "No data set favorites found.",
