@@ -17,7 +17,6 @@ import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import * as l10n from "@vscode/l10n";
-import { Hero } from "./Hero";
 import "./style.css";
 
 export function App(): JSXInternal.Element {
@@ -70,7 +69,10 @@ export function App(): JSXInternal.Element {
 
   return (
     <div className="releaseNotesRoot">
-      <Hero version={version} />
+      <header className="heroBanner">
+        <h1 className="heroTitle">{l10n.t("What's New in Zowe Explorer {0}", version ?? "")}</h1>
+        <p className="heroSubtitle">{l10n.t("Here you can find the latest updates and features.")}</p>
+      </header>
       <div className="releaseNotesCard">
         <label className="releaseNotesDropdownLabel">
           <span className="releaseNotesDropdownLabelText">{l10n.t("When would you like release notes to show?")}</span>

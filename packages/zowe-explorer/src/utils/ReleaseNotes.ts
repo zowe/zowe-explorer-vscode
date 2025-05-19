@@ -29,25 +29,24 @@ export class ReleaseNotes extends WebView {
         const majorMinorVersion = extensionVersion.match(versionRegex);
         const currentVersion: string = majorMinorVersion ? majorMinorVersion[0] : extensionVersion;
 
-        // Get user setting for release notes display (from VS Code settings)
-        // This should be one of: "always", "never", "disableForThisVersion"
+        // Get user setting for release notes display
         const showSetting = SettingsConfig.getDirectValue<string>(Constants.SETTINGS_SHOW_RELEASE_NOTES, Constants.RELEASE_NOTES_OPTS.ALWAYS_SHOW);
 
-        // Get last shown version from local storage (global state)
+        // Get last shown version from local storage
         const previousVersion = ZoweLocalStorage.getValue<string>(Definitions.LocalStorageKey.SHOW_RELEASE_NOTES_VERSION) ?? "";
 
         // Logic:
-        // - "always": always show release notes
-        // - "never": never show release notes
-        // - "disableForThisVersion": only show if version changed
+        // - "ALWAYS_SHOW" (default): always show release notes
+        // - "NEVER_SHOW": never show release notes
+        // - "DISABLE_FOR_THIS_VERSION": only show if version changed
         let showReleaseNotes = true;
         if (showSetting === Constants.RELEASE_NOTES_OPTS.NEVER_SHOW) {
             showReleaseNotes = false;
         } else if (showSetting === Constants.RELEASE_NOTES_OPTS.DISABLE_FOR_THIS_VERSION) {
             showReleaseNotes = previousVersion !== currentVersion;
-        } // else "always" or unknown, show
+        } // else "ALWAYS_SHOW" or unknown, show
 
-        // Update lastShownVersion in local storage if version changed and showing notes
+        // Update last shown version in local storage if version changed and showing notes
         if (showReleaseNotes && previousVersion !== currentVersion) {
             ZoweLocalStorage.setValue(Definitions.LocalStorageKey.SHOW_RELEASE_NOTES_VERSION, currentVersion);
         }
@@ -70,7 +69,7 @@ export class ReleaseNotes extends WebView {
     }
 
     public constructor(context: ExtensionContext, version: string) {
-        super(l10n.t("{0} - {1}", Constants.RELEASE_NOTES_PANEL_TITLE, version), "release-notes", context, {
+        super(Constants.RELEASE_NOTES_PANEL_TITLE, "release-notes", context, {
             onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
             viewColumn: ViewColumn.Active,
             iconPath: {
@@ -86,24 +85,11 @@ export class ReleaseNotes extends WebView {
             return;
         }
 
-        switch (message.command) {
-            case "ready":
-                await this.sendReleaseNotes();
-                break;
-            case Constants.RELEASE_NOTES_OPTS.NEVER_SHOW:
-                // Disable release notes permanently
-                SettingsConfig.setDirectValue(Constants.SETTINGS_SHOW_RELEASE_NOTES, message.command);
-                break;
-            case Constants.RELEASE_NOTES_OPTS.DISABLE_FOR_THIS_VERSION:
-                // Disable release notes for this version only
-                SettingsConfig.setDirectValue(Constants.SETTINGS_SHOW_RELEASE_NOTES, message.command);
-                break;
-            case Constants.RELEASE_NOTES_OPTS.ALWAYS_SHOW:
-                // Re-enable release notes
-                SettingsConfig.setDirectValue(Constants.SETTINGS_SHOW_RELEASE_NOTES, message.command);
-                break;
-            default:
-                break;
+        const { command } = message as { command: string };
+        if (command === "ready") {
+            await this.sendReleaseNotes();
+        } else if (Object.values(Constants.RELEASE_NOTES_OPTS).includes(command)) {
+            SettingsConfig.setDirectValue(Constants.SETTINGS_SHOW_RELEASE_NOTES, command);
         }
     }
 
@@ -133,7 +119,6 @@ export class ReleaseNotes extends WebView {
 
     public extractCurrentVersionNotes(changelog: string): string {
         const regex = new RegExp(`## \`(${this.version}\\.\\d+)\`[\\s\\S]*?(?=^## \`(?!${this.version}\\.\\d+))`, "gm");
-
         const matches = [...changelog.matchAll(regex)];
         if (matches.length === 0) {
             return l10n.t("No changelog entries found for this version.");
