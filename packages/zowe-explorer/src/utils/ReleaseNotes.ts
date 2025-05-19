@@ -71,6 +71,7 @@ export class ReleaseNotes extends WebView {
     public constructor(context: ExtensionContext, version: string) {
         super(Constants.RELEASE_NOTES_PANEL_TITLE, "release-notes", context, {
             onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
+            retainContext: true,
             viewColumn: ViewColumn.Active,
             iconPath: {
                 light: context.asAbsolutePath("resources/zowe-icon-color.png"),
