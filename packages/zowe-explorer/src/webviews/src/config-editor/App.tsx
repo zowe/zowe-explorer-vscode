@@ -277,7 +277,8 @@ export function App() {
         return (
           <div key={fullKey} className="config-item parent" style={{ marginLeft: `${path.length * 10}px` }}>
             <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>
-              {displayKey} {/* Use displayKey instead of key */}
+              {"> "}
+              {displayKey}
               <button className="add-default-button" title={`Add key inside "${fullKey}"`} onClick={() => openAddProfileModalAtPath(currentPath)}>
                 <span className="codicon codicon-add"></span>
               </button>
@@ -295,23 +296,30 @@ export function App() {
       } else if (isArray) {
         return (
           <div key={fullKey} className="config-item" style={{ marginLeft: `${path.length * 10}px` }}>
-            <span className="config-label">{displayKey}:</span> {/* Use displayKey instead of key */}
-            <ul>
+            <span className="config-label" style={{ fontWeight: "bold" }}>
+              {displayKey}
+            </span>
+            <div>
               {value.map((item: any, index: number) => (
-                <li key={index}>{item}</li>
+                <div className="list-item secure-item-container" key={index}>
+                  {item}
+                  <button className="action-button" style={{ marginLeft: "8px" }}>
+                    <span className="codicon codicon-edit"></span>
+                  </button>
+                  <button className="action-button" style={{ marginLeft: "8px" }}>
+                    <span className="codicon codicon-trash"></span>
+                  </button>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         );
       } else {
         return (
           <div key={fullKey} className="config-item" style={{ marginLeft: `${path.length * 10}px` }}>
             <div className="config-item-container">
-              <span className="config-label">{displayKey}:</span> {/* Use displayKey instead of key */}
-              {typeof pendingValue === "string" ||
-              typeof pendingValue === "boolean" ||
-              typeof pendingValue === "string" ||
-              typeof pendingValue === "number" ? (
+              <span className="config-label">{displayKey}</span>
+              {typeof pendingValue === "string" || typeof pendingValue === "boolean" || typeof pendingValue === "number" ? (
                 <input
                   className="config-input"
                   type="text"
@@ -319,7 +327,7 @@ export function App() {
                   onChange={(e) => handleChange(fullKey, (e.target as HTMLTextAreaElement).value)}
                 />
               ) : (
-                <span>{"{...}"}</span> // or JSON.stringify(pendingValue)
+                <span>{"{...}"}</span>
               )}
               <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
                 <span className="codicon codicon-trash"></span>
@@ -359,10 +367,15 @@ export function App() {
       } else if (isArray) {
         return (
           <div key={fullKey} className="config-item" style={{ marginLeft: `${currentPath.length * 10}px` }}>
-            <span className="config-label">{key}:</span>
+            <span className="config-label">
+              {">"}
+              {key}
+            </span>
             <ul>
               {value.map((item: any, index: number) => (
-                <li key={index}>{item}</li>
+                <li style={{ fontSize: "16px" }} key={index}>
+                  {item}
+                </li>
               ))}
             </ul>
           </div>
@@ -371,7 +384,7 @@ export function App() {
         return (
           <div key={fullKey} className="config-item" style={{ marginLeft: `${currentPath.length * 10}px` }}>
             <div className="config-item-container">
-              <span className="config-label">{key}:</span>
+              <span className="config-label">{key}</span>
               <input
                 className="config-input"
                 type="text"
@@ -662,6 +675,14 @@ const styles = `
   max-width: 500px;
 }
 
+.secure-item-container {
+  display: grid;
+  grid-template-columns: 100px auto auto;
+  gap: 8px;
+  align-items: center;
+  max-width: 200px;
+}
+
 .action-button {
   font-size: 14px;
   background-color: var(--vscode-button-background);
@@ -721,8 +742,9 @@ ul {
   padding-left: 20px;
 }
 
-li {
-  line-height: 1.5;
+.list-item {
+  line-height: 2;
+  padding-left: 3em;
 }
 
 .modal-overlay {
