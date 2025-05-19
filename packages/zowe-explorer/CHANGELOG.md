@@ -13,6 +13,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where an incorrect profile name is shown in the output for the "Issue Unix Command" function when an SSH profile is required to issue commands. [#3646](https://github.com/zowe/zowe-explorer-vscode/issues/3646)
 - Fixed Switch Authentication method misbehavior when changing from Token authentication to Basic authentication. [#3654](https://github.com/zowe/zowe-explorer-vscode/issues/3654)
 
 ## `3.2.0`
