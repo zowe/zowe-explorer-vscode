@@ -20,14 +20,20 @@ import { Definitions } from "../configuration/Definitions";
 
 export class ReleaseNotes extends WebView {
     private version: string;
+    private readonly extensionVersion: string;
     public static instance: ReleaseNotes | undefined;
 
-    public static shouldShowReleaseNotes(context: ExtensionContext): { version: string; showReleaseNotes: boolean } {
+    public static getExtensionVersion(context: ExtensionContext): string {
         // Get extension version (major.minor)
         const extensionVersion: string = context.extension.packageJSON.version;
         const versionRegex = /(\d+\.\d+)/;
         const majorMinorVersion = extensionVersion.match(versionRegex);
-        const currentVersion: string = majorMinorVersion ? majorMinorVersion[0] : extensionVersion;
+        return majorMinorVersion ? majorMinorVersion[0] : extensionVersion;
+    }
+
+    public static shouldShowReleaseNotes(context: ExtensionContext): { version: string; showReleaseNotes: boolean } {
+        // Get extension version (major.minor)
+        const currentVersion = ReleaseNotes.getExtensionVersion(context);
 
         // Get user setting for release notes display
         const showSetting = SettingsConfig.getDirectValue<string>(Constants.SETTINGS_SHOW_RELEASE_NOTES, Constants.RELEASE_NOTES_OPTS.ALWAYS_SHOW);
@@ -79,6 +85,7 @@ export class ReleaseNotes extends WebView {
             },
         });
         this.version = version;
+        this.extensionVersion = ReleaseNotes.getExtensionVersion(context);
     }
 
     public async onDidReceiveMessage(message: object): Promise<void> {
@@ -86,8 +93,11 @@ export class ReleaseNotes extends WebView {
             return;
         }
 
-        const { command } = message as { command: string };
+        const { command, version } = message as { command: string; version?: string };
         if (command === "ready") {
+            await this.sendReleaseNotes();
+        } else if (command === "selectVersion" && version) {
+            this.version = version;
             await this.sendReleaseNotes();
         } else if (Object.values(Constants.RELEASE_NOTES_OPTS).includes(command)) {
             SettingsConfig.setDirectValue(Constants.SETTINGS_SHOW_RELEASE_NOTES, command);
@@ -98,6 +108,7 @@ export class ReleaseNotes extends WebView {
         const releaseNotes = await this.getReleaseNotes();
         const changelog = await this.getChangelog();
         const showReleaseNotesSetting = SettingsConfig.getDirectValue(Constants.SETTINGS_SHOW_RELEASE_NOTES);
+        const versionOptions = await this.getAllMajorMinorVersions();
 
         return this.panel.webview.postMessage({
             releaseNotes: releaseNotes,
@@ -105,6 +116,7 @@ export class ReleaseNotes extends WebView {
             version: this.version,
             showReleaseNotesSetting: showReleaseNotesSetting,
             dropdownOptions: Constants.RELEASE_NOTES_OPTS,
+            versionOptions: versionOptions,
         });
     }
 
@@ -114,9 +126,8 @@ export class ReleaseNotes extends WebView {
             const changelog = await fs.readFile(releaseNotesPath, { encoding: "utf8" });
             return changelog;
         } catch (error) {
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-            ZoweLogger.error(`[ReleaseNotes] Error reading release notes file: ${error}`);
-            return l10n.t("Error reading release notes file.");
+            ZoweLogger.error(`[ReleaseNotes] Error reading release notes file: ${String(error)}`);
+            return l10n.t("No release notes found for this version.");
         }
     }
 
@@ -126,9 +137,8 @@ export class ReleaseNotes extends WebView {
             const changelog = await fs.readFile(changelogPath, { encoding: "utf8" });
             return this.extractCurrentVersionNotes(changelog);
         } catch (error) {
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-            ZoweLogger.error(`[ReleaseNotes] Error reading changelog file: ${error}`);
-            return l10n.t("Error reading changelog file.");
+            ZoweLogger.error(`[ReleaseNotes] Error reading changelog file: ${String(error)}`);
+            return l10n.t("No changelog entries found for this version.");
         }
     }
 
@@ -140,5 +150,30 @@ export class ReleaseNotes extends WebView {
         }
 
         return matches.map((m) => m[0].trim()).join("\n\n");
+    }
+
+    public async getAllMajorMinorVersions(): Promise<string[]> {
+        const changelogPath = this.context.asAbsolutePath("CHANGELOG.md");
+        try {
+            const changelog = await fs.readFile(changelogPath, { encoding: "utf8" });
+            // Match all ## `x.y.z` and extract x.y
+            const regex = /^## `(\d+\.\d+)\.\d+`/gm;
+            const versions = new Set<string>();
+            let match;
+            while ((match = regex.exec(changelog)) !== null) {
+                versions.add(match[1]);
+            }
+            if (!versions.has(this.version)) {
+                versions.add(this.version);
+            }
+            if (!versions.has(this.extensionVersion)) {
+                versions.add(this.extensionVersion);
+            }
+            // Sort descending
+            return Array.from(versions).sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+        } catch (error) {
+            ZoweLogger.error(`[ReleaseNotes] Error parsing changelog for versions: ${String(error)}`);
+            return [];
+        }
     }
 }

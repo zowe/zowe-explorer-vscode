@@ -26,6 +26,7 @@ export function App(): JSXInternal.Element {
   const [version, setVersion] = useState<string | null>(null);
   const [showOption, setShowOption] = useState<string>("");
   const [dropdownOptions, setDropdownOptions] = useState<Record<string, string>>({});
+  const [versionOptions, setVersionOptions] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<"releaseNotes" | "changelog">("releaseNotes");
 
   useEffect(() => {
@@ -38,7 +39,7 @@ export function App(): JSXInternal.Element {
         return;
       }
 
-      const { releaseNotes, changelog, version, showReleaseNotesSetting, dropdownOptions } = event.data;
+      const { releaseNotes, changelog, version, showReleaseNotesSetting, dropdownOptions, versionOptions } = event.data;
 
       if (releaseNotes !== undefined) {
         setReleaseNotes(releaseNotes);
@@ -55,6 +56,9 @@ export function App(): JSXInternal.Element {
       if (dropdownOptions !== undefined) {
         setDropdownOptions(dropdownOptions);
       }
+      if (versionOptions !== undefined) {
+        setVersionOptions(versionOptions);
+      }
     });
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "ready" });
   }, []);
@@ -65,6 +69,12 @@ export function App(): JSXInternal.Element {
 
     // Send the selected command (which is the localised value) back to the extension
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: selectedOption });
+  };
+
+  const handleVersionChange = (event: JSXInternal.TargetedEvent<HTMLSelectElement>) => {
+    const selectedVersion = event.currentTarget.value;
+    setVersion(selectedVersion);
+    PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "selectVersion", version: selectedVersion });
   };
 
   const rewriteImageUrls = (markdown: string) => markdown.replace(/!\[([^\]]*)\]\(\.\/images\/([^)]+)\)/g, `![$1](${RESOURCES_BASE}/$2)`);
@@ -84,17 +94,30 @@ export function App(): JSXInternal.Element {
         <p className="heroSubtitle">{l10n.t("Here you can find the latest updates and features.")}</p>
       </header>
       <div className="releaseNotesCard">
-        <label className="releaseNotesDropdownLabel">
-          <span className="releaseNotesDropdownLabelText">{l10n.t("When would you like release notes to show?")}</span>
-          <br />
-          <VSCodeDropdown value={showOption} onChange={handleDropdownChange} className="releaseNotesDropdown">
-            {Object.values(dropdownOptions).map((label) => (
-              <VSCodeOption value={label} key={label}>
-                {label}
-              </VSCodeOption>
-            ))}
-          </VSCodeDropdown>
-        </label>
+        <div className="releaseNotesDropdownsLabelsRow">
+          <div className="releaseNotesDropdownLabelText">{l10n.t("When would you like release notes to show?")}</div>
+          <div className="releaseNotesDropdownLabelText">{l10n.t("Show notes for version:")}</div>
+        </div>
+        <div className="releaseNotesDropdownsRow">
+          <div className="releaseNotesDropdownCol">
+            <VSCodeDropdown value={showOption} onChange={handleDropdownChange} className="releaseNotesDropdown">
+              {Object.values(dropdownOptions).map((label) => (
+                <VSCodeOption value={label} key={label}>
+                  {label}
+                </VSCodeOption>
+              ))}
+            </VSCodeDropdown>
+          </div>
+          <div className="releaseNotesDropdownCol">
+            <VSCodeDropdown value={version ?? ""} onChange={handleVersionChange} className="releaseNotesDropdown">
+              {versionOptions.map((ver) => (
+                <VSCodeOption value={ver} key={ver}>
+                  {ver}
+                </VSCodeOption>
+              ))}
+            </VSCodeDropdown>
+          </div>
+        </div>
         <div className="releaseNotesTabs">
           <button
             className={`releaseNotesTab${activeTab === "releaseNotes" ? " active" : ""}`}

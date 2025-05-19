@@ -174,14 +174,13 @@ describe("ReleaseNotes Webview", () => {
 
     it("should return error message and logs error if changelog file cannot be read", async () => {
         const rn = new ReleaseNotes(context, "3.2");
-        const errorMsg = "Error reading changelog file.";
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const fsMock = require("fs/promises");
         fsMock.readFile.mockRejectedValueOnce(new Error("File not found"));
         const loggerSpy = jest.spyOn(ZoweLogger, "error").mockImplementation(() => {});
         const result = await rn.getChangelog();
-        expect(result).toBe(errorMsg);
-        expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining("Error reading changelog file"));
+        expect(result).toBe("No changelog entries found for this version.");
+        expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining("Error reading changelog file: Error: File not found"));
     });
 
     it("should do nothing if message does not have 'command'", async () => {
@@ -244,8 +243,8 @@ describe("ReleaseNotes Webview", () => {
         const rn = new ReleaseNotes(context, version);
         const loggerSpy = jest.spyOn(ZoweLogger, "error").mockImplementation(() => {});
         const notes = await rn.getReleaseNotes();
-        expect(notes).toMatch(/Error reading release notes file/);
-        expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining("Error reading release notes file"));
+        expect(notes).toMatch(/No release notes found for this version/);
+        expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining("[ReleaseNotes] Error reading release notes file: Error: File not found"));
     });
 
     it("should send correct release notes and changelog for a version", async () => {
@@ -271,5 +270,69 @@ describe("ReleaseNotes Webview", () => {
                 version: version,
             })
         );
+    });
+
+    it("should call getAllMajorMinorVersions and include versionOptions in sendReleaseNotes postMessage", async () => {
+        const version = "3.2";
+        const rn = new ReleaseNotes(context, version);
+        (rn as any).panel = panelMock;
+        const versionOpts = ["3.2", "3.1", "4.0"];
+        const getAllMajorMinorVersionsSpy = jest.spyOn(rn, "getAllMajorMinorVersions").mockResolvedValueOnce(versionOpts);
+
+        jest.spyOn(rn, "getReleaseNotes").mockResolvedValueOnce("release notes content");
+        jest.spyOn(rn, "getChangelog").mockResolvedValueOnce("changelog content");
+
+        await rn.sendReleaseNotes();
+
+        expect(getAllMajorMinorVersionsSpy).toHaveBeenCalled();
+        expect(postMessageMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                versionOptions: versionOpts,
+                releaseNotes: "release notes content",
+                changelog: "changelog content",
+                version: version,
+            })
+        );
+    });
+
+    it("should always include the extension's original version in version options, even after switching dropdown", async () => {
+        // Simulate extension version is 3.3, changelog only has 3.2 and 3.1, and dropdown is switched to 3.2
+        context.extension.packageJSON.version = "3.3.0";
+        (fs.readFile as jest.Mock).mockResolvedValueOnce(changelog);
+        const rn = new ReleaseNotes(context, "3.2");
+        const versions = await rn.getAllMajorMinorVersions();
+        expect(versions).toContain("3.3"); // extension's original version
+        expect(versions).toContain("3.2"); // currently selected version
+        expect(versions).toContain("3.1");
+    });
+
+    it("should include both extension version and selected version if both are missing from changelog", async () => {
+        // Simulate extension version is 4.0, selected version is 5.0, changelog only has 3.2 and 3.1
+        context.extension.packageJSON.version = "4.0.0";
+        (fs.readFile as jest.Mock).mockResolvedValueOnce(changelog);
+        const rn = new ReleaseNotes(context, "5.0");
+        const versions = await rn.getAllMajorMinorVersions();
+        expect(versions).toContain("4.0"); // extension's original version
+        expect(versions).toContain("5.0"); // currently selected version
+        expect(versions).toContain("3.2");
+        expect(versions).toContain("3.1");
+    });
+
+    it("should not duplicate extension version or selected version if already present in changelog", async () => {
+        // Simulate extension version is 3.2, selected version is 3.2, changelog has 3.2 and 3.1
+        context.extension.packageJSON.version = "3.2.3";
+        (fs.readFile as jest.Mock).mockResolvedValueOnce(changelog);
+        const rn = new ReleaseNotes(context, "3.2");
+        const versions = await rn.getAllMajorMinorVersions();
+        expect(versions.filter((v) => v === "3.2").length).toBe(1);
+    });
+
+    it("should return empty array and log error if changelog cannot be read in getAllMajorMinorVersions", async () => {
+        (fs.readFile as jest.Mock).mockRejectedValueOnce(new Error("File not found"));
+        const rn = new ReleaseNotes(context, "3.2");
+        const loggerSpy = jest.spyOn(ZoweLogger, "error").mockImplementation(() => {});
+        const versions = await rn.getAllMajorMinorVersions();
+        expect(versions).toEqual([]);
+        expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining("Error parsing changelog for versions: Error: File not found"));
     });
 });
