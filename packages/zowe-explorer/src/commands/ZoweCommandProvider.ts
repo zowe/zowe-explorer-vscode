@@ -263,7 +263,7 @@ export abstract class ZoweCommandProvider {
 
     public async checkCurrentProfile(node: IZoweTreeNode): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("ZoweCommandProvider.checkCurrentProfile called.");
-        const profile = node.getProfile();
+        const profile = Profiles.getInstance().loadNamedProfile(node.getProfileName());
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile, node);
         if (profileStatus.status === "inactive") {
             if (

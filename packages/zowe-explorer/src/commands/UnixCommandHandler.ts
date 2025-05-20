@@ -20,6 +20,7 @@ import { Definitions } from "../configuration/Definitions";
 import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { Constants } from "../configuration/Constants";
+import { Profiles } from "../configuration/Profiles";
 
 /**
  * Provides a class that manages submitting a Unix command on the server
@@ -97,7 +98,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
 
         if (node) {
             await this.checkCurrentProfile(node);
-            this.nodeProfile = node.getProfile();
+            this.nodeProfile = Profiles.getInstance().loadNamedProfile(node.getProfileName());
             this.sshCwd = node.fullPath;
         }
         if (!this.nodeProfile) {
