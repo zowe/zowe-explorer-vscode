@@ -110,7 +110,7 @@ export function App() {
     if (!newProfileKey.trim() || !newProfileKeyPath) return;
 
     const path = [...newProfileKeyPath, newProfileKey.trim()];
-    const fullKey = path.join("."); // Using path.join correctly
+    const fullKey = path.join(".");
     const profileKey = path[0];
 
     setPendingChanges((prev) => ({
@@ -206,7 +206,8 @@ export function App() {
     setPendingDefaults({});
     setDefaultsDeletions([]);
 
-    vscodeApi.postMessage({ command: "GETPROFILES" }); // Refresh configurations after save
+    // Refresh configurations after save
+    vscodeApi.postMessage({ command: "GETPROFILES" });
   };
 
   const handleOpenRawJson = (configPath: string) => {
@@ -669,7 +670,7 @@ const styles = `
 
 .config-item-container {
   display: grid;
-  grid-template-columns: 140px 1fr auto;
+  grid-template-columns: 150px 1fr auto;
   gap: 8px;
   align-items: center;
   max-width: 500px;
