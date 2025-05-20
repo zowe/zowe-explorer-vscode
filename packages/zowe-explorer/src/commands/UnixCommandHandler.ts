@@ -244,7 +244,9 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     }
 
     public formatCommandLine(command: string, profile?: imperative.IProfileLoaded): string {
-        const prof = this.nodeProfile ?? profile;
+        // Use the profile name from the SSH profile if one was used to issue the command - fallback to
+        // the node that the user interacted with in the USS tree
+        const prof = this.sshProfile ?? this.nodeProfile ?? profile;
         const user: string = prof?.profile.user;
         if (prof) {
             return `> ${user}@${prof.name}:${this.sshCwd ?? "~"} $ ${command}`;
@@ -255,7 +257,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
 
     public runCommand(profile: imperative.IProfileLoaded, command: string): Promise<string> {
         // Clear path and selected profile for follow up commands from the command palette
-        this.nodeProfile = undefined;
+        this.nodeProfile = this.sshProfile = undefined;
         const newCmd = `if [ -n "$SSH_TTY" ]; then $SHELL <$SSH_TTY >$SSH_TTY 2>$SSH_TTY | ${command}; else ${command}; fi`;
         return ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand(newCmd, this.sshCwd, this.sshSession);
     }
