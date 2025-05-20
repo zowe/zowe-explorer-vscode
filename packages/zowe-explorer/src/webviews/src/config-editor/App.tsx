@@ -3,6 +3,7 @@ import path from "path";
 import * as l10n from "@vscode/l10n";
 import { cloneDeep } from "es-toolkit";
 import { isSecureOrigin } from "../utils";
+
 const vscodeApi = acquireVsCodeApi();
 
 export function App() {
@@ -75,7 +76,8 @@ export function App() {
       }
     });
 
-    vscodeApi.postMessage({ command: "GETPROFILES" });
+    vscodeApi.postMessage({ command: "GET_PROFILES" });
+    vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
   }, [localizationState]);
 
   useEffect(() => {
@@ -251,7 +253,7 @@ export function App() {
     setDefaultsDeletions({});
 
     // Refresh configurations after save
-    vscodeApi.postMessage({ command: "GETPROFILES" });
+    vscodeApi.postMessage({ command: "GET_PROFILES" });
   };
 
   const handleOpenRawJson = (configPath: string) => {
@@ -576,7 +578,7 @@ export function App() {
             className="header-button"
             title="Clear Pending Changes"
             onClick={() => {
-              vscodeApi.postMessage({ command: "GETPROFILES" });
+              vscodeApi.postMessage({ command: "GET_PROFILES" });
               setPendingChanges({});
               setDeletions({});
               setPendingDefaults({});

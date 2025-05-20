@@ -96,7 +96,7 @@ export class ConfigEditor extends WebView {
     protected async onDidReceiveMessage(message: any): Promise<void> {
         const profInfo = new ProfileInfo("zowe");
         switch (message.command.toLocaleUpperCase()) {
-            case "GETPROFILES": {
+            case "GET_PROFILES": {
                 const configurations = await this.getLocalConfigs();
                 await this.panel.webview.postMessage({
                     command: "CONFIGURATIONS",
