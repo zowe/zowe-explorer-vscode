@@ -256,7 +256,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     public runCommand(profile: imperative.IProfileLoaded, command: string): Promise<string> {
         // Clear path and selected profile for follow up commands from the command palette
         this.nodeProfile = undefined;
-        const newCmd = `if [ -n "$SSH_TTY" ]; then sh <$SSH_TTY >$SSH_TTY 2>$SSH_TTY | ${command}; else ${command}; fi`;
+        const newCmd = `if [ -n "$SSH_TTY" ]; then $SHELL <$SSH_TTY >$SSH_TTY 2>$SSH_TTY | ${command}; else ${command}; fi`;
         return ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand(newCmd, this.sshCwd, this.sshSession);
     }
 }
