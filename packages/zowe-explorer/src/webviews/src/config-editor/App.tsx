@@ -12,15 +12,28 @@ export function App() {
   const [flattenedConfig, setFlattenedConfig] = useState<{ [key: string]: { value: string; path: string[] } }>({});
   const [flattenedDefaults, setFlattenedDefaults] = useState<{ [key: string]: { value: string; path: string[] } }>({});
   const [pendingChanges, setPendingChanges] = useState<{
-    [key: string]: {
-      value: string | Record<string, any>;
-      path: string[];
-      profile: string;
+    [configPath: string]: {
+      [key: string]: {
+        value: string | Record<string, any>;
+        path: string[];
+        profile: string;
+      };
     };
   }>({});
-  const [pendingDefaults, setPendingDefaults] = useState<{ [key: string]: { value: string; path: string[] } }>({});
-  const [deletions, setDeletions] = useState<string[]>([]);
-  const [defaultsDeletions, setDefaultsDeletions] = useState<string[]>([]);
+  const [pendingDefaults, setPendingDefaults] = useState<{
+    [configPath: string]: {
+      [key: string]: {
+        value: string;
+        path: string[];
+      };
+    };
+  }>({});
+  const [deletions, setDeletions] = useState<{
+    [configPath: string]: string[];
+  }>({});
+  const [defaultsDeletions, setDefaultsDeletions] = useState<{
+    [configPath: string]: string[];
+  }>({});
   const [newKeyModalOpen, setNewKeyModalOpen] = useState(false);
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");
@@ -52,7 +65,6 @@ export function App() {
 
         if (contents.length > 0) {
           const indexToUse = (prev: number | null) => (prev !== null && prev < contents.length ? prev : 0);
-
           const config = contents[indexToUse(selectedTab ?? 0)].properties;
           setFlattenedConfig(flattenKeys(config.profiles));
           setFlattenedDefaults(flattenKeys(config.defaults));
@@ -72,50 +84,62 @@ export function App() {
       setFlattenedConfig(flattenKeys(config.profiles));
       setFlattenedDefaults(flattenKeys(config.defaults));
       setOriginalDefaults(flattenKeys(config.defaults));
-
-      // Clear pending edits after reloading
-      setPendingChanges({});
-      setDeletions([]);
-      setPendingDefaults({});
-      setDefaultsDeletions([]);
     }
   }, [selectedTab, configurations]);
 
   const handleChange = (key: string, value: string) => {
+    const configPath = configurations[selectedTab!]!.configPath;
     const path = flattenedConfig[key]?.path ?? key.split(".");
     const profileKey = path[0];
     setPendingChanges((prev) => ({
       ...prev,
-      [key]: { value, path, profile: profileKey },
+      [configPath]: {
+        ...prev[configPath],
+        [key]: { value, path, profile: profileKey },
+      },
     }));
 
-    if (deletions.includes(key)) {
-      setDeletions((prev) => prev.filter((k) => k !== key));
+    if (deletions[configPath]?.includes(key)) {
+      setDeletions((prev) => ({
+        ...prev,
+        [configPath]: prev[configPath]?.filter((k) => k !== key) ?? [],
+      }));
     }
   };
 
   const handleDefaultsChange = (key: string, value: string) => {
+    const configPath = configurations[selectedTab!]!.configPath;
     const path = flattenedDefaults[key]?.path ?? key.split(".");
     setPendingDefaults((prev) => ({
       ...prev,
-      [key]: { value, path },
+      [configPath]: {
+        ...prev[configPath],
+        [key]: { value, path },
+      },
     }));
 
-    if (defaultsDeletions.includes(key)) {
-      setDefaultsDeletions((prev) => prev.filter((k) => k !== key));
+    if (defaultsDeletions[configPath]?.includes(key)) {
+      setDefaultsDeletions((prev) => ({
+        ...prev,
+        [configPath]: prev[configPath]?.filter((k) => k !== key) ?? [],
+      }));
     }
   };
 
   const handleAddNewProfileKey = () => {
     if (!newProfileKey.trim() || !newProfileKeyPath) return;
 
+    const configPath = configurations[selectedTab!]!.configPath;
     const path = [...newProfileKeyPath, newProfileKey.trim()];
     const fullKey = path.join(".");
     const profileKey = path[0];
 
     setPendingChanges((prev) => ({
       ...prev,
-      [fullKey]: { value: newProfileValue, path, profile: profileKey },
+      [configPath]: {
+        ...prev[configPath],
+        [fullKey]: { value: newProfileValue, path, profile: profileKey },
+      },
     }));
 
     setNewProfileKey("");
@@ -133,15 +157,22 @@ export function App() {
 
   const handleAddNewDefault = () => {
     if (newKey.trim() && newValue.trim()) {
+      const configPath = configurations[selectedTab!]!.configPath;
       const path = newKey.split(".");
       const fullKey = path.join(".");
 
       setPendingDefaults((prev) => ({
         ...prev,
-        [fullKey]: { value: newValue, path },
+        [configPath]: {
+          ...prev[configPath],
+          [fullKey]: { value: newValue, path },
+        },
       }));
 
-      setDefaultsDeletions((prev) => prev.filter((k) => k !== fullKey));
+      setDefaultsDeletions((prev) => ({
+        ...prev,
+        [configPath]: prev[configPath]?.filter((k) => k !== fullKey) ?? [],
+      }));
     }
 
     setNewKey("");
@@ -150,47 +181,61 @@ export function App() {
   };
 
   const handleDeleteProperty = (key: string) => {
+    const configPath = configurations[selectedTab!]!.configPath;
     setPendingChanges((prevChanges) => {
       const updatedChanges = { ...prevChanges };
-      delete updatedChanges[key];
+      if (updatedChanges[configPath]) {
+        delete updatedChanges[configPath][key];
+      }
       return updatedChanges;
     });
 
-    if (flattenedConfig[key] && !pendingChanges[key]) {
-      setDeletions((prev) => [...prev, key]);
+    if (flattenedConfig[key] && !(pendingChanges[configPath]?.[key] ?? false)) {
+      setDeletions((prev) => ({
+        ...prev,
+        [configPath]: [...(prev[configPath] ?? []), key],
+      }));
     }
   };
 
   const handleDeleteDefaultsProperty = (key: string) => {
-    if ((!flattenedDefaults[key] && !pendingDefaults[key]) || selectedTab === null) return;
+    if (selectedTab === null) return;
+    const configPath = configurations[selectedTab!]!.configPath;
 
     setPendingDefaults((prev) => {
       const newState = { ...prev };
-      delete newState[key];
+      if (newState[configPath]) {
+        delete newState[configPath][key];
+      }
       return newState;
     });
 
     if (Object.prototype.hasOwnProperty.call(originalDefaults, key)) {
-      setDefaultsDeletions((prev) => [...prev, key]);
+      setDefaultsDeletions((prev) => ({
+        ...prev,
+        [configPath]: [...(prev[configPath] ?? []), key],
+      }));
     }
   };
 
   const handleSave = () => {
-    const changes = Object.keys(pendingChanges).map((key) => {
-      const { value, path, profile } = pendingChanges[key];
-      return { key, value, path, profile };
-    });
+    const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]) =>
+      Object.keys(changesForPath).map((key) => {
+        const { value, path, profile } = changesForPath[key];
+        return { key, value, path, profile, configPath };
+      })
+    );
 
-    const deleteKeys = deletions;
+    const deleteKeys = Object.entries(deletions).flatMap(([configPath, keys]) => keys.map((key) => ({ key, configPath })));
 
-    const defaultsChanges = Object.keys(pendingDefaults).map((key) => {
-      const { value, path } = pendingDefaults[key];
-      return { key, value, path };
-    });
+    const defaultsChanges = Object.entries(pendingDefaults).flatMap(([configPath, changesForPath]) =>
+      Object.keys(changesForPath).map((key) => {
+        const { value, path } = changesForPath[key];
+        return { key, value, path, configPath };
+      })
+    );
 
-    const defaultsDeleteKeys = defaultsDeletions;
-
-    const configPath = selectedTab !== null ? configurations[selectedTab].configPath : "";
+    const defaultsDeleteKeys = Object.entries(defaultsDeletions).flatMap(([configPath, keys]) => keys.map((key) => ({ key, configPath })));
 
     vscodeApi.postMessage({
       command: "SAVE_CHANGES",
@@ -198,13 +243,12 @@ export function App() {
       deletions: deleteKeys,
       defaultsChanges,
       defaultsDeleteKeys: defaultsDeleteKeys,
-      configPath,
     });
 
     setPendingChanges({});
-    setDeletions([]);
+    setDeletions({});
     setPendingDefaults({});
-    setDefaultsDeletions([]);
+    setDefaultsDeletions({});
 
     // Refresh configurations after save
     vscodeApi.postMessage({ command: "GETPROFILES" });
@@ -236,27 +280,17 @@ export function App() {
 
   const handleTabChange = (index: number) => {
     setSelectedTab(index);
-    if (index !== null) {
-      const config = configurations[index].properties;
-      setFlattenedConfig(flattenKeys(config.profiles));
-      setFlattenedDefaults(flattenKeys(config.defaults));
-      setOriginalDefaults(flattenKeys(config.defaults));
-    }
-
-    setPendingChanges({});
-    setDeletions([]);
-    setPendingDefaults({});
-    setDefaultsDeletions([]);
   };
 
   const renderConfig = (obj: any, path: string[] = []) => {
     const fullPath = path.join(".");
     const baseObj = cloneDeep(obj);
 
+    const configPath = configurations[selectedTab!]!.configPath;
     const combinedConfig = {
       ...baseObj,
       ...Object.fromEntries(
-        Object.entries(pendingChanges)
+        Object.entries(pendingChanges[configPath] ?? {})
           .filter(([key]) => {
             const keyParts = key.split(".");
             return key.startsWith(fullPath) && keyParts.length === path.length + 1;
@@ -269,10 +303,10 @@ export function App() {
       const currentPath = [...path, key];
       const fullKey = currentPath.join(".");
       const displayKey = key.split(".").pop();
-      if (deletions.includes(fullKey)) return null;
+      if ((deletions[configPath] ?? []).includes(fullKey)) return null;
       const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
       const isArray = Array.isArray(value);
-      const pendingValue = pendingChanges[fullKey]?.value ?? value;
+      const pendingValue = (pendingChanges[configPath] ?? {})[fullKey]?.value ?? value;
 
       if (isParent) {
         return (
@@ -344,7 +378,7 @@ export function App() {
     const combinedDefaults = {
       ...defaults,
       ...Object.fromEntries(
-        Object.entries(pendingDefaults)
+        Object.entries(pendingDefaults[configurations[selectedTab!]!.configPath] ?? {})
           .filter(([key]) => !(key in defaults))
           .map(([key, entry]) => [key, entry.value])
       ),
@@ -353,10 +387,10 @@ export function App() {
     return Object.entries(combinedDefaults).map(([key, value]) => {
       const currentPath = [key];
       const fullKey = currentPath.join(".");
-      if (defaultsDeletions.includes(fullKey)) return null;
+      if (defaultsDeletions[configurations[selectedTab!]!.configPath]?.includes(fullKey)) return null;
       const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
       const isArray = Array.isArray(value);
-      const pendingValue = pendingDefaults[fullKey]?.value ?? value;
+      const pendingValue = (pendingDefaults[configurations[selectedTab!]!.configPath] ?? {})[fullKey]?.value ?? value;
 
       if (isParent) {
         return (
@@ -494,7 +528,10 @@ export function App() {
 
     setPendingChanges((prev) => ({
       ...prev,
-      [fullKey]: { value: {}, path, profile: profileKey },
+      [configurations[selectedTab!]!.configPath]: {
+        ...prev[configurations[selectedTab!]!.configPath],
+        [fullKey]: { value: {}, path, profile: profileKey },
+      },
     }));
 
     setNewLayerName("");
@@ -523,30 +560,45 @@ export function App() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          position: "sticky",
+          top: 0,
+          background: "var(--vscode-editor-background)",
+        }}
+      >
         <h1>{l10n.t("Configuration Editor")}</h1>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <button
             className="header-button"
+            title="Clear Pending Changes"
             onClick={() => {
               vscodeApi.postMessage({ command: "GETPROFILES" });
+              setPendingChanges({});
+              setDeletions({});
+              setPendingDefaults({});
+              setDefaultsDeletions({});
             }}
           >
-            {l10n.t("Refresh")}
+            <span className="codicon codicon-clear-all"></span>
           </button>
           {selectedTab !== null && (
-            <button className="header-button" onClick={() => handleOpenRawJson(configurations[selectedTab].configPath)}>
-              {l10n.t("Open Raw")}
+            <button className="header-button" title="Open Raw File" onClick={() => handleOpenRawJson(configurations[selectedTab].configPath)}>
+              <span className="codicon codicon-go-to-file"></span>
             </button>
           )}
           <button
             className="header-button"
+            title="Save All Changes"
             onClick={() => {
               handleSave();
               setSaveModalOpen(true);
             }}
           >
-            {l10n.t("Save Changes")}
+            <span className="codicon codicon-save-all"></span>
           </button>
         </div>
       </div>
