@@ -1,4 +1,4 @@
-name: Report VSIX Artifact in PR 
+name: Report VSIX Artifact in PR
 
 on:
   pull_request:
@@ -50,5 +50,6 @@ jobs:
         uses: bitonality/PRtifact@v0.1.0
         continue-on-error: true
         with:
+          github-token: ${{ secrets.TEST_ISSUE_UPDATE_TOKEN }}
           comment-mode: 'CreateOrUpdate'
           handlebars-template: '.github/resources/artifact-template.hbs'
