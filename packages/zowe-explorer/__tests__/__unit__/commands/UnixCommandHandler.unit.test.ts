@@ -204,6 +204,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     return profileFromConfig;
                 }),
                 openConfigFile: jest.fn(),
+                loadNamedProfile: jest.fn(),
             };
         }),
     });

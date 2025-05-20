@@ -45,6 +45,7 @@ describe("SpoolProvider Unit Tests", () => {
                 }),
                 profilesForValidation: [],
                 validateProfiles: jest.fn(),
+                loadNamedProfile: jest.fn(),
             };
         }),
     });

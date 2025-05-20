@@ -378,6 +378,7 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
                         status: "unverified",
                     }),
                     validProfile: Validation.ValidationType.UNVERIFIED,
+                    loadNamedProfile: jest.fn().mockReturnValue(globalMocks.testProfile),
                 };
             }),
         });

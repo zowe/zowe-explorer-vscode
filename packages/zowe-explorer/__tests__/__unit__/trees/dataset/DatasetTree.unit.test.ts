@@ -2096,6 +2096,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
                         status: "active",
                         name: "testProfile",
                     }),
+                    loadNamedProfile: jest.fn().mockReturnValue(newMocks.imperativeProfile),
                 };
             }),
         });
@@ -2618,6 +2619,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
                     }),
                     validProfile: Validation.ValidationType.UNVERIFIED,
                     getBaseProfile: jest.fn(),
+                    loadNamedProfile: jest.fn().mockReturnValue(blockMocks.imperativeProfile),
                 };
             }),
         });

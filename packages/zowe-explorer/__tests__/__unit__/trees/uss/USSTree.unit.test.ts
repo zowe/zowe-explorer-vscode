@@ -223,6 +223,10 @@ function createGlobalMocks() {
         value: jest.fn().mockReturnValue(globalMocks.testSession),
         configurable: true,
     });
+    // Object.defineProperty(Profiles, "getInstance", {
+    //     value: jest.fn().mockReturnValue(createInstanceOfProfile(globalMocks.testProfile)),
+    //     configurable: true,
+    // });
 
     jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
         ds: {

@@ -25,11 +25,10 @@ import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { ZoweJobNode, ZoweSpoolNode } from "../../../../src/trees/job/ZoweJobNode";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
-import { AuthUtils } from "../../../../src/utils/AuthUtils";
-import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { createIJobFile, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
+import { Profiles } from "../../../../src/configuration/Profiles";
 
 function createGlobalMocks() {
     const newMocks = {
@@ -42,9 +41,13 @@ function createGlobalMocks() {
     };
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.createDirectory);
     newMocks.mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
-    newMocks.mockProfileInstance = createInstanceOfProfile(createIProfile());
+    newMocks.mockProfileInstance = createInstanceOfProfile(newMocks.profileOne);
     Object.defineProperty(Constants, "PROFILES_CACHE", {
         value: newMocks.mockProfileInstance,
+        configurable: true,
+    });
+    Object.defineProperty(Profiles, "GetInstance", {
+        value: jest.fn().mockReturnValue(newMocks.mockProfileInstance),
         configurable: true,
     });
 

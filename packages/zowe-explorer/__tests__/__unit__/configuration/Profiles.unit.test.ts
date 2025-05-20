@@ -2200,6 +2200,7 @@ describe("Profiles Unit Tests - function enableValidation", () => {
     it("should enable validation for the profile on the current tree", () => {
         const globalMocks = createGlobalMocks();
         const enableValidationContextSpy = jest.spyOn(Profiles.getInstance(), "enableValidationContext");
+        jest.spyOn(Profiles.getInstance(), "loadNamedProfile").mockReturnValueOnce(globalMocks.testProfile);
         jest.spyOn(SharedTreeProviders, "getSessionForAllTrees").mockReturnValue([globalMocks.testNode]);
         expect(globalMocks.testNode.contextValue).toEqual(Constants.DS_SESSION_CONTEXT);
         expect(Profiles.getInstance().enableValidation(globalMocks.testNode)).toEqual(globalMocks.testNode);

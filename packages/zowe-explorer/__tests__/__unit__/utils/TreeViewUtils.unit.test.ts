@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import { Gui, PersistenceSchemaEnum, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
-import { createIProfile, createISession, createPersistentConfig, createTreeView } from "../../__mocks__/mockCreators/shared";
+import { createInstanceOfProfile, createIProfile, createISession, createPersistentConfig, createTreeView } from "../../__mocks__/mockCreators/shared";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { TreeViewUtils } from "../../../src/utils/TreeViewUtils";
 import { Constants } from "../../../src/configuration/Constants";
@@ -41,6 +41,10 @@ describe("TreeViewUtils Unit Tests", () => {
         newMocks.testDatasetTree.addFileHistory("[profile1]: TEST.NODE");
         Object.defineProperty(ZoweLocalStorage, "globalState", {
             value: createPersistentConfig(),
+            configurable: true,
+        });
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn().mockReturnValue(createInstanceOfProfile(newMocks.imperativeProfile)),
             configurable: true,
         });
 
@@ -113,6 +117,7 @@ describe("TreeViewUtils Unit Tests", () => {
                 errorMessage: jest.spyOn(Gui, "errorMessage").mockClear(),
                 profilesInstance: jest.spyOn(Profiles, "getInstance").mockReturnValue({
                     checkCurrentProfile: jest.fn(),
+                    loadNamedProfile: jest.fn(),
                 } as any),
             };
         }
