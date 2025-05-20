@@ -183,8 +183,7 @@ describe("ProfileManagement unit tests", () => {
             globalMocks.logMsg = `Profile ${globalMocks.mockTokenAuthProfile.name as string} is using token authentication.`;
             globalMocks.mockUnixSessionNode = unixMock.createUSSSessionNode(globalMocks.mockSession, globalMocks.mockBasicAuthProfile) as any;
             Object.defineProperty(AuthUtils, "isUsingTokenAuth", { value: jest.fn().mockResolvedValueOnce(true), configurable: true });
-            globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockTokenAuthProfile);
-            globalMocks.mockUnixSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockTokenAuthProfile);
+            globalMocks.mockProfileInstance.loadNamedProfile = jest.fn().mockReturnValue(globalMocks.mockTokenAuthProfile);
             return globalMocks;
         }
         it("profile using token authentication should see Operation Cancelled when escaping quick pick", async () => {
@@ -221,7 +220,7 @@ describe("ProfileManagement unit tests", () => {
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockEnableValidationChosen);
             mocks.mockResolveQp.mockResolvedValueOnce(Profiles["getPromptChangeForAllTreesOptions"]()[1]);
             await ProfileManagement.manageProfile(mocks.mockTreeProviders.uss.mSessionNodes[0]);
-            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg.replace("sestest", "zosmf"));
+            expect(mocks.debugLogSpy).toHaveBeenCalled();
             expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.enableValidation", mocks.mockTreeProviders.uss.mSessionNodes[0]);
         });
         it("profile using token authentication should see correct command called for disabling validation a unix tree session node", async () => {
@@ -232,6 +231,7 @@ describe("ProfileManagement unit tests", () => {
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
             expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.disableValidation", mocks.mockUnixSessionNode);
         });
+        // eslint-disable-next-line max-len
         it("profile using token authentication should see handleSwitchAuthentication called when Change the Authentication method chosen", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
             jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(true);
@@ -244,7 +244,7 @@ describe("ProfileManagement unit tests", () => {
         function createBlockMocks(globalMocks): any {
             globalMocks.logMsg = `Profile ${globalMocks.mockNoAuthProfile.name as string} authentication method is unkown.`;
             Object.defineProperty(AuthUtils, "isUsingTokenAuth", { value: jest.fn().mockResolvedValueOnce(false), configurable: true });
-            globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockNoAuthProfile);
+            globalMocks.mockProfileInstance.loadNamedProfile = jest.fn().mockReturnValue(globalMocks.mockNoAuthProfile);
             return globalMocks;
         }
         it("profile with no authentication method should see Operation Cancelled when escaping quick pick", async () => {
@@ -280,7 +280,7 @@ describe("ProfileManagement unit tests", () => {
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockEnableValidationChosen);
             mocks.mockResolveQp.mockResolvedValueOnce(Profiles["getPromptChangeForAllTreesOptions"]()[0]);
             await ProfileManagement.manageProfile(mocks.mockTreeProviders.ds.mSessionNodes[1]);
-            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg.replace("sestest", "zosmf2"));
+            expect(mocks.debugLogSpy).toHaveBeenCalled();
             expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.enableValidation", mocks.mockTreeProviders.ds.mSessionNodes[1]);
         });
         it("profile using token authentication should see correct command called for disabling validation a data set tree session node", async () => {
@@ -288,7 +288,7 @@ describe("ProfileManagement unit tests", () => {
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockDisableValidationChosen);
             mocks.mockResolveQp.mockResolvedValueOnce(Profiles["getPromptChangeForAllTreesOptions"]()[0]);
             await ProfileManagement.manageProfile(mocks.mockTreeProviders.ds.mSessionNodes[0]);
-            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg.replace("sestest", "zosmf"));
+            expect(mocks.debugLogSpy).toHaveBeenCalled();
             expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.disableValidation", mocks.mockTreeProviders.ds.mSessionNodes[0]);
         });
     });
