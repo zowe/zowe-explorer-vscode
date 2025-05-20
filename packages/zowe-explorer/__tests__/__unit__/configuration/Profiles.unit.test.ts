@@ -195,6 +195,10 @@ function createGlobalMocks(): { [key: string]: any } {
         }),
         configurable: true,
     });
+    Object.defineProperty(newMocks.mockProfileInstance, "loadNamedProfile", {
+        value: jest.fn().mockReturnValue(newMocks.testProfile),
+        configurable: true,
+    });
 
     Object.defineProperty(imperative, "Config", {
         value: () => newMocks.mockConfigInstance,
@@ -2192,6 +2196,7 @@ describe("Profiles Unit Tests - function enableValidation", () => {
             createMockNode("test2", Constants.DS_SESSION_CONTEXT),
             globalMocks.testNode,
         ]);
+
         expect(globalMocks.testNode.contextValue).toEqual(Constants.DS_SESSION_CONTEXT);
         expect(Profiles.getInstance().enableValidation(globalMocks.testNode)).toEqual(globalMocks.testNode);
         expect(globalMocks.testNode.contextValue).toEqual(Constants.DS_SESSION_CONTEXT + Constants.VALIDATE_SUFFIX);
