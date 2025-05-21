@@ -111,6 +111,9 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(AuthUtils, "isUsingTokenAuth", { value: globalMocks.isUsingTokenAuth, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
+    globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
+    globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
+    globalMocks.mockEditSession.mockReturnValue(globalMocks.testProfile);
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn().mockReturnValue({
             allProfiles: [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }],
@@ -170,9 +173,6 @@ async function createGlobalMocks() {
         parentNode: globalMocks.testUSSTree.mSessionNodes[0],
         session: globalMocks.testSession,
     });
-    globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
-    globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
-    globalMocks.mockEditSession.mockReturnValue(globalMocks.testProfile);
 
     return globalMocks;
 }
@@ -378,6 +378,7 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
                         status: "unverified",
                     }),
                     validProfile: Validation.ValidationType.UNVERIFIED,
+                    loadNamedProfile: jest.fn().mockReturnValue(globalMocks.testProfile),
                 };
             }),
         });

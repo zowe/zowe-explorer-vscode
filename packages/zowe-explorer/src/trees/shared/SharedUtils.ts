@@ -32,6 +32,7 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedContext } from "./SharedContext";
 import { Definitions } from "../../configuration/Definitions";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
+import { Profiles } from "../../configuration/Profiles";
 
 export class SharedUtils {
     public static async copyExternalLink(this: void, context: vscode.ExtensionContext, node: IZoweTreeNode): Promise<void> {
@@ -218,7 +219,7 @@ export class SharedUtils {
             description: vscode.l10n.t("Specify another codepage"),
         };
         const items: vscode.QuickPickItem[] = [ebcdicItem, binaryItem, otherItem, Constants.SEPARATORS.RECENT];
-        const profile = node.getProfile();
+        const profile = Profiles.getInstance().loadNamedProfile(node.getProfileName());
         if (profile.profile?.encoding != null) {
             items.splice(0, 0, {
                 label: String(profile.profile?.encoding),

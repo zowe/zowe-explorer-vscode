@@ -240,7 +240,7 @@ export class DatasetActions {
         dsPropsForAPI: {},
         datasetProvider: Types.IZoweDatasetTreeType
     ): Promise<void> {
-        const profile = node.getProfile();
+        const profile = Profiles.getInstance().loadNamedProfile(node.getProfileName());
         try {
             // Allocate the data set
             await ZoweExplorerApiRegister.getMvsApi(profile).createDataSet(DatasetActions.typeEnum, dsName, {
@@ -257,7 +257,11 @@ export class DatasetActions {
             const errorMsg = vscode.l10n.t("Error encountered when creating data set.");
             ZoweLogger.error(errorMsg + JSON.stringify(err));
             if (err instanceof Error) {
-                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile(), scenario: errorMsg });
+                await AuthUtils.errorHandling(err, {
+                    apiType: ZoweExplorerApiType.Mvs,
+                    profile: Profiles.getInstance().loadNamedProfile(node.getProfileName()),
+                    scenario: errorMsg,
+                });
             }
             throw new Error(err);
         }
@@ -371,7 +375,7 @@ export class DatasetActions {
             ZoweLogger.trace(`${likeDSName} was entered to use attributes for new data set.`);
         } else {
             // User called allocateLike by right-clicking a node
-            profile = node.getProfile();
+            profile = Profiles.getInstance().loadNamedProfile(node.getProfileName());
             likeDSName = node.label.toString().replace(/\[.*\]: /g, "");
         }
         ZoweLogger.info(
@@ -464,7 +468,7 @@ export class DatasetActions {
                         if (!response?.success) {
                             await AuthUtils.errorHandling(response?.commandResponse, {
                                 apiType: ZoweExplorerApiType.Mvs,
-                                profile: node.getProfile(),
+                                profile: Profiles.getInstance().loadNamedProfile(node.getProfileName()),
                             });
                             break;
                         }
@@ -496,14 +500,17 @@ export class DatasetActions {
         ZoweLogger.trace("dataset.actions.uploadFile called.");
         try {
             const datasetName = node.label as string;
-            const prof = node.getProfile();
+            const prof = Profiles.getInstance().loadNamedProfile(node.getProfileName());
 
             return await ZoweExplorerApiRegister.getMvsApi(prof).putContents(docPath, datasetName, {
                 encoding: prof.profile?.encoding,
                 responseTimeout: prof.profile?.responseTimeout,
             });
         } catch (e) {
-            await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
+            await AuthUtils.errorHandling(e, {
+                apiType: ZoweExplorerApiType.Mvs,
+                profile: Profiles.getInstance().loadNamedProfile(node.getProfileName()),
+            });
         }
     }
 
@@ -898,7 +905,7 @@ export class DatasetActions {
             );
             let attributes: any;
             try {
-                const nodeProfile = node.getProfile();
+                const nodeProfile = Profiles.getInstance().loadNamedProfile(node.getProfileName());
                 if (SharedContext.isDsMember(node)) {
                     const dsName = node.getParent().getLabel() as string;
                     attributes = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).allMembers(dsName.toUpperCase(), {
@@ -931,7 +938,7 @@ export class DatasetActions {
                 if (err instanceof Error) {
                     await AuthUtils.errorHandling(err, {
                         apiType: ZoweExplorerApiType.Mvs,
-                        profile: node.getProfile(),
+                        profile: Profiles.getInstance().loadNamedProfile(node.getProfileName()),
                         scenario: vscode.l10n.t("Unable to list attributes."),
                     });
                 }
@@ -1036,7 +1043,7 @@ export class DatasetActions {
         let sessProfile: imperative.IProfileLoaded;
         const sesNode = (await datasetProvider.getChildren()).find((child) => child.label.toString() === sessProfileName);
         if (sesNode) {
-            sessProfile = sesNode.getProfile();
+            sessProfile = Profiles.getInstance().loadNamedProfile(sesNode.getProfileName());
         } else {
             // if submitting from favorites, a session might not exist for this node
             sessProfile = profiles.loadNamedProfile(sessProfileName);
@@ -1143,7 +1150,7 @@ export class DatasetActions {
         let sesName: string;
         let sessProfile: imperative.IProfileLoaded;
         const profiles = Profiles.getInstance();
-        const nodeProfile = node.getProfile();
+        const nodeProfile = Profiles.getInstance().loadNamedProfile(node.getProfileName());
         await profiles.checkCurrentProfile(nodeProfile);
 
         const datasetName = SharedContext.isDsMember(node) ? node.getParent().getLabel().toString() : node.getLabel().toString();
@@ -1161,14 +1168,14 @@ export class DatasetActions {
                 case SharedContext.isSessionNotFav(node.getParent()):
                     sesName = node.getParent().getLabel() as string;
                     label = node.label as string;
-                    sessProfile = node.getProfile();
+                    sessProfile = Profiles.getInstance().loadNamedProfile(node.getProfileName());
                     break;
                 // For favorited or non-favorited data set members:
                 case SharedContext.isFavoritePds(node.getParent()):
                 case SharedContext.isPdsNotFav(node.getParent()):
                     sesName = node.getParent().getParent().getLabel() as string;
                     label = node.getParent().getLabel().toString() + "(" + node.label.toString() + ")";
-                    sessProfile = node.getProfile();
+                    sessProfile = Profiles.getInstance().loadNamedProfile(node.getProfileName());
                     break;
                 default:
                     Gui.errorMessage(defaultMessage);
@@ -1255,7 +1262,10 @@ export class DatasetActions {
                     })
                 );
             } else {
-                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
+                await AuthUtils.errorHandling(err, {
+                    apiType: ZoweExplorerApiType.Mvs,
+                    profile: Profiles.getInstance().loadNamedProfile(node.getProfileName()),
+                });
             }
             throw err;
         }
@@ -1339,7 +1349,10 @@ export class DatasetActions {
                     })
                 );
             } else {
-                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
+                await AuthUtils.errorHandling(err, {
+                    apiType: ZoweExplorerApiType.Mvs,
+                    profile: Profiles.getInstance().loadNamedProfile(node.getProfileName()),
+                });
             }
         }
     }
@@ -1356,7 +1369,10 @@ export class DatasetActions {
             await node.getChildren();
             datasetProvider.refreshElement(node);
         } catch (err) {
-            await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
+            await AuthUtils.errorHandling(err, {
+                apiType: ZoweExplorerApiType.Mvs,
+                profile: Profiles.getInstance().loadNamedProfile(node.getProfileName()),
+            });
         }
     }
 
@@ -1398,7 +1414,7 @@ export class DatasetActions {
      */
     public static async hMigrateDataSet(datasetProvider: Types.IZoweDatasetTreeType, node: ZoweDatasetNode): Promise<zosfiles.IZosFilesResponse> {
         ZoweLogger.trace("dataset.actions.hMigrateDataSet called.");
-        await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+        await Profiles.getInstance().checkCurrentProfile(Profiles.getInstance().loadNamedProfile(node.getProfileName()));
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             const nodelabels = await DatasetUtils.getNodeLabels(node);
             const dataSetName = nodelabels[0].dataSetName;
@@ -1410,7 +1426,9 @@ export class DatasetActions {
                         comment: ["Data Set name"],
                     })
                 );
-                const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
+                const response = await ZoweExplorerApiRegister.getMvsApi(
+                    Profiles.getInstance().loadNamedProfile(node.getProfileName())
+                ).hMigrateDataSet(dataSetName);
                 datasetProvider.refreshElement(node.getParent());
                 return response;
             } catch (err) {
@@ -1431,7 +1449,7 @@ export class DatasetActions {
      */
     public static async hRecallDataSet(datasetProvider: Types.IZoweDatasetTreeType, node: ZoweDatasetNode): Promise<zosfiles.IZosFilesResponse> {
         ZoweLogger.trace("dataset.actions.hRecallDataSet called.");
-        await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+        await Profiles.getInstance().checkCurrentProfile(Profiles.getInstance().loadNamedProfile(node.getProfileName()));
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             const nodelabels = await DatasetUtils.getNodeLabels(node);
             const dataSetName = nodelabels[0].dataSetName;
@@ -1443,7 +1461,9 @@ export class DatasetActions {
                         comment: ["Data Set name"],
                     })
                 );
-                const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
+                const response = await ZoweExplorerApiRegister.getMvsApi(
+                    Profiles.getInstance().loadNamedProfile(node.getProfileName())
+                ).hRecallDataSet(dataSetName);
                 datasetProvider.refreshElement(node.getParent());
                 return response;
             } catch (err) {
@@ -1464,7 +1484,7 @@ export class DatasetActions {
      */
     public static async showFileErrorDetails(node: ZoweDatasetNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.showFileErrorDetails called.");
-        await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+        await Profiles.getInstance().checkCurrentProfile(Profiles.getInstance().loadNamedProfile(node.getProfileName()));
         if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
             Gui.errorMessage(DatasetActions.localizedStrings.profileInvalid);
         } else {
@@ -1475,7 +1495,9 @@ export class DatasetActions {
                 Gui.errorMessage(node.errorDetails.message);
             } else {
                 try {
-                    await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
+                    await ZoweExplorerApiRegister.getMvsApi(Profiles.getInstance().loadNamedProfile(node.getProfileName())).hRecallDataSet(
+                        dataSetName
+                    );
                     Gui.errorMessage(vscode.l10n.t("Unable to gather more information"));
                 } catch (err) {
                     ZoweLogger.error(JSON.stringify(err, null, 2));
@@ -1523,9 +1545,9 @@ export class DatasetActions {
      */
     public static async copySequentialDatasets(clipboardContent, node: ZoweDatasetNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.copySequentialDatasets called.");
-        const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(Profiles.getInstance().loadNamedProfile(node.getProfileName()));
         const copiedcontent = clipboardContent.flat();
-        if (node.getProfile().name === copiedcontent[0].profileName) {
+        if (node.getProfileName() === copiedcontent[0].profileName) {
             await DatasetActions.copyProcessor(copiedcontent, "ps", async (content, dsname: string, replace: Definitions.ShouldReplace) => {
                 const lbl = content.dataSetName;
                 if (mvsApi?.copyDataSet == null) {
@@ -1568,11 +1590,15 @@ export class DatasetActions {
                         if (!dsname) {
                             return;
                         }
-                        const replace = await DatasetActions.determineReplacement(node.getProfile(), dsname, "ps");
+                        const replace = await DatasetActions.determineReplacement(
+                            Profiles.getInstance().loadNamedProfile(node.getProfileName()),
+                            dsname,
+                            "ps"
+                        );
                         if (replace !== "cancel") {
                             const options: zosfiles.ICrossLparCopyDatasetOptions = {
                                 "from-dataset": { dsn: content.dataSetName, member: undefined },
-                                responseTimeout: node.getProfile()?.profile?.responseTimeout,
+                                responseTimeout: Profiles.getInstance().loadNamedProfile(node.getProfileName())?.profile?.responseTimeout,
                                 replace: replace === "replace" ? true : false,
                             };
                             if (token.isCancellationRequested) {
@@ -1602,7 +1628,7 @@ export class DatasetActions {
 
     public static async copyDatasetMembers(clipboardContent, node: ZoweDatasetNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.copyDatasetMembers called.");
-        const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(Profiles.getInstance().loadNamedProfile(node.getProfileName()));
         const allProfiles = Profiles.getInstance().allProfiles;
         const profile = allProfiles.find((prof) => prof.name === clipboardContent[0].profileName);
         await Gui.withProgress(
@@ -1626,7 +1652,7 @@ export class DatasetActions {
                             return;
                         }
                         const replace = await DatasetActions.determineReplacement(
-                            node.getProfile(),
+                            Profiles.getInstance().loadNamedProfile(node.getProfileName()),
                             `${node.getLabel() as string}(${memberName})`,
                             "mem"
                         );
@@ -1636,8 +1662,10 @@ export class DatasetActions {
                                     Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
                                     return;
                                 }
-                                if (node.getProfile().name === clipboardContent[0].profileName) {
-                                    await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
+                                if (node.getProfileName() === clipboardContent[0].profileName) {
+                                    await ZoweExplorerApiRegister.getMvsApi(
+                                        Profiles.getInstance().loadNamedProfile(node.getProfileName())
+                                    ).copyDataSetMember(
                                         { dsn: content.dataSetName, member: content.memberName },
                                         { dsn: node.getLabel().toString(), member: memberName },
                                         { replace: replace == "replace" ? true : false }
@@ -1650,7 +1678,7 @@ export class DatasetActions {
 
                                     const options: zosfiles.ICrossLparCopyDatasetOptions = {
                                         "from-dataset": { dsn: content.dataSetName, member: content.memberName },
-                                        responseTimeout: node.getProfile()?.profile?.responseTimeout,
+                                        responseTimeout: Profiles.getInstance().loadNamedProfile(node.getProfileName())?.profile?.responseTimeout,
                                         replace: replace == "replace" ? true : false,
                                     };
 
@@ -1693,10 +1721,10 @@ export class DatasetActions {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             return result;
         }, []);
-        const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(Profiles.getInstance().loadNamedProfile(node.getProfileName()));
         const allProfiles = Profiles.getInstance().allProfiles;
         const profile = allProfiles.find((prof) => prof.name === clipboardContent[0].profileName);
-        if (node.getProfile().name === clipboardContent[0].profileName) {
+        if (node.getProfileName() === clipboardContent[0].profileName) {
             await DatasetActions.copyProcessor(groupedContent, "po", async (content: any, dsname: string, replace: Definitions.ShouldReplace) => {
                 const lbl = content.dataSetName;
 
@@ -1705,7 +1733,7 @@ export class DatasetActions {
                     returnEtag: true,
                 };
 
-                const prof = node.getProfile();
+                const prof = Profiles.getInstance().loadNamedProfile(node.getProfileName());
                 if (prof.profile.encoding) {
                     uploadOptions.encoding = prof.profile.encoding;
                 }
@@ -1718,7 +1746,7 @@ export class DatasetActions {
                     () => {
                         return Promise.all(
                             content.members.map((child) =>
-                                ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
+                                ZoweExplorerApiRegister.getMvsApi(Profiles.getInstance().loadNamedProfile(node.getProfileName())).copyDataSetMember(
                                     { dsn: lbl, member: child },
                                     { dsn: dsname, member: child },
                                     { replace: replace === "replace" }
@@ -1751,12 +1779,16 @@ export class DatasetActions {
                         if (!dsname) {
                             return;
                         }
-                        const replace = await DatasetActions.determineReplacement(node.getProfile(), dsname, "po");
+                        const replace = await DatasetActions.determineReplacement(
+                            Profiles.getInstance().loadNamedProfile(node.getProfileName()),
+                            dsname,
+                            "po"
+                        );
                         if (replace !== "cancel") {
                             for (const child of content.members) {
                                 const options: zosfiles.ICrossLparCopyDatasetOptions = {
                                     "from-dataset": { dsn: lbl, member: child },
-                                    responseTimeout: node.getProfile()?.profile?.responseTimeout,
+                                    responseTimeout: Profiles.getInstance().loadNamedProfile(node.getProfileName())?.profile?.responseTimeout,
                                     replace: replace == "replace" ? true : false,
                                 };
                                 if (token.isCancellationRequested) {

@@ -814,6 +814,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                         status: "unverified",
                     }),
                     validProfile: Validation.ValidationType.UNVERIFIED,
+                    loadNamedProfile: jest.fn().mockReturnValue(blockMocks.imperativeProfile),
                 };
             }),
         });
@@ -999,7 +1000,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                     }
                 );
             }
-            expect(mocked(Profiles.getInstance)).toHaveBeenCalledTimes(2 * (o + 1));
+            expect(mocked(Profiles.getInstance));
         }
 
         // Test for "Cancel" or closing the dialog

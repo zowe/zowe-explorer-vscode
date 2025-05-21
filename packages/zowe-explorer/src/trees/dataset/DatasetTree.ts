@@ -287,7 +287,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
      */
     public async rename(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("DatasetTree.rename called.");
-        await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+        await Profiles.getInstance().checkCurrentProfile(Profiles.getInstance().loadNamedProfile(node.getProfileName()));
         if (await TreeViewUtils.errorForUnsavedResource(node)) {
             return;
         }
@@ -473,7 +473,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
      */
     public async initializeFavChildNodeForProfile(label: string, contextValue: string, parentNode: IZoweDatasetTreeNode): Promise<ZoweDatasetNode> {
         ZoweLogger.trace("DatasetTree.initializeFavChildNodeForProfile called.");
-        const profile = parentNode.getProfile();
+        const profile = Profiles.getInstance().loadNamedProfile(parentNode.getProfileName());
         let node: ZoweDatasetNode;
         if (contextValue.includes(Constants.DS_PDS_CONTEXT) || contextValue.includes(Constants.DS_DS_CONTEXT)) {
             if (contextValue.includes(Constants.DS_PDS_CONTEXT)) {
@@ -547,7 +547,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             })
         );
         // Load profile for parent profile node in this.mFavorites array
-        if (!parentNode.getProfile() || !parentNode.getSession()) {
+        if (!Profiles.getInstance().loadNamedProfile(parentNode.getProfileName()) || !parentNode.getSession()) {
             // If no profile/session yet, then add session and profile to parent profile node in this.mFavorites array:
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
@@ -588,7 +588,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 return;
             }
         }
-        profile = parentNode.getProfile();
+        profile = Profiles.getInstance().loadNamedProfile(parentNode.getProfileName());
         session = parentNode.getSession();
         // Pass loaded profile/session to the parent node's favorites children.
         const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
@@ -713,7 +713,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 parentNode: profileNodeInFavorites,
                 contextOverride: node.contextValue,
-                profile: node.getProfile(),
+                profile: Profiles.getInstance().loadNamedProfile(node.getProfileName()),
             });
 
             await this.checkCurrentProfile(node);
@@ -731,7 +731,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 parentNode: profileNodeInFavorites,
                 contextOverride: node.contextValue,
                 etag: await node.getEtag(),
-                profile: node.getProfile(),
+                profile: Profiles.getInstance().loadNamedProfile(node.getProfileName()),
             });
             temp.contextValue = SharedContext.asFavorite(temp);
             temp.resourceUri = node.resourceUri;

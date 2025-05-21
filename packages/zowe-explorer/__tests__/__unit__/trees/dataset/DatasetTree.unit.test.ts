@@ -62,15 +62,13 @@ jest.mock("util");
 function createGlobalMocks() {
     const globalMocks = {
         testProfileLoaded: createValidIProfile(),
-        mockProfileInstance: null,
+        mockProfileInstance: createInstanceOfProfile(createValidIProfile()),
         mockShowWarningMessage: jest.fn(),
         mockProfileInfo: createInstanceOfProfileInfo(),
         mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
         mockTreeProviders: createTreeProviders(),
         isUsingTokenAuth: jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(false),
     };
-
-    globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
 
     Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
@@ -91,6 +89,10 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn().mockReturnValue(globalMocks.mockProfileInstance),
+        configurable: true,
+    });
+    Object.defineProperty(globalMocks.mockProfileInstance, "loadNamedProfile", {
+        value: jest.fn().mockReturnValue(globalMocks.testProfileLoaded),
         configurable: true,
     });
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
@@ -168,7 +170,7 @@ function createGlobalMocks() {
         value: globalMocks.mockShowWarningMessage,
         configurable: true,
     });
-    Object.defineProperty(Constants, "PROFILES_CACHE", { value: globalMocks.mockProfileInstance!, configurable: true });
+    Object.defineProperty(Constants, "PROFILES_CACHE", { value: globalMocks.mockProfileInstance, configurable: true });
     Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
@@ -176,7 +178,7 @@ function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     Object.defineProperty(ProfilesCache, "getProfileSessionWithVscProxy", { value: jest.fn().mockReturnValue(createISession()), configurable: true });
-    jest.spyOn(ZoweTreeProvider.prototype, "checkCurrentProfile").mockResolvedValue({ status: "active", name: createIProfile().name! });
+    jest.spyOn(ZoweTreeProvider.prototype, "checkCurrentProfile").mockResolvedValue({ status: "active", name: createIProfile().name as any });
     return globalMocks;
 }
 
@@ -250,8 +252,9 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         };
     }
     it("Checking function for PDS favorite", async () => {
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
+        globalMocks.mockProfileInstance.loadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
         const testTree = new DatasetTree();
         const favProfileNode = new ZoweDatasetNode({
             label: "testProfile",
@@ -274,8 +277,9 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         expect(favChildNodeForProfile).toEqual(node);
     });
     it("Checking function for sequential DS favorite", async () => {
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
+        globalMocks.mockProfileInstance.loadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
         const testTree = new DatasetTree();
         blockMocks.datasetSessionNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         const node = new ZoweDatasetNode({
@@ -706,7 +710,7 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
         expect(resultFavProfileNode).toEqual(expectedFavProfileNode);
     });
     it("Checking that error is handled if profile not successfully loaded for profile grouping node in Favorites", async () => {
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
         const favProfileNode = new ZoweDatasetNode({
             label: "badTestProfile",
@@ -717,18 +721,11 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
         const testTree = new DatasetTree();
         testTree.mFavorites.push(favProfileNode);
         const showErrorMessageSpy = jest.spyOn(Gui, "errorMessage");
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn(() => {
-                        throw new Error();
-                    }),
-                    getBaseProfile: jest.fn(() => {
-                        return blockMocks.imperativeProfile;
-                    }),
-                };
-            }),
+        globalMocks.mockProfileInstance.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
+        globalMocks.mockProfileInstance.loadNamedProfile.mockImplementation(() => {
+            throw new Error();
         });
+        globalMocks.mockProfileInstance.getBaseProfile.mockResolvedValue(blockMocks.imperativeProfile);
         mocked(Gui.errorMessage).mockResolvedValueOnce("Remove");
         await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         expect(showErrorMessageSpy).toHaveBeenCalledTimes(1);
@@ -2096,6 +2093,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
                         status: "active",
                         name: "testProfile",
                     }),
+                    loadNamedProfile: jest.fn().mockReturnValue(newMocks.imperativeProfile),
                 };
             }),
         });
@@ -2618,6 +2616,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
                     }),
                     validProfile: Validation.ValidationType.UNVERIFIED,
                     getBaseProfile: jest.fn(),
+                    loadNamedProfile: jest.fn().mockReturnValue(blockMocks.imperativeProfile),
                 };
             }),
         });
