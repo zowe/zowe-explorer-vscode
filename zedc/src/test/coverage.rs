@@ -12,6 +12,7 @@ use std::process::Command;
 use std::process::Stdio;
 use std::sync::{Arc, Mutex};
 use std::thread;
+use supports_hyperlinks::Stream;
 
 /// Run the coverage check command
 pub fn run_coverage_check(threshold: Option<u8>, verbose: bool) -> Result<()> {
@@ -870,16 +871,26 @@ fn display_uncovered_lines(uncovered_lines_details: &HashMap<String, Vec<usize>>
                         //     "│".bright_black(),
                         //     line_content.red()
                         // );
-                        let hyperlink = format!(
-                            "\x1B]8;;vscode://file/{}/{}:{}\x1B\\{}  {} {}\x1B]8;;\x1B\\",
-                            std::env::current_dir().unwrap().display(),
-                            file_path_str,
-                            line_num_usize,
-                            format!("{:>3}", line_num_usize).dimmed(),
-                            "│".bright_black(),
-                            line_content.red()
-                        );
-                        println!("  {}", hyperlink);
+                        // vscode://file/
+                        let text = if supports_hyperlinks::on(Stream::Stdout) {
+                            format!(
+                                "\x1B]8;;vscode://file/{}/{}:{}\x1B\\{}  {} {}\x1B]8;;\x1B\\",
+                                std::env::current_dir().unwrap().display(),
+                                file_path_str,
+                                line_num_usize,
+                                format!("{:>3}", line_num_usize).dimmed(),
+                                "│".bright_black(),
+                                line_content.red()
+                            )
+                        } else {
+                            format!(
+                                "{}  {} {}",
+                                format!("{:>3}", line_num_usize).dimmed(),
+                                "│".bright_black(),
+                                line_content.red()
+                            )
+                        };
+                        println!("  {}", text);
                     } else {
                         // Fallback if line number is out of bounds (should not happen with correct diff parsing)
                         println!(
