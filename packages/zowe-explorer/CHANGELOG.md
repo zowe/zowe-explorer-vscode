@@ -13,6 +13,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where an incorrect profile name is shown in the output for the "Issue Unix Command" function when an SSH profile is required to issue commands. [#3646](https://github.com/zowe/zowe-explorer-vscode/issues/3646)
 - Improved integrated terminal behavior to match standard terminal functionality. Now, users can smoothly maintain proper cursor position when typing and backspacing. [#3391](https://github.com/zowe/zowe-explorer-vscode/issues/3391)
 
 ## `3.2.0`

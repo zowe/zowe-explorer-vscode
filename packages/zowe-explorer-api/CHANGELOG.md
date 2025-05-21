@@ -14,6 +14,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Fixed error message shown when creating a config file that already exists. [#3647](https://github.com/zowe/zowe-explorer-vscode/issues/3647)
+
 ## `3.2.0`
 
 ### New features and enhancements
