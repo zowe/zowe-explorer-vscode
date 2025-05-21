@@ -94,7 +94,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
             }
         }
     }
-    private getLine(cmd: string): string {
+    private getLine(cmd?: string): string {
         return this.formatCommandLine ? this.formatCommandLine(cmd ?? this.command) : cmd ?? this.command;
     }
     protected writeCmd(cmd?: string) {
@@ -137,7 +137,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
 
         this.writeLine(this.chalk.dim.italic(this.mMessage));
         if (this.command.length > 0) {
-            this.handleInput(ZoweTerminal.Keys.ENTER);
+            void this.handleInput(ZoweTerminal.Keys.ENTER);
         }
     }
 
