@@ -15,9 +15,13 @@ use std::thread;
 use supports_hyperlinks::Stream;
 
 /// Run the coverage check command
-pub fn run_coverage_check(threshold: Option<u8>, verbose: bool) -> Result<()> {
+pub fn run_coverage_check(
+    threshold: Option<u8>,
+    verbose: bool,
+    filter: Option<String>,
+) -> Result<()> {
     // Get changed files and lines from git diff
-    let (changed_lines, initial_total_lines_in_patch, repo_root_pathbuf) =
+    let (mut changed_lines, initial_total_lines_in_patch, repo_root_pathbuf) =
         get_changed_files_and_lines(verbose)?;
 
     if changed_lines.is_empty() {
@@ -36,37 +40,86 @@ pub fn run_coverage_check(threshold: Option<u8>, verbose: bool) -> Result<()> {
         return Ok(());
     }
 
+    // If filter is provided, filter the changed_lines to only include files from that package
+    let mut filtered_total_lines = initial_total_lines_in_patch;
+    if let Some(pkg) = &filter {
+        let package_path = format!("packages/{}/", pkg);
+
+        // Count lines to be removed for accurate stats
+        let mut lines_to_remove = 0;
+        let files_to_remove: Vec<String> = changed_lines
+            .keys()
+            .filter(|file| !file.starts_with(&package_path))
+            .cloned()
+            .collect();
+
+        for file in &files_to_remove {
+            if let Some(lines) = changed_lines.get(file) {
+                lines_to_remove += lines.len();
+            }
+        }
+
+        // Remove files not in the filtered package
+        for file in files_to_remove {
+            changed_lines.remove(&file);
+        }
+
+        filtered_total_lines = initial_total_lines_in_patch - lines_to_remove;
+
+        if verbose {
+            println!(
+                "Debug - Filtered changed files to only include package '{}'. {} of {} lines remain.",
+                pkg, filtered_total_lines, initial_total_lines_in_patch
+            );
+        }
+
+        if filtered_total_lines == 0 {
+            println!(
+                "{}",
+                format!(
+                    "No changed lines found in package '{}' to check for coverage.",
+                    pkg
+                )
+                .yellow()
+            );
+            return Ok(());
+        }
+    }
+
     // Run the tests with coverage
-    println!(
-        "{}",
-        "Running unit tests with coverage for all packages...".blue()
-    );
-    let (test_success, stdout_lines, stderr_lines) = run_tests()?;
+    let display_text = match &filter {
+        Some(pkg) => format!("Running unit tests with coverage for package '{}'...", pkg),
+        None => "Running unit tests with coverage for all packages...".to_string(),
+    };
+    println!("{}", display_text.blue());
+
+    let (test_success, stdout_lines, stderr_lines) = run_tests(filter.clone())?;
 
     if !test_success {
-        println!("pnpm -r test stdout:");
+        println!("pnpm test stdout:");
         for line in stdout_lines.iter() {
             println!("{}", line);
         }
-        println!("pnpm -r test stderr:");
+        println!("pnpm test stderr:");
         for line in stderr_lines.iter() {
             eprintln!("{}", line);
         }
-        anyhow::bail!("pnpm -r test failed.");
+        anyhow::bail!("pnpm test failed.");
     }
 
     // Process coverage reports
     println!("{}", "\nProcessing coverage reports...".blue());
     let (covered_lines_in_patch, uncovered_lines_details) =
-        process_coverage_reports(&changed_lines, &repo_root_pathbuf, verbose)?;
+        process_coverage_reports(&changed_lines, &repo_root_pathbuf, verbose, &filter)?;
 
     // Display results
     display_coverage_results(
         covered_lines_in_patch,
-        initial_total_lines_in_patch,
+        filtered_total_lines,
         &uncovered_lines_details,
         threshold,
         verbose,
+        &filter,
     )
 }
 
@@ -257,19 +310,35 @@ fn parse_hunk_header(
 }
 
 /// Run the tests with coverage
-fn run_tests() -> Result<(bool, Vec<String>, Vec<String>)> {
+fn run_tests(filter: Option<String>) -> Result<(bool, Vec<String>, Vec<String>)> {
     let pb = ProgressBar::new_spinner();
     pb.set_style(
         ProgressStyle::default_spinner()
             .template("{spinner:.green} {msg}")
             .unwrap(),
     );
-    pb.set_message("Executing pnpm -r test...");
+
+    // Set the message based on whether we're filtering or not
+    let msg = match &filter {
+        Some(pkg) => format!("Executing pnpm --filter {} test...", pkg),
+        None => "Executing pnpm -r test...".to_string(),
+    };
+    pb.set_message(msg);
     pb.enable_steady_tick(std::time::Duration::from_millis(120));
 
-    // Run pnpm -r test
+    // Run pnpm test
     let mut pnpm_test_cmd = cmd::as_binary("pnpm");
-    pnpm_test_cmd.args(["-r", "test"]);
+
+    // If filter is provided, use --filter instead of -r
+    match &filter {
+        Some(pkg) => {
+            pnpm_test_cmd.args(["--filter", pkg, "test"]);
+        }
+        None => {
+            pnpm_test_cmd.args(["-r", "test"]);
+        }
+    }
+
     pnpm_test_cmd.stdout(Stdio::piped());
     pnpm_test_cmd.stderr(Stdio::piped());
 
@@ -396,13 +465,19 @@ fn process_coverage_reports(
     changed_lines: &HashMap<String, Vec<usize>>,
     repo_root_pathbuf: &PathBuf,
     verbose: bool,
+    filter: &Option<String>,
 ) -> Result<(usize, HashMap<String, Vec<usize>>)> {
     let mut covered_lines_in_patch = 0;
     let mut uncovered_lines_details: HashMap<String, Vec<usize>> = HashMap::new();
 
-    // Find all coverage-final.json files
-    let coverage_files_pattern =
-        repo_root_pathbuf.join("packages/*/results/unit/coverage/coverage-final.json");
+    // Find coverage-final.json files, applying filter if provided
+    let coverage_files_pattern = match filter {
+        Some(pkg) => repo_root_pathbuf.join(format!(
+            "packages/{}/results/unit/coverage/coverage-final.json",
+            pkg
+        )),
+        None => repo_root_pathbuf.join("packages/*/results/unit/coverage/coverage-final.json"),
+    };
 
     if verbose {
         println!(
@@ -775,6 +850,7 @@ fn display_coverage_results(
     uncovered_lines_details: &HashMap<String, Vec<usize>>,
     threshold: Option<u8>,
     verbose: bool,
+    filter: &Option<String>,
 ) -> Result<()> {
     if initial_total_lines_in_patch == 0 {
         println!(
@@ -787,15 +863,18 @@ fn display_coverage_results(
     let patch_coverage_percentage =
         (covered_lines_in_patch as f64 / initial_total_lines_in_patch as f64) * 100.0;
 
-    println!(
-        "{}",
-        format!(
+    let coverage_header = match filter {
+        Some(pkg) => format!(
+            "\nCoverage for package '{}': {:.2}% ({}/{} lines covered)",
+            pkg, patch_coverage_percentage, covered_lines_in_patch, initial_total_lines_in_patch
+        ),
+        None => format!(
             "\nCoverage: {:.2}% ({}/{} lines covered)",
             patch_coverage_percentage, covered_lines_in_patch, initial_total_lines_in_patch
-        )
-        .bold()
-        .blue()
-    );
+        ),
+    };
+
+    println!("{}", coverage_header.bold().blue());
 
     if verbose {
         println!(
@@ -810,24 +889,32 @@ fn display_coverage_results(
     // Check threshold if specified
     if let Some(min_threshold) = threshold {
         if patch_coverage_percentage < min_threshold as f64 {
-            eprintln!(
-                "{}",
-                format!(
+            let message = match filter {
+                Some(pkg) => format!(
+                    "Package '{}' coverage {:.2}% is below the threshold of {}%",
+                    pkg, patch_coverage_percentage, min_threshold
+                ),
+                None => format!(
                     "Patch coverage {:.2}% is below the threshold of {}%",
                     patch_coverage_percentage, min_threshold
-                )
-                .red()
-            );
+                ),
+            };
+
+            eprintln!("{}", message.red());
             anyhow::bail!("Coverage threshold not met.");
         } else {
-            println!(
-                "{}",
-                format!(
+            let message = match filter {
+                Some(pkg) => format!(
+                    "Package '{}' coverage {:.2}% meets the threshold of {}%",
+                    pkg, patch_coverage_percentage, min_threshold
+                ),
+                None => format!(
                     "Patch coverage {:.2}% meets the threshold of {}%",
                     patch_coverage_percentage, min_threshold
-                )
-                .green()
-            );
+                ),
+            };
+
+            println!("{}", message.green());
         }
     }
 
