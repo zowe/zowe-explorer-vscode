@@ -865,13 +865,6 @@ fn display_uncovered_lines(uncovered_lines_details: &HashMap<String, Vec<usize>>
                     if line_idx < lines.len() {
                         let line_content = lines[line_idx].trim();
                         // Format: <grey_line_num_padded> | <red_line_content>
-                        // println!(
-                        //     "  {} {}   {}",
-                        //     format!("{:>3}", line_num_usize).dimmed(), // Right-align and pad to 3 spaces
-                        //     "│".bright_black(),
-                        //     line_content.red()
-                        // );
-                        // vscode://file/
                         let text = if supports_hyperlinks::on(Stream::Stdout) {
                             format!(
                                 "\x1B]8;;vscode://file/{}/{}:{}\x1B\\{}  {} {}\x1B]8;;\x1B\\",
