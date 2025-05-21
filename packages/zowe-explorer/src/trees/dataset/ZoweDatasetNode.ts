@@ -796,7 +796,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     .filter((r) => r.success)
                     .reduce((arr: IZosmfListResponse[], r) => {
                         const items: IZosmfListResponse[] = r.apiResponse?.items;
-                        totalItems += items.length;
+                        totalItems += items?.length ?? 0;
                         return items ? [...arr, ...items] : arr;
                     }, []);
 
