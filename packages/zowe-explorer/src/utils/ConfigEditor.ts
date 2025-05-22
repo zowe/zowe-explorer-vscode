@@ -43,6 +43,7 @@ export class ConfigEditor extends WebView {
         super(vscode.l10n.t("Config Editor"), "config-editor", context, {
             onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
             retainContext: true,
+            viewColumn: vscode.ViewColumn.Active,
         });
         this.panel.onDidDispose(() => {});
     }
