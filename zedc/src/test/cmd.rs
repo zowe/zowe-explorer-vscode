@@ -1,6 +1,6 @@
 //! Command module for handling `test` commands.
- 
-use crate::test::{ghr, local};
+
+use crate::test::{coverage, ghr, local};
 use clap::{command, Subcommand};
 use owo_colors::OwoColorize;
 
@@ -24,6 +24,19 @@ pub enum Commands {
         alias = "l"
     )]
     Local { files: Vec<String> },
+    #[command(
+        name = "coverage",
+        about = "Run unit tests and compare patch coverage with main branch",
+        alias = "cov"
+    )]
+    Coverage {
+        #[arg(short, long)]
+        threshold: Option<u8>,
+        #[arg(short, long)]
+        verbose: bool,
+        #[arg(short, long, help = "Filter tests to a specific package")]
+        filter: Option<String>,
+    },
 }
 
 /// Handles the logic for the `zedc test [t]` command.
@@ -37,13 +50,11 @@ pub async fn handle_cmd(
     vsc_version: Option<String>,
     cmd: Commands,
 ) -> anyhow::Result<()> {
-    println!("{}\n", "zedc test".bold());
+    println!("{}\n", "zedc test".bold().blue());
 
     // Handle any subcommands.
     match cmd {
-        Commands::GhRepo {
-            references,
-        } => {
+        Commands::GhRepo { references } => {
             let crab = octocrab::instance();
             ghr::setup(references, vsc_version, &crab).await?;
         }
@@ -55,12 +66,22 @@ pub async fn handle_cmd(
                 }
             };
         }
+        Commands::Coverage {
+            threshold,
+            verbose,
+            filter,
+        } => {
+            coverage::run_coverage_check(threshold, verbose, filter)?;
+        }
     }
 
     // Install Zowe CLI if a version was provided.
     if install_cli.is_some() {
         let ver = install_cli.unwrap();
-        println!("💿 Installing Zowe CLI (version: {})...", ver);
+        println!(
+            "💿 {}",
+            format!("Installing Zowe CLI (version: {})...", ver).blue()
+        );
         super::install_cli(ver)?;
     }
 

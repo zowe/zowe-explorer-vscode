@@ -9,5 +9,6 @@ pub fn code_binary() -> String {
         "macos" => "Visual Studio Code.app",
         "windows" => "Code.exe",
         _ => "code",
-    }.to_owned()
+    }
+    .to_owned()
 }

@@ -1,7 +1,7 @@
 //! Module for handling the `test local` sub-command.
 
 /// Downloads VS Code, resolves artifacts from the given file paths, installs them in VS Code and opens it.
-/// 
+///
 /// # Arguments
 /// * `vsc_version` - (optional) The VS Code version to download (default: `latest`)
 /// * `files` - A `Vec` of relative file paths pointing to extensions to install
