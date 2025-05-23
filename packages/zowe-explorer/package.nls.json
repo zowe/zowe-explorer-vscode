@@ -59,6 +59,8 @@
   "uss.text": "Toggle Text",
   "uss.filterBy": "Search by Directory",
   "uss.cd": "Go Up One Level",
+  "uss.back": "Back",
+  "uss.forward": "Forward",
   "jobs.search": "Search Jobs",
   "deleteJob": "Delete Job",
   "runModifyCommand": "Issue Modify Command",
